@@ -20,6 +20,8 @@ import { isWatched } from '../../sim/sys/scout11';
 import { nextStep23 } from '../../sim/sys/scout23';
 import { VENUES17, venueOpen } from '../../sim/sys/venues17';
 import { memberBlock29, memberOptions29 } from '../../sim/sys/member29';
+import { featPersonBlock29 } from '../../sim/sys/featp29';
+import { featSongs } from '../../sim/sys/feats8';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, money, playerActs } from '../../sim/util';
 import { actionRow20, actionRows20, type Cat20 } from '../actions20';
@@ -260,6 +262,18 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
     try { block = memberBlock29(s, pid); } catch { block = N('Indisponível agora.', 'Unavailable now.'); }
     out.push(it('person.offer29', fmtL(N('Oferecer a {n}… ›', 'Offer {n}… ›'), { n: person.name }), 'contract', 'do', block, {
       sec: 'career', note: N('Carreira solo no seu selo, entrar numa banda sua, sessão, projeto paralelo, equipe ou feat.', 'Solo career on your label, join one of your bands, sessions, side project, staff or a feature.'),
+    }));
+  }
+  // R29 (feat de pessoa): "Convidar {nome} para um feat…" — o feat negociado de sempre com SÓ esta pessoa como convidada
+  if (person && !me) {
+    let block: L | null = null;
+    try {
+      const mineActs = playerActs(s).map((id) => s.acts[id]).filter((a) => !!a && a.members.length > 0);
+      block = !mineActs.length ? N('Você precisa de um artista no elenco.', 'You need an act on your roster.')
+        : featPersonBlock29(s, pid) ?? (mineActs.some((a) => featSongs(s, a.id).length) ? null : N('Nenhuma música sua pronta para receber participação (inédita, sem convidado).', 'None of your songs is ready for a feature (unreleased, no guest).'));
+    } catch { block = N('Indisponível agora.', 'Unavailable now.'); }
+    out.push(it('person.feat29', fmtL(N('Convidar {n} para um feat…', 'Invite {n} to a feature…'), { n: person.name }), 'note', 'do', block, {
+      sec: 'music', note: N('Só a pessoa, sem a banda: cachê e liberação pela fama e habilidade dela.', 'Just the person, not the band: fee and clearance by their own fame and skill.'),
     }));
   }
   // atalhos: o ato da pessoa

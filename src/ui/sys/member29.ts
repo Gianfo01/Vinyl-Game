@@ -3,12 +3,12 @@
 // Cada opção segue o fluxo de sempre (docs/act27.md, um caminho só):
 //  • carreira solo → cria o solo-proposta (sim/sys/member29) e abre a TELA DA OFERTA de sempre (openOffer: a mesa r27,
 //    ou a proposta única no "Resolver rápido"); ao fechar a mesa/proposta, settleMember29 conclui ou desfaz;
-//  • participação (feat) → o feat negociado de sempre (round8.openFeatModal) com a banda como convidada;
+//  • participação (feat) → o feat negociado de sempre (round8.openFeatModal) com A PESSOA como convidada (sys/featp29);
 //  • entrar / sessão / projeto paralelo / equipe / ghostwriter → resolvem na hora (sorteio próprio) com aviso;
 //    o projeto paralelo, quando nasce, abre a proposta de contrato do supergrupo (como no bonds9).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { bandOf29, runMemberOption29, settleMember29, startMemberSolo29, type MoMode29 } from '../../sim/sys/member29';
+import { memberFeatPreset29, runMemberOption29, settleMember29, startMemberSolo29, type MoMode29 } from '../../sim/sys/member29';
 import type { GameState } from '../../sim/types';
 import { rerender, toast } from '../common';
 import { openOffer } from '../ficha';
@@ -28,8 +28,8 @@ export function runMember29(s: GameState, pid: string, itemId: string): void {
     return;
   }
   if (itemId === 'mo.feat') {
-    const band = bandOf29(s, pid);
-    if (band) void import('./round8').then((m) => m.openFeatModal(s, { guest: band.id })); // carregado sob demanda (não muda a ordem de registro das seções)
+    // R29 (feat de pessoa): a convidada é a PESSOA (não a banda) — carregado sob demanda (não muda a ordem de registro)
+    if (s.persons[pid]) void import('./round8').then((m) => m.openFeatModal(s, memberFeatPreset29(s, pid)));
     return;
   }
   const out = runMemberOption29(s, pid, itemId);

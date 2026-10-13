@@ -11,7 +11,8 @@
 //  • Músico de sessão para um ato seu (session19: hireAce19, 6 meses, com crédito) — continua na banda.
 //  • Projeto paralelo / supergrupo com o líder de um ato seu (bonds9 formBond 'super', liberação de feats8) — continua na banda.
 //  • Equipe do selo (produtor / A&R, quem tem a habilidade) — deixa a banda; compositor(a) em segredo (writers19 ghostwriter).
-//  • Participação num lançamento seu (feats8) — a interface abre o feat negociado de sempre com a banda como convidada.
+//  • Participação num lançamento seu (feats8) — a interface abre o feat negociado de sempre com A PESSOA como convidada
+//    (sys/featp29: só ela, sem a banda; liberação do selo da banda e reação dos colegas).
 // Selo rival: rescisão paga ao selo (mágoa pequena) ou aliciamento sem pagar (mágoa grande, rivalidade e risco de processo
 // por contrato — business.fileLawsuit). Modo exato: interferir marca a banda como história alterada (history15).
 // Determinístico: Rng.fromSeed(semente|member29v1|…) próprio; nunca o fluxo compartilhado. Fatos e memórias alimentam o
@@ -34,6 +35,7 @@ import { actsTouched17 } from '../actidx17';
 import { admiration, bondCost, formBond } from './bonds9';
 import { personFame } from './fame15';
 import { clearance, featSongs } from './feats8';
+import { featPersonBlock29 } from './featp29';
 import { departNpc16, joinBand, l16, leaveBand16, pressure16, WHY16 } from './lineup16';
 import { opinionOf } from './persona13';
 import { grudge27, temper27 } from './rivals27';
@@ -652,10 +654,17 @@ export function memberOptions29(s: GameState, pid: string): Opt29[] {
       note: l('Continua na banda; escreve sem crédito (writers19): barato, mas o rancor cresce com os hits.', 'Keeps the band; writes uncredited (writers19): cheap, but the grudge grows with the hits.') });
   }
   const songs = mine.some((a) => featSongs(s, a.id).length);
-  out.push({ id: 'mo.feat', k: 'feat', label: T('Participação (feat) de {b} num lançamento seu…', 'Feature by {b} on one of your releases…', { b: band?.name ?? p.name }), sec: 'music',
-    block: common ?? (!mine.length ? NO_ACT : !songs ? l('Nenhuma música sua pronta para receber participação.', 'None of your songs is ready for a feature.') : band && clearance(s, band.id, 1).blocked ? clearance(s, band.id, 1).text : null),
-    note: l('Abre o feat negociado de sempre com a banda como convidada (feats8).', 'Opens the usual negotiated feature with the band as guest (feats8).') });
+  // R29 (feat de pessoa): o convidado é a PESSOA (não a banda inteira) — o feat negociado de sempre com ela pré-escolhida
+  out.push({ id: 'mo.feat', k: 'feat', label: T('Participação (feat) de {n} num lançamento seu…', 'Feature by {n} on one of your releases…', { n: p.name }), sec: 'music',
+    block: common ?? (!mine.length ? NO_ACT : !songs ? l('Nenhuma música sua pronta para receber participação.', 'None of your songs is ready for a feature.') : featPersonBlock29(s, pid)),
+    note: T('Abre o feat negociado de sempre com {n} como convidado(a) — só a pessoa, sem a banda (feats8).', 'Opens the usual negotiated feature with {n} as the guest — just the person, not the band (feats8).', { n: p.name }) });
   return out;
+}
+
+/** R29 (feat de pessoa): o que a opção "Participação" pré-escolhe na tela do feat — a pessoa, não a banda. */
+export function memberFeatPreset29(s: GameState, pid: string): { persons: string[]; host?: string } {
+  const mine = playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && live(a) && !mo29(s).sh[a.id] && featSongs(s, a.id).length > 0).sort((a, b) => b.fame - a.fame);
+  return mine[0] ? { persons: [pid], host: mine[0].id } : { persons: [pid] };
 }
 
 /** Executa uma opção que resolve na hora (entrar, sessão, projeto, equipe, ghost). Solo e feat abrem telas (interface). */

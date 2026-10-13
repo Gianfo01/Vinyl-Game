@@ -10,6 +10,8 @@ import { availableChannels } from '../../sim/market';
 import { songProfile } from '../../sim/repertoire';
 import { availableProducers, producerFit, sessionCost } from '../../sim/studio';
 import { featureCandidates, featureFee } from '../../sim/sys/creation/core';
+import { featPersons29 } from '../../sim/sys/featp29';
+import { featCredit29, featPersonButton29 } from './featp29';
 import { explainRelease } from '../../sim/sys/explain8';
 import {
   CONCEPTS, GOALS, STAGES, STAGE_NAMES, candidateSongs, closeProject, conceptById, createProject, featOf, inviteGuest, maxSongs, needSongs, openProjects,
@@ -148,10 +150,11 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
         h('button', { class: 'btn small primary', onclick: () => say(recordNow(s, p), l('Sessão de estúdio marcada.', 'Studio session booked.')) }, ic('mic'), ' ', t(l('Gravar agora ({c})', 'Record now ({c})'), { c: $(sessionCost(s, unrec, p.tier, p.approach, p.producerId)) })),
     ) : null,
     lead ? h('fieldset', null, h('legend', null, t(l('Participação especial', 'Guest feature'))),
-      feat ? h('p', null, t(l('Faixa principal com participação de ', 'Lead track featuring ')), actLink(s, feat)) :
+      feat || featPersons29(s, lead.id).length ? h('p', null, t(l('Faixa principal com participação de ', 'Lead track featuring ')), featCredit29(s, lead.id, feat)) :
         locked ? h('p', { class: 'muted small' }, '—') : h('div', { class: 'row wrap' },
           select(p.guestId ?? '', [{ value: '', label: t(l('Sem convidado', 'No guest')) }, ...guests.map((g) => ({ value: g.id, label: `${g.name} (${$(featureFee(s, g))})` }))], (v) => { p.guestId = v || undefined; rerender(); }),
           h('button', { class: 'btn small', disabled: !p.guestId, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
+          featPersonButton29(s, p.actId, lead.id),
           !p.guestId ? h('small', { class: 'muted' }, t(guests.length ? l('Escolha um convidado na lista para convidar.', 'Pick a guest from the list to invite.') : l('Nenhum convidado possível agora: veja Parcerias em Composição.', 'No possible guest right now: see Partners in Songwriting.'))) : null)) : null,
 
     ...PROJ_TRACK_EXTRAS18.map((f) => f(s, p, locked)),

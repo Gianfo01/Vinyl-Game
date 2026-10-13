@@ -42,8 +42,25 @@ export interface FeatDeal {
   paid: number;
   week: number;
   migrated?: 1;
+  /** R29 (feat de pessoa): convidados pessoa a pessoa (integrante, solo, sessão, produtor que canta/toca). Com pessoas,
+   *  `guestActId` é o ato convidado junto (feat misto) ou '' (só pessoas). Ausente = feat do ato inteiro, como sempre. */
+  guestPersons?: string[];
 }
-export interface FeatState { deals: FeatDeal[]; npc: { y: number; a: string; b: string }[]; asked: Record<string, number> }
+export interface FeatState {
+  deals: FeatDeal[]; npc: { y: number; a: string; b: string }[]; asked: Record<string, number>;
+  /** R29: contador do sorteio próprio dos feats de pessoa (Rng.fromSeed — nunca o fluxo compartilhado) */
+  n29?: number;
+}
+
+/** R29 (feat de pessoa): ganchos preenchidos por sys/featp29 (sem import estático: não muda a ordem dos módulos).
+ *  Só valem para negociações com `guestPersons`; o feat do ato inteiro segue o caminho de sempre. */
+export const FEAT29: {
+  accept?: (s: GameState, d: FeatDeal) => L | null;
+  resolve?: (s: GameState, d: FeatDeal, malus: number) => { result: FeatResult; text: L };
+  payee?: (s: GameState, d: FeatDeal) => Act | undefined;
+} = {};
+/** A faixa já tem participação (ato ou pessoa)? */
+export const hasFeat29 = (s: GameState, songId: string): boolean => !!songX(s, songId).featuring || !!songX(s, songId).featPersons?.length;
 
 declare module '../ext4' { interface Ext4 { feats8: FeatState } }
 registerExt4('feats8', () => ({ deals: [], npc: [], asked: {} }));
@@ -59,7 +76,7 @@ const isMine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.pl
 export function featSongs(s: GameState, actId: string): Song[] {
   const act = s.acts[actId];
   if (!act) return [];
-  return act.songs.map((id) => s.songs[id]).filter((so): so is Song => !!so && !so.releaseId && !songX(s, so.id).featuring && ['written', 'recorded', 'vault'].includes(songStatus(s, so)));
+  return act.songs.map((id) => s.songs[id]).filter((so): so is Song => !!so && !so.releaseId && !hasFeat29(s, so.id) && ['written', 'recorded', 'vault'].includes(songStatus(s, so)));
 }
 
 /** Convidados possíveis: qualquer ato vivo e em atividade fora do seu selo (amigos primeiro). */
@@ -123,7 +140,7 @@ export function proposeFeat(s: GameState, r: Rng, songId: string, guestId: strin
   const guest = s.acts[guestId];
   const host = song ? s.acts[song.actId] : undefined;
   if (!song || !guest || !host || !isMine(s, host) || isMine(s, guest)) return { result: 'invalid', text: l('Convite inválido.', 'Invalid invite.') };
-  if (song.releaseId || songX(s, songId).featuring) return { result: 'invalid', text: l('Esta música já foi lançada ou já tem participação.', 'This song is already out or already has a feature.') };
+  if (song.releaseId || hasFeat29(s, songId)) return { result: 'invalid', text: l('Esta música já foi lançada ou já tem participação.', 'This song is already out or already has a feature.') };
   if (feats(s).deals.some((d) => d.songId === songId && d.status !== 'done')) return { result: 'invalid', text: l('Já há uma negociação aberta para esta música.', 'There is already an open negotiation for this song.') };
   t0 = { fee: Math.max(0, Math.round(t0.fee)), split: clamp(t0.split, 0, 0.5) };
   const cl = clearance(s, guestId, t0.fee);
@@ -167,6 +184,7 @@ export function acceptFeatCounter(s: GameState, dealId: string): L | null {
   const st = feats(s);
   const d = st.deals.find((x) => x.id === dealId && x.status === 'counter');
   if (!d?.counter) return l('Contraproposta expirada.', 'Counter-offer expired.');
+  if (d.guestPersons?.length && FEAT29.accept) return FEAT29.accept(s, d); // R29: convidado pessoa
   const cl = clearance(s, d.guestActId, d.counter.fee);
   if (freeCash20(s) < d.counter.fee + cl.cost) return cashWhy20(s, d.counter.fee + cl.cost, l('Caixa insuficiente.', 'Not enough cash.'));
   st.deals = st.deals.filter((x) => x !== d);
@@ -188,6 +206,7 @@ export function pressFeat(s: GameState, r: Rng, dealId: string): { result: FeatR
 }
 
 function resolveThinkingFeat(s: GameState, r: Rng, d: FeatDeal, malus = 0): { result: FeatResult; text: L } {
+  if (d.guestPersons?.length && FEAT29.resolve) return FEAT29.resolve(s, d, malus); // R29: sorteio próprio, não o `r`
   const st = feats(s);
   st.deals = st.deals.filter((x) => x !== d);
   const guest = s.acts[d.guestActId];
@@ -203,7 +222,7 @@ export function closeFeat(s: GameState, songId: string, guestId: string, t0: Fea
   const song = s.songs[songId];
   const guest = s.acts[guestId];
   const host = song ? s.acts[song.actId] : undefined;
-  if (!song || !guest || !host || song.releaseId || songX(s, songId).featuring) return null;
+  if (!song || !guest || !host || song.releaseId || hasFeat29(s, songId)) return null;
   if (t0.fee > 0) post(s, `feat8:${songId}`, -t0.fee, 'recording', `Participação de ${guest.name}`);
   if (clearanceCost > 0) post(s, `featclr:${songId}`, -clearanceCost, 'legal', `Liberação de ${guest.name}`);
   guest.cash += t0.fee + clearanceCost;
@@ -226,7 +245,7 @@ export function closeFeat(s: GameState, songId: string, guestId: string, t0: Fea
   return deal;
 }
 
-function pushDeal(s: GameState, d: FeatDeal): void {
+export function pushDeal(s: GameState, d: FeatDeal): void {
   const st = feats(s);
   st.deals.push(d);
   // guarda as negociações abertas e as 40 parcerias mais recentes
@@ -237,7 +256,7 @@ function pushDeal(s: GameState, d: FeatDeal): void {
   }
 }
 
-function linkActs(s: GameState, A: Act, B: Act, v: number): void {
+export function linkActs(s: GameState, A: Act, B: Act, v: number): void {
   const a = A.leaderId && A.members.includes(A.leaderId) ? A.leaderId : A.members[0];
   const b = B.leaderId && B.members.includes(B.leaderId) ? B.leaderId : B.members[0];
   if (a && b) bump(s, a, b, v, 'feat', 'collab');
@@ -350,9 +369,9 @@ function royaltiesMonth(s: GameState): void {
     d.lastRev = rel.revenue;
     const amount = Math.round((delta * d.split) / Math.max(1, rel.songs.length));
     if (amount <= 0) continue;
-    const guest = s.acts[d.guestActId];
+    const guest = s.acts[d.guestActId] ?? (d.guestPersons?.length ? FEAT29.payee?.(s, d) : undefined); // R29: a banda/carreira da pessoa recebe
     if (d.side === 'host') {
-      post(s, `featroy:${d.id}:${s.year}:${s.month}`, -amount, 'royalties', `Royalties de feat: ${guest?.name ?? ''}`);
+      post(s, `featroy:${d.id}:${s.year}:${s.month}`, -amount, 'royalties', `Royalties de feat: ${d.guestPersons?.length ? d.guestPersons.map((p) => s.persons[p]?.name ?? '?').join(' & ') : guest?.name ?? ''}`);
       if (guest) guest.cash += amount;
     } else {
       post(s, `featroyin:${d.id}:${s.year}:${s.month}`, amount, 'royalties', `Royalties de feat em "${d.title}"`);

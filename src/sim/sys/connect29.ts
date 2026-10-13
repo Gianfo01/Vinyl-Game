@@ -96,3 +96,21 @@ export function biography29(s: GameState, pid: string): ChronEv[] {
   const spans = careerActs29(s, pid).flatMap((x) => x.segs.map((g) => ({ a: x.act.id, from: g.from, to: g.to ?? 9999 })));
   return chronState(s).ev.filter((e) => e.a?.includes(pid) || (e.i >= 2 && spans.some((x) => e.a?.[0] === x.a && e.y >= x.from && e.y <= x.to)));
 }
+
+export interface PersonFeat29 { songId: string; title: string; hostActId: string; year: number; via: 'person' | 'act'; actId?: string }
+/** R29 (feat de pessoa): participações da pessoa — as dela, pessoa a pessoa (creation.songs[].featPersons), e as do ato
+ *  inteiro de uma banda/carreira dela (careerActs29) gravadas durante a passagem. Só leitura; mais recentes primeiro. */
+export function personFeats29(s: GameState, pid: string, limit = 24): PersonFeat29[] {
+  const songs = (s.x4 as unknown as { creation?: { songs: Record<string, { featuring?: string; featPersons?: string[] }> } }).creation?.songs ?? {};
+  const spans = careerActs29(s, pid).flatMap((x) => x.segs.map((g) => ({ a: x.act.id, from: g.from, to: g.to ?? 9999 })));
+  const out: PersonFeat29[] = [];
+  for (const [id, x] of Object.entries(songs)) {
+    const so = s.songs[id];
+    if (!so || (!x.featuring && !x.featPersons?.length)) continue;
+    const rel = so.releaseId ? s.releases[so.releaseId] : undefined;
+    const year = rel?.year ?? s.year - Math.max(0, Math.floor((s.week - so.createdWeek) / 52));
+    if (x.featPersons?.includes(pid)) out.push({ songId: id, title: so.title, hostActId: so.actId, year, via: 'person' });
+    else if (x.featuring && spans.some((g) => g.a === x.featuring && year >= g.from && year <= g.to)) out.push({ songId: id, title: so.title, hostActId: so.actId, year, via: 'act', actId: x.featuring });
+  }
+  return out.sort((a, b) => b.year - a.year).slice(0, limit);
+}

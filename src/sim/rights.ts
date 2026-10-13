@@ -186,8 +186,8 @@ export function dealOfRelease(s: GameState, rel: Release): Contract | undefined 
 }
 
 export function hasGuest(s: GameState, rel: Release): boolean {
-  const cr = (s.x4 as unknown as { creation?: { songs: Record<string, { featuring?: string }> } }).creation;
-  return !!rel.songs.some((id) => cr?.songs[id]?.featuring);
+  const cr = (s.x4 as unknown as { creation?: { songs: Record<string, { featuring?: string; featPersons?: string[] }> } }).creation;
+  return !!rel.songs.some((id) => cr?.songs[id]?.featuring || cr?.songs[id]?.featPersons?.length); // R29: convidado pessoa também conta
 }
 
 // ---------------------------------------------------------------- reversão
