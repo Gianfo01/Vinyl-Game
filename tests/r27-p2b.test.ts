@@ -67,11 +67,11 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
     // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
     // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
-    // rng. Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
-    expect(AFTER.player.cash).toBe(221268);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3005372679);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4246775399);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1175182249);
+    // rng (com os grupos 2 e 3 e os pisos anti-espiral). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+    expect(AFTER.player.cash).toBe(333758);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1642544891);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3380302445);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2264116950);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

@@ -186,7 +186,7 @@ onFact('scandal', (s, f) => {
   r.institutional = Math.max(0, r.institutional - Math.min(4, f.severity / 30) * K());
   r.commercial = Math.max(0, r.commercial - Math.min(2, f.severity / 60) * K());
   // imprensa → dinheiro: gestão de crise (assessoria extra, advogado, cancelamentos)
-  if (on('escandalo_custo') && f.severity >= 30) post(s, `conn29crise:${f.id}`, -Math.round(money(s, f.severity * 60) * K()), 'marketing', 'Gestão de crise (escândalo)');
+  if (on('escandalo_custo') && f.severity >= 30) post(s, `conn29crise:${f.id}`, -Math.round(money(s, f.severity * 30) * K()), 'marketing', 'Gestão de crise (escândalo)');
 }, 'conn29:scandal-rep');
 
 // ---------------------------------------------------------------- mensal: prêmios, reputação, submundo, vida
@@ -208,15 +208,15 @@ registerSimHook('month', 'conn29', (s: GameState) => {
   }
   const h = heatHome(s);
   if (h >= 30 && on('submundo')) { // submundo → reputação / dinheiro
-    r.institutional = Math.max(0, r.institutional - Math.min(1.5, h / 60) * K());
-    post(s, `conn29law:${s.year}:${s.month}`, -Math.round(money(s, h * 40) * K()), 'legal', 'Advogados (investigação policial)');
+    r.institutional = Math.max(0, r.institutional - Math.min(1.5, h / 60) * K()); // sem piso: o calor não depende da reputação (não há ciclo)
+    post(s, `conn29law:${s.year}:${s.month}`, -Math.round(money(s, h * 20) * K()), 'legal', 'Advogados (investigação policial)');
   }
   // vida → dinheiro: terapia/médico para quem está muito estressado. Sem ciclo: só com caixa livre (selo quebrado não
-  // paga — senão "sem caixa → estresse → terapia → menos caixa" virava espiral), no máximo 3 pessoas, US$ 250 cada.
+  // paga — senão "sem caixa → estresse → terapia → menos caixa" virava espiral), no máximo 3 pessoas, US$ 300 cada.
   let n = 0;
   if (on('terapia') && freeCash20(s) > 0) for (const id of playerActs(s)) for (const pid of s.acts[id]?.members ?? []) if (s.persons[pid]?.alive && stressOf(s, pid).short >= 26) n++;
   n = Math.min(3, n);
-  if (n) post(s, `conn29med:${s.year}:${s.month}`, -Math.round(money(s, 250 * n) * K()), 'artist_dev', `Terapia e médico (${n} do elenco)`);
+  if (n) post(s, `conn29med:${s.year}:${s.month}`, -Math.round(money(s, 300 * n) * K()), 'artist_dev', `Terapia e médico (${n} do elenco)`);
 });
 
 // ================================================================ grupo 2 (o resto que deve existir)
@@ -236,6 +236,8 @@ registerSimHook('month', 'conn29', (s: GameState) => {
 //  vida      → submundo    gente nervosa fala demais: exposição maior nos crimes com o ato
 //  contratos → reputação   ato que desconfia do selo fala mal: reputação com artistas cai (mensal)
 //  prêmios   → ao vivo     prêmio recente enche casa (demanda na cidade)
+/** piso das quedas mensais de reputação vindas destas arestas */
+const PISO29 = 35;
 const avgStress = (s: GameState, a: Act) => { const ms = a.members.filter((id) => s.persons[id]?.alive); return ms.length ? ms.reduce((t, id) => t + stressOf(s, id).short, 0) / ms.length : 0; };
 const recentGood = (s: GameState, a: Act) => a.releases.map((id) => s.releases[id]).filter((r) => r && s.week - r.week <= 12 && !r.reissueOf).reduce((m, r) => Math.max(m, r!.q), 0);
 
@@ -302,7 +304,9 @@ GRAMO_ADJ.push((s, relId) => {
 
 registerSimHook('month', 'conn29b', (s: GameState) => {
   const r = s.player.reputation;
-  if (on('caixa_rep') && freeCash20(s) < 0) { r.commercial = Math.max(0, r.commercial - 0.5 * K()); r.artists = Math.max(0, r.artists - 0.7 * K()); }
+  // sem espiral: essas quedas mensais nunca levam a reputação abaixo de PISO29 (reputação com artistas pesa nas propostas)
+  const down = (v: number, d: number) => (v > PISO29 ? Math.max(PISO29, v - d * K()) : v);
+  if (on('caixa_rep') && freeCash20(s) < 0) r.commercial = down(r.commercial, 0.5);
   const pub = staffSkill(s, 'publicist');
   if (on('sede_rep') && pub > 0) r.commercial = Math.min(100, r.commercial + (pub / 300) * K()); // sede → reputação
   for (const id of playerActs(s)) {
@@ -310,9 +314,9 @@ registerSimHook('month', 'conn29b', (s: GameState) => {
     if (!a) continue;
     if (on('sede_fama') && pub > 0) a.fame = Math.min(100, a.fame + (pub / 150) * (1 - a.fame / 100) * K());
     if (on('vida_fama') && avgStress(s, a) >= 22) a.momentum = Math.max(0, a.momentum - 3 * K()); // vida → fama: banda esgotada perde embalo
-    if (on('vida_rep') && avgStress(s, a) >= 26) r.artists = Math.max(0, r.artists - 0.5 * K()); // vida → reputação: "selo que esgota artistas"
+    if (on('vida_rep') && avgStress(s, a) >= 26) r.artists = down(r.artists, 0.3); // vida → reputação: "selo que esgota artistas"
     if (on('vida_contratos') && avgStress(s, a) >= 22) a.trust = Math.max(0, a.trust - 1.5 * K());
-    if (on('contratos_rep') && a.trust < 30) r.artists = Math.max(0, r.artists - 1 * K());
+    if (on('contratos_rep') && a.trust < 30) r.artists = down(r.artists, 0.4);
   }
 });
 
