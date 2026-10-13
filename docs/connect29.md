@@ -164,7 +164,31 @@ Consertos (cada um mínimo e aditivo):
 - R6 falecido mostrado como integrante atual; R7 compositor inexistente; R7m crédito a quem já tinha saído;
 - R8 identidade partida (mesma pessoa real em duas Pessoas); R9 índice nome → pessoa velho.
 
-ANTES_DEPOIS_AQUI
+Totais nas 80 medições (antes = base friendly-brown com as vistas antigas; depois = r29-connect):
+
+| código | o que é | antes | depois |
+|---|---|---|---|
+| R1 | real em banda real sem registro | 0 | 0 |
+| R2c | ex-integrante fora de Carreira → Atos | **9083** | **0** |
+| R2a | ex-integrante fora de Alma → Bandas (bio) | **8126** | **0** |
+| R2t | ex-integrante fora da Trajetória | 0 | 0 |
+| R3 | ato de carreira cuja página não lista a pessoa | — | 0 |
+| R4 | datas impossíveis (passagem invertida, entrada antes de nascer) | **78** | **0** |
+| R5 | parentesco assimétrico / romance órfão | 0 | 0 |
+| R6 | falecido mostrado como integrante atual | **302** | **0** |
+| R7 | compositor(a) inexistente | **48** | **0** |
+| R7m | crédito para quem já tinha saído antes de compor | (não medido) | **0** |
+| R8 | mesma pessoa real em duas Pessoas | **6** | **0** |
+| R9 | índice nome → pessoa velho | 26 no ano 0 (`r29c-0`, 20 mundos) | **0** |
+| R1s | troca simulada põe real em banda real (história alternativa; informativo) | 57 | 67 |
+| R3l | passagem só na crônica (log de formação não pegou; informativo, já coberto por connect29) | 106¹ | 103 |
+
+¹ Na base esse número era o "R3" antigo (mesma medida). R1s/R3l não são erros: são o que a simulação faz na história
+alternativa e o que o índice canônico já junta. Antes, por início (ano 0 / +6 anos): R2c 71/113 (1950), 143/237 (1962),
+670/830 (1975), 1346/1619 (1990), 1828/2226 (2005); R6 30 (1975) → 168 (2005) no ano 0. Depois: zero em todos os
+códigos de erro, em todos os inícios, mundos e nos dois instantes.
+
+Medido no commit 6283222 (antes do §1b e do merge); confirmação na cabeça final em `r29c-0` (40 medições): FINAL_AQUI.
 
 ## 6. Determinismo, golden e equilíbrio
 
