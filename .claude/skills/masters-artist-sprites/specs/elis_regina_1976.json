@@ -1,0 +1,33 @@
+{
+  "name": "Elis Regina",
+  "year": 1976,
+  "ref": "Anos 70 ('Falso Brilhante'): cabelo bem curto, sorriso largo ('Pimentinha'), cantando de microfone na mão.",
+  "body": {
+    "sex": "f",
+    "build": "female",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "pixie",
+    "color": "#2a1c14"
+  },
+  "face": {
+    "mouth": "grin",
+    "lips": "#b04a50",
+    "lashes": true,
+    "brow_style": "arched",
+    "cheeks": true
+  },
+  "top": {
+    "style": "dress",
+    "color": "#c83a3a"
+  },
+  "bottom": {
+    "style": "skirt_long",
+    "color": "#c83a3a"
+  },
+  "shoes": {
+    "color": "#2a2224"
+  },
+  "pose": "hand_mic"
+}

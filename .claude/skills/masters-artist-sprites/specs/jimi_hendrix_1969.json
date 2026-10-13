@@ -1,0 +1,47 @@
+{
+  "name": "Jimi Hendrix",
+  "year": 1969,
+  "seed": 11,
+  "ref": "Woodstock: jaqueta branca de franjas com contas azuis, lenço vermelho na cabeça, calça jeans boca de sino, Stratocaster branca tocada canhota.",
+  "body": {
+    "sex": "m",
+    "build": "slim",
+    "skin": "moreno"
+  },
+  "hair": {
+    "style": "afro",
+    "color": "#221814"
+  },
+  "hat": {
+    "style": "headband",
+    "color": "#d03a2a"
+  },
+  "face": {
+    "iris": "#1e1412",
+    "facial": "mustache",
+    "jaw": "narrow",
+    "eyes": "hooded"
+  },
+  "top": {
+    "style": "fringe_jacket",
+    "color": "#ece2cc",
+    "beads": "#3a6ac8",
+    "sleeve_fringe": true,
+    "necklace": "#d0a040"
+  },
+  "bottom": {
+    "style": "jeans",
+    "flare": true
+  },
+  "shoes": {
+    "color": "#3a2418",
+    "style": "boot"
+  },
+  "pose": "guitar_lefty",
+  "prop": {
+    "type": "electric",
+    "body": "#efe8d8",
+    "guard": "#ded8cc",
+    "neck": "#e0b070"
+  }
+}

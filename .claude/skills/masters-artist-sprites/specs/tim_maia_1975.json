@@ -1,0 +1,38 @@
+{
+  "name": "Tim Maia",
+  "year": 1975,
+  "ref": "Fase Racional (1975): só roupa branca (exigência da seita), black power cheio, barba e bigode, corpo grande; soul de microfone na mão.",
+  "body": {
+    "sex": "m",
+    "build": "stocky",
+    "skin": "moreno",
+    "head_rx": 10.8
+  },
+  "hair": {
+    "style": "afro",
+    "color": "#1e1612",
+    "size": 1.05
+  },
+  "face": {
+    "iris": "#1e1412",
+    "mouth": "open",
+    "lips": "#8a4a3a",
+    "facial": "beard",
+    "cheeks": true,
+    "jaw": "round",
+    "nose": "wide"
+  },
+  "top": {
+    "style": "open_shirt",
+    "color": "#f2eee4",
+    "chain": "#d0a040"
+  },
+  "bottom": {
+    "style": "flare",
+    "color": "#f2eee4"
+  },
+  "shoes": {
+    "color": "#f2eee4"
+  },
+  "pose": "hand_mic"
+}

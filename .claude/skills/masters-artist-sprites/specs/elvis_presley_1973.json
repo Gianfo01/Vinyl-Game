@@ -1,0 +1,51 @@
+{
+  "name": "Elvis Presley",
+  "year": 1973,
+  "seed": 3,
+  "ref": "Aloha from Hawaii: macacão branco de gola alta com águia americana em pedras vermelhas, azuis e douradas; cinto de águias douradas; capa com forro azul; óculos aviador dourados.",
+  "body": {
+    "sex": "m",
+    "build": "regular",
+    "skin": "#e6b48c",
+    "head_rx": 10.5
+  },
+  "hair": {
+    "style": "pompadour",
+    "color": "#16121a",
+    "size": 1.25,
+    "sideburns": 13
+  },
+  "face": {
+    "iris": "#2a2224",
+    "mouth": "open",
+    "lips": "#c07060",
+    "glasses": "aviator",
+    "glasses_color": "#d0a040",
+    "jaw": "round",
+    "cheeks": true
+  },
+  "top": {
+    "style": "jumpsuit",
+    "color": "#efebe2",
+    "pattern": "eagle",
+    "belt": "#d0a040",
+    "jewel": "#c03030"
+  },
+  "cape": {
+    "color": "#efebe2",
+    "lining": "#2a4ab0",
+    "eagle": true
+  },
+  "bottom": {
+    "style": "flare",
+    "color": "#efebe2",
+    "studs": [
+      "#d0a040",
+      "#c03030"
+    ]
+  },
+  "shoes": {
+    "color": "#efebe2"
+  },
+  "pose": "hand_mic"
+}

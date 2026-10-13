@@ -1,0 +1,60 @@
+{
+  "name": "Carmen Miranda",
+  "year": 1941,
+  "ref": "Baiana estilizada: turbante com frutas (bananas, uvas, cerejas), barriga de fora, colares e pulseiras, saia longa listrada, plataformas; batom vermelho e sorriso largo.",
+  "body": {
+    "sex": "f",
+    "build": "female",
+    "skin": "medio"
+  },
+  "hair": {
+    "style": "bob",
+    "color": "#1a1012"
+  },
+  "hat": {
+    "style": "turban_fruit",
+    "color": "#e88030"
+  },
+  "face": {
+    "iris": "#2a1a12",
+    "mouth": "grin",
+    "lips": "#c8283a",
+    "lashes": true,
+    "blush": "#e07a6a",
+    "brow_style": "arched"
+  },
+  "top": {
+    "style": "crop",
+    "color": "#d4363a",
+    "trim": "#f0c030",
+    "sleeves": "bare"
+  },
+  "bottom": {
+    "style": "skirt_long",
+    "color": "#e8dcc4",
+    "bands": [
+      "#d4363a",
+      "#2f9a5a",
+      "#3a5ab0",
+      "#f0c030"
+    ]
+  },
+  "shoes": {
+    "color": "#c02a2e"
+  },
+  "necklaces": [
+    "#f0c030",
+    "#d4363a",
+    "#2f9a5a"
+  ],
+  "earrings": "#f0c030",
+  "bangles": [
+    "#f0c030",
+    "#d4363a"
+  ],
+  "bangles_back": [
+    "#f0c030",
+    "#2f9a5a"
+  ],
+  "pose": "arm_up"
+}

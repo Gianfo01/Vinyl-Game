@@ -1,0 +1,34 @@
+{
+  "name": "Roberto Carlos",
+  "year": 1972,
+  "ref": "Anos 70: cabelo comprido ondulado com costeletas, preferência por azul e branco, romântico de microfone na mão.",
+  "body": {
+    "sex": "m",
+    "build": "regular",
+    "skin": "claro"
+  },
+  "hair": {
+    "style": "wavy_long",
+    "color": "#4a3020",
+    "size": 0.95
+  },
+  "face": {
+    "iris": "#3a2a22",
+    "mouth": "smile",
+    "nose": "long",
+    "smile_lines": true
+  },
+  "top": {
+    "style": "jacket_open",
+    "color": "#6ab0e0",
+    "shirt": "#f4f2ee"
+  },
+  "bottom": {
+    "style": "flare",
+    "color": "#f4f2ee"
+  },
+  "shoes": {
+    "color": "#f4f2ee"
+  },
+  "pose": "hand_mic"
+}
