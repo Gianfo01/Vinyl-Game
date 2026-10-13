@@ -3,7 +3,7 @@
 // processo) e determinismo. Ver docs/integrante29.md.
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
-import { acceptOffer, defaultOffer, evaluateOffer } from '../src/sim/contracts';
+import { acceptOffer, defaultOffer, evaluateOffer, makeOffer } from '../src/sim/contracts';
 import { advanceWeek } from '../src/sim/tick';
 import type { Act, GameState } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
@@ -239,5 +239,20 @@ describe('R29 — oferta a um integrante específico', () => {
     s.persons[pid].alive = false;
     expect(ctxMenu27(s, 'person', `p:${pid}`)?.items.find((x) => x.id === 'person.offer29')?.block?.pt ?? 'sem item').toMatch(/Faleceu|sem item/);
   }, 60_000);
+  it('proposta que fica pendente (fecha no fim do mês): o gancho semanal conclui ou desfaz sozinho', () => {
+    const s = game('r29mo-k');
+    const band = freeBand(s);
+    const pid = band.members[1];
+    const r = startMemberSolo29(s, pid, 'free') as { actId: string };
+    const o = makeOffer(s, { ...defaultOffer(s, s.acts[r.actId]), advance: 0 });
+    expect(o).toBeTruthy();
+    for (let i = 0; i < 10 && mo29(s).sh[r.actId]; i++) advanceWeek(s);
+    expect(mo29(s).sh[r.actId]).toBeUndefined();
+    const solo = s.acts[r.actId];
+    if (solo?.owner) {
+      expect(s.acts[band.id].members).not.toContain(pid);
+      expect(careerActs29(s, pid).find((x) => x.act.id === band.id)?.current).toBe(false);
+    } else expect(s.acts[band.id].members.includes(pid) || !solo).toBe(true);
+  }, 120_000);
 });
 

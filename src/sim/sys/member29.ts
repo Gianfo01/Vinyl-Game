@@ -214,7 +214,9 @@ export function startMemberSolo29(s: GameState, pid: string, mode: MoMode29): { 
 }
 
 function discard(s: GameState, id: string, sh: Shell29): void {
-  delete s.acts[id]; delete s.soloOf[id]; delete s.delegated[id]; delete s.knowledge[id];
+  const a = s.acts[id];
+  if (a && (a.songs.length || a.releases.length)) { a.status = 'split'; a.careerEnd = s.year; } // já tem obra (proposta que demorou semanas): vira solo encerrado, nada fica órfão
+  else { delete s.acts[id]; delete s.soloOf[id]; delete s.delegated[id]; delete s.knowledge[id]; }
   actsTouched17(s);
   delete (s.agenda as Record<string, unknown>)[id];
   s.offers = s.offers.filter((o) => o.actId !== id);
