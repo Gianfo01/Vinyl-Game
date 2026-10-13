@@ -25,6 +25,7 @@ import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
 import { takeoverTerms, type TakeoverTerms } from './takeover';
 import { runSimHooks } from './ext4';
+import { LB29, labelsOn29 } from './labels29gate'; // r29: gravadoras escolhidas na Nova run
 
 export const SAVE_VERSION = 6;
 /** r27 (F): modelo histórico novo (passagens, laços com período, apelidos, composição, procedência) — saves anteriores
@@ -123,7 +124,7 @@ function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
   const later = future === 'none' ? [] : future === 'all' ? pool.filter((d) => d.founded > startY) : chosen.filter((d) => d.founded > startY);
   const want = set.count === undefined ? now.length : Math.max(0, Math.min(LABELS_MAX22, Math.round(set.count)));
   if (now.length > want) now = r.shuffle([...now]).slice(0, want).sort((a, b) => a.founded - b.founded);
-  else if (now.length < want) {
+  else if (now.length < want && !labelsOn29(cfg)) { // r29: com gravadoras escolhidas, o que falta é inventado na época (LB29.gen)
     const extra = r.shuffle(pool.filter((d) => d.founded <= startY && !now.includes(d)));
     now = [...now, ...extra.slice(0, want - now.length)];
   }
@@ -139,6 +140,8 @@ function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
   }
   // faltou gente (lista curta para o número pedido): selos genéricos fundados há poucos anos
   for (let i = Object.values(s.labels).filter((x) => x.founded <= startY).length; i < want; i++) {
+    const g29 = LB29.gen?.(s, cfg, i); // r29: nome, praça e porte da época (sorteio próprio)
+    if (g29) { makeLabel(s, r, { id: 'gen' + i, ...g29, focus: [] }, true); continue; }
     const city = r.pick(['new_york', 'london', 'paris', 'berlin', 'rio', 'buenos_aires', 'los_angeles', 'tokyo', 'sao_paulo', 'mexico_city']);
     let name = `${r.pick(PROC_A)} ${r.pick(PROC_B)}`;
     while (Object.values(s.labels).some((x) => x.name === name)) name = `${r.pick(PROC_A)} ${r.pick(PROC_A)} ${r.pick(PROC_B)}`;
@@ -302,6 +305,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 
 export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): GameState {
   normalizeHistory(cfg);
+  LB29.prep?.(cfg); // r29: gravadoras escolhidas (quais e quantas) viram a lista da partida; sem labels29 não faz nada
   applyRealNames(!!cfg.realNames);
   const startDay = 0;
   const s: GameState = {

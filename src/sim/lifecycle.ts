@@ -1,6 +1,7 @@
 // Pessoas e atos ao longo do tempo: estados, crescimento, bandas, carreira em 3 eixos,
 // aposentadoria, ato fênix, surgimento do catálogo e atos procedurais (GDD §5.3, §9, §19).
 
+import { LB29 } from './labels29gate';
 import { clamp, type Rng } from '../core/rng';
 import { CITIES, MARKETS, l } from '../data/world';
 import { REAL_CLASSIC } from '../data/realacts_classic';
@@ -230,6 +231,7 @@ export function prune(s: GameState): void {
 }
 
 export function newRivalLabel(s: GameState, r: Rng): void {
+  if (LB29.newRival?.(s)) return; // r29: com gravadoras escolhidas, os selos novos vêm do sorteio próprio (labels29start)
   const active = Object.values(s.labels).filter((x) => x.active).length;
   if (active >= 14 || !r.chance(0.08)) return;
   const city = r.pick(CITIES.filter((c) => MARKETS.find((m) => m.id === c.market)!.size(s.year) > 0.2));
