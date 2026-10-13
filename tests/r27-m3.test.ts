@@ -205,4 +205,7 @@ describe('r27 M3 — operações jogáveis do Submundo', () => {
 
 // r27 INT: rebaselinado depois dos merges do mundo; commitCrime com e sem a linha do dq (o único toque do M3 no
 // modo rápido) dá o mesmo resultado neste mundo (4 sementes conferidas).
-const QUICK_SNAPSHOT: string[] = ["10:0.70/0.22:10331206", "00:0.70/0.16:9926500"];
+// R28/R29: re-medido depois das mudanças intencionais do mundo (F3 mundo inicial pela cena, F5 rivais, formações reais,
+// F8 reputação de selo, R29 conexões). Antes: "10:0.70/0.22:10331206", "00:0.70/0.16:9926500". A garantia do teste
+// (com e sem a linha do dq dá o mesmo resultado) segue no expect logo acima do snapshot.
+const QUICK_SNAPSHOT: string[] = ["10:0.70/0.22:10331957", "10:0.70/0.22:10332304"];
