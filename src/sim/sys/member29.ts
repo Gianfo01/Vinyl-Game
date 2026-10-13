@@ -25,7 +25,7 @@ import { fileLawsuit } from '../business';
 import { defaultOffer, evaluateOffer, expectedAdvance } from '../contracts';
 import { soloActFrom29 } from '../dynasty';
 import { registerExt4, registerOfferMod, registerSimHook } from '../ext4';
-import { emitFact } from '../facts17';
+import { emitFact, onFact } from '../facts17';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import type { Act, GameState, Label, Person } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
@@ -679,3 +679,14 @@ registerSimHook('week', 'member29', (s) => {
   if (st.sh && Object.keys(st.sh).length) settleMember29(s);
   if (st.staff) for (const pid of Object.keys(st.staff)) if (l16(s).free[pid]) delete l16(s).free[pid];
 });
+
+// R29 (infra): a troca de integrante vira assunto — a imprensa e o público olham para quem chega. O ato que recebe
+// ganha embalo proporcional à manchete (fama da banda de origem); a banda de origem já perdeu moral/embalo no acerto.
+// Puro (sem sorteio): só lê o fato.
+for (const kind of ['member_solo', 'member_join'] as const) {
+  onFact(kind, (s, f) => {
+    const to = s.acts[f.actors[2] ?? ''];
+    if (!to || to.status === 'retired' || to.status === 'split') return;
+    to.momentum = clamp(to.momentum + Math.round(f.severity / 12), 0, 100);
+  });
+}
