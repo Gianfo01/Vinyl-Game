@@ -13,6 +13,7 @@
 //  R6  falecido(a) mostrado(a) como integrante atual de ato ativo; morte antes do nascimento; vivo com ano de morte
 //  R7  autoria: compositor(a) inexistente, ou música do lançamento de outro ato
 //  R8  identidade partida: a mesma pessoa real (nome canônico) em duas Pessoas diferentes
+//  R9  índice nome → pessoa (rw.pid) apontando para alguém com outro nome (a causa raiz do caso Roger Waters)
 import { HOMONYMS27 } from '../data/model27';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { REAL_ACTS } from '../data/realnames';
@@ -162,6 +163,8 @@ export function audit29(s: GameState): Finding29[] {
     }
     for (const [k, xs] of by) if (xs.length > 1) add('R8', `${k}: ${xs.length} pessoas (${xs.join(', ')})`);
   }
+  // R9 — índice velho
+  for (const [k, id] of Object.entries(st.pid ?? {})) { const p = s.persons[id]; if (p && canonKey(p.name) !== k) add('R9', `índice "${k}" → ${p.name}`); }
   return out;
 }
 
