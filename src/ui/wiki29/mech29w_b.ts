@@ -13,6 +13,7 @@ import { MOD_CAP18, PERK_CAP18 } from '../../sim/caps18';
 import { STREAM_PAYOUT17 } from '../../sim/market';
 import { PRODUCTION_COST, TICKET } from '../../sim/tours';
 import { TEAM_FROM18 } from '../../sim/sys/fans18';
+import { FEAT_MAX_P29 } from '../../sim/sys/featp29';
 import { STAND_KEYS, STAND_NAME } from '../../sim/sys/standing9';
 
 // dólares reais (2020) — as tabelas guardam dólares, não centavos
@@ -42,6 +43,8 @@ export const MECH_B: MechArt29[] = [
         'No lançamento você escolhe formatos, tiragem, territórios e marketing. O apelo do disco é calculado UMA vez, na estreia; o que muda depois só pesa nas vendas semanais. Toda semana o mercado divide uma demanda finita entre todos os lançamentos vivos e monta as paradas.',
         'At release you pick formats, pressing, territories and marketing. The record\'s appeal is computed ONCE, at launch; anything that changes later only affects weekly sales. Every week the market splits a finite demand among all live releases and builds the charts.',
       ),
+      l('Participação (feat.): convide um ato inteiro, UMA pessoa específica (integrante, solista, músico avulso, produtor que canta ou toca), até 4 pessoas ou um ato + pessoas. O crédito sai com o nome: "Música (feat. Freddie Mercury)". É a mesma negociação de sempre (cachê, royalties da faixa, liberação do selo), aberta pela tela do feat ("Ato inteiro / Pessoa(s) específica(s)"), pelo clique direito na pessoa (Música e projetos › "Convidar {nome} para um feat…") ou pela [[glossario:oferta-a-integrante]].',
+        'Feature (feat.): invite a whole act, ONE specific person (band member, solo artist, freelance musician, producer who sings or plays), up to 4 people or an act + people. The credit carries the name: "Song (feat. Freddie Mercury)". It is the usual negotiation (fee, track royalties, label clearance), opened from the feat screen ("Whole act / Specific person(s)"), by right-clicking the person (Music and projects › "Invite {name} to a feat…") or through the [[glossario:oferta-a-integrante]].'),
     ],
     inputs: [
       l('Talento de composição e letra, inspiração (cai 8 pontos por música escrita).', 'Writing and lyric talent, inspiration (drops 8 points per song written).'),
@@ -97,8 +100,11 @@ export const MECH_B: MechArt29[] = [
         'Produtor real: jantar no estúdio dele custa US$ 900 (DINNER_COST, producers15) e só pode ser repetido a cada 26 semanas; com opinião −35 ou pior ele recusa o trabalho.',
         'Real producer: dinner at his studio costs $900 (DINNER_COST, producers15) and can only be repeated every 26 weeks; at opinion −35 or worse he refuses the job.',
       ),
+      l('Feat de pessoa: cachê = cachê pela fama da pessoa × (0,85 + habilidade/400), somado por convidado; performance da faixa por pessoa com pesos 1 / 0,6 / 0,4 / 0,3, teto +12; apelo até +20% pela fama das pessoas; público cruzado vem dos fãs da banda dela, reduzido. A liberação passa pelo selo de cada banda (rivalidade acima de 60 bloqueia), e os colegas de banda reagem com ciúme (−2) ou orgulho (+1 se você é bem maior). Bloqueado: falecido, menor de 14 anos, produtor que não canta nem toca, fora de atividade ou já seu.',
+        'Person feat: fee = fee by the person\'s fame × (0.85 + skill/400), summed per guest; track performance per person with weights 1 / 0.6 / 0.4 / 0.3, cap +12; appeal up to +20% from the people\'s fame; fan crossover comes from their band\'s fans, scaled down. Clearance goes through each band\'s label (rivalry above 60 blocks), and bandmates react with jealousy (−2) or pride (+1 if you are much bigger). Blocked: dead, under 14, a producer who neither sings nor plays, inactive or already yours.'),
     ],
     tips: [
+      l('Quer a voz de uma banda sem pagar pela banda toda? Feat de pessoa: o cachê segue a fama da PESSOA e a habilidade conta (voz de quem canta, instrumento de quem toca).', 'Want one band\'s voice without paying for the whole band? A person feat: the fee follows THEIR fame and skill counts (voice for singers, instrument for players).'),
       l('Grave quando a banda estiver descansada: estresse alto custa 6% de nota em toda faixa.', 'Record when the band is rested: high stress costs 6% grade on every track.'),
       l('Espaçe os discos. Dois por ano já começam a se canibalizar.', 'Space out releases. Two a year already start cannibalizing each other.'),
       l('Tudo que mexe no apelo precisa estar pronto antes da estreia: depois, só as vendas semanais mudam.', 'Anything that affects appeal must be ready before launch: afterwards only weekly sales change.'),
@@ -109,6 +115,7 @@ export const MECH_B: MechArt29[] = [
     see: ['mech:fame', 'mech:contracts', 'mech:money', 'mech:press', 'glossario:apelo', 'glossario:nota-q'],
     nums: () => {
       const rows: [ReturnType<typeof l>, string][] = [];
+      rows.push([l('Feat: pessoas convidadas por faixa (máx.)', 'Feat: invited people per track (max)'), String(FEAT_MAX_P29)]);
       for (const t of STUDIO_TIERS.slice(1)) rows.push([t.name, `${usd(t.cost)} · +${t.production}`]);
       rows.push([l('Abordagens (custo)', 'Approaches (cost)'), APPROACHES.map((a) => `${a.costMult}×`).join(' / ')]);
       rows.push([l('Jabá: pacotes', 'Payola: packages'), PAYOLA_TIERS.map((t) => usd(t.real)).join(' / ')]);
@@ -116,7 +123,7 @@ export const MECH_B: MechArt29[] = [
       rows.push([l('Teto suave de bônus de nota (joelho)', 'Soft cap on grade bonuses (knee)'), `+${pct(MOD_CAP18.songQ.knee)}`]);
       return rows;
     },
-    docs: ['docs/connect29.md', 'docs/econ18.md'],
+    docs: ['docs/connect29.md', 'docs/econ18.md', 'docs/feat29.md'],
   },
 
   // ------------------------------------------------------------------------------------------------ ao vivo

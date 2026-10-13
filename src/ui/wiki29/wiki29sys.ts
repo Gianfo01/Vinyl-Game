@@ -9,7 +9,7 @@ export const SYS_OF_MECH29: Record<string, string[]> = {
   scouting: ['scout11', 'scout23', 'dossier8', 'discover18', 'talent', 'ability18', 'schools19', 'tv18', 'contests19', 'kpop18', 'idols18', 'school18'],
   music: ['music', 'creation', 'quality18', 'traj18', 'sound', 'recipe12', 'project8', 'project12', 'project13', 'compose27', 'camp27', 'session18', 'session19', 'camps18', 'writers19', 'remix19',
     'charts7', 'world4', 'warmup8', 'relevance8', 'explain8', 'review18', 'mkt18', 'stream18', 'radio18', 'media18', 'outlets17', 'supply18', 'songsale', 'songmkt27', 'rights8', 'rights18',
-    'reach17', 'trends17', 'revival19', 'sync15', 'adsync19', 'score19', 'instruments', 'ai18', 'market19a', 'gear19'],
+    'reach17', 'trends17', 'revival19', 'sync15', 'adsync19', 'score19', 'instruments', 'ai18', 'market19a', 'gear19', 'featp29'],
   live: ['live', 'live18', 'live19', 'route8', 'fests8', 'fest18', 'venues17', 'venues27', 'clash17', 'circuit17', 'circuits18', 'showops20', 'road27', 'merch17', 'crew8', 'deleg16', 'charity19', 'naming19'],
   fame: ['fame15', 'fame16', 'fan15', 'fans18', 'audience8', 'hype12', 'notoriety14', 'novelty9', 'terr20', 'social8', 'bonds9'],
   reputation: ['identity', 'standing9', 'sat19', 'culture19', 'wins19'],

@@ -17,7 +17,8 @@ Resumo:
   (86 kB gzip) e 7,4 kB de CSS. O jogo continua com o mesmo código; dividir em dois pacotes custou +58 kB no total de JS do
   jogo (+29 kB gzip), porque nomes exportados entre pedaços não são encurtados.
 - Atualizado depois com as frentes novas do base: **nível dos rivais** (`rivals29`, artigo Escada de início) e **oferta a
-  um integrante** (`member29`, artigo Contratos), com verbetes no glossário.
+  um integrante** (`member29`, artigo Contratos) e **feat de pessoa específica** (`featp29`, artigo Projetos), com verbetes no
+  glossário.
 - `tests/r29-wiki.test.ts`: 19 testes verdes. `r29-reorg`, `r27-ux`, `r27-ctx` e `r29-fixes` continuam verdes.
 - Capturas: `docs/shots29wiki/` (16 telas × computador 1440×900 e celular 390×844).
 
