@@ -10,7 +10,7 @@ import { availableProducers } from '../src/sim/studio';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { Rng } from '../src/core/rng';
-import { rw } from '../src/sim/sys/realworld';
+import { IDENT_CAP27, rw } from '../src/sim/sys/realworld';
 import { DEST18, career18, courtNewcomer18, destWeights18, genProds18, secondCareer18, w18, type Dest18 } from '../src/sim/sys/world18';
 import { dependence18, mind18, observed18, rm18 } from '../src/sim/sys/rivalmind18';
 import type { Act, GameState } from '../src/sim/types';
@@ -28,7 +28,11 @@ describe('r18 world18', () => {
   it('história alternativa: só o modo exato agenda fatos reais depois do início', () => {
     const alt = mk('w18h', { history: 'loose', mode: 'free' });
     const ex = mk('w18h', { history: 'strict', mode: 'historic', realFates: true });
-    expect(rw(alt).sched.filter((x) => x.year >= 1980).length).toBe(0);
+    // R28 (formações reais): fora do modo exato só se agenda a formação de identidade (trocas de integrante até a
+    // formação clássica, no máximo 10 anos depois da estreia, marcadas `lin`) — nenhum outro fato real depois do início
+    const late = rw(alt).sched.filter((x) => x.year >= 1980);
+    expect(late.every((x) => x.lin && (x.kind === 'join' || x.kind === 'leave'))).toBe(true);
+    expect(late.every((x) => x.year <= 1980 + 2 + IDENT_CAP27)).toBe(true);
     expect(rw(ex).sched.filter((x) => x.year >= 1980).length).toBeGreaterThan(0);
     expect(scriptedReal(alt, 1979)).toBe(true);
     expect(scriptedReal(alt, 1985)).toBe(false);

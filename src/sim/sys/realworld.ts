@@ -394,7 +394,11 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     // Ringo juntos em jan/1962), e fora do modo exato a "formação clássica" entrava já no início.
     // Trocas agendadas: no modo exato, todas; nos outros, só as da formação de identidade (até a estreia ou, se a banda
     // cresceu depois, até a formação clássica) — depois disso o futuro é da simulação.
-    const identY = fates ? Infinity : identityYear27(d.m, d.d ?? debut - shift) + shift;
+    // R28: a janela de identidade tem teto de 10 anos depois da estreia — o "maior elenco até 2030" pegava reuniões
+    // tardias (Rush + Anika Nilles em 2026, volta de Jermaine aos Jacksons em 1983) e agendava fatos reais décadas depois
+    // do início na história alternativa. Formações clássicas da 1ª década (Nickelback + Daniel Adair, 9 anos) seguem.
+    const debY27 = d.d ?? debut - shift;
+    const identY = fates ? Infinity : Math.min(identityYear27(d.m, debY27), debY27 + IDENT_CAP27) + shift;
     const canSched = (y: number) => (fates ? s.config.mode !== 'chaos' : y <= identY);
     const lin = fates ? {} : { lin: 1 as const };
     const shifted = (m: RealMember) => periodsOf(m).map(([a, b]) => [a !== undefined ? a + shift : undefined, b !== undefined ? b + shift : undefined] as RealPeriod);
@@ -526,6 +530,9 @@ export function classicLineup25(m: RealMember[], debut: number): Set<number> | u
 
 /** r27 (LIN): último ano das trocas de formação roteirizadas fora do modo exato — a estreia ou, quando a banda cresceu
  *  depois (classicLineup25), o primeiro ano da formação clássica. */
+/** Anos depois da estreia em que a formação de identidade ainda se agenda fora do modo exato (R28). */
+export const IDENT_CAP27 = 10;
+
 export function identityYear27(m: RealMember[], debut: number): number {
   const deb = m.filter((x) => inLineupAt(x, debut)).length;
   let best = 0, at = debut;
