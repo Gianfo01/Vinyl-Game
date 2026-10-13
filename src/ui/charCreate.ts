@@ -15,8 +15,11 @@ import { ROLE_NAMES, type Role } from '../sim/sys/talent/attrs';
 import type { Appearance, CharacterSpec, RunConfig } from '../sim/types';
 import { cityName } from './common';
 import { h, select } from './dom';
-import { appearanceEditor, fitLookToSex, type Sex } from './pixel/editor';
+import { appearanceEditor, type Sex } from './pixel/editor';
 import { helpTip, hl, traitFx, traitPicker } from './newgame13';
+import { rolesOpen29, setCharAge29, setCharName29, setExtraRoles29, setMainRole29 } from '../sim/char29data'; // r29: mesmos setters da Nova run rápida
+import { setCharSex29, toggleExtra29 } from './ps/char29model';
+import { roleChips29 } from './ps/char29';
 
 /** Rodada 17: orientação, armário, filhos e estado civil no começo do jogo (efeitos explicados ao lado). */
 export function lifeRow17(ch: CharacterSpec): HTMLElement {
@@ -58,8 +61,12 @@ export function identityCard22(cfg: RunConfig, onChange: () => void): HTMLElemen
   const fake: { id: string; role: Role; look?: Appearance } = { id: 'player-new', role: ch.role ?? 'guitar', look: ch.look };
   const lookBox = h('div', { class: 'ng-look' });
   const drawLook = () => lookBox.replaceChildren(appearanceEditor(fake, (look) => { ch.look = look; fake.look = look; }, cfg.startYear, ch.sex));
-  const roles: Role[] = ['vocal', 'guitar', 'bass', 'drums', 'keys', 'horns', 'strings', 'dj', 'producer', 'mc'];
-  const roleSel = select<Role>(ch.role ?? 'guitar', roles.map((r) => ({ value: r, label: t(ROLE_NAMES[r]) })), (v) => { ch.role = v; fake.role = v; drawLook(); });
+  // r29: funções abertas na época (sem DJ/MC/produtor antes de existirem; a atual fica na lista) + até 2 extras (3 instrumentos)
+  const roles: Role[] = [...rolesOpen29(cfg.startYear)];
+  if (ch.role && !roles.includes(ch.role)) roles.push(ch.role);
+  const chips = roleChips29({ year: () => cfg.startYear, main: () => ch.role ?? 'guitar', extras: () => ch.roles27 ?? [],
+    toggle: (r) => { const a = { role: ch.role ?? 'guitar', extra: [...(ch.roles27 ?? [])] }; toggleExtra29(a, r, cfg.startYear); setExtraRoles29(ch, a.extra, cfg.startYear); } });
+  const roleSel = select<Role>(ch.role ?? 'guitar', roles.map((r) => ({ value: r, label: t(ROLE_NAMES[r]) })), (v) => { setMainRole29(ch, v, cfg.startYear); fake.role = ch.role ?? v; chips.draw(); drawLook(); });
   const pathInfo = h('div', { class: 'ng22-path-info small' });
   const drawPath = () => {
     const cur = originById[careerOfSpec(ch)];
@@ -74,6 +81,8 @@ export function identityCard22(cfg: RunConfig, onChange: () => void): HTMLElemen
   const pathSel = select<string>(careerOfSpec(ch), ORIGINS.map((o) => ({ value: o.id, label: t(o.name) })), (id) => {
     const o = originById[id as keyof typeof originById];
     ch.career = o.id; ch.background = o.bg; const r = backgroundById[o.bg].role; ch.role = r; fake.role = r; roleSel.value = r;
+    if (ch.roles27) setExtraRoles29(ch, ch.roles27, cfg.startYear); // r29: a nova principal sai das extras
+    chips.draw();
     drawPath(); drawLook(); onChange();
   }, { class: 'cc-path-sel', 'aria-label': t(l('Trajetória profissional', 'Professional path')) });
 
@@ -95,15 +104,14 @@ export function identityCard22(cfg: RunConfig, onChange: () => void): HTMLElemen
       h('div', { class: 'ng22-you-main' },
         grp(l('Identidade', 'Identity'),
           h('div', { class: 'ng22-row' },
-            h('label', { class: 'ng22-grow' }, ...hl(l('Nome', 'Name'), 'identity'), h('input', { type: 'text', value: ch.name, placeholder: t(l('(gerado)', '(generated)')), maxlength: 40, oninput: (e: Event) => (ch.name = (e.target as HTMLInputElement).value) })),
+            h('label', { class: 'ng22-grow' }, ...hl(l('Nome', 'Name'), 'identity'), h('input', { type: 'text', value: ch.name, placeholder: t(l('(gerado)', '(generated)')), maxlength: 40, oninput: (e: Event) => setCharName29(ch, (e.target as HTMLInputElement).value) })),
             h('label', null, t(l('Apelido', 'Nickname')), h('input', { type: 'text', value: ch.nickname ?? '', maxlength: 24, placeholder: t(l('opcional', 'optional')), oninput: (e: Event) => (ch.nickname = (e.target as HTMLInputElement).value) }))),
           h('div', { class: 'ng22-row' },
             h('label', null, t(l('Sexo', 'Sex')), select<Sex>(ch.sex ?? 'x', SEXES.map((x) => ({ value: x.id, label: t(x.name) })), (v) => {
-              ch.sex = v; ch.pronoun = pronounOf(v);
-              if (ch.look) { ch.look = fitLookToSex(ch.look, v); fake.look = ch.look; }
+              setCharSex29(ch, v); fake.look = ch.look; // r29: o mesmo setter da Nova run rápida
               drawLook();
             })),
-            h('label', null, t(l('Idade', 'Age')), h('input', { type: 'number', min: 18, max: 70, value: ch.age, oninput: (e: Event) => (ch.age = Math.max(18, Math.min(70, Number((e.target as HTMLInputElement).value) || 30))) })),
+            h('label', null, t(l('Idade', 'Age')), h('input', { type: 'number', min: 18, max: 70, value: ch.age, oninput: (e: Event) => setCharAge29(ch, Number((e.target as HTMLInputElement).value)) })),
             h('label', null, ...hl(l('Cidade natal', 'Hometown'), 'hometown'), select(ch.hometown ?? '', [{ value: '', label: t(l('(a cidade da sede)', '(the HQ city)')) }, ...cities.map((c) => ({ value: c.id, label: cityName(c.id) }))], (v) => (ch.hometown = v || undefined))))),
         grp(l('Trajetória — como você entrou na indústria', 'Path — how you got into the industry'),
           h('div', { class: 'ng22-row' }, h('label', { class: 'ng22-grow' }, ...hl(l('Trajetória', 'Path'), 'path'), pathSel)),
@@ -112,7 +120,9 @@ export function identityCard22(cfg: RunConfig, onChange: () => void): HTMLElemen
           h('div', { class: 'ng22-row' },
             h('label', null, ...hl(l('Instrumento principal', 'Main instrument'), 'instrument'), roleSel),
             h('label', null, ...hl(l('Gênero do coração', 'Favourite genre'), 'favGenre'), select(ch.favGenre ?? '', [{ value: '', label: t(l('(nenhum)', '(none)')) }, ...genres.map((g) => ({ value: g.id, label: t(g.name) }))], (v) => (ch.favGenre = v || undefined))),
-            h('label', null, ...hl(l('Visual', 'Look'), 'visual'), select(ch.visual ?? 'casual', VISUALS.map((v) => ({ value: v.id, label: `${t(v.name)} — ${t(v.desc)}` })), (v) => { ch.visual = v; onChange(); })))),
+            h('label', null, ...hl(l('Visual', 'Look'), 'visual'), select(ch.visual ?? 'casual', VISUALS.map((v) => ({ value: v.id, label: `${t(v.name)} — ${t(v.desc)}` })), (v) => { ch.visual = v; onChange(); }))),
+          // r29: até 3 instrumentos (a principal + 2), os mesmos chips da Nova run rápida
+          h('div', { class: 'ng22-row ng29-roles' }, h('div', { class: 'ng22-grow' }, h('b', { class: 'small' }, t(l('Também toca ou canta', 'Also plays or sings'))), chips.el))),
         grp(l('Vida pessoal e crenças', 'Personal life and beliefs'),
           lifeRow17(ch),
           h('div', { class: 'ng22-row' }, h('label', null, ...hl(l('Visão política', 'Political view'), 'beliefs'), polSel), h('label', null, t(l('Religião', 'Religion')), relSel)),

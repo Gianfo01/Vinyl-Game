@@ -31,6 +31,9 @@ import { CAREER_SHORT27, DIFFS27, careerOpen27, clampYear27, quickDefaults27, qu
 import { achBadge27, homeAch27 } from '../ach27';
 import { profAchCount27 } from '../ach27store';
 import './home27.css';
+import { quickCharBlock29 } from './char29'; // r29: "Seu personagem" (nome, idade, sexo, instrumentos e banda)
+import { charLine29, isArtist29 } from './char29model';
+import { clampAge29 } from '../../sim/char29data';
 
 /** r27: arte da tela inicial e da Nova run = a sede em pixel art do próprio jogo (hqpx27), não ilustração externa. */
 const SHOW27: [number, number, string][] = [[2, 1966, 'london'], [3, 1984, 'new_york'], [1, 1956, 'memphis'], [4, 2008, 'sao_paulo'], [0, 1977, 'liverpool'], [3, 1995, 'rio'], [5, 2030, 'tokyo'], [2, 1929, 'chicago']];
@@ -277,7 +280,7 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
   // r28 (F4): ano de fim (o Recomendado sugere 25 anos; "Sem fim" = sandbox)
   const endF = endYearField28(() => q.startYear, () => q.runYears ?? REC_YEARS28, (v) => { q.runYears = v; }, 'h27-end');
   const cities = [...CITIES].sort((a, b) => cityName(a.id).localeCompare(cityName(b.id)));
-  const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; drawPrev(); }, { id: 'h27-city' });
+  const citySel = select(q.homeCity, cities.map((c) => ({ value: c.id, label: cityName(c.id) })), (v) => { q.homeCity = v; drawPrev(); charB.refresh(); drawStatus(); }, { id: 'h27-city' });
   // r29: situação inicial (escada zero → líder do mercado); o rótulo segue a carreira ("Artista hipster", "Produtor top 5"…)
   const status = h('p', { class: 'small h27-status', role: 'status', 'aria-live': 'polite' });
   const drawStatus = () => {
@@ -285,11 +288,13 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
     const st28 = pickStart28(q.seed);
     const rv = riv29ById(q.rivals29 ?? 'mix')!;
     const tag = labelsTag29({ seed: q.seed, startYear: q.startYear, careers: { main: [q.career] }, labels29: { n: q.labels29n, vn: q.labels29vn } } as RunConfig); // r29: "· 8 gravadoras"
-    status.replaceChildren(h('b', null, t(statusLine29(q.career, d.id, rv.id)), t(tag)), ' — ', h('span', { class: 'muted' }, t(d.fx)),
+    const c = q.char29, a = isArtist29(q.career) ? q.art29 : undefined; // r29: "Ana Souza, 22 · Vocal · Guitarra · …"
+    const who = c ? `${t(charLine29({ name: c.name, age: clampAge29(c.age), role: (a?.role ?? 'guitar') as never, roles27: a?.extra }, !!a))} · ` : '';
+    status.replaceChildren(h('b', null, who, t(statusLine29(q.career, d.id, rv.id)), t(tag)), ' — ', h('span', { class: 'muted' }, t(d.fx)),
       ...(rv.id !== 'mix' ? [h('span', { class: 'muted' }, ` · ${t(l('Rivais', 'Rivals'))}: ${t(rv.fx)}`)] : []),
       ...(start28Fits29(st28.id, d.id) ? [h('span', { class: 'muted' }, ` · ${t(l('Começo sorteado', 'Rolled start'))}: ${t(st28.name)}`)] : []));
   };
-  const startSel = select<Sit29>(sitNow(), SITS29.map((d) => ({ value: d.id, label: t(statusLabel29(q.career, d.id)) })), (v) => { q.start29 = v; q.scenario = sit29ById(v)!.base; drawPrev(); drawStatus(); }, { id: 'h27-start' });
+  const startSel = select<Sit29>(sitNow(), SITS29.map((d) => ({ value: d.id, label: t(statusLabel29(q.career, d.id)) })), (v) => { q.start29 = v; q.scenario = sit29ById(v)!.base; drawPrev(); charB.refresh(); drawStatus(); }, { id: 'h27-start' });
   // r29: nível dos rivais (mesma escada; "mistura realista" = o mundo de sempre)
   const rivSel = select<Riv29>(q.rivals29 ?? 'mix', RIVS29.map((d) => ({ value: d.id, label: t(d.name) })), (v) => { q.rivals29 = v === 'mix' ? undefined : v; drawStatus(); }, { id: 'h27-rivals' });
   // r29: gravadoras no início (atalho; o número sai da semente e respeita a era) e concorrentes da carreira
@@ -298,7 +303,9 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
   const venLab = h('span');
   const venField = h('label', { class: 'h27-field', for: 'h27-ven' }, venLab, venSel);
   const drawVen = () => { const vk = venKind29(q.career, q.startYear); venField.hidden = !vk; if (!vk) { q.labels29vn = undefined; venSel.value = ''; } else venLab.textContent = t(l(`Concorrentes no início (${vk.pt[1]})`, `Competitors at the start (${vk.en[1]})`)); };
-  afterCareer = () => { drawVen(); SITS29.forEach((d, i) => { const o = startSel.options[i]; if (o) o.textContent = t(statusLabel29(q.career, d.id)); }); drawStatus(); };
+  // r29: "Seu personagem" segue atividade, ano, cidade e situação enquanto nome e idade forem automáticos
+  const charB = quickCharBlock29(q, () => drawStatus());
+  afterCareer = () => { drawVen(); charB.refresh(); SITS29.forEach((d, i) => { const o = startSel.options[i]; if (o) o.textContent = t(statusLabel29(q.career, d.id)); }); drawStatus(); };
   afterCareer();
   drawPrev();
   const diffSel = select(q.difficulty, DIFFS27.map((d) => ({ value: d.id, label: t(d.name) })), (v) => (q.difficulty = v), { id: 'h27-diff' });
@@ -338,6 +345,7 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
           field('h27-city', l('Cidade', 'City'), citySel)),
         endF.el,
         h('div', { class: 'h27-field' }, h('span', null, t(l('Sua atividade principal', 'Your main activity'))), careerBox),
+        charB.el,
         h('div', { class: 'h27-2' },
           field('h27-start', l('Ponto de partida', 'Starting point'), startSel),
           field('h27-rivals', l('Nível dos rivais', 'Rival level'), rivSel)),
