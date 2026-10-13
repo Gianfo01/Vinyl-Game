@@ -41,6 +41,20 @@ Correção (mínima):
 Medido (`r29c-0`, ano 0, 5 inícios × 4 mundos): entradas velhas no índice 1–5 por mundo → **0**; depois de 6 anos,
 o kin15 recriava 1–3 (R9) → **0**.
 
+### 1b. "The Jackson 5" que nunca virava "The Jacksons" (r10-fixes, r16-lineups)
+
+Mesma família de defeito (identidade/ligação dependente de ordem). Os renomes reais (`RENAMES16`) e a marcação "ato já
+existia no início" (`l16.boost`, que impede a fama herdada no 1º mês) rodavam no gancho `newgame` do lineup16 — que só
+vê os atos que já existem. Há um ciclo de imports realworld ↔ lineup16: com os imports de um teste (bot, tick, worldgen,
+realworld) o gancho do lineup16 era registrado ANTES do realworld (medido: posição 16 × 40 de 41), então rodava antes de
+os atos reais existirem — sem renome ("The Jackson 5" em 1985) e com os atos reais do início ganhando fama herdada no
+1º mês. Com outra ordem de imports o mundo saía diferente (outros ids, renome acontecendo).
+
+Correção: `src/sim/sys/after29.ts` (módulo sem imports) guarda `RW_AFTER_NEWGAME`; o gancho do realworld chama a lista no
+fim do seu newgame e o lineup16 se registra nela (o gancho antigo fica; as duas operações são idempotentes). Agora a
+ordem é a mesma em qualquer combinação de imports. `tests/r10-fixes` e `tests/r16-lineups` voltam a passar (falhavam
+na base desde o merge 5ba47ed). Muda o mundo de propósito (golden em §6).
+
 ## 2. Vistas que liam fontes diferentes — fonte canônica
 
 | Vista | Lia antes | Lê agora |
@@ -154,10 +168,20 @@ ANTES_DEPOIS_AQUI
 
 ## 6. Determinismo, golden e equilíbrio
 
-Mundo mudado **de propósito** (perks religados, songQ depois dos ganchos, escândalo → próximo disco, prêmios →
-prestígio). Golden re-medidos com comentário em `tests/r27-p2a.test.ts` e `tests/r27-p2b.test.ts` (semente `r16pb-5`,
-1975, 8 meses de playbot): caixa **446096 → 427926**, acts **4292160800 → 1063419696**; tours (1382068899) e **rng
-(2262769409) iguais** — nenhuma mudança consome o RNG do jogo. `r27-m2` passa sem mudança. As correções de dados/vistas
+Mundo mudado **de propósito**, em duas etapas. Golden re-medidos com comentário em `tests/r27-p2a.test.ts` e
+`tests/r27-p2b.test.ts` (semente `r16pb-5`, 1975, 8 meses de playbot):
+
+| | caixa | tours | acts | rng |
+|---|---|---|---|---|
+| antes da R29 | 446096 | 1382068899 | 4292160800 | 2262769409 |
+| perks religados, songQ depois dos ganchos, escândalo → disco, prêmios → prestígio | 427926 | igual | 1063419696 | igual |
+| + ganchos de início em ordem fixa (§1b) | 252 | igual | 2817744560 | 1576372716 |
+
+O merge com friendly-brown (cenas/arte/reorg/fixes) não muda esses números. `r27-m2`: com o mundo novo, o fixture
+`r16pb-7` quebra antes do show jogável e `r16pb-4` (o antigo) fecha com um rival na mesa; o fixture passa a `r16pb-8`
+(show no 9º mês). O teste "proposta generosa fecha" agora põe no caixa o adiantamento de 6× que oferece — o ato aceitava
+("Eles topam"), mas o caixa livre do fixture não cobria (na base, `r16pb-4` dá o mesmo 'sniped'/'lost': sensível ao
+fixture, não à R29). As correções de dados/vistas
 (índice, connect29, créditos, kin15, stints16) não mexem nesses golden. A sonda e a auditoria não avançam o tempo nem
 tocam no estado.
 
@@ -182,9 +206,10 @@ nunca aponta para outro nome (9 mundos); ex-integrante ⇔ carreira (Syd Barrett
 estresse baixa a nota da gravação; departamentos da sede mexem em apelo e vendas; previsão de renovação com os ganchos.
 
 Rodados (lotes pequenos, `--poolOptions.forks.maxForks=2`): `r29-connect` (10/10), `r27-p2a` (18/18), `r27-p2b`
-(21/21), `r27-m2` (12/12), `r27-audit`, `r27-consistency`, `r15-kin`, `r16-links`, `r17-foundation`, `r25-kin` — todos
-verdes. `r16-lineups` › "Michael: nas Jacksons até 1984" **falha igual na base** (friendly-brown, antes da R29: "The
-Jackson 5 já se chama The Jacksons em 1983: expected undefined") — não é desta rodada. `tsc --noEmit` limpo.
+(21/21), `r27-m2` (12/12), `r10-fixes`, `r16-lineups`, `r27-audit`, `r27-consistency`, `r15-kin`, `r16-links`, `r17-foundation`, `r25-kin` — todos
+verdes. `r16-lineups` e `r10-fixes` (Michael Jackson / The Jacksons), que **falhavam na base**, passam (§1b). Depois do merge
+com friendly-brown: `r29-art`, `r29-fixes`, `r29-reorg`, `r29-scenes`, `r9-bonds`, `r27-aud2` também verdes (77/77).
+`tsc --noEmit` limpo.
 
 ## 8. Capturas
 
