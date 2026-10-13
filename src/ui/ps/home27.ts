@@ -2,12 +2,13 @@
 // Tela inicial: marca grande sobre a sede ilustrada, "Continuar" com o último save, Nova run, Carregar, links
 // (cenários, configuração completa, código de run, importar/colar, opções) e, abaixo, perfis e saves com ações
 // (carregar, renomear, apagar — sempre com confirmação).
-// Nova run rápida: uma tela só (empresa, ano, cidade, atividade, ponto de partida, dificuldade) que gera a MESMA
+// Nova run rápida: uma tela só (empresa, ano, cidade, atividade, ponto de partida, nível dos rivais, dificuldade) que gera a MESMA
 // RunConfig da configuração completa (home27model.ts) e abre a configuração completa pré-preenchida.
 
 import { endYearField28 } from '../endyear28'; // r28 (F4)
 import { REC_YEARS28, pickStart28 } from '../../sim/start28data';
 import { SITS29, sit29ById, sitOfScenario29, start28Fits29, statusLabel29, type Sit29 } from '../../sim/start29data'; // r29
+import { RIVS29, riv29ById, statusLine29, type Riv29 } from '../../sim/rivals29data'; // r29: nível dos rivais
 import { drawHqCutaway27 } from './hqpx27';
 import { CITIES, l, type L } from '../../data/world';
 import { S, locale, t, type Lang } from '../../i18n/strings';
@@ -280,10 +281,14 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
   const drawStatus = () => {
     const d = sit29ById(sitNow())!;
     const st28 = pickStart28(q.seed);
-    status.replaceChildren(h('b', null, t(statusLabel29(q.career, d.id))), ' — ', h('span', { class: 'muted' }, t(d.fx)),
+    const rv = riv29ById(q.rivals29 ?? 'mix')!;
+    status.replaceChildren(h('b', null, t(statusLine29(q.career, d.id, rv.id))), ' — ', h('span', { class: 'muted' }, t(d.fx)),
+      ...(rv.id !== 'mix' ? [h('span', { class: 'muted' }, ` · ${t(l('Rivais', 'Rivals'))}: ${t(rv.fx)}`)] : []),
       ...(start28Fits29(st28.id, d.id) ? [h('span', { class: 'muted' }, ` · ${t(l('Começo sorteado', 'Rolled start'))}: ${t(st28.name)}`)] : []));
   };
   const startSel = select<Sit29>(sitNow(), SITS29.map((d) => ({ value: d.id, label: t(statusLabel29(q.career, d.id)) })), (v) => { q.start29 = v; q.scenario = sit29ById(v)!.base; drawPrev(); drawStatus(); }, { id: 'h27-start' });
+  // r29: nível dos rivais (mesma escada; "mistura realista" = o mundo de sempre)
+  const rivSel = select<Riv29>(q.rivals29 ?? 'mix', RIVS29.map((d) => ({ value: d.id, label: t(d.name) })), (v) => { q.rivals29 = v === 'mix' ? undefined : v; drawStatus(); }, { id: 'h27-rivals' });
   afterCareer = () => { SITS29.forEach((d, i) => { const o = startSel.options[i]; if (o) o.textContent = t(statusLabel29(q.career, d.id)); }); drawStatus(); };
   afterCareer();
   drawPrev();
@@ -326,6 +331,8 @@ export function quickRunScreen27(root: HTMLElement, onStart: () => void, q0?: Qu
         h('div', { class: 'h27-field' }, h('span', null, t(l('Sua atividade principal', 'Your main activity'))), careerBox),
         h('div', { class: 'h27-2' },
           field('h27-start', l('Ponto de partida', 'Starting point'), startSel),
+          field('h27-rivals', l('Nível dos rivais', 'Rival level'), rivSel)),
+        h('div', { class: 'h27-2' },
           field('h27-diff', l('Dificuldade', 'Difficulty'), diffSel)),
         status,
         h('p', { class: 'muted small h27-hint' }, t(l('Nomes reais em um mundo simulado. Você pode ajustar história, personagem, carreiras simultâneas, gravadoras, regras e modificadores na configuração completa.', 'Real names in a simulated world. You can adjust history, character, simultaneous careers, labels, rules and modifiers in the full setup.'))),

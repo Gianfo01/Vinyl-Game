@@ -4,6 +4,7 @@
 // a ficha COMPLETA do personagem ao vivo (simula o começo do jogo com as escolhas e mostra tudo o que você ganha).
 
 import { SITS29, careerOf29, setStart29, sitOf29, statusLabel29, syncStart29 } from '../sim/start29data'; // r29
+import { RIVS29, rivOf29, setRivals29, statusLineOf29 } from '../sim/rivals29data'; // r29: nível dos rivais
 import { formatMoney } from '../core/money';
 import { SKILLS } from '../data/people';
 import { l, type L } from '../data/world';
@@ -204,6 +205,21 @@ export function startCard17(cfg: RunConfig, rebuild: () => void, custom: HTMLEle
       h('span', null, h('b', null, t(statusLabel29(career, s0.id))), h('small', null, t(s0.fx)))))),
     h('details', { class: 'ng17-custom' }, h('summary', { class: 'small' }, t(l('Ajuste fino do começo (caixa, sede, elenco, equipe…)', 'Fine-tune the start (cash, HQ, roster, staff…)'))), custom),
   );
+}
+
+/** r29: NÍVEL DOS RIVAIS — a mesma escada para os outros (do zero → gigantes, um líder dominante, mistura realista). A escolha
+ *  usa o MESMO handler da Nova run rápida (setRivals29); "mistura realista" (padrão) deixa a configuração intocada. */
+export function rivalsCard29(cfg: RunConfig, rebuild: () => void): HTMLElement {
+  const cur = rivOf29(cfg);
+  const ignored = cfg.scenario17 ? l('Cenário histórico: os rivais são os do cenário (esta escolha não vale).', 'Historical scenario: rivals are the scenario\'s own (this choice does not apply).')
+    : cfg.takeover ? l('Assumindo uma gravadora, o mercado fica como a história o deixou (esta escolha não vale).', 'Taking over a label, the market stays as history left it (this choice does not apply).') : null;
+  return h('section', { class: 'card wide ng29-rivals' },
+    h('h3', null, t(l('Nível dos rivais', 'Rival level')), ' ', helpTip(l('Quão fortes são as outras gravadoras e os negócios rivais da sua carreira no começo: caixa, prestígio artístico × alcance comercial, elenco e fama, mercados e agressividade. Escala com a economia da era (em 1889 não há cinco majors globais).', 'How strong the other labels and your career\'s rival businesses are at the start: cash, artistic prestige × commercial reach, roster and fame, markets and aggressiveness. Scales with the era\'s economy (1889 has no five global majors).'))),
+    h('p', { class: 'small' }, h('b', null, t(statusLineOf29(cfg)))),
+    ignored ? h('p', { class: 'small muted' }, 'ⓘ ', t(ignored)) : null,
+    h('div', { class: 'ng17-start-grid' }, ...RIVS29.map((d) => h('label', { class: `radio pick ${cur === d.id ? 'on' : ''}`, 'data-rivals29': d.id },
+      h('input', { type: 'radio', name: 'rv29', checked: cur === d.id, onchange: () => { setRivals29(cfg, d.id); rebuild(); } }),
+      h('span', null, h('b', null, t(d.name)), h('small', null, t(d.fx)))))));
 }
 
 // ---------------------------------------------------------------- regras: dificuldade detalhada e prazo

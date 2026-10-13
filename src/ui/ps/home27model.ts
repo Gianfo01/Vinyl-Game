@@ -15,6 +15,7 @@ import { YEAR_MAX20, YEAR_MIN20 } from '../../sim/worldpolicy20';
 import { materializeLabels22 } from '../newgameLabels';
 import { REC_YEARS28, pickStart28, yearsFor28 } from '../../sim/start28data';
 import { SITS29, setStart29, start28Fits29, syncStart29, type Sit29 } from '../../sim/start29data';
+import { setRivals29, type Riv29 } from '../../sim/rivals29data';
 
 /** Atividades oferecidas na Nova run (mesma lista e ordem da configuração completa, careers12 NG_CAREERS). */
 export const CAREERS27 = ['label', 'musician', 'manager', 'studio', 'festival', 'booking', 'venue', 'publisher', 'media', 'platform'] as const;
@@ -41,6 +42,8 @@ export interface QuickRun27 {
   difficulty: RunConfig['difficulty'];
   /** r29: situação inicial escolhida (ausente = a equivalente ao `scenario`) */
   start29?: Sit29;
+  /** r29: nível dos rivais (ausente ou "mix" = mistura realista, o mundo de sempre) */
+  rivals29?: Riv29;
   /** r28 (F4): duração escolhida pelo ano de fim (0 = sem fim / sandbox); ausente = sugestão do Recomendado */
   runYears?: number;
 }
@@ -85,6 +88,7 @@ export function applyQuick27(cfg: RunConfig, q: QuickRun27): RunConfig {
   cfg.homeCity = q.homeCity;
   cfg.scenario = q.scenario;
   if (q.start29) setStart29(cfg, q.start29); // r29: mesmo handler do cartão "Ponto de partida" da configuração completa
+  if (q.rivals29) setRivals29(cfg, q.rivals29); // r29: mesmo handler do cartão "Nível dos rivais" da configuração completa
   cfg.difficulty = q.difficulty;
   if (q.runYears !== undefined) cfg.runYears17 = q.runYears; // r28 (F4)
   const main = [careerOpen27(q.career, cfg.startYear) ? q.career : 'label'];
@@ -105,7 +109,7 @@ export function buildRun27(cfg: RunConfig): RunConfig {
   run.seed = run.seed.trim();
   const sc = run.scenario17 ? scenarioById[run.scenario17] : undefined;
   if (sc) Object.assign(run, { startYear: sc.startYear, homeCity: sc.homeCity, scenario: sc.scenario, ...(sc.role ? { role: sc.role } : {}) });
-  if (run.scenario17) delete run.start29; else if (run.start29) syncStart29(run); // r29: cenário histórico tem o próprio começo
+  if (run.scenario17) { delete run.start29; delete run.rivals29; } else if (run.start29) syncStart29(run); // r29: cenário histórico tem o próprio começo (e os próprios rivais)
   materializeLabels22(run);
   if (!run.scenario17 && !run.start28) { const st = pickStart28(run.seed).id; if (start28Fits29(st, run.start29)) run.start28 = st; } // r28 (F4): começo sorteado pela semente; r29: pulado se contradiz a situação
   return run;
