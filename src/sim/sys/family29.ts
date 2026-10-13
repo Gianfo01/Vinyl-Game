@@ -1285,12 +1285,15 @@ function seed29(s: GameState): void {
     if (age < 42 || !r.chance(0.35)) continue;
     const F0 = ensureFamily(s, key);
     if (F0.kids.length) continue;
-    const city = per13(s, key)?.city ?? s.config.homeCity;
+    const P = per13(s, key);
+    const city = P?.city ?? s.config.homeCity;
+    const sur = (P?.name ?? '').split(' ').slice(1).join(' '); // o filho leva o sobrenome do pai/mãe
     const n = r.int(1, 2);
     for (let i = 0; i < n; i++) {
       const kb = Math.min(y0 - 14, born + r.int(24, 38));
       if (kb <= born + 18) continue;
-      F0.kids.push({ id: `f29i${hashString(`${s.config.seed}|${key}|${i}`).toString(36)}`, name: personName(r, langForCity(city, r)), born: kb, bond: 60, musical: r.int(10, 90) });
+      const nm0 = personName(r, langForCity(city, r));
+      F0.kids.push({ id: `f29i${hashString(`${s.config.seed}|${key}|${i}`).toString(36)}`, name: sur ? `${nm0.split(' ')[0]} ${sur}` : nm0, born: kb, bond: 60, musical: r.int(10, 90) });
     }
   }
 }
