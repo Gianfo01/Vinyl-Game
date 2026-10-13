@@ -47,10 +47,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // choques macro) mudou só acts (→ 3789538846); AUD1 (166a36e: playbot compra negócios e contrata no 1º ano) mudou
     // caixa, tours, acts e rng.
     // A garantia "o P2B não mexe no modo rápido" segue provada pelo teste do gancho logo abaixo (com × sem STOP27.pre).
-    expect(AFTER.player.cash).toBe(1089445);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(529417993);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1761475379);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3113611029);
+    // R28: re-medidos depois de dois merges que mudam o mundo de propósito — fase 5 (rival disputa a oferta ao vivo e
+    // tem reserva própria: 77884 / 1382068899 / 4242977539 / 1276410388) e formações reais na data inicial (95b6b81,
+    // realNames: integrantes pela passagem, ex-integrantes, trocas agendadas). O bot prometendo não muda esta semente.
+    expect(AFTER.player.cash).toBe(382059);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3709969893);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3305882789);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3630394072);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -152,7 +155,9 @@ describe('r27 P2B — turnê no mapa', () => {
       for (const x of outs) {
         if (x.d.skip || x.st.status !== 'played' || x.st.capacity !== st0.capacity) continue;
         if ((x.d.mods?.qMult ?? 1) < 1 && !x.d.mods?.fans) { expect(x.st.sold).toBeLessThanOrEqual(neutral.st.sold); compared++; }
-        if ((x.d.mods?.fans ?? 1) > 1 && (x.d.mods?.qMult ?? 1) >= 1) { expect(x.fans).toBeGreaterThan(neutral.fans); compared++; }
+        // R28: num ato pequeno (fixture novo) o ganho de fãs da noite neutra é 1 e o multiplicador arredonda igual — aí
+        // basta não perder; com base de 10+ fãs, trazer fãs tem de converter mais
+        if ((x.d.mods?.fans ?? 1) > 1 && (x.d.mods?.qMult ?? 1) >= 1) { if (neutral.fans >= 10) expect(x.fans).toBeGreaterThan(neutral.fans); else expect(x.fans).toBeGreaterThanOrEqual(neutral.fans); compared++; }
       }
     }
     // decidir de novo é recusado
