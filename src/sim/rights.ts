@@ -60,6 +60,12 @@ export function defaultRights(model: ContractModel, publishing = false): RightsT
   if (model === '360' || model === 'publishing') base.pubShare = 0.5;
   if (model === 'licensing') return { ...base, master: 'artist', reissue: false, remaster: false, license: false, reversionYears: 2 };
   if (model === 'distribution') return { ...base, master: 'artist', producerPts: 0, guestPts: 0, exclusive: false, sync: false, reissue: false, remaster: false, license: false, reversionYears: 0, reversionNeedsRecoup: false };
+  // R29 (contratos+, terms29): empresário não fica com direito nenhum (o master é do artista/do selo dele) — só a comissão
+  if (model === 'management') return { ...base, master: 'artist', pubShare: 0, producerPts: 0, guestPts: 0, exclusive: true, sync: false, reissue: false, remaster: false, license: false, reversionYears: 0, reversionNeedsRecoup: false };
+  // produção: a produtora é dona do master e o licencia/vende a um selo; você É o produtor (sem pontos de terceiro); 1 opção
+  if (model === 'production') return { ...base, master: 'label', pubShare: 0, producerPts: 0, options: 1, license: true };
+  // joint venture: master co-propriedade (50/50 do lucro nos discos do seu selo; no subselo, a divisão é pela participação)
+  if (model === 'jv') return { ...base, master: 'shared', pubShare: 0, license: true };
   return base;
 }
 

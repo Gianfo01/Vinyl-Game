@@ -430,6 +430,9 @@ function certify(s: GameState, rel: Release): void {
   }
 }
 
+/** R29 (contratos+): liquidação de disco entregue por contrato de produção (sys/contracts29 registra). true = tratou. */
+export function prod29(): { dist?: (s: GameState, rel: Release, act: Act, gross: number, units: number) => boolean } { const f = prod29 as unknown as { o?: { dist?: (s: GameState, rel: Release, act: Act, gross: number, units: number) => boolean } }; return (f.o ??= {}); } // hoisted (ciclo de imports)
+
 /** Separa master e edição; recoupment só abate o saldo (não é receita extra; GDD §11, §16).
  *  Rodada 8: cada master segue o acordo que o cobre (não o contrato atual do ato), com a divisão da
  *  ficha de direitos (master compartilhado, pontos de produtor e convidados, fatia da edição) e
@@ -439,6 +442,8 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   if (!act) return;
   // subselo: liquidação no caixa próprio (sublabels.ts), nunca no da matriz
   if (s.subLabels.some((x) => x.id === rel.owner)) return;
+  // R29 (contratos+): master entregue pela sua produtora a um selo rival — o selo fica com o master e paga pontos (sys/contracts29)
+  if (rel.owner !== 'player' && prod29().dist?.(s, rel, act, gross, units)) return;
   const current = act.contractId ? s.contracts[act.contractId] : undefined;
   // master do selo: vale o acordo da época do disco; master que voltou ao artista não é do selo
   const deal = !act.playerBand && rel.owner === 'player' ? dealOfRelease(s, rel) : undefined;

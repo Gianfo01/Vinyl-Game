@@ -33,6 +33,30 @@ export function registerContractHook(id: string, h: ContractHook): void {
   else contractHooks().push({ id, h });
 }
 import { renewalAdj, rightsScore, scopeTerritories, signingTrust } from './rights';
+import { advFactor29, isSide29, royTerms29 } from './terms29';
+import type { ContractModel } from '../data/rules';
+
+/** R29 (contratos+): ganchos dos modelos novos (empresariamento, produção, joint venture) — sys/contracts29 registra.
+ *  `accept` assume o aceite inteiro (empresariamento: o ato não muda de selo); `signed` completa um contrato normal
+ *  (produção/JV); `eligible` dá a regra de quem pode receber a proposta do modelo; `reach` troca o "alcance do selo". */
+export interface Special29 {
+  accept?: (s: GameState, act: Act, o: Offer) => boolean;
+  signed?: (s: GameState, act: Act, o: Offer, c: Contract) => void;
+  eligible?: (s: GameState, act: Act, model: ContractModel) => { ok: boolean; why?: L } | null;
+  reach?: (s: GameState, act: Act, model: ContractModel) => number | null;
+}
+// guardado numa função (hoisted), como contractHooks: o módulo que registra pode carregar antes deste terminar (ciclo de imports)
+export function special29(): Special29 { const f = special29 as unknown as { o?: Special29 }; return (f.o ??= {}); }
+
+/** Quem pode receber uma proposta deste modelo (a regra única do radar, da ficha, da mesa e do aceite).
+ *  Modelos de selo: scoutEligible20 (sem contrato). Empresariamento: o ato pode ter selo (rival), não pode ser seu. */
+export function offerEligible29(s: GameState, act: Act | undefined, model: ContractModel = 'classic'): { ok: boolean; why?: L; comeback?: boolean } {
+  const base = !act || !isSide29({ model }) ? scoutEligible20(s, act) : { ok: true };
+  if (!act || !base.ok) return base;
+  return special29().eligible?.(s, act, model) ?? base;
+}
+/** O ato está "tomado" para este modelo? (resolveOne/acceptCounter: assinou com outro no meio do caminho) */
+const taken29 = (act: Act, model: ContractModel): boolean => (isSide29({ model }) ? act.owner === 'player' && !act.playerBand : !!act.owner);
 
 /** R29 (integrante B): atos em negociação que ainda não existem no mundo (a banda montada pela oferta, sys/member29) —
  *  sem disputa de rival (ninguém disputa uma banda que não existe) e com resposta na hora (sem "pensar"). */
@@ -79,10 +103,9 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   const amb = mainAmbition(s, act);
   const reasons: L[] = [];
   const advReal = toReal(o.advance, s.year);
-  const exp = expectedAdvance(s, act) * (1 + perk(s, 'advance'));
+  const exp = expectedAdvance(s, act) * (1 + perk(s, 'advance')) * advFactor29(o.model); // R29: empresário/produção/JV esperam menos luvas
   const advU = clamp(advReal / exp, 0, 2.5);
-  const roy = o.model === 'distribution' ? 1 - (o.distributionFee ?? 0.2) : o.royalty;
-  const expRoy = o.model === 'distribution' ? 0.8 : 0.14 + act.fame / 600;
+  const { roy, exp: expRoy } = royTerms29(o, act.fame); // R29 (terms29): mesma conta de sempre nos modelos antigos
   const royU = clamp(roy / expRoy, 0, 2);
   const w = {
     adv: amb === 'money' || amb === 'security' ? 0.38 : 0.26,
@@ -97,8 +120,9 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   add(l('Adiantamento vs. expectativa', 'Advance vs. expectation'), advU * w.adv);
   add(l('Royalty vs. expectativa', 'Royalty vs. expectation'), royU * w.roy);
   add(l('Controle criativo', 'Creative control'), (o.creativeControl ? 1 : 0.35) * w.control);
-  const reach = s.player.territories.length / 4 + hqCaps(s).careers / 24 + s.player.reputation.commercial / 160;
-  add(l('Alcance do selo (territórios, sede, reputação comercial)', 'Label reach (territories, HQ, commercial rep)'), clamp(reach, 0.2, 1.6) * w.reach);
+  const reach29 = special29().reach?.(s, act, o.model) ?? null; // R29: empresariamento pesa a sua reputação de empresário
+  const reach = reach29 ?? s.player.territories.length / 4 + hqCaps(s).careers / 24 + s.player.reputation.commercial / 160;
+  add(reach29 !== null ? l('Sua reputação e alcance como empresário', 'Your reputation and reach as a manager') : l('Alcance do selo (territórios, sede, reputação comercial)', 'Label reach (territories, HQ, commercial rep)'), clamp(reach, 0.2, 1.6) * w.reach);
   add(l('Reputação com artistas', 'Reputation with artists'), (s.player.reputation.artists - 40) / 250);
   add(l('Confiança do ato em você', 'Act\'s trust in you'), (act.trust - 50) / 300);
   let mv = 0;
@@ -111,6 +135,10 @@ export function evaluateOffer(s: GameState, act: Act, o: Omit<Offer, 'id' | 'wee
   if (o.model === 'distribution') mv += amb === 'freedom' ? 0.15 : act.fame > 20 ? 0.05 : -0.08;
   if (o.model === 'publishing') mv -= 0.05;
   if (o.publishing && o.model !== 'publishing') mv -= 0.07;
+  // R29 (contratos+): carreiristas gostam de empresário; independentes, de JV; quem vive no estúdio, de produção
+  if (o.model === 'management') mv += amb === 'fame' || amb === 'status' || amb === 'money' ? 0.12 : amb === 'freedom' ? 0.06 : amb === 'security' ? -0.04 : 0.02;
+  if (o.model === 'production') mv += amb === 'art' || amb === 'critics' ? 0.1 : amb === 'fame' || amb === 'status' ? -0.06 : 0;
+  if (o.model === 'jv') mv += (amb === 'freedom' || amb === 'legacy' || amb === 'art' ? 0.15 : amb === 'security' ? -0.1 : 0) + (act.fame < 10 ? -0.06 : 0);
   add(l('Modelo de contrato × ambição', 'Contract model × ambition'), mv);
   const termYears = o.termMonths / 12;
   add(l('Prazo', 'Term'), amb === 'security' ? (termYears - 3) * 0.03 : -(termYears - 3) * 0.035);
@@ -163,7 +191,7 @@ export function careerSlotsUsed(s: GameState): number {
 export function makeOffer(s: GameState, o: Omit<Offer, 'id' | 'week' | 'status'>): Offer | null {
   const act = s.acts[o.actId];
   if (!act || act.owner === 'player') return null;
-  if (!scoutEligible20(s, act).ok) return null; // r20 (B9): proposta só para quem é contratável
+  if (!offerEligible29(s, act, o.model).ok) return null; // r20 (B9): proposta só para quem é contratável (R29: regra do modelo)
   if (s.offers.some((x) => x.actId === o.actId && x.status === 'pending')) return null;
   // r20 (B4): o adiantamento fica reservado enquanto a oferta pende — não dá para prometer o mesmo caixa duas vezes
   if (o.advance > 0 && freeCash20(s) < o.advance) return null;
@@ -187,16 +215,18 @@ export function withdrawOffer(s: GameState, offerId: string): void {
 /** Resolve uma oferta. `live` = resposta na hora (rodada 7): o artista pode pedir tempo para pensar. */
 export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer['status'] | 'thinking' {
   const act = s.acts[o.actId];
-  if (!act || act.owner) {
+  if (!act || taken29(act, o.model)) {
     o.status = 'sniped';
     o.note = act?.owner ? s.labels[act.owner]?.name : undefined;
     return 'sniped';
   }
-  if (!scoutEligible20(s, act).ok) { o.status = 'rejected'; o.thinkUntil = undefined; o.note = scoutEligible20(s, act).why?.pt; return 'rejected'; } // r20 (B9): aposentou/acabou no meio da negociação
+  const el29 = offerEligible29(s, act, o.model);
+  if (!el29.ok) { o.status = 'rejected'; o.thinkUntil = undefined; o.note = el29.why?.pt; return 'rejected'; } // r20 (B9): aposentou/acabou no meio da negociação
   const ev = evaluateOffer(s, act, o);
   // rival disputa atos públicos. r28 (C7): também na oferta ao vivo de ato com fama > 10; o rival tem reserva
   // própria (fama percebida, não o seu lance) e pode cobrir a sua proposta num sorteio (sys/rivalsense28)
-  const rivalBid = !pending29(s, act) && (!live || act.fame > 10) && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
+  // R29: no empresariamento não há selo rival disputando (o ato fica no selo dele)
+  const rivalBid = !isSide29(o) && !pending29(s, act) && (!live || act.fame > 10) && (act.fame > 10 || (act.catalogNo && s.year >= act.debutYear));
   if (rivalBid) {
     const won = rivalContest28(s, r, act, o, ev.score, live);
     if (won) {
@@ -296,17 +326,18 @@ export function acceptCounter(s: GameState, offerId: string): boolean {
   const o = s.offers.find((x) => x.id === offerId && x.status === 'counter');
   if (!o) return false;
   const act = s.acts[o.actId];
-  if (!act || act.owner) {
+  if (!act || taken29(act, o.model)) {
     o.status = 'sniped';
     return false;
   }
-  if (!scoutEligible20(s, act).ok) return false; // r20 (B9)
+  if (!offerEligible29(s, act, o.model).ok) return false; // r20 (B9)
   if (freeCash20(s) < o.advance) return false; // r20 (B4): respeita o caixa reservado por outras ofertas
   return acceptOffer(s, act, o);
 }
 
 export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
   if (o.status === 'accepted') return false; // r20 (B4): idempotente — repetir não debita duas vezes
+  if (special29().accept?.(s, act, o)) return true; // R29: empresariamento — o ato fica no selo dele (sys/contracts29)
   o.status = 'accepted';
   const id = nextId(s, 'k');
   const termWeeks = Math.round(o.termMonths * 4.35);
@@ -339,6 +370,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
     act.trust = clamp(act.trust + signingTrust(o.rights, o.model, mainAmbition(s, act)), 0, 100);
   }
   if (o.clauses18) c.clauses18 = { ...o.clauses18 };
+  if (o.x29) c.x29 = { ...o.x29 }; // R29 (contratos+)
   s.contracts[id] = c;
   armPromises28(s, c); // r28 (C7): verba, multa e prazo da promessa
   act.owner = 'player';
@@ -351,6 +383,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
   const k = s.knowledge[act.id];
   if (k) k.stage = 'negotiation';
   s.delegated[act.id] = s.delegated[act.id] ?? true;
+  special29().signed?.(s, act, o, c); // R29: produção e joint venture completam o contrato normal (sys/contracts29)
   s.player.stats.signed += 1;
   notify(s, fmtL(l('{act} assinou com você!', '{act} signed with you!'), { act: act.name }), 'good');
   remember(s, 'signed', fmtL(l('{act} assinou contrato ({model}) com {company}.', '{act} signed a {model} deal with {company}.'), { act: act.name, model: CONTRACT_MODELS.find((m) => m.id === o.model)?.name ?? o.model, company: s.config.companyName }), { actId: act.id, important: true });

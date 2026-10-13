@@ -7,6 +7,7 @@
 // Reuso: `DealPackage`, `artistWeights`, `scorePackage`, `rivalPackages` e `comparePackages` não dependem
 // do papel do jogador (o empresário pode montar pacotes de várias gravadoras e comparar do lado do cliente).
 
+import { expRoy29, royTerms29 } from '../terms29';
 import { clamp, hashString } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
@@ -160,11 +161,11 @@ export function labelClout(s: GameState, from: string): number {
 export function scorePackage(s: GameState, act: Act, p: DealPackage, wi = artistWeights(s, act)): PackageScore {
   const exp = expectedAdvance(s, act);
   const advU = clamp(toReal(p.advance, s.year) / Math.max(1, exp), 0, 2.2);
-  const expRoy = p.model === 'distribution' ? 0.8 : 0.14 + act.fame / 600;
+  const expRoy = expRoy29(p.model, act.fame); // R29 (terms29): mesma conta nos modelos antigos
   const royU = clamp(p.royalty / expRoy, 0, 2);
   const dims = {} as Record<Dim, number>;
   dims.money = clamp(advU * 0.32 + royU * 0.18, 0, 1);
-  dims.autonomy = clamp((p.creativeControl ? 0.45 : 0.1) + (p.ar === 'artist' ? 0.45 : p.ar === 'joint' ? 0.25 : 0) + (p.model === 'distribution' || p.model === 'licensing' ? 0.15 : 0), 0, 1);
+  dims.autonomy = clamp((p.creativeControl ? 0.45 : 0.1) + (p.ar === 'artist' ? 0.45 : p.ar === 'joint' ? 0.25 : 0) + (p.model === 'distribution' || p.model === 'licensing' || p.model === 'management' || p.model === 'jv' ? 0.15 : 0), 0, 1);
   const rev = p.master === 'artist' ? 0.55 : p.master === 'shared' ? 0.35 : 0;
   dims.rights = clamp(0.25 + rev + (p.master !== 'artist' && p.reversionYears > 0 ? clamp((30 - p.reversionYears) / 60, 0, 0.35) : 0) - p.pubShare * 0.4 - p.share360 * 0.8, 0, 1);
   const pledge = toReal(p.tourSupport + p.marketing, s.year) / Math.max(1, exp);
@@ -192,7 +193,7 @@ export function scorePackage(s: GameState, act: Act, p: DealPackage, wi = artist
 export function packageFromOffer(s: GameState, o: Omit<Offer, 'id' | 'week' | 'status'>, from = 'player', name = s.config.companyName): DealPackage {
   const r = o.rights ?? defaultRights(o.model, o.publishing);
   return {
-    from, name, model: o.model, advance: o.advance, royalty: o.model === 'distribution' ? 1 - (o.distributionFee ?? 0.2) : o.royalty,
+    from, name, model: o.model, advance: o.advance, royalty: royTerms29(o, 0).roy, // R29: comissão/participação nos modelos novos
     creativeControl: o.creativeControl, ar: o.pk12?.ar ?? (o.creativeControl ? 'joint' : 'label'), master: r.master, reversionYears: r.reversionYears,
     pubShare: r.pubShare, share360: o.model === '360' ? Math.max(0.1, o.share360) : 0, albums: o.releasesOwed, termMonths: o.termMonths,
     tourSupport: o.pk12?.tour ?? 0, marketing: o.pk12?.mkt ?? 0, scope: r.scope, promises: [...o.promises], clout: labelClout(s, from),
