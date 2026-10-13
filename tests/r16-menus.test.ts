@@ -1,5 +1,9 @@
 // Rodada 16 — menus revistos (cada negócio com a sua página, sem duplicatas, 2 níveis) e 3 habilidades iniciais.
 import { describe, expect, it } from 'vitest';
+// carrega a simulação pela entrada (como o app e outros testes): sys/careers12 importado primeiro cai no ciclo
+// careers12 → life → … → worldgen → sys/index → manager12 (TDZ). Antes do AUD1 (dcfb96c) a ordem vinha de graça
+// pelo persona/skills apagado.
+import '../src/sim/sys';
 import { l } from '../src/data/world';
 import { CAREER_NAV, type NavGroup } from '../src/ui/careernav13';
 import { HOME_EXTRA16, ORDER16, groupOf16, navGroups16 } from '../src/ui/careernav16';

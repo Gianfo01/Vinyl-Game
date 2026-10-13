@@ -1,0 +1,1499 @@
+
+ RUN  v3.2.4 /home/user/Vinyl-Game
+
+ ✓ tests/r19-infra.test.ts (15 tests | 1 skipped) 7259ms
+   ✓ r19 0.1 — rng por sistema > jogo novo tem rngVersion; save antigo segue no fluxo único  531ms
+   ✓ r19 0.1 — rng por sistema > um sorteio a mais no fluxo comum não muda os fluxos dos sistemas  1734ms
+   ✓ r19 11.1 — volume de fatos > chart só nos marcos: o 2º nº 1 de país no mês soma no primeiro  363ms
+   ✓ r19 11.1 — volume de fatos > anel por gravidade e tipo: enxurrada de um tipo não apaga o fato grave  374ms
+   ✓ r19 0.5 — streaming sem dupla contagem > payout18 já inclui a base STREAM_PAYOUT17 e substitui (não multiplica) a tarifa antiga  649ms
+   ✓ r19 11.9 — cobertura dos tipos da Caixa > bot curto entrega mensagens tipadas na Caixa  2979ms
+ ✓ tests/r27-aud2.test.ts (17 tests) 12482ms
+   ✓ r27 AUD2 — agiota ligado a crime, segredos e obrigações > empréstimo de agiota do jogador vira segredo, dívida da organização e visita com escolhas  622ms
+   ✓ r27 AUD2 — agiota ligado a crime, segredos e obrigações > quitar fecha o segredo; agiota da empresa também tem dono; pedir prazo dá favor à organização  485ms
+   ✓ r27 AUD2 — agiota ligado a crime, segredos e obrigações > NPCs: selos no vermelho pegam com a organização e sofrem cobrança; o segundo calote vira fachada  335ms
+   ✓ r27 AUD2 — filhos × herança e escolhas sobre os filhos > afastado e artista de selo rival não herdam como um filho próximo; quem trabalha no selo passa à frente  401ms
+   ✓ r27 AUD2 — filhos × herança e escolhas sobre os filhos > pagar estudos, apoiar, deserdar e fazer as pazes  358ms
+   ✓ r27 AUD2 — cultura que emerge das decisões > decisões generosas puxam "artista primeiro"; 3 meses dominando mudam a casa sem decreto (sem o choque de −6)  442ms
+   ✓ r27 AUD2 — cultura que emerge das decisões > declarar outra cultura empurra devagar (recarga de 12 meses) e a distância cansa a equipe  393ms
+   ✓ r27 AUD2 — estresse que quebra de verdade > artista no limite quebra (no máximo uma vez por ano); o dono esgotado recebe o cartão  403ms
+   ✓ r27 AUD2 — estresse que quebra de verdade > gastar para aliviar tem contexto: as ações avisam e às vezes algo acontece  412ms
+   ✓ r27 AUD2 — críticos com memória > quem elogiou defende; jabá exposto afasta todos; editor da sua revista vira aliado; o tempo esfria  394ms
+   ✓ r27 AUD2 — críticos com memória > escândalo: quem reage sai do conteúdo do fato, não do id (um fato a mais antes não muda nada)  670ms
+   ✓ r27 AUD2 — choques macro no dinheiro > juros sobem: empréstimos flutuantes, bolsa e fundos  320ms
+   ✓ r27 AUD2 — choques macro no dinheiro > crise cambial: estrada mais cara no submercado por 12 meses  370ms
+   ✓ r27 AUD2 — reações de fora para fatos que só o emissor ouvia > tributo, certificado, divisão de autoria e fanzine mexem em fãs, confiança, banda e cena  387ms
+   ✓ r27 AUD2 — determinismo > mesma semente, mesmos estados novos depois de meses de jogo  6479ms
+ ❯ tests/r27-p2b.test.ts (21 tests | 1 failed) 21459ms
+   × r27 P2B — modo rápido intacto > com os módulos P2B carregados, o mundo do playbot é o mesmo de antes deles 13ms
+     → expected 1089445 to be 1301031 // Object.is equality
+   ✓ r27 P2B — modo rápido intacto > nada de estado P2B criado sem o jogador 1ms
+   ✓ r27 P2B — modo rápido intacto > turnê marcada pelo caminho de sempre: o gancho da estrada não mexe em nada  3937ms
+   ✓ r27 P2B — turnê no mapa > a rota mostra trecho, praça, economia e risco por parada, sem NaN 154ms
+   ✓ r27 P2B — turnê no mapa > marcar usa o planTour de sempre e liga os eventos só nesta turnê 150ms
+   ✓ r27 P2B — turnê no mapa > eventos determinísticos (mesma semente, mesma estrada)  317ms
+   ✓ r27 P2B — turnê no mapa > cada escolha mexe na noite na direção esperada (via playStop de sempre)  1807ms
+   ✓ r27 P2B — turnê no mapa > sem decisão do jogador, a equipe decide no dia (dentro da política) e o mês corre igual nos dois clones  2160ms
+   ✓ r27 P2B — turnê no mapa > teto de gasto apertado: a equipe não escolhe a opção cara 156ms
+   ✓ r27 P2B — crises com relógio > gatilhos de sempre viram crises na mesa (falência, processo, incêndio, prisão)  384ms
+   ✓ r27 P2B — crises com relógio > abrir a sala: relógio, K ações por semana, ações mexem na ameaça e tudo é determinístico  344ms
+   ✓ r27 P2B — crises com relógio > semana sem ação: com gente da área a equipe age; sem ninguém, a ameaça sobe pela pressão 173ms
+   ✓ r27 P2B — crises com relógio > desfecho cai nos sistemas de sempre: falência contornada recua a insolvência; perdida, adianta  319ms
+   ✓ r27 P2B — crises com relógio > seguro conta: incêndio só aciona seguro com apólice; fiança sai pela metade com pessoa-chave 189ms
+   ✓ r27 P2B — crises com relógio > política conta: com teto apertado a equipe só escolhe ações sem custo 177ms
+   ✓ r27 P2B — crises com relógio > relógio anda com o tempo de verdade (advanceWeek) e termina com desfecho  1142ms
+   ✓ r27 P2B — reunião de diretoria > pauta de 3–4 propostas, determinística, com agenda por função/traço e apoio/oposição 287ms
+   ✓ r27 P2B — reunião de diretoria > aprovar sobe a lealdade de quem propôs; vetar derruba  324ms
+   ✓ r27 P2B — reunião de diretoria > regras de delegação: gasto fora do teto é vetado sozinho 211ms
+   ✓ r27 P2B — reunião de diretoria > desligada (padrão) não faz nada no fim do mês; ligada, o mês sem você é decidido pelas regras  2005ms
+   ✓ r27 P2B — reunião de diretoria > fechar a reunião decide o que sobrou 131ms
+stdout | tests/r27-eggs.test.ts > r27 ovos — determinismo e raridade > partida normal do bot (2 anos): no máximo um punhado de ovos
+r27 ovos no bot (2 anos): []
+
+ ✓ tests/r27-eggs.test.ts (76 tests) 28191ms
+   ✓ r27 ovos — determinismo e raridade > mesma semente → mesmos ovos (o telhado de 1969 numa partida de verdade)  3158ms
+   ✓ r27 ovos — determinismo e raridade > partida normal do bot (2 anos): no máximo um punhado de ovos  21118ms
+ ✓ tests/r8-identity.test.ts (12 tests) 5324ms
+   ✓ perfis do selo emergem das decisões > reedições repetidas consolidam o selo de catálogo; depois, lançar sem parar vira selo de hits (com estranhamento do elenco)  708ms
+   ✓ perfis do selo emergem das decisões > contratar artistas da cidade-sede faz nascer o selo de cena  489ms
+   ✓ perfis do selo emergem das decisões > cada perfil muda oportunidades, custo/risco e reações (nunca só um bônus passivo)  528ms
+   ✓ perfis do selo emergem das decisões > trade-off: o selo de catálogo não ganha o bônus do selo de hits ao lançar toda semana; a cena domina em casa, não fora  386ms
+   ✓ perfis do selo emergem das decisões > as oportunidades exclusivas custam e rendem pelo extrato, com recarga  421ms
+   ✓ trajetória profissional: contatos e preço > a mesma pessoa com trajetórias diferentes começa com lacunas e vantagens diferentes  705ms
+   ✓ trajetória profissional: contatos e preço > jornalista: imprensa a favor, mas artistas detonados e um rival com rancor  331ms
+   ✓ trajetória profissional: contatos e preço > promotor de shows: casas de casa cheias, mas parcelas de dívida todo mês  336ms
+   ✓ trajetória profissional: contatos e preço > sem trajetória escolhida, ela vem da origem antiga (saves e criação rápida)  363ms
+   ✓ estilo de liderança consolidado pelas decisões > apoiar artistas nas crises consolida "artista em primeiro lugar": melhores ofertas para quem quer liberdade e mais retenção  378ms
+   ✓ estilo de liderança consolidado pelas decisões > controlador: artistas de arte fogem, retenção cai e o dono se estressa mais que o delegador  342ms
+   ✓ estilo de liderança consolidado pelas decisões > o estado cabe num save pequeno  332ms
+ ❯ tests/r27-p2a.test.ts (18 tests | 18 skipped) 7142ms
+   ↓ r27 P2A — campanha de lançamento > sem campanha nada muda (gancho semanal inerte) e consultas não mexem no estado
+   ↓ r27 P2A — campanha de lançamento > determinística e sem NaN
+   ↓ r27 P2A — campanha de lançamento > verba nos canais vira marketing normal (E maior) e mais expectativa na estreia
+   ↓ r27 P2A — campanha de lançamento > jabá rende mais alcance, mas acumula exposição e calor
+   ↓ r27 P2A — campanha de lançamento > cada resposta a um imprevisto mexe na direção esperada
+   ↓ r27 P2A — campanha de lançamento > sem resposta, vale a opção prudente na semana seguinte
+   ↓ r27 P2A — campanha de lançamento > jogadas da campanha chamam a ação rápida de sempre (mesmo resultado)
+   ↓ r27 P2A — campanha de lançamento > pós-estreia: rádio pelo promotor independente (jabá) é jogada arriscada
+   ↓ r27 P2A — entrevistas e coletivas > oportunidades não mexem no estado; há entrevista de ato e do dono
+   ↓ r27 P2A — entrevistas e coletivas > determinística e sem NaN
+   ↓ r27 P2A — entrevistas e coletivas > polêmica rende mais hype e mais calor; charme, mais imagem e menos calor (média de 10 entrevistas)
+   ↓ r27 P2A — entrevistas e coletivas > esquivar irrita o repórter e traz a pergunta quente (o segredo)
+   ↓ r27 P2A — entrevistas e coletivas > mistério que cola planta um boato; repetir reduz a chance
+   ↓ r27 P2A — entrevistas e coletivas > coletiva sobre matéria vira a resposta oficial (media17) e escândalo abre coletiva de crise
+   ↓ r27 P2A — rede de favores > quadro determinístico, sem NaN e sem mexer no estado
+   ↓ r27 P2A — rede de favores > dar = a gentileza de sempre + um favor no livro; a conversa certa rende mais opinião
+   ↓ r27 P2A — rede de favores > pedir sem crédito cria dívida; retribuir quita; cobrar gasta o favor
+   ↓ r27 P2A — rede de favores > queimar um contato: ganho dobrado agora, mágoa, opinião no chão e boato
+stdout | tests/r27-m2.test.ts > r27 M2 — show jogável > jogável bem jogado ≈ +0–30% de fãs sobre o rápido; mal jogado, menos
+EV {
+  gG: 33,
+  q: 26.416666666666668,
+  ratio: 1.249211356466877,
+  pay: 33371,
+  qPay: 27390.166666666668,
+  poor: 22
+}
+
+ ✓ tests/r27-m2.test.ts (12 tests) 18865ms
+   ✓ r27 M2 — modo rápido intacto > tourDay refatorado (playStop): mesma seed, mesmo mundo; o bot toca shows  5068ms
+   ✓ r27 M2 — show jogável > determinístico: mesmas escolhas, mesmo resultado; não toca no s.rng  319ms
+   ✓ r27 M2 — show jogável > jogável bem jogado ≈ +0–30% de fãs sobre o rápido; mal jogado, menos  2133ms
+   ✓ r27 M2 — negociação jogável > determinística e sem tocar no s.rng  424ms
+   ✓ r27 M2 — negociação jogável > a faixa revelada contém o mínimo escondido; proposta generosa fecha com contrato normal  375ms
+   ✓ r27 M2 — negociação jogável > a chance do mínimo bate com a curva do modo rápido (mesma proposta, várias tentativas)  728ms
+   ✓ r27 M2 — negociação jogável > táticas: prazo abaixo do mínimo derruba; aceitar a contraproposta fecha; sair com rival entrega o ato  642ms
+   ✓ r27 M2 — renegociação > pedido dispara quando o ato cresceu desde a assinatura (antes: nunca em 24 meses)  1287ms
+   ✓ r27 M2 — renegociação > mesa de renegociação: mínimo calibrado com o meio-termo do modo rápido; acordo aplica royalty e bônus; sair = recusar  590ms
+ ✓ tests/r9-identity-plus.test.ts (10 tests) 70673ms
+   ✓ 18 perfis de selo > as ações exclusivas só abrem para o perfil e rodam pelo extrato; saves antigos (sem os acumuladores novos) continuam funcionando  591ms
+   ✓ 18 perfis de selo > efeitos: audiófilo premia a qualidade e pune o descuido; fábrica de ídolos cansa o elenco; gospel favorece o sacro; predatório rende e custa confiança  439ms
+   ✓ 13 manuais de rival > há 13 manuais com líder e perfil; os selos recebem manuais variados e perfis válidos, e os novos lances aparecem no relatório  65916ms
+   ✓ 9 eixos de som > as faixas têm 9 eixos; vetores de saves antigos (6 eixos) são completados com o neutro  639ms
+   ✓ 9 eixos de som > melancolia, local/global e ruptura entram nas frases da faixa  573ms
+   ✓ 40 momentos de vida > há 40 momentos bilíngues; os novos são marcados por outros sistemas, puxam eixos e se combinam (até 2) nas frases  530ms
+   ✓ 40 momentos de vida > decisões resolvidas e memórias do ato viram momentos (processo, exílio, reconciliação)  492ms
+   ✓ assinaturas de timbre > três lançamentos com o mesmo timbre viram marca registrada; outro ato que o usa é visto como cópia e a crítica pune  545ms
+   ✓ modo livre: subgêneros > uma cena forte gera um subgênero com nome, instrumentação, regras e cidade; ele se espalha entre atos da família  939ms
+ ✓ tests/r27-city.test.ts (26 tests) 3170ms
+   ✓ r27 estado dos prédios > sessão gravando: sede (sem estúdio próprio) acesa com fila de músicos  525ms
+   ✓ r27 estado dos prédios > obra: andaime + prazo em meses; noite de show: marquise acesa + fila  426ms
+   ✓ r27 estado dos prédios > alertas: prédio danificado conta no ícone  316ms
+   ✓ r27 lotes à venda > só aparecem quando cabem no caixa; no máximo 3; o resto vira cidade comum  590ms
+   ✓ r27 vida na rua > turnê → ônibus; disco na parada → fãs; escândalo → imprensa  373ms
+   ✓ r27 vizinhos e painel > não mexe no estado nem no sorteio  401ms
+ ✓ tests/r19-scenes.test.ts (11 tests) 5873ms
+   ✓ r19 cenas: 1. resultado só depois da cerimônia > com a interface ligada, livro, avisos e cartões esperam a cena ser vista  764ms
+   ✓ r19 cenas: 1. resultado só depois da cerimônia > sem interface (bot/teste) o resultado sai na hora, com aviso de derrota quando perde  441ms
+   ✓ r19 cenas: 2. indicados oficiais > a cena mostra exatamente a lista oficial e só existe com indicado seu  909ms
+   ✓ r19 cenas: 2. indicados oficiais > papel empresário: indicado do cliente gera cerimônia; artista: a própria banda  891ms
+   ✓ r19 cenas: 3. calendário real > figurino escolhido entre indicação e cerimônia: pesa pouco no voto (com porquê) e a cena não pede de novo  384ms
+   ✓ r19 cenas: 4. ganchos por marca processada > cerimônia entra na Cinemateca e casamento vira cena interativa dias depois  361ms
+   ✓ r19 cenas: 5. ids únicos e fila sem perdas > ids por contador; não vistas importantes ficam; vistas saem primeiro  391ms
+   ✓ r19 cenas: 6. regionais e ato ao vivo > ids reais dos regionais; ato ao vivo de quem não é seu não é seu  404ms
+   ✓ r19 cenas: 7. volume > Hall e velório de NPC não viram cena; de quem é próximo, sim; final de concurso de NPC fica fora do álbum  481ms
+   ✓ r19 cenas: 7. volume > veredito/eco (prioridade) passam do orçamento; picos de cenas menores são espalhados  570ms
+ ✓ tests/r8-rights.test.ts (11 tests) 21226ms
+   ✓ ficha de direitos negociável > a ficha padrão do modelo não muda a avaliação; termos generosos ajudam e duros atrapalham  629ms
+   ✓ ficha de direitos negociável > assinar grava a ficha: territórios, opções, confiança e alcance na assinatura  450ms
+   ✓ royalties, recoupment e catálogo > pontos de produtor saem do caixa, o adiantamento é recuperado antes de pagar o artista e o caixa fecha  474ms
+   ✓ royalties, recoupment e catálogo > o master segue o acordo da época: o artista sai e o selo continua recebendo o catálogo  441ms
+   ✓ royalties, recoupment e catálogo > reversão anos depois: os masters voltam ao artista e passam a pagar só a ele; dá para recomprar antes  1696ms
+   ✓ royalties, recoupment e catálogo > sem direito de reedição o aniversário é bloqueado até comprar a autorização  461ms
+   ✓ royalties, recoupment e catálogo > artista que cresceu pede renegociação; aceitar paga bônus e sobe o royalty, ignorar custa confiança  1850ms
+   ✓ dossiê de descoberta > cada fonte é enviesada: o crítico supervaloriza novidade, o agente local minimiza riscos; ninguém mostra o valor verdadeiro  364ms
+   ✓ dossiê de descoberta > pagar mais pesquisa estreita o intervalo; demo e residência levam semanas e a residência expõe o ato  1419ms
+   ✓ dossiê de descoberta > o histórico de A&R julga as apostas: deixar passar quem estourou e acertar antes do mercado  1161ms
+   ✓ dossiê de descoberta > um ano de jogo com o sistema rodando não quebra o caixa  12275ms
+ ✓ tests/r19-world.test.ts (8 tests) 24063ms
+   ✓ world19 > lote vazio: construir aqui (popup + ação), obra com prazo; vizinhança e popup do prédio  2917ms
+   ✓ world19 > ampliação em estágios, mudança de lote, renomear e vender  4591ms
+   ✓ world19 > bairro, vizinhos (compra), eventos com decisão e marcos clicáveis; saves antigos  629ms
+   ✓ world19 > determinístico: mesma semente, mesmo bairro e mesmos eventos  8181ms
+   ✓ world19 > começo pequeno: o lugarzinho da época e da carreira; some depois da 1ª ampliação  688ms
+   ✓ world19 > estilos: só os que já existiam, ≥5 em qualquer ano; escolhido persiste, custa e aparece no retrato  5422ms
+   ✓ world19 > bairro segue a história real década a década (exato = só história; outros modos desviam)  1621ms
+ ✓ tests/r8-sound.test.ts (11 tests) 5182ms
+   ✓ eixos puxados por quem está envolvido > composição grava os seis eixos; produtor seco e produtor polido levam a mesma faixa para lados opostos  774ms
+   ✓ eixos puxados por quem está envolvido > instrumentos dos integrantes: sintetizador e computador puxam para o eletrônico, violão para o acústico  493ms
+   ✓ eixos puxados por quem está envolvido > momento de vida de quem compõe: luto baixa a energia e aproxima a voz; vício aumenta a experimentação  472ms
+   ✓ eixos puxados por quem está envolvido > o momento de vida também muda o tema e fica registrado na faixa  408ms
+   ✓ eixos puxados por quem está envolvido > direção pretendida: a faixa chega mais perto do que o jogador pediu, mas não exatamente  415ms
+   ✓ descrição curta e específica > frases concordam em português e o veredito aponta onde o som funciona  416ms
+   ✓ descrição curta e específica > cada faixa e cada disco ganham descrição bilíngue  360ms
+   ✓ assinatura sonora que evolui > artista e selo acumulam os lançamentos e mudam de direção com o tempo  515ms
+   ✓ o som importa no jogo > rádio prefere som polido e vocal; clubes, som cru e enérgico — e o apelo acompanha o canal  513ms
+   ✓ o som importa no jogo > capa coerente, gosto dos críticos e palco reagem ao som  446ms
+   ✓ o som importa no jogo > jogo curto: tudo tem som, o caixa fecha e faixas antigas sem registro ainda têm perfil  364ms
+ ✓ tests/r27-songmkt.test.ts (13 tests) 12814ms
+   ✓ r27 songmkt: vitrine > é determinística, por época, e a faixa estimada sempre contém a verdade (A&R estreita)  2579ms
+   ✓ r27 songmkt: comprar > direito de gravar paga royalties mecânicos ao autor; obra comprada fica com a edição  398ms
+   ✓ r27 songmkt: comprar > caixa insuficiente bloqueia e não muda nada  404ms
+   ✓ r27 songmkt: ganhar de outros artistas > pedir canção exige laço; com laço, vira dívida de favor e a canção chega em Ofertas  341ms
+   ✓ r27 songmkt: ganhar de outros artistas > dar uma canção deixa o outro te devendo; cobrar o favor traz uma canção de volta  351ms
+   ✓ r27 songmkt: ganhar de outros artistas > sem laço nenhum, o mês não traz presentes  423ms
+   ✓ r27 songmkt: licenças (covers) > a licença de cover põe a canção no repertório e paga royalties aos autores originais  337ms
+   ✓ r27 songmkt: licenças (covers) > regras por época: licença compulsória dos EUA desde 1909 e a taxa sobe  764ms
+   ✓ r27 songmkt: riscos > canção parecida com outra: ao lançar, abre processo de plágio  419ms
+   ✓ r27 songmkt: riscos > venda dupla: quem não lança a tempo vê o outro ato lançar primeiro  381ms
+   ✓ r27 songmkt: riscos > a canção que você recusou vira hit na voz de outro (fato)  356ms
+   ✓ r27 songmkt: riscos > passar uma canção a tira da vitrine  409ms
+   ✓ r27 songmkt: simulação > semanas seguidas sem NaN, mesma semente = mesmo estado do mercado  5644ms
+ ✓ tests/r27-ctx.test.ts (14 tests) 3791ms
+   ✓ r27 CTX — modelo de ações > jogando como artista: proposta e olheiro dizem por quê  488ms
+   ✓ r27 CTX — modelo de ações > profissional do mercado: contratar com custo; sede cheia e sem caixa dão o motivo  505ms
+   ✓ r27 CTX — modelo de ações > cidade: "Nosso mundo" só na sua cidade; marcar show pede artistas  486ms
+   ✓ r27 CTX — modelo de ações > casa de shows: fora da época fica desabilitada com o ano  789ms
+   ✓ r27 CTX — DOM: data-ent/data-id nos nomes > actLink, releaseLink, labelLink, cityLink, songName e personLink16  738ms
+ ✓ tests/r8-crew-tour-ai.test.ts (11 tests) 8555ms
+   ✓ especialistas: trade-offs e química > produtor autoral brilha no gênero dele e briga com quem quer controle; o facilitador não  681ms
+   ✓ especialistas: trade-offs e química > engenheiro de assinatura troca originalidade por identidade; equipe de estrada cautelosa custa fixo e reduz risco  538ms
+   ✓ especialistas: trade-offs e química > empresário independente ganha confiança e reduz a influência do selo; química de anos cai com a saída da pessoa-chave  526ms
+   ✓ turnê roteada com promotor > rota compacta é mais curta e barata; a de expansão abre mercados  558ms
+   ✓ turnê roteada com promotor > promotor contrapropõe pedidos altos; linha-dura negocia mais e azeda o humor  441ms
+   ✓ turnê roteada com promotor > turnê fechada gera relatório com várias métricas e respeita a invariante do caixa  1636ms
+   ✓ IA, consentimento e autoria > leis por país diferem e o lobby antecipa ou atrasa  584ms
+   ✓ IA, consentimento e autoria > consentimento por artista: fatia e crédito importam; voz licenciada paga o artista e o selo  570ms
+   ✓ IA, consentimento e autoria > licenciar o catálogo sem consentimento dá caixa e custa confiança, valor de catálogo e a certificação  1190ms
+   ✓ IA, consentimento e autoria > escala sintética rende margem e corrói a confiança; humano mantém  1208ms
+   ✓ IA, consentimento e autoria > voz sem consentimento é bloqueada em país de lei dura e passa onde não há lei  618ms
+ ✓ tests/r27-world.test.ts (11 tests) 17525ms
+   ✓ r27 cenas — nascem, crescem, saturam e morrem, com causas > hit do jogador planta cena (casa fundadora, fundador, fato) e a cena percorre as fases até morrer  677ms
+   ✓ r27 cenas — nascem, crescem, saturam e morrem, com causas > entrar cedo rende bônus; chegar tarde numa cena saturada da sua cidade custa apelo  453ms
+   ✓ r27 rivais — personalidade, memória e imitadores > leilão vencido e artista levado do rival viram mágoa com lembrança; mágoa alta vira reação no noticiário  473ms
+   ✓ r27 rivais — personalidade, memória e imitadores > imitador copia o hit: ato clonado no rival, fato, cartão e apelo dividido; responder em público ajuda  435ms
+   ✓ r27 cidades — economia própria > poder de compra, ingresso médio, mídia e leis; tocar em casa é neutro  394ms
+   ✓ r27 história real como cartões de decisão > 1959: audiências do jabá abrem cartão; "abrir os livros" zera o calor e vira história da partida  5782ms
+   ✓ r27 história real como cartões de decisão > marcos ligados: AI-5 só para quem tem pé no Brasil e muda a censura; disco 1979 e streaming 2008 com efeitos que duram  548ms
+   ✓ r27 história real como cartões de decisão > disco 1979 abre cartão para quem tem ato de disco  5258ms
+   ✓ r27 consequências que se espalham > escândalo do jogador derruba vendas mais em uns mercados que em outros; esfria com o tempo  346ms
+   ✓ r27 consequências que se espalham > morte do rosto do ato: lenda, catálogo vende mais e vale mais  309ms
+   ✓ r27 determinismo > mesma semente → mesmo mundo (estado novo e geradores do jogo)  2845ms
+ ✓ tests/r19-fix-b.test.ts (8 tests) 12051ms
+   ✓ r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorteio > empresário, agência, festival, editora: para várias comissões/termos  6256ms
+   ✓ r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorteio > contraproposta do artista: a chance depende do tamanho do pedido e é a do sorteio  2330ms
+   ✓ r19-fix-b §4: cockpit por profissão > empresário: "Hoje" traz crises e mandato vencendo; atalhos e humor são de clientes  461ms
+   ✓ r19-fix-b §4: cockpit por profissão > selo continua com os atalhos clássicos; festival mostra edição e headliner faltando  811ms
+   ✓ r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do mês, delegação > crises de clientes contam no orçamento: cheio, o narrador não abre crise nova (só oportunidades)  451ms
+   ✓ r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do mês, delegação > autoResolve19 lista os cartões da mesa com a resposta padrão  1011ms
+   ✓ r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do mês, delegação > avisos menores além da cota viram um "Resumo do mês"; ruins nunca são agrupados  337ms
+   ✓ r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do mês, delegação > delegação do empresário renova mandato ou sobe exceção (fato deleg_exc → Caixa)  385ms
+ ✓ tests/r8-stories.test.ts (9 tests) 6645ms
+   ✓ identidade: fases da carreira > descoberta, afirmação, auge, desgaste e reinvenção  495ms
+   ✓ identidade: preferências mudam aceitação e reação > artista artístico prefere selo artístico e liberdade; o comercial, o contrário  418ms
+   ✓ identidade: preferências mudam aceitação e reação > memória: quem saiu magoado lembra da promessa quebrada ao receber nova proposta  370ms
+   ✓ identidade: preferências mudam aceitação e reação > mesmo fracasso, reações diferentes conforme a confiança  343ms
+   ✓ histórias com continuidade: o disco cult > aclamado e encalhado → rival corteja a voz → escolha → anos depois, redescoberta  2028ms
+   ✓ rivais com estratégia reconhecível > cada selo tem um manual; Abutre/Tecnologia antecipam a data do seu lançamento  488ms
+   ✓ rivais com estratégia reconhecível > interesse declarado vira motivo na proposta (contrato mais atraente do rival)  406ms
+   ✓ público segmentado > viral lota a parada mas não a casa; banda fiel vende ingresso e edição especial  585ms
+   ✓ público segmentado > redescoberta multiplica o catálogo antigo; artista parado perde fãs para os parecidos  1507ms
+ ✓ tests/r27-consistency.test.ts (11 tests) 1547ms
+   ✓ r27 F: apelidos, composição e pesquisa > save de versão antiga é recusado como "old" (a tela oferece Excluir)  724ms
+   ✓ r27 F: no jogo (vida real exata, 2005) > passagens, uma pessoa em vários papéis, compositor real, laços com período e procedência  723ms
+ ✓ tests/r4-live.test.ts (15 tests) 39158ms
+   ✓ live: determinismo e invariante > mesma seed = mesma história com os ganchos do palco  18900ms
+   ✓ curva do setlist > ordem automática melhora a ordem pior e grava bônus na turnê  304ms
+   ✓ notas do show e show ao vivo > cada show da turnê recebe empolgação, intensidade e cansaço; arenas enfileiram a cena  1437ms
+   ✓ ingressos > VIP e preço dinâmico sobem a bilheteria; meia-entrada reduz no Brasil  538ms
+   ✓ festival próprio > sem segurança a nota de segurança despenca; sem palco a edição é cancelada  399ms
+   ✓ casa de shows, residência e megaevento > casa própria rende por mês e conta como conquista  984ms
+   ✓ casa de shows, residência e megaevento > residência para veteranos ocupa capacidade e paga todo mês  1426ms
+   ✓ casa de shows, residência e megaevento > megaevento de 1985 convida o ato mais famoso; aceitar dá impulso ao catálogo  4224ms
+   ✓ cenários, desafio e universo > cenário prepara o mundo, mede a meta e dá medalha no prazo  8792ms
+   ✓ cenários, desafio e universo > desafio da semana: mesma semana, mesmas regras  838ms
+   ✓ cenários, desafio e universo > pacote de universo: valida, aplica no newgame e dispara eventos com caixa via post  745ms
+stdout | tests/r27-m1.test.ts > r27 M1 — compor jogável > jogar bem rende mais que jogar mal; o bom jogador fica ~+5–25% acima do modo rápido
+[m1] compor: ganho médio do bom jogador 17.9%, do pior -4.3%, ao acaso 4.7% (n=12)
+
+stdout | tests/r27-m1.test.ts > r27 M1 — gravar jogável > valor esperado: jogar com cuidado ≥ modo rápido (keep após N takes), sem passar de ~+25%
+[m1] gravar: quem joga com cuidado — Q 4.8%, performance 16.6% (n=6)
+
+ ✓ tests/r27-m1.test.ts (11 tests) 17938ms
+   ✓ r27 M1 — compor jogável > mesma semente, mesmas escolhas → mesma sessão e mesmo resultado (sem NaN)  920ms
+   ✓ r27 M1 — compor jogável > modo rápido intacto: composeSongs com a mesma semente dá as mesmas músicas de antes  583ms
+   ✓ r27 M1 — compor jogável > jogar bem rende mais que jogar mal; o bom jogador fica ~+5–25% acima do modo rápido  7416ms
+   ✓ r27 M1 — compor jogável > ideia emprestada: marca risco na faixa; carta de bloqueio/discussão encolhem a mão  3166ms
+   ✓ r27 M1 — gravar jogável > determinístico, não usa s.rng, sem NaN; fecha as faixas e a mixagem  525ms
+   ✓ r27 M1 — gravar jogável > mixagem: "mais rádio" sobe produção e baixa originalidade; "mais crua" o contrário  379ms
+   ✓ r27 M1 — gravar jogável > valor esperado: jogar com cuidado ≥ modo rápido (keep após N takes), sem passar de ~+25%  3866ms
+ ✓ tests/r8-social.test.ts (11 tests) 72916ms
+   ✓ herdeiros > morte com filho adulto: a escolha vai para a mesa e o herdeiro assume com patrimônio taxado  1566ms
+   ✓ herdeiros > aposentadoria passa o selo ao cônjuge; sem herdeiros, aposentar ou morrer encerra a run  1447ms
+   ✓ herdeiros > decisão de sucessão sem resposta vale o melhor herdeiro no começo do mês seguinte  1083ms
+   ✓ participações em selos rivais > negociação com resposta: preço generoso fecha, a fatia entra e o caixa respeita o extrato  429ms
+   ✓ participações em selos rivais > controle: absorver elenco e catálogo ou virar subselo  374ms
+   ✓ participações em selos rivais > rivais compram fatias entre si ao longo dos anos  24767ms
+   ✓ relações entre artistas > laços nascem na cena, ficam esparsos e aparecem por ato  9173ms
+   ✓ relações entre artistas > amigo no elenco ajuda a contratar; rixa pública dá apelo  557ms
+   ✓ feats negociados > convite com resposta na hora: aceita, contraproposta ou recusa; o caixa fica certo  706ms
+   ✓ feats negociados > convites de fora chegam na caixa de entrada e podem ser aceitos  3657ms
+   ✓ feats negociados > em uma run longa, convites de fora surgem sozinhos e o mundo grava feats  29153ms
+ ✓ tests/r27-m3.test.ts (7 tests) 4180ms
+   ✓ r27 M3 — operações jogáveis do Submundo > equipe visível (lealdade, habilidade, calor) e determinismo do plano inteiro  1069ms
+   ✓ r27 M3 — operações jogáveis do Submundo > modo rápido igual ao de antes (commitCrime sem plano; sem dq nada muda)  658ms
+   ✓ r27 M3 — operações jogáveis do Submundo > cada decisão empurra na direção esperada  312ms
+   ✓ r27 M3 — operações jogáveis do Submundo > valor esperado: jogar bem rende um pouco mais que o modo rápido (≈ +10–20%), jogar mal rende menos  1525ms
+   ✓ r27 M3 — operações jogáveis do Submundo > encobrir: bode expiatório, pagar e sumir do mapa mexem em provas, calor e mágoas  308ms
+   ✓ r27 M3 — operações jogáveis do Submundo > traição: quem tem lealdade baixa e é ameaçado pode entregar você (caso com informante, boato)  302ms
+ ✓ tests/r19-data-base.test.ts (7 tests) 864ms
+   ✓ r19 base de dados: pessoas, selos, lugares e eventos (validador da onda 2) > more19: 12 vagas ligadas; o que entra nos pacotes chega às tabelas do jogo  830ms
+ ✓ tests/r4-people.test.ts (20 tests) 30097ms
+   ✓ humor em pilha de pensamentos > show lotado vira pensamento com prazo e puxa o moral  1301ms
+   ✓ colapsos > quebrar equipamento cobra, entra no diário e alivia o estresse  310ms
+   ✓ colapsos > moral baixo gera risco; declaração ofensiva abre crise  335ms
+   ✓ saúde do músico > cirurgia de calos afasta da agenda e cura  2004ms
+   ✓ conversas e promessas > promessa de single cumprida aumenta a confiança  1192ms
+   ✓ conversas e promessas > promessa quebrada custa confiança e vira memória  1916ms
+   ✓ equipe com carreira > treinamento sobe habilidade; engenheiro vira produtor  1020ms
+   ✓ Mesa de negociação > automático assina um artista livre  324ms
+   ✓ Mesa de negociação > renovação na mesa estende o contrato  308ms
+   ✓ caixa de entrada e feed > mensagem de saúde responde direto e inclui decisões e avisos  694ms
+   ✓ caixa de entrada e feed > feed: cartas antes de 2004, redes depois  807ms
+   ✓ panelinhas, segredos e romances > mapa social agrupa o elenco  655ms
+   ✓ panelinhas, segredos e romances > detetive e pressão no CEO rival  595ms
+   ✓ determinismo > mesma seed = mesmo estado de pessoas  17309ms
+ ✓ tests/r20-G3.test.ts (15 tests) 3692ms
+   ✓ r20 G3 > B7: show ao vivo determinístico por show/decisão, sem Math.random, com log  463ms
+   ✓ r20 G3 > B15: segurança do kit melhora só as cartas de segurança de público  307ms
+ ✓ tests/r20c-n3.test.ts (8 tests) 10215ms
+   ✓ N3.1 mercados ligados às coortes > vendas/streams/campanha nascem nos mercados do lançamento; preço e ofensiva mexem; conservação  653ms
+   ✓ N3.2 validação rápida > direitos: teto da trava de recoupment  549ms
+   ✓ N3.2 validação rápida > contratos: oferta reserva caixa; recusa por caixa libera a reserva sem debitar  469ms
+   ✓ N3.2 validação rápida > save legado (sem política nem estados novos) carrega e avança  1678ms
+   ✓ N3.2 validação rápida > matriz modo × era × semente: cria sem erro e sem nada datado no futuro  4692ms
+   ✓ N3.3 dinâmicas novas > residência: custo/bolsa pela época, qualidade, risco fora do mercado, fim com inspiração  994ms
+   ✓ N3.3 dinâmicas novas > negociação coletiva: quatro escolhas com efeitos; fatos; greve real suspende pautas; antes de 1900 nada  1153ms
+ ✓ tests/r27-mundo.test.ts (13 tests) 11720ms
+   ✓ r27 resumo do mês (Este mês no mundo) > só itens do período, com categoria conhecida, destino válido e limite por categoria  2849ms
+   ✓ r27 resumo do mês (Este mês no mundo) > um fato público novo (lei, escândalo, morte) entra na categoria certa e leva à tela certa; fato velho não entra  631ms
+   ✓ r27 resumo do mês (Este mês no mundo) > seus atos vêm primeiro; segredo nunca aparece  966ms
+   ✓ r27 mapa e ficha da cidade > brilho das cenas entre 0 e 1 (a cena mais forte = 1); faixas de força  329ms
+   ✓ r27 mapa e ficha da cidade > países fechados: Cortina de Ferro em 1962 (selo no Ocidente), aberta em 2005  911ms
+   ✓ r27 linha das eras > 2005: CD no passado; streaming só aparece se já chegou neste save  347ms
+   ✓ r27 O que sabemos e paradas > separa públicos, confirmados, boatos e suspeitas sem repetir  3557ms
+   ✓ r27 O que sabemos e paradas > linha da parada: estreia, sobe, desce; seu disco marcado; pioneiro  863ms
+   ✓ r27 FLOW2: seus lugares fora da sede no mapa-múndi > filial em outra cidade vira marcador com ficha (cidade, tipo, equipe, artistas) e leva à página dela  317ms
+ ✓ tests/r27-art.test.ts (18 tests) 4784ms
+   ✓ r27 K — arte de página: área → cena > cada cena muda com a época (≥4 variantes) e a pintura é determinística e cheia  855ms
+   ✓ r27 K — cenas: escolhas com efeito real > toda cena tem quadro pintável nas duas pontas da história e 0–3 escolhas  468ms
+ ✓ tests/r8-pacing.test.ts (13 tests) 23657ms
+   ✓ eras que mudam a estratégia > na virada do LP o selo escolhe uma postura e os modificadores mudam singles e LPs  1174ms
+   ✓ eras que mudam a estratégia > eras já passadas no início ficam com a postura padrão; só a atual é perguntada  1543ms
+   ✓ eras que mudam a estratégia > catálogo no CD: discos velhos vendem mais; pivô custa caro e tem carência  1579ms
+   ✓ eras que mudam a estratégia > selos rivais adotam posturas conforme o arquétipo e isso afeta os discos deles  681ms
+   ✓ eras que mudam a estratégia > imagem é tudo na TV de clipes cobra por artista todo mês  1943ms
+   ✓ avançar até algo relevante > sem critérios, para no limite de meses e devolve um resumo agrupado  1836ms
+   ✓ avançar até algo relevante > para quando surge uma decisão nova  1078ms
+   ✓ avançar até algo relevante > critério de caixa: dispara só ao cruzar o piso  356ms
+   ✓ delegação com orçamento, prioridade e registro > teto de gasto por carreira corta ações pagas e a equipe explica por quê  1696ms
+   ✓ delegação com orçamento, prioridade e registro > prioridade turnê põe shows na agenda; descanso não lança nada  1357ms
+   ✓ delegação com orçamento, prioridade e registro > com mais carreiras que a capacidade da equipe, as de menor prioridade ficam no mínimo  885ms
+   ✓ delegação com orçamento, prioridade e registro > orçamento da equipe é compartilhado e o jogo continua determinístico  6611ms
+   ✓ sede como painel > cada carreira tem estado, atenção, projeto e próxima decisão; a sede guarda o crescimento  2912ms
+ ✓ tests/r19-regions.test.ts (9 tests) 3298ms
+   ✓ r19 T5 regions19 — selos regionais > sound system: abrir, render, clash com dubplates, fato com ouvinte e eco  540ms
+   ✓ r19 T5 regions19 — selos regionais > cassete fora da época antes de 1979; selo de rua "de rua" acumula mágoa e vira processo  813ms
+   ✓ r19 T5 — comuna-república e exílio (N10) > comuna sob a ditadura brasileira: calor, batida não gráfica, exílio pelo society18  551ms
+   ✓ r19 T5 — greve 1948 (M10) e campanhas (M29) > canção em campanha: licenciar paga e mexe na facção; fato e eco  395ms
+ ✓ tests/r19-market-a.test.ts (9 tests) 4494ms
+   ✓ r19 T6 M8 — certificações por país e época > patamares da época e fórmula de streams (EUA: singles 2013, álbuns 2016)  745ms
+   ✓ r19 T6 M8 — certificações por país e época > disco do jogador espera auditoria; pagar entrega a placa, vira fato, manchete e prestígio  522ms
+   ✓ r19 T6 M8 — certificações por país e época > contar pacotes sobe um degrau e pode ser revogado (eco)  521ms
+   ✓ r19 T6 M7 — pesquisa de mercado > teste custa, tem erro, deixa escolher e dá bônus nas paradas ao single escolhido  808ms
+   ✓ r19 T6 N12/N15/N21 — playlists, promotora 360, antitruste > faixas sem rosto: compra fechada paga; vazamento custa reputação; denúncia rende reputação  626ms
+   ✓ r19 T6 N12/N15/N21 — playlists, promotora 360, antitruste > estrela com contrato acabando recebe oferta 360; "deixar sair" vira saída no fim do contrato  472ms
+   ✓ r19 T6 N12/N15/N21 — playlists, promotora 360, antitruste > fusão acima do limiar → remédio, leilão, lote vai para alguém  448ms
+   ✓ r19 T6 N23+E7 — ciclo da cena (cadeia 6: corrida → ressaca) > cena forçada: hype → corrida (scene_boom) → saturação → ressaca (scene_bust) com efeitos  347ms
+ ✓ tests/r19-afterlife.test.ts (6 tests) 7561ms
+   ✓ r19 T3 afterlife19 — espólio como ator, 11.8, arena digital > 11.8: morte encerra o contrato; master do artista volta aos herdeiros; projeto de catálogo pede o espólio  700ms
+   ✓ r19 T3 afterlife19 — espólio como ator, 11.8, arena digital > 11.8: masters de selo rival bloqueiam o projeto até licenciar; sociedade passa ao herdeiro  537ms
+   ✓ r19 T3 afterlife19 — espólio como ator, 11.8, arena digital > E2: espólio processa, propõe projeto e tem calendário; arena digital com residência de morto  4489ms
+   ✓ r19 T3 afterlife19 — espólio como ator, 11.8, arena digital > gear19: nada do futuro; endosso, assinatura e fabricante comprável  1237ms
+   ✓ r19 T3 afterlife19 — espólio como ator, 11.8, arena digital > cadeia 5: guitarra vira assinatura → artista morre → relíquia → leilão → herdeiros brigam → holograma/tributo oficial  593ms
+ ✓ tests/r27-flow2.test.ts (15 tests) 14069ms
+   ✓ r27 FLOW2 — campanha de lançamento pelo avanço > estreia perto → cartão "Campanha"; longe → nada (o quadro dura no máximo 8 semanas)  1302ms
+   ✓ r27 FLOW2 — campanha de lançamento pelo avanço > só importantes: artista pequeno vai no rápido; famoso (≥ 40) é oferecido  1392ms
+   ✓ r27 FLOW2 — campanha de lançamento pelo avanço > "Resolver rápido" não pergunta de novo; sempre rápido não oferece nada  825ms
+   ✓ r27 FLOW2 — campanha de lançamento pelo avanço > a tela de programar (scheduling) usa a mesma atividade: oferecida só quando o avanço a ofereceria  756ms
+   ✓ r27 FLOW2 — entrevista e coletiva > pedido de imprensa: no máximo um por mês (o mais famoso), só na virada do mês; coletivas são importantes  1088ms
+   ✓ r27 FLOW2 — crise e reunião pelo avanço (importantes) > crise na mesa → cartão no modo "só importantes"; Resolver rápido = deixar correr  882ms
+   ✓ r27 FLOW2 — crise e reunião pelo avanço (importantes) > reunião de diretoria: oferecida no começo do mês quando há pauta; desligada e recusada não volta  1065ms
+   ✓ r27 FLOW2 — crise e reunião pelo avanço (importantes) > avanço longo (trimestre) resolve tudo no rápido  796ms
+   ✓ r27 FLOW2 — telas (a atividade É a tela da ação) > turnê: "Confirmar turnê" vira o mapa só com rota; só importantes = 3+ cidades ou fama ≥ 30  653ms
+   ✓ r27 FLOW2 — telas (a atividade É a tela da ação) > renovação: a mesa só para contratos do seu selo  663ms
+   ✓ r27 FLOW2 — telas (a atividade É a tela da ação) > favores: sem contato válido não abre a conversa (a ação de sempre segue)  606ms
+   ✓ r27 FLOW2 — modo e simulação > planejar o avanço não muda a simulação (bots e testes seguem iguais)  3116ms
+   ✓ r27 FLOW2 — modo e simulação > nenhuma ocasião produz texto vazio ou NaN  913ms
+ ✓ tests/r19-money-b.test.ts (11 tests) 3241ms
+   ✓ r19 money-b — valor de mercado (M1/M2) > valor de mercado sobe com a fama  468ms
+   ✓ r19 money-b — N2 vender o contrato (Sun → RCA) > lance no aperto de caixa → vender com override paga % das vendas no rival; estrela que explode vira arrependimento  332ms
+   ✓ r19 money-b — N4 disco de cumprimento > artista insatisfeito entrega lixo; engavetar conta como entregue; processar abre processo  419ms
+   ✓ r19 money-b — N4 disco de cumprimento > carreira de artista: entregar o disco de cumprimento ao selo NPC  389ms
+   ✓ r19 money-b — N16 briga de gestão (Klein) > votação pela Dinâmica; apoiar a minoria contra a maioria racha a banda e abre rixa  384ms
+ ✓ tests/r7.test.ts (12 tests) 30794ms
+   ✓ artistas reais e discografia > nomes reais: os artistas surgem com integrantes, discos anteriores e quem já acabou fica na história  559ms
+   ✓ artistas reais e discografia > no modo ficcional os arquétipos reais entram com nomes inventados  414ms
+   ✓ artistas reais e discografia > atos gerados ativos no início ganham discografia simulada  434ms
+   ✓ ciclo de vida > banda que perde um integrante pode seguir com substituto e o catálogo continua vendendo  1577ms
+   ✓ paradas por país e formato > cada país tem sua parada e prêmios nacionais saem no fim do ano  19977ms
+   ✓ início personalizado > ano exato, caixa, sede, estúdio, formação e estágio do artista  381ms
+   ✓ instrumentos, mobília e vida intensa > pessoas tocam até 5 instrumentos e aprendem com aulas  3318ms
+   ✓ instrumentos, mobília e vida intensa > vícios, empréstimos e viagens têm consequências e mudam traços  2660ms
+   ✓ venda de composições e negociação na hora > vender uma música rende royalties combinados  369ms
+   ✓ agenda por semana > combinações são detectadas e ações de semanas posteriores rodam ao longo do mês  572ms
+ ✓ tests/r8.test.ts (9 tests) 25064ms
+   ✓ início e correções > caixa personalizado é o valor exato da tela e os atos contratados entram em qualquer papel  494ms
+   ✓ início e correções > ninguém toca instrumento sem nome  437ms
+   ✓ início e correções > paradas já começam preenchidas (mundo e países)  404ms
+   ✓ início e correções > ficha do disco: faixas com duração (até de discos antes da run) e nota da crítica  460ms
+   ✓ capas > três propostas com estilos diferentes; a escolhida vai para o lançamento e cobra o custo  2600ms
+   ✓ festivais > line-up do ano, negociação na hora, convite aceito e cachê na data  6935ms
+   ✓ premiações > indicados saem em novembro, campanha custa e soma pontos; a cerimônia (fevereiro) escolhe entre os indicados  12899ms
+   ✓ críticos regionais > cada região tem críticos; resenhas puxam críticos da casa; relação pesa  443ms
+   ✓ peso mundial dos países > artista brasileiro domina em casa mas viaja menos que um americano  387ms
+ ✓ tests/r19-market-b.test.ts (5 tests) 7308ms
+   ✓ r19 T7 — mercado B: remix19, adsync19, score19 > cadeia 2: fracasso de 1983 → remix 1997 → comercial 2009 → série 2022 → sucesso tardio → certificação tardia  785ms
+   ✓ r19 T7 — mercado B: remix19, adsync19, score19 > residência de DJ e canção-tema com estreia e prêmio  2233ms
+   ✓ r19 T7 — mercado B: cancel19, insure19, culture19, naming19 > cancelamento 2016: onda, janela, desculpas, cláusula de conduta da marca e do nome da casa  651ms
+   ✓ r19 T7 — mercado B: cancel19, insure19, culture19, naming19 > seguro de pessoa-chave paga na morte e irrita herdeiros; plano de saúde e cultura mexem em equipe e propostas  430ms
+   ✓ r19 T7 — mercado B: cancel19, insure19, culture19, naming19 > fatos novos têm ouvintes, fluxos de sorteio registrados, nada antes da época  3205ms
+ ✓ tests/r4-scenes.test.ts (9 tests) 43824ms
+   ✓ cenas: estado e determinismo > mesma seed = mesmas cenas  39115ms
+   ✓ premiação > monta indicados, revela o vencedor e aplica o discurso uma vez  384ms
+   ✓ premiação > discurso político deixa o ato na mira e provocação esquenta a rivalidade  323ms
+   ✓ entrevista > tom ideal rende mais que o arriscado; efeitos limitados e aplicados uma vez  360ms
+   ✓ rádio > disco certo dá impulso de apelo que aparece nos modificadores  1460ms
+   ✓ tribunal e conselho > audiência com perito melhora as chances; recurso cobra taxa  319ms
+   ✓ tribunal e conselho > assembleia anual vota propostas  396ms
+   ✓ turnê, feira e fábrica > quarto destruído cobra multa na hora; descontar do artista devolve metade  308ms
+   ✓ turnê, feira e fábrica > feira cobra estande e vende licenças; fábrica prensa em turno extra  1154ms
+ ❯ tests/r18-tutorial.test.ts (7 tests | 1 failed) 884ms
+   ✓ tutorial18: ajuda > toda área do menu (árvore nav17, páginas de carreira, telas absorvidas e áreas registradas) tem ajuda bilíngue 5ms
+   × tutorial18: ajuda > toda aba registrada (registerTab/registerPageTab/abas de carreira) e toda aba vista no navegador tem ajuda 58ms
+     → expected [ 'life-you:skills' ] to deeply equal []
+   ✓ tutorial18: ajuda > helpFor18 junta página e abas abertas sem repetir 1ms
+   ✓ tutorial18: ajuda > ligações e termos citados existem 8ms
+   ✓ tutorial18: glossário > cobre os termos pedidos e busca sem acento e por apelido 5ms
+   ✓ tutorial18: trilhas e dicas > toda carreira tem trilha; todo destino tem ajuda; leitura não muda o estado  470ms
+   ✓ tutorial18: trilhas e dicas > dica dispara quando o fato aparece e some depois de vista  335ms
+ ✓ tests/r19-money-a.test.ts (9 tests) 5600ms
+   ✓ registro > todo fato novo tem ouvinte money19; fluxo próprio; porquês e ecos  655ms
+   ✓ M13 juros por época > trajetória real: 1981 alto, 2009–2021 quase zero; múltiplo de masters 2021 entre 15 e 20  417ms
+   ✓ M13 juros por época > crédito mais caro em 1981 que em 2015; deriva só fora do modo exato  1520ms
+   ✓ J3 covenants e o banco > 3 trimestres no prejuízo → banco chama a dívida (carta + fato + elenco desconfia); aceleração; quebra de novo no vermelho → pedido de falência e leilão do empenho  587ms
+   ✓ J3 covenants e o banco > aceleração sobe a prestação  471ms
+   ✓ N1 falência de selo e leilão de masters > rival quebra → fato → leilão com carta; lance do jogador vence e os masters mudam de dono  408ms
+   ✓ N5 preferência e "Versão do artista" > preferência: o artista cobre a venda do master (fato + confiança)  568ms
+   ✓ N5 preferência e "Versão do artista" > regravação + campanha dos fãs: master antigo de outro selo perde demanda pela parcela dos fãs  629ms
+   ✓ N6 títulos lastreados (Bowie Bonds) > emite com rating e cupom = juro + spread; Napster rebaixa; inadimplência executa o lastro  337ms
+ ✓ tests/r27-hqpx.test.ts (12 tests) 1551ms
+   ✓ r27 nível da sede → casca e salas > salas desenhadas = salas abertas no modelo (minHq), por nível  651ms
+   ✓ r27 desenho determinístico > mesma entrada → mesmos pixels; nível, ano, cidade e largura mudam o desenho  355ms
+   ✓ r27 desenho determinístico > bonecos: pés no chão da sala certa, dentro dela, "+N" quando passa do limite  358ms
+ ✓ tests/r19-fix-c.test.ts (9 tests) 3442ms
+   ✓ r19 fix C — regras de contexto (§2) > diretor × dedicação dependem de porte, energia e frentes  533ms
+   ✓ r19 fix C — regras de contexto (§2) > credibilidade é julgada pelo consenso posterior, não pela qualidade oculta; quem viu antes ganha bônus  413ms
+   ✓ r19 fix C — regras de contexto (§2) > festival rival pesa por distância, mês, gênero e porte  319ms
+   ✓ r19 fix C — ctxFx nas decisões (§8) > a mesma opção rende diferente com históricos diferentes  818ms
+   ✓ r19 fix C — ctxFx nas decisões (§8) > quem tem mágoa aberta é sorteado com mais peso  386ms
+   ✓ r19 fix C — vitórias pequenas (§6) > caminhos novos e KPIs relativos do empresário  372ms
+ ✓ tests/r8-you-map.test.ts (10 tests) 21379ms
+   ✓ bens pessoais > comprar sai do patrimônio pessoal (não do caixa) e dá efeitos; vender devolve o valor de mercado  845ms
+   ✓ bens pessoais > manutenção mensal sai do bolso; três meses sem pagar e o bem é tomado  581ms
+   ✓ bens pessoais > bens aliviam o estresse e treinam o personagem; jatinho dá tempo livre  538ms
+   ✓ investimentos, equipe, cursos e aparições > aplicar e resgatar  599ms
+   ✓ investimentos, equipe, cursos e aparições > assistente pessoal dá +1 de tempo livre e sai do bolso todo mês  637ms
+   ✓ investimentos, equipe, cursos e aparições > curso completo vira diploma com bônus permanente  547ms
+   ✓ mapa jogável > viajar sai do bolso, você fica na cidade e pode frequentar os clubes de lá  448ms
+   ✓ mapa jogável > olheiro avulso paga do caixa e traz nomes da cidade  546ms
+   ✓ mapa jogável > divulgação dá fãs e aumenta o público da cidade; distribuição local em teste abre e fecha o mercado  14059ms
+   ✓ mapa jogável > o mês completo segue com bens e investimentos e mantém o invariante do caixa  2575ms
+ ✓ tests/r19-ux.test.ts (11 tests) 35980ms
+   ✓ r19 ux — viradas e metas > metas de abertura para toda faixa de época, inclusive 1889  2429ms
+   ✓ r19 ux — viradas e metas > virada de década grava mudanças, resumo, rivais e metas; fato era_turn tem ouvinte e vai ao Diário  6075ms
+   ✓ r19 ux — viradas e metas > era nova (LP/streaming) vira cartão com o que mudou  12783ms
+   ✓ r19 ux — viradas e metas > meta cumprida dá reputação e fato era_goal; prazo no calendário; porquê  863ms
+   ✓ r19 ux — recibo, perda, fim, divulgação > recibo de decisão registra escolha e ecos pendentes  1363ms
+   ✓ r19 ux — recibo, perda, fim, divulgação > "por que perdi?": causas do ledger e dos fatos, com o que teria ajudado  2122ms
+   ✓ r19 ux — recibo, perda, fim, divulgação > cadeias de história contam elos; epitáfio; herança entra pelo ledger (financiamento)  516ms
+   ✓ r19 ux — recibo, perda, fim, divulgação > divulgação progressiva: áreas avançadas fecham no início e abrem com tempo ou gatilho (e ficam abertas)  8880ms
+   ✓ r19 ux — "Sem tutoriais (já sei jogar)" > com a chave desligada, partidas novas em 1889/1965/2005 seguem iguais (só a interface muda)  936ms
+ ✓ tests/r17-data.test.ts (6 tests) 44349ms
+   ✓ r17 dados reais > relíquias reais só aparecem depois do fato e seguem a história (com nomes reais)  26925ms
+   ✓ r17 dados reais > gêneros em alta saem das paradas e hit viral global dá alcance de astro americano  17235ms
+ ✓ tests/r19-links-b.test.ts (9 tests) 3563ms
+   ✓ 1. sessão × qualidade × CA/PA > músico forte sobe a dimensão certa; fraco derruba; porquê explicado  595ms
+   ✓ 2. câmbio por submercado > crise da tequila (modo exato) cobra a receita faturada no México e o fato atinge quem depende  349ms
+   ✓ 2. câmbio por submercado > fora do modo exato, depois do início, a tabela real não roteiriza  510ms
+   ✓ 3. inteligência de rivais, pactos e traições > intenção revelada vira nota do relatório e carta; pacto pode virar traição com carta  399ms
+   ✓ 4/6. campus: moral, qualidade, atração; obra atrasada e seguro como cartas > placar do campus mexe em propostas; investimento destrava bônus  379ms
+   ✓ 4/6. campus: moral, qualidade, atração; obra atrasada e seguro como cartas > atraso e dano viram cartas com ecos  480ms
+   ✓ 5. júri lê o caminho > selo de paradas com crítica fraca perde pontos; ajuste entra no placar de indicação  417ms
+   ✓ 7. PA e olho do A&R nas ofertas; corrida pelo jovem > ofertas registram a aposta e o olho fica entre 0,2 e 0,95  426ms
+ ✓ tests/r27-hqrooms.test.ts (10 tests) 4592ms
+   ✓ r27 I1 leitura pura e preço > nível novo vem com salas e andares fechados; sala de andar fechado espera o andar  611ms
+   ✓ r27 I1 leitura pura e preço > custo segue a época (nominal) e a cidade (mercado × bairro)  1721ms
+   ✓ r27 I1 compra → obra → aberta > estúdio B: paga, fica em obra pelos meses certos, abre e soma uma sessão; manutenção mensal  463ms
+   ✓ r27 I1 compra → obra → aberta > andar: libera as salas dele e soma vagas de equipe  355ms
+   ✓ r27 I1 compra → obra → aberta > efeitos: perks e vagas das salas abertas (imprensa, ensaio, reunião, arquivo, reforma do lounge)  523ms
+   ✓ r27 I1 compra → obra → aberta > sem caixa: não compra e explica  305ms
+   ✓ r27 I1 compra → obra → aberta > mudança de sede: sala comprada vai junto; andar é do prédio  309ms
+ ✓ tests/r10-labels.test.ts (10 tests) 87761ms
+   ✓ gravadoras escolhidas > sem configuração, o conjunto de sempre; todo selo ativo tem líder  531ms
+   ✓ gravadoras escolhidas > escolhe quais e quantos; as do futuro só nascem no ano delas, com fundador e notícia  31928ms
+   ✓ gravadoras escolhidas > número de rivais: corta, completa e aceita zero  2873ms
+   ✓ gravadoras escolhidas > do zero, todos iguais: mesmo caixa, reputação e nenhum elenco (inclusive o jogador)  949ms
+   ✓ estratégias novas > os oito manuais novos deixam jogadas visíveis  33676ms
+   ✓ líderes > envelhecem, se aposentam e têm sucessores registrados na crônica  344ms
+   ✓ líderes > anos ruins derrubam o líder; a carreira guarda os selos que comandou  651ms
+   ✓ líderes > semana a semana = mês a mês com líderes e conjunto escolhido  16507ms
+ ✓ tests/r19-live.test.ts (7 tests) 9175ms
+   ✓ r19 T4 live19 — ingressos, festival grátis, vinil, temporada > N9: boicote ao gigante → audiência antitruste corta a taxa; modo exato arquiva  1448ms
+   ✓ r19 T4 live19 — ingressos, festival grátis, vinil, temporada > N26: festival gratuito lotado sem segurança → incidente, processo e lei; modo exato sem tragédia  809ms
+   ✓ r19 T4 live19 — ingressos, festival grátis, vinil, temporada > N22: curva do vinil e Record Store Day → superfãs e vendas  762ms
+   ✓ r19 T4 live19 — ingressos, festival grátis, vinil, temporada > M6: Natal > janeiro, média do ano ≈ 1, streaming sente menos, marcos no calendário  4567ms
+   ✓ r19 9.8 charity19 — cadeia 4 > crise → beneficente → rivais no palco → pacto ou briga → dinheiro some → investigação  556ms
+   ✓ r19 9.12 contests19 — concursos > festival da canção: inscrição, patrocínio, júri → final, vencedor vira pista e ghostwriter (cadeia 3)  372ms
+   ✓ r19 9.12 contests19 — concursos > final do tv18 vira contest_final/contest_winner; ouvintes registrados  656ms
+ ✓ tests/r27-home.test.ts (8 tests) 1122ms
+   ✓ r27 Nova run rápida > gera um jogo válido pelo mesmo preparo da configuração completa  1026ms
+ ✓ tests/r19-echoes.test.ts (7 tests) 4779ms
+   ✓ r19 ecos (11.2) > eco padrão pelo tom: classifica, agenda e dispara com Fato  1499ms
+   ✓ r19 era 1889 (11.5) e contratos por época (11.6) > card "A era", Conselheiro e ecos de época  505ms
+   ✓ r19 Frente 2 — piloto da história real > 4 marcos com decisão; escolha e desfecho aparecem no cartão "A história real" (modo alternativo)  1393ms
+   ✓ r19 Frente 2 — piloto da história real > festival gratuito: vítima anônima e fictícia, sem detalhe gráfico  1357ms
+ ✓ tests/r27-flow.test.ts (12 tests) 8312ms
+   ✓ r27 FLOW — a Compor da agenda > modo jogável: a composição é oferecida no avanço do mês  1521ms
+   ✓ r27 FLOW — a Compor da agenda > modo rápido: nada é oferecido — a composição fica com o motor  832ms
+   ✓ r27 FLOW — a Compor da agenda > "só importantes": composição de ato contratado vai no rápido; avanço longo resolve tudo no rápido  881ms
+   ✓ r27 FLOW — a Compor da agenda > agenda delegada também conta (a agenda padrão que vai rodar)  887ms
+   ✓ r27 FLOW — a Compor da agenda > mês já aberto (avanço de semana): a agenda já rodou, nada de composição  756ms
+   ✓ r27 FLOW — a Compor da agenda > composição já jogada (played27) não é oferecida de novo  643ms
+   ✓ r27 FLOW — a Compor da agenda > uma composição por ato, mesmo com duas "Compor" na agenda  672ms
+   ✓ r27 FLOW — limite por mês, ordem e pureza > no máximo 3 por mês; o resto vai no rápido com nota; importantes primeiro  620ms
+   ✓ r27 FLOW — limite por mês, ordem e pureza > planejar não mexe no jogo (modo rápido intacto) e é determinístico  856ms
+   ✓ r27 FLOW — limite por mês, ordem e pureza > telas: a mesa/o plano só abre quando o modo pede; senão a tela de sempre segue  629ms
+ ✓ tests/r27-nav.test.ts (12 tests) 169ms
+ ✓ tests/r27-city2.test.ts (17 tests) 6052ms
+   ✓ r27 CITY2 lugares básicos por época > london 1962: todo lugar básico da época existe (seu ou NPC)  552ms
+   ✓ r27 CITY2 lugares básicos por época > rio 1985: todo lugar básico da época existe (seu ou NPC)  484ms
+   ✓ r27 CITY2 lugares básicos por época > new_york 2005: todo lugar básico da época existe (seu ou NPC)  486ms
+   ✓ r27 CITY2 lugares básicos por época > rádio só depois de 1922; partituras antes de 1920, CD nos anos 90, vinil depois  418ms
+   ✓ r27 CITY2 toda construção é interativa > london 1962: cada lote ocupado tem lugar ou prédio seu com ações  326ms
+   ✓ r27 CITY2 toda construção é interativa > rio 1985: cada lote ocupado tem lugar ou prédio seu com ações  361ms
+   ✓ r27 CITY2 toda construção é interativa > new_york 2005: cada lote ocupado tem lugar ou prédio seu com ações  413ms
+   ✓ r27 CITY2 toda construção é interativa > vitrine na loja: custa, dá fãs e entra em espera  352ms
+   ✓ r27 CITY2 filial/escritório estrangeiro fora do bairro > rival vizinho é sempre da cidade (ou do país) da sede  1495ms
+   ✓ r27 CITY2 filial/escritório estrangeiro fora do bairro > filial em outra cidade não entra no mapa da sede  334ms
+ ✓ tests/r19-media.test.ts (8 tests) 8285ms
+   ✓ r19 T9 — banco de mídia > chega às metas da Frente 10 (eventos, situações, veículos, formatos, covers, cenas, relíquias, crime)  740ms
+   ✓ r19 T9 — banco de mídia > nada do futuro: programa e estúdio só aparecem na janela real  406ms
+   ✓ r19 9.10/9.11 — fanzines e fraudes > fanzine próprio esquenta a cidade e acende uma cena (zine_scene); o porquê explica o calor  1736ms
+   ✓ r19 9.10/9.11 — fanzines e fraudes > voz-fantasma exposta: escândalo, fãs e prêmios cassados (award_revoked)  733ms
+   ✓ r19 9.10/9.11 — fanzines e fraudes > modo exato: revista real não está à venda e ato real não vira banda-fantasma  368ms
+   ✓ r19 9.10/9.11 — fanzines e fraudes > cadeia 6 forçada: fanzine → cena → corrida do ouro (scene_boom) → bandas-fantasma → lei nova  4276ms
+ ✓ tests/r8-project.test.ts (5 tests) 4367ms
+   ✓ projeto musical > atravessa conceito → composição → gravação → mixagem/capa → programado → lançado → balanço  2183ms
+   ✓ projeto musical > cancelar o lançamento devolve o dinheiro e volta para a etapa de acabamento  370ms
+   ✓ leitura do resultado > três fatores que ajudaram, dois que atrapalharam, contra a expectativa e uma oportunidade  353ms
+   ✓ leitura do resultado > fracasso explicado: marketing fraco vira a oportunidade  307ms
+   ✓ retrospectiva > organiza discos por era, marcos, artistas e gêneros  1150ms
+ ✓ tests/r17-foundation.test.ts (5 tests) 8225ms
+   ✓ r17 fundação > fatos: emitir, ouvir, consultar e pontes de remember/chron sem duplicar  590ms
+   ✓ r17 fundação > escândalo: mesmo contador, Fact tipado e reação por país (religião/época) e patrocínio  439ms
+   ✓ r17 fundação > obrigações: conceder, alavancar oferta, usar, perdoar; adaptadores dos segredos antigos  363ms
+   ✓ r17 fundação > estresse: curto + longo, porquê e quebra que usa mecânicas existentes  314ms
+   ✓ r17 fundação > situações: NPC escolhe pelos traços; orçamento e calma; determinismo de meses  6515ms
+ ❯ tests/r27-ux.test.ts (11 tests | 1 failed) 155ms
+   ✓ r27 UX: hubs (páginas unificadas) > cada página está em no máximo um hub, todas existem e ficam na seção do hub 14ms
+   × r27 UX: hubs (páginas unificadas) > quase toda página da árvore cabe num hub (as soltas são poucas e de propósito) 15ms
+     → expected [ 'cockpit', 'songmkt27', 'tut18' ] to deeply equal [ 'cockpit', 'tut18' ]
+   ✓ r27 UX: hubs (páginas unificadas) > vista Essencial: toda página do menu aparece em exatamente uma entrada (nada some), em toda combinação de carreiras 36ms
+   ✓ r27 UX: hubs (páginas unificadas) > poucas portas: ≤ 5 entradas por seção (fora as páginas de carreira) e ~1/3 das páginas no total 20ms
+   ✓ r27 UX: hubs (páginas unificadas) > as carreiras vêm primeiro na seção, como entradas próprias 1ms
+   ✓ r27 UX: hubs (páginas unificadas) > faixa de vistas: as páginas do mesmo hub; página solta não tem faixa 2ms
+   ✓ r27 UX: ids antigos continuam abrindo > todo id antigo de página resolve para uma página do menu (direto, pela carreira ou por um hub) 59ms
+   ✓ r27 UX: ids antigos continuam abrindo > toda página com abas no registro continua alcançável no menu Essencial 2ms
+   ✓ r27 UX: ids antigos continuam abrindo > ids de hub ("hub:money") abrem a última página visitada nele, ou a 1ª visível 1ms
+   ✓ r27 UX: escolhas e faixas compactas > segmentado para 2–4 opções curtas; lista para 5+ ou nomes longos; chips para filtros; cartões com consequência 0ms
+   ✓ r27 UX: escolhas e faixas compactas > faixa de abas: até 6 mostra todas; mais que isso mostra 5 + a aberta e o resto vai para "+N" 0ms
+ ✓ tests/r19-session.test.ts (8 tests) 3786ms
+   ✓ r19 session19 — músicos de estúdio > coletivos reais por época; fictícios só fora do modo exato  809ms
+   ✓ r19 session19 — músicos de estúdio > contratar: vira pessoa, toca nas faixas, sobe a dimensão do disco e cresce  384ms
+   ✓ r19 session19 — músicos de estúdio > documentário → processo por crédito (rights18 + holds17); modo exato não inventa processo de gente real  544ms
+   ✓ r19 session19 — músicos de estúdio > fama do documentário pode virar carreira própria (fato session_star)  348ms
+   ✓ r19 writers19 — créditos, ghostwriters e plágio > ghostwriter escreve, guarda rancor e, ao revelar, vira escândalo e carreira solo  484ms
+   ✓ r19 writers19 — créditos, ghostwriters e plágio > plágio contra você: acordo cobra; tribunal resolve com fato case_ruling  374ms
+   ✓ r19 writers19 — créditos, ghostwriters e plágio > meses seguidos rodam sem erro e são determinísticos  552ms
+ ✓ tests/r18-cine.test.ts (6 tests) 9994ms
+   ✓ cine18: composição de cenas > cerimônia completa: tapete, indicados, apresentador, envelope, vencedor, subida, discurso e festa; o tema escolhido vira balão  961ms
+   ✓ cine18: composição de cenas > perder: a reação escolhida (sair) vira pose e caminhada; o protesto do escândalo aparece no tapete  611ms
+   ✓ cine18: composição de cenas > todos os grandes momentos viram storyboard de 2+ quadros com legenda; holograma usa ator fantasma  829ms
+   ✓ post18: carreiras póstumas > a era decide o que existe e a qualidade técnica  735ms
+   ✓ post18: carreiras póstumas > espólio com herdeiros: chance e polêmica explicadas; tributo aprovado rende, sobe o legado e vira cena  2382ms
+   ✓ post18: carreiras póstumas > modo exato: artista real bloqueado e a crônica real aparece na data  4464ms
+ ✓ tests/r27-ach.test.ts (7 tests) 7127ms
+   ✓ r27 conquistas — determinismo > sincronizar com o perfil a cada mês não muda a simulação  6583ms
+   ✓ r27 conquistas — determinismo > ler conquistas antes do primeiro mês não cria estado na partida  489ms
+ ✓ tests/r6.test.ts (8 tests) 16384ms
+   ✓ scouting e pipeline > há pelo menos 3 ações de scouting por mês e o pipeline segue as ofertas  569ms
+   ✓ persona > atributos derivam de origem, traços, estilo, visual e pontos  401ms
+   ✓ persona > origem e traços viram perks; estilo desbloqueia perks com o tempo  320ms
+   ✓ temperamento × gênero > atos de rock tendem a ter rebeldes; hip hop, gente da rua  469ms
+   ✓ cartas e mutators novos > perks de mutator aparecem; a Carta do selo saiu do jogo (r22; código apagado na r27)  4139ms
+   ✓ capital > aporte, retirada, sócios, dividendos e IPO mantêm o caixa fechando  5099ms
+   ✓ nomes reais > atos históricos, selos, festivais e textos fixos aparecem com nomes reais  367ms
+   ✓ intriga e decisões (CK3) > trama de investigação termina, decisões aplicam perks e o caixa fecha  5014ms
+ ✓ tests/r10-life.test.ts (11 tests) 145883ms
+   ✓ política e religião > é derivada de seed + id, estável e sem inflar o save  680ms
+   ✓ política e religião > o jogador usa a escolha da ficha  533ms
+   ✓ política e religião > laços entre artistas pesam a compatibilidade  470ms
+   ✓ eventos de vida pessoal > frequência: cerca de um evento a cada 1–2 meses, e eles viram pop-up  71265ms
+   ✓ eventos de vida pessoal > responder aplica custo e efeitos; ignorar aplica o padrão no mês seguinte  1250ms
+   ✓ eventos de vida pessoal > requisitos e tempo livre bloqueiam respostas  434ms
+   ✓ eventos de vida pessoal > época: eventos de uma era não aparecem fora dela  15812ms
+   ✓ eventos de vida pessoal > determinismo: mesma semente, mesmos eventos  55409ms
+ ✓ tests/r9-ventures.test.ts (7 tests) 13864ms
+   ✓ empreendimentos > funda no selo ou no nome próprio, transfere e gera P&L mensal  4097ms
+   ✓ empreendimentos > r27: festival de Empreendimentos é o negócio do festival único (fest12): terreno, calendário e ingresso vêm de lá  2792ms
+   ✓ empreendimentos > editora contrata compositor e coloca música com artista de outro selo  1642ms
+   ✓ gestão de artistas > empresaria artista de outro selo e recebe comissão no patrimônio pessoal  1466ms
+   ✓ prestígio dos selos > todo selo ganha reconhecimento, popularidade e momento, e o prestígio pesa nas propostas  2499ms
+   ✓ sucessão só passando o selo > funcionário de confiança e artista próximo viram sucessores; o jogador passa a ser essa pessoa  492ms
+   ✓ sucessão só passando o selo > sem ninguém para assumir, morte e sucessão antiga encerram a run  871ms
+ ✓ tests/r20-g2.test.ts (5 tests) 3177ms
+   ✓ r20 G2 — finanças > B3: emitir título aumenta caixa e passivo igualmente (patrimônio inalterado); covenant bancário não conta o título  809ms
+   ✓ r20 G2 — finanças > B4: oferta pendente reserva caixa; sem caixa na aceitação nada muda; repetir não debita duas vezes  609ms
+   ✓ r20 G2 — finanças > B8: AR/AP do balanço são ao vivo; fechamento guarda retrato datado e a reconciliação fecha  556ms
+   ✓ r20 G2 — finanças > B29: cenário de cauda e teto da trava de recoupment  504ms
+   ✓ r20 G2 — finanças > B21: dois legados com nomes distintos e composição que reconcilia  695ms
+ ✓ tests/r19-fix-a.test.ts (7 tests) 1095ms
+   ✓ r19 A — economia interna > transferência interna não cria dinheiro e some no consolidado  343ms
+   ✓ r19 A — economia interna > produtor (você) no disco do próprio selo: débito no selo, crédito no produtor, recuperável e desconto da casa  335ms
+   ✓ r19 A — economia interna > cachê da própria banda no próprio festival é interno (soma do caixa não muda)  381ms
+ ✓ tests/r18-core.test.ts (6 tests) 4581ms
+   ✓ r18 core > explain18: chaves principais explicam com partes e níveis encadeados  1653ms
+   ✓ r18 core > inbox 2.0: tipos registrados, resposta pelo tratador, categoria/prioridade e arquivo  340ms
+   ✓ r18 core > conselheiro v2: dicas registradas com porquê; runway e relatório mensal do analista  2020ms
+   ✓ r18 core > ações por pessoa: menu com chance e porquê, custo, cooldown, fatos e crime17 ligado  311ms
+ ✓ tests/expansion.test.ts (9 tests) 32602ms
+   ✓ tempo > avançar semana a semana dá o mesmo resultado que avançar o mês  3892ms
+   ✓ capacidade > reserva futura não cobra, respeita 100% e cancelar libera  312ms
+   ✓ subselos > aporte é transferência (não receita) e o extrato da matriz fecha  3404ms
+   ✓ estúdio > sessão grava por takes ao longo dos dias  917ms
+   ✓ turnê > cancelar devolve metade da logística não executada  382ms
+   ✓ rollout > exige ao menos 6 faixas e no máximo 3 singles  17756ms
+   ✓ neural > holograma autorizado exige direitos do espólio  4577ms
+   ✓ leilão > leilão termina com um vencedor e o extrato fecha  1057ms
+ ✓ tests/r19-tribute.test.ts (4 tests) 3758ms
+   ✓ r19 9.1 tribute19 — tributos e covers > cadeia 1: banda separa → tributo → sósia contratado na reunião → fãs divididos → documentário  844ms
+   ✓ r19 9.1 tribute19 — tributos e covers > selo: licença paga royalty todo mês e entra no calendário; processo e despedida falsa são fatos com ouvinte  2129ms
+   ✓ r19 9.1 tribute19 — tributos e covers > cadeia 2: fracasso de 1983 → remix → comercial → série → revival → certificação → valor do catálogo  779ms
+ ✓ tests/r27-aud1-scout.test.ts (7 tests) 6995ms
+   ✓ r27 AUD1 — scouting num motor só > viagem com filtro de nível (ex-pedido de scout) só traz quem obedece — e nunca relaxa  718ms
+   ✓ r27 AUD1 — scouting num motor só > o próximo passo do funil é o único "aprofundar": custo, cota de A&R e relatório depois  540ms
+   ✓ r27 AUD1 — noite de olheiro > o mapa é determinístico e não mexe no estado  453ms
+   ✓ r27 AUD1 — noite de olheiro > ver o show põe no funil como Observado; ficar o show inteiro vai mais fundo; custa 1 bolinha e caixa  840ms
+   ✓ r27 AUD1 — noite de olheiro > puxar conversa nunca piora e, com carisma alto, aprofunda  2480ms
+   ✓ r27 AUD1 — noite de olheiro > rival no bar pode virar disputa (aviso de rival de sempre); determinístico por semente  1128ms
+   ✓ r27 AUD1 — noite de olheiro > modo Rápido intacto: olhar o mapa da noite não muda a viagem à cena  832ms
+ ✓ tests/content.test.ts (13 tests) 46800ms
+   ✓ simulação longa com o conteúdo novo > 4 anos sem exceção e caixa fechando (content-a, 1920)  5239ms
+   ✓ simulação longa com o conteúdo novo > 4 anos sem exceção e caixa fechando (content-b, 1960)  19755ms
+   ✓ simulação longa com o conteúdo novo > 4 anos sem exceção e caixa fechando (content-c, 2005)  21670ms
+ ✓ tests/r19-data-eg.test.ts (8 tests) 2674ms
+   ✓ r19 WP-E: pessoas e selos > produtor, empresário e selo aparecem no ano certo, e só nele  994ms
+   ✓ r19 WP-G: festivais, prêmios, paradas, sociedades e leis > leis: só dados (sem appeal/onFire) e disparam no calendário real  1655ms
+ ✓ tests/r18-decide.test.ts (7 tests) 7292ms
+   ✓ r18 decide > escolha agenda eco; dispara depois com Fato, fio na Caixa e efeito  1220ms
+   ✓ r18 decide > eco com condição: promessa cumprida ou quebrada; determinístico por semente  2561ms
+   ✓ r18 decide > portão: opção travada vira a padrão; desbloqueio abre a opção depois  593ms
+   ✓ r18 decide > prazo curto vence na semana; aposta tem odds visíveis; etapa seguinte vira cartão  700ms
+   ✓ r18 decide > pulso do mês guarda séries e deltas  1534ms
+   ✓ r18 decide > integração: 15+ ligações com porquê; rixa vende, separação inspira, mágoa derruba show  633ms
+ ✓ tests/r19-links-a.test.ts (8 tests) 2309ms
+   ✓ r19 links A — matriz e registro > porquê de cada ligação existe  461ms
+   ✓ r19 links A — espólio × hologramas > uso sem aval: fato, escândalo e herdeiros; exato bloqueia reais  385ms
+   ✓ r19 links A — festival × segurança × crime > tragédia: processo e lei; exato nunca  335ms
+ ✓ tests/r17-start.test.ts (7 tests) 14302ms
+   ✓ novo jogo r17 > real até o início: nenhuma estreia real futura  764ms
+   ✓ novo jogo r17 > dificuldade detalhada vira perk e mexe nas rivais  751ms
+   ✓ novo jogo r17 > cenários de época: começam com elenco, marcos datados e regras; gêneros existem  1221ms
+   ✓ novo jogo r17 > prazo da partida: pontuação final no último dezembro  11362ms
+ ✓ tests/r27-ui.test.ts (11 tests) 750ms
+   ✓ r27 ui: cabeçalho das páginas > KPIs: só leitura, rótulos bilíngues, valores formatados, sem mexer no estado nem no RNG  723ms
+ ✓ tests/r27-new-data.test.ts (10 tests) 1885ms
+   ✓ r27 músicas das lendas > 341 artistas, títulos limpos e anos plausíveis  778ms
+   ✓ r27 no jogo > base grande em 1996: Tool surge como banda, com integrantes reais  1001ms
+ ✓ tests/travel.test.ts (18 tests) 319ms
+ ✓ tests/r17-life.test.ts (6 tests) 9644ms
+   ✓ r17 vida pessoal > pessoas reais: só o documentado; o resto fica não declarado  467ms
+   ✓ r17 vida pessoal > exposição: em época hostil vira escândalo pelo pipeline; em época acolhedora, apoio  1141ms
+   ✓ r17 vida pessoal > começar casado(a) com filhos; filhos crescem e mudam de temperamento  6701ms
+   ✓ r17 vida pessoal > retrato envelhece mantendo o visual; aparência pesa por época  1036ms
+ ✓ tests/r9-world.test.ts (8 tests) 43385ms
+   ✓ rodada 9 — mundo vivo > crônica: o diário alimenta a crônica e os detectores rodam com o tempo  17434ms
+   ✓ rodada 9 — mundo vivo > personalidade determinística, com extremos raros, e frases  876ms
+   ✓ rodada 9 — mundo vivo > surto criativo de NPC atendido vira obra-prima e relíquia; do jogador vira decisão  368ms
+   ✓ rodada 9 — mundo vivo > relíquias: leilão e compra pelo jogador  359ms
+   ✓ rodada 9 — mundo vivo > boatos se espalham e distorcem  7500ms
+   ✓ rodada 9 — mundo vivo > músicos livres formam bandas novas com pessoas reais  399ms
+   ✓ rodada 9 — mundo vivo > história prévia de 20 anos é rápida e o mundo começa com passado  319ms
+   ✓ rodada 9 — mundo vivo > mundo persistente: exporta, importa N anos depois e escreve o livro  16124ms
+ ✓ tests/r19-facades.test.ts (6 tests) 10828ms
+   ✓ fandom19 > lê sem criar estado e soma por região o mesmo total  689ms
+   ✓ fandom19 > escala de fãs é a mesma do decide18 (Fx18.fans) e fan_wave tem ouvinte  2826ms
+   ✓ rivals19 > calor: fonte única s.rivalries, faixas e fatos rivalry_flare/rivalry_cool com ouvinte  3767ms
+   ✓ rivals19 > intenções e retrato não criam memória nem fixam arquétipo  430ms
+   ✓ awards19 > livro único, vencedores normalizados, póstumo, memória do júri e fatos award_win/award_posthumous  2635ms
+   ✓ awards19 > cerimônia do envelope (cine18) usa a fachada e todo fato da fachada tem ouvinte  476ms
+ ✓ tests/r25-hq.test.ts (8 tests) 2158ms
+   ✓ r25 hqModel25 > modelo básico: 6 salas com selo, no máximo 3 tarefas, cada uma com botão e destino  530ms
+   ✓ r25 hqModel25 > gravação em andamento: artista no estúdio, selo verde e agenda com a sessão  334ms
+   ✓ r25 hqModel25 > turnê rodando: artista fora da sede; decisão pendente: recepção e "Precisa de você"  313ms
+   ✓ r25 hqModel25 > sede pequena: salas sem espaço próprio ficam apagadas com a dica; equipe grande vira "+N"  375ms
+ ❯ tests/r17-nav.test.ts (8 tests | 1 failed) 846ms
+   ✓ menu r17 > toda combinação de carreiras: nada some, nada duplica, carreiras em Você, telas absorvidas viram abas 269ms
+   ✓ menu r17 > Empreendimentos e Carreiras moram só em Você (sem a duplicata Início × Empreendimentos) 1ms
+   ✓ menu r17 > sem selo nem banda, telas de selo descem para Mais; páginas de carreira inativa também 1ms
+   ✓ menu r17 > páginas novas de outras frentes entram no grupo sugerido (ou em Mais), nunca no Início 0ms
+   × menu r17 > ícones únicos e existentes; teclas únicas (; = Submundo) 10ms
+     → expected 95 to be 96 // Object.is equality
+   ✓ menu r17 > fixados e recentes 1ms
+   ✓ menu r17 > popups: abas em categorias, nenhuma some 1ms
+   ✓ menu r17 > experiência no ofício alivia a agenda da carreira  561ms
+ ✓ tests/r15-deep.test.ts (4 tests) 1973ms
+   ✓ r15 aprofundamentos > sync: meios por época, encaixe explicado, nostalgia, desgaste, receita e retorno às paradas  719ms
+   ✓ r15 aprofundamentos > fandom: petição vira decisão, teto de ingresso reduz bilheteria e é explicado  464ms
+   ✓ r15 aprofundamentos > disputas: confiança baixa gera caso; acordo custa e devolve confiança; jurídico melhora chances  360ms
+   ✓ r15 aprofundamentos > prêmios: júri favorece artista da casa; avisos de top 10 agrupados  427ms
+stderr | tests/r20-g1.test.ts > falha local visível (B1) e avanço transacional (B27) > sem IndexedDB: save falha visível, checkpoint não avança, listagem não vira lista vazia
+save failed ReferenceError: indexedDB is not defined
+    at /home/user/Vinyl-Game/src/ui/store.ts:106:17
+    at new Promise (<anonymous>)
+    at openDb (/home/user/Vinyl-Game/src/ui/store.ts:105:10)
+    at saveGame (/home/user/Vinyl-Game/src/ui/store.ts:166:22)
+    at /home/user/Vinyl-Game/tests/r20-g1.test.ts:81:18
+    at file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
+
+stderr | tests/r20-g1.test.ts > falha local visível (B1) e avanço transacional (B27) > erro no meio do avanço devolve o estado anterior
+advance failed — state restored Error: gancho quebrado
+    at /home/user/Vinyl-Game/tests/r20-g1.test.ts:90:93
+    at tx20 (/home/user/Vinyl-Game/src/core/save20.ts:142:34)
+    at /home/user/Vinyl-Game/tests/r20-g1.test.ts:90:15
+    at file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
+    at runTest (file:///home/user/Vinyl-Game/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+ ✓ tests/r20-g1.test.ts (6 tests) 2170ms
+   ✓ envelope e versões (B6) + importação (B5) > ida e volta, jogo cru antigo aceito, futuro recusado sem dano  543ms
+   ✓ nuvem: gerações imutáveis (B2) > falha em cada escrita mantém a geração anterior carregável e idêntica  359ms
+   ✓ falha local visível (B1) e avanço transacional (B27) > sem IndexedDB: save falha visível, checkpoint não avança, listagem não vira lista vazia  435ms
+   ✓ falha local visível (B1) e avanço transacional (B27) > erro no meio do avanço devolve o estado anterior  612ms
+ ✓ tests/r9-bonds.test.ts (7 tests) 48661ms
+   ✓ laços duradouros > dupla de composição melhora as músicas; morte encerra com tributo póstumo  702ms
+   ✓ laços duradouros > supergrupo cria um ato paralelo com prazo; o jogador propõe e recebe convites  593ms
+   ✓ laços duradouros > o mundo forma laços sozinho e a admiração tem opinião  15333ms
+   ✓ laços duradouros > modo histórico: Run-DMC e Aerosmith cruzam gêneros e nasce um subgênero  2729ms
+   ✓ movimentos > a Tropicália vira movimento com fundadores e morre pela censura  25983ms
+   ✓ movimentos > o jogador funda um movimento (pode falhar) e outros pedem para entrar com votação  515ms
+   ✓ movimentos > saves antigos sem as camadas novas carregam  2801ms
+ ✓ tests/r27-audit.test.ts (7 tests) 1544ms
+   ✓ r27 auditoria: família no jogo > Michael Jackson: irmãos; Tito é PAI de Taj, Taryll e TJ (3T), que são irmãos  1404ms
+ ✓ tests/r18-econ.test.ts (8 tests) 3613ms
+   ✓ r18 econ: livro contábil > aporte, empréstimo e IPO entram no caixa mas não são receita nem lucro  733ms
+   ✓ r18 econ: livro contábil > venda de catálogo e compra de casa são investimento (não lucro)  542ms
+   ✓ r18 econ: livro contábil > receita a prazo: reconhecida agora, caixa só no vencimento  466ms
+   ✓ r18 econ: livro contábil > câmbio depende da exposição real (sem títulos/vendas no país, sem perda)  481ms
+   ✓ r18 econ: cláusulas de recuperação > fração da gravação conforme a cláusula (0 / 50% legado / 100%)  496ms
+   ✓ r18 econ: cláusulas de recuperação > por projeto: o disco novo não paga a dívida do anterior; cruzado paga  464ms
+   ✓ r18 econ: cláusulas de recuperação > o artista lê as cláusulas (pacote pró-artista pesa a favor do pacote major)  425ms
+ ✓ tests/r19-history.test.ts (5 tests) 5870ms
+   ✓ r19 T8 history19 — marcos 1925–2026 com decisão e ecos > nada do futuro: começo em 1975 marca o passado em silêncio e não dispara o que vem depois  1762ms
+   ✓ r19 T8 history19 — marcos 1925–2026 com decisão e ecos > o marco dispara na data: fato com ouvinte, apelo para o estilo, cartão com decisão, eco e "na sua partida"  3249ms
+   ✓ r19 T8 history19 — marcos 1925–2026 com decisão e ecos > geopolítica 37 → ~60 e regimes novos no society18  376ms
+   ✓ r19 T8 history19 — marcos 1925–2026 com decisão e ecos > flags de dados: exact:false some do modo exato; T marca tributo  452ms
+ ✓ tests/r16-links.test.ts (7 tests) 3062ms
+   ✓ r16 conexões > sync ganho empurra paradas e procura de shows, com rótulo  641ms
+   ✓ r16 conexões > fama do elenco sobe a notoriedade da Gravadora; demos chegam com nome  434ms
+   ✓ r16 conexões > amizade de um músico seu vira sinal de scouting com fonte própria  535ms
+   ✓ r16 conexões > luto de familiar vira decisão, arco e efeito nas faixas  462ms
+   ✓ r16 conexões > sobrecarga prolongada derruba lealdade e atrai proposta de rival  471ms
+   ✓ r16 conexões > esnobada: moral cai, arco registra e o júri lembra no ano seguinte  514ms
+ ✓ tests/r23-secrets.test.ts (5 tests) 4775ms
+   ✓ r23 segredos e vínculos > ciclo: escondido → suspeita → boato → confirmado (proximidade, imprensa, detetive), com fatos  937ms
+   ✓ r23 segredos e vínculos > Vida real exata: nenhum segredo inventado sobre gente real; fora dele, no máximo boato  746ms
+   ✓ r23 segredos e vínculos > vazamento vira escândalo pesado pela época (jabá antes × depois das audiências de 1959)  398ms
+   ✓ r23 segredos e vínculos > conhecimento e segredos nativos persistem no save (JSON)  648ms
+   ✓ r23 segredos e vínculos > o mês roda no jogo inteiro (gancho registrado, descoberta e nativos) sem erro  2041ms
+ ✓ tests/r18-media.test.ts (7 tests) 4687ms
+   ✓ r18 media: marketing > canal repetido satura, equipe aprende; cena local converte pouco e vende ingresso  725ms
+   ✓ r18 media: marketing > imprensa demora a render; vídeo curto não sustenta álbum fraco  610ms
+   ✓ r18 media: streaming > pró-rata: mercado barato paga menos por play; fã que volta paga mais que vídeo  592ms
+   ✓ r18 media: streaming > playlist traz plays, busca/indicação trazem fãs  881ms
+   ✓ r18 media: streaming > fazenda de streams: sobe unidades, não paga, e a derrubada zera  919ms
+   ✓ r18 media: rádio, clipe e remix > formatos com consultor real na época; adição dá rotação e empurra as unidades  373ms
+   ✓ r18 media: rádio, clipe e remix > clipe entra como canal; remix encomendado vai às pistas  582ms
+ ✓ tests/r20-g4.test.ts (7 tests) 2265ms
+   ✓ r20 G4 — registro de ações > menu: linhas sem mudar estado; bloqueio tem motivo; fora do elenco é bloqueado  598ms
+   ✓ r20 G4 — registro de ações > execução revalida: caixa zerado bloqueia na hora de confirmar; navegação não muda nada  454ms
+   ✓ r20 G4 — registro de ações > plano de agenda respeita slots e capacidade e lista o que sai  382ms
+   ✓ r20 G4 — registro de ações > lote: escopo explícito, prévia por artista, aplica só aos elegíveis  301ms
+ ✓ tests/r18-artist.test.ts (6 tests) 30332ms
+   ✓ artist18: selos NPC disputam a banda do jogador > banda famosa recebe proposta com cláusulas, nota com partes escondidas e voto da banda  1437ms
+   ✓ artist18: selos NPC disputam a banda do jogador > assinar: contrato com o selo NPC, banda continua sua, adiantamento no caixa, selo paga a fabricação, royalties vão para a prestação de contas  17947ms
+   ✓ artist18: selos NPC disputam a banda do jogador > contraproposta: com concorrência sobe a chance; recusa repetida faz o selo retirar  1006ms
+   ✓ artist18: selos NPC disputam a banda do jogador > fim do contrato: master do selo antigo continua pagando só royalty (recupera o saldo antes)  1344ms
+   ✓ artist18: selos NPC disputam a banda do jogador > determinismo: mesma semente, mesmas propostas; o bot artista joga sem quebrar  8262ms
+   ✓ shared18: sociedades com NPCs > fundar, votar (50/50 trava com votos diferentes) e o histórico registra  331ms
+ ✓ tests/r18-ability.test.ts (7 tests) 11172ms
+   ✓ r18 ability: CA/PA > determinístico mês a mês  11120ms
+ ✓ tests/r19-data-f.test.ts (5 tests) 1001ms
+   ✓ r19 WP-F: lugares e equipamento > casa só aparece no seu ano e em jogo de 1961 o Star-Club ainda não existe  961ms
+ ✓ tests/r25-nav.test.ts (7 tests) 517ms
+   ✓ menu r25 (Pixel Studio) > toda combinação de carreiras: nada some, nada duplica, ≤5 principais, o resto por tema (r27: tudo na árvore)  504ms
+ ✓ tests/r12-festival-venue.test.ts (4 tests) 12828ms
+   ✓ festival unificado > Empreendimentos e terreno são o mesmo festival  740ms
+   ✓ festival unificado > ciclo completo: identidade, contratação, early bird, anúncio, venda em lotes e edição com memória  6036ms
+   ✓ festival unificado > dois grandes no mesmo horário frustram; headliner cancela e a troca é paga ou compensada  556ms
+   ✓ casa de shows > noites fixas criam frequentadores; festa corporativa e fim de noite antiga cobram o preço  5493ms
+ ✓ tests/r18-supply.test.ts (5 tests) 6177ms
+   ✓ supply18 > em 2021 o vinil atrasa; a política "adiar" empurra a data e "lançar" segura o estoque  3716ms
+   ✓ supply18 > rede independente: taxa menor, prazo maior e reserva de devolução 6 meses depois  1304ms
+   ✓ supply18 > relatório de mercado: formatos por país e fila das prensas  620ms
+   ✓ supply18 > desenvolvimento bloqueia rivais; pacotes de serviços viram modelo distribuição  531ms
+ ✓ tests/r18-campus.test.ts (5 tests) 4359ms
+   ✓ campus18 > estado → prédios: sede, filial no mundo, escola, casa no lote residencial  595ms
+   ✓ campus18 > obra: entrada 30% como investimento, andaime, atraso/estouro possíveis, inauguração  1616ms
+   ✓ campus18 > incêndio num ato seu danifica a sede; reforma conserta e muda o estilo para a época atual  1676ms
+   ✓ campus18 > casa de shows vendida vira placa de "vendido" por um tempo  465ms
+ ✓ tests/r17-crime.test.ts (5 tests) 26342ms
+   ✓ r17 crime > organizações seguem a era e a região  496ms
+   ✓ r17 crime > chances visíveis, sem assassinato de pessoa real, e consequências (fato, calor, obrigação)  381ms
+   ✓ r17 crime > caso: provas → indiciamento → delação fecha com multa  1618ms
+   ✓ r17 crime > relíquias reais chegam na era e o roubo passa pelo mercado negro  965ms
+   ✓ r17 crime > NPCs tramam por anos sem assassinar gente real (modo exato), e é determinístico  22878ms
+ ✓ tests/round3.test.ts (9 tests) 5147ms
+   ✓ repertório > mostra status e em quais discos cada música entrou  1757ms
+   ✓ repertório > revisão melhora a composição, custa mais a cada vez e tem limite  306ms
+   ✓ repertório > cofre e descarte tiram a música do caminho, mas não o que já foi lançado  328ms
+   ✓ repertório > demo grava cru e lança; coletânea reaproveita músicas lançadas sem perder o disco original  1233ms
+   ✓ repertório > perfil comercial é determinístico e limitado a 0..100  330ms
+   ✓ sedes e filiais > filiais somam capacidade e exigem o loft  632ms
+ ✓ tests/r18-art.test.ts (6 tests) 16594ms
+   ✓ r18 art: trajetória > resultado contra a previsão: cult, hit e fracasso  349ms
+   ✓ r18 art: trajetória > expectativa sufocante: crítica compara com o melhor disco  326ms
+   ✓ r18 art: trajetória > jogo real: discos do jogador ganham perfil congelado, explicações e trajetória  15911ms
+ ✓ tests/r27-aud1-biz.test.ts (4 tests) 53883ms
+   ✓ r27 AUD1 — casas de shows num modelo só > lista única (construída + reais) com a chave do mapa, teto único de 4 e um fechamento por casa  1620ms
+   ✓ r27 AUD1 — festival único > o negócio de Empreendimentos espelha o terreno (uma direção só) e não tem line-up próprio  419ms
+   ✓ r27 AUD1 — bot nos negócios > com caixa folgado, o perfil equilibrado compra sala, casa, editora, estúdio e funda um festival — sem quebrar o caixa  30415ms
+   ✓ r27 AUD1 — bot nos negócios > perfil cauteloso não abre negócios; sem caixa, nada é comprado  21425ms
+ ✓ tests/r19-calendar.test.ts (5 tests) 3436ms
+   ✓ r19 calendar19 + notify19 > artista: no máximo 3 ofertas de selo abertas  3407ms
+ ✓ tests/r18-world.test.ts (6 tests) 23908ms
+   ✓ r18 world18 > história alternativa: só o modo exato agenda fatos reais depois do início  916ms
+   ✓ r18 world18 > mais produtores e empresários reais + produtores gerados só na partida certa  772ms
+   ✓ r18 world18 > segunda carreira: cada destino tem peso e efeito visível  353ms
+   ✓ r18 world18 > estreante/volta começa sem selo e o rival corteja até decidir  3828ms
+   ✓ r18 world18 > rivais aprendem: perder leilões leva a desenvolver talento; alvo aparece só como sinal  1181ms
+   ✓ r18 world18 > modo exato não muda a carreira de gente real; determinístico  16852ms
+ ✓ tests/r17-biz.test.ts (3 tests) 20519ms
+   ✓ r17 negócios > vender o selo: preço, comprador assume elenco/catálogo, o jogo segue e dá para recomeçar  5505ms
+   ✓ r17 negócios > canais por época, imagem com chance inversa à fama e proteções, concorrência na agenda, casas  1423ms
+   ✓ r17 negócios > licença de entrada paga adiantamento e é determinística por semente  13588ms
+ ❯ tests/sim.test.ts (10 tests | 1 failed) 386330ms
+   ✓ determinismo > mesma seed + mesmas decisões = mesma história  42746ms
+   ✓ determinismo > seeds diferentes geram mundos diferentes  474ms
+   ✓ finanças > caixa fecha com o extrato depois de anos de jogo  18516ms
+   ✓ finanças > reprocessar a mesma chave na mesma semana não duplica 253ms
+   ✓ finanças > cancelar um lançamento devolve tudo 215ms
+   ✓ contratos > recoupment abate o saldo e não é receita extra do selo (exemplo do v6) 229ms
+   ✓ conteúdo > eventos com tags filtradas nunca viram cartão de decisão 219ms
+   ✓ conteúdo > atos com regra de separação reforçada não recebem eventos sensíveis 210ms
+   ✓ conteúdo > todo evento tem texto PT e EN 61ms
+   × arco completo > uma run iniciada em 2030 chega a um dos 20 finais 323403ms
+     → Test timed out in 300000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ✓ tests/r16-scenes.test.ts (4 tests) 1159ms
+   ✓ momentos r16 > fatos do diário viram momentos; só os do jogador entram na fila  706ms
+   ✓ momentos r16 > jogo novo abre com o preço de matéria-prima da época (não ×1.00 em tudo)  445ms
+ ✓ tests/r23-links.test.ts (5 tests) 2559ms
+   ✓ r23 ligações > cultura/lealdade → recrutamento do crime; agiota → recrutamento  635ms
+   ✓ r23 ligações > idol: caso pesa mais pela época/contrato e a imprensa vigia  588ms
+   ✓ r23 ligações > prisão de pessoa segurada: paga 20% ou anula se é do crime  455ms
+   ✓ r23 ligações > seguradora revela doença escondida; segredo do dono exposto tira a marca do nome  475ms
+   ✓ r23 ligações > gênero em alta pesa no olheiro; sede confortável sobe a lealdade  402ms
+ ✓ tests/r13-careerui.test.ts (5 tests) 930ms
+   ✓ menu por carreira (r13) > trocar de carreira no meio da partida muda o menu na hora  515ms
+   ✓ menu por carreira (r13) > agente: fundar agência explica o custo e libera clientes  404ms
+ ✓ tests/r18-talent.test.ts (4 tests) 71755ms
+   ✓ r18 talent18 > relíquias reais: exato segue a história; outros modos só o que é anterior ao início; fictício não tem nenhuma  46312ms
+   ✓ r18 talent18 > relíquia nasce de um fato (show lendário) e o valor acompanha o legado  7370ms
+   ✓ r18 talent18 > descoberta, camp e pitching, banda da casa, escola  11806ms
+   ✓ r18 talent18 > TV de talentos: temporada anual, parceiro leva o vencedor  6262ms
+ ✓ tests/r17-director.test.ts (5 tests) 32320ms
+   ✓ r17 diretor criativo e mundo dos NPCs > narrador = diretor: perfis diferentes e liberdade escala o mundo  462ms
+   ✓ r17 diretor criativo e mundo dos NPCs > selo fundado por NPC entra na lista; independente por opção recusa rivais  434ms
+   ✓ r17 diretor criativo e mundo dos NPCs > guerra de preços aparece no apelo com o porquê  380ms
+   ✓ r17 diretor criativo e mundo dos NPCs > mundo solto gera jogadas com porquê, é determinístico e respeita a vida real exata  31039ms
+ ✓ tests/r10-fixes.test.ts (5 tests) 42280ms
+   ✓ identidade única de pessoas reais > Michael Jackson é uma pessoa só, no Jackson 5 e na carreira solo  655ms
+   ✓ identidade única de pessoas reais > quem estreia solo durante a run reaproveita a pessoa da banda (Beyoncé)  40362ms
+   ✓ vocalista e faixas instrumentais > a banda do jogador começa com alguém que canta, mesmo que o personagem toque bateria  517ms
+   ✓ opiniões variadas > pessoas diferentes admiram listas diferentes, com frases diferentes  475ms
+ ✓ tests/r17-agenda.test.ts (3 tests) 4336ms
+   ✓ r17 agenda > bolinhas: 5 pessoais sem desconto da banda; carreiras usam expediente e depois as pessoais  572ms
+   ✓ r17 agenda > sobrecarga gera estresse; diretor contratado libera a bolinha  1435ms
+   ✓ r17 agenda > festival sem a carreira: sem diretor a reputação cai; contratação de equipe e freelancer  2327ms
+ ✓ tests/r20-g6.test.ts (5 tests) 975ms
+   ✓ r20 G6 — gráficos, unidades e cockpit > decisões por prazo e mudanças em destaques  541ms
+   ✓ r20 G6 — oferta em camadas (§4.5) > resumo, diferença do preset, comparação e revisão de caixa  402ms
+ ✓ tests/r13-persona.test.ts (4 tests) 3786ms
+   ✓ r13 persona unificada > todo tipo de pessoa tem o mesmo esquema, determinístico  1985ms
+   ✓ r13 persona unificada > barreiras da época: segregação nos EUA dos anos 50 e o peso da imagem na era da MTV  318ms
+   ✓ r13 persona unificada > dispensar um artista deixa marca com motivo e pesa na proposta; presente melhora líder  501ms
+   ✓ r13 persona unificada > a pessoa do jogador espelha o personagem (fonte única) e não tem opinião sobre si  978ms
+ ✓ tests/r20-g8.test.ts (4 tests) 752ms
+   ✓ r20 G8 — nova run > hook do mundo real não restaura lançamentos/fins reais anteriores ao início no random v2  739ms
+ ✓ tests/r18-regions.test.ts (6 tests) 42251ms
+   ✓ r18 regions18 > Ásia aberta em submercados: neutra em média, mas o gosto difere por país  849ms
+   ✓ r18 regions18 > save antigo sem estado ganha estado novo; viradas anteriores ao início já valem  2143ms
+   ✓ r18 regions18 > modo exato: Despacito (2017) muda a afinidade no ano certo  22190ms
+   ✓ r18 regions18 > licenciado/escritório: exige a região aberta, melhora o acesso; China fechada ao escritório antes de 1979  411ms
+   ✓ r18 regions18 > circuito de rodeio aumenta a demanda de shows no Brasil  460ms
+   ✓ r18 regions18 > K-pop: academia, audição, 12 meses de treino, debut com contrato KFTC de 7 anos  16195ms
+ ✓ tests/r10-invest.test.ts (7 tests) 30769ms
+   ✓ bolsa: só o que existe na época > 1960 não tem streaming nem selos fundidos depois; 2022 não tem jukebox de 1950  3384ms
+   ✓ bolsa: só o que existe na época > preços andam, têm histórico e os nomes mudam sem nomes reais  6097ms
+   ✓ negociar ações > compra, vende com corretagem e entra no patrimônio líquido  1087ms
+   ✓ negociar ações > selo rival: teto de participação; fechamento zera a ação e quita a posição  1714ms
+   ✓ imóveis: aluguel só do que você possui > sem imóvel não há aluguel nem como alugar  1616ms
+   ✓ imóveis: aluguel só do que você possui > com imóvel: aluga e rende  16433ms
+   ✓ imóveis: aluguel só do que você possui > saves antigos: imóveis para alugar viram um bem alugado pelo valor justo  433ms
+ ✓ tests/r20b-z.test.ts (3 tests) 49ms
+ ✓ tests/r17-scenes.test.ts (4 tests) 5138ms
+   ✓ r17 cenas interativas > show: opções com variação e efeito explicado (fama regional)  901ms
+   ✓ r17 cenas interativas > prêmio perdido: invadir o palco vira escândalo; Deus/família no discurso  584ms
+   ✓ r17 cenas interativas > encontro em duas etapas muda a afinidade; prisão dispara cena; sem resposta resolve sozinha  3223ms
+   ✓ r17 cenas interativas > foto icônica: guardar ou licenciar uma vez só  428ms
+ ✓ tests/r25-kin.test.ts (4 tests) 2601ms
+   ✓ r25 parentesco real > Gilsons: José é filho de Gilberto Gil; Francisco e João são netos, primos e sobrinhos de José  1170ms
+   ✓ r25 parentesco real > kin25 só cita nomes do banco (ou parentes documentados ausentes) e é determinístico  375ms
+   ✓ r25 formações > formação clássica: banda que cresceu depois da estreia não fica presa à formação de estreia  764ms
+ ✓ tests/r9-nofuture.test.ts (6 tests) 30678ms
+   ✓ mais eras > as eras seguem a ordem cronológica e cobrem de 1920 até depois de 2040  583ms
+   ✓ mais eras > a era das discotecas pergunta a postura; eras antigas ficam no padrão  1536ms
+   ✓ mais eras > saves antigos: posturas já escolhidas continuam valendo  627ms
+   ✓ nada do futuro > artistas que ainda não estrearam ficam escondidos, a não ser que você já saiba deles  333ms
+   ✓ nada do futuro > o que nasce no ano sai no noticiário — sem inundar o início da partida  27591ms
+ ✓ tests/r12-careers.test.ts (3 tests) 18746ms
+   ✓ carreiras r12 > editora: anúncio polêmico, recusa, estoque e vidas da obra  8188ms
+   ✓ carreiras r12 > mídia: programação, dilema do anunciante e credibilidade  3912ms
+   ✓ carreiras r12 > plataforma: renovação exigida por uma major e escolhas de descoberta  6644ms
+ ✓ tests/r17-media.test.ts (4 tests) 24020ms
+   ✓ r17 mídia > veículos e críticos respeitam a era  671ms
+   ✓ r17 mídia > notícias e boatos nascem com origem e alcance, mais para os famosos; determinístico  16871ms
+   ✓ r17 mídia > jogador planta boato e responde a boato sobre o próprio artista  532ms
+   ✓ r17 mídia > hype: motivos variam por ato (não é mais o mesmo texto/valor para todos)  5943ms
+ ✓ tests/r27-known.test.ts (5 tests) 3531ms
+   ✓ r27 knownArtists27 > inclui o seu elenco (a fundo) e as superestrelas; cada linha tem ao menos um motivo  1005ms
+   ✓ r27 knownArtists27 > deixa de fora atos pequenos e distantes sem laço nenhum  467ms
+   ✓ r27 knownArtists27 > olheiro/radar entra na lista com o motivo certo (e o memo da semana se renova)  365ms
+   ✓ r27 knownArtists27 > é determinístico (mesma semente → mesma lista) e não escreve no estado  500ms
+   ✓ r27 knownArtists27 > aguenta o banco 'huge' (e a segunda chamada na semana sai do memo)  1191ms
+stdout | tests/r14-db.test.ts > base de dados r14 > enorme: criar o jogo < 3s e avançar meses continua rápido
+huge: acts=2686 criar=1369ms simulate(1 ano)/mês=3049ms
+
+ ❯ tests/r14-db.test.ts (5 tests | 1 failed) 42553ms
+   ✓ base de dados r14 > lote novo é consistente: ids válidos, cobre décadas, países e continentes, sem futuro 62ms
+   ✓ base de dados r14 > tamanhos crescem: pequeno < médio < grande < enorme (reais e total de atos)  2936ms
+   ✓ base de dados r14 > médio mantém o comportamento anterior (mesma semente: nada de gerados extras)  871ms
+   ✓ base de dados r14 > artistas do lote novo só existem a partir do ano real (nada do futuro)  712ms
+   × base de dados r14 > enorme: criar o jogo < 3s e avançar meses continua rápido 37969ms
+     → expected 3049 to be less than 1500
+ ✓ tests/r25-festival.test.ts (3 tests) 18323ms
+   ✓ r25 economia do festival > direitos de mídia por época: só edição boa, mais com headliner famoso  620ms
+   ✓ r25 economia do festival > produtor cauteloso: duas edições boas, a 2ª com lucro, caixa sempre positivo  13262ms
+   ✓ r25 economia do festival > estrelas caras num terreno pequeno ainda quebram o caixa  4438ms
+ ✓ tests/r27-cockpit.test.ts (5 tests) 6988ms
+   ✓ r27 (COCK) — Cockpit como página inicial e menu de topo > início do jogo: enxuto, primeiro passo no Agora, cartões vazios viram uma linha  544ms
+   ✓ r27 (COCK) — Cockpit como página inicial e menu de topo > com decisões pendentes: um único contador de decisões, nenhum "(0)"  1303ms
+   ✓ r27 (COCK) — Cockpit como página inicial e menu de topo > fim do ano 1 (bot jogando): continua enxuto  5128ms
+ ✓ tests/r19-era.test.ts (4 tests) 6671ms
+   ✓ r19 era: nada do futuro > vizinhos: rival só se já fundada; nomes bilíngues e de época  3973ms
+   ✓ r19 era: nada do futuro > gravadoras reais não nascem antes do ano documentado  431ms
+   ✓ r19 era: nada do futuro > rótulos de época: 1889 sem tecnologia do futuro; hoje com  873ms
+   ✓ r19 era: nada do futuro > Grupo e consolidado: todo negócio ativo aparece, mesmo sem receita  1391ms
+ ✓ tests/r23-crime-members.test.ts (4 tests) 4716ms
+   ✓ r23 membros do crime > recrutamento acontece ao longo dos anos num mundo livre (com o porquê)  2702ms
+   ✓ r23 membros do crime > modo Vida real exata: nenhuma pessoa/selo real vira membro nem comete crime inventado  1050ms
+   ✓ r23 membros do crime > membros persistem no save (ida e volta em JSON)  547ms
+   ✓ r23 membros do crime > funcionário seu descoberto como membro vira cartão de decisão (demitir/denunciar/manter)  414ms
+ ✓ tests/r18-dm.test.ts (4 tests) 60371ms
+   ✓ r18 dm18 > determinístico: mesma semente, mesmo Mestre, mesmas rixas e iniciativas  45885ms
+   ✓ r18 dm18 > modo exato: ninguém real age, sofre, entra em rixa ou morre por estes sistemas  14075ms
+   ✓ r18 dm18 > história alternativa (modo livre): gente real entra na escada e pode chegar à violência  405ms
+ ✓ tests/r13-project.test.ts (2 tests) 850ms
+   ✓ matéria-prima (rodada 13) > cada material tem curva própria, crises e fornecedor que muda custo e defeitos  494ms
+   ✓ projeto musical (rodada 13) > mistura de conceitos, opções por época, custo, prazo e prévia explicada  353ms
+ ✓ tests/r13-hype.test.ts (3 tests) 1531ms
+   ✓ hype r12 > fatos sobem o hype e a semana derruba  684ms
+   ✓ hype r12 > bolha: expectativa alta e disco fraco estreiam bem e despencam; disco ótimo sem barulho cresce  540ms
+   ✓ hype r12 > relíquia encarece com hype; alavancas custam e respeitam a época  305ms
+ ✓ tests/r23-scout.test.ts (3 tests) 1642ms
+   ✓ r23 talentos > olheiro numa cena traz nomes daquela cena ao longo das semanas, com origem  686ms
+   ✓ r23 talentos > próximo passo: custo e tempo, grau só sobe quando o relatório chega  536ms
+   ✓ r23 talentos > chamada de demos e aviso de rival  417ms
+ ✓ tests/r18-rights.test.ts (4 tests) 2537ms
+   ✓ r18 rights > edição passa pelas sociedades: exterior paga depois e perde mais; metadados reduzem a caixa preta  834ms
+   ✓ r18 rights > disputa de crédito congela a edição em caução, bloqueia sync e libera ao reconhecer  558ms
+   ✓ r18 rights > precedentes só valem na data real (Grand Upright, dez/1991)  480ms
+   ✓ r18 rights > rescisão americana: cessão de 1980 vence em 2015; catálogo concentrado vale menos que diversificado  662ms
+ ✓ tests/r4-industry.test.ts (5 tests) 59143ms
+   ✓ indústria > estado existe em partidas novas  520ms
+   ✓ indústria > prensagem grande entra na fila e chega nas semanas seguintes  1630ms
+   ✓ indústria > fábrica própria aumenta a capacidade  1247ms
+   ✓ indústria > lojas, distribuidores, pesquisa e conselho rodam anos sem quebrar o caixa e de forma determinística  55444ms
+ ✓ tests/r13-dossier.test.ts (4 tests) 2363ms
+   ✓ dossiê r13 > fatia do selo por ano, histórico de selos e nada do futuro  710ms
+   ✓ dossiê r13 > marcos: fracassos e prêmios do artista  477ms
+   ✓ dossiê r13 > pessoa: campos novos de outros sistemas aparecem sozinhos  353ms
+   ✓ dossiê r13 > mapa: números por país e camadas da época  821ms
+stdout | tests/r14-leisure.test.ts > lazer r14 > custo de CPU baixo (< 15% a mais por mês)
+lazer14: 35ms de 9564ms (0.4%)
+
+ ✓ tests/r14-leisure.test.ts (3 tests) 59172ms
+   ✓ lazer r14 > simula artistas, executivos e equipe com teto mensal, sem futuro e de forma determinística  44729ms
+   ✓ lazer r14 > jogador vai a um ponto de encontro: gasta tempo e dinheiro, muda opiniões com motivo  4427ms
+   ✓ lazer r14 > custo de CPU baixo (< 15% a mais por mês)  10014ms
+ ✓ tests/r16-people.test.ts (3 tests) 42481ms
+   ✓ r16 pessoas > quem é artista e produtor é uma pessoa só, com os dois cargos  820ms
+   ✓ r16 pessoas > empresário real liga o cliente no ano certo; atos gerados ganham empresário da praça  19353ms
+   ✓ r16 pessoas > vida com efeito no cargo: reabilitação fecha a agenda, morte libera clientes e abre sucessão  22305ms
+ ✓ tests/r20c-n2.test.ts (3 tests) 2425ms
+   ✓ r20c N2 > preço explica US$ do ano e equivalente de 2020  497ms
+   ✓ r20c N2 > compra de equipamento respeita o caixa reservado para ofertas pendentes, com motivo claro  585ms
+   ✓ r20c N2 > teto da trava libera o master e perdoa de fato o saldo não recuperado (com linha no razão)  1341ms
+ ✓ tests/r14-managers.test.ts (3 tests) 3291ms
+   ✓ r14 empresários > são pessoas completas, só aparecem na época certa e com nome real ou gerado  858ms
+   ✓ r14 empresários > liga clientes históricos só no intervalo real e pesa nas propostas  1453ms
+   ✓ r14 empresários > roubar cliente gera rixa; opinião no fundo do poço também  977ms
+ ✓ tests/r14-shell.test.ts (3 tests) 12ms
+ ✓ tests/r18-live.test.ts (4 tests) 2111ms
+   ✓ r18 live: turnê > kit muda o custo: van mais barata, seguro e avião mais caros  751ms
+   ✓ r18 live: turnê > marcação guarda a previsão; cancelamento por acidente com seguro paga e fecha o post-mortem  494ms
+   ✓ r18 live: turnê > bot: contrato clássico não segura bilheteria que não é do selo  445ms
+   ✓ r18 live: fãs > virada comercial: casuais sobem e núcleo cai aos poucos; puristas se irritam  418ms
+ ✓ tests/r23-era.test.ts (11 tests) 8ms
+ ✓ tests/r9-newrun.test.ts (6 tests) 12831ms
+   ✓ assumir gravadora existente > transfere elenco, contratos e caixa e tira o selo dos rivais (historic)  2533ms
+   ✓ assumir gravadora existente > transfere elenco, contratos e caixa e tira o selo dos rivais (free)  2042ms
+   ✓ assumir gravadora existente > transfere elenco, contratos e caixa e tira o selo dos rivais (chaos)  1855ms
+   ✓ árvore de habilidades (apagada na r27) > a ficha deriva os atributos sem habilidades e nenhum perk de Habilidade aparece  5873ms
+   ✓ trajetórias > toda trajetória tem base válida e efeitos; Músico melhora o próprio instrumento  429ms
+ ✓ tests/r19-data-ab.test.ts (3 tests) 1929ms
+   ✓ r19 WP-A / WP-B: dados de artistas > ids, datas e fichas de país coerentes; era certa; sem duplicata entre pacotes; sem criminosos reais  874ms
+   ✓ r19 WP-A / WP-B: dados de artistas > entradas aparecem no jogo no ano certo (nomes reais): 1935 (WP-A) e 1980 (WP-B)  1047ms
+ ✓ tests/r5-life.test.ts (6 tests) 5548ms
+   ✓ personagem > criação aplica nome, idade, origem e cria a pessoa do jogador  461ms
+   ✓ personagem > artista: o personagem lidera a própria banda  328ms
+   ✓ personagem > tempo livre limita ações por mês e renova  1031ms
+   ✓ personagem > namoro, pedido, casamento e filho  1684ms
+   ✓ personagem > carreira solo, bar e sair do projeto; caixa da empresa fecha  1503ms
+   ✓ personagem > mesma seed, mesmo personagem  537ms
+ ✓ tests/r14-capacity.test.ts (5 tests) 2617ms
+   ✓ capacidade 14 > ofertas: cota da equipe, depois o seu tempo, depois bloqueio explicado  514ms
+   ✓ capacidade 14 > selo rival não contrata sem limite no mês  350ms
+   ✓ capacidade 14 > banda sobrecarregada mostra quem está ocupado e acumula cansaço  1125ms
+   ✓ capacidade 14 > equipe: carreiras delegadas pesam em empresários e administração  333ms
+ ✓ tests/r4-music.test.ts (6 tests) 6389ms
+   ✓ music: estúdio > pistas por era: 1 antes da fita multipista, ilimitado com DAW  1024ms
+   ✓ music: estúdio > foco e equipamento entram na gravação; compra respeita o caixa  422ms
+   ✓ music: estúdio > sessão aplica bônus pendentes ao fechar a faixa (varredura diária)  1045ms
+   ✓ music: partitura e determinismo > mesma seed, mesma história com o sistema ligado  3604ms
+ ✓ tests/r20-g7.test.ts (4 tests) 2359ms
+   ✓ r20 G7 terr20 > soma regional == global e show converte só na praça compatível  655ms
+   ✓ r20 G7 terr20 > preço por mercado: só o mercado alvo muda e a margem não duplica  353ms
+   ✓ r20 G7 terr20 > virada de mês cria o livro (fecha com o global no momento do acerto)  1343ms
+ ✓ tests/r12-careers-manager.test.ts (2 tests) 5141ms
+   ✓ carreiras r12 > aplica escolhas do Novo Jogo e a agenda cheia estressa  2199ms
+   ✓ serviços e empresário r12 > capacidade limitada, plano co-escolhido, dilema e prestação de contas  2940ms
+ ✓ tests/r18-society.test.ts (3 tests) 22079ms
+   ✓ r18 society18 > trilhas: encomenda chega, é aceita, entregue e estreia  17255ms
+   ✓ r18 society18 > votantes e regras mudam com a época; IA gerada é inelegível  425ms
+   ✓ r18 society18 > jornalismo: resenha move a média e a credibilidade; censura e filantropia têm efeito  4396ms
+ ✓ tests/r23-journey.test.ts (4 tests) 1611ms
+   ✓ r23 nextStep23 > sem artista → encontrar um artista  532ms
+   ✓ r23 nextStep23 > atravessa repertório → trabalho marcado → gravação → capa/verba/data → divulgação  400ms
+   ✓ r23 nextStep23 > meta de fãs diz a janela de medição  380ms
+ ✓ tests/r15-nav.test.ts (7 tests) 8ms
+ ✓ tests/r14-scenes.test.ts (3 tests) 39ms
+ ✓ tests/r11-scout-manager.test.ts (2 tests) 5968ms
+   ✓ scouting r11 > missão (r27: viagem do motor único) revela pistas aos poucos e os relatórios amadurecem  3723ms
+   ✓ empresário r11 > renegocia comissão, leva ao mercado, fecha contrato e gera relatório  2243ms
+ ✓ tests/r27-sort.test.ts (5 tests) 26ms
+ ✓ tests/r12-project.test.ts (3 tests) 1276ms
+   ✓ projeto musical (rodada 12) > compromissos mudam meta, orçamento e estúdio; atraso vira decisão com consequência  571ms
+   ✓ projeto musical (rodada 12) > o foco ideal do estúdio depende do público-alvo e do conceito, não só do gênero  410ms
+ ✓ tests/r16-delegate.test.ts (3 tests) 4173ms
+   ✓ delegar 16 > mercado tem agentes e promotores; contratar, delegar turnê e ver resultado explicado  1956ms
+   ✓ delegar 16 > promotor: rádio gasta orçamento; capacidade limita a 3 ordens por mês  1071ms
+   ✓ delegar 16 > proposta de rival: cobrir mantém, ignorar perde a pessoa e as ordens  1143ms
+ ✓ tests/r20c-n1.test.ts (2 tests) 986ms
+   ✓ r20c N1 — passado profissional > trajetória escolhida pelo bloco novo = mesma config que a ficha antiga gerava  504ms
+   ✓ r20c N1 — passado profissional > resumo somado: cada perk uma vez e igual à soma das fontes de passado no motor  480ms
+ ✓ tests/r12-career.test.ts (3 tests) 14047ms
+   ✓ agente x promotor > promotor marca, prevê e liquida um show; força local e cansaço se movem  3301ms
+   ✓ agente x promotor > agente exige agência e cliente  430ms
+   ✓ estúdio e produtor > estúdio recebe propostas e o produtor conclui um projeto com o take imperfeito  10313ms
+ ✓ tests/r22-newrun.test.ts (5 tests) 3575ms
+   ✓ r22 gravadoras > começos novos geram mundos válidos; todas novatas não têm elenco no começo  1642ms
+   ✓ r22 gravadoras > pede até 100 rivais  464ms
+   ✓ r22 carta e origem > uma Carta antiga na config não tem efeito e a origem padrão é neutra  896ms
+   ✓ r22 músicas das curtidas > dados válidos e títulos reais só com nomes reais e depois do ano  565ms
+ ✓ tests/r16-regionfame.test.ts (2 tests) 16987ms
+   ✓ fama regional 16 > base local, shows constroem o nome lá e o desvio decai  13806ms
+   ✓ fama regional 16 > exposição vista do país do jogador e determinismo  3179ms
+ ✓ tests/r15-producers.test.ts (3 tests) 37344ms
+   ✓ r15 produtores reais > tem ~50, entram no catálogo só na época certa e com som próprio  522ms
+   ✓ r15 produtores reais > obras só até o ano atual, nome gerado sem nomes reais, pessoa completa  913ms
+   ✓ r15 produtores reais > relação muda cachê e pode causar recusa; rivais ocupam a agenda  35906ms
+ ✓ tests/r11-bolsa.test.ts (3 tests) 27466ms
+   ✓ bolsa r11 > pregão cheio no início em qualquer ano, com histórico e sem empresas do futuro  2098ms
+   ✓ bolsa r11 > o selo investe no mesmo mercado com o caixa da empresa  520ms
+   ✓ bolsa r11 > IPO do seu selo vira ação; rival acumula bloco, há aviso e dá para recomprar  24844ms
+ ✓ tests/r23-scenarios.test.ts (22 tests) 19586ms
+   ✓ r23 cenários > manager_1961: começa, abre o negócio e mede  1242ms
+   ✓ r23 cenários > woodstock_1969: começa, abre o negócio e mede  993ms
+   ✓ r23 cenários > rockinrio_1985: começa, abre o negócio e mede  1409ms
+   ✓ r23 cenários > cbgb_1973: começa, abre o negócio e mede  1056ms
+   ✓ r23 cenários > memphis_studio_1961: começa, abre o negócio e mede  650ms
+   ✓ r23 cenários > brill_1958: começa, abre o negócio e mede  623ms
+   ✓ r23 cenários > djrock_1951: começa, abre o negócio e mede  521ms
+   ✓ r23 cenários > chitlin_1955: começa, abre o negócio e mede  527ms
+   ✓ r23 cenários > stream_startup_2008: começa, abre o negócio e mede  1542ms
+   ✓ r23 cenários > funk_1989: começa, abre o negócio e mede  1240ms
+   ✓ r23 cenários > mangue_1993: começa, abre o negócio e mede  1368ms
+   ✓ r23 cenários > studioone_1963: começa, abre o negócio e mede  771ms
+   ✓ r23 cenários > jovemguarda_1965: começa, abre o negócio e mede  800ms
+   ✓ r23 cenários > afrobeat_1970: começa, abre o negócio e mede  874ms
+   ✓ r23 cenários > factory_1978: começa, abre o negócio e mede  1035ms
+   ✓ r23 cenários > defjam_1984: começa, abre o negócio e mede  1134ms
+   ✓ r23 cenários > axe_1985: começa, abre o negócio e mede  1097ms
+   ✓ r23 cenários > sertanejo_2005: começa, abre o negócio e mede  1304ms
+   ✓ r23 cenários > festival_king: começa, abre o negócio e mede  1087ms
+   ✓ r23 cenários > tinpan_1910: começa, abre o negócio e mede  300ms
+ ✓ tests/r15-history.test.ts (3 tests) 12842ms
+   ✓ modos de história r15 > exata: disco real sai no ano real com o título real e a morte real acontece  11068ms
+   ✓ modos de história r15 > história alternativa (r18): fora do modo exato nenhum fato real futuro é agendado  836ms
+   ✓ modos de história r15 > determinístico: mesma semente, mesmo roteiro  936ms
+ ✓ tests/r15-fame.test.ts (2 tests) 5976ms
+   ✓ fama 15 > degraus, efeitos e histórico  5684ms
+ ✓ tests/r16-lineups.test.ts (2 tests) 13459ms
+   ✓ formações r16 > Michael: nas Jacksons até 1984, solo em paralelo, mesma pessoa; Jermaine volta  12959ms
+   ✓ formações r16 > saída genérica vira carreira solo ou banda nova com a mesma pessoa  498ms
+ ✓ tests/r18-era1889.test.ts (1 test) 122731ms
+   ✓ era1889 > começa em 1889, joga 30 anos sem erro, com formatos, gêneros e selos reais nas datas  122729ms
+ ✓ tests/r23-finance.test.ts (4 tests) 9765ms
+   ✓ r23 fechamento do mês > último mês exibido = caixa final − inicial do mês recém-fechado = soma do extrato  6469ms
+   ✓ r23 fechamento do mês > extrato do mês fechado é imutável; lançamento entre meses vai para o mês novo  1242ms
+   ✓ r23 fechamento do mês > save antigo (sem campos r23) gira o extrato uma vez na abertura e segue  1150ms
+   ✓ r23 fechamento do mês > histórico limitado a 24 meses  900ms
+ ✓ tests/r5-media.test.ts (2 tests) 1169ms
+   ✓ críticas > cada crítica tem notas por aspecto, faixas citadas e texto com veredito  726ms
+   ✓ entrevistas > cada pergunta traz quatro respostas escritas para ela, e a transcrição sai no resultado  440ms
+ ❯ tests/r13-newgame.test.ts (4 tests | 1 failed) 3023ms
+   ✓ novo jogo r13 > cada ano de início tem nome único (pt e en) 2ms
+   ✓ novo jogo r13 > origens novas existem e têm efeito real  1202ms
+   ✓ novo jogo r13 > narradores novos têm ritmo e voz próprios  1809ms
+   × novo jogo r13 > toda seção tem ajuda bilíngue 7ms
+     → expected undefined to be truthy
+ ✓ tests/r12-offers-explain.test.ts (1 test) 3744ms
+   ✓ r12 pacotes e leituras > compara pacotes, pesa autonomia/verba e cumpre a verba prometida  3740ms
+ ✓ tests/r19-balance.test.ts (2 tests) 1362ms
+   ✓ r19 onda 4 — equilíbrio > banda divide o lucro do mês em partes iguais; prejuízo é abatido antes  696ms
+   ✓ r19 onda 4 — equilíbrio > selo no zero a zero vale menos que um lucrativo com o mesmo catálogo  663ms
+ ✓ tests/r4-creation.test.ts (3 tests) 33737ms
+   ✓ criação > toda música composta ganha um tema e a tendência fica no intervalo  560ms
+   ✓ criação > receita gera efeitos e o lançamento recebe críticas e enfileira a cena  1210ms
+   ✓ criação > encomendas e divisões pagam e cobram sem quebrar o caixa, de forma determinística  31964ms
+ ✓ tests/r9-you.test.ts (4 tests) 18821ms
+   ✓ tempo livre > são 5 unidades por mês, uma ocupada pela banda  704ms
+   ✓ novidades de época > clipe só existe depois do ano e exige desbloqueio; depois disso aparece como canal  876ms
+   ✓ novidades de época > save antigo (sem registro) começa com o que já existia desbloqueado  497ms
+   ✓ save em texto > exporta, importa (texto compactado e JSON puro) e continua rodando  16742ms
+stdout | tests/r18-agency.test.ts > r18 agency (motivos) > partida longa: boas, neutras e ruins; poucas por mês
+NT {"neutral":20,"good":24,"bad":8} 32
+
+ ✓ tests/r18-agency.test.ts (3 tests) 38963ms
+   ✓ r18 agency (motivos) > sem gatilho, ninguém age; um fato forte gera iniciativa com porquê  812ms
+   ✓ r18 agency (motivos) > partida longa: boas, neutras e ruins; poucas por mês  38147ms
+ ✓ tests/r20b-x.test.ts (4 tests) 1291ms
+   ✓ r20b X — parceria de TV e caixa livre > com caixa livre suficiente: cotação sem bloqueio e assinatura debita uma vez  554ms
+   ✓ r20b X — parceria de TV e caixa livre > caixa reservado em oferta pendente bloqueia com motivo e não muda estado  342ms
+   ✓ r20b X — parceria de TV e caixa livre > caixa curto: motivo "insuficiente" e nada muda  392ms
+ ✓ tests/r5-talent.test.ts (3 tests) 3506ms
+   ✓ talent > atributos estáveis, por função, entre 1 e 99  500ms
+   ✓ talent > aulas custam, duram três meses e sobem o grupo  2721ms
+ ✓ tests/r12-rivals-hq.test.ts (3 tests) 34354ms
+   ✓ rivais r12 > lance rival depois do seu derruba a oferta; cobrir recupera  701ms
+   ✓ rivais r12 > acordo de distribuição com rival: aceito, rende e rompe com tensão  468ms
+   ✓ rivais r12 > simulação longa gera respostas visíveis sem quebrar  33183ms
+ ✓ tests/r15-looks.test.ts (3 tests) 1027ms
+   ✓ r15 visuais reais > aplica no modo nomes reais, troca de fase e respeita edição do jogador  556ms
+   ✓ r15 visuais reais > modo ficcional não grava visuais reais  372ms
+ ✓ tests/r18-long.test.ts (2 tests) 152ms
+ ✓ tests/r11-events.test.ts (4 tests) 30699ms
+   ✓ eventos da rodada 11 > nada do futuro: pirataria P2P, redes e streaming não aparecem em 1960  505ms
+   ✓ eventos da rodada 11 > simulação curta no ano 2000 fecha o caixa  30170ms
+ ✓ tests/r20b-y.test.ts (3 tests) 696ms
+ ✓ tests/r12-scenes-eras.test.ts (2 tests) 4840ms
+   ✓ cenas r12 > investir cresce a cena; explorar demais gera rejeição e um selo local rival  1762ms
+   ✓ eras r12 > virada de era derruba o encaixe e a reorganização restaura  3076ms
+ ✓ tests/r11-lendas.test.ts (2 tests) 10495ms
+   ✓ relíquias (rodada 11) > negociação: aceita, contrapropõe ou recusa; recusa impõe espera  9007ms
+   ✓ relíquias (rodada 11) > lance fechado alto vence o leilão; acervo pode ser exposto, emprestado e doado  1485ms
+ ✓ tests/r12-arcs.test.ts (3 tests) 14494ms
+   ✓ r12 arcos, rotinas e história > o histórico pesa na proposta com o motivo à vista  585ms
+   ✓ r12 arcos, rotinas e história > rotinas rodam sozinhas com o tempo livre e custam do bolso  459ms
+   ✓ r12 arcos, rotinas e história > a história do selo junta capítulos e fotografias anuais  13447ms
+ ✓ tests/r16-playbot.test.ts (1 test) 13818ms
+   ✓ playbot16 > uma run curta tem ações variadas de jogador e é determinística  13816ms
+ ✓ tests/r20-g5.test.ts (3 tests) 15ms
+ ✓ tests/r19-data-d.test.ts (3 tests) 110476ms
+   ✓ r19 WP-D2/D3: pacotes de artistas > entradas aparecem no jogo no ano real e não antes (gating por estreia)  110441ms
+ ✓ tests/r27-int.test.ts (3 tests) 760ms
+   ✓ r27 INT — sede em pixel > o toca-discos do lounge devolve a caixa clicável em toda casca e época  754ms
+ ✓ tests/r14-polish.test.ts (3 tests) 8ms
+ ✓ tests/r15-kin.test.ts (3 tests) 31833ms
+   ✓ família r15 > liga irmãos e filhos reais por nome, sem mostrar quem ainda não nasceu  896ms
+   ✓ família r15 > morte de um parente derruba a moral de quem fica, com rastro no registro  403ms
+   ✓ família r15 > simulação é determinística e gera famílias de procedurais  30532ms
+ ✓ tests/r19-data-cd.test.ts (2 tests) 1045ms
+   ✓ r19 WP-C e WP-D1: artistas > exemplos aparecem no jogo: já ativos no começo e estreando depois  772ms
+ ✓ tests/r27-factseed.test.ts (2 tests) 1216ms
+   ✓ r27 — semente das reações de NPC pelo conteúdo do fato > um fato extra sem relação não muda quem o selo NPC dispensa ou banca  1210ms
+ ✓ tests/r11-takeover-all.test.ts (2 tests) 2546ms
+   ✓ assumir qualquer gravadora do ano > lista rivais e todo o catálogo fundado até o ano; as de fora entram no mundo com elenco mínimo  2449ms
+ ✓ tests/r17-final.test.ts (3 tests) 1129ms
+   ✓ r17 final > uma fonte de perks que consulta perk() não recursa (antes estourava a pilha)  633ms
+   ✓ r17 final > crédito: cada empréstimo encolhe o próximo; no vermelho há 2 meses o banco não empresta  494ms
+ ✓ tests/r13-overhead.test.ts (3 tests) 2295ms
+   ✓ overhead13 > selo pequeno quase não paga e tiers sobem  690ms
+   ✓ overhead13 > major paga 10-38% da receita (streaming: +8 p.p. de playlists/anúncios; 2010+: +5 p.p. da corrida por playlists) e mais que o pequeno  652ms
+   ✓ overhead13 > promoção do lançamento depende da época e do tamanho do mercado  951ms
+ ✓ tests/r11-opinions.test.ts (1 test) 6783ms
+   ✓ opiniões dos artistas > sem auto-opinião, sem duplicatas, com teto e frases variadas  6781ms
+ ✓ tests/r17-balance.test.ts (2 tests) 1202ms
+   ✓ r17 balanço > quebra no 4º mês seguido de caixa negativo  651ms
+   ✓ r17 balanço > 360: estrela paga fatia menor e o selo tem teto anual por ato  549ms
+ ✓ tests/r14-notoriety.test.ts (2 tests) 2569ms
+   ✓ notoriedade > degraus, ganho por sucesso, decaimento e motivo  2565ms
+ ✓ tests/r19-bots.test.ts (10 tests) 11476ms
+   ✓ r19 bots de equilíbrio > balanced joga alguns meses  968ms
+   ✓ r19 bots de equilíbrio > cautious joga alguns meses  1101ms
+   ✓ r19 bots de equilíbrio > aggressive joga alguns meses  1760ms
+   ✓ r19 bots de equilíbrio > artist joga alguns meses  2721ms
+   ✓ r19 bots de equilíbrio > loans joga alguns meses  836ms
+   ✓ r19 bots de equilíbrio > flip joga alguns meses  1053ms
+   ✓ r19 bots de equilíbrio > signall joga alguns meses  1938ms
+   ✓ r19 bots de equilíbrio > crime joga alguns meses  605ms
+ ✓ tests/r9-rockhall.test.ts (1 test) 47183ms
+   ✓ Hall da Fama do Rock > não existe antes de 1983 e empossa turmas a partir de 1986  47181ms
+ ✓ tests/r13-self.test.ts (1 test) 551ms
+   ✓ r13 personagem = artista > o líder da banda do jogador é o personagem e não tem opiniões geradas  549ms
+ ✓ tests/r22-sort.test.ts (1 test) 7ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/r16-menus.test.ts [ tests/r16-menus.test.ts ]
+ReferenceError: Cannot access 'LOAD_EXTRA' before initialization
+ ❯ registerLoad src/sim/sys/careers12.ts:178:13
+    176| const LOAD_EXTRA: { id: string; fn: (s: GameState) => number }[] = [];
+    177| export function registerLoad(id: string, fn: (s: GameState) => number)…
+    178|   const i = LOAD_EXTRA.findIndex((x) => x.id === id);
+       |             ^
+    179|   if (i >= 0) LOAD_EXTRA[i] = { id, fn }; else LOAD_EXTRA.push({ id, f…
+    180| }
+ ❯ src/sim/sys/manager12.ts:109:1
+ ❯ src/sim/sys/index.ts:92:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/r27-p2a.test.ts [ tests/r27-p2a.test.ts ]
+AssertionError: expected 1089445 to be 1301031 // Object.is equality
+
+- Expected
++ Received
+
+- 1301031
++ 1089445
+
+ ❯ tests/r27-p2a.test.ts:58:25
+     56|   }
+     57|   // modo rápido intacto: valores medidos nesta base SEM o módulo camp…
+     58|   expect(s.player.cash).toBe(1301031);
+       |                         ^
+     59|   expect(hashString(JSON.stringify(s.acts))).toBe(2195685417);
+     60|   expect(hashString(JSON.stringify(s.rng))).toBe(2442526734);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/r13-newgame.test.ts > novo jogo r13 > toda seção tem ajuda bilíngue
+AssertionError: expected undefined to be truthy
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ tests/r13-newgame.test.ts:59:27
+     57|   it('toda seção tem ajuda bilíngue', () => {
+     58|     // r27 AUD1 (a4702a8) tirou a seção 'card' (Cartas do selo apagada…
+     59|     for (const k of ['storyteller', 'origin', 'ambition', 'traits', 'p…
+       |                           ^
+     60|       expect(HELP[k]?.pt).toBeTruthy();
+     61|       expect(HELP[k]?.en).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/r14-db.test.ts > base de dados r14 > enorme: criar o jogo < 3s e avançar meses continua rápido
+AssertionError: expected 3049 to be less than 1500
+ ❯ tests/r14-db.test.ts:74:22
+     72|     const perMonth = (Date.now() - t1) / 12;
+     73|     console.log(`huge: acts=${count(s)} criar=${created}ms simulate(1 …
+     74|     expect(perMonth).toBeLessThan(1500);
+       |                      ^
+     75|     expect(Object.keys(state.acts).length).toBeGreaterThan(count(mk('s…
+     76|   }, 60000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/r17-nav.test.ts > menu r17 > ícones únicos e existentes; teclas únicas (; = Submundo)
+AssertionError: expected 95 to be 96 // Object.is equality
+
+- Expected
++ Received
+
+- 96
++ 95
+
+ ❯ tests/r17-nav.test.ts:75:36
+     73|     const areaIcons = Object.values(ICON17);
+     74|     const allIcons = [...groupIcons, ...areaIcons, 'key'];
+     75|     expect(new Set(allIcons).size).toBe(allIcons.length);
+       |                                    ^
+     76|     const known = new Set<string>([...ICON_NAMES, ...ICON17_NAMES]);
+     77|     for (const x of allIcons) expect(known.has(x)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/r18-tutorial.test.ts > tutorial18: ajuda > toda aba registrada (registerTab/registerPageTab/abas de carreira) e toda aba vista no navegador tem ajuda
+AssertionError: expected [ 'life-you:skills' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "life-you:skills",
++ ]
+
+ ❯ tests/r18-tutorial.test.ts:45:23
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/r27-p2b.test.ts > r27 P2B — modo rápido intacto > com os módulos P2B carregados, o mundo do playbot é o mesmo de antes deles
+AssertionError: expected 1089445 to be 1301031 // Object.is equality
+
+- Expected
++ Received
+
+- 1301031
++ 1089445
+
+ ❯ tests/r27-p2b.test.ts:45:31
+     43|   it('com os módulos P2B carregados, o mundo do playbot é o mesmo de a…
+     44|     // valores medidos com src/sim/tours.ts e src/sim/sys/index.ts SEM…
+     45|     // Re-medidos na r27 (docs/suite27-final.md) depois de dois merges…
+       |                               ^
+     46|     // (1301031 / 1382068899 / 2195685417 / 2442526734) reproduzem em …
+     47|     // choques macro) mudou só acts (→ 3789538846); AUD1 (166a36e: pla…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/r27-ux.test.ts > r27 UX: hubs (páginas unificadas) > quase toda página da árvore cabe num hub (as soltas são poucas e de propósito)
+AssertionError: expected [ 'cockpit', 'songmkt27', 'tut18' ] to deeply equal [ 'cockpit', 'tut18' ]
+
+- Expected
++ Received
+
+  [
+    "cockpit",
++   "songmkt27",
+    "tut18",
+  ]
+
+ ❯ tests/r27-ux.test.ts:37:26
+     35|   it('quase toda página da árvore cabe num hub (as soltas são poucas e…
+     36|     const loose = [...KNOWN25].filter((a) => !HUBBED27.has(a));
+     37|     expect(loose.sort()).toEqual(['cockpit', 'tut18']);
+       |                          ^
+     38|   });
+     39|   it('vista Essencial: toda página do menu aparece em exatamente uma e…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  tests/sim.test.ts > arco completo > uma run iniciada em 2030 chega a um dos 20 finais
+Error: Test timed out in 300000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/sim.test.ts:107:3
+    105| 
+    106| describe('arco completo', () => {
+    107|   it('uma run iniciada em 2030 chega a um dos 20 finais', () => {
+       |   ^
+    108|     const s = createGame(defaultConfig('arc-1', { startYear: 2030, sce…
+    109|     for (let i = 0; i < 12 * 11 + 2 && !s.ended; i++) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 9 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  9 failed | 202 passed (211)
+      Tests  7 failed | 1430 passed | 19 skipped (1456)
+     Errors  9 errors
+   Start at  01:08:40
+   Duration  4041.78s (transform 19.90s, setup 0ms, collect 539.76s, tests 3415.92s, environment 56ms, prepare 19.60s)
+

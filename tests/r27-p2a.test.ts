@@ -54,10 +54,13 @@ beforeAll(() => {
     if (m === 7) FIX = clone(s);
     advanceMonth(s);
   }
-  // modo rápido intacto: valores medidos nesta base SEM o módulo camp27 (gancho semanal) carregado
-  expect(s.player.cash).toBe(1301031);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2195685417);
-  expect(hashString(JSON.stringify(s.rng))).toBe(2442526734);
+  // modo rápido intacto: valores medidos nesta base SEM o módulo camp27 (gancho semanal) carregado.
+  // Re-medidos na r27 (docs/suite27-final.md), mesmos do r27-p2b: os antigos (1301031 / 2195685417 / 2442526734)
+  // reproduzem em b748d64; AUD2 (c4c5bfd) mudou acts e AUD1 (166a36e: playbot compra negócios e contrata no 1º ano)
+  // mudou caixa, acts e rng. "Sem campanha nada muda" segue provado no 1º teste da campanha (a × b).
+  expect(s.player.cash).toBe(1089445);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1761475379);
+  expect(hashString(JSON.stringify(s.rng))).toBe(3113611029);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
