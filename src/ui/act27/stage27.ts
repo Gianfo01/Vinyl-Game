@@ -1,13 +1,11 @@
 // r27 (M2) — palco em pixel art para o show jogável: casa por porte (bar, clube, teatro, arena, estádio a céu
 // aberto) e luz por era (lâmpadas e âmbar → gelatinas coloridas → laser → telões de LED; isqueiros → celulares).
 // paintStage27 é PURA (só Px); drawStage27 pinta no <canvas> e põe os integrantes reais (avatarSprite) no palco.
-// r27 (CHAR): quem tem sprite de semelhança (pessoa real, nomes reais) sobe ao palco em corpo inteiro (palco em 4×).
 
 import { avatarSprite, lookOf, type Role } from '../pixel/avatar';
 import type { Appearance } from '../../sim/types';
 import { C, Px, mix, noise, shade, withAlpha } from '../pixel/px';
 import { drawPerson } from '../sys/live/art';
-import { drawBody27, type Sprite27 } from '../pixel/people27';
 
 export const W27 = 200;
 export const H27 = 112;
@@ -96,46 +94,23 @@ export function paintStage27(o: Stage27): Px {
   return p;
 }
 
-export interface Member27 { id: string; look?: Appearance; born?: number; role?: string; /** r27 (CHAR): sprite real (corpo 96×152) */ sprite?: Sprite27 }
-
-/** r27 (CHAR): escala do palco quando alguém tem sprite real — o cenário 200×112 vai a 4× e o corpo real (≈125 px)
- *  entra em 1×, com a mesma altura relativa do boneco procedural (34 px × 4). */
-export const HD27 = 4;
-let stageBuf: HTMLCanvasElement | null = null;
+export interface Member27 { id: string; look?: Appearance; born?: number; role?: string }
 
 /** Pinta no canvas e coloca os integrantes no palco. */
 export function drawStage27(cv: HTMLCanvasElement, o: Stage27, members: Member27[]): void {
-  const hd = members.slice(0, 5).some((m) => m.sprite);
-  const k = hd ? HD27 : 1;
-  if (cv.width !== W27 * k) { cv.width = W27 * k; cv.height = H27 * k; cv.classList.toggle('hd27', hd); }
   const ctx = cv.getContext('2d');
   if (!ctx) return;
   const px = paintStage27(o);
-  if (hd) {
-    stageBuf ??= document.createElement('canvas');
-    stageBuf.width = W27;
-    stageBuf.height = H27;
-    const bctx = stageBuf.getContext('2d');
-    if (!bctx) return;
-    const img = bctx.createImageData(W27, H27);
-    new Uint32Array(img.data.buffer).set(px.d);
-    bctx.putImageData(img, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(stageBuf, 0, 0, W27 * k, H27 * k);
-  } else {
-    const img = ctx.createImageData(W27, H27);
-    new Uint32Array(img.data.buffer).set(px.d);
-    ctx.putImageData(img, 0, 0);
-  }
+  const img = ctx.createImageData(W27, H27);
+  new Uint32Array(img.data.buffer).set(px.d);
+  ctx.putImageData(img, 0, 0);
   ctx.imageSmoothingEnabled = false;
   const stageY = [62, 58, 56, 52, 50][o.tier] ?? 56;
   const n = Math.min(5, members.length);
   members.slice(0, 5).forEach((m, i) => {
-    const x = Math.round(W27 / 2 + (i - (n - 1) / 2) * 22);
-    const hop = o.energy > 70 && (o.frame + i * 7) % 20 < 4 ? 1 : 0;
-    // corpo real: pés (linha 148 do quadro) no chão do palco, centro da figura (x≈57) na marca do integrante
-    if (m.sprite && drawBody27(ctx, m.sprite, x * k - 57, (stageY + 1) * k - 149 - hop * 3, 1)) return;
     const sp = avatarSprite(lookOf({ id: m.id, look: m.look, born: m.born }), { year: o.year, role: (m.role ?? null) as Role | null, pose: 'play', frame: Math.floor(o.frame / 8) + i, dir: i % 2 ? 'SW' : 'SE' });
-    ctx.drawImage(sp.c, (x - sp.ax) * k, (stageY + 1 - sp.ay - hop) * k, sp.c.width * k, sp.c.height * k);
+    const x = Math.round(W27 / 2 + (i - (n - 1) / 2) * 22);
+    ctx.drawImage(sp.c, x - sp.ax, stageY + 1 - sp.ay - (o.energy > 70 && (o.frame + i * 7) % 20 < 4 ? 1 : 0));
   });
 }
+

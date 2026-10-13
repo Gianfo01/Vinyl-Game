@@ -26,7 +26,6 @@ import { openOffer, openRelease } from './ficha';
 import { rightsSheet } from './rightsView';
 import { openDossier } from './dossierView';
 import { portraitCanvas } from './pixel/avatar';
-import { heroBody27, lineup27 } from './sys/sprites27';
 import { appearanceEditor } from './pixel/editor';
 import { personActivity } from './pixel/activity';
 import { instrumentsTab } from './sys/instruments';
@@ -147,8 +146,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
   const vis = visibleFields(deg);
   const w = fuzz(deg, mine);
   const ovr = overall(s, p);
-  const face = () => heroBody27(s, p) ?? portraitCanvas(p, s, 4); // r27 (CHAR): pessoa real = corpo inteiro (sprite de semelhança)
-  const portraitBox = h('div', { class: 'pg-portrait' }, face());
+  const portraitBox = h('div', { class: 'pg-portrait' }, portraitCanvas(p, s, 4));
   const activity = mine ? personActivity(s, p.id) : null;
   const pot = Math.round(p.potential);
   const potShown = mine ? (s.year - p.born < 26 ? `${Math.max(ovr, pot - 6)}–${pot + 6}` : `~${Math.max(ovr, pot)}`) : vis.skills ? `${Math.max(1, pot - 15)}–${pot + 15}` : '?';
@@ -156,7 +154,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     const editor = appearanceEditor(p, (look) => {
       if (look) p.look = look;
       else delete p.look;
-      portraitBox.replaceChildren(face());
+      portraitBox.replaceChildren(portraitCanvas(p, s, 4));
     }, s.year);
     modal(t(l('Editar aparência', 'Edit look')) + ` — ${p.name}`, editor, { wide: true });
   };
@@ -350,7 +348,6 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
 
         !mine && s.config.role !== 'artist' && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { close(); openDossier(a.id); } }, t(l('Dossiê de A&R', 'A&R dossier'))) : null),
     ),
-    lineup27(s, a, (pid) => openPersonPage(pid)), // r27 (CHAR): a formação real em corpo inteiro
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([
     { id: 'overview', label: l('Visão geral', 'Overview'), icon: 'star', render: () => overviewTab(s, a, deg, mine) },

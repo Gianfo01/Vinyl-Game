@@ -14,6 +14,5 @@ Gerado pela skill `.claude/skills/masters-artist-sprites/` a partir das fichas e
 `python3 scripts/export.py specs/lotes/lote_??.jsonl --out ../../../art/personagens` (≈1 min).
 Para corrigir alguém: edite a linha dele no lote e exporte de novo.
 
-No jogo (r27 CHAR): `npm run people27` empacota tudo em `src/assets/people27/` (folhas WebP sem perdas + índice) e
-`src/ui/pixel/people27.ts` casa o `name` da pessoa (modo nomes reais) com o índice; homônimos pelo ato.
-Depois de exportar de novo, rode `npm run people27`.
+Sem integração com o jogo ainda (o nome casa com o `name` da pessoa no modo nomes reais; homônimos levam o ato
+entre parênteses).

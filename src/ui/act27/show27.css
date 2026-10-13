@@ -1,7 +1,6 @@
 /* r27 (M2) — show jogável. Cores só pelas variáveis do tema (theme25). */
 .a27-show { display: grid; gap: 10px; color: var(--ink); }
 .a27-stage { width: 100%; max-width: 520px; aspect-ratio: 200 / 112; image-rendering: pixelated; justify-self: center; border: 1px solid var(--line); border-radius: 6px; background: #0b0a12; }
-.a27-stage.hd27 { max-width: 800px; } /* r27 (CHAR): palco 4× com corpos reais em 1× — até 800 px fica pixel a pixel */
 .a27-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .92em; color: var(--muted); }
 .a27-head b { color: var(--ink); }
 .a27-cols { display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px; }

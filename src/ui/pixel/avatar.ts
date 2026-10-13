@@ -1024,26 +1024,15 @@ export function avatarSprite(look: Appearance, o: AvatarOpts): Sprite {
 const portraitCache = new Map<string, HTMLCanvasElement>();
 const portraitUrlCache = new Map<string, string>();
 
-/** `proc27`: força o retrato procedural (editor de aparência), mesmo para quem tem sprite real. */
-type PersonLike = { id: string; look?: Appearance; role?: Role; born?: number; proc27?: boolean };
+type PersonLike = { id: string; look?: Appearance; role?: Role; born?: number };
 
-/** r27 (CHAR): retratos reais (sprites de semelhança das pessoas reais, modo nomes reais) — registrados pela UI
- *  (ui/sys/sprites27.ts). Cada função devolve null quando a pessoa não tem sprite: fica o procedural de sempre. */
-export interface RealPortrait27 {
-  /** canvas size×size; se a folha ainda carrega, devolve `fallback()` e troca o desenho quando ela chegar */
-  canvas(person: PersonLike, size: number, year: number, fallback: () => HTMLCanvasElement): HTMLCanvasElement | null;
-  /** data URL size×size, ou null (sem sprite ou folha carregando: `late(url)` é chamada quando ficar pronta) */
-  url(person: PersonLike, size: number, year: number, late?: (url: string) => void): string | null;
-  /** busto 32×32 (2:1) com a placa da era, para cenas em pixel art; null se não houver ou ainda não carregou */
-  px(person: PersonLike, year: number): Px | null;
-}
-let REAL27: RealPortrait27 | null = null;
-export function setRealPortrait27(r: RealPortrait27 | null): void { REAL27 = r; }
-
-/** Placa de fundo do retrato (32×32, arredondada, na cor da era). */
-export function portraitPlatePx(year: number, synthetic = false): Px {
+/** Busto 32×32 de frente. */
+export function portraitPx(person: PersonLike, year: number): Px {
+  const look = lookOf(person);
   const pal = PALETTES[eraOf(year)];
+  const col = colorsFor(look, pal);
   const p = new Px(32, 32);
+  // fundo: placa arredondada na cor da era
   const bgA = mix(pal.wall, pal.bg, 0.25);
   const bgB = shade(bgA, -0.18);
   p.fill((x, y) => {
@@ -1051,21 +1040,7 @@ export function portraitPlatePx(year: number, synthetic = false): Px {
     if (!inside) return 0;
     return y > 20 && dith(x, y, (y - 20) / 14) ? bgB : bgA;
   });
-  if (synthetic) p.fill((x, y) => (y % 3 === 0 ? withAlpha(C('#2ee8d8'), 40) : 0));
-  return p;
-}
-
-/** Busto 32×32 de frente (r27: o sprite real da pessoa, quando houver e já estiver carregado). */
-export function portraitPx(person: PersonLike, year: number): Px {
-  return (!person.proc27 && REAL27?.px(person, year)) || proceduralPx(person, year);
-}
-
-function proceduralPx(person: PersonLike, year: number): Px {
-  const look = lookOf(person);
-  const pal = PALETTES[eraOf(year)];
-  const col = colorsFor(look, pal);
-  // fundo: placa arredondada na cor da era
-  const p = portraitPlatePx(year, person.role === 'synthetic');
+  if (person.role === 'synthetic') p.fill((x, y) => (y % 3 === 0 ? withAlpha(C('#2ee8d8'), 40) : 0));
   // ombros e roupa
   const outfit = look.outfit % 4;
   const shirtC = outfit === 0 && pal.era === '1920' ? col.shirt : col.cloth;
@@ -1104,35 +1079,29 @@ function proceduralPx(person: PersonLike, year: number): Px {
 /** Retrato ampliado em canvas (px = tamanho de cada pixel). */
 export function portraitCanvas(person: PersonLike, s?: GameState | number | null, px = 3): HTMLCanvasElement {
   const year = typeof s === 'number' ? s : s?.year ?? 1960;
-  const procedural = (): HTMLCanvasElement => {
-    const look = lookOf(person);
-    const key = `${person.id}|${lookKey(look)}|${eraOf(year)}|${person.role}|${px}`;
-    let c = portraitCache.get(key);
-    if (!c) {
-      c = upscale(proceduralPx(person, year).canvas(), 32 * px);
-      c.className = 'px portrait';
-      portraitCache.set(key, c);
-    }
-    const copy = document.createElement('canvas');
-    copy.width = c.width;
-    copy.height = c.height;
-    copy.className = 'px portrait';
-    copy.getContext('2d')!.drawImage(c, 0, 0);
-    return copy;
-  };
-  return (!person.proc27 && REAL27?.canvas(person, 32 * px, year, procedural)) || procedural();
+  const look = lookOf(person);
+  const key = `${person.id}|${lookKey(look)}|${eraOf(year)}|${person.role}|${px}`;
+  let c = portraitCache.get(key);
+  if (!c) {
+    c = upscale(portraitPx(person, year).canvas(), 32 * px);
+    c.className = 'px portrait';
+    portraitCache.set(key, c);
+  }
+  const copy = document.createElement('canvas');
+  copy.width = c.width;
+  copy.height = c.height;
+  copy.className = 'px portrait';
+  copy.getContext('2d')!.drawImage(c, 0, 0);
+  return copy;
 }
 
-/** Data URL do retrato com `size` px (múltiplo de 32 fica perfeito). r27: o busto real sai com `shown` px (o tamanho
- *  em pixels de tela onde ele aparece) e `late(url)` o recebe quando a folha de sprites termina de carregar. */
-export function portraitDataUrl(person: PersonLike, size = 64, year = 1960, late?: (url: string) => void, shown = size): string {
-  const real = person.proc27 ? null : REAL27?.url(person, shown, year, late);
-  if (real) return real;
+/** Data URL do retrato com `size` px (múltiplo de 32 fica perfeito). */
+export function portraitDataUrl(person: PersonLike, size = 64, year = 1960): string {
   const look = lookOf(person);
   const key = `${person.id}|${lookKey(look)}|${eraOf(year)}|${person.role}|${size}`;
   let u = portraitUrlCache.get(key);
   if (!u) {
-    u = upscale(proceduralPx(person, year).canvas(), size).toDataURL();
+    u = upscale(portraitPx(person, year).canvas(), size).toDataURL();
     portraitUrlCache.set(key, u);
   }
   return u;

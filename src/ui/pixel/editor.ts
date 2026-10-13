@@ -68,7 +68,7 @@ export function appearanceEditor(person: EditablePerson, onChange: (look: Appear
     bctx.fillRect((sp.ax - 6) * Z, (sp.ay) * Z, 12 * Z, Z);
     bctx.drawImage(sp.c, 0, 0, sp.c.width * Z, sp.c.height * Z);
   };
-  const drawPortrait = () => portraitBox.replaceChildren(portraitCanvas({ ...person, look, proc27: true }, year, 4));
+  const drawPortrait = () => portraitBox.replaceChildren(portraitCanvas({ ...person, look }, year, 4));
   const timer = reduced ? 0 : window.setInterval(() => {
     if (!body.isConnected && tick > 4) { window.clearInterval(timer); return; }
     tick++;

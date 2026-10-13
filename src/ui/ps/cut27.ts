@@ -13,7 +13,6 @@ import type { GameState } from '../../sim/types';
 import { money } from '../../sim/util';
 import { h } from '../dom';
 import { portraitPx } from '../pixel/avatar';
-import { realSprite27, whenSheet27 } from '../pixel/people27';
 import { Px } from '../pixel/px';
 import { AFTER_ADVANCE, registerCutscene, showPendingCutscene } from '../registry';
 import { rerender } from '../common';
@@ -133,9 +132,7 @@ export function cutView27(s: GameState, d: CutData27, close: () => void, cs?: { 
   const buf = new Px(m.W, m.H);
   const img = ctx?.createImageData(m.W, m.H);
   const who = d.key === 'death' && d.pid ? s.persons[d.pid] : undefined;
-  let pic = who ? portraitPx(who, d.year) : null;
-  const sp27 = who ? realSprite27(s, who) : undefined; // r27 (CHAR): o busto real entra na moldura quando a folha carrega
-  if (who && sp27) whenSheet27('bust', sp27.bust.sheet, () => { pic = portraitPx(who, d.year); });
+  const pic = who ? portraitPx(who, d.year) : null;
   const paint = (tm: number) => {
     if (!ctx || !img) return;
     paintArt27(m, tm, buf);
