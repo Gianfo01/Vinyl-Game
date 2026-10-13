@@ -1,0 +1,24 @@
+/* R29 (S03) — grade semana/mês. Cor + TEXTO em cada célula (nunca só cor). */
+.g29 { margin: var(--sp-3) 0; }
+.g29-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.g29-head .sec29 { margin: var(--sp-2) 0; }
+.g29-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.g29-t { width: 100%; border-collapse: collapse; min-width: 640px; }
+.g29-t th, .g29-t td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.g29-t thead th { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.g29-t thead th button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+.g29-t thead th.sel button { color: var(--accent); outline: 1px solid var(--accent); }
+.g29-t tbody th { min-width: 150px; max-width: 220px; }
+.g29-t tbody th span { display: block; font-weight: 700; overflow-wrap: anywhere; }
+.g29-t td b { display: block; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.g29-t td small { font-size: .72em; opacity: .85; }
+.g29-t td.lv-ok { background: color-mix(in srgb, var(--good) 10%, transparent); }
+.g29-t td.lv-warn { background: var(--t-warn-bg); color: var(--t-warn-fg); }
+.g29-t td.lv-over { background: var(--t-bad-bg); color: var(--t-bad-fg); }
+.g29-t td.lv-unknown { font-style: italic; opacity: .75; }
+.g29-t td.sel { box-shadow: inset 0 0 0 2px var(--accent); }
+.g29-det { margin-top: var(--sp-2); }
+.g29-det h3 { margin: var(--sp-2) 0; font-size: var(--fs-md); }
+.g29-items { margin: 0; padding-left: 1.1em; }
+.g29-items li { margin: 4px 0; }
+.g29-items li.act span { font-weight: 700; }

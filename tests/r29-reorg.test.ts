@@ -224,3 +224,35 @@ describe('r29 M42: rascunho persistente (preferência de interface, expira, por 
     delete (globalThis as { localStorage?: unknown }).localStorage;
   });
 });
+
+// ---------------------------------------------------------------- R29b item 1 — S03: grade semana/mês com capacidade
+import { cols29, grid29, colItems29, monthOfWeek29 } from '../src/ui/ps/grid29model';
+import { monthIndex } from '../src/sim/capacity';
+describe('r29 S03: grade semana/mês com capacidade por recurso (consulta)', () => {
+  it('semana e mês: 6 colunas, a 1ª é o período atual; recursos pessoas/estúdio/dinheiro/tempo/prazos', () => {
+    const s = played('r29-grid', 6);
+    const before = JSON.stringify(s);
+    for (const mode of ['week', 'month'] as const) {
+      const G = grid29(s, mode);
+      expect(G.cols.length).toBe(6);
+      expect(G.cols[0].now).toBe(true);
+      expect(G.cols[0].month).toBe(monthIndex(s)); // a coluna atual é o mês do relógio do jogo
+      const kinds = new Set(G.rows.map((r) => r.kind));
+      for (const k of ['studio', 'money', 'time', 'deadlines'] as const) expect(kinds.has(k), k).toBe(true);
+      for (const r of G.rows) expect(r.cells.length).toBe(6);
+      // tempo pessoal: só o mês em curso é calculado; os outros meses ficam "desconhecido", nunca zero
+      const time = G.rows.find((r) => r.kind === 'time')!;
+      G.cols.forEach((c, i) => { if (c.month !== monthIndex(s)) expect(time.cells[i].v.kind).toBe('unknown'); else expect(time.cells[i].v.kind).not.toBe('unknown'); });
+      for (const c of G.cols) colItems29(s, c);
+    }
+    expect(JSON.stringify(s)).toBe(before); // selecionar/consultar não muda o estado nem o RNG
+  });
+  it('meses em ordem e semanas contíguas', () => {
+    const s = played('r29-grid2', 2);
+    const M = cols29(s, 'month');
+    for (let i = 1; i < M.length; i++) { expect(M[i].month).toBe(M[i - 1].month + 1); expect(M[i].w0).toBe(M[i - 1].w1); }
+    const W = cols29(s, 'week');
+    for (let i = 1; i < W.length; i++) expect(W[i].w0).toBe(W[i - 1].w1);
+    expect(monthOfWeek29(s, s.week)).toBe(monthIndex(s));
+  });
+});
