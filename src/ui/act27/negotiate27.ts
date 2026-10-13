@@ -15,6 +15,7 @@ import {
 } from '../../sim/sys/nego27';
 import { $, modal, pill, rerender, toast } from '../common';
 import { h } from '../dom';
+import { pending29 } from '../../sim/contracts';
 import { clearDraft29, loadDraft29, saveDraft29 } from '../ps/draft29';
 import { store } from '../store';
 import { settleMember29 } from '../../sim/sys/member29';
@@ -94,7 +95,8 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('button', { class: 'btn primary', onclick: () => play('plain') }, t(l('Propor', 'Propose'))),
       h('button', { class: 'btn', title: t(l('"Temos outro artista na mira." Se colar, eles baixam a pedida; se não, confiança e paciência caem.', '"We have another act lined up." If it lands they lower the ask; if not, trust and patience drop.')), onclick: () => play('bluff') }, t(l('Blefar e propor', 'Bluff and propose'))),
       h('button', { class: 'btn', title: t(l('Resposta agora: fecha se estiver perto do mínimo; senão eles saem.', 'Answer now: closes if near their minimum; otherwise they leave.')), onclick: () => play('deadline') }, t(l('Propor com prazo', 'Propose with a deadline'))),
-      h('button', { class: 'btn', disabled: !!n.rival, title: t(l('Abre a disputa: +1 rodada e paciência, mas o mínimo sobe acima do lance rival.', 'Opens the bidding: +1 round and patience, but their minimum rises above the rival bid.')), onclick: () => { bringRival27(s, n, true); draw(); } }, t(l('Chamar um rival', 'Bring in a rival'))),
+      // R29: banda em montagem (pending29) não tem rival — o botão fica desativado com o motivo
+      h('button', { class: 'btn', disabled: !!n.rival || (!!s.acts[n.actId] && pending29(s, s.acts[n.actId])), title: s.acts[n.actId] && pending29(s, s.acts[n.actId]) ? t(l('Nenhum selo disputa uma banda que ainda está sendo montada.', 'No label bids on a band that is still being put together.')) : t(l('Abre a disputa: +1 rodada e paciência, mas o mínimo sobe acima do lance rival.', 'Opens the bidding: +1 round and patience, but their minimum rises above the rival bid.')), onclick: () => { bringRival27(s, n, true); draw(); } }, t(l('Chamar um rival', 'Bring in a rival'))),
       h('button', { class: 'btn ghost', onclick: () => { walk27(s, n); draw(); } }, t(l('Sair da mesa', 'Walk away'))),
       quick && !n.log.some((x) => x.who === 'you') ? h('button', { class: 'btn ghost', title: t(l('O formulário de sempre: uma proposta, uma resposta.', 'The usual form: one offer, one answer.')), onclick: () => { close(); quick(); } }, t(l('Resolver rápido: proposta única', 'Resolve quickly: single offer'))) : null) : null;
     const end = !open ? h('div', { class: `n27-end ${n.status === 'deal' ? 'good' : 'bad'}` },
