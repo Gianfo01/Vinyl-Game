@@ -13,7 +13,7 @@ import { COVERS17, ERAS17 } from '../../data/heritage17';
 import { GLOBAL17 } from '../../data/relevance17';
 import { MONTHS27 } from '../../data/lineup27';
 import { l } from '../../data/world';
-import { canonKey } from '../../sim/sys/realworld';
+import { canonKey, lineupPick29 } from '../../sim/sys/realworld';
 import { H, P, T, ln29, slug29, tx, type RArt29, type RPer29 } from './wiki29core';
 import { relics29 } from './wiki29world';
 import type { Block29, Inline29 } from './wiki29types';
@@ -86,6 +86,16 @@ export function personLore29(rp: RPer29, has: (slug: string) => boolean): Block2
 /** História real ampliada de um ARTISTA/BANDA real. */
 export function actLore29(a: RArt29): Block29[] {
   const out: Block29[] = [];
+  // formação inicial nas partidas com nomes reais (fora do modo exato): "mais famosa" (padrão) × "original" (da estreia)
+  if (a.m && a.m.length > 1) {
+    try {
+      const fam = lineupPick29(a.m, a.d, 'famous', a.n), ori = lineupPick29(a.m, a.d, 'original', a.n);
+      const names = (ix: Set<number>) => [...ix].map((i) => a.m![i]?.[0]).filter(Boolean).join(', ');
+      out.push(H(T('Formação inicial numa partida', 'Starting lineup in a run')), { k: 'kv', rows: [
+        [T('Mais famosa (padrão)', 'Most famous (default)'), [names(fam)]], [T('Original (da estreia)', 'Original (at debut)'), [names(ori)]],
+      ] }, P(T('Vale nas partidas com nomes reais fora da "Vida real exata". Depois do início nenhuma troca real é agendada: trocas, separações e voltas são simuladas. Quem fica fora da formação escolhida existe como pessoa sem banda (não é ex-integrante).', 'Applies to runs with real names outside "Exact real life". After the start no real lineup change is scheduled: changes, splits and reunions are simulated. Whoever is left out of the chosen lineup exists as a band-less person (not a former member).')));
+    } catch { /* sem formação */ }
+  }
   const g = GLOBAL17.filter((x) => same(x[0], a.n));
   if (g.length) out.push(H(T('Sucesso mundial', 'Worldwide success')), { k: 'ul', items: g.map((x) => [`${x[1]}–${x[2]} · ${tx(l(x[4], x[5]))} (${T('peso global', 'global weight')} ${x[3]})`]) });
   const eras = ERAS17.filter((e) => e[1].some((n) => same(n, a.n)));
