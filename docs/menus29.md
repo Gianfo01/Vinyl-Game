@@ -117,7 +117,11 @@ selo → nome + marca), `awardTxt29` (prêmio do livro único).
   botões desabilitados, tipos novos (festival/premiação/relíquia/movimento) com handler, índice de nomes (único,
   ambíguo, artista solo).
 
-Resultado da varredura final (partida de 1981, 79 áreas, ~140 abas, 14 fichas): ver o relatório da rodada.
+Resultado da varredura final (partida de 1981, 79 áreas e suas abas, 14 fichas com todas as abas e o painel "Ações"):
+**0 dado cru** (antes: 36 ocorrências distintas); 47 lugares mostram nomes sem marca explícita mas com clique direito
+pela rede de segurança; restam 3 sem menu, todos sem entidade a abrir: o seletor de músicas do Rollout (caixa de
+seleção), produtor genérico do estúdio (não é pessoa da partida) e faixa de lançamento da história real sem música
+registrada.
 
 ## Capturas (`docs/shots29menus/`)
 
