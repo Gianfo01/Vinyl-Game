@@ -133,13 +133,13 @@ export function demand19(s: GameState, t: Trib19): { v: number; parts: WhyPart[]
   const ab = absent19(s, a);
   const absF = t.k === 'dance' || t.k === 'parody' || t.k === 'orch' ? 1 : ab ? 1 : 0.4;
   parts.push({ label: ab ? fmtL(l('Ausência: {w}', 'Absence: {w}'), { w: ab }) : l('Original na ativa: quem quer o show vai ao verdadeiro', 'Original still active: fans go to the real thing'), value: absF, fmt: 'mult', tone: absF < 1 ? 'bad' : 'good' });
-  const loy = 0.8 + loyalty19(s, a.id) / 250; parts.push({ label: l('Lealdade dos fãs (fans18)', 'Fan loyalty (fans18)'), value: Math.round(loy * 100) / 100, fmt: 'mult' });
+  const loy = 0.8 + loyalty19(s, a.id) / 250; parts.push({ label: l('Lealdade dos fãs', 'Fan loyalty'), value: Math.round(loy * 100) / 100, fmt: 'mult' });
   const c = circ19(t.c); const cm = c?.mul ?? 1; parts.push({ label: fmtL(l('Circuito: {c}', 'Circuit: {c}'), { c: c?.name ?? '?' }), value: cm, fmt: 'mult' });
   const q = 0.5 + t.q / 100 + (t.sa ? t.sim / 400 : 0); parts.push({ label: l('Qualidade (CA dos músicos + semelhança do sósia)', 'Quality (players\' CA + sound-alike likeness)'), value: Math.round(q * 100) / 100, fmt: 'mult' });
   let comp = 1;
-  if (holo(s, a)) { comp *= 0.6; parts.push({ label: l('Holograma do original em cartaz (post18)', 'Original\'s hologram on stage (post18)'), value: 0.6, fmt: 'mult', tone: 'bad' }); }
+  if (holo(s, a)) { comp *= 0.6; parts.push({ label: l('Holograma do original em cartaz', 'Original\'s hologram on stage'), value: 0.6, fmt: 'mult', tone: 'bad' }); }
   if (reunited(s, a)) { comp *= 0.55; parts.push({ label: l('Reunião do original nos últimos 3 anos', 'Original reunited in the last 3 years'), value: 0.55, fmt: 'mult', tone: 'bad' }); }
-  if ((t19(s).spark[a.id] ?? 0) > s.week) { comp *= 1.4; parts.push({ label: l('Sucesso tardio do original (revival19)', 'Original\'s late hit (revival19)'), value: 1.4, fmt: 'mult', tone: 'good' }); }
+  if ((t19(s).spark[a.id] ?? 0) > s.week) { comp *= 1.4; parts.push({ label: l('Sucesso tardio do original', 'Original\'s late hit'), value: 1.4, fmt: 'mult', tone: 'good' }); }
   if (t.res) { comp *= 1.15; parts.push({ label: l('Residência fixa na sua casa', 'Residency at your venue'), value: 1.15, fmt: 'mult', tone: 'good' }); }
   if (t.ok) { comp *= 1.2; parts.push({ label: l('Bênção oficial do artista', 'Official blessing from the artist'), value: 1.2, fmt: 'mult', tone: 'good' }); }
   if (t.lic === 2) { comp *= 0.5; parts.push({ label: l('Proibido/processado: só toca escondido', 'Banned/sued: plays under the radar'), value: 0.5, fmt: 'mult', tone: 'bad' }); }

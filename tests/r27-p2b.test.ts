@@ -65,10 +65,38 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    // R29 (CONECTAR TUDO, de propósito — docs/connect29.md): arestas novas entre sistemas (conn29: confiança no palco/estúdio,
+    // crise na demanda da cidade, prêmios → fama/reputação, reputação → fama/equipe, calor policial…) mudam caixa, tours, acts e
+    // rng (com os grupos 2 e 3 e os pisos anti-espiral). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+    // R29 DEMO (de propósito — docs/demo29.md): público por idade e região muda apelo, demanda nas cidades, divisão por país,
+    // line-up dos festivais e o relatório do analista (nova dica): caixa, acts e rng mudam (tours igual). Antes: 450735 / 2386675548 / 2839816166.
+    // R29 CONECTAR TUDO + DEMO juntos (merge r29-demo): re-medido. Antes (só conn29): 333758 / 1642544891 / 3380302445 / 2264116950.
+    // R29 relíquias, "bem mais relíquias por save" (densidade padrão "muitas" — docs/reliquias29.md): ~7× mais peças
+    // procedurais (22 em 8 meses de 1975 nesta semente, contra 3), mais lotes em leilão e ofertas no mercado negro; caixa, acts e rng mudam
+    // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
+  // R29 conectar tudo + relíquias juntos: re-medido.
+    // R29 família (sys/family29, de propósito — docs/familia29.md): vida familiar dos artistas NPC (Rng próprio; casal célebre
+    // mexe em fama/público dos atos, o que muda a venda nas paradas da turnê): acts e tours mudam (caixa e rng iguais).
+    // Antes: tours 3927711826 / acts 827562554.
+    // R29 conectar tudo + público + relíquias "muitas" juntos (merge friendly-brown): re-medido. Antes: 332627 / 1382068899 / 1849171597 / 4090265307.
+  // R29: conectar tudo (13 sistemas, com público por idade/região) + família juntos: re-medido.
+    // R29 (contratos+, de propósito — docs/contratos29.md): empresários NPC com contrato e comissão (sai do caixa do ato),
+    // produtoras NPC assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng
+    // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+  // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
+    // R29c (facções × artistas do mundo, aff29npc — de propósito, docs/submundo29.md): Outfit, Genovese e Sumiyoshi
+    // abordam atos NPC de jazz/blues/pop/enka nesta semente (cerca de uma dezena de abordagens em 8 meses: bailes/boates com cachê e embalo,
+    // pedágios, recusas com ameaça e rixas de cena), o mercado e os sorteios do fluxo comum mudam: caixa, acts e rng
+    // mudam; tours igual. O caixa do playbot oscila centenas de milhares de mês a mês nesta semente (o 8º mês caiu num
+    // vale). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+  // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
+    // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
+    // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
+  // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
+    expect(AFTER.player.cash).toBe(1034775);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(2631883956);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(829002627);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1362224447);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -80,7 +108,9 @@ describe('r27 P2B — modo rápido intacto', () => {
     const run = (hook: boolean) => {
       const s = clone(FIX);
       s.player.cash += money(s, 200000);
-      const actId = playerActs(s)[0];
+      // R29: com o mundo novo o bot já tem turnê marcada no 1º ato — mesmo critério do roadFix abaixo
+      let actId = playerActs(s).find((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
+      if (!actId) { actId = playerActs(s)[0]; for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id); }
       const r = planTour(s, basePlan27(s, actId, ['rio', 'buenos_aires', 'montevideo', 'santiago'].filter((c) => c !== s.acts[actId].city), { startInDays: 7 }));
       expect('id' in r).toBe(true);
       const pre = STOP27.pre;
@@ -101,7 +131,8 @@ function roadFix(): { s: GameState; tid: string } {
   let actId = playerActs(s).find((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
   if (!actId) { actId = playerActs(s)[0]; for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id); }
   const home = s.acts[actId].city;
-  const cities = CITIES.filter((c) => c !== home).slice(0, 6);
+  // R29 demo29: com o mundo novo, 6 paradas desta semente não sorteiam nenhum evento de estrada; 10 paradas garantem a amostra
+  const cities = CITIES.filter((c) => c !== home).slice(0, 10);
   s.player.cash += money(s, 200000);
   const r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays: 7 }));
   if (!('id' in r)) throw new Error(`book: ${r.pt}`);

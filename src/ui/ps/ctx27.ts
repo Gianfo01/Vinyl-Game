@@ -7,6 +7,7 @@
 // (aria-disabled) e não executa. Sem marca → menu nativo do navegador; Ctrl+clique direito → sempre o nativo.
 // Cada ação chama o MESMO fluxo da tela de sempre (docs/act27.md: um caminho só) — nada de telas paralelas.
 
+import { runC29 } from './ctx29c';
 import { buildSongSpec } from '../../audio/spec';
 import { audioAvailable, nowPlaying, play, stopAll } from '../../audio/engine';
 import { audioOn28 } from '../audio28';
@@ -37,15 +38,17 @@ import { openPerson16 } from '../sys/people16';
 import { presetCity23 } from '../sys/talentos23';
 import { TIPS18 } from '../tracks18';
 import { ic, setTab } from '../vis';
-import { CTXHOOK27, ctxMenu27, menuSections27, type CtxEnv27, type CtxItem27, type CtxMenu27, type Sec29 } from './ctx27model';
+import { CTXHOOK27, NO_ACTIONS29, ctxMenu27, liveCount29, menuSections27, nameHit29, type CtxEnv27, type CtxItem27, type CtxMenu27 } from './ctx27model';
 import { CRIMES17, approachOrg, reportOrg, toggleLaunder } from '../../sim/sys/crime17';
 import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
 import { crimeForm17, presetCrimeFor29, presetHire29 } from '../sys/crimeform29';
 import { delay29, doMob29, fulfill29, hire29, jobOf29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
+import { denounce29n, rescue29n } from '../../sim/sys/aff29npc'; // r29c: facções × artistas do mundo
 import { runMember29 } from '../sys/member29';
 import { memberFeatPreset29 } from '../../sim/sys/member29';
 import { isEnt27, type Ent27 } from './ent27';
+import { relics } from '../../sim/sys/relics9';
 import './ctx27.css';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
@@ -159,6 +162,17 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     case 'venue.show': goArea(s, 'shows'); return;
     case 'venue.city': { const v = VENUES17.find((x) => x.id === id); if (v) openCity27(v.city); return; }
     case 'festival.open': goArea(s, 'festivals'); return;
+    // r29 (menus): festival, premiação, relíquia e movimento — as mesmas páginas dos links de sempre (sob demanda)
+    case 'festival.page': case 'festival.pitch': void import('../sys/hubs8').then((x) => x.openFestivalPage(Number(id))); return;
+    case 'festival.city': { void import('../../data/catalog').then((x) => { const f = x.FESTIVALS[Number(id)]; if (f) { document.querySelectorAll('.overlay, .scene-overlay').forEach((o) => o.remove()); openCity27(f.city); } }); return; }
+    case 'award.page': void import('../sys/hubs8').then((x) => x.openCeremonyPage(id)); return;
+    case 'award.open': goArea(s, 'awards'); return;
+    case 'relic.page': void import('../sys/lendas9').then((x) => x.openRelic(s, id)); return;
+    case 'relic.act': { const r = relics(s).list.find((x) => x.id === id); if (r?.a) inspect.act(r.a); return; }
+    case 'relic.person': { const r = relics(s).list.find((x) => x.id === id); if (r?.p) openPerson16(`p:${r.p}`); return; }
+    case 'relic.open': goArea(s, 'lendas'); return;
+    case 'movement.page': void import('../sys/bonds9').then((x) => x.openMovementPage(s, id)); return;
+    case 'movement.open': goArea(s, 'movements'); return;
     case 'place.open': goArea(s, 'campus18'); return;
     case 'org.open': goArea(s, 'crime', ['crime17', 'orgs']); return;
     // r29: Submundo (as mesmas funções dos botões de Submundo › Organizações / Planos)
@@ -169,13 +183,14 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     // r29: qualquer pessoa (artista, produtor, empresário, líder, crítico, equipe): fica o crime contra pessoa já escolhido no formulário
     case 'crime.person': { const cur = CRIMES17.find((c) => c.id === crimeForm17.c && c.tk === 'person'); const c0 = cur ?? CRIMES17.find((c) => c.tk === 'person'); if (c0) presetCrimeFor29(s, c0.id, key); goArea(s, 'crime', ['crime17', 'plans']); return; }
     // r29: atalhos e submenus de pessoa
-    case 'act.leader': { const a = s.acts[id]; const p = a?.leaderId && a.members.includes(a.leaderId) && !s.persons[a.leaderId]?.isPlayer ? a.leaderId : a?.members.find((m) => s.persons[m]?.alive && !s.persons[m].isPlayer); if (p) setTimeout(() => openCtx27(s, 'person', `p:${p}`, anchor), 0); return; }
-    case 'label.leader': { const L0 = leaderOf(s, id); if (L0) setTimeout(() => openCtx27(s, 'person', `l:${L0.id}`, anchor), 0); return; }
+    case 'act.leader': { const a = s.acts[id]; const p = a?.leaderId && a.members.includes(a.leaderId) && !s.persons[a.leaderId]?.isPlayer ? a.leaderId : a?.members.find((m) => s.persons[m]?.alive && !s.persons[m].isPlayer); if (p) sub27(s, 'person', `p:${p}`, anchor); return; }
+    case 'label.leader': { const L0 = leaderOf(s, id); if (L0) sub27(s, 'person', `l:${L0.id}`, anchor); return; }
     case 'person.act': { const pid = key.startsWith('p:') ? key.slice(2) : ''; const a = Object.values(s.acts).find((x) => x.members.includes(pid) && x.status !== 'retired' && x.status !== 'split'); if (a) inspect.act(a.id); return; }
     case 'person.feat29': { const pid = key.startsWith('p:') ? key.slice(2) : ''; if (pid) void import('../sys/round8').then((m) => m.openFeatModal(s, memberFeatPreset29(s, pid))); return; } // R29: feat só com a pessoa (sob demanda: não muda a ordem de registro)
-    case 'person.offer29': { const pid = key.startsWith('p:') ? key.slice(2) : ''; if (pid) setTimeout(() => openCtx27(s, 'person', `mo29:${pid}`, anchor), 0); return; } // R29: submenu "Oferecer a…"
+    case 'person.offer29': { const pid = key.startsWith('p:') ? key.slice(2) : ''; if (pid) sub27(s, 'person', `mo29:${pid}`, anchor); return; } // R29: submenu "Oferecer a…"
     case 'person.actmore': { const pid = key.slice(2); const a = playerActs(s).find((x) => s.acts[x]?.members.includes(pid)); if (a) openActionMenu20(s, a, anchor); return; }
     default:
+      if (runC29(s, m, item)) return; // R29 (contratos+): "Propor empresariamento/produção/joint venture" — o mesmo handler da ficha
       if (item.id.startsWith('mo.') && key.startsWith('mo29:')) { runMember29(s, key.slice(5), item.id); return; } // R29 (integrante)
       if (item.id.startsWith('pa:')) { runPA18(s, key, item.id.slice(3), (txt, ok) => { toast(txt, ok ? 'good' : 'bad'); rerender(); }); return; }
       if (item.id.startsWith('a20:')) { chooseAction20(s, item.id.slice(4), id, anchor); return; }
@@ -190,31 +205,41 @@ CTXHOOK27.run = (s, m, item, anchor) => run(s, m, item, anchor);
 function mobRun29(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): boolean {
   const id = item.id;
   const res = (r: { ok: boolean; text: L }) => { toast(T(r.text), r.ok ? 'good' : 'bad'); rerender(); };
-  if (id.startsWith('org29:')) { const oid = id.slice(6); setTimeout(() => openCtx27(s, 'org', oid, anchor), 0); return true; }
-  if (id.startsWith('mob.hire:')) { const oid = id.slice(9); const target = m.ent === 'org' ? '' : m.id; setTimeout(() => openCtx27(s, 'org', `hire29:${oid}|${target}`, anchor), 0); return true; }
+  if (id.startsWith('org29:')) { const oid = id.slice(6); sub27(s, 'org', oid, anchor); return true; }
+  if (id.startsWith('mob.hire:')) { const oid = id.slice(9); const target = m.ent === 'org' ? '' : m.id; sub27(s, 'org', `hire29:${oid}|${target}`, anchor); return true; }
   if (id.startsWith('mob.job:')) { const [oid, target = ''] = m.id.slice(7).split('|'); res(hire29(s, oid, id.slice(8), target)); return true; }
   if (id.startsWith('mob.plan:')) { const oid = m.id.slice(7).split('|')[0]; const j = jobOf29(id.slice(9)); presetHire29(oid, j?.c ?? id.slice(9), j?.m); goArea(s, 'crime', ['crime17', 'plans']); return true; }
   if (id.startsWith('mob.delay:')) { res(delay29(s, id.slice(10))); return true; }
   if (id.startsWith('mob.do:')) { res(doMob29(s, m.id, id.slice(7))); return true; }
   if (id.startsWith('mob.ask:')) { res(fulfill29(s, id.slice(8))); return true; }
   if (id.startsWith('mob.refuse:')) { res(refuse29(s, id.slice(11))); return true; }
+  if (id === 'mob.affden') { res(denounce29n(s, m.id)); return true; } // r29c: facção abordou o ato (sim/sys/aff29npc)
+  if (id === 'mob.afffree') { res(rescue29n(s, m.id)); return true; }
   return id.startsWith('mob.');
 }
 
 // ---------------------------------------------------------------- o menu
 
-/** r29: seções recolhidas pelo jogador (lembradas enquanto a página estiver aberta). */
-const folded29 = new Set<Sec29>();
 let closeOpen: ((refocus: boolean) => void) | null = null;
 let seq = 0;
 
 /** Fecha o menu aberto (se houver). */
 export function closeCtx27(): void { closeOpen?.(false); }
 
-/** Abre o menu da entidade ancorado no elemento (ou no ponto do clique / do toque). */
+/** r29 (menus): texto comparável do filtro (sem acento, minúsculo). */
+export const fold29 = (x: string): string => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+/** Abre um submenu (Ações com o líder, Oferecer a…, Contratar família…); sem nada a fazer, avisa em vez de abrir vazio. */
+function sub27(s: GameState, ent: Ent27, id: string, anchor: HTMLElement): void {
+  setTimeout(() => { if (!openCtx27(s, ent, id, anchor)) toast(T(NO_ACTIONS29), 'info'); }, 0);
+}
+
+/** Abre o menu da entidade ancorado no elemento (ou no ponto do clique / do toque).
+ *  r29 (menus): sem nenhuma ação possível agora (fora "Copiar nome") não abre — devolve false e o navegador mostra o
+ *  menu nativo; as seções (dropdowns) abrem SEMPRE recolhidas, e digitar filtra (as seções com resultado se abrem). */
 export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElement, at?: { x: number; y: number }, sheet = false): boolean {
   const m = ctxMenu27(s, ent, id, env27(s), (anchor.textContent ?? '').trim());
-  if (!m || !m.items.length) return false;
+  if (!m || !m.items.length || !liveCount29(m)) return false;
   closeOpen?.(false);
   const mid = `cx27-${++seq}`;
   const mobile = sheet || window.innerWidth <= 600;
@@ -226,6 +251,7 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
     close(false);
     try { run(s, m, it, anchor); } catch (e) { console.warn('ctx27', e); toast(T(l('Não deu para abrir agora.', 'Could not open right now.')), 'bad'); }
   };
+  const words = new Map<HTMLElement, string>(); // item → texto do filtro
   const row = (it: CtxItem27) => {
     const label = it.id.endsWith('.listen') && playing ? l('Parar a prévia', 'Stop the preview') : it.label;
     const pc = it.chance !== undefined ? Math.round(it.chance * 100) : null;
@@ -235,10 +261,12 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
       h('span', { class: 'cx27-l' }, it.icon ? ic(it.icon) : null, h('span', null, T(label))),
       it.cost || pc !== null ? h('span', { class: 'cx27-c num' }, pc !== null ? h('span', { class: `cx27-pc ${pc >= 60 ? 'good' : pc < 35 ? 'bad' : 'warn'}` }, `${pc}%`) : null, it.cost ? $(it.cost) : null) : null,
       it.block ? h('small', { class: 'cx27-why' }, T(it.block)) : it.note ? h('small', { class: 'muted cx27-note' }, T(it.note)) : null);
+    words.set(el, fold29(T(label)));
     return el;
   };
   // r29: seções com cabeçalho (Ver / Abrir, Carreira e contrato, Música e projetos, Ao vivo, Relação e vida pessoal,
-  // Imprensa e imagem, Submundo, Atalhos); cada cabeçalho recolhe/abre a seção (clique, Enter, ←/→)
+  // Imprensa e imagem, Submundo, Atalhos); cada cabeçalho recolhe/abre a seção (clique, Enter, ←/→).
+  // r29 (menus): todas começam RECOLHIDAS a cada abertura (nada é lembrado entre aberturas); o foco cai no 1º cabeçalho.
   const secs = menuSections27(m);
   const many = m.items.length > 9 && secs.length > 1;
   const rowsOf = new Map<HTMLElement, HTMLElement[]>();
@@ -246,29 +274,50 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
     secs.map((x, i) => {
       const rs = x.items.map(row);
       if (!many) { items.push(...rs); return [i ? h('div', { role: 'separator', class: 'cx27-sep' }) : null, h('div', { role: 'group', 'aria-label': T(x.label) }, rs)]; }
-      const open0 = !folded29.has(x.sec);
       const n = x.items.filter((y) => !y.block).length;
-      const body = h('div', { role: 'group', 'aria-label': T(x.label), class: 'cx27-sbody', hidden: !open0 }, rs);
-      const hd = h('div', { role: 'menuitem', tabindex: '-1', class: 'cx27-shead', 'data-sec': x.sec, 'aria-expanded': String(open0),
+      const body = h('div', { role: 'group', 'aria-label': T(x.label), class: 'cx27-sbody', id: `${mid}-${x.sec}`, hidden: true }, rs);
+      const hd = h('div', { role: 'menuitem', tabindex: '-1', class: 'cx27-shead', 'data-sec': x.sec, 'aria-expanded': 'false', 'aria-controls': `${mid}-${x.sec}`,
         onclick: (e: Event) => { e.stopPropagation(); toggle(hd); } },
         h('span', { class: 'cx27-l' }, ic(x.icon), h('b', null, T(x.label))), h('small', { class: 'muted cx27-n' }, `${n}/${x.items.length}`), h('span', { class: 'cx27-chev', 'aria-hidden': 'true' }, '▾'));
       rowsOf.set(hd, rs);
       items.push(hd, ...rs);
       return h('div', { class: 'cx27-sec', 'data-sec': x.sec }, hd, body);
     }));
-  function toggle(hd: HTMLElement, force?: boolean): void {
+  function setOpen(hd: HTMLElement, open: boolean): void {
     const body = hd.nextElementSibling as HTMLElement | null;
     if (!body) return;
-    const open = force ?? hd.getAttribute('aria-expanded') !== 'true';
     hd.setAttribute('aria-expanded', String(open));
     body.hidden = !open;
-    const sec = hd.dataset.sec as Sec29;
-    if (open) folded29.delete(sec); else folded29.add(sec);
   }
-  const visible = () => items.filter((x) => !(x.parentElement as HTMLElement | null)?.hidden);
+  function toggle(hd: HTMLElement, force?: boolean): void { setOpen(hd, force ?? hd.getAttribute('aria-expanded') !== 'true'); }
+  // r29 (menus): filtro digitado — as seções com resultado se abrem; ao limpar, volta como estava antes de filtrar
+  let q = '';
+  let before: Map<HTMLElement, boolean> | null = null;
+  const filterBar = h('div', { class: 'cx27-filter small', hidden: true, 'aria-live': 'polite' });
+  const visible = () => items.filter((x) => !x.hidden && !(x.parentElement as HTMLElement | null)?.hidden && !(x.closest('.cx27-sec') as HTMLElement | null)?.hidden);
+  function applyFilter(): void {
+    if (q && !before) before = new Map([...rowsOf.keys()].map((hd) => [hd, hd.getAttribute('aria-expanded') === 'true']));
+    let hits = 0;
+    for (const [hd, rs] of rowsOf) {
+      const sec = hd.parentElement as HTMLElement;
+      if (!q) { for (const r of rs) r.hidden = false; sec.hidden = false; setOpen(hd, before?.get(hd) ?? false); continue; }
+      let n = 0;
+      for (const r of rs) { const ok = (words.get(r) ?? '').includes(q); r.hidden = !ok; if (ok) n++; }
+      hits += n;
+      sec.hidden = !n;
+      setOpen(hd, n > 0);
+    }
+    if (!q) before = null;
+    filterBar.hidden = !q;
+    filterBar.textContent = q ? `${T(l('Filtro', 'Filter'))}: “${q}” · ${hits} ${T(hits === 1 ? l('resultado', 'result') : l('resultados', 'results'))} — ${T(l('Backspace apaga, Esc limpa', 'Backspace deletes, Esc clears'))}` : '';
+    const v = visible();
+    const first = v.findIndex((x) => !x.classList.contains('cx27-shead'));
+    if (v.length) v[q ? Math.max(0, first) : 0].focus();
+  }
   const box = h('div', { class: `cx27${mobile ? ' sheet' : ''}`, 'data-ctx27': '' },
-    h('div', { class: 'cx27-head' }, h('b', null, T(m.name)), h('small', { class: 'muted' }, T(m.kind))),
-    menu, status);
+    h('div', { class: 'cx27-head' }, h('b', null, T(m.name)), h('small', { class: 'muted' }, T(m.kind)),
+      many ? h('small', { class: 'muted cx27-hint' }, T(l('digite para filtrar', 'type to filter'))) : null),
+    many ? filterBar : null, menu, status);
   const scrim = mobile ? h('div', { class: 'cx27-scrim', onclick: () => close(true) }) : null;
   const focusAt = (i: number) => { const v = visible(); const n = v.length; if (!n) return; v[((i % n) + n) % n].focus(); };
   const cur = () => visible().indexOf(document.activeElement as HTMLElement);
@@ -282,14 +331,19 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
     else if (e.key === 'Home') { e.preventDefault(); focusAt(0); }
     else if (e.key === 'End') { e.preventDefault(); focusAt(v.length - 1); }
     else if (e.key === 'ArrowLeft' && el && many) { e.preventDefault(); const hd = headOf(el); if (hd?.classList.contains('cx27-shead')) { toggle(hd, false); hd.focus(); } }
-    else if (e.key === 'ArrowRight' && el?.classList.contains('cx27-shead')) { e.preventDefault(); toggle(el, true); rowsOf.get(el)?.[0]?.focus(); }
+    else if (e.key === 'ArrowRight' && el?.classList.contains('cx27-shead')) { e.preventDefault(); toggle(el, true); rowsOf.get(el)?.find((r) => !r.hidden)?.focus(); }
     else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); const hs = v.filter((x) => x.classList.contains('cx27-shead')); const at = el ? headOf(el) : null; const k = at ? hs.indexOf(at) : -1; const nx = hs[Math.max(0, Math.min(hs.length - 1, k + (e.key === 'PageDown' ? 1 : -1)))]; nx?.focus(); }
-    else if (e.key === 'Escape') { e.preventDefault(); close(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); if (q) { q = ''; applyFilter(); } else close(true); }
+    else if (e.key === 'Backspace' && many && q) { e.preventDefault(); q = q.slice(0, -1); applyFilter(); }
     else if (e.key === 'Tab') { e.preventDefault(); close(true); }
-    else if ((e.key === 'Enter' || e.key === ' ') && el) { e.preventDefault(); el.click(); }
-    else if (e.key.length === 1 && /\S/.test(e.key)) {
-      const k = e.key.toLowerCase(), n = v.length;
-      for (let j = 1; j <= n; j++) { const x = v[(Math.max(i, 0) + j) % n]; if ((x.textContent ?? '').trim().toLowerCase().startsWith(k)) { x.focus(); break; } }
+    else if (e.key === 'Enter' && el) { e.preventDefault(); el.click(); }
+    else if (e.key === ' ' && el && !(many && q)) { e.preventDefault(); el.click(); }
+    else if (e.key.length === 1 && /\S|\s/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (many) { if (e.key !== ' ' || q) { e.preventDefault(); q = fold29(q + e.key); applyFilter(); } }
+      else if (/\S/.test(e.key)) {
+        const k = e.key.toLowerCase(), n = v.length;
+        for (let j = 1; j <= n; j++) { const x = v[(Math.max(i, 0) + j) % n]; if ((x.textContent ?? '').trim().toLowerCase().startsWith(k)) { x.focus(); break; } }
+      }
     }
     e.stopPropagation(); // o Esc não fecha a janela de baixo; atalhos globais não disparam com o menu aberto
   };
@@ -337,16 +391,27 @@ export function openCtx27(s: GameState, ent: Ent27, id: string, anchor: HTMLElem
 // ---------------------------------------------------------------- ouvintes delegados
 
 const SKIP = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
-function entOf(target: EventTarget | null): HTMLElement | null {
+/** r29 (menus): onde o nome exato de uma entidade, sem a marca, ainda abre o menu (rede de segurança): folhas de texto
+ *  comuns (negrito, célula, botão, item…). Abas, migalhas, menus, títulos de página e rótulos de KPI ficam de fora. */
+const NAME_LEAF29 = 'b, strong, td, th, button, a, span, li, h3, h4, h5, small, label, dt, dd, p';
+const NAME_SKIP29 = 'nav, [role=tab], .tabs, .crumbs15, h1, h2, .kpi27-l, .cx27, .am20, [data-noctx29], .sr-only';
+interface Hit27 { el: HTMLElement; ent: Ent27; id: string }
+function entOf(target: EventTarget | null): Hit27 | null {
   if (!(target instanceof Element)) return null;
   if (target.closest('[data-ctx27]') || target.closest(SKIP)) return null;
   const el = target.closest<HTMLElement>('[data-ent][data-id]');
-  return el && isEnt27(el.dataset.ent) && el.dataset.id ? el : null;
+  if (el && isEnt27(el.dataset.ent) && el.dataset.id) return { el, ent: el.dataset.ent as Ent27, id: el.dataset.id };
+  // r29 (menus): sem marca — o texto exato do elemento é o nome de UMA entidade? (ps/ctx27model.nameHit29)
+  const s = g();
+  const leaf = target.closest<HTMLElement>(NAME_LEAF29);
+  if (!s || !leaf || leaf.closest(NAME_SKIP29)) return null;
+  const hit = nameHit29(s, leaf.textContent ?? '');
+  return hit ? { el: leaf, ent: hit.ent, id: hit.id } : null;
 }
-function openFor(el: HTMLElement, at?: { x: number; y: number }, sheet = false): boolean {
+function openFor(x: Hit27, at?: { x: number; y: number }, sheet = false): boolean {
   const s = g();
   if (!s) return false;
-  const ok = openCtx27(s, el.dataset.ent as Ent27, el.dataset.id!, el, at, sheet);
+  const ok = openCtx27(s, x.ent, x.id, x.el, at, sheet);
   if (ok) markSeen();
   return ok;
 }
@@ -390,7 +455,7 @@ export function installCtx27(doc: Document = document): void {
     const x = e.clientX, y = e.clientY;
     lp = { x, y, timer: w.setTimeout(() => {
       lp = null;
-      if (!el.isConnected) return;
+      if (!el.el.isConnected) return;
       if (openFor(el, { x, y }, true)) { lastOpen = Date.now(); swallowClickUntil = Date.now() + 10000; held = true; try { navigator.vibrate?.(12); } catch { /* sem vibração */ } }
     }, 500) };
   }, { capture: true, passive: true });

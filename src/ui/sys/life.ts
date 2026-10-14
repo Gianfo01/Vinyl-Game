@@ -34,6 +34,8 @@ import { ownerTab } from './people/area';
 import { personalAgendaTab, possessionsTab } from './goods8';
 import { careTab, heartTab, kidsTab, looksTab } from './life17';
 import { kidChoices27 } from './kin27';
+import { ent27 } from '../ps/ent27';
+import { personKey27 } from '../ps/ent27';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -84,7 +86,7 @@ function profileTab(s: GameState): HTMLElement {
           L0.partner ? h('p', null, ic('heart'), ' ', t(L0.partner.stage === 'married' ? l('Casado(a) com ', 'Married to ') : L0.partner.stage === 'engaged' ? l('Noivo(a) de ', 'Engaged to ') : l('Namorando ', 'Dating ')), h('b', null, L0.partner.name)) : null,
           o.kids.length ? h('p', null, ic('fans'), ' ', t(l('Filhos: ', 'Children: ')), o.kids.map((k) => k.name.split(' ')[0]).join(', ')) : null,
         ),
-        p ? h('div', null, personCard(s, p), h('button', { class: 'btn small ghost', onclick: () => openPersonPage(p.id) }, t(l('Ver todos os atributos', 'See every attribute')))) : null,
+        p ? h('div', null, personCard(s, p), h('button', { ...ent27('person', personKey27(p.id)), class: 'btn small ghost', onclick: () => openPersonPage(p.id) }, t(l('Ver todos os atributos', 'See every attribute')))) : null,
       ),
     ),
     section(t(l('Visão de mundo', 'Worldview')), playerViewsBlock(s)),
@@ -110,7 +112,7 @@ function loveTab(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' },
       h('b', null, pt.name), pill(`${s.year - pt.born} ${t(l('anos', 'yrs'))}`), pill(t(pt.job)), pill(t(PARTNER_TRAITS.find((x) => x.id === pt.trait)?.name ?? l('', ''))),
       pill(t(pt.stage === 'married' ? l('casados', 'married') : pt.stage === 'engaged' ? l('noivos', 'engaged') : l('namorando', 'dating')), 'good'),
-      pt.personId ? h('button', { class: 'link', onclick: () => openPersonPage(pt.personId!) }, t(l('ver ficha', 'see card'))) : null),
+      pt.personId ? h('button', { ...ent27('person', personKey27(pt.personId!)), class: 'link', onclick: () => openPersonPage(pt.personId!) }, t(l('ver ficha', 'see card'))) : null),
     meter('heart', l('Afinidade', 'Affinity'), pt.affinity),
     h('p', { class: 'small muted' }, t(l('Cada pessoa gosta de um tipo de programa: quem é caseiro prefere ficar em casa; quem adora holofotes, shows; quem é pé no chão, um bom jantar.', 'Each person likes a kind of date: homebodies prefer staying in; spotlight lovers, shows; down-to-earth people, a good dinner.'))),
     h('div', { class: 'row wrap' },
@@ -201,7 +203,7 @@ function musicTab(s: GameState): HTMLElement {
       ),
     ),
     act ? section(t(l('Seu projeto: {a}', 'Your project: {a}'), { a: act.name }),
-      h('div', { class: 'row wrap' }, h('button', { class: 'btn small', onclick: () => openActPage(act.id) }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))),
+      h('div', { class: 'row wrap' }, h('button', { ...ent27('act', act.id), class: 'btn small', onclick: () => openActPage(act.id) }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))),
         btn(l('Sair da banda', 'Leave the band'), 0, () => { if (confirm(t(l('Sair de {a}?', 'Leave {a}?'), { a: act.name }))) run(leaveBand(s), l('Você saiu.', 'You left.')); })),
       h('p', { class: 'small muted' }, t(l('A agenda, gravações e shows do projeto ficam na área Artistas, como qualquer ato do selo. Seus atributos contam na performance.', 'The project\'s agenda, recordings and shows live in the Artists area like any act on the label. Your attributes count in performance.'))),
     ) : section(t(l('Começar um projeto', 'Start a project')),

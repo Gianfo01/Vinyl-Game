@@ -27,6 +27,7 @@ import { bizTabs17 } from './biz17';
 import { careerKpis13 } from './careerui13';
 import { fest17 } from './ventures16';
 import { openActPage } from '../pages';
+import { ent27 } from '../ps/ent27';
 
 export type Tab = { id: string; label: string; icon?: string; badge?: number; render: () => HTMLElement };
 
@@ -105,7 +106,7 @@ function bandTab(s: GameState): HTMLElement {
   return h('div', null, bands.map((a) => section(a.name,
     h('div', { class: 'row wrap small' }, pill(t(l('fama', 'fame')) + ` ${Math.round(a.fame)}`), ' ', pill(`${a.members.length} ${t(l('integrante(s)', 'member(s)'))}`), ' ', pill(String(a.status))),
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small', onclick: () => openActPage(a.id) }, ic('guitar'), ' ', t(l('Página da banda', 'Band page'))),
+      h('button', { ...ent27('act', a.id), class: 'btn small', onclick: () => openActPage(a.id) }, ic('guitar'), ' ', t(l('Página da banda', 'Band page'))),
       link('project', l('Projeto musical', 'Music project')), link('studio', l('Gravação', 'Recording')), link('shows', l('Shows', 'Shows')), link('you', l('Carreira musical (Você)', 'Music career (You)'), ['life-you', 'music'])))));
 }
 

@@ -26,6 +26,7 @@ import { personRoute16 } from '../route16';
 import { mgrsOfAct16 } from '../../sim/sys/people16';
 import { favorAct27 } from '../act27/flow27p2'; // r27 FLOW2: o almoço abre a conversa de favor (rápido dentro)
 import { staffFace29 } from '../art29ui'; // r29 (arte)
+import { ent27 } from '../ps/ent27';
 
 /** Rodada 16: quem já empresariou o ato (com anos). */
 function mgrHist16(s: GameState, actId: string): HTMLElement | null {
@@ -39,7 +40,7 @@ const pct = (v: number) => `${Math.round(v * 100)}%`;
 const years = (s: GameState, m: RealMgr) => `${m.from}–${mgrActive(s, m) ? '' : Math.min(m.to, m.died ?? 9999)}`;
 const stylePill = (m: RealMgr) => h('span', { title: t(MGR_STYLE[m.style][1]) }, pill(t(MGR_STYLE[m.style][0]), m.style === 'guardian' ? 'good' : m.style === 'muscle' || m.style === 'shark' ? 'bad' : ''));
 const opPill = (s: GameState, id: string) => { const v = opinionOf(s, mgrKey(id)); return pill(signed(v), v >= 15 ? 'good' : v <= -15 ? 'bad' : ''); };
-const mgrBtn = (s: GameState, m: RealMgr) => h('button', { class: 'link', onclick: () => openMgr14(m.id) }, staffFace29(`mgr:${m.id}`, 'manager', s.year, m.born, 20), mgrName(s, m)); // r29: rosto com telefone
+const mgrBtn = (s: GameState, m: RealMgr) => h('button', { ...ent27('person', `e:${m.id}`), class: 'link', onclick: () => openMgr14(m.id) }, staffFace29(`mgr:${m.id}`, 'manager', s.year, m.born, 20), mgrName(s, m)); // r29: rosto com telefone
 const act14 = (redraw: () => void, fn: () => Res14) => () => { const r = fn(); toast(t(r.text), r.ok ? 'good' : 'bad'); redraw(); rerender(); };
 
 /** Disputar o cliente de um empresário (carreira de empresário do jogador). */
@@ -110,7 +111,7 @@ function area(s: GameState): HTMLElement {
     brought.length ? section(t(l('Indicações recebidas', 'Referrals received')), h('ul', null, brought.map(([a, [mid, w]]) => h('li', null, actLink(s, a), ' — ', t(l('indicado por', 'referred by')), ' ', mgrBtn(s, mgrById[mid]), h('span', { class: 'small muted' }, ` · ${t(l('vale até a semana', 'valid until week'))} ${w} `), s.acts[a].owner ? null : h('button', { class: 'btn small', onclick: () => openOffer(a) }, t(l('Fazer proposta', 'Make an offer'))))))) : null,
     rank.length ? section(t(l('Disputa por clientes (sua carreira de empresário)', 'Race for clients (your manager career)')),
       h('table', { class: 'table small' }, h('tr', null, h('th', null, '#'), h('th', null, t(l('Escritório', 'Office'))), h('th', null, t(l('Clientes', 'Clients'))), h('th', null, t(l('Fama somada', 'Total fame')))),
-        rank.slice(0, 10).map((r, i) => h('tr', { class: r.you ? 'good' : '' }, h('td', null, String(i + 1)), h('td', null, r.you ? h('b', null, r.name) : h('button', { class: 'link', onclick: () => openMgr14(r.id) }, r.name)), h('td', null, String(r.clients)), h('td', null, String(r.fame))))),
+        rank.slice(0, 10).map((r, i) => h('tr', { class: r.you ? 'good' : '' }, h('td', null, String(i + 1)), h('td', null, r.you ? h('b', null, r.name) : h('button', { ...ent27('person', `e:${r.id}`), class: 'link', onclick: () => openMgr14(r.id) }, r.name)), h('td', null, String(r.clients)), h('td', null, String(r.fame))))),
       h('p', { class: 'small muted' }, t(l('Tirar clientes de outro empresário é mais difícil quanto mais forte ele for; dá para disputar na ficha dele ou na página do artista.', 'Taking clients from another manager is harder the stronger they are; contest them on their profile or the artist page.')))) : null,
     h('div', { class: 'row wrap' },
       h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: F.past, onchange: (e: Event) => { F.past = (e.target as HTMLInputElement).checked; rerender(); } }), ' ', t(l('Incluir quem já saiu do ramo', 'Include those who left the business')))),

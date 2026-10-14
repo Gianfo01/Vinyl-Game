@@ -6,7 +6,7 @@
 import type { Person } from '../../sim/types';
 import { avatarSprite, lookOf, type Pose } from '../pixel/avatar';
 import { paletteOf, type Palette } from '../pixel/palette';
-import { C, Px, dith, mix, noise, shade, type Col } from '../pixel/px';
+import { C, INK, Px, dith, inked, mix, noise, shade, type Col } from '../pixel/px';
 
 export const W27 = 200;
 export const H27 = 92;
@@ -36,6 +36,8 @@ export function paintTable27(year: number, played: string[] = [], seed = 0): Px 
   // luminária pendente
   p.vline(100, 0, 14, pal.outline); p.poly([[92, 20], [108, 20], [104, 14], [96, 14]], pal.metalDark); p.hline(93, 107, 20, pal.lamp);
   p.fill((x, y) => { const d = Math.hypot((x - 100) / 1.6, y - 50); return d < 34 && dith(x, y, 0.5 - d / 80) ? mix(p.get(x, y), pal.lamp, 0.12) : p.get(x, y); }, 50, 20, 100, 60);
+  // R29 (arte consistente): móveis e objetos numa camada (relevo pela silhueta + contorno INK), como na sede
+  inked(p, (p) => {
   // violão encostado
   p.ellipse(176, 70, 6, 8, pal.wood); p.ellipse(176, 60, 4, 5, pal.wood); p.disc(176, 66, 1, pal.outline); p.rect(175, 38, 2, 22, pal.woodDark);
   // mesa (tampo em perspectiva) e pernas
@@ -50,6 +52,7 @@ export function paintTable27(year: number, played: string[] = [], seed = 0): Px 
     const x = 82 + i * 5, y = 61 + (i % 2);
     p.rect(x - 1, y - 1, 10, 9, pal.outline); p.rect(x, y, 8, 7, C(KIND_COL[k] ?? '#cccccc')); p.rect(x + 1, y + 1, 6, 1, shade(C(KIND_COL[k] ?? '#cccccc'), 0.25));
   });
+  }, INK, { relief: true });
   return p;
 }
 
@@ -72,9 +75,11 @@ export function paintStudio27(year: number, rec = false): Px {
   p.rect(150, 4, 22, 7, pal.outline); p.rect(151, 5, 20, 5, rec ? C('#d83a3a') : C('#4a1f1f'));
   // tapete, microfone, amplificador, bateria simples
   p.ellipse(60, 74, 44, 9, shade(pal.fabric2, -0.1));
+  inked(p, (p) => { // R29: microfone, amplificador e bateria com relevo e contorno INK
   p.vline(40, 34, 70, pal.metalDark); p.rect(38, 30, 5, 6, pal.metal); p.hline(36, 44, 70, pal.metalDark);
   p.rect(96, 52, 16, 14, pal.outline); p.rect(97, 53, 14, 12, pal.woodDark); p.rect(99, 55, 10, 8, shade(pal.fabric, -0.4));
   p.ellipse(20, 70, 8, 4, pal.metal); p.ellipse(20, 62, 6, 3, mix(pal.gold, pal.metal, 0.4)); p.vline(20, 58, 70, pal.metalDark);
+  }, INK, { relief: true });
   p.rect(0, 62, p.w, 1, shade(pal.trim, -0.2));
   return p;
 }

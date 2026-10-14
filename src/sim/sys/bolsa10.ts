@@ -10,7 +10,7 @@
 import { clamp, Rng } from '../../core/rng';
 import { priceIndex } from '../../core/money';
 import { techById } from '../../data/rules';
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { GameState, Label } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
@@ -888,7 +888,7 @@ export function listed(s: GameState): Row[] {
       const lb = s.labels[id.slice(3)];
       if (!lb) continue;
       kind = 'label'; tags = ['label']; div = lb.cash > 0 ? 0.02 : 0;
-      blurb = fmtL(l('Selo rival ({c}), listado desde {y}: preço segue receita, catálogo, elenco e prestígio.', 'Rival label ({c}), listed since {y}: price follows revenue, catalogue, roster and standing.'), { c: lb.city, y: st.lbl[lb.id] ?? q.born });
+      blurb = fmtL(l('Selo rival ({c}), listado desde {y}: preço segue receita, catálogo, elenco e prestígio.', 'Rival label ({c}), listed since {y}: price follows revenue, catalogue, roster and standing.'), { c: cityById[lb.city]?.name ?? lb.city, y: st.lbl[lb.id] ?? q.born }); // r29: nome da cidade, não o id
     } else if (id.startsWith('nv:')) {
       const d = nvDef(s, id.slice(3));
       if (!d) continue;

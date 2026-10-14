@@ -2,7 +2,7 @@
 
 import { freeCash20, reservedAdvances20 } from '../sim/oblig20';
 import { cap14 } from '../sim/sys/gate14';
-import { CONTRACT_MODELS, type ContractModel } from '../data/rules';
+import { CHANNELS, CONTRACT_MODELS, type ContractModel } from '../data/rules';
 import { S, t } from '../i18n/strings';
 import { acceptCounter, defaultOffer, evaluateOffer, offerEligible29, offerNow, pressForAnswer, withdrawCounter } from '../sim/contracts';
 import { HOW29, applyModel29, isSpecial29, termLabel29 } from '../sim/terms29';
@@ -90,7 +90,7 @@ export function openRelease(id: string): void {
       h('div', null,
         producer && s.persons[producer] ? kv(t(l('Produção', 'Producer')), s.persons[producer].name) : null,
         writers.length ? kv(t(l('Compositores', 'Writers')), writers.slice(0, 6).map((p) => p.name).join(', ')) : null,
-        r.marketing.length ? kv(t(l('Divulgação', 'Promotion')), r.marketing.map((m) => m.channel).join(', ')) : null,
+        r.marketing.length ? kv(t(l('Divulgação', 'Promotion')), r.marketing.map((m) => { const c = CHANNELS.find((x) => x.id === m.channel); return c ? t(c.name) : m.channel.replace(/_/g, ' '); }).join(', ') /* r29: nome do canal, não o id */) : null,
         r.kind && r.kind !== 'standard' ? kv(t(l('Edição', 'Edition')), r.kind) : null,
       ),
     ),

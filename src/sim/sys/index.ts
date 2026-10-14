@@ -362,6 +362,8 @@ import './chains28';
 import './quarter28';
 import './shared28'; // r28 F8: sociedade com NPC no festival, no campus e na venda da empresa // r28 F8 (C3/I25): uma decisão que importa por trimestre + delegação lida pelo Mestre (dm18) // r28 F8: Mestre das cadeias — cadeias 1, 2 e 5 andam em partidas reais (empurra o elo parado pelo sistema dono) // r28 F8 (I13): facções de fãs reagem diferente a cada escândalo (racha / defesa)
 import './mech29'; // R29 (CONNECT): escândalo → próximo disco; prêmios → prestígio nas ofertas
+import './conn29'; // R29 (CONECTAR TUDO): arestas que faltavam entre os 13 sistemas (sonda probe29all)
+import './conn29b'; // R29 conectar tudo, rodada 11 (docs/connect29.md §11)
 import './perks29'; // R29 (CONNECT): perks appeal/chartUnits/showRevenue/pressingCost passam a valer (eram escritos e nunca lidos)
 import './member29'; // R29 (integrante): oferta a um integrante específico (solo pela proposta de sempre, entrar numa banda sua, sessão, projeto paralelo, equipe)
 import './featp29'; // R29 (feat de pessoa): o feat negociado aceita integrante/pessoa específica (e várias) — gancho novo, no fim
@@ -369,4 +371,8 @@ import './relics29'; // R29 (relíquias): versões procedurais dos arquétipos d
 import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
+import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também os artistas do mundo (NPC decide; feed, ficha, card, selo)
+import './family29'; // R29 (família): vida familiar de todo artista NPC, filhos da indústria com carreira, estrelas mirins (docs/familia29.md)
+import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
+import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

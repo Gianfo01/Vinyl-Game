@@ -94,6 +94,8 @@ function ensureProd(p: RealProd): void {
   const i = PRODUCERS.findIndex((x) => x.id === `rp_${p.id}`);
   if (i < 0) PRODUCERS.push(defOf(p)); else PRODUCERS[i] = defOf(p);
 }
+/** R29 (família): registra um produtor de carreira nova desta partida (filho de gente da indústria, sys/family29). */
+export function addProd18(s: GameState, p: RealProd): void { const st = w18(s); if (!st.prods.some((x) => x.id === p.id)) st.prods.push(p); ensureProd(p); }
 const GEN = new Map<string, RealProd[]>();
 const tagOf = (s: GameState) => hashString(s.config.seed).toString(36);
 /** Produtores gerados desta semente: um por mercado a cada ~12 anos, com som da cena local. */

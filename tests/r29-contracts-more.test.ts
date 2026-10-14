@@ -325,3 +325,160 @@ describe('R29 contratos+ — determinismo', () => {
     expect(run()).toBe(run());
   });
 });
+
+// ================================================================ R29 contratos+ (NPC): empresários, produtoras e selos
+import { playMonth } from '../src/sim/playbot16';
+import { resolveDecision } from '../src/sim/events';
+import { npcProdOf29, offerMasters29, proposeJV29, prodCos29, signNpcProd29 } from '../src/sim/sys/npc29';
+import { m14 } from '../src/sim/sys/managers14';
+import { ctxMenu27 } from '../src/ui/ps/ctx27model';
+import { c29Open, runC29 } from '../src/ui/ps/ctx29c';
+import { mgrEra29, prodEra29, jvEra29 } from '../src/sim/terms29';
+
+/** 10 anos de bot: quantos contratos NPC de cada modelo nasceram (e em que ano). */
+function npcCensus(seed: string, startYear: number, years = 10) {
+  const s = createGame(defaultConfig(seed, { startYear, realNames: true }));
+  const seen = new Map<string, { model: string; y: number; party: string }>();
+  for (let m = 0; m < years * 12 && !s.ended; m++) {
+    playMonth(s, 'balanced');
+    advanceMonth(s);
+    for (const c of Object.values(s.contracts)) if ((c.party.includes(':') || (c.model === 'jv' && c.party !== 'player')) && !seen.has(c.id)) seen.set(c.id, { model: c.model, y: s.config.startYear + Math.floor(c.startWeek / 52), party: c.party });
+  }
+  const by = (model: string) => [...seen.values()].filter((x) => x.model === model);
+  return { s, seen, mgmt: by('management'), prod: by('production'), jv: by('jv') };
+}
+
+describe('R29 contratos+ — NPC usam os três modelos (10 anos de bot)', () => {
+  it('era do rock (1962–72): empresários NPC com contrato e comissão; produtoras NPC assinam e entregam', () => {
+    const { s, mgmt, prod, jv } = npcCensus('c29-npc-62', 1962);
+    console.log('NPC 1962–72', { management: mgmt.length, production: prod.length, jv: jv.length });
+    expect(mgmt.length).toBeGreaterThan(5);
+    expect(mgmt.every((x) => x.party.startsWith('e:'))).toBe(true);
+    expect(prod.length).toBeGreaterThan(3);
+    expect(prod.every((x) => x.party.startsWith('pd:') || x.party.startsWith('vs:'))).toBe(true);
+    expect(jv.every((x) => x.y >= 1970)).toBe(true); // JV NPC só a partir dos anos 1970
+    // quem empresaria quem = contrato vigente (m14.rep ↔ s.contracts)
+    for (const [aid, rp] of Object.entries(m14(s).rep)) expect(Object.values(s.contracts).some((c) => c.actId === aid && c.party === `e:${rp.m}` && c.model === 'management' && !c.x29?.ended)).toBe(true);
+    const paid = Object.values(s.contracts).filter((c) => c.model === 'management' && c.party.startsWith('e:')).reduce((t, c) => t + (c.x29?.paid ?? 0), 0);
+    expect(paid).toBeGreaterThan(0); // a comissão saiu do caixa dos atos
+    const delivered = Object.values(s.contracts).filter((c) => c.model === 'production' && c.party.includes(':')).flatMap((c) => c.x29?.deliveries ?? []);
+    expect(delivered.length).toBeGreaterThan(0); // masters entregues a selos
+  }, 600_000);
+
+  it('anos 1975–85: JV/selo-vaidade NPC com estrelas aparece; produção ainda forte', () => {
+    const { prod, jv } = npcCensus('c29-npc-75', 1975);
+    console.log('NPC 1975–85', { production: prod.length, jv: jv.length });
+    expect(jv.length).toBeGreaterThan(0);
+    expect(prod.length).toBeGreaterThan(3);
+  }, 600_000);
+
+  it('curvas de época: empresário desde os 1950 (pico no rock), produção 1960–80, JV a partir de 1970', () => {
+    expect(mgrEra29(1965)).toBeGreaterThan(mgrEra29(1955));
+    expect(mgrEra29(1955)).toBeGreaterThan(mgrEra29(1940));
+    expect(prodEra29(1970)).toBeGreaterThan(prodEra29(1995));
+    expect(prodEra29(1945)).toBe(0);
+    expect(jvEra29(1969)).toBe(0);
+    expect(jvEra29(1975)).toBeGreaterThan(0);
+  });
+});
+
+describe('R29 contratos+ — Caixa de entrada: masters de produtora NPC e JV proposta por estrela', () => {
+  it('"{produtora} oferece as masters de {ato}" → licenciar: o disco sai pelo seu selo, a produtora ganha pontos', () => {
+    const s = game('c29-inbox-m');
+    s.player.cash += 5_000_000;
+    const a = freeAct(s, 0);
+    const co = prodCos29(s)[0] ?? { key: 'pd:test', name: 'Produtora Teste' };
+    const c = signNpcProd29(s, a, co);
+    expect(npcProdOf29(s, a.id)?.id).toBe(c.id);
+    expect(scoutEligible20(s, a).ok).toBe(false); // quem quer o ato negocia as masters com a produtora
+    record(s, a, 3);
+    expect(offerMasters29(s, c.id)).toBe(true);
+    const d = s.decisions.find((x) => x.eventId === 'c29_masters')!;
+    expect(d).toBeTruthy();
+    expect(d.title.pt).toContain(`oferece as masters de ${a.name}`);
+    expect(d.options.map((o) => o.id)).toEqual(['license', 'buy', 'decline']);
+    const cash0 = s.player.cash;
+    expect(resolveDecision(s, d.id, 'license')).toBe(true);
+    const del = c.x29!.deliveries![0];
+    expect(del.lb).toBe('player');
+    expect(s.releases[del.relId].owner).toBe('player');
+    expect(s.player.cash).toBe(cash0 - del.adv);
+    for (let m = 0; m < 6; m++) advanceMonth(s);
+    expect(del.earned).toBeGreaterThan(0);
+    expect(s.ledger.some((x) => x.key.endsWith(`sales:${del.relId}`))).toBe(true); // a venda é sua
+  });
+
+  it('comprar as masters: sem pontos; recusar: vai para um selo rival', () => {
+    const s = game('c29-inbox-b');
+    s.player.cash += 5_000_000;
+    const [a, b] = [freeAct(s, 0), freeAct(s, 1)];
+    const co = prodCos29(s)[0] ?? { key: 'pd:test', name: 'Produtora Teste' };
+    const c1 = signNpcProd29(s, a, co);
+    record(s, a, 2);
+    offerMasters29(s, c1.id);
+    resolveDecision(s, s.decisions.find((x) => x.eventId === 'c29_masters')!.id, 'buy');
+    expect(c1.x29!.deliveries![0].kind).toBe('sale');
+    expect(c1.x29!.deliveries![0].pts).toBe(0);
+    const c2 = signNpcProd29(s, b, co);
+    record(s, b, 2);
+    offerMasters29(s, c2.id);
+    resolveDecision(s, s.decisions.find((x) => x.eventId === 'c29_masters')!.id, 'decline');
+    const d2 = c2.x29!.deliveries![0];
+    expect(d2 && d2.lb !== 'player' && !!s.labels[d2.lb]).toBe(true);
+  });
+
+  it('a estrela propõe uma JV: aceitar assina o contrato normal e cria o subselo', () => {
+    const s = createGame(defaultConfig('c29-inbox-jv', { startYear: 1978, realNames: true }));
+    s.player.cash += 50_000_000;
+    const star = Object.values(s.acts).filter((x) => !x.owner && activeAct(x) && offerEligible29(s, x, 'jv').ok).sort((p, q) => q.fame - p.fame)[0];
+    proposeJV29(s, star);
+    const d = s.decisions.find((x) => x.eventId === 'c29_jv')!;
+    expect(d.title.pt).toContain('propõe uma joint venture');
+    expect(resolveDecision(s, d.id, 'accept')).toBe(true);
+    const c = newest(s, star.id, 'jv');
+    expect(c).toBeTruthy();
+    expect(star.owner).toBe('player');
+    expect(jvSub29(s, c)?.status).toBe('active');
+  });
+});
+
+describe('R29 contratos+ — clique direito (ctx27)', () => {
+  it('ato de selo rival: "Propor empresariamento" ativo, produção/JV desativados com motivo; mesmo handler', () => {
+    const s = game('c29-ctx');
+    const a = npcAct(s);
+    const m = ctxMenu27(s, 'act', a.id)!;
+    const items = m.items.filter((x) => x.id.startsWith('act.c29:'));
+    expect(items.map((x) => x.id)).toEqual(['act.c29:management', 'act.c29:production', 'act.c29:jv']);
+    expect(items.every((x) => x.sec === 'career')).toBe(true);
+    expect(items[0].block).toBeNull();
+    expect(items[1].block?.pt).toMatch(/contrato/i);
+    expect(items[2].block?.pt).toMatch(/contrato/i);
+    const calls: [string, string][] = [];
+    c29Open().f = (id, model) => { calls.push([id, model]); };
+    expect(runC29(s, m, items[0])).toBe(true);
+    expect(runC29(s, m, items[1])).toBe(true); // bloqueado: não chama
+    expect(calls).toEqual([[a.id, 'management']]);
+    // o botão da ficha usa o mesmo handler
+    expect(readFileSync('src/ui/sys/contracts29reg.ts', 'utf8')).toMatch(/c29Open\(\)\.f\?\.\(a\.id, 'management'\)/);
+    // pessoa: pelo ato dela
+    const pid = a.members.find((x) => s.persons[x]?.alive)!;
+    const pm = ctxMenu27(s, 'person', `p:${pid}`)!;
+    const pi = pm.items.find((x) => x.id === 'person.c29:management')!;
+    expect(pi?.block).toBeNull();
+    runC29(s, pm, pi);
+    expect(calls[1]).toEqual([a.id, 'management']);
+    // ato sem selo: os três valem
+    const f = freeAct(s, 0);
+    const fm = ctxMenu27(s, 'act', f.id)!;
+    expect(fm.items.filter((x) => x.id.startsWith('act.c29:') && !x.block).length).toBe(3);
+  });
+});
+
+describe('R29 contratos+ — determinismo do lado NPC', () => {
+  const run = () => {
+    const s = createGame(defaultConfig('c29-npc-det', { startYear: 1966, realNames: true }));
+    for (let m = 0; m < 24; m++) { playMonth(s, 'balanced'); advanceMonth(s); }
+    return JSON.stringify(Object.values(s.contracts).filter((c) => c.party.includes(':') || c.model === 'jv').map((c) => [c.id, c.model, c.party, c.x29?.paid ?? 0, c.x29?.deliveries?.length ?? 0, c.x29?.ended ?? '']));
+  };
+  it('mesma semente → mesmos contratos NPC', () => { expect(run()).toBe(run()); }, 300_000);
+});

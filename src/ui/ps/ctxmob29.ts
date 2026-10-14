@@ -1,12 +1,13 @@
 // Rodada 29 (Submundo) — itens do menu de ações (clique direito) para as famílias: ligações com o crime (fonte única
 // orglinks29), interações com a organização e "Contratar {família} para… ›" (submenu de serviços). Modelo puro: cada
 // item liga às MESMAS funções do card da organização e do planejador do Submundo (sim/sys/mob29: doMob29, hire29,
-// fulfill29/refuse29) — ps/ctx27.ts só despacha. Módulo à parte para não mexer no miolo de ctx27model.
+// fulfill29/refuse29; r29c sim/sys/aff29npc: denounce29n, rescue29n) — ps/ctx27.ts só despacha. Módulo à parte para não mexer no miolo de ctx27model.
 
 import { l, type L } from '../../data/world';
 import { a3Of, crimeById, orgs17, placeOf, targetBlock17, targetId17, usd } from '../../sim/sys/crime17';
 import { JOBS29, asks29, askDef29, delayCost29, hireOdds29, jobTk29, jobsFor29, meter29, mobActs29, present29 } from '../../sim/sys/mob29';
 import { LINK29, linksOfKey29 } from '../../sim/sys/orglinks29';
+import { actLog29n, denounceBlock29n, denounceOdds29n, rescueBlock29n, rescueCost29n } from '../../sim/sys/aff29npc'; // r29c
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import type { CtxEnv27, CtxItem27, CtxMenu27 } from './ctx27model';
@@ -29,6 +30,22 @@ export function mobLinkItems29(s: GameState, key: string): CtxItem27[] {
     out.push(it(`org29:${o.id}`, fmtL(N('{o}: {k} ›', '{o}: {k} ›'), { o: o.name, k: LINK29[x.kind] }), 'skull', 'open', null, { note: x.text }));
   }
   return out.slice(0, 4);
+}
+
+/** r29c (aff29npc): ato do mundo abordado por uma facção — "Denunciar a ligação" e "Tirar do esquema". As mesmas
+ *  funções do card da organização (sim/sys/aff29npc: denounce29n, rescue29n); só aparecem se houve abordagem. */
+export function mobAffItems29(s: GameState, actId: string, env: CtxEnv27 = {}): CtxItem27[] {
+  if (env.has?.('area:crime') === false || !actLog29n(s, actId).length || playerActs(s).includes(actId)) return [];
+  const e = actLog29n(s, actId)[0];
+  const o = orgs17(s, true).find((y) => y.id === e.o);
+  const name = o?.name ?? l(e.o, e.o);
+  const db = denounceBlock29n(s, actId), rb = rescueBlock29n(s, actId);
+  return [
+    it('mob.affden', fmtL(N('Denunciar a ligação com {o}', 'Report the tie to {o}'), { o: name }), 'newspaper', 'do', db,
+      { chance: db ? undefined : denounceOdds29n(s, actId), note: N('Imprensa e polícia: escândalo para o artista e caso contra a facção. Pode não colar — e eles sabem de onde veio.', 'Press and police: a scandal for the act and a case against the faction. It may not stick — and they know where it came from.') }),
+    it('mob.afffree', fmtL(N('Tirar do esquema de {o} (oferecer proteção)', 'Get them out of {o}\'s scheme (offer protection)'), { o: name }), 'shield', 'do', rb,
+      { cost: rb ? undefined : rescueCost29n(s, actId), note: N('Você paga o acerto à facção; o artista sai do laço, confia em você e fica devendo um favor (proposta e buyout ficam mais fáceis).', 'You pay the faction off; the act leaves the tie, trusts you and owes you a favor (offer and buyout get easier).') }),
+  ];
 }
 
 /** Tipo de alvo dos serviços que cabem nesta entidade. */

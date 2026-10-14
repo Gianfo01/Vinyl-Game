@@ -10,6 +10,7 @@ import { cityById, familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
+import { DEMO29 } from '../demo29hook';
 
 export type FestTier = 'headline' | 'afternoon' | 'opening';
 export const TIER_ORDER: FestTier[] = ['headline', 'afternoon', 'opening'];
@@ -95,7 +96,7 @@ function buildYear(s: GameState, r: Rng): void {
       let list = cands.filter((a) => !used.has(a.id) && a.fame >= lo && a.fame <= hi);
       if (list.length < want[tier]) list = cands.filter((a) => !used.has(a.id));
       // atos da casa entram com mais facilidade
-      const ranked = list.map((a) => ({ a, k: a.fame * (cityById[a.city]?.market === home ? 1.35 : 1) * (0.7 + r.next() * 0.6) })).sort((x, y) => y.k - x.k);
+      const ranked = list.map((a) => ({ a, k: a.fame * (cityById[a.city]?.market === home ? 1.35 : 1) * (0.7 + r.next() * 0.6) * (DEMO29.fest?.(s, f, a) ?? 1) })) // R29 demo29: idade do público do festival.sort((x, y) => y.k - x.k);
       for (const { a } of ranked.slice(0, want[tier])) {
         used.add(a.id);
         lineup.push({ actId: a.id, tier, fee: festFee(s, f, a, tier) });
@@ -119,6 +120,11 @@ export type PitchResult = { result: 'accepted' | 'counter' | 'rejected'; tier?: 
 export function pitchOdds8(s: GameState, fi: number, actId: string, tier: FestTier, fee: number): number {
   const f = FESTIVALS[fi], act = s.acts[actId];
   if (!f || !act || !fits(f, act)) return 0;
+  // R29b: as mesmas recusas de saída do pitchAct (sem edição, line-up fechado, já escalado, produção pediu para não
+  // insistir) — antes a previsão mostrava 100% para um ato que já estava no line-up e o sorteio recusava
+  const ed = editionOf(s, fi);
+  if (!ed || ed.done || ed.month <= s.month || ed.lineup.some((x) => x.actId === actId)) return 0;
+  if ((fest8(s).cooldown[`${fi}:${actId}`] ?? 0) > s.week) return 0;
   const can = festTierFor(s, f, fi, act);
   if (!can || TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf(can)) return 0;
   const ratio = fee / Math.max(1, festFee(s, f, act, tier)), b = staffSkill(s, 'booking') / 400;

@@ -16,7 +16,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { MGR_STYLE, mgrById, type MgrStyle, type RealMgr } from '../../data/managers14';
-import { cityById, familyOf, l, type L } from '../../data/world';
+import { cityById, familyOf, gfName, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { dir17 } from '../director17';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -551,7 +551,7 @@ function priceWars(s: GameState, r: Rng, W: number): void {
   const mk = B.territories.find((t) => A.territories.includes(t))!;
   st.war.push({ a: A.id, b: B.id, fam: f, mk, from: s.week, until: s.week + r.int(26, 52) });
   move(s, { k: 'war', lb: A.id, lb2: B.id, t: fmtL(l('Guerra de preços: a {a} baixou o preço dos discos de {f} para tirar mercado da {b} ({w}). Os dois perdem margem; discos deles vendem +8%, os outros do gênero −4%.', 'Price war: {a} cut {f} record prices to take market share from {b} ({w}). Both lose margin; their records sell +8%, everyone else in the genre −4%.'),
-    { a: A.name, b: B.name, f, w: risk(s, A) > 1.1 ? l('chefe com apetite por risco', 'a risk-hungry boss') : l('estratégia agressiva do selo', 'the label\'s aggressive strategy') }) },
+    { a: A.name, b: B.name, f: gfName(f), w: risk(s, A) > 1.1 ? l('chefe com apetite por risco', 'a risk-hungry boss') : l('estratégia agressiva do selo', 'the label\'s aggressive strategy') }) },
   { kind: 'deal', actors: [A.id, B.id], sev: 35, vis: 'public', tags: ['price_war'] });
 }
 

@@ -44,3 +44,9 @@
 .cx27-pc.good { color: var(--good); } .cx27-pc.warn { color: var(--warn); } .cx27-pc.bad { color: var(--bad); }
 .cx27.sheet { max-height: 82vh; }
 @media (prefers-reduced-motion: reduce) { .cx27-chev { transition: none; } }
+/* r29 (menus): seções sempre recolhidas ao abrir; filtro digitado (itens/seções sem resultado somem) */
+.cx27-item[hidden], .cx27-sec[hidden], .cx27-filter[hidden] { display: none; }
+.cx27-hint { margin-left: auto; text-transform: none !important; letter-spacing: 0 !important; }
+.cx27-filter { padding: 0.25rem var(--sp-3, 12px); border-bottom: 1px solid var(--line); color: var(--accent); }
+/* r29 (menus): botão "Ações…" sem nenhuma ação possível — desabilitado, com o motivo no tooltip */
+[data-noacts29] { width: auto; align-self: flex-start; opacity: 0.55; cursor: not-allowed; filter: grayscale(0.6); }

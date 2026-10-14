@@ -9,6 +9,7 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
 import { roleLine27 } from '../../sim/sys/roles27';
+import { TAG29, kinTags29, type Tag29 } from '../../sim/sys/family29';
 import { preDebut, visibleAct } from '../../sim/future';
 import { actLink, cityLink, cityName, actGenre23, genreName, labelLink, logo, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
@@ -16,6 +17,8 @@ import { openAct, openOffer, openPerson } from '../ficha';
 import { registerArea } from '../registry';
 import { setSort27, sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { ic } from '../vis';
+import { ent27 } from '../ps/ent27';
+import { personKey27 } from '../ps/ent27';
 
 const F = {
   mode: 'acts' as 'acts' | 'people' | 'gone',
@@ -28,8 +31,12 @@ const F = {
   format: 'any' as 'any' | 'solo' | 'band',
   sort: 'fame' as 'fame' | 'name' | 'debut' | 'known' | 'momentum',
   role: 'any',
+  /** R29 (família): filtro por laços (casados, casais célebres, com filhos, filhos de famosos, menores, ex-mirins…) */
+  kin: 'any' as 'any' | Tag29,
   page: 0,
 };
+/** R29: o ato tem a etiqueta de família em algum integrante (ou é banda de família). */
+const kinOk29 = (s: GameState, ids: string[]): boolean => F.kin === 'any' || ids.some((id) => kinTags29(s, id).has(F.kin as Tag29));
 const PAGE = 40;
 
 function actMatches(s: GameState, a: Act, q: string): boolean {
@@ -44,6 +51,7 @@ function actMatches(s: GameState, a: Act, q: string): boolean {
   if (F.status === 'retired' && live) return false;
   if (F.format === 'solo' && a.members.length !== 1) return false;
   if (F.format === 'band' && a.members.length < 2) return false;
+  if (!kinOk29(s, a.members)) return false;
   if (!q) return true;
   if (a.name.toLowerCase().includes(q) || genreName(a.genre).toLowerCase().includes(q) || cityName(a.city).toLowerCase().includes(q)) return true;
   return a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q));
@@ -83,7 +91,7 @@ function actRows(s: GameState): HTMLElement {
           h('td', null, tal ? `${tal.lo}–${tal.hi}` : '?'),
           h('td', null, a.owner === 'player' ? '—' : k ? `${k.degree}/5` : '—'),
           h('td', { class: 'row' },
-            h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page'))),
+            h('button', { ...ent27('act', a.id), class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page'))),
             a.owner !== 'player' && !k && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { watchAct(s, a.id); toast(t(l('{a} entrou no seu radar (Mercado → Pipeline).', '{a} is on your radar (Market → Pipeline).'), { a: a.name }), 'good'); rerender(); } }, t(l('Seguir', 'Follow'))) : null,
             !a.owner && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(l('Oferta', 'Offer'))) : null,
           ),
@@ -110,6 +118,7 @@ function personRows(s: GameState): HTMLElement {
     if (F.owner === 'rival' && (!a?.owner || a.owner === 'player')) return false;
     if (F.family !== 'any' && (!a || familyOf(a.genre) !== F.family)) return false;
     if (F.market !== 'any' && (!a || cityById[a.city]?.market !== F.market)) return false;
+    if (!kinOk29(s, [p.id])) return false;
     return !q || p.name.toLowerCase().includes(q) || (a?.name.toLowerCase().includes(q) ?? false);
   });
   const ver = `${s.config.seed}|${s.week}`; if (ver !== ocVer) { ocVer = ver; OC.clear(); } const oc = OC; // r15: memo por semana (o sort chamava overall() em cada comparação)
@@ -132,12 +141,13 @@ function personRows(s: GameState): HTMLElement {
         const deg = mine ? 5 : knownLevel(s, p.id).priv;
         const o = overall(s, p);
         return h('tr', null,
-          h('td', null, h('b', null, p.name), p.isPlayer ? pill(t(l('você', 'you')), 'good') : null, !p.alive ? pill('†', 'bad') : null),
+          h('td', null, h('b', null, p.name), p.isPlayer ? pill(t(l('você', 'you')), 'good') : null, !p.alive ? pill('†', 'bad') : null,
+            ...(() => { const kt = kinTags29(s, p.id); return [kt.has('minor') ? pill(t(l('menor', 'minor')), 'warn') : null, kt.has('couple') ? pill('♥', 'gold') : null, kt.has('nepo') ? pill(t(l('filho(a) de famoso', 'famous parent')), '') : null]; })()),
           h('td', null, t(roleLine27(s, p))),
           h('td', null, String(s.year - p.born)),
           h('td', null, a ? actLink(s, a.id) : '—'),
           h('td', null, deg >= 4 ? String(o) : deg >= 2 ? `${Math.max(0, o - 8)}–${Math.min(99, o + 8)}` : '?'),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
+          h('td', null, h('button', { ...ent27('person', personKey27(p.id)), class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
         );
       })),
     )),
@@ -169,7 +179,7 @@ function goneRows(s: GameState): HTMLElement {
           h('td', null, t(roleLine27(s, p))),
           h('td', null, `${p.born}–${p.died ?? '?'}${p.died ? ` (${p.died - p.born})` : ''}`),
           h('td', null, (actsOf[p.id] ?? []).map((a) => actLink(s, a.id))),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
+          h('td', null, h('button', { ...ent27('person', personKey27(p.id)), class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
         ))))),
       pager(pages));
   }
@@ -198,7 +208,7 @@ function goneRows(s: GameState): HTMLElement {
           h('td', null, `${a.releases.length} · ${a.hits} top 10 · ${a.number1s} #1`),
           h('td', null, N0(catalog(a))),
           h('td', null, a.deceased || !live ? '—' : t(l('{n} vivos', '{n} alive'), { n: live })),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page')))),
+          h('td', null, h('button', { ...ent27('act', a.id), class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page')))),
         );
       })))),
     pager(pages));
@@ -248,6 +258,8 @@ function directoryArea(s: GameState): HTMLElement {
       F.mode === 'gone' ? null : F.mode === 'acts'
         ? select(F.format, [{ value: 'any', label: t(l('Solo e banda', 'Solo and band')) }, { value: 'solo', label: t(l('Solo', 'Solo')) }, { value: 'band', label: t(l('Banda', 'Band')) }] as { value: typeof F.format; label: string }[], set('format'))
         : select(F.role, [{ value: 'any', label: t(l('Qualquer função', 'Any role')) }, ...roles.map((r) => ({ value: r, label: t(ROLE_NAMES[r]) }))], set('role')),
+      F.mode === 'gone' ? null : select(F.kin, [{ value: 'any', label: t(l('Família: todos', 'Family: all')) },
+        ...(Object.keys(TAG29) as Tag29[]).map((k) => ({ value: k, label: `${t(l('Família', 'Family'))}: ${t(TAG29[k])}` }))] as { value: typeof F.kin; label: string }[], set('kin')),
       select(F.sort, [
         { value: 'fame', label: t(l('Ordenar: alcance', 'Sort: reach')) }, { value: 'name', label: t(l('Ordenar: nome', 'Sort: name')) },
         { value: 'debut', label: t(l('Ordenar: mais novos', 'Sort: newest')) }, { value: 'known', label: t(l('Ordenar: mais conhecidos por você', 'Sort: best known to you')) },

@@ -77,7 +77,7 @@ export function factsList17(s: GameState, id: string, withAct = true): HTMLEleme
   return section(t(l('Fatos recentes', 'Recent facts')),
     fs.length ? h('ul', { class: 'small' }, ...fs.map((f) => factRow(s, f))) : h('p', { class: 'muted small' }, t(l('Nada notável registrado ainda.', 'Nothing notable on record yet.'))),
     sc ? h('p', { class: 'small' }, `${t(l('Último escândalo', 'Last scandal'))} (${t(SCANDAL_NAME[sc.kind])}, ${sc.sev} → ${sc.eff}): ${sc.why.map((w) => t(w)).join(' · ')}${sc.lost?.length ? ` · ${t(l('patrocínio perdido', 'sponsorship lost'))}: ${sc.lost.join(', ')}` : ''}`, ' ', ivMark27(s, (o) => o.ctx === 'scandal' && o.actId === id)) : null,
-    h('p', { class: 'small muted' }, t(l('Boato = circula em algumas cidades (press9); público = manchete. Escândalos reagem à religião e à censura do país na época, à imprensa local, aos fãs núcleo e à fama regional.', 'Rumor = circulating in some cities (press9); public = headline. Scandals react to the country\'s religion and censorship at the time, local press, core fans and regional fame.'))));
+    h('p', { class: 'small muted' }, t(l('Boato = circula em algumas cidades; público = manchete. Escândalos reagem à religião e à censura do país na época, à imprensa local, aos fãs núcleo e à fama regional.', 'Rumor = circulating in some cities; public = headline. Scandals react to the country\'s religion and censorship at the time, local press, core fans and regional fame.'))));
 }
 
 export function factsBlock17(s: GameState, key: string): HTMLElement {

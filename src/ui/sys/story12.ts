@@ -14,6 +14,7 @@ import { openScene, registerTab } from '../registry';
 import { chips, stat } from '../vis';
 import { nameSvg20 } from '../ux20';
 import { chartTable20 } from '../st20';
+import { ent27 } from '../ps/ent27';
 
 const TONE: Record<Tone, [L, string, string]> = {
   peak: [l('Picos', 'Peaks'), '▲', 'good'], crisis: [l('Crises', 'Crises'), '▼', 'bad'], release: [l('Lançamentos', 'Releases'), '●', ''],
@@ -90,7 +91,7 @@ export function storyView(s: GameState, refresh: () => void = rerender): HTMLEle
         return h('div', { class: 'chapter' }, h('h4', null, t(c.name), ' ', h('small', { class: 'muted' }, `${$(c.rev)}`)),
           h('ol', null, its.slice().reverse().slice(0, 60).map((x) => h('li', { class: `it ${x.tone}` }, h('b', null, String(x.y)),
             h('span', null, `${TONE[x.tone][1]} `, t(x.t), x.act && s.acts[x.act] ? h('span', null, ' · ', actLink(s, x.act)) : null),
-            x.rel && s.releases[x.rel] ? h('a', { href: '#', onclick: (e: Event) => { e.preventDefault(); openRelease(x.rel!); } }, '↗') : h('span')))));
+            x.rel && s.releases[x.rel] ? h('a', { ...ent27('release', x.rel!), href: '#', onclick: (e: Event) => { e.preventDefault(); openRelease(x.rel!); } }, '↗') : h('span')))));
       })),
   );
 }

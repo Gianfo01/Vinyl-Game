@@ -4,6 +4,7 @@
 // mesmo fluxo da tela de sempre (caminho único, docs/act27.md) — "Fazer proposta" abre a mesa de negociação, "Almoço"
 // abre a conversa de favor, "Gravar" abre o preparo da sessão do estúdio etc.
 
+import { actOfPerson29 as actOf29, proposals29 } from './ctx29c';
 import { cityById, l, type L } from '../../data/world';
 import { hqCaps } from '../../sim/branches';
 import { cashWhy20, freeCash20 } from '../../sim/oblig20';
@@ -22,11 +23,14 @@ import { VENUES17, venueOpen } from '../../sim/sys/venues17';
 import { freeAgent29, memberBlock29, memberOptions29 } from '../../sim/sys/member29';
 import { featPersonBlock29 } from '../../sim/sys/featp29';
 import { featSongs } from '../../sim/sys/feats8';
+import { FESTIVALS } from '../../data/catalog';
+import { relics } from '../../sim/sys/relics9';
+import { mvById } from '../../sim/sys/movements9';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, money, playerActs } from '../../sim/util';
 import { actionRow20, actionRows20, type Cat20 } from '../actions20';
 import { personKey27, type Ent27 } from './ent27';
-import { hireMenu29, mobHireItems29, mobLinkItems29, mobOrgItems29 } from './ctxmob29'; // r29 Submundo: famílias
+import { hireMenu29, mobAffItems29, mobHireItems29, mobLinkItems29, mobOrgItems29 } from './ctxmob29'; // r29 Submundo: famílias
 
 export type Grp27 = 'open' | 'do' | 'info';
 /** r29: seções do menu (a mesma divisão no clique direito e no painel "Ações" da ficha). */
@@ -67,6 +71,7 @@ export const KIND27: Record<Ent27, L> = {
   act: l('artista', 'artist'), person: l('pessoa', 'person'), label: l('gravadora', 'label'), city: l('cidade', 'city'),
   song: l('música', 'song'), release: l('lançamento', 'release'), venue: l('casa de shows', 'venue'), festival: l('festival', 'festival'),
   place: l('lugar', 'place'), org: l('organização', 'organization'),
+  award: l('premiação', 'award'), relic: l('relíquia', 'relic'), movement: l('movimento', 'movement'), // r29 (menus)
 };
 
 const N = (pt: string, en: string): L => l(pt, en);
@@ -80,13 +85,23 @@ const SEC_OF_ID29: Record<string, Sec29> = {
   'person.hire': 'career', 'person.lunch': 'career', 'person.dinner': 'career', 'person.gift': 'social',
   'label.money': 'career', 'city.show': 'live', 'city.scout': 'career',
   'release.listen': 'music', 'release.campaign': 'press', 'song.listen': 'music', 'song.market': 'career', 'song.sync': 'career',
-  'venue.show': 'live',
+  'venue.show': 'live', 'festival.pitch': 'live',
 };
 /** Seção de um item: a dele, a do id de sempre ou, pelo grupo antigo, "Ver / Abrir" (abrir/saber mais) e "Atalhos". */
 export const secOf27 = (x: CtxItem27): Sec29 => x.sec ?? SEC_OF_ID29[x.id] ?? (x.grp === 'do' ? 'more' : 'open');
 /** As seções do menu na ordem de exibição, só as que têm item. Fonte única do clique direito e do painel da ficha. */
 export function menuSections27(m: CtxMenu27): { sec: Sec29; label: L; icon: string; items: CtxItem27[] }[] {
   return SEC29.map((d) => ({ sec: d.id, label: d.label, icon: d.icon, items: m.items.filter((x) => secOf27(x) === d.id) })).filter((x) => x.items.length);
+}
+
+/** r29 (menus): motivo único para "Ações…" sem nada a fazer — botão desabilitado e clique direito sem menu. */
+export const NO_ACTIONS29: L = l('Nenhuma ação disponível agora.', 'No action available right now.');
+/** Itens que não contam como "ação" ao decidir se o menu/botão vale a pena: copiar o nome sempre funciona. */
+const NOT_ACTION29 = new Set(['copy']);
+/** r29 (menus): quantas ações dá para fazer AGORA (sem bloqueio), fora "Copiar nome" e o que `skip` pedir.
+ *  Zero = o botão "Ações…" fica desabilitado com NO_ACTIONS29 e o clique direito cai no menu nativo. */
+export function liveCount29(m: CtxMenu27 | null | undefined, skip: (x: CtxItem27) => boolean = () => false): number {
+  return m ? m.items.filter((x) => !x.block && !NOT_ACTION29.has(x.id) && !skip(x)).length : 0;
 }
 
 /** r29: ganchos da interface (ctx27.ts preenche): o ambiente da sessão e quem executa um item — o painel "Ações" da ficha
@@ -98,11 +113,16 @@ export const CTXHOOK27: { env?: (s: GameState) => CtxEnv27; run?: (s: GameState,
 /** Grupo do menu de pessoa (personact18) → seção; alguns ids têm lugar mais certo. */
 const PA_SEC29: Record<PAGroup, Sec29> = { social: 'social', love: 'social', care: 'social', career: 'career', press: 'press', dark: 'dark' };
 const PA_ID_SEC29: Record<string, Sec29> = { feat: 'music', invite: 'live' };
+/** Ações de pessoa que fazem sentido com quem já morreu. */
+const DEAD_OK29 = new Set(['funeral']);
 /** Todas as ações do menu de pessoa (a mesma lista do painel "Ações com esta pessoa"), como itens `pa:<id>`. */
 function paItems29(s: GameState, key: string, skip: Set<string>): CtxItem27[] {
   let rows: ReturnType<typeof personActions18> = [];
   try { rows = personActions18(s, key); } catch { rows = []; }
-  return rows.filter((r) => !skip.has(r.def.id)).map((r) => it(`pa:${r.def.id}`, r.def.label, r.def.icon ?? 'handshake', 'do', r.block, {
+  // r29 (menus): com quem já morreu só vale a homenagem (o resto aparece desabilitado com o motivo)
+  const pid = key.startsWith('p:') ? key.slice(2) : '';
+  const gone = !!pid && s.persons[pid] && !s.persons[pid].alive ? N('Já morreu.', 'They have died.') : null;
+  return rows.filter((r) => !skip.has(r.def.id)).map((r) => it(`pa:${r.def.id}`, r.def.label, r.def.icon ?? 'handshake', 'do', r.block ?? (gone && !DEAD_OK29.has(r.def.id) ? gone : null), {
     sec: PA_ID_SEC29[r.def.id] ?? PA_SEC29[r.def.group] ?? 'more', note: r.def.desc ?? null, cost: costMoney18(s, r.cost) || undefined, chance: r.chance?.p,
   }));
 }
@@ -191,6 +211,7 @@ function actMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
       env.has?.('area:crime') === false ? NO_CRIME29 : gangs.length ? null : N('Nenhuma gangue ativa nesta época.', 'No active gang in this era.'), { sec: 'dark' }));
   } else {
     out.push(it('act.offer', N('Fazer proposta / negociar', 'Make an offer / negotiate'), 'handshake', 'do', offerBlock27(s, a)));
+    out.push(...proposals29(s, a, 'act')); // R29 (contratos+): empresariamento (também a ato de selo rival), produção e JV
     if (s.config.role !== 'artist') {
       const w = isWatched(s, id);
       out.push(it('act.watch', w ? N('Parar de observar', 'Stop watching') : N('Observar (alertas mensais)', 'Watch (monthly alerts)'), 'star', 'do'));
@@ -209,7 +230,7 @@ function actMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
   out.push(it('act.compare', N('Comparar com outros', 'Compare with others'), 'network', 'info', pool ? null : N('Você ainda não conhece este artista (observe ou mande olheiro).', 'You don\'t know this act yet (watch or scout them).')));
   out.push(it('act.charts', N('Ver nas paradas', 'See on the charts'), 'chart-up', 'info', chartBlock(s, inCharts(s, (r) => s.releases[r]?.actId === id))));
   out.push(it('act.known', N('Notícias e boatos (O que sabemos)', 'News and rumors (What we know)'), 'newspaper', 'info'));
-  out.push(...mobLinkItems29(s, id), ...(a.status !== 'retired' && a.status !== 'split' ? mobHireItems29(s, id, env) : [])); // r29 Submundo: famílias (ctxmob29)
+  out.push(...mobLinkItems29(s, id), ...mobAffItems29(s, id, env), ...(a.status !== 'retired' && a.status !== 'split' ? mobHireItems29(s, id, env) : [])); // r29 Submundo: famílias (ctxmob29); r29c: facção abordou o ato
   out.push(COPY());
   void env;
   return { ent: 'act', id, name: a.name, kind: KIND27.act, items: out };
@@ -239,7 +260,7 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
   if (!me && P) {
     if (key.startsWith('e:')) out.push(it('person.lunch', N('Almoço de negócios', 'Business lunch'), 'handshake', 'do', giveBlock27(s, key, 'lunch'), { cost: money(s, LUNCH_COST) }));
     if (key.startsWith('pd:')) out.push(it('person.dinner', N('Jantar no estúdio', 'Dinner at the studio'), 'cd', 'do', giveBlock27(s, key, 'dinner'), { cost: money(s, DINNER_COST) }));
-    out.push(it('person.gift', N('Mandar presente', 'Send a gift'), 'heart', 'do', giveBlock27(s, key, 'gift'), { cost: money(s, GIFT_COST) }));
+    out.push(it('person.gift', N('Mandar presente', 'Send a gift'), 'heart', 'do', person && !person.alive ? N('Já morreu: não há a quem mandar.', 'They have died: nobody to send it to.') : giveBlock27(s, key, 'gift'), { cost: money(s, GIFT_COST) })); // r29: morto não recebe presente
   }
   if (!pro || P) out.push(it('person.rel', N('Relações', 'Relationships'), 'network', 'info'));
   if (person && !me) out.push(it('person.known', N('O que sabemos', 'What we know'), 'newspaper', 'info'));
@@ -279,6 +300,8 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
       sec: 'music', note: N('Só a pessoa, sem a banda: cachê e liberação pela fama e habilidade dela.', 'Just the person, not the band: fee and clearance by their own fame and skill.'),
     }));
   }
+  // R29 (contratos+): as propostas dos três modelos pelo ato da pessoa (as mesmas do menu do ato)
+  if (person && !me) out.push(...proposals29(s, actOf29(s, key), 'person'));
   // atalhos: o ato da pessoa
   const actOf = pid ? Object.values(s.acts).find((a) => a.members.includes(pid) && a.status !== 'retired' && a.status !== 'split') : undefined;
   if (actOf) {
@@ -399,6 +422,53 @@ function orgMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu
   return { ent: 'org', id, name: o.name, kind: KIND27.org, items: out };
 }
 
+/** r29 (menus): festival — a página do festival (line-up, inscrever um artista seu) e a lista de festivais. */
+function festivalMenu(s: GameState, id: string, env: CtxEnv27, name: string): CtxMenu27 {
+  const off = env.has?.('area:festivals') === false ? N('Ainda não há festivais nesta época.', 'No festivals in this era yet.') : null;
+  const fi = /^\d+$/.test(id) ? Number(id) : -1;
+  const f = fi >= 0 ? FESTIVALS[fi] : undefined;
+  const items: CtxItem27[] = [];
+  if (f) {
+    const why = off ?? (s.year < f.start ? fmtL(N('Ainda não existe (começa em {y}).', 'Doesn\'t exist yet (starts in {y}).'), { y: f.start }) : null);
+    items.push(it('festival.page', N('Abrir página do festival', 'Open festival page'), 'eye', 'open', why));
+    items.push(it('festival.pitch', N('Inscrever um artista seu (na página do festival)', 'Pitch one of your acts (on the festival page)'), 'tour-bus', 'do', why ?? (playerActs(s).length ? null : NO_ACTS), { sec: 'live' }));
+    if (cityById[f.city]) items.push(it('festival.city', N('Ver a cidade', 'See the city'), 'map', 'info'));
+  }
+  items.push(it('festival.open', N('Abrir festivais', 'Open festivals'), 'star', 'open', off), COPY());
+  return { ent: 'festival', id, name: f?.name ?? (name || id), kind: KIND27.festival, items };
+}
+
+/** r29 (menus): premiação — a página da cerimônia (vencedores, campanha) e a lista de premiações. */
+function awardMenu(id: string, name: string): CtxMenu27 {
+  return { ent: 'award', id, name: name || id, kind: KIND27.award, items: [
+    it('award.page', N('Abrir página da premiação', 'Open award page'), 'trophy', 'open'),
+    it('award.open', N('Ver todas as premiações', 'See all award ceremonies'), 'star', 'open'),
+    COPY(),
+  ] };
+}
+
+/** r29 (menus): relíquia — a ficha da relíquia (comprar, leiloar, emprestar…), o artista e a pessoa de origem. */
+function relicMenu(s: GameState, id: string, name: string): CtxMenu27 | null {
+  const r = (() => { try { return relics(s).list.find((x) => x.id === id); } catch { return undefined; } })();
+  if (!r) return null;
+  const items: CtxItem27[] = [it('relic.page', N('Abrir a relíquia', 'Open the relic'), 'vault', 'open')];
+  if (r.a && s.acts[r.a]) items.push(it('relic.act', fmtL(N('Ver o artista ({a})', 'See the act ({a})'), { a: s.acts[r.a].name }), 'guitar', 'open'));
+  if (r.p && s.persons[r.p]) items.push(it('relic.person', fmtL(N('Ver a pessoa ({p})', 'See the person ({p})'), { p: s.persons[r.p].name }), 'people', 'open'));
+  items.push(it('relic.open', N('Lendas › acervo de relíquias', 'Legends › relic archive'), 'book', 'info'), COPY());
+  return { ent: 'relic', id, name: r.n ?? name, kind: KIND27.relic, items };
+}
+
+/** r29 (menus): movimento (cena com nome) — a página do movimento (entrar, sair, fundar) e "Relações e movimentos". */
+function movementMenu(s: GameState, id: string, name: string): CtxMenu27 | null {
+  const mv = (() => { try { return mvById(s, id); } catch { return undefined; } })();
+  if (!mv) return null;
+  return { ent: 'movement', id, name: mv.name ?? name, kind: KIND27.movement, items: [
+    it('movement.page', N('Abrir página do movimento', 'Open movement page'), 'fire', 'open'),
+    it('movement.open', N('Relações e movimentos', 'Relations and movements'), 'network', 'info'),
+    COPY(),
+  ] };
+}
+
 /** R29 (integrante): o submenu "Oferecer a {nome}…" — as opções de sim/sys/member29 (bloqueio com motivo, chance, custo). */
 function memberMenu29(s: GameState, pid: string): CtxMenu27 | null {
   const p = s.persons[pid];
@@ -423,9 +493,60 @@ export function ctxMenu27(s: GameState, ent: Ent27, id: string, env: CtxEnv27 = 
     case 'release': return releaseMenu(s, id, env);
     case 'song': return songMenu(s, id, env);
     case 'venue': return venueMenu(s, id);
-    case 'festival': return plainMenu(ent, id, name || id, it('festival.open', N('Abrir festivais', 'Open festivals'), 'star', 'open', env.has?.('area:festivals') === false ? N('Ainda não há festivais nesta época.', 'No festivals in this era yet.') : null));
+    case 'festival': return festivalMenu(s, id, env, name);
+    case 'award': return awardMenu(id, name);
+    case 'relic': return relicMenu(s, id, name);
+    case 'movement': return movementMenu(s, id, name);
     case 'place': return plainMenu(ent, id, name || id, it('place.open', N('Abrir "Nosso mundo"', 'Open "Our world"'), 'house', 'open'));
     case 'org': return id.startsWith('hire29:') ? hireMenu29(s, id) : orgMenu(s, id, env, name); // r29: submenu "Contratar {família} para…"
     default: return null;
   }
+}
+
+// ---------------------------------------------------------------- r29 (menus): nome → entidade (rede de segurança)
+
+export interface NameHit29 { ent: Ent27; id: string }
+/** Prioridade quando o mesmo nome é de tipos diferentes (artista solo = pessoa: vale o artista). */
+const NAME_ORDER29: Ent27[] = ['act', 'label', 'person', 'release', 'venue', 'city'];
+const nameCache29 = new WeakMap<GameState, { key: string; idx: Map<string, NameHit29 | null> }>();
+/** Índice "nome exato → entidade" para o clique direito em nomes que a tela mostrou sem a marca `data-ent`
+ *  (cartões, tabelas, listas antigas). Nome que serve a duas entidades do mesmo tipo é ambíguo (null) e não abre
+ *  menu — melhor o menu nativo do que a pessoa errada. Nomes com menos de 3 letras ficam de fora. */
+export function nameIndex29(s: GameState): Map<string, NameHit29 | null> {
+  const key = `${s.week}:${Object.keys(s.acts).length}:${Object.keys(s.persons).length}:${Object.keys(s.labels).length}:${Object.keys(s.releases).length}`;
+  const c = nameCache29.get(s);
+  if (c && c.key === key) return c.idx;
+  const byName = new Map<string, Map<Ent27, Set<string>>>();
+  const add = (ent: Ent27, id: string, n: unknown) => {
+    const x = typeof n === 'string' ? n.trim() : '';
+    if (x.length < 3) return;
+    const m = byName.get(x) ?? new Map<Ent27, Set<string>>();
+    const set = m.get(ent) ?? new Set<string>();
+    set.add(id); m.set(ent, set); byName.set(x, m);
+  };
+  for (const a of Object.values(s.acts)) add('act', a.id, a.name);
+  for (const lb of Object.values(s.labels)) add('label', lb.id, lb.name);
+  for (const p of Object.values(s.persons)) if (!p.isPlayer) add('person', `p:${p.id}`, p.name);
+  for (const r of Object.values(s.releases)) add('release', r.id, r.title);
+  for (const v of VENUES17) add('venue', v.id, v.name);
+  for (const ct of Object.values(cityById)) { add('city', ct.id, ct.name.pt); if (ct.name.en !== ct.name.pt) add('city', ct.id, ct.name.en); }
+  const idx = new Map<string, NameHit29 | null>();
+  for (const [n, m] of byName) {
+    let hit: NameHit29 | null = null;
+    for (const ent of NAME_ORDER29) {
+      const ids = m.get(ent);
+      if (!ids) continue;
+      hit = ids.size === 1 ? { ent, id: [...ids][0] } : null; // dois do mesmo tipo com o mesmo nome: ambíguo
+      break;
+    }
+    idx.set(n, hit);
+  }
+  nameCache29.set(s, { key, idx });
+  return idx;
+}
+/** A entidade de um texto exato (ou null: desconhecido/ambíguo). */
+export function nameHit29(s: GameState, text: string): NameHit29 | null {
+  const x = text.trim();
+  if (x.length < 3 || x.length > 80) return null;
+  return nameIndex29(s).get(x) ?? null;
 }

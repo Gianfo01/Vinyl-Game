@@ -208,4 +208,7 @@ describe('r27 M3 — operações jogáveis do Submundo', () => {
 // R28/R29: re-medido depois das mudanças intencionais do mundo (F3 mundo inicial pela cena, F5 rivais, formações reais,
 // F8 reputação de selo, R29 conexões). Antes: "10:0.70/0.22:10331206", "00:0.70/0.16:9926500". A garantia do teste
 // (com e sem a linha do dq dá o mesmo resultado) segue no expect logo acima do snapshot.
-const QUICK_SNAPSHOT: string[] = ["10:0.70/0.22:10331957", "10:0.70/0.22:10332304"];
+// R29 (conectar tudo, conn29): alvo famoso expõe mais (fama → submundo) e o calor/jurídico entram nas chances — re-medido.
+// R29 DEMO (público por idade e região, merge r29-demo): o mundo inicial e o alvo mudam um pouco — re-medido.
+// Antes: "10:0.70/0.34:10331957", "10:0.78/0.34:10332304".
+const QUICK_SNAPSHOT: string[] = ["11:0.70/0.34:10331252", "10:0.70/0.34:10331434"];

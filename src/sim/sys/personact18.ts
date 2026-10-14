@@ -172,7 +172,7 @@ reg({
 
 reg({
   id: 'callfavor', group: 'career', icon: 'handshake', label: l('Cobrar favor', 'Call in a favor'),
-  desc: l('Usa uma obrigação que esta pessoa tem com você (holds17).', 'Uses an obligation this person owes you (holds17).'),
+  desc: l('Usa uma obrigação que esta pessoa tem com você.', 'Uses an obligation this person owes you.'),
   visible: (s, k) => notSelf(s, k) && holdsBetween(s, 'player', hid(k)).some((h) => h.status === 'open' && (h.kind === 'favor' || h.kind === 'debt' || h.kind === 'loyalty')),
   available: (s, k) => { const h = holdsBetween(s, 'player', hid(k)).find((x) => x.status === 'open' && (x.kind === 'favor' || x.kind === 'debt' || x.kind === 'loyalty')); return h ? canUse(s, h, 'call') : l('Nada a cobrar.', 'Nothing to call in.'); },
   run: (s, k) => {
@@ -215,7 +215,7 @@ const bestMine = (s: GameState): Act | undefined => playerActs(s).map((id) => s.
 const featKind = (M: Act, O: Act) => (familyOf(M.genre) !== familyOf(O.genre) ? 'cross' : 'ally') as 'cross' | 'ally';
 reg({
   id: 'feat', group: 'career', icon: 'note', label: l('Propor parceria / feat', 'Propose a partnership / feat'), cooldown: 26, selfRoll: true,
-  desc: l('Junta o seu artista principal com o desta pessoa (bonds9): crossover se os gêneros diferem, aliança se parecidos.', 'Pairs your lead act with this person\'s (bonds9): crossover if genres differ, alliance if close.'),
+  desc: l('Junta o seu artista principal com o desta pessoa: crossover se os gêneros diferem, aliança se parecidos.', 'Pairs your lead act with this person\'s: crossover if genres differ, alliance if close.'),
   visible: (s, k) => { const p = personOf(s, k); const a = p && actOfP(s, p.id); return !!a && !mineAct(s, a) && !!bestMine(s) && alive(s, k); },
   cost: (s, k) => { const M = bestMine(s)!, O = actOfP(s, hid(k))!; return { cents: bondCost(s, featKind(M, O), O.id).cost, shown: true }; },
   available: (s, k) => { const M = bestMine(s)!, O = actOfP(s, hid(k))!; const c = bondCost(s, featKind(M, O), O.id); return c.blocked ? c.text : null; },
@@ -307,7 +307,7 @@ function rumorPlan(s: GameState, k: string): { act: Act; tpl: string; out: strin
 }
 reg({
   id: 'rumor', group: 'press', icon: 'newspaper', label: l('Espalhar boato', 'Spread a rumor'), cooldown: 8, selfRoll: true,
-  desc: l('Planta uma história num veículo (media17). Se rastrearem até você: mágoa, reputação e talvez processo por difamação.', 'Plants a story in an outlet (media17). If traced back: a grudge, reputation and maybe a defamation suit.'),
+  desc: l('Planta uma história num veículo. Se rastrearem até você: mágoa, reputação e talvez processo por difamação.', 'Plants a story in an outlet. If traced back: a grudge, reputation and maybe a defamation suit.'),
   visible: (s, k) => notSelf(s, k) && alive(s, k) && !!personOf(s, k) && !mineAct(s, actOfP(s, hid(k))),
   cost: (s, k) => ({ cents: rumorPlan(s, k)?.cost ?? 0, shown: true }),
   available: (s, k) => strictReal(s, k) ?? (rumorPlan(s, k) ? null : l('Nenhum veículo topa agora.', 'No outlet will take it now.')),
@@ -368,7 +368,7 @@ reg({
 
 reg({
   id: 'flirt', group: 'love', icon: 'heart', label: l('Flertar / convidar para sair', 'Flirt / ask out'), cooldown: 26,
-  desc: l('Se der química: namoro (solteiro) ou um caso secreto (comprometido — love17: segredo, risco de descobrirem).', 'If there\'s chemistry: dating (single) or a secret affair (taken — love17: a secret, risk of discovery).'),
+  desc: l('Se der química: namoro (solteiro) ou um caso secreto (comprometido — segredo, risco de descobrirem).', 'If there\'s chemistry: dating (single) or a secret affair (taken — a secret, risk of discovery).'),
   visible: (s, k) => { const p = personOf(s, k); return !!p && notSelf(s, k) && p.alive && s.year - p.born >= 18; },
   cost: () => ({ usd: 100, balls: 1 }),
   available: (s, k) => strictReal(s, k),

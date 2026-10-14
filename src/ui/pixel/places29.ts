@@ -6,7 +6,7 @@
 // Tudo PURO e semeado (id + ano): a mesma entrada sempre dá os mesmos pixels. <img> memorizado em pxImg28.
 
 import { drawText, fitText, textWidth } from './font';
-import { C, Px, dith, hsl, mix, noise, shade, withAlpha, type Col } from './px';
+import { C, Px, dith, hsl, inked, mix, noise, shade, withAlpha, type Col } from './px';
 import { K28 as K, OUT28, bevel, h28, pxImg28, rng28 } from './art28kit';
 import { relicBand28 } from './relic28';
 import { region27, type Reg27 } from './skyline27';
@@ -62,7 +62,10 @@ function wall(p: Px, x: number, y: number, w: number, hh: number, m: Mat, base: 
 }
 
 /** Céu de fundo: dia (até a era do rádio) ou anoitecer (casas de show, letreiros acesos). */
-function sky(p: Px, night: boolean, hue: number): void {
+/** R29: durante a fachada, o céu vai para o fundo (a fachada fica numa camada própria e ganha contorno). */
+let SKY_DST29: Px | null = null;
+function sky(p0: Px, night: boolean, hue: number): void {
+  const p = SKY_DST29 ?? p0;
   const a = night ? hsl(235 + (hue % 30), 45, 16) : hsl(205, 55, 72);
   const b = night ? hsl(285, 45, 30) : hsl(200, 50, 84);
   for (let y = 0; y < p.h; y++) for (let x = 0; x < p.w; x++) p.put(x, y, dith(x, y, y / p.h) ? b : a);
@@ -285,10 +288,16 @@ const DRAW: Record<Place29, (c: Ctx) => void> = {
 
 /** Fachada 32×32 de um lugar. `city` dá o material pela região; `year` dá a época. */
 export function placePx29(kind: Place29, id: string, name: string, year: number, city = ''): Px {
+  // R29 (arte consistente): o céu enchia o quadro e o contorno do Px não achava borda — agora o céu vai para o
+  // fundo e a fachada (numa camada) ganha o contorno INK de 1 px na silhueta, como o resto
   const p = new Px(32, 32);
+  const fg = new Px(32, 32);
   const r = rng28('place29', kind, id);
   const reg = city ? region27(city) : '';
-  DRAW[kind]({ p, r, band: relicBand28(year), reg, hue: h28('pl29h', id) % 360, seed: h28('pl29s', id) & 0xffff, name, year });
+  SKY_DST29 = p;
+  try { DRAW[kind]({ p: fg, r, band: relicBand28(year), reg, hue: h28('pl29h', id) % 360, seed: h28('pl29s', id) & 0xffff, name, year }); }
+  finally { SKY_DST29 = null; }
+  inked(p, (q) => q.blit(fg, 0, 0), OUT28);
   p.outline(OUT28);
   return p;
 }

@@ -40,7 +40,7 @@ const kv = (k: L, v: string | HTMLElement | (HTMLElement | string)[]) => [h('dt'
 
 function whoList(s: GameState, ps: Person27[]): HTMLElement {
   return h('ul', { class: 'c2-who' }, ps.slice(0, 8).map((p) => h('li', null,
-    p.actId ? h('button', { type: 'button', class: 'linklike', onclick: () => inspect.act(p.actId!) }, p.name) : h('span', null, p.name),
+    p.actId ? h('button', { ...ent27('act', p.actId!), type: 'button', class: 'linklike', onclick: () => inspect.act(p.actId!) }, p.name) : h('span', null, p.name),
     h('small', { class: p.mine ? 'good' : 'muted' }, ` · ${t(p.role)}`))));
 }
 
@@ -128,3 +128,5 @@ export function insideView27(s: GameState, x: InsideT27, back: () => void, actio
   bindZoomOut27(box, back);
   return box;
 }
+
+import { ent27 } from '../ps/ent27';

@@ -152,7 +152,7 @@ export function openActCard(s: GameState, actId: string): void {
     h('div', { class: 'next-step' }, h('h4', null, t(l('Próxima decisão importante', 'Next important decision'))), h('p', null, t(st.next.label)),
       h('button', { class: 'btn primary', onclick: () => doNext(s, actId, st) }, t(l('Resolver agora', 'Handle it now')))),
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small ghost', onclick: () => { document.querySelector('.overlay')?.remove(); inspect.act(actId); } }, t(l('Ficha completa', 'Full record'))),
+      h('button', { ...ent27('act', actId), class: 'btn small ghost', onclick: () => { document.querySelector('.overlay')?.remove(); inspect.act(actId); } }, t(l('Ficha completa', 'Full record'))),
       h('button', { class: 'btn small ghost', onclick: () => goArea('team') }, t(l('Delegação', 'Delegation'))),
       ACT_CARD_EXTRA20.f?.(s, actId) ?? null, // r20 G4: o mesmo menu Ações ▾ do registro único
     ),
@@ -239,3 +239,5 @@ hqHooks.onRoom = (kind) => {
 };
 
 registerSection('hq', { id: 'hq8-growth', order: 5, render: (s) => section(t(l('Crescimento da empresa', 'Company growth')), timeline(s)) });
+
+import { ent27 } from '../ps/ent27';

@@ -16,6 +16,7 @@ import { h } from '../dom';
 import { why18 } from '../explain18';
 import { ACT_OVERVIEW_EXTRAS, PERSON_HEAD_EXTRAS, PERSON_TABS, openPersonPage } from '../pages';
 import { PAGE16_HEAD, PAGE16_TABS } from './people16';
+import { personKey27 } from '../ps/ent27';
 
 const T = (x: L) => t(x);
 const nums = (s: GameState, key: string, e: Est18): HTMLElement =>
@@ -108,7 +109,7 @@ function devTab(s: GameState, key: string): HTMLElement {
     const m = mentorFor18(s, p);
     out.push(section(T(l('Treino e mentoria', 'Training and mentoring')),
       h('p', { class: 'small' }, tr > s.week ? T(fmtL(l('Em aulas por mais {w} semanas.', 'In lessons for {w} more weeks.'), { w: tr - s.week })) : T(l('Sem aulas agora.', 'No lessons right now.')), ' ',
-        mt && mt[1] > s.week ? h('span', null, T(l('Mentor: ', 'Mentor: ')), h('button', { class: 'link', onclick: () => openPersonPage(mt[0]) }, s.persons[mt[0]]?.name ?? '?')) : m ? T(fmtL(l('Mentor possível no elenco: {m}.', 'Possible mentor on the roster: {m}.'), { m: m.name })) : null),
+        mt && mt[1] > s.week ? h('span', null, T(l('Mentor: ', 'Mentor: ')), h('button', { ...ent27('person', personKey27(mt[0])), class: 'link', onclick: () => openPersonPage(mt[0]) }, s.persons[mt[0]]?.name ?? '?')) : m ? T(fmtL(l('Mentor possível no elenco: {m}.', 'Possible mentor on the roster: {m}.'), { m: m.name })) : null),
       h('p', { class: 'small muted' }, T(l('Use o menu de ações da pessoa (Carreira): aulas, mentor. Estrada e estúdio também ensinam; estresse, vício e burnout travam.', 'Use the person\'s action menu (Career): lessons, mentor. The road and the studio teach too; stress, addiction and burnout stall.')))));
   }
   if (A.np && (e.mine || e.know >= 0.5)) {

@@ -19,6 +19,7 @@ import { preselectSession } from './studio';
 import { songAttrs } from '../songAttrs';
 import { closeSale, fairTerms, offerSong, saleChance, saleTargets, type SaleTerms } from '../../sim/sys/songsale';
 import { fameText } from '../../sim/sys/fame15';
+import { ent27 } from '../ps/ent27';
 
 /** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
@@ -146,7 +147,7 @@ function songCard(s: GameState, so: Song): HTMLElement {
   const open = view.open === so.id;
   return h('article', { class: `rep-song ${STATUS_CLS[st]}` },
     h('div', { class: 'rep-head' },
-      h('span', { class: 'row', style: 'gap:6px' }, ic(so.recorded ? 'disc' : 'note'), h('b', null, so.title), pill(t(STATUS_NAMES[st]), st === 'released' ? 'good' : st === 'vault' ? 'warn' : '')),
+      h('span', { class: 'row', style: 'gap:6px' }, ic(so.recorded ? 'disc' : 'note'), h('b', { ...ent27('song', so.id) }, so.title), pill(t(STATUS_NAMES[st]), st === 'released' ? 'good' : st === 'vault' ? 'warn' : '')),
       h('span', { class: 'row', style: 'gap:6px' }, ...REP_SONG_EXTRAS.map((f) => f(s, so)), stat('sparkle', Math.round(so.q), l('Qualidade Q', 'Quality Q')),
         h('button', { class: 'btn small ghost', 'aria-expanded': open ? 'true' : 'false', onclick: () => { view.open = open ? '' : so.id; rerender(); } }, t(open ? l('Fechar', 'Close') : l('O que fazer', 'What to do'))))),
     so.theme ? h('small', { class: 'muted' }, ic('bulb'), ` ${t(l('Tema', 'Theme'))}: ${t(so.theme)}`) : null,

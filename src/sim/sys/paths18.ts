@@ -136,7 +136,7 @@ export const PATHS18: PathDef18[] = [
       const cv = old.length ? catVal18(s, old, true) : { annual: 0, value: 0 };
       const songs = vl(s, 'publisher').reduce((t, v) => t + (v.cat?.length ?? 0), 0);
       return [
-        K(l('Renda anual do catálogo antigo (3+ anos)', 'Annual income of old catalog (3+ yrs)'), toReal(cv.annual, s.year), 400_000, 'usd', l('O que discos com 3 anos ou mais ainda rendem por ano (rights18).', 'What records 3+ years old still earn per year (rights18).')),
+        K(l('Renda anual do catálogo antigo (3+ anos)', 'Annual income of old catalog (3+ yrs)'), toReal(cv.annual, s.year), 400_000, 'usd', l('O que discos com 3 anos ou mais ainda rendem por ano.', 'What records 3+ years old still earn per year.')),
         K(l('Clássicos (5+ anos, 100 mil+ unidades)', 'Classics (5+ yrs, 100k+ units)'), old.filter((r) => s.year - r.year >= 5 && r.totalUnits >= 100_000).length, 8, 'num', l('Discos antigos que viraram referência.', 'Old records that became references.')),
         K(l('Obras na sua editora', 'Songs in your publisher'), songs, 80, 'num', l('Catálogo de composições administrado.', 'Administered song catalog.')),
         K(l('Relançamentos', 'Reissues'), s.player.reissues, 8, 'num', l('Reedições e coletâneas lançadas.', 'Reissues and compilations released.')),

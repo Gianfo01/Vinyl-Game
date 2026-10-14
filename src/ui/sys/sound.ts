@@ -150,7 +150,7 @@ function directionTab(s: GameState): HTMLElement {
       sliders(aim, (a) => { setActAim(s, act.id, a); rerender(); }),
     ),
     section(t(l('Faixas inéditas', 'Unreleased tracks')),
-      songs.length ? h('div', { class: 'snd-songs' }, ...songs.map((so) => h('article', { class: 'snd-card' }, h('b', null, so.title, ' ', pill(t(so.recorded ? l('gravada', 'recorded') : l('escrita', 'written')))), songSoundPanel(s, so, { edit: true }))))
+      songs.length ? h('div', { class: 'snd-songs' }, ...songs.map((so) => h('article', { class: 'snd-card' }, h('b', ent27('song', so.id), so.title, ' ', pill(t(so.recorded ? l('gravada', 'recorded') : l('escrita', 'written')))), songSoundPanel(s, so, { edit: true }))))
         : h('p', { class: 'muted small' }, t(l('Nenhuma faixa inédita. Coloque "Compor" na agenda.', 'No unreleased tracks. Add "Write songs" to the agenda.'))),
     ),
   );
@@ -240,3 +240,5 @@ registerSection('company', {
 });
 
 registerTab('creation', { id: 'cr-sound', label: l('Direção sonora', 'Sound direction'), icon: 'note', render: directionTab, order: 60 });
+
+import { ent27 } from '../ps/ent27';

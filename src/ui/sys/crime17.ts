@@ -14,9 +14,10 @@ import {
 } from '../../sim/sys/crime17';
 import { targetPicker29 } from './crimepick29'; // r29: seletor de alvo com busca (todos os personagens)
 import { delay29, jobTarget29, jobsFor29, METER29, askDef29, asks29, doMob29, era29, fulfill29, hire29, hireOdds29, meter29, mobActs29, peek29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
-import { LINK29, LINKSIM29, orgLinks29 } from '../../sim/sys/orglinks29';
+import { LINK29, orgLinks29 } from '../../sim/sys/orglinks29';
 import { AWCAT29, awCatsOn29 } from '../../sim/sys/rig29'; // r29: votação de prêmio comprada
 import { orgAff29 } from '../../sim/sys/aff29'; // r29: facções × cenas
+import { ASK29N, DEC29N, OUT29N, orgLog29n } from '../../sim/sys/aff29npc'; // r29c: facções × artistas do mundo
 import { fmtL } from '../../sim/util';
 import { GONE23, RANK23, ROLE23, density23, name23, orgPower23 } from '../../sim/sys/crimemem23';
 import { WARN_REPLY, cutTie, payOffCost, replyWarn, tieAct, tieOf, truce, truceCost, type WarnReply } from '../../sim/sys/crimenpc17';
@@ -36,6 +37,7 @@ import { heistOn27 } from '../act27/heist27'; // r27 (M3): operação jogável
 import { screen27, screenOn27 } from '../act27/flow27'; // r27 FLOW: uma entrada só
 import { crimeForm17, presetHire29 } from './crimeform29';
 import { ent27 } from '../ps/ent27';
+import { relicBrowser29 } from './relics29'; // R29: filtros e páginas para listas grandes de relíquias
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 /** r28 (arte): brasão semeado da organização (forma pelo tipo, cores pela região, carga pelo negócio). */
@@ -55,8 +57,8 @@ function orgsTab(s: GameState): HTMLElement {
   const feuds = Object.entries(st.feud).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', null,
     h('p', { class: 'muted small' }, T(l(
-      'Organizações ativas nesta época. As reais trazem apenas laços documentados; ' + (strict ? 'no modo Vida real exata nada é inventado para pessoas reais.' : 'nos modos livres, laços novos de pessoas reais aparecem só como boato.') + ' Assassinato nunca envolve pessoas reais.',
-      'Organizations active in this era. Real ones only show documented ties; ' + (strict ? 'in Exact real life mode nothing is invented for real people.' : 'in free modes, new ties of real people only appear as rumors.') + ' Murder never involves real people.'))),
+      'Organizações ativas nesta época. ' + (strict ? 'No modo Vida real exata, artista real só aparece ligado a uma organização com laço documentado.' : 'Depois do início, as ligações são o que acontece nesta partida.') + ' Assassinato nunca envolve pessoas reais.',
+      'Organizations active in this era. ' + (strict ? 'In Exact real life mode, a real artist only appears tied to an organization with a documented tie.' : 'After the start, ties are whatever happens in this run.') + ' Murder never involves real people.'))),
     // r29: o que as famílias estão cobrando agora (o card de cada uma tem os botões)
     asks29(s).length ? h('div', { class: 'card' }, h('b', null, T(l('Pedidos das famílias', 'Requests from the families'))), h('ul', { class: 'small' }, asks29(s).map((a) => h('li', null,
       `${T(orgById(s, a.o)?.name ?? a.o)}: ${T(askDef29(a.k).name)} · ${T(l('prazo: semana', 'deadline: week'))} ${a.dl}`)))) : null,
@@ -72,7 +74,8 @@ function orgsTab(s: GameState): HTMLElement {
         meterRow29(s, o.id),
         h('p', { class: 'small muted' }, T(era29(s, o).text)),
         // r29: facções × gêneros e cenas (afinidade cultural; nunca afirmação sobre pessoas)
-        ...orgAff29(s, o.id).map((x) => h('p', { class: 'small' }, pill(T(x.doc ? l('cena documentada', 'documented scene') : l('afinidade de jogo', 'game affinity')), x.doc ? 'trait' : ''), ` ${T(x.scene)} — `, h('span', { class: 'muted' }, T(x.note)))),
+        ...orgAff29(s, o.id).map((x) => h('p', { class: 'small' }, h('b', null, T(x.scene)), ' — ', h('span', { class: 'muted' }, T(x.note)))),
+        approached29n(s, o.id), // r29c: atos da cena que a facção abordou (aff29npc); o nome abre o menu do ato
         membersBox(s, o.id),
         asksBox29(s, o.id),
         h('details', { class: 'small' }, h('summary', null, `${T(l('Negócios com a família', 'Dealings with the family'))} (${mobActs29(s, o.id).filter((x) => !x.block).length}/${mobActs29(s, o.id).length})`), h('div', { class: 'row wrap' },
@@ -102,7 +105,8 @@ function orgsTab(s: GameState): HTMLElement {
   );
 }
 /** r23 → r29: ligações com a organização — UMA fonte (orglinks29), a mesma da ficha da pessoa, do menu de ações e da
- *  busca: ligação documentada · membro (com posto/função e o que você sabe) · associado · deve favor · inimizade · sócio. */
+ *  busca: ligação · membro (com posto/função e o que você sabe) · associado · deve favor · inimizade · sócio.
+ *  r29c: sem distinção visível entre laço documentado e laço desta partida (pedido do autor). */
 function membersBox(s: GameState, oid: string): HTMLElement {
   const st = crime17(s);
   const o = orgById(s, oid)!;
@@ -116,7 +120,7 @@ function membersBox(s: GameState, oid: string): HTMLElement {
     links.length ? h('ul', null, links.map((x) => {
       const m = x.kind === 'member' ? mem[x.key] : undefined;
       return h('li', null,
-        whoLink29(s, x.key), ' ', pill(T(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''), x.sim ? pill(T(LINKSIM29), 'warn') : null,
+        whoLink29(s, x.key), ' ', pill(T(LINK29[x.kind]), x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''),
         x.y ? ` ${x.y}` : '',
         m ? [` — ${T(RANK23[m.rk])}, ${T(ROLE23[m.ro])} `, pill(m.k === 2 ? T(l('confirmado', 'confirmed')) : T(l('boato', 'rumor')), m.k === 2 ? 'bad' : 'warn')] : null,
         x.key.startsWith('s:') ? pill(T(l('sua equipe', 'your staff')), 'trait') : null,
@@ -126,6 +130,16 @@ function membersBox(s: GameState, oid: string): HTMLElement {
     gone.length ? h('p', { class: 'muted' }, `${T(l('Delatores', 'Informants'))}: ${gone.slice(-5).map((g) => `${name23(s, g.k)} (${T(RANK23[g.rk])})`).join(', ')} — ${T(GONE23.informant)}`) : null,
     h('p', { class: 'muted' }, fmtTxt(l('Membros (todos, inclusive secretos) no país: {v} — a polícia presta atenção.', 'Members (all, secret included) in the country: {v} — police take notice.'), String(density23(s, o.a3)))),
   );
+}
+/** r29c (aff29npc): atos da cena que a facção abordou — quem topou, quem recusou e o que veio depois. O nome do ato
+ *  abre o menu de ações dele (denunciar a ligação / tirar do esquema: as mesmas funções do menu). */
+function approached29n(s: GameState, oid: string): HTMLElement | null {
+  const xs = orgLog29n(s, oid).slice(0, 8);
+  if (!xs.length) return null;
+  return h('details', { class: 'small' }, h('summary', null, `${T(l('Artistas da cena que eles procuraram', 'Scene acts they approached'))} (${orgLog29n(s, oid).length})`),
+    h('ul', null, xs.map((e) => h('li', null, `${e.y} · `, s.acts[e.a] ? whoLink29(s, e.a) : '?', ' ', pill(T(ASK29N[e.k])), ' ',
+      pill(T(DEC29N[e.d]), e.d === 'refuse' ? 'good' : 'warn'), ...e.out.filter((k) => k !== 'cash' && k !== 'movement').map((k) => pill(T(OUT29N[k]), k === 'drop' || k === 'raid' || k === 'scandal' ? 'bad' : '')),
+      h('div', { class: 'muted' }, T(e.t))))));
 }
 /** Nome com menu de ações (clique direito) de quem está ligado. */
 function whoLink29(s: GameState, key: string): HTMLElement {
@@ -252,7 +266,13 @@ function marketTab(s: GameState): HTMLElement {
         st.fake[rl!.id] ? null : btn(l('Devolver e cobrar recompensa (10%)', 'Return for the reward (10%)'), () => say(returnHot(s, rl!.id), 'good'), { cls: 'ghost' }))))) : h('p', { class: 'muted small' }, T(l('Vazio. Relíquias roubadas (Planos → Roubar relíquia) ou compradas aqui ficam escondidas; a polícia pode achá-las (mais calor, mais buscas).', 'Empty. Relics stolen (Plans → Steal a relic) or bought here stay hidden; police may find them (more heat, more searches).'))),
       h('p', { class: 'muted small' }, T(l('Receptadores cobram corte e alguns são armadilhas da polícia. Peça "quente" vale menos; procedência duvidosa derruba o preço.', 'Fences take a cut and some are police stings. A "hot" piece is worth less; doubtful provenance cuts the price.')))),
     section(T(l('Ofertas no mercado negro', 'Black-market offers')),
-      st.market.length ? h('ul', null, st.market.map((of) => { const rl = relics(s).list.find((x) => x.id === of.rl); return rl ? h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ` ${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') })) : null; })) : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
+      st.market.length ? (() => {
+        const offerLi = (of: (typeof st.market)[number], rl: (typeof stash)[number] & object) => h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ` ${T(rl.n)} — ${T(FENCES17[of.fence].name)} · ${T(usd(of.price))} · ${T(l('autenticidade estimada', 'estimated authenticity'))} ${P(of.auth)} · ${T(l('até semana', 'until week'))} ${of.until} `, btn(l('Comprar', 'Buy'), () => say(buyOffer(s, of.id)), { title: l('Pode ser falsa; receptação aumenta o calor.', 'May be fake; handling stolen goods raises heat.') }));
+        const pairs = st.market.map((of) => [of, relics(s).list.find((x) => x.id === of.rl)] as const).filter((x) => !!x[1]);
+        // R29: com muitas relíquias o mercado fica cheio — filtros e páginas acima de 6 ofertas
+        if (pairs.length <= 6) return h('ul', null, ...pairs.map(([of, rl]) => offerLi(of, rl!)));
+        return relicBrowser29(s, 'crime:market', pairs.map((x) => x[1]!), (rl) => offerLi(pairs.find((x) => x[1] === rl)![0], rl), { size: 8, owners: false, wrap: (kids) => h('ul', null, ...kids) });
+      })() : h('p', { class: 'muted small' }, T(l('Nada à venda agora. Peças roubadas pelo mundo aparecem aqui com preço baixo — e risco.', 'Nothing for sale now. Pieces stolen around the world show up here cheap — and risky.')))),
     section(T(l('Falsificação', 'Forgery')),
       h('p', { class: 'small muted' }, T(l('Encomende uma réplica de peça famosa e venda como verdadeira: o comprador desconfia (autenticidade baixa).', 'Commission a replica of a famous piece and sell it as genuine: buyers get suspicious (low authenticity).'))),
       h('div', { class: 'row wrap' }, ...famous.map((rl) => btn(`${T(rl.n)} (${T(usd(forgeCost(s, rl.v)))})`, () => say(forgeRelic(s, rl.id)), { title: fmtTxt(l('Autenticidade percebida {v}', 'Perceived authenticity {v}'), P(0.25)) })))),

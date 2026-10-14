@@ -74,6 +74,7 @@ import { icon17 } from './pixel/icons17';
 import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da jornada do disco
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
+import { settingsRelics29 } from './sys/relics29'; // R29 (relíquias): densidade nas Opções
 import './nav17.css';
 // r25 Pixel Studio: 6 seções (Sede, Pessoas, Projetos, Ao vivo, Mundo, Gestão), busca global e encaixe da Sede
 import { SECTIONS25, SEDE25, home25, landing27, navGroups25, sectionIdOf25, type NavGroup25 } from './ps/nav25';
@@ -645,6 +646,7 @@ function settings(): void {
     presetsSettings29(), // r29 REORG (M20): Guiado / Livre / Contemplativo — só apresentação
     settings19(), // r19 B.5
     settings20(), // r20 G6: densidade
+    settingsRelics29(store.game), // R29 (relíquias): poucas / normal / muitas / tudo (config da partida)
     h('label', null, t(l('Interrupções', 'Interruptions')), select(p.interrupt23 ?? 'milestones', [{ value: 'decisions' as const, label: t(l('Só decisões', 'Decisions only')) }, { value: 'milestones' as const, label: t(l('Decisões e marcos', 'Decisions and milestones')) }, { value: 'all' as const, label: t(l('Tudo (cada cena abre)', 'Everything (every scene opens)')) }], (v) => { p.interrupt23 = v; INT_PREF23.v = v; savePrefs(); })), // r23 (A)
     settings27(), // r27: atividades jogáveis (jogáveis / só importantes / sempre rápido)
     settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas

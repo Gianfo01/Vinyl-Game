@@ -7,6 +7,7 @@
 //  - "O que sabemos" (área `known27`): segredos e vínculos (secrets23) + fatos públicos e boatos (facts17), separados.
 // Modelos puros em ./mundo27model.ts (testes: tests/r27-mundo.test.ts).
 
+import { ageBubbles29, ageLayer29, ageLayerColor29, ageLegend29 } from './demo29'; // R29 demo29: camada Fãs por idade
 import { CITIES, l, type L } from '../../data/world';
 import { countryOfCity } from '../../data/geo';
 import { t } from '../../i18n/strings';
@@ -60,7 +61,7 @@ function itemRow(s: GameState, it: DigestItem27): HTMLElement {
       h('span', null, h('b', null, T(it.title)), it.mine ? [' ', pill(T(l('seu', 'yours')), 'mine27')] : null),
       it.text ? h('small', { class: 'muted' }, T(it.text)) : null,
       it.act && s.acts[it.act] && it.kind !== 'chart' ? h('small', null, actLink(s, it.act)) : null),
-    h('button', { type: 'button', class: 'btn small mw27-go', 'aria-label': `${T(l('Ver', 'View'))}: ${T(it.title)}`, onclick: () => (it.kind === 'chart' && it.act ? go27(it.go) : it.go.act && !it.go.tab ? inspect.act(it.go.act) : go27(it.go)) }, T(l('Ver', 'View')), ' →'));
+    h('button', { ...ent27('act', it.go.act), type: 'button', class: 'btn small mw27-go', 'aria-label': `${T(l('Ver', 'View'))}: ${T(it.title)}`, onclick: () => (it.kind === 'chart' && it.act ? go27(it.go) : it.go.act && !it.go.tab ? inspect.act(it.go.act) : go27(it.go)) }, T(l('Ver', 'View')), ' →'));
 }
 
 function digestPage(s: GameState): HTMLElement {
@@ -250,8 +251,9 @@ function mapTab(s: GameState): HTMLElement {
   const closed = layers.has('closed') ? closedCountries27(s) : new Map<string, ReturnType<typeof closedCountries27> extends Map<string, infer V> ? V : never>();
   const st = strengths27(s);
   const cities = cities27(s, closed, st);
-  const ov = overlays27(s);
+  const ov = layers.has('agefans') ? [...overlays27(s), ...ageBubbles29(s)] : overlays27(s); // R29 demo29: bolhas por idade
   const sites = sitesByCity27(s);
+  const ages = layers.has('agefans') ? ageLayer29(s) : null; // R29 demo29: faixa dominante dos seus fãs por país
   const opts = {
     getYear: () => store.game?.year ?? s.year,
     getMonth: () => store.game?.month ?? s.month,
@@ -261,9 +263,9 @@ function mapTab(s: GameState): HTMLElement {
     onCityClick: (id: string) => { mapSel = id; rerender(); },
     onCountryClick: (a3: string) => openMapInfo17(s, 'country', a3),
     overlays: () => ov,
-    countryShade: (a3: string) => { const c = closed.get(a3); return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
+    countryShade: (a3: string) => { const c = closed.get(a3); if (!c && ages) { const x = ages.get(a3); if (x) return { color: ageLayerColor29(x.band, x.v) }; } return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
     cityTipExtra: (id: string) => { const v = st.get(id) ?? 0; const mine = layers.has('mine') ? sites.get(id) ?? [] : []; return h('div', { class: 'small' }, `${T(l('Cena', 'Scene'))}: ${T(TIER27[sceneTier27(v)])}`, mine.length ? h('div', { class: 'mine27' }, ic('building'), ` ${mine.map((x) => `${x.name} (${T(x.kindName)})`).join(' · ')}`) : null); },
-    countryTipExtra: (a3: string) => { const c = closed.get(a3); return c ? h('div', { class: 'small bad' }, ic('lock'), ' ', T(c.why)) : null; },
+    countryTipExtra: (a3: string) => { const c = closed.get(a3); const x = ages?.get(a3); return c ? h('div', { class: 'small bad' }, ic('lock'), ' ', T(c.why)) : x ? h('div', { class: 'small' }, ic('fans'), ' ', x.mix.map((v, i) => `${['13–17', '18–24', '25–34', '35–49', '50+'][i]} ${Math.round(v * 100)}%`).join(' · ')) : null; },
     legendExtra: () => [
       h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--gold)' }), T(l('Brilho: força da cena', 'Glow: scene strength'))),
       layers.has('mine') && sites.size ? h('span', { class: 'wmap-key' }, ic('building'), ' ', T(l('Seus lugares fora da sede', 'Your places away from HQ'))) : null,
@@ -271,6 +273,7 @@ function mapTab(s: GameState): HTMLElement {
       layers.has('rivals') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--bad)' }), T(l('Força dos rivais', 'Rival strength'))) : null,
       layers.has('closed') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw hatch', style: 'background-color:var(--bad)' }), T(l('Fechado (guerra, bloco, shows proibidos)', 'Closed (war, bloc, shows banned)'))) : null,
       layers.has('closed') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgba(238,143,132,0.45)' }), T(l('Censura forte', 'Heavy censorship'))) : null,
+      ...(ages ? ageLegend29() : []),
     ].filter(Boolean) as HTMLElement[],
   };
   if (!map27) map27 = new WorldMap(opts);

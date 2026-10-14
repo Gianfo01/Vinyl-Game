@@ -422,7 +422,7 @@ describe('r29 Submundo — facções × gêneros e cenas (aff29)', () => {
     expect(AFF29.length).toBeGreaterThanOrEqual(12);
   }, 60000);
 
-  it('cena com efeito: ato seu de funk no Rio recebe a facção (baile, pedágio, homenagem); a homenagem vira laço SIMULADO', () => {
+  it('cena com efeito: ato seu de funk no Rio recebe a facção (baile, pedágio, homenagem); a homenagem vira laço da partida (marca interna sim; a interface não distingue)', () => {
     const s = rich(game(2000, 'loose', 'baile'));
     const a = s.acts[playerActs(s)[0]];
     a.genre = 'funk_carioca'; a.city = 'rio';
@@ -430,7 +430,7 @@ describe('r29 Submundo — facções × gêneros e cenas (aff29)', () => {
     for (let i = 0; i < 24 && !ask; i++) { advanceMonth(s); ask = asks29(s).find((x) => x.act === a.id && ['baile', 'homage', 'toll'].includes(x.k)); }
     expect(ask).toBeTruthy();
     expect(sceneAff29(s, 'funk_carioca', 'rio').some((x) => x.o === ask!.o)).toBe(true);
-    // a homenagem: laço de rua desta partida, rotulado simulado (nunca documentado)
+    // a homenagem: laço de rua desta partida (marca interna sim = 1; r29c: sem rótulo na interface)
     const o = orgById(s, ask!.o)!;
     const h = _mob29.ask29(s, o, 'homage', undefined, a.id);
     expect(fulfill29(s, h.id).ok).toBe(true);
@@ -441,7 +441,7 @@ describe('r29 Submundo — facções × gêneros e cenas (aff29)', () => {
     expect(count29(audit29(s)).R10 ?? 0).toBe(0);
   }, 120000);
 
-  it('nenhuma pessoa/ato REAL ganha laço criminal não documentado (só "ligação documentada" ou jogada da partida)', () => {
+  it('laço sorteado em segundo plano para gente REAL não vira afirmação (só documentado ou o que aconteceu na partida: jogada sua ou abordagem de facção aceita — aff29npc)', () => {
     const s = game(1999, 'loose', 'safe');
     const real = Object.values(s.acts).find((x) => x.catalogNo && x.status === 'active' && !playerActs(s).includes(x.id))!;
     const fict = Object.values(s.acts).find((x) => !x.catalogNo && x.status === 'active' && !playerActs(s).includes(x.id))!;
@@ -453,7 +453,7 @@ describe('r29 Submundo — facções × gêneros e cenas (aff29)', () => {
     const card = orgLinks29(s, 'cv', true);
     expect(card.some((x) => x.key === real.id || x.key === `p:${rp}`)).toBe(false);
     expect(linksOfKey29(s, `p:${rp}`, true).filter((x) => x.kind !== 'doc')).toEqual([]);
-    expect(card.some((x) => x.key === fict.id && x.kind === 'assoc' && !x.sim)).toBe(true); // ato inventado: laço simulado do mundo
+    expect(card.some((x) => x.key === fict.id && x.kind === 'assoc' && !x.sim)).toBe(true); // ato inventado: laço de segundo plano do mundo
     // varredura: em qualquer mundo, ligação de chave real é documentada ou da partida
     for (const w of [game(1965, 'loose', 'safe2'), game(1999, 'loose', 'safe3')]) {
       for (let i = 0; i < 3; i++) advanceMonth(w);

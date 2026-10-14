@@ -21,6 +21,8 @@ import { visibleAct } from '../../sim/future';
 import { fameText } from '../../sim/sys/fame15';
 import { a29 } from '../art29ui'; // r29 (arte)
 import { movementBadgeImg29 } from '../pixel/badge29';
+import { ent27 } from '../ps/ent27';
+import { personKey27 } from '../ps/ent27';
 
 const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 const myActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.members.length > 0 && a.status !== 'split' && a.status !== 'retired');
@@ -36,7 +38,7 @@ function bondRow(s: GameState, b: Bond, close: () => void): HTMLElement {
   return h('li', null,
     pill(t(BOND_NAME[b.k]), KIND_CLS[b.k]), ' ',
     h('b', null, bondTitle(s, b)), ' ',
-    ...b.p.slice(0, 5).map((p) => h('button', { class: 'link small', onclick: () => { close(); openPersonPage(p); } }, s.persons[p]?.name ?? '?')),
+    ...b.p.slice(0, 5).map((p) => h('button', { ...ent27('person', personKey27(p)), class: 'link small', onclick: () => { close(); openPersonPage(p); } }, s.persons[p]?.name ?? '?')),
     b.act ? h('span', null, ' → ', actLink(s, b.act)) : null, ' ',
     b.end ? h('small', { class: 'muted' }, ` ${b.y}–${b.end.y} · ${t(END_NAME[b.end.c])}${b.end.ep ? ` · ${t(EPI_NAME[b.end.ep])}` : ''}`) : h('span', null, bar(b.str, 100, b.str > 40 ? 'good' : 'warn'), h('small', { class: 'muted' }, ` ${t(l('desde', 'since'))} ${b.y} · ${t(l('obras', 'works'))} ${b.works}`)),
     b.pl && !b.end ? h('button', { class: 'btn small ghost', onclick: () => { leaveBond(s, rngOf(s), b.id); rerender(); close(); } }, t(l('Encerrar', 'End'))) : null,
@@ -160,7 +162,7 @@ export function openMovementPage(s: GameState, id: string): void {
 function mvLabel(s: GameState, a: Act): HTMLElement | null {
   const tm = tierOf(s, a.id);
   if (!tm) return null;
-  return h('button', { class: 'btn small ghost', onclick: () => openMovementPage(s, tm.mv.id) }, `${t(l('Movimento', 'Movement'))}: ${t(tm.mv.name)} (${t(TIER_NAME[tm.tier])})`);
+  return h('button', { class: 'btn small ghost', ...ent27('movement', tm.mv.id), onclick: () => openMovementPage(s, tm.mv.id) }, `${t(l('Movimento', 'Movement'))}: ${t(tm.mv.name)} (${t(TIER_NAME[tm.tier])})`);
 }
 
 export function openFoundModal(s: GameState): void {
@@ -217,7 +219,7 @@ ACT_TABS.push((s, a, close) => {
 function opinionsBlock(s: GameState, pid: string, close: () => void): HTMLElement | null {
   const op = opinionLines(s, pid);
   if (!op.length) return null;
-  const row = (x: { act: Act; v: number; txt: L }) => h('li', null, h('button', { class: 'link', onclick: () => { close(); openActPage(x.act.id); } }, x.act.name), ' ', pill(`${x.v > 0 ? '+' : ''}${x.v}`, x.v > 0 ? 'good' : 'bad'),
+  const row = (x: { act: Act; v: number; txt: L }) => h('li', null, h('button', { ...ent27('act', x.act.id), class: 'link', onclick: () => { close(); openActPage(x.act.id); } }, x.act.name), ' ', pill(`${x.v > 0 ? '+' : ''}${x.v}`, x.v > 0 ? 'good' : 'bad'),
     h('div', { class: 'muted' }, h('i', null, `“${t(x.txt)}”`)));
   const top = op.filter((x) => x.v > 0), low = op.filter((x) => x.v < 0);
   return h('div', null, h('h4', null, `${t(l('Opiniões de', 'Opinions of'))} ${s.persons[pid]?.name ?? ''}`),
@@ -251,7 +253,7 @@ export function relTab(s: GameState): HTMLElement {
       h('button', { class: 'btn small primary', onclick: () => openBondModal(s) }, t(l('Propor laço artístico', 'Propose an artistic bond'))),
       h('button', { class: 'btn small', onclick: () => openFoundModal(s) }, t(l('Fundar um movimento', 'Start a movement')))),
     section(t(l('Movimentos', 'Movements')), mvs.length ? h('ul', { class: 'attr-list' }, mvs.slice(0, 30).map(({ mv, x }) => h('li', null,
-      h('button', { class: 'link', onclick: () => openMovementPage(s, mv.id) }, a29(movementBadgeImg29(mv.id, x.parents[0] ?? 'rock', mv.born, 24)), t(mv.name)), ' ', // r29: selo do movimento
+      h('button', { class: 'link', ...ent27('movement', mv.id), onclick: () => openMovementPage(s, mv.id) }, a29(movementBadgeImg29(mv.id, x.parents[0] ?? 'rock', mv.born, 24)), t(mv.name)), ' ', // r29: selo do movimento
       pill(t(PHASE_NAME[x.phase]), x.phase === 'death' ? 'bad' : x.phase === 'peak' ? 'gold' : ''), x.pl ? pill(t(l('seu', 'yours')), 'good') : null, ' ',
       bar(mv.strength, 100, 'good'),
       h('small', { class: 'muted' }, ` ${t(cityById[mv.city]?.name ?? l(mv.city))} · ${mv.born} · ${members(x).length} ${t(l('artistas', 'artists'))}${x.end ? ` · ${t(MV_END_NAME[x.end.c])}` : ''}`)))) : h('p', { class: 'muted small' }, t(l('Nenhum movimento por enquanto.', 'No movements yet.')))),

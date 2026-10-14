@@ -4,10 +4,11 @@
 // Ids por tipo:
 //   act → id do ato · person → chave de pessoa ('p:…', 'e:…' empresário, 'pd:…' produtor, 'l:…' líder, 's:…' equipe,
 //   'c:…' crítico, 'player') · label → id do selo · city → id da cidade · song / release → id · venue → id de VENUES17 ·
-//   festival / place / org → id livre (o menu usa o texto do elemento como nome).
+//   festival → índice em FESTIVALS (ou id livre) · place / org → id livre (o menu usa o texto do elemento como nome) ·
+//   r29 (menus): award → id da premiação (cerimônia) · relic → id da relíquia · movement → id do movimento.
 
-export type Ent27 = 'act' | 'person' | 'label' | 'city' | 'song' | 'release' | 'venue' | 'festival' | 'place' | 'org';
-export const ENTS27: readonly Ent27[] = ['act', 'person', 'label', 'city', 'song', 'release', 'venue', 'festival', 'place', 'org'];
+export type Ent27 = 'act' | 'person' | 'label' | 'city' | 'song' | 'release' | 'venue' | 'festival' | 'place' | 'org' | 'award' | 'relic' | 'movement';
+export const ENTS27: readonly Ent27[] = ['act', 'person', 'label', 'city', 'song', 'release', 'venue', 'festival', 'place', 'org', 'award', 'relic', 'movement'];
 export const isEnt27 = (x: unknown): x is Ent27 => typeof x === 'string' && (ENTS27 as readonly string[]).includes(x);
 
 /** Atributos para espalhar em `h(tag, { ...ent27('act', id), … })`. Id vazio = sem marca (o nome fica sem menu). */

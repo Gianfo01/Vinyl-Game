@@ -181,7 +181,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
       activity ? h('div', { class: 'small' }, icon(activity.icon, 1), ' ', t(activity.label)) : null,
       h('div', { class: 'row wrap' },
         mine || vis.private ? h('button', { class: 'btn small', onclick: editLook }, ic('pen'), ' ', t(l('Editar aparência', 'Edit look'))) : null,
-        act ? h('button', { class: 'btn small ghost', onclick: () => { closeAll(); openActPage(act.id); } }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))) : null),
+        act ? h('button', { ...ent27('act', act.id), class: 'btn small ghost', onclick: () => { closeAll(); openActPage(act.id); } }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))) : null),
     ),
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([
@@ -305,7 +305,7 @@ function careerTab(s: GameState, p: Person): HTMLElement {
     chips(stat('pen', written.length, l('Músicas escritas', 'Songs written')), stat('disc', released.length, l('Lançadas', 'Released')), stat('trophy', hits.length, l('No top 10', 'Top 10'))),
     acts.length ? h('p', null, t(l('Atos: ', 'Acts: ')), acts.flatMap((a, i) => [i ? ', ' : '', actLink(s, a.id)])) : null,
     best.length ? h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, 'Q'), h('th', null, t(S.peak)), h('th', null, t(l('Ano', 'Year'))))),
-      h('tbody', null, best.map((so) => { const r = s.releases[so.releaseId!]; return h('tr', null, h('td', null, h('button', { class: 'link', onclick: () => openRelease(r.id) }, so.title)), h('td', null, Math.round(so.q)), h('td', null, r.peak < 999 ? `#${r.peak}` : '—'), h('td', null, r.year)); }))) : null,
+      h('tbody', null, best.map((so) => { const r = s.releases[so.releaseId!]; return h('tr', null, h('td', null, h('button', { ...ent27('release', r.id), class: 'link', onclick: () => openRelease(r.id) }, so.title)), h('td', null, Math.round(so.q)), h('td', null, r.peak < 999 ? `#${r.peak}` : '—'), h('td', null, r.year)); }))) : null,
   );
 }
 
@@ -354,7 +354,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
         !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null,
         ...ACT_HEAD_EXTRAS.map((f) => f(s, a, close)),
 
-        !mine && s.config.role !== 'artist' && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { close(); openDossier(a.id); } }, t(l('Dossiê de A&R', 'A&R dossier'))) : null),
+        !mine && s.config.role !== 'artist' && a.status !== 'retired' && a.status !== 'split' ? h('button', { ...ent27('act', a.id), class: 'btn small', onclick: () => { close(); openDossier(a.id); } }, t(l('Dossiê de A&R', 'A&R dossier'))) : null),
     ),
   );
   return h('div', { class: 'ficha pg' }, head, pageTabs([
@@ -428,7 +428,7 @@ function discoTab(s: GameState, a: Act, mine: boolean): HTMLElement {
     h('thead', null, h('tr', null, h('th', null, ''), h('th', null, t(S.title)), h('th', null, t(l('Tipo', 'Type'))), h('th', null, t(l('Ano', 'Year'))), h('th', null, t(S.peak)), h('th', null, t(S.totalUnits)), h('th', null, t(l('Crítica', 'Reviews'))), mine ? h('th', null, t(S.revenue)) : null)),
     h('tbody', null, rels.map((r) => {
       const rv = avgReview(s, r.id);
-      return h('tr', { class: 'click', onclick: () => openRelease(r.id) },
+      return h('tr', { ...ent27('release', r.id), class: 'click', onclick: () => openRelease(r.id) },
         h('td', null, cover(s, r, 32)), h('td', null, h('b', null, r.title), r.certified ? pill(r.certified, 'gold') : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null),
         h('td', null, r.type.toUpperCase()), h('td', null, r.year), h('td', null, r.peak < 999 ? `#${r.peak}` : '—'), h('td', null, N(r.totalUnits)),
         h('td', null, rv !== undefined ? rv.toFixed(1) : '—'), mine ? h('td', null, $(r.revenue)) : null);
@@ -441,10 +441,10 @@ function songsTab(s: GameState, a: Act, mine: boolean): HTMLElement {
   return h('table', { class: 'tbl compact' },
     h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(l('Compositores', 'Writers'))), h('th', null, t(l('Lançada em', 'Released on'))))),
     h('tbody', null, songs.map((so) => h('tr', null,
-      h('td', null, so.title, so.instrumental ? h('small', { class: 'muted' }, ` · ${t(l('instrumental', 'instrumental'))}`) : ''), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, so.instrumental ? '—' : show(so.lyrics)),
+      h('td', ent27('song', so.id), so.title, so.instrumental ? h('small', { class: 'muted' }, ` · ${t(l('instrumental', 'instrumental'))}`) : ''), h('td', null, h('b', null, show(so.q))), h('td', null, show(so.melody)), h('td', null, so.instrumental ? '—' : show(so.lyrics)),
       h('td', null, so.recorded ? show(so.performance) : '—'), h('td', null, so.recorded ? show(so.production) : '—'),
       h('td', { class: 'small' }, so.writers.map((w) => s.persons[w]?.name.split(' ')[0] ?? '?').join(', ')),
-      h('td', null, so.releaseId && s.releases[so.releaseId] ? h('button', { class: 'link', onclick: () => openRelease(so.releaseId!) }, s.releases[so.releaseId].title) : h('span', { class: 'muted' }, t(so.recorded ? l('gravada', 'recorded') : l('escrita', 'written'))))))));
+      h('td', null, so.releaseId && s.releases[so.releaseId] ? h('button', { ...ent27('release', so.releaseId!), class: 'link', onclick: () => openRelease(so.releaseId!) }, s.releases[so.releaseId].title) : h('span', { class: 'muted' }, t(so.recorded ? l('gravada', 'recorded') : l('escrita', 'written'))))))));
 }
 
 function historyTab(s: GameState, a: Act): HTMLElement {

@@ -10,7 +10,12 @@ const FULL = !!process.env.BALANCE_FULL;
 
 describe('playbot16', () => {
   it('uma run curta tem ações variadas de jogador e é determinística', () => {
-    const cfg = defaultConfig('r16pb-16', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
+    // R29b: d2651a4 (R29 CONNECT) corrigiu a ordem dos ganchos de início (renomes e marcação de atos reais do lineup16
+    // depois que os atos reais existem); a trajetória mudou e pb-16 assina um chanson de fama 0,3 no lugar da Westend
+    // Orchestra — sem ato que caiba num festival no 1º ano (festivals = 0) e sem receita para a 1ª contratação
+    // (liquidez 1,57 mi < 18 × salário × 1,1). Varredura pb-1..15 no 1º ano: só pb-2, pb-8, pb-11 e pb-13 têm todas as
+    // ações (contratar no 1º ano continua raro: 9 de 15 sem contratação); pb-11 tem a maior folga (8 festivais, 2 turnês).
+    const cfg = defaultConfig('r16pb-11', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
     const years = FULL ? 2 : 1;
     // a mesma partida que simulatePlayer joga, guardando o retrato do 3º mês para a reprise curta
     const s = createGame(cfg);

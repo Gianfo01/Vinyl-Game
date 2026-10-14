@@ -312,7 +312,7 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
     }
     case 'radio': {
       const rel = a ? latestRel(s, a) : undefined, f = a ? fmtFor(s, a) : undefined;
-      out.push({ id: 'pitch', act: true, label: l('Levar a música ao diretor', 'Pitch the song to the PD'), desc: f ? fmtL(l('Formato {f}: as estações decidem se tocam (radio18).', 'Format {f}: the stations decide whether to play it (radio18).'), { f: FMT18[f].name }) : l('Leva o lançamento recente às rádios.', 'Takes the recent release to radio.'),
+      out.push({ id: 'pitch', act: true, label: l('Levar a música ao diretor', 'Pitch the song to the PD'), desc: f ? fmtL(l('Formato {f}: as estações decidem se tocam.', 'Format {f}: the stations decide whether to play it.'), { f: FMT18[f].name }) : l('Leva o lançamento recente às rádios.', 'Takes the recent release to radio.'),
         cost: money(s, 300), dis: noAct ?? (!hasTech(s, 'radio') ? l('Ainda não há rádio.', 'There is no radio yet.') : !rel ? l('Precisa de um lançamento seu das últimas 16 semanas.', 'Needs one of your releases from the last 16 weeks.') : !f ? l('Nenhum formato de rádio agora.', 'No radio format right now.') : cash(money(s, 300))) });
       const sta = (s.x4 as unknown as { radio18?: { st?: { id: string; fmt: string; pd: string }[] } }).radio18?.st ?? [];
       if (sta.length) out.push({ id: 'lunch', label: l('Jantar com o diretor de programação', 'Dinner with the programme director'), desc: l('Relação +8 com a estação (uma vez a cada 8 semanas).', 'Relationship +8 with the station (once every 8 weeks).'), cost: money(s, 200), dis: cash(money(s, 200)) });
@@ -325,7 +325,7 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
       break;
     }
     case 'press': {
-      out.push({ id: 'news', act: true, label: l('Mandar um release à redação', 'Send a press release'), desc: l('Notícia sobre o artista: hype se publicarem (media17).', 'A story about the act: hype if they run it (media17).'), cost: money(s, 300), dis: noAct ?? cash(money(s, 300)) });
+      out.push({ id: 'news', act: true, label: l('Mandar um release à redação', 'Send a press release'), desc: l('Notícia sobre o artista: hype se publicarem.', 'A story about the act: hype if they run it.'), cost: money(s, 300), dis: noAct ?? cash(money(s, 300)) });
       out.push({ id: 'interview', act: true, label: l('Marcar entrevista', 'Book an interview'), desc: l('Exposição maior; risco de frase infeliz.', 'More exposure; risk of a gaffe.'), dis: noAct });
       break;
     }

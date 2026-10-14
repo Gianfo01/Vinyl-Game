@@ -3,7 +3,7 @@
 // aparece como aba "Trajetória no mundo" na página da pessoa, do ato e do selo.
 
 import { STORYTELLERS } from '../../data/rules';
-import { l, type L } from '../../data/world';
+import { gfName, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { FREEDOM17, dir17, freedomOf } from '../../sim/director17';
 import { SITS, sit17 } from '../../sim/sys/situations17';
@@ -87,7 +87,7 @@ export function trail17(s: GameState, id: string): HTMLElement {
   const war = s.labels[id] ? wars17(s).find((w) => w.a === id || w.b === id) : undefined;
   return h('div', null,
     fd ? section(t(l('Fundação', 'Founding')), h('p', { class: 'small' }, `${fd.name} (${t(ROLE17[fd.k === 'imprint' ? 'imprint' : fd.k === 'exec' ? 'exec' : fd.k === 'manager' ? 'manager' : 'artist'])}), ${fd.y}: ${t(fd.why)}`, ' ', fd.by.includes(':') ? personLink16(s, fd.by, t(l('ver pessoa', 'see person'))) : null)) : null,
-    war ? section(t(l('Guerra de preços', 'Price war')), h('p', { class: 'small' }, labelLink(s, war.a), ' × ', labelLink(s, war.b), ` (${war.fam})`)) : null,
+    war ? section(t(l('Guerra de preços', 'Price war')), h('p', { class: 'small' }, labelLink(s, war.a), ' × ', labelLink(s, war.b), ` (${t(gfName(war.fam))})`)) : null,
     car.length ? section(t(l('Mudanças de carreira', 'Career changes')), h('ul', { class: 'small' }, ...car.map(([y, a, b, w]) => h('li', null, `${y}: ${t(ROLE17[a] ?? l(a))} → ${t(ROLE17[b] ?? l(b))} — ${t(w)}`)))) : null,
     section(t(l('Jogadas e porquês', 'Moves and whys')), mv.length ? h('ul', { class: 'small' }, ...mv.map((m) => moveRow(s, m))) : h('p', { class: 'muted small' }, t(l('Nenhuma jogada registrada.', 'No moves on record.')))),
   );

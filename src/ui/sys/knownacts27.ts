@@ -126,7 +126,7 @@ function table(s: GameState, all: KnownAct27[], group: 'all' | Group27): HTMLEle
           h('td', null, statusOf(s, a)),
           h('td', { class: 'num' }, fameCell(k)),
           h('td', null, knowDots(k.know)),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page')))));
+          h('td', null, h('button', { ...ent27('act', a.id), class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page')))));
       })))),
     pg.pages > 1 ? h('div', { class: 'row center ka27-pager' },
       h('button', { class: 'btn small ghost', disabled: pg.page === 0, 'aria-label': t(l('Página anterior', 'Previous page')), onclick: () => { F.page -= 1; rerender(); } }, '←'),
@@ -155,3 +155,5 @@ function knownActsPage(s: GameState): HTMLElement {
 }
 
 registerArea({ id: KNOWNACTS27, label: l('Artistas conhecidos', 'Known artists'), icon: 'rolodex', key: '', render: knownActsPage });
+
+import { ent27 } from '../ps/ent27';

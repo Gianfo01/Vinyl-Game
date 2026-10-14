@@ -18,6 +18,8 @@ import type { GameState, Person } from '../../../sim/types';
 import { money, playerActs, rngOf } from '../../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../../common';
 import { h, select } from '../../dom';
+import { ent27 } from '../../ps/ent27';
+import { ROLE_NAMES } from '../../../sim/sys/talent/attrs';
 import { registerArea, registerSection } from '../../registry';
 import { chips, ic, meter, portrait, stat, tabs, tile } from '../../vis';
 import { renewBtn27 } from '../../act27/flow27p2'; // r27 FLOW2: renovar = a mesa (pedido → negotiate27), rápido dentro
@@ -51,7 +53,7 @@ function personCard(s: GameState, p: Person): HTMLElement {
   const talkErr = canTalk(s, p.id);
   const doTalk = (k: TalkKind) => { const res = talk(s, p.id, k, k === 'promise' ? ui.promise : undefined); toast(t(res.text), res.ok ? 'good' : 'warn'); rerender(); };
   return h('article', { class: 'pp-card' },
-    h('div', { class: 'pp-head' }, portrait(p, 48), h('div', null, h('b', null, p.name), h('div', { class: 'small muted' }, act ? actLink(s, act.id) : '', ` · ${p.role}`)),
+    h('div', { class: 'pp-head' }, portrait(p, 48), h('div', null, h('b', { ...ent27('person', `p:${p.id}`) }, p.name), h('div', { class: 'small muted' }, act ? actLink(s, act.id) : '', ` · ${t(ROLE_NAMES[p.role] ?? l(p.role))}`)), // r29: função traduzida + clique direito
       h('span', { class: `pp-mood ${moodColor(mood)}`, title: t(l('Humor (soma dos pensamentos)', 'Mood (sum of thoughts)')) }, mood > 0 ? `+${mood}` : String(mood))),
     th.length ? h('ul', { class: 'pp-thoughts' }, th.slice(0, 8).map((x) => h('li', { class: x.v > 0 ? 'good' : 'bad' }, h('b', null, x.v > 0 ? `+${x.v}` : String(x.v)), ' ', t(thoughtText(x))))) : h('p', { class: 'muted small' }, t(l('Sem pensamentos marcantes.', 'No notable thoughts.'))),
     chips(

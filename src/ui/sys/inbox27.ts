@@ -135,6 +135,8 @@ function fromEl(s: GameState, snd: Sender27): Node {
   return document.createTextNode(snd.kind === 'desk' && snd.nameL ? t(snd.nameL) : snd.name);
 }
 const senderName = (snd: Sender27): string => (snd.nameL ? t(snd.nameL) : snd.name);
+/** r29 (menus): remetente que é pessoa, artista ou selo ganha o clique direito da entidade. */
+const sndEnt = (snd: Sender27): Record<string, string> => (snd.person ? ent27('person', snd.person) : snd.act ? ent27('act', snd.act) : snd.label ? ent27('label', snd.label) : {});
 
 // ---------------------------------------------------------------- lista
 
@@ -148,7 +150,7 @@ function rowEl(s: GameState, th: Thread27, isNew: boolean, pick: (id: string) =>
   h('span', { class: 'm27-av' }, avatar(s, m.sender, 34), th.unread ? h('span', { class: 'm27-dot', title: t(l('Não lida', 'Unread')) }) : null),
   h('span', { class: 'm27-rb' },
     h('span', { class: 'm27-r1' },
-      h('span', { class: 'm27-from' }, senderName(m.sender)),
+      h('span', { class: 'm27-from', ...sndEnt(m.sender) }, senderName(m.sender)),
       th.n > 1 ? h('span', { class: 'm27-n', title: t(l('Mensagens nesta conversa', 'Messages in this conversation')) }, String(th.n)) : null,
       h('span', { class: 'm27-date' }, t(m.date))),
     h('span', { class: 'm27-sj' }, t(m.subject)),
@@ -194,7 +196,7 @@ function letterEl(s: GameState, m: Mail27, focus: boolean): HTMLElement {
       groupParas(s, L.paras),
       L.facts.length ? h('dl', { class: 'm27-facts' }, L.facts.map((f) => [h('dt', null, t(f.label)), h('dd', { class: f.tone ? `t-${f.tone}` : '' }, ...segsEl(s, f.value))])) : null,
       L.closing ? h('p', null, t(L.closing)) : null,
-      h('p', { class: 'm27-sign' }, t(L.signoff), h('br'), h('b', null, senderName(m.sender)), h('br'), h('small', { class: 'muted' }, t(L.from.role)))),
+      h('p', { class: 'm27-sign' }, t(L.signoff), h('br'), h('b', sndEnt(m.sender), senderName(m.sender)), h('br'), h('small', { class: 'muted' }, t(L.from.role)))),
     L.replied ? h('div', { class: 'm27-reply' }, h('span', { class: 'm27-reply-l' }, t(l('Sua resposta', 'Your reply'))), h('span', null, '↩ ', t(L.replied))) : null,
     acts.length || go.length ? h('footer', { class: 'm27-acts' },
       acts.length ? h('div', { class: `m27-acts-r ${d ? 'dec' : ''}` }, acts) : null,
@@ -213,7 +215,7 @@ function groupParas(s: GameState, ps: ReturnType<typeof letter27>['paras']): HTM
 /** Mensagem anterior do fio, dobrada (abre ao clicar). */
 function foldEl(s: GameState, m: Mail27, repaint: () => void): HTMLElement {
   return h('button', { type: 'button', class: `m27-fold ${m.unread ? 'unread' : ''}`, onclick: () => { ui.expand.add(m.key); ACT27.open(s, m.it); repaint(); } },
-    avatar(s, m.sender, 22), h('b', null, senderName(m.sender)),
+    avatar(s, m.sender, 22), h('b', sndEnt(m.sender), senderName(m.sender)),
     h('span', { class: 'm27-fold-sn' }, t(m.subject), ' — ', t(m.snippet)),
     h('small', { class: 'muted' }, m.it.msg?.resolved ? [h('span', { class: 'm27-fold-re' }, '↩ ', t(m.it.msg.actions?.find((a) => a.id === m.it.msg!.resolved)?.label ?? l('Respondida', 'Answered'))), ' · '] : null, t(m.date)));
 }

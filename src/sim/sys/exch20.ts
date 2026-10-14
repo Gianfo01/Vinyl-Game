@@ -11,7 +11,7 @@
 //    ecos (parceria com músicos locais). Locaute contra o sindicato (union20) esfria todas as cenas.
 // Era: o meio de transporte do texto segue o ano (navio/trem/avião). Determinismo: fluxo rng19 'exch20'.
 import { Rng, clamp } from '../../core/rng';
-import { CITIES, cityById, familyOf, l, type L } from '../../data/world';
+import { CITIES, cityById, familyOf, gfName, l, type L } from '../../data/world';
 import { registerConseq18 } from '../decide18';
 import { registerExplain, type WhyPart } from '../explain18';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -102,7 +102,7 @@ export function startRes20(s: GameState, who: ExchWho20, actId: string, city: st
   const tv = travel20(s, a.city, city);
   const text = fmtL(who === 'producer'
     ? l('O produtor da casa parte {h} para {w} semanas na cena {g} de {c}.', 'The house producer leaves {h} for {w} weeks in the {g} scene of {c}.')
-    : l('{a} parte {h} para {w} semanas de residência na cena {g} de {c}.', '{a} leaves {h} for a {w}-week residency in the {g} scene of {c}.'), { a: a.name, h: tv.how, w: weeks, g: genre, c: cityById[city].name });
+    : l('{a} parte {h} para {w} semanas de residência na cena {g} de {c}.', '{a} leaves {h} for a {w}-week residency in the {g} scene of {c}.'), { a: a.name, h: tv.how, w: weeks, g: gfName(genre), c: cityById[city].name }); // r29: nome do gênero, não o id
   st.log.unshift([s.year, s.month, text]); if (st.log.length > 20) st.log.length = 20;
   emitFact(s, { kind: 'scene_residency', actors: [a.id, 'player'], severity: 25, visibility: 'public', tags: ['exch20', who, 'good'], place: city, text, src: 'exch20', data: { city, genre, weeks, who } });
   return text;
@@ -157,7 +157,7 @@ registerSimHook('month', 'exch20', (s) => {
   const c6 = resCost20(s, 'act', a.id, h.city, 6), cp = resCost20(s, 'producer', a.id, h.city, 6);
   pushInbox18(s, 'exch20', {
     from: l('Coletivo de músicos', 'Musicians\' collective').pt, tone: 'info', ref: { act: a.id, city: h.city }, weeks: 4,
-    subject: fmtL(l('Convite: residência na cena {g} de {c}', 'Invitation: residency in the {g} scene of {c}'), { g: h.genre, c: cityById[h.city].name }),
+    subject: fmtL(l('Convite: residência na cena {g} de {c}', 'Invitation: residency in the {g} scene of {c}'), { g: gfName(h.genre), c: cityById[h.city].name }), // r29: nome do gênero, não o id
     body: fmtL(l('A cena de {c} convida {a} para semanas de troca: tocar nos clubes, compor com músicos locais, absorver o som. Seis semanas custam {x} (bolsa já descontada); doze rendem mais e cansam mais. Ou mande só o produtor da casa ({p}): influência menor, para todo o elenco. Shows longe de {c} no período ficam mais arriscados.', '{c}\'s scene invites {a} for weeks of exchange: playing the clubs, writing with local musicians, soaking up the sound. Six weeks cost {x} (grant already deducted); twelve give more and tire more. Or send only the house producer ({p}): smaller influence, for the whole roster. Shows far from {c} in that period get riskier.'),
       { c: cityById[h.city].name, a: a.name, x: usd(c6.cost - c6.grant), p: usd(cp.cost - cp.grant) }),
     actions: [{ id: 'act6', label: l('Mandar o ato (6 semanas)', 'Send the act (6 weeks)') }, { id: 'act12', label: l('Mandar o ato (12 semanas)', 'Send the act (12 weeks)') },

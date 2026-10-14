@@ -104,8 +104,12 @@ export function scandalReaction(s: GameState, act: Act | undefined, kind: Scanda
       why.push(fmtL(l('fama em {c}: {f} ({x})', 'fame in {c}: {f} ({x})'), { c: cn, f: Math.round(f), x: pct(k) }));
     }
   }
+  // R29 (CONECTAR TUDO): outros sistemas pesam na reação (reputação do selo, assessor de imprensa, polícia de olho)
+  for (const f of REACT29) { const x = f(s, act, kind); if (x && Math.abs(x.k - 1) > 0.005) { m *= x.k; why.push(fmtL(x.why, { x: pct(x.k) })); } }
   return { mult: m, eff: Math.round(clamp(severity * m, 0, 100)), why, a3, market, rebel, piety: pi };
 }
+/** R29: multiplicadores extras da reação a escândalo ({x} no texto vira o fator). Puros. */
+export const REACT29: ((s: GameState, act: Act | undefined, kind: ScandalKind) => { k: number; why: L } | null)[] = [];
 
 export interface ScandalOpts { person?: string; place?: string; text?: L; cause?: string[]; tags?: string[]; quiet?: boolean }
 export interface ScandalResult { fact: Fact | null; eff: number; why: L[]; a3: string | null; fameDelta: number; lost: string[] }

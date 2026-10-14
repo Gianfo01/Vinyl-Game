@@ -1,0 +1,24 @@
+/* R29 (família): seção Família da ficha e árvore em retratos pixelados (estilo procedural antigo) */
+.fam29 { margin-top: 0.6rem; border-top: 1px dashed var(--line); padding-top: 0.5rem; }
+.fam29 h4 { margin: 0 0 0.3rem; font-size: 0.95rem; }
+.fam29-minor { border-left: 3px solid var(--warn); padding-left: 0.4rem; }
+.fam29-tree-wrap > summary { cursor: pointer; margin: 0.3rem 0; }
+.fam29-tree { display: grid; gap: 0.35rem; padding: 0.4rem; border-radius: var(--radius, 6px); background: var(--panel-2); overflow-x: auto; }
+.fam29-gen { display: grid; grid-template-columns: 6.5rem 1fr; align-items: center; gap: 0.4rem; position: relative; }
+.fam29-gen + .fam29-gen::before { content: ''; position: absolute; left: 50%; top: -0.35rem; height: 0.35rem; border-left: 2px solid var(--line); }
+.fam29-lab { text-align: right; }
+.fam29-row { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: stretch; }
+.fam29-node { display: grid; grid-template-columns: 32px auto; grid-template-rows: auto auto auto; column-gap: 0.35rem; align-items: center; padding: 0.2rem 0.4rem 0.2rem 0.2rem;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--panel); min-width: 8.5rem; max-width: 12rem; }
+.fam29-node canvas.portrait { grid-row: 1 / span 3; width: 32px; height: 32px; image-rendering: pixelated; }
+.fam29-node .fam29-n { font-size: 0.82rem; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fam29-node small { font-size: 0.7rem; line-height: 1.1; }
+.fam29-node.me { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.fam29-node.gone { opacity: 0.7; filter: grayscale(0.6); }
+.fam29-sim { color: var(--warn); }
+.fam29-sep { align-self: center; color: var(--muted); padding: 0 0.2rem; }
+@media (max-width: 640px) {
+  .fam29-gen { grid-template-columns: 1fr; }
+  .fam29-lab { text-align: left; }
+  .fam29-gen + .fam29-gen::before { display: none; }
+}

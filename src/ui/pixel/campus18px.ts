@@ -6,7 +6,7 @@
 // Montagem em camadas: chão (1 canvas) + um sprite por prédio (ordenado por profundidade junto com o que se
 // move) + luzes com oclusão. Tudo em baixa resolução (300×268) ampliado por CSS (pixelated).
 
-import { C, Px, mix, noise, shade, withAlpha, dith, type Col } from './px';
+import { C, Px, ctxPoly, mix, noise, shade, withAlpha, dith, type Col } from './px';
 import { drawText, textWidth } from './font';
 import { DIST18, LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, type Style18 } from '../../sim/sys/campus18';
 import { ICON27, cityLook27, env27, era27, hqExt27, type BVis27, type CityLook27, type Env27, type Era27, type HqExt27, type Life27, type Sale27 } from './city27';
@@ -867,6 +867,8 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
 
 // ---------------------------------------------------------------- vida (quadro a quadro)
 
+/** R29: contorno escuro quente do estilo (mesmo INK do px.ts). */
+const INK20 = '#170e12';
 const OUTFIT = ['#2c4a7e', '#a33434', '#2f7a4c', '#d0a43c', '#6a4590', '#e4dccb', '#2a2a30', '#d8692a', '#5e3c26', '#6ab0e0'];
 type Extra27 = 'case' | 'camera' | 'mic' | 'sign' | 'heart';
 function person(ctx: CanvasRenderingContext2D, x: number, y: number, k: number, year: number, frame: number, sign?: string, pal: string[] = OUTFIT, extra?: Extra27): void {
@@ -887,11 +889,19 @@ function vehicle(ctx: CanvasRenderingContext2D, x: number, y: number, kind: Retu
   const col = (cars ?? ['#a03030', '#2c4a7e', '#e0c040', '#3a7a4a', '#e8e4d8', '#303034'])[k % (cars?.length ?? 6)];
   const len = kind === 'cart' ? 8 : kind === 'fin' ? 9 : kind === 'suv' ? 8 : 7;
   const x0 = dir > 0 ? x - len : x;
+  // R29 (arte consistente): carros com contorno INK de 1 px (como prédios e árvores do mapa), teto com fio de luz
+  // e saia em sombra — antes eram retângulos chapados
+  const cabH = kind === 'modelT' || kind === 'suv' ? 3 : 2;
+  ctx.fillStyle = INK20;
+  if (kind === 'cart') { ctx.fillRect(x0 - 1, y - 6, 10, 5); ctx.fillRect(x0, y - 3, 8, 3); }
+  else { ctx.fillRect(x0 - 1, y - 5, len + 2, 5); const cabT = cabH === 3 ? 7 : 6; ctx.fillRect(x0 + 1, y - cabT - 1, len - 2, cabH + 2); }
   if (kind === 'cart') { ctx.fillStyle = '#5a3a20'; ctx.fillRect(x0 + (dir > 0 ? 5 : 0), y - 5, 3, 3); ctx.fillStyle = '#8a6a40'; ctx.fillRect(x0 + (dir > 0 ? 0 : 3), y - 5, 5, 3); ctx.fillStyle = '#2a2020'; ctx.fillRect(x0 + 1, y - 2, 2, 2); ctx.fillRect(x0 + 5, y - 2, 2, 2); return; }
   ctx.fillStyle = flash !== undefined ? '#e8e8f0' : kind === 'modelT' ? '#202024' : kind === 'pod' ? '#f0f4f8' : col;
   ctx.fillRect(x0, y - 4, len, 3);
   ctx.fillStyle = kind === 'modelT' ? '#202024' : '#9ab8d0';
   ctx.fillRect(x0 + 2, y - (kind === 'modelT' || kind === 'suv' ? 7 : 6), len - 4, kind === 'modelT' || kind === 'suv' ? 3 : 2);
+  ctx.fillStyle = 'rgba(255,248,224,0.45)'; ctx.fillRect(x0, y - 4, len, 1); // fio de luz
+  ctx.fillStyle = 'rgba(28,16,48,0.35)'; ctx.fillRect(x0, y - 2, len, 1); // saia em sombra
   ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x0 + 1, y - 1, 2, 1); ctx.fillRect(x0 + len - 3, y - 1, 2, 1);
   if (kind === 'pod') { ctx.fillStyle = 'rgba(96,224,255,0.7)'; ctx.fillRect(x0, y, len, 1); }
   if (flash !== undefined) { ctx.fillStyle = Math.floor(t * 4) % 2 ? '#ff2020' : '#2040ff'; ctx.fillRect(x0 + 3, y - 8, 2, 1); }
@@ -907,11 +917,13 @@ function tourBus(ctx: CanvasRenderingContext2D, x: number, y: number, year: numb
   x = Math.round(x); y = Math.round(y);
   const body = year < 1950 ? '#e8d8a8' : year < 1975 ? '#d8dce4' : year < 2000 ? '#f4f0f8' : '#24242a';
   const stripe = year < 1950 ? '#9a3a2a' : year < 1975 ? '#2a5ab0' : year < 2000 ? '#e040c0' : '#e0b040';
+  ctx.fillStyle = INK20; ctx.fillRect(x - 17, y - 9, 18, 9); // R29: contorno INK
   ctx.fillStyle = body; ctx.fillRect(x - 16, y - 8, 16, 7);
   ctx.fillStyle = stripe; ctx.fillRect(x - 16, y - 4, 16, 1); ctx.fillRect(x - 16, y - 8, 16, 1);
   if (year >= 1975 && year < 2000) { ctx.fillStyle = '#30d0f0'; ctx.fillRect(x - 16, y - 3, 16, 1); }
   ctx.fillStyle = '#9ab8d0'; for (let i = 0; i < 4; i++) ctx.fillRect(x - 15 + i * 3, y - 7, 2, 2);
   ctx.fillRect(x - 2, y - 7, 2, 3);
+  ctx.fillStyle = 'rgba(28,16,48,0.35)'; ctx.fillRect(x - 16, y - 2, 16, 1);
   ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x - 14, y - 1, 3, 1); ctx.fillRect(x - 5, y - 1, 3, 1);
   if (night > 0.3) { ctx.fillStyle = '#fff4c0'; ctx.fillRect(x, y - 3, 1, 1); ctx.fillStyle = 'rgba(255,240,180,0.35)'; ctx.fillRect(x + 1, y - 4, 7, 3); }
 }
@@ -1051,7 +1063,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
     if (a.k === 'mural') items.push({ d: d + 2, f: () => { const [gx, gy, w, dd] = s.fp; const [ax, ay] = iso(gx + w, gy + dd); for (let i = 0; i < 9; i++) for (let j = 0; j < 7; j++) { ctx.fillStyle = ['#e04848', '#f0c040', '#48b85c', '#4a8ae0', '#8a5ad0'][(i + j * 2) % 5]; ctx.fillRect(Math.round(ax + 2 + i), Math.round(ay - 12 - i / 2 + j), 1, 1); } } });
     if (a.k === 'pilgrim') for (let i = 0; i < 18; i++) items.push({ d, f: () => person(ctx, dx - 20 + (i % 9) * 3, dy + 6 + Math.floor(i / 9) * 4 + (i % 9) * 1.5, i + 4, y, Math.floor(t * 3 + i) % 2, i % 5 === 0 ? '#ffe0f0' : undefined, pal) });
     if (a.k === 'noise') items.push({ d: d + 3, f: () => { ctx.fillStyle = '#f8f4ec'; const ph = (t * 1.5) % 1; ctx.font = '6px monospace'; ctx.fillText('♪', Math.round(s.top[0] + 4), Math.round(s.top[1] - 4 - ph * 10)); person(ctx, dx + 16, dy + 8, 7, y, 0, '#f04040', pal); } });
-    if (a.k === 'flood') items.push({ d: d + 1, f: () => { ctx.fillStyle = `rgba(70,120,170,${0.55 + Math.sin(t * 2) * 0.08})`; const [gx, gy, w, dd] = s.fp; ctx.beginPath(); const q = [iso(gx - 1.2, gy + dd - 0.2), iso(gx + w + 0.4, gy + dd - 0.2), iso(gx + w + 0.4, gy + dd + 1.8), iso(gx - 1.2, gy + dd + 1.8)]; ctx.moveTo(q[0][0], q[0][1]); for (const z of q.slice(1)) ctx.lineTo(z[0], z[1]); ctx.fill(); } });
+    if (a.k === 'flood') items.push({ d: d + 1, f: () => { ctx.fillStyle = `rgba(70,120,170,${0.55 + Math.sin(t * 2) * 0.08})`; const [gx, gy, w, dd] = s.fp; ctxPoly(ctx, [iso(gx - 1.2, gy + dd - 0.2), iso(gx + w + 0.4, gy + dd - 0.2), iso(gx + w + 0.4, gy + dd + 1.8), iso(gx - 1.2, gy + dd + 1.8)]); /* R29: sem antialiasing */ } });
   }
   items.sort((a, b) => a.d - b.d);
   for (const it of items) it.f();
@@ -1124,7 +1136,7 @@ export function worldCanvas18(b: Bld18, year: number, seed: number, brand = 'REC
   ctx.imageSmoothingEnabled = false;
   const [gx, gy] = iso(2, 2);
   ctx.fillStyle = '#6a9a48';
-  ctx.beginPath(); const p = [iso(0, 0), iso(4, 0), iso(4, 4), iso(0, 4)].map(([x, y]) => [x - gx + 36, y - gy + 52]); ctx.moveTo(p[0][0], p[0][1]); for (const q of p.slice(1)) ctx.lineTo(q[0], q[1]); ctx.fill();
+  ctxPoly(ctx, [iso(0, 0), iso(4, 0), iso(4, 4), iso(0, 4)].map(([x, y]) => [x - gx + 36, y - gy + 52] as [number, number])); // R29: losango sem antialiasing
   ctx.drawImage(s.c, s.x - gx + 36, s.y - gy + 52);
   return c;
 }

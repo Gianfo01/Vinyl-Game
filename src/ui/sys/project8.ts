@@ -30,6 +30,7 @@ import { store } from '../store';
 import { ic, setTab } from '../vis';
 import { compose23 } from './journey23';
 import { openRecord20 } from './actmenu20';
+import { ent27 } from '../ps/ent27';
 
 const ui = { sel: '' as string, type: 'single' as ReleaseType, concept: CONCEPTS[0].id };
 
@@ -130,7 +131,7 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
         const on = p.songIds.includes(so.id);
         return h('tr', { class: on ? 'pj-on' : '' },
           h('td', null, h('input', { type: 'checkbox', checked: on, disabled: locked || (!on && p.songIds.length >= maxSongs(p.type)), 'aria-label': so.title, onchange: (e: Event) => { const c = (e.target as HTMLInputElement).checked; setProjectSongs(s, p, c ? [...p.songIds, so.id] : p.songIds.filter((x) => x !== so.id)); rerender(); } })),
-          h('td', null, so.title, p.songIds[0] === so.id ? ' ' : '', p.songIds[0] === so.id ? pill(t(l('principal', 'lead'))) : null),
+          h('td', ent27('song', so.id), so.title, p.songIds[0] === so.id ? ' ' : '', p.songIds[0] === so.id ? pill(t(l('principal', 'lead'))) : null),
           h('td', null, so.recorded ? pill(t(l('gravada', 'recorded')), 'good') : sess?.songIds.includes(so.id) ? pill(t(l('em estúdio', 'in studio')), 'gold') : pill(t(l('escrita', 'written')))),
           h('td', null, Math.round(so.q)),
           h('td', null, Math.round(songProfile(so).hook)));
@@ -249,7 +250,7 @@ function resultSection(s: GameState, p: MusicProject): HTMLElement | null {
     h('p', { class: 'muted small' }, t(res.goalText)),
     explainBox(s, rel),
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small', onclick: () => openRelease(rel.id) }, ic('disc'), ' ', t(l('Ficha do lançamento', 'Release sheet'))),
+      h('button', { ...ent27('release', rel.id), class: 'btn small', onclick: () => openRelease(rel.id) }, ic('disc'), ' ', t(l('Ficha do lançamento', 'Release sheet'))),
       act ? h('button', { class: 'btn small primary', onclick: () => { const n = createProject(s, act.id, { type: rel.type === 'single' ? 'ep' : 'single', concept: p.concept }); if ('pt' in n) toast(t(n), 'bad'); else ui.sel = n.id; rerender(); } }, ic('note'), ' ', t(l('Próximo projeto de {a}', 'Next project for {a}'), { a: act.name })) : null,
       h('button', { class: 'btn small', onclick: () => { store.area = 'shows'; rerender(); } }, ic('mic'), ' ', t(l('Marcar shows', 'Book shows'))),
       h('button', { class: 'btn small', onclick: () => { store.area = 'media'; rerender(); } }, ic('newspaper'), ' ', t(l('Mídia e imprensa', 'Media and press'))),

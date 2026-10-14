@@ -77,6 +77,11 @@ export function shortOf(s: GameState, p: Person): { v: number; parts: L[]; np: [
   if (fx.v >= 3) parts.push(fx.why);
   const car = careerPressure(s, p);
   if (car.v >= 3) parts.push(car.why);
+  // R29 (CONECTAR TUDO): pressões de outros sistemas (selo sem caixa, desconfiança do selo, polícia de olho…)
+  let ext = 0;
+  const cx: Px29 = {};
+  for (const f of PRESSURE29) { const x = f(s, p, cx); if (x && x.v) { ext += x.v; if (Math.abs(x.v) >= 3) parts.push(x.why); } }
+  v = Math.max(0, v + ext);
   v += fat + hl + mor + res + body + fx.v + car.v;
   // r18 (explain18): a mesma soma com números
   const np: [L, number][] = [[l('Tensão acumulada (agenda, eventos, vícios)', 'Built-up tension (schedule, events, vices)'), p.stress], [l('cansaço', 'fatigue'), fat], [l('saúde', 'health'), hl], [l('moral baixa', 'low morale'), mor], [l('ressentimento', 'resentment'), res], [l('corpo (voz/lesão)', 'body (voice/injury)'), body], [fx.why, fx.v], [car.why, car.v]];
@@ -122,6 +127,11 @@ function factPressure(s: GameState, pid: string): { v: number; why: L } {
   c.m.set(pid, out);
   return out;
 }
+/** R29: pressões de curto prazo vindas de outros sistemas (positivas estressam, negativas aliviam). Puras.
+ *  R29b (desempenho): `cx` é um rascunho novo a cada leitura de shortOf — as pressões guardam ali o que todas leem (o
+ *  ato do jogador da pessoa) e não refazem a busca 4× por pessoa. Nada muda entre as pressões de uma mesma leitura. */
+export interface Px29 { a?: Act | null }
+export const PRESSURE29: ((s: GameState, p: Person, cx: Px29) => { v: number; why: L } | null)[] = [];
 /** Pressão da carreira: embalo em queda, holofote de estrela, estrada. */
 function careerPressure(s: GameState, p: Person): { v: number; why: L } {
   let v = 0, why = l('pressão da carreira', 'career pressure');

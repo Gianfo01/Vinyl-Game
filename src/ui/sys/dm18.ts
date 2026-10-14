@@ -5,13 +5,14 @@
 import { Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { ag18, nameOfKey18, toneOf18, VERBS18, type Tone18 } from '../../sim/sys/agency18';
+import { ag18, toneOf18, VERBS18, type Tone18 } from '../../sim/sys/agency18';
 import { dm18, knownThreads18, PHASE18, THREADS18, type Thread18 } from '../../sim/sys/dm18';
 import { activeFeuds18, altHist18, ALT_NOTE18, cool18, feud18, feudsOf18, STAGE18, tryCool18, type Feud18 } from '../../sim/sys/feud18';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { actLink, monthName, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
+import { keyEnt29, keyName29 } from '../ps/raw29';
 import { registerArea, registerPageTab } from '../registry';
 import { store } from '../store';
 import { directorCard17 } from './npc17';
@@ -87,7 +88,7 @@ function agencyList(s: GameState): HTMLElement {
   return h('div', null, mix, h('ul', { class: 'small' }, ...rows.map((r) => {
     const v = VERBS18.find((x) => x.id === r.v);
     const tone = r.tone ?? toneOf18(v);
-    return h('li', null, h('span', { class: 'muted' }, `${monthName(r.m)} ${r.y} `), pill(v ? t(v.name) : r.v, TONE_CLS[tone]), ' ', `${nameOfKey18(s, r.a)} → ${nameOfKey18(s, r.t)}: `, t(r.txt), r.mine ? pill(t(l('você', 'you')), 'warn') : null, r.pend ? pill(t(l('proposta', 'offer')), '') : null,
+    return h('li', null, h('span', { class: 'muted' }, `${monthName(r.m)} ${r.y} `), pill(v ? t(v.name) : r.v, TONE_CLS[tone]), ' ', h('span', keyEnt29(s, r.a), keyName29(s, r.a)), ' → ', h('span', keyEnt29(s, r.t), keyName29(s, r.t)), ': ', t(r.txt), // r29: nomes (nunca a chave crua) com clique direito r.mine ? pill(t(l('você', 'you')), 'warn') : null, r.pend ? pill(t(l('proposta', 'offer')), '') : null,
       r.why ? h('div', { class: 'muted' }, `${t(l('Por quê', 'Why'))}: `, t(r.why)) : null);
   })));
 }

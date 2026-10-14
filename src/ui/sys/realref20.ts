@@ -11,6 +11,7 @@ import { N, cityName, kv, pill, section, statusName } from '../common';
 import { h } from '../dom';
 import { openRelease } from '../ficha';
 import { provBadge20 } from '../provbadge20';
+import { ent27 } from '../ps/ent27';
 
 const TYPE20: Record<string, string> = { lp: 'LP', ep: 'EP', single: 'Single' };
 
@@ -46,7 +47,7 @@ export function realRefPanel20(s: GameState, a: Act): HTMLElement {
     kv(t(l('Trajetória', 'Trajectory')), `${t(l('fama', 'fame'))} ${Math.round(run.fame)} · ${run.hits} hits · ${run.number1s}× #1 · ${t(l('melhor posição', 'best peak'))} ${run.peak < 999 ? `#${run.peak}` : '—'}`),
     run.careerEnd !== undefined ? kv(t(l('Fim de carreira', 'Career end')), String(run.careerEnd)) : null,
     run.latest.length
-      ? h('ul', { class: 'small ref20-rels' }, run.latest.map((r) => h('li', null, h('button', { class: 'link', onclick: () => openRelease(r.id) }, `${r.year} · ${r.title}`), ' ', provBadge20(s, r), ' ', h('span', { class: 'muted' }, N(r.totalUnits)))))
+      ? h('ul', { class: 'small ref20-rels' }, run.latest.map((r) => h('li', null, h('button', { ...ent27('release', r.id), class: 'link', onclick: () => openRelease(r.id) }, `${r.year} · ${r.title}`), ' ', provBadge20(s, r), ' ', h('span', { class: 'muted' }, N(r.totalUnits)))))
       : h('p', { class: 'muted small' }, t(l('Ainda sem lançamentos nesta partida.', 'No releases in this run yet.'))),
     run.doc ? h('p', { class: 'muted small' }, t(l('"Documentado" = disco real posto pelo roteiro documentado; os números de venda são sempre da simulação.', '"Documented" = real record placed by the documented script; sales figures always come from the simulation.'))) : null,
   );

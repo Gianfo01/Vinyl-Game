@@ -9,14 +9,16 @@ import { retrospective, type RetroEra } from '../../sim/sys/retro8';
 import type { GameState, Release } from '../../sim/types';
 import { $, N, actLink, cityName, cover, genreName, logo, pill, section, statusName } from '../common';
 import { bar, h } from '../dom';
+import { awardTxt29 } from '../ps/raw29';
 import { openRelease } from '../ficha';
 import { registerTab } from '../registry';
 import { chips, stat } from '../vis';
+import { ent27 } from '../ps/ent27';
 
 const CERT: Record<string, ReturnType<typeof l>> = { gold: l('Ouro', 'Gold'), platinum: l('Platina', 'Platinum'), diamond: l('Diamante', 'Diamond') };
 
 function coverTile(s: GameState, r: Release): HTMLElement {
-  return h('button', { class: 'rt-cover', title: `${r.title} (${r.year})`, onclick: () => openRelease(r.id) },
+  return h('button', { ...ent27('release', r.id), class: 'rt-cover', title: `${r.title} (${r.year})`, onclick: () => openRelease(r.id) },
     cover(s, r, 96),
     h('b', null, r.title),
     h('small', { class: 'muted' }, `${s.acts[r.actId]?.name ?? '—'} · ${r.year}`),
@@ -44,18 +46,18 @@ function retroTab(s: GameState): HTMLElement {
         stat('trophy', T.no1, l('Números 1', 'Number ones')), stat('star', T.top10, l('Top 10', 'Top 10')), stat('disc', T.certs, l('Certificados', 'Certifications')),
         stat('trophy', T.awards, l('Prêmios', 'Awards')), stat('fans', T.acts, l('Artistas', 'Acts')))),
       rt.milestones.length ? h('ol', { class: 'rt-timeline' }, rt.milestones.map((m) => h('li', null, h('b', null, `${m.year} · ${t(m.label)}`), ' — ',
-        m.releaseId && s.releases[m.releaseId] ? h('a', { href: '#', onclick: (e: Event) => { e.preventDefault(); openRelease(m.releaseId!); } }, s.releases[m.releaseId].title) : null,
+        m.releaseId && s.releases[m.releaseId] ? h('a', { ...ent27('release', m.releaseId!), href: '#', onclick: (e: Event) => { e.preventDefault(); openRelease(m.releaseId!); } }, s.releases[m.releaseId].title) : null,
         m.actId ? h('span', null, ' · ', actLink(s, m.actId)) : null))) : null,
     ),
     section(t(l('Discos por era', 'Records by era')), ...rt.eras.slice().reverse().map((e) => eraBlock(s, e))),
     rt.hits.length || rt.awards.length ? section(t(l('Hits, certificados e prêmios', 'Hits, certifications and awards')),
       rt.hits.length ? h('div', { class: 'rt-covers' }, rt.hits.map((r) => coverTile(s, r))) : null,
-      rt.awards.length ? h('ul', { class: 'rt-stories' }, rt.awards.slice(0, 30).map((a) => h('li', { class: 'reunion' }, `${a.year} · ${a.name}`, a.actId ? h('span', null, ' · ', actLink(s, a.actId)) : null, a.releaseId && s.releases[a.releaseId] ? ` · "${s.releases[a.releaseId].title}"` : ''))) : null,
+      rt.awards.length ? h('ul', { class: 'rt-stories' }, rt.awards.slice(0, 30).map((a) => h('li', { class: 'reunion' }, `${a.year} · ${awardTxt29(a)}`, a.actId ? h('span', null, ' · ', actLink(s, a.actId)) : null, a.releaseId && s.releases[a.releaseId] ? ` · "${s.releases[a.releaseId].title}"` : ''))) : null,
     ) : null,
     rt.bets.length ? section(t(l('Maiores apostas', 'Biggest bets')),
       h('table', { class: 'tbl compact' },
         h('thead', null, h('tr', null, h('th', null, ''), h('th', null, t(l('Disco', 'Record'))), h('th', null, t(l('Ano', 'Year'))), h('th', null, t(l('Divulgação', 'Promotion'))), h('th', null, t(l('Receita', 'Revenue'))), h('th', null, t(l('Retorno', 'Return'))), h('th', null, ''))),
-        h('tbody', null, rt.bets.map((b) => h('tr', { class: 'clickable', onclick: () => openRelease(b.rel.id) },
+        h('tbody', null, rt.bets.map((b) => h('tr', { ...ent27('release', b.rel.id), class: 'clickable', onclick: () => openRelease(b.rel.id) },
           h('td', null, cover(s, b.rel, 32)), h('td', null, b.rel.title, ' · ', actLink(s, b.rel.actId)), h('td', null, b.rel.year), h('td', null, $(b.spend)), h('td', null, $(b.rel.revenue)),
           h('td', null, `×${b.roi.toFixed(1)}`), h('td', null, b.hit ? pill(t(l('acertou', 'paid off')), 'good') : pill(t(l('não pagou', 'missed')), 'bad'))))))) : null,
     section(t(l('Artistas que passaram pelo selo', 'Acts who passed through the label')),
@@ -64,7 +66,7 @@ function retroTab(s: GameState): HTMLElement {
         return h('div', { class: 'rt-alum' }, act ? logo(act, 44) : h('span'),
           h('div', null, actLink(s, a.actId), ' ', a.current ? pill(t(l('no elenco', 'on roster')), 'good') : pill(a.status === 'deceased' ? t(l('falecido', 'deceased')) : statusName(a.status)),
             h('div', { class: 'muted small' }, `${a.from}–${a.to ?? t(l('hoje', 'now'))} · ${a.releases} ${t(l('discos', 'records'))} · ${N(a.units)} ${t(l('unid.', 'units'))}`),
-            a.best ? h('div', { class: 'small' }, t(l('Destaque: ', 'Highlight: ')), h('a', { href: '#', onclick: (e: Event) => { e.preventDefault(); openRelease(a.best!.id); } }, a.best.title)) : null));
+            a.best ? h('div', { class: 'small' }, t(l('Destaque: ', 'Highlight: ')), h('a', { ...ent27('release', a.best!.id), href: '#', onclick: (e: Event) => { e.preventDefault(); openRelease(a.best!.id); } }, a.best.title)) : null));
       }))),
     rt.stories.length ? section(t(l('Rompimentos e reencontros', 'Breakups and reunions')),
       h('ul', { class: 'rt-stories' }, rt.stories.map((x) => h('li', { class: x.kind }, h('b', null, `${x.year} `), x.kind === 'broken' ? '💔 ' : '🤝 ', t(x.text))))) : null,

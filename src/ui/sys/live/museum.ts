@@ -10,7 +10,7 @@ import { C, Px } from '../../pixel/px';
 import { chips, stat } from '../../vis';
 import { relicImg28, roleImg28 } from '../../pixel/relic28'; // r28 (arte): discos emoldurados e instrumentos desenhados
 import { relics } from '../../../sim/sys/relics9';
-import { relic29Pills } from '../relics29';
+import { relic29Pills, relicBrowser29 } from '../relics29';
 
 const INSTRUMENT: Record<Person['role'], { icon: string; name: { pt: string; en: string } }> = {
   vocal: { icon: '🎤', name: l('microfone', 'microphone') },
@@ -61,7 +61,7 @@ export function museumView(s: GameState): HTMLElement {
   const legends = Object.values(s.acts).filter((a) => (a.owner === 'player' || a.playerBand) && (a.legend || s.hallOfFame.some((x) => x.actId === a.id) || a.number1s > 0)).slice(0, 8);
   const hall = s.hallOfFame.filter((x) => s.acts[x.actId]?.owner === 'player' || s.acts[x.actId]?.playerBand);
   const timeline = s.memory.filter((m) => m.important).slice(-40);
-  const vault = relics(s).list.filter((x) => x.st === 'player' || x.brw).sort((a, b) => b.v - a.v).slice(0, 12);
+  const vault = relics(s).list.filter((x) => x.st === 'player' || x.brw).sort((a, b) => b.v - a.v);
   const byYear: Record<number, typeof timeline> = {};
   for (const m of timeline) (byYear[m.year] ??= []).push(m);
   const canvas = hallCanvas(st.gold, st.platinum, st.awards);
@@ -80,8 +80,8 @@ export function museumView(s: GameState): HTMLElement {
       h('small', null, ...a.members.map((id) => s.persons[id]).filter(Boolean).flatMap((p, i) => [i ? ' · ' : '', roleImg28(p.role, a.formed, p.id, 24), ` ${t(l('{i} de {p}', '{p}\'s {i}'), { i: INSTRUMENT[p.role]?.name ?? l('instrumento', 'instrument'), p: p.name })}`]))))))
       : h('p', { class: 'muted small' }, t(l('Quando seus artistas virarem lendas, os instrumentos deles vêm para cá.', 'When your acts become legends, their instruments come here.')))),
     // R29: as relíquias do acervo (as procedurais com arquétipo, estado e procedência); expor rende prestígio e visitantes
-    vault.length ? section(t(l('Relíquias do acervo', 'Relics in the collection')), h('ul', { class: 'lv-certs' }, vault.map((rl) => h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ' ', h('b', null, t(rl.n)),
-      ` · ${rl.y}${rl.ex ? ` · ${t(l('exposta', 'on show'))}` : ''} `, relic29Pills(s, rl))))) : null,
+    vault.length ? section(t(l('Relíquias do acervo', 'Relics in the collection')), relicBrowser29(s, 'museu:vault', vault, (rl) => h('li', null, relicImg28(rl.k, rl.n.en, rl.y, rl.rr ?? rl.id, 24), ' ', h('b', null, t(rl.n)),
+      ` · ${rl.y}${rl.ex ? ` · ${t(l('exposta', 'on show'))}` : ''} `, relic29Pills(s, rl)), { size: 12, owners: false, wrap: (kids) => h('ul', { class: 'lv-certs' }, ...kids) })) : null,
     hall.length ? section(t(l('Hall dos Ecos', 'Hall of Echoes')), h('ul', null, hall.map((x) => h('li', null, `🏛 ${x.year} · `, actLink(s, x.actId))))) : null,
     section(t(l('Linha do tempo', 'Timeline')), Object.keys(byYear).length ? h('ol', { class: 'lv-timeline' }, Object.entries(byYear).map(([y, list]) => h('li', null, h('b', null, y), h('ul', null, list.map((m) => h('li', { class: 'small' }, t(m.text)))))))
       : h('p', { class: 'muted small' }, t(l('A história da run aparece aqui.', 'The run\'s story appears here.')))),

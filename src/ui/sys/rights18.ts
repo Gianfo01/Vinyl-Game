@@ -19,6 +19,7 @@ import { h } from '../dom';
 import { why18, whyIcon } from '../explain18';
 import { registerArea } from '../registry';
 import { chips, stat, tabs } from '../vis';
+import { ent27 } from '../ps/ent27';
 
 const say = (x: L | null | undefined, ok: L = l('Feito.', 'Done.')) => { toast(t(x ?? ok), x ? 'info' : 'good'); rerender(); };
 const pc = (v: number) => `${Math.round(v * 100)}%`;
@@ -78,7 +79,7 @@ function works(s: GameState): HTMLElement {
       const sp = so.splits?.length ? so.splits : so.writers.map((w) => ({ personId: w, share: 1 / Math.max(1, so.writers.length) }));
       const fr = frozen18(s, so.id);
       const reg = st.conf[so.id] ? pill(t(l('conflito de cadastro', 'registration conflict')), 'bad') : fr ? pill(t(l('congelada', 'frozen')), 'bad') : st.reg[so.id] === 2 ? pill(t(l('split assinado', 'split signed')), 'good') : pill(t(l('splits em aberto', 'open splits')), 'warn');
-      return h('tr', null, h('td', null, so.title), h('td', null, actLink(s, so.actId)),
+      return h('tr', null, h('td', ent27('song', so.id), so.title), h('td', null, actLink(s, so.actId)),
         h('td', { class: 'small' }, sp.map((x) => `${s.persons[x.personId]?.name ?? '?'} ${pc(x.share)}`).join(', ')),
         h('td', null, reg), h('td', null, String(vers[so.id] ?? 0)),
         h('td', null, st.conf[so.id] ? btn(l('Corrigir (~$250)', 'Fix (~$250)'), () => say(fixConflict18(s, so.id))) : null));
@@ -135,7 +136,7 @@ function clearances(s: GameState): HTMLElement {
       cov.length ? tbl([l('Faixa', 'Track'), l('Situação', 'Status'), l('')], cov.map((c) => h('tr', null, h('td', null, s.songs[c.song]?.title ?? '?'), h('td', null, pill(t(ST[c.st] ?? l(c.st)), c.st === 'denied' ? 'bad' : 'warn')),
         h('td', null, c.st === 'denied' ? btn(l('Proposta melhor (3× taxa, 60%)', 'Better offer (3× fee, 60%)'), () => say(payClearance18(s, 'cover', c.id))) : t(l('resposta em semanas', 'answer in weeks')))))) : empty(l('Nada pendente.', 'Nothing pending.'))),
     section(t(l('Sync de obras de terceiros', 'Sync of third-party works')),
-      sy.length ? tbl([l('Faixa', 'Track'), l('Obra de', 'Work by'), l('')], sy.map((so) => h('tr', null, h('td', null, so.title), h('td', null, actLink(s, thirdWork18(s, so)?.actId)),
+      sy.length ? tbl([l('Faixa', 'Track'), l('Obra de', 'Work by'), l('')], sy.map((so) => h('tr', null, h('td', ent27('song', so.id), so.title), h('td', null, actLink(s, thirdWork18(s, so)?.actId)),
         h('td', null, btn(l('Pedir liberação (~$800, 70%)', 'Request clearance (~$800, 70%)'), () => say(payClearance18(s, 'sync', so.id))))))) : empty(l('Nenhuma obra de terceiros no seu catálogo de sync.', 'No third-party works in your sync catalog.'))),
   );
 }

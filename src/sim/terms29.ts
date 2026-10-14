@@ -52,6 +52,10 @@ export interface ContractX29 extends OfferX29 {
   paid?: number;
   /** parte do artista já paga (produção: split; JV: lucro) */
   artistPaid?: number;
+  /** contrato NPC (empresário, produtora, selo): nome de quem assinou, para as telas */
+  co?: string;
+  /** JV de selo NPC: nome do selo-vaidade da estrela (deals18 dá o mesmo +4% de apelo) */
+  imprint?: string;
   /** joint venture: semana em que você comprou a parte do artista (o selo virou 100% seu; o contrato segue) */
   bought?: number;
   /** conflito de interesse avisado (empresário de ato do próprio selo) */
@@ -60,7 +64,7 @@ export interface ContractX29 extends OfferX29 {
   ended?: End29;
   endWeek29?: number;
 }
-export type End29 = 'expired' | 'quit' | 'fired' | 'released' | 'buyout' | 'dissolved' | 'partner_exit' | 'gone';
+export type End29 = 'expired' | 'quit' | 'fired' | 'released' | 'buyout' | 'dissolved' | 'partner_exit' | 'gone' | 'sold' | 'replaced';
 
 declare module './types' {
   interface Offer { /** R29 (contratos+): termos dos modelos novos */ x29?: OfferX29 }
@@ -135,7 +139,7 @@ export const termLabel29 = (m: ContractModel): L =>
 /** O acordo especial está valendo? (o empresariamento não é o act.contractId do ato) */
 export function active29(s: GameState, c: Contract): boolean {
   if (c.x29?.ended) return false;
-  if (isSide29(c)) return c.endWeek > s.week;
+  if (isSide29(c) || c.party.includes(':')) return c.endWeek > s.week; // empresariamento e produtora NPC não são o act.contractId
   return s.acts[c.actId]?.contractId === c.id && c.endWeek >= s.week;
 }
 
@@ -143,7 +147,23 @@ export const END29_NAME: Record<End29, L> = {
   expired: l('fim do prazo', 'term ended'), quit: l('você deixou a gestão', 'you stepped down'), fired: l('o artista demitiu você', 'the act fired you'),
   released: l('ato liberado', 'act released'), buyout: l('você comprou a parte do artista', 'you bought out the act'), dissolved: l('JV dissolvida', 'JV dissolved'),
   partner_exit: l('o artista saiu da sociedade', 'the act left the partnership'), gone: l('o ato encerrou a carreira', 'the act ended its career'),
+  sold: l('um selo comprou o contrato', 'a label bought the contract'), replaced: l('trocou de empresário', 'switched managers'),
 };
+
+// ---------------------------------------------------------------- NPC (sys/npc29): época e nomes
+/** Empresariamento NPC: existe desde sempre, ganha corpo nos anos 1950 e vira regra na era do rock (1960–89). */
+export const mgrEra29 = (y: number): number => (y < 1950 ? 0.4 : y < 1960 ? 0.9 : y < 1990 ? 1.5 : 1);
+/** Produção NPC (chance por mês de uma produtora assinar alguém): forte nos anos 1960–80 (Spector, Motown, indies dos 80). */
+export const prodEra29 = (y: number): number => (y < 1950 ? 0 : y < 1960 ? 0.06 : y < 1990 ? 0.3 : y < 2005 ? 0.12 : 0.05);
+/** JV/selo-vaidade de estrela com selo NPC (chance quando um selo assina um ato famoso): a partir dos anos 1970. */
+export const jvEra29 = (y: number): number => (y < 1970 ? 0 : y < 1990 ? 0.12 : 0.2);
+/** Parte NPC (empresário 'e:', produtor 'pd:', estúdio NPC 'vs:') — selos e o jogador não têm ':' no id. */
+export const npcParty29 = (party: string): boolean => party.includes(':');
+/** Nome de quem assinou o contrato (selo, você, empresário ou produtora NPC). */
+export function partyName29(s: GameState, c: Contract): string {
+  if (c.party === 'player') return s.config.companyName;
+  return s.labels[c.party]?.name ?? c.x29?.co ?? c.party;
+}
 
 /** Descrição de cada modelo novo para a interface (o que acontece ao assinar). */
 export const HOW29: Partial<Record<ContractModel, L>> = {

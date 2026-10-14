@@ -13,6 +13,8 @@ export const ageInfo = (p: { id: string; born?: number }): AgeInfo | undefined =
 
 /** Visual envelhecido (cópia). Idade < 36 devolve o próprio visual. */
 export function ageLook(a: Appearance, age: number, seed: string, sx?: 'm' | 'f' | 'x'): Appearance {
+  // R29 (família): estrela mirim e filhos — antes dos 17 nada de barba, bigode nem tatuagem, e corpo de criança
+  if (age < 17 && !a.helm && (a.beard || a.bdT || a.tat || a.body > 0)) return { ...a, beard: false, bdT: undefined, tat: undefined, body: 0 };
   if (age < 36 || a.helm) return a;
   const h = hashString(`age17:${seed}`) >>> 0;
   const grayStart = 36 + (h % 22); // 36..57

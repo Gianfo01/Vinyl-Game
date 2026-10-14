@@ -60,8 +60,9 @@ export function chips(...items: (HTMLElement | null | false | undefined)[]): HTM
   return h('div', { class: 'chips' }, items.filter(Boolean) as HTMLElement[]);
 }
 
-export function tile(icon: string, title: string, body: (Node | string | null)[], opts: { onClick?: () => void; cls?: string; badge?: string } = {}): HTMLElement {
-  return h(opts.onClick ? 'button' : 'div', { class: `tile ${opts.cls ?? ''}`, onclick: opts.onClick },
+export function tile(icon: string, title: string, body: (Node | string | null)[], opts: { onClick?: () => void; cls?: string; badge?: string; ent?: Record<string, string> } = {}): HTMLElement {
+  // r29 (menus): `ent` = marca de clique direito (ent27) — o cartão inteiro abre o menu de ações da entidade
+  return h(opts.onClick ? 'button' : 'div', { class: `tile ${opts.cls ?? ''}`, onclick: opts.onClick, ...(opts.ent ?? {}) },
     h('div', { class: 'tile-ic' }, ic(icon, 2)),
     h('div', { class: 'tile-body' }, h('b', null, title), ...(body.filter((x) => x !== null) as Node[])),
     opts.badge ? h('span', { class: 'badge' }, opts.badge) : null,

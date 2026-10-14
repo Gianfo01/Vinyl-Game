@@ -3,14 +3,14 @@
 // "definiu uma época", fracassos, contratos e selos, relíquias e vida pessoal (com campos genéricos).
 
 import { CONTRACT_MODELS } from '../../data/rules';
-import { active29, isSpecial29, termTxt29 } from '../../sim/terms29';
+import { active29, isSpecial29, npcParty29, partyName29, termTxt29 } from '../../sim/terms29';
 import { l, marketById, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { bolsa, change12, holders } from '../../sim/sys/bolsa10';
 import { ch7 } from '../../sim/sys/charts7';
 import {
   actContracts, actLabelHistory, actMilestones, actRelics, isPlayerLabel, labelAlumni, labelAwards, labelName13, labelRoster13, labelScenes,
-  labelShareHistory, labelStats13, labelTopReleases, personExtraFacts, personLife, type Award13, type Fact13,
+  labelShareHistory, labelStats13, labelTopReleases, personLife, type Award13,
 } from '../../sim/sys/dossier13';
 import { actHype } from '../../sim/sys/hype12';
 import { leaderOf, leaders } from '../../sim/sys/leaders10';
@@ -275,9 +275,9 @@ ACT_TABS.push((s, a) => (know(s, a) < 2 && !canSee(s, a.id, 'fans') ? null : {
         : empty(l('Sem lançamentos ainda.', 'No releases yet.')),
       h('h4', null, t(l('Contratos conhecidos', 'Known contracts'))),
       cs.length ? h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, ...[l('Com', 'With'), l('Modelo', 'Model'), l('Royalty', 'Royalty'), l('Início', 'Start'), l('Lançamentos', 'Releases'), l('Situação', 'Status')].map((x) => h('th', null, t(x))))),
-        h('tbody', null, cs.map((c) => h('tr', null, h('td', null, own(c.party)), h('td', null, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name ?? l(c.model))),
-          h('td', null, know(s, a) >= 3 ? (isSpecial29(c.model) && c.party === 'player' ? t(termTxt29(c)) : pct(c.royalty)) : '?'), h('td', null, String(s.config.startYear + Math.floor(c.startWeek / 52))),
-          h('td', null, `${c.releasesDone}/${c.releasesOwed}`), h('td', null, (isSpecial29(c.model) && c.party === 'player' ? active29(s, c) : a.contractId === c.id) ? pill(t(l('vigente', 'active')), 'good') : pill(t(l('encerrado', 'ended'))))))))
+        h('tbody', null, cs.map((c) => h('tr', null, h('td', null, npcParty29(c.party) ? h('span', null, partyName29(s, c)) : own(c.party)), /* R29: empresário/produtora NPC */ h('td', null, t(CONTRACT_MODELS.find((m) => m.id === c.model)?.name ?? l(c.model))),
+          h('td', null, know(s, a) >= 3 ? (isSpecial29(c.model) ? t(termTxt29(c)) : pct(c.royalty)) : '?'), h('td', null, String(s.config.startYear + Math.floor(c.startWeek / 52))),
+          h('td', null, `${c.releasesDone}/${c.releasesOwed}`), h('td', null, (isSpecial29(c.model) ? active29(s, c) : a.contractId === c.id) ? pill(t(l('vigente', 'active')), 'good') : pill(t(l('encerrado', 'ended'))))))))
         : empty(l('Nenhum contrato guardado (contratos antigos de rivais somem depois de um ano).', 'No stored contracts (old rival contracts vanish after a year).')),
     );
   },
@@ -297,9 +297,6 @@ export const LIFE_EXTRAS13: ((s: GameState, p: Person, open?: boolean) => HTMLEl
 
 function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
   const lf = personLife(s, p);
-  const facts = personExtraFacts(s, p);
-  const groups = new Map<string, Fact13[]>();
-  for (const f of facts) { const g = groups.get(f.group) ?? []; g.push(f); groups.set(f.group, g); }
   const healthName: Record<string, L> = { ok: l('bem', 'fine'), voice_strain: l('voz desgastada', 'voice strain'), burnout: l('esgotamento', 'burnout'), addiction: l('dependência', 'addiction'), recovering: l('em recuperação', 'recovering'), ill: l('doente', 'ill') };
   return h('div', { class: 'dos13-person' },
     h('div', { class: 'row wrap' }, open ? h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, h('b', null, p.name)) : h('b', null, p.name),
@@ -312,8 +309,9 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
       lf.dependency !== undefined && lf.dependency > 5 && canSee(s, p.id, 'health') ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
     ),
     ...(canSee(s, p.id, 'life') ? LIFE_EXTRAS13.map((f) => f(s, p, open)) : []),
-    ...[...groups].filter(() => canSee(s, p.id, 'life')).map(([g, xs]) => h('details', null, h('summary', { class: 'small muted' }, `${t(l('Mais dados', 'More data'))} · ${g}`),
-      h('ul', { class: 'dos13-list small' }, xs.slice(0, 25).map((f) => h('li', null, h('span', { class: 'muted' }, `${t(f.label)}: `), typeof f.v === 'string' ? f.v : t(f.v)))))));
+    // R29: os campos internos crus ("Mais dados · person / ability18.p", real27, roles27…) não aparecem mais para o jogador —
+    // o que importa já tem bloco próprio (funções no cabeçalho, fonte/certeza, família, saúde).
+  );
 }
 
 ACT_TABS.push((s, a) => ({

@@ -807,8 +807,8 @@ export function memberOptions29(s: GameState, pid: string): Opt29[] {
     const block = blk('session', sc.blocked ? sc.text : null, cash(sc.cost), ses19(s).aces.some((a) => a.pid === pid && a.hire && a.hire.until >= s.week) ? l('Já está gravando com você.', 'Already recording with you.') : null);
     const ch = block ? null : sessionChance29(s, pid);
     out.push({ id: `mo.session:${A.id}`, k: 'session', label: T('Músico(a) de sessão para {a} (6 meses)', 'Session player for {a} (6 months)', { a: A.name }), block, chance: ch?.p, why: ch?.why, cost: sc.cost, sec: 'music',
-      note: band ? l('Continua na banda; toca nas gravações (com crédito na capa) e melhora uma dimensão do disco (session19).', 'Keeps the band; plays on the recordings (credited) and lifts one record dimension (session19).')
-        : l('Toca nas gravações (com crédito na capa) e melhora uma dimensão do disco (session19).', 'Plays on the recordings (credited) and lifts one record dimension (session19).') });
+      note: band ? l('Continua na banda; toca nas gravações (com crédito na capa) e melhora uma dimensão do disco.', 'Keeps the band; plays on the recordings (credited) and lifts one record dimension.')
+        : l('Toca nas gravações (com crédito na capa) e melhora uma dimensão do disco.', 'Plays on the recordings (credited) and lifts one record dimension.') });
   }
   const bc = bondCost(s, 'super', band?.id ?? '');
   for (const A of mine.slice(0, 2)) {
@@ -816,16 +816,16 @@ export function memberOptions29(s: GameState, pid: string): Opt29[] {
     const block = blk('side', bc.blocked ? bc.text : null, cash(bc.cost), !lead || lead === pid ? l('O ato não tem quem lidere o projeto.', 'The act has nobody to lead the project.') : null);
     const ch = block ? null : sideChance29(s, pid, A.id);
     out.push({ id: `mo.side:${A.id}`, k: 'side', label: T('Projeto paralelo com {l} ({a})', 'Side project with {l} ({a})', { l: lead ? s.persons[lead].name : '?', a: A.name }), block, chance: ch?.p, why: ch?.why, cost: bc.cost, sec: 'music',
-      note: band ? l('Supergrupo de ~3 anos (bonds9); os dois continuam nas bandas. Depois, proponha contrato ao projeto.', 'A ~3-year supergroup (bonds9); both keep their bands. Then offer the project a deal.')
-        : l('Supergrupo de ~3 anos (bonds9) com o líder de um ato seu. Depois, proponha contrato ao projeto.', 'A ~3-year supergroup (bonds9) with one of your act leaders. Then offer the project a deal.') });
+      note: band ? l('Supergrupo de ~3 anos; os dois continuam nas bandas. Depois, proponha contrato ao projeto.', 'A ~3-year supergroup; both keep their bands. Then offer the project a deal.')
+        : l('Supergrupo de ~3 anos com o líder de um ato seu. Depois, proponha contrato ao projeto.', 'A ~3-year supergroup with one of your act leaders. Then offer the project a deal.') });
   }
   const G = mine.find((a) => a.owner === 'player');
   if (G && s.config.role !== 'artist') {
     const block = blk('ghost', ghostBlock29(s, pid, G.id));
     const ch = block ? null : ghostChance29(s, pid);
     out.push({ id: `mo.ghost:${G.id}`, k: 'ghost', label: T('Compor em segredo para {a} (ghostwriter)', 'Write in secret for {a} (ghostwriter)', { a: G.name }), block, chance: ch?.p, why: ch?.why, sec: 'music',
-      note: band ? l('Continua na banda; escreve sem crédito (writers19): barato, mas o rancor cresce com os hits.', 'Keeps the band; writes uncredited (writers19): cheap, but the grudge grows with the hits.')
-        : l('Escreve sem crédito (writers19): barato, mas o rancor cresce com os hits.', 'Writes uncredited (writers19): cheap, but the grudge grows with the hits.') });
+      note: band ? l('Continua na banda; escreve sem crédito: barato, mas o rancor cresce com os hits.', 'Keeps the band; writes uncredited: cheap, but the grudge grows with the hits.')
+        : l('Escreve sem crédito: barato, mas o rancor cresce com os hits.', 'Writes uncredited: cheap, but the grudge grows with the hits.') });
   }
   // sem banda: montar uma banda em volta da pessoa (lineup16.newBand16, o mesmo caminho dos músicos livres do mundo)
   if (!band) {
@@ -833,7 +833,7 @@ export function memberOptions29(s: GameState, pid: string): Opt29[] {
     const block = blk('band', artist, cash(fee), !refAct29(s, pid) ? l('Sem referência de gênero e cidade para a banda.', 'No genre/city reference for the band.') : null);
     const ch = block ? null : bandChance29(s, pid);
     out.push({ id: 'mo.band', k: 'band', label: T('Montar uma banda com {n}…', 'Form a band around {n}…', { n: p.name }), block, chance: ch?.p, why: ch?.why, cost: fee, sec: 'career',
-      note: l('Audições (pagas mesmo sem acordo): monta a banda com músicos livres do mercado (lineup16) e abre a mesa de negociação. Só existe se o contrato fechar.', 'Auditions (paid even without a deal): forms the band with free musicians from the market (lineup16) and opens the negotiation table. It only exists if the deal closes.') });
+      note: l('Audições (pagas mesmo sem acordo): monta a banda com músicos livres do mercado e abre a mesa de negociação. Só existe se o contrato fechar.', 'Auditions (paid even without a deal): forms the band with free musicians from the market and opens the negotiation table. It only exists if the deal closes.') });
   }
   const songs = mine.some((a) => featSongs(s, a.id).length);
   // R29 (feat de pessoa): o convidado é a PESSOA (não a banda inteira) — o feat negociado de sempre com ela pré-escolhida

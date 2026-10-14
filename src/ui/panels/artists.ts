@@ -42,7 +42,7 @@ import { actStatus } from '../../sim/sys/hq8';
 import { flowNote27, slotHint27, slotMark27 } from '../act27/flow27';
 
 /** Seções registradas por outros sistemas que agora moram numa subaba (e não mais soltas no fim da página). */
-const PLACED20: Record<string, Sub20> = { feats8: 'agenda', 'people-negotiate': 'career', 'scenes-actions': 'audience', w4clubs: 'audience' };
+const PLACED20: Record<string, Sub20> = { feats8: 'agenda', 'people-negotiate': 'career', 'scenes-actions': 'audience', w4clubs: 'audience', demo29: 'audience' }; // R29 demo29: idade e região do público
 hideSection((host, id) => host === 'artists' && id in PLACED20);
 const placed = (s: GameState, sub: Sub20): HTMLElement[] => sectionsOf('artists', Object.keys(PLACED20).filter((k) => PLACED20[k] === sub), s);
 
@@ -134,7 +134,7 @@ function header20(s: GameState, a: Act): HTMLElement {
       h('div', { class: 'ar21-right' },
         h('div', { class: 'ar21-tiles' }, tile('star', S.fame, a.fame), tile('heart', S.morale, st.morale), tile('sleep', S.fatigue, st.fatigue, true), tile('stress', S.stress, st.stress, true)),
         h('div', { class: 'ar20-actions ar21-actions' }, quickPins20(s, a.id),
-          h('button', { class: 'btn', onclick: () => openAct(a.id) }, '🔍 ', t(S.inspect)), actionsButton20(s, a.id, 'btn primary')))),
+          h('button', { ...ent27('act', a.id), class: 'btn', onclick: () => openAct(a.id) }, '🔍 ', t(S.inspect)), actionsButton20(s, a.id, 'btn primary')))),
     crit.length ? h('ul', { class: 'ar20-crit', 'aria-label': t(l('Alertas críticos', 'Critical alerts')) }, crit.map((x) => h('li', { class: x.tone },
       x.nav ? h('button', { class: 'link', onclick: () => applyNav20(s, { act: a.id, ...x.nav }) }, '⚠ ', t(x.text), ' ›') : h('span', null, '⚠ ', t(x.text))))) : null,
   );
