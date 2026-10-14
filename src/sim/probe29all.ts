@@ -33,13 +33,15 @@ import { hallScore } from './sys/rockhall9';
 import { hq6 } from './sys/hq6';
 import { pr18 } from './sys/press18';
 import { influence } from './sys/world4/laws';
+import { ageMix29, demo29, regionMix29, taste29, youth29 } from './sys/demo29';
+import { countryOfCity } from '../data/geo';
 
-export const SYS29 = ['dinheiro', 'reputacao', 'imprensa', 'projetos', 'aovivo', 'sede', 'fama', 'mundo', 'vida', 'contratos', 'premios', 'submundo'] as const;
+export const SYS29 = ['dinheiro', 'reputacao', 'imprensa', 'projetos', 'aovivo', 'sede', 'fama', 'mundo', 'vida', 'contratos', 'premios', 'submundo', 'publico'] as const;
 export type Sys29 = (typeof SYS29)[number];
 export const SYS29_NAME: Record<Sys29, string> = {
   dinheiro: 'Dinheiro e livro-caixa', reputacao: 'Reputação', imprensa: 'Imprensa, críticos e escândalos', projetos: 'Projetos, composição, estúdio, lançamento',
   aovivo: 'Ao vivo, turnês e festivais', sede: 'Sede, equipe e departamentos', fama: 'Fama, fãs e facções', mundo: 'Mundo, eras, tecnologia',
-  vida: 'Vida pessoal e saúde', contratos: 'Contratos, promessas, rivais', premios: 'Prêmios e legado', submundo: 'Submundo',
+  vida: 'Vida pessoal e saúde', contratos: 'Contratos, promessas, rivais', premios: 'Prêmios e legado', submundo: 'Submundo', publico: 'Público por idade e região (demo29)',
 };
 
 /** Estado-base: um ato seu com um single lançado (1985, nomes reais) e um ato livre de NPC para ofertas. */
@@ -116,6 +118,10 @@ export const METRICS29: Metric29[] = [
   { id: 'crime_q', sys: 'submundo', kind: 'pura', name: 'exposição de um crime', f: (c) => crimeOdds(c.s, { actor: 'player', target: c.a.id, partners: [] }, 'chart_rig').q },
   { id: 'crime_pirata', sys: 'submundo', kind: 'pura', name: 'chance de piratear o ato', f: (c) => crimeOdds(c.s, { actor: 'player', target: c.a.id, partners: [] }, 'bootleg').p },
   { id: 'calor', sys: 'submundo', kind: 'mes', name: 'calor policial', f: (c) => crime17(c.s).heat[a3home(c.s)] ?? 0 },
+  // R29 DEMO: o público por idade e região (demo29) como 13º sistema
+  { id: 'jovens', sys: 'publico', kind: 'mes', name: 'fatia do público até 24 anos', f: (c) => youth29(ageMix29(c.s, c.a)) },
+  { id: 'fora', sys: 'publico', kind: 'mes', name: 'fatia do público fora do país natal', f: (c) => { const h = countryOfCity(c.a.city); return regionMix29(c.s, c.a).top.filter((x) => x.a3 !== h).reduce((t, x) => t + x.v, 0); } },
+  { id: 'gosto_jovem', sys: 'publico', kind: 'pura', name: 'gosto de quem tem 20 anos pelo gênero do ato', f: (c) => taste29(c.s, 20, c.s.config.homeCity ? countryOfCity(c.s.config.homeCity) ?? undefined : undefined, c.a.genre) },
 ];
 
 export interface Nudge29 { id: string; sys: Sys29; name: string; f: (c: Ctx) => void }
@@ -139,6 +145,8 @@ export const NUDGES29: Nudge29[] = [
   { id: 'rival', sys: 'contratos', name: 'rival em guerra (+60 de calor)', f: (c) => { const lb = Object.values(c.s.labels).filter((l) => l.active).sort((x, y) => y.reputation - x.reputation)[0]; if (lb) c.s.rivalries[lb.id] = (c.s.rivalries[lb.id] ?? 0) + 60; } },
   { id: 'premios', sys: 'premios', name: '4 prêmios do selo e do ato', f: (c) => { for (let i = 0; i < 4; i++) c.s.awards.push({ year: c.s.year, category: 'sonda', name: 'Sonda', byPlayer: true, actId: c.a.id, releaseId: c.rel.id }); c.a.awards += 4; c.s.player.stats.awards += 4; } },
   { id: 'jaba', sys: 'submundo', name: 'jabá nas rádios', f: (c) => { payDJs(c.s, 1); } },
+  { id: 'jovem', sys: 'publico', name: 'público jovem (70% até 24 anos)', f: (c) => { const d = demo29(c.s).a[c.a.id]; if (d) d.b = [250, 450, 220, 60, 20]; else demo29(c.s).a[c.a.id] = { b: [250, 450, 220, 60, 20], n: c.a.fans.casual + c.a.fans.active + c.a.fans.core }; } },
+  { id: 'velho', sys: 'publico', name: 'público maduro (70% com 35+)', f: (c) => { const d = demo29(c.s).a[c.a.id]; if (d) d.b = [20, 80, 200, 400, 300]; else demo29(c.s).a[c.a.id] = { b: [20, 80, 200, 400, 300], n: c.a.fans.casual + c.a.fans.active + c.a.fans.core }; } },
   { id: 'calor', sys: 'submundo', name: 'polícia de olho (+60 de calor)', f: (c) => { const k = a3home(c.s); crime17(c.s).heat[k] = (crime17(c.s).heat[k] ?? 0) + 60; } },
 ];
 
@@ -238,9 +246,14 @@ export const EDGES29: { a: Sys29; b: Sys29; check?: [nudge: string, metric: stri
   { a: 'vida', b: 'aovivo', check: ['estresse', 'show', -1] }, { a: 'vida', b: 'projetos', check: ['estresse', 'gravacao', -1] }, { a: 'vida', b: 'imprensa' },
   { a: 'vida', b: 'dinheiro', check: ['estresse', 'despesas', 1] },
   { a: 'contratos', b: 'dinheiro' }, { a: 'contratos', b: 'projetos', check: ['desconfianca', 'gravacao', -1] }, { a: 'contratos', b: 'aovivo', check: ['desconfianca', 'show', -1] },
-  { a: 'contratos', b: 'imprensa' }, { a: 'contratos', b: 'vida', check: ['desconfianca', 'estresse', 1] },
+  { a: 'contratos', b: 'imprensa', check: ['desconfianca', 'fatos', 1] }, { a: 'contratos', b: 'vida', check: ['desconfianca', 'estresse', 1] },
   { a: 'premios', b: 'fama', check: ['premios', 'fama', 1] }, { a: 'premios', b: 'reputacao', check: ['premios', 'rep', 1] }, { a: 'premios', b: 'contratos', check: ['premios', 'oferta', 1] },
   { a: 'premios', b: 'projetos', check: ['premios', 'apelo', 1] }, { a: 'premios', b: 'dinheiro' },
   { a: 'submundo', b: 'dinheiro', check: ['jaba', 'despesas', 1] }, { a: 'submundo', b: 'imprensa', check: ['calor', 'reacao', 1] }, { a: 'submundo', b: 'projetos', check: ['jaba', 'vendas', 1] },
   { a: 'submundo', b: 'vida', check: ['calor', 'estresse', 1] }, { a: 'submundo', b: 'reputacao', check: ['calor', 'rep', -1] }, { a: 'submundo', b: 'contratos', check: ['calor', 'oferta', -1] },
+  // R29 DEMO (13º sistema): público por idade e região
+  { a: 'publico', b: 'projetos', check: ['velho', 'apelo', -1] }, { a: 'publico', b: 'aovivo', check: ['velho', 'show', -1] }, { a: 'publico', b: 'premios', check: ['velho', 'gramofone', 1] },
+  { a: 'publico', b: 'contratos' }, { a: 'publico', b: 'dinheiro' },
+  { a: 'mundo', b: 'publico', check: ['decada', 'jovens', -1] }, { a: 'fama', b: 'publico', check: ['fama', 'fora', 1] },
+  { a: 'premios', b: 'imprensa', check: ['premios', 'fatos', 1] },
 ];

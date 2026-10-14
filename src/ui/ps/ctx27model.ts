@@ -4,6 +4,7 @@
 // mesmo fluxo da tela de sempre (caminho único, docs/act27.md) — "Fazer proposta" abre a mesa de negociação, "Almoço"
 // abre a conversa de favor, "Gravar" abre o preparo da sessão do estúdio etc.
 
+import { actOfPerson29 as actOf29, proposals29 } from './ctx29c';
 import { cityById, l, type L } from '../../data/world';
 import { hqCaps } from '../../sim/branches';
 import { cashWhy20, freeCash20 } from '../../sim/oblig20';
@@ -210,6 +211,7 @@ function actMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
       env.has?.('area:crime') === false ? NO_CRIME29 : gangs.length ? null : N('Nenhuma gangue ativa nesta época.', 'No active gang in this era.'), { sec: 'dark' }));
   } else {
     out.push(it('act.offer', N('Fazer proposta / negociar', 'Make an offer / negotiate'), 'handshake', 'do', offerBlock27(s, a)));
+    out.push(...proposals29(s, a, 'act')); // R29 (contratos+): empresariamento (também a ato de selo rival), produção e JV
     if (s.config.role !== 'artist') {
       const w = isWatched(s, id);
       out.push(it('act.watch', w ? N('Parar de observar', 'Stop watching') : N('Observar (alertas mensais)', 'Watch (monthly alerts)'), 'star', 'do'));
@@ -298,6 +300,8 @@ function personMenu(s: GameState, raw: string, env: CtxEnv27 = {}): CtxMenu27 | 
       sec: 'music', note: N('Só a pessoa, sem a banda: cachê e liberação pela fama e habilidade dela.', 'Just the person, not the band: fee and clearance by their own fame and skill.'),
     }));
   }
+  // R29 (contratos+): as propostas dos três modelos pelo ato da pessoa (as mesmas do menu do ato)
+  if (person && !me) out.push(...proposals29(s, actOf29(s, key), 'person'));
   // atalhos: o ato da pessoa
   const actOf = pid ? Object.values(s.acts).find((a) => a.members.includes(pid) && a.status !== 'retired' && a.status !== 'split') : undefined;
   if (actOf) {

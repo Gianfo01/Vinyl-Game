@@ -37,6 +37,8 @@ import { store } from '../store';
 import { chips, ic, stat } from '../vis';
 import { criticBody } from './hubs8';
 import { familyBlock15 } from './kin15';
+import { famIndustry29, famSection29 } from './family29';
+import { famOf29 } from '../../sim/sys/family29';
 import { leaderBody, playerLeaderBody } from './leaders10';
 import { timeline } from './leisure14';
 import { profile as mgrProfile } from './managers14';
@@ -91,6 +93,7 @@ function familyBlock16(s: GameState, key: string): HTMLElement {
       ...heirs.map((x2) => h('li', null, personLink16(s, `l:${x2.id}`, x2.name), ` · ${t(l('filho(a) — herdou o comando', 'child — inherited the helm'))}`)),
     ),
     !F0?.partner && !F0?.kids.length && !rk.length && !parent && !heirs.length ? empty(l('Sem família conhecida.', 'No known family.')) : null,
+    famIndustry29(s, key), // R29 (família): o que cada filho virou (artista, produtor, empresário, equipe, crítico, executivo)
     h('p', { class: 'small muted' }, t(l('A família pesa no trabalho: filhos podem herdar o comando de um selo; casamento e filhos seguram vícios; separações e lutos derrubam o ânimo e a produtividade.', 'Family weighs on work: children may inherit a label; marriage and kids hold addictions back; break-ups and grief hurt mood and output.'))),
   );
 }
@@ -330,6 +333,11 @@ function civil16Person(s: GameState, p: Person): L {
   const rc = lz14(s).r[`p:${p.id}`];
   if (kinOf15(s, p.id).some((k) => k.rel === 'spouse')) return l('casado(a)', 'married');
   if (F0?.partner && !F0.separated) return rc?.mar ? l('casado(a)', 'married') : l('em relacionamento', 'in a relationship');
+  // R29 (família): artistas NPC vivem a vida no family29
+  const f29 = famOf29(s, p.id).status;
+  if (f29 === 2) return l('casado(a)', 'married');
+  if (f29 === 1) return l('em relacionamento', 'in a relationship');
+  if (f29 === 3) return l('separado(a)', 'separated');
   return F0?.separated ? l('separado(a)', 'separated') : l('solteiro(a)', 'single');
 }
 
@@ -337,7 +345,7 @@ PERSON_TABS.push((s, p) => ({
   id: 'fam16', label: l('Família', 'Family'), icon: 'fans',
   render: () => {
     const rk = realKin16(s, `p:${p.id}`);
-    return h('div', null, familyBlock15(s, p),
+    return h('div', null, familyBlock15(s, p), famSection29(s, p), // R29 (família): par, filhos, pais, menor e a árvore
       rk.length ? section(t(l('Parentes na indústria', 'Relatives in the industry')), h('ul', { class: 'small' }, rk.map((r) => h('li', null, r.key ? personLink16(s, r.key, r.name) : r.name, ` · ${t(KIN16_REL[r.rel] ?? l(r.rel))}`)))) : null);
   },
 }));

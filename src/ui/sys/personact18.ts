@@ -16,6 +16,7 @@ import { fmtL } from '../../sim/util';
 import { ACT_HEAD_EXTRAS, PERSON_HEAD_EXTRAS } from '../pages';
 import { ic } from '../vis';
 import { PAGE16_HEAD } from './people16';
+import { openFamily29 } from './family29';
 import { CTXHOOK27, NO_ACTIONS29, ctxMenu27, liveCount29, menuSections27, secOf27, type CtxItem27, type CtxMenu27 } from '../ps/ctx27model';
 import './core18.css';
 
@@ -31,6 +32,7 @@ export function runPA18(s: GameState, key: string, id: string, done: (txt: strin
   const go = () => {
     const o = doPersonAction18(s, r.def.id, key);
     if (o.ui === 'offer' && o.uiArg) { openOffer(o.uiArg); return; }
+    if (o.ui === 'family' && o.uiArg) { openFamily29(o.uiArg); return; } // R29 (família): "Ver família" abre a aba Família
     done(t(o.text), o.ok);
   };
   // confirmação só no que não tem volta (jogo sujo)

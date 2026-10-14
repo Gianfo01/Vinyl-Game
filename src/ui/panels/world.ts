@@ -21,6 +21,7 @@ import { ic, stat, chips, tabs, tile } from '../vis';
 import { select } from '../dom';
 import { board } from '../../sim/sys/charts7';
 import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
+import { ageBubbles29, ageLayer29, ageLayerColor29, ageLegend29 } from '../sys/demo29'; // R29 demo29: camada Fãs por idade
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
 import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintNow, paintShadeMap, setPaint } from '../sys/map13';
 import { PAINT_INFO, paintAvailable, type Paint } from '../../sim/sys/map13';
@@ -31,7 +32,7 @@ let worldMap: WorldMap | null = null;
 let focusCity: string | null = null;
 let focusCountry: string | null = null;
 
-type Layer = 'fans' | 'scenes' | 'festivals' | 'rivals' | 'hq' | 'tours' | 'movements' | 'clubs' | 'geo' | 'countryfans' | 'genre' | 'rivalpower' | 'charts' | 'you';
+type Layer = 'fans' | 'scenes' | 'festivals' | 'rivals' | 'hq' | 'tours' | 'movements' | 'clubs' | 'geo' | 'countryfans' | 'genre' | 'rivalpower' | 'charts' | 'you' | 'agefans';
 const LAYERS: { id: Layer; icon: string; name: L }[] = [
   { id: 'fans', icon: 'fans', name: l('Seus fãs', 'Your fans') },
   { id: 'scenes', icon: 'fire', name: l('Cenas', 'Scenes') },
@@ -46,6 +47,7 @@ const LAYERS: { id: Layer; icon: string; name: L }[] = [
   { id: 'genre', icon: 'note', name: l('Calor de um gênero', 'Genre heat') },
   { id: 'rivalpower', icon: 'flag', name: l('Força dos rivais', 'Rival strength') },
   { id: 'charts', icon: 'chart-up', name: l('Suas paradas', 'Your charts') },
+  { id: 'agefans', icon: 'fans', name: l('Fãs por idade', 'Fans by age') }, // R29 demo29
   { id: 'you', icon: 'star', name: l('Você (casas, viagem, divulgação)', 'You (homes, travel, promo)') },
 ];
 const layers = new Set<Layer>(['fans', 'hq', 'tours', 'you']);
@@ -90,6 +92,7 @@ function countryLayerShade(s: GameState): Map<string, { color: string }> {
     const max = Math.max(1, ...f.values());
     for (const [a3, v] of f) if (v / max > 0.03) m.set(a3, { color: `rgba(200,100,30,${(0.35 + 0.65 * Math.sqrt(v / max)).toFixed(2)})` });
   }
+  if (layers.has('agefans')) for (const [a3, x] of ageLayer29(s)) m.set(a3, { color: ageLayerColor29(x.band, x.v) }); // R29 demo29: faixa dominante dos seus fãs no país
   if (layers.has('charts')) {
     const keys = new Set<string>();
     for (const c of CITIES) { const a3 = countryOfCity(c.id); if (a3) keys.add(a3); }
@@ -149,6 +152,7 @@ function overlays(s: GameState): MapOverlay[] {
     for (const [c, v] of pw) o.push({ kind: 'bubble', city: c, value: v / max, color: 'var(--bad)' });
   }
   if (layers.has('you')) personalOverlays(s, (c, g) => icon(c, g), (x) => o.push(x));
+  if (layers.has('agefans')) o.push(...ageBubbles29(s)); // R29 demo29
   return o;
 }
 
@@ -197,8 +201,10 @@ function countryTipExtra(s: GameState, a3: string): HTMLElement | null {
   const geo = activeGeo(s).filter((g) => g.markets.includes(m));
   const cens = activeCensorship(s).filter((c) => c.markets.includes(m));
   const x13 = countryTip13(s, a3);
-  if (!geo.length && !cens.length) return x13;
-  return h('div', { class: 'wmap-tip-extra' }, [...geo.map((g) => tipLine('globe', t(g.name))), ...cens.map((c) => tipLine('newspaper', t(c.name))), x13]);
+  const ag = layers.has('agefans') ? ageLayer29(s).get(a3) : undefined; // R29 demo29: fatias por idade dos seus fãs no país
+  const agL = ag ? tipLine('fans', ag.mix.map((v, i) => `${['13–17', '18–24', '25–34', '35–49', '50+'][i]} ${Math.round(v * 100)}%`).join(' · ')) : null;
+  if (!geo.length && !cens.length && !agL) return x13;
+  return h('div', { class: 'wmap-tip-extra' }, [...geo.map((g) => tipLine('globe', t(g.name))), ...cens.map((c) => tipLine('newspaper', t(c.name))), agL, x13]);
 }
 
 function layerBar(): HTMLElement {
@@ -314,6 +320,7 @@ function mapSection(s: GameState): HTMLElement {
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:var(--warn, #e0a030);opacity:.5' }), t(l('Crise econômica', 'Economic crisis'))) : null,
       layers.has('countryfans') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgb(200,100,30);opacity:.5' }), t(l('País: seus fãs', 'Country: your fans'))) : null,
       layers.has('charts') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgb(184,144,28);opacity:.5' }), t(l('País: você nas paradas', 'Country: you on the charts'))) : null,
+      ...(layers.has('agefans') ? ageLegend29() : []),
       layers.has('genre') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:#a35bd8' }), t(l('Bolha: calor do gênero', 'Bubble: genre heat'))) : null,
       layers.has('rivalpower') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--bad)' }), t(l('Bolha: força dos rivais', 'Bubble: rival strength'))) : null,
       ...(['hq', 'branch', 'rival', 'festival', 'tour', 'movement', 'home', 'you', 'promo', 'scout'] as const).map((g) => h('span', { class: 'wmap-key' }, glyphCanvas(g, 1), t(GLYPH_NAMES[g]))),

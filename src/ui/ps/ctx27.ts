@@ -7,6 +7,7 @@
 // (aria-disabled) e não executa. Sem marca → menu nativo do navegador; Ctrl+clique direito → sempre o nativo.
 // Cada ação chama o MESMO fluxo da tela de sempre (docs/act27.md: um caminho só) — nada de telas paralelas.
 
+import { runC29 } from './ctx29c';
 import { buildSongSpec } from '../../audio/spec';
 import { audioAvailable, nowPlaying, play, stopAll } from '../../audio/engine';
 import { audioOn28 } from '../audio28';
@@ -188,6 +189,7 @@ function run(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLElement): 
     case 'person.offer29': { const pid = key.startsWith('p:') ? key.slice(2) : ''; if (pid) sub27(s, 'person', `mo29:${pid}`, anchor); return; } // R29: submenu "Oferecer a…"
     case 'person.actmore': { const pid = key.slice(2); const a = playerActs(s).find((x) => s.acts[x]?.members.includes(pid)); if (a) openActionMenu20(s, a, anchor); return; }
     default:
+      if (runC29(s, m, item)) return; // R29 (contratos+): "Propor empresariamento/produção/joint venture" — o mesmo handler da ficha
       if (item.id.startsWith('mo.') && key.startsWith('mo29:')) { runMember29(s, key.slice(5), item.id); return; } // R29 (integrante)
       if (item.id.startsWith('pa:')) { runPA18(s, key, item.id.slice(3), (txt, ok) => { toast(txt, ok ? 'good' : 'bad'); rerender(); }); return; }
       if (item.id.startsWith('a20:')) { chooseAction20(s, item.id.slice(4), id, anchor); return; }

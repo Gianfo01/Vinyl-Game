@@ -6,7 +6,7 @@
 
 import { drawText, textWidth } from '../pixel/font';
 import { paletteOf, tone, type Palette } from '../pixel/palette';
-import { C, Px, dith, mix, noise, shade, withAlpha, type Col } from '../pixel/px';
+import { C, Px, dith, inked, mix, noise, shade, withAlpha, type Col } from '../pixel/px';
 
 export type Band27 = 0 | 1 | 2 | 3;
 /** Geração dos objetos por ano (os testes conferem as fronteiras). */
@@ -22,6 +22,20 @@ export interface K27 {
   fy: number;
   /** cor da época: hex → Col já tonalizada (sépia nos anos 20) */
   c: (hex: string, a?: number) => Col;
+  /** R29: dentro de um objeto contornado (ink27), luzes (halo/cone) ficam para depois, fora da silhueta */
+  defer?: (() => void)[];
+}
+
+/**
+ * R29 (arte consistente): desenha um OBJETO numa camada própria, dá volume pela silhueta (borda de cima/esquerda
+ * na luz, de baixo/direita na sombra) e contorna com INK de 1 px — o mesmo acabamento da mobília da sede e dos
+ * bonecos. Halos e cones pedidos lá dentro são pintados depois, por cima, para não virarem parte da silhueta.
+ */
+export function ink27(k: K27, draw: () => void, relief = true): void {
+  const p0 = k.p, prev = k.defer;
+  k.defer = [];
+  try { inked(p0, (q) => { k.p = q; try { draw(); } finally { k.p = p0; } }, k.c('#170e12'), { relief }); }
+  finally { const later = k.defer; k.defer = prev; for (const f of later) f(); }
 }
 
 export function kit27(p: Px, year: number, t: number, seed: number, fy?: number): K27 {
@@ -124,6 +138,7 @@ export function floor(k: K27, y0: number, a?: Col, b?: Col): void {
 
 /** Cone de luz translúcido (holofote, poste). */
 export function cone(k: K27, x: number, y0: number, w0: number, y1: number, w1: number, col: Col, a = 46): void {
+  if (k.defer) { k.defer.push(() => cone(k, x, y0, w0, y1, w1, col, a)); return; }
   const h = y1 - y0;
   for (let y = y0; y < y1; y++) {
     const f = (y - y0) / h, hw = (w0 + (w1 - w0) * f) / 2;
@@ -131,6 +146,7 @@ export function cone(k: K27, x: number, y0: number, w0: number, y1: number, w1: 
   }
 }
 export function halo(k: K27, cx: number, cy: number, r: number, col: Col, a = 90): void {
+  if (k.defer) { k.defer.push(() => halo(k, cx, cy, r, col, a)); return; }
   for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
     const d = Math.sqrt(x * x + y * y) / r;
     if (d > 1) continue;
@@ -158,7 +174,9 @@ export function neon(k: K27, s: string, cx: number, y: number, col: Col): void {
 // ---------------------------------------------------------------- multidão e figurantes
 
 /** Plateia em silhuetas (cabeças e ombros), `n` 0..1 de lotação; pula no ritmo quando `hop` > 0. */
-export function crowd(k: K27, x0: number, x1: number, y: number, n: number, hop: number, rows = 3, lit?: Col): void {
+/** R29: a plateia ganha contorno INK na silhueta do conjunto (sem relevo: continua em contraluz). */
+export function crowd(...a: Parameters<typeof crowd0>): void { ink27(a[0], () => crowd0(...a), false); }
+function crowd0(k: K27, x0: number, x1: number, y: number, n: number, hop: number, rows = 3, lit?: Col): void {
   const skin = ['#f2c9a0', '#d79b6b', '#a46a42', '#6b4428'].map((h) => k.c(h));
   const cloth = [k.pal.fabric, k.pal.fabric2, k.pal.accent2, k.c('#2a2a38'), k.c('#4a5a7a'), k.pal.metalDark];
   const hair = [k.c('#1e1814'), k.c('#3d2616'), k.c('#8e3a1e'), k.c('#dcb862')];
@@ -181,31 +199,43 @@ export function crowd(k: K27, x0: number, x1: number, y: number, n: number, hop:
 
 // ---------------------------------------------------------------- objetos (todos ancorados no chão: x = esquerda, y = base)
 
-export function speaker(k: K27, x: number, y: number, w = 10, h = 16): void {
+/** R29: objeto contornado (ver ink27). */
+export function speaker(...a: Parameters<typeof speaker0>): void { ink27(a[0], () => speaker0(...a)); }
+function speaker0(k: K27, x: number, y: number, w = 10, h = 16): void {
   R(k, x, y - h, w, h, k.c('#1c1a20')); R(k, x, y - h, w, 1, k.c('#38343e'));
   for (let i = 0; i < Math.floor(h / 8); i++) { k.p.disc(x + w / 2 - 0.5, y - h + 4 + i * 8, Math.min(3, w / 3), k.c('#3a3640')); k.p.set(Math.floor(x + w / 2), y - h + 4 + i * 8, k.c('#5a5662')); }
 }
-export function micStand(k: K27, x: number, y: number, h = 20): void {
+/** R29: objeto contornado (ver ink27). */
+export function micStand(...a: Parameters<typeof micStand0>): void { ink27(a[0], () => micStand0(...a)); }
+function micStand0(k: K27, x: number, y: number, h = 20): void {
   k.p.vline(x, y - h, y - 1, k.c('#8a8a92')); k.p.hline(x - 3, x + 3, y - 1, k.c('#5a5a62'));
   R(k, x - 1, y - h - 3, 3, 3, k.band === 0 ? k.c('#c9b37a') : k.c('#3a3a42'));
 }
-export function drums(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function drums(...a: Parameters<typeof drums0>): void { ink27(a[0], () => drums0(...a)); }
+function drums0(k: K27, x: number, y: number): void {
   k.p.ellipse(x + 9, y - 6, 6, 6, k.c('#e8e0d0')); k.p.ring(x + 9, y - 6, 6, k.pal.accent2);
   R(k, x, y - 9, 5, 7, k.pal.accent2); R(k, x + 15, y - 9, 5, 7, k.pal.accent2);
   k.p.hline(x - 2, x + 3, y - 14, k.pal.gold); k.p.hline(x + 16, x + 22, y - 16, k.pal.gold);
   k.p.vline(x, y - 14, y - 1, k.c('#7a7a80')); k.p.vline(x + 19, y - 16, y - 1, k.c('#7a7a80'));
 }
-export function amp(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function amp(...a: Parameters<typeof amp0>): void { ink27(a[0], () => amp0(...a)); }
+function amp0(k: K27, x: number, y: number): void {
   R(k, x, y - 10, 12, 10, k.band >= 2 ? k.c('#1a1a1e') : k.c('#5a3a24'));
   R(k, x + 1, y - 9, 10, 2, k.band >= 2 ? k.c('#c0c0c8') : k.pal.gold);
   R(k, x + 1, y - 6, 10, 5, k.c('#2e2a2a'));
 }
-export function guitar(k: K27, x: number, y: number, col?: Col): void {
+/** R29: objeto contornado (ver ink27). */
+export function guitar(...a: Parameters<typeof guitar0>): void { ink27(a[0], () => guitar0(...a)); }
+function guitar0(k: K27, x: number, y: number, col?: Col): void {
   const c = col ?? k.pal.accent2;
   k.p.ellipse(x + 3, y - 4, 3, 3, c); k.p.ellipse(x + 3, y - 8, 2, 2, c);
   k.p.line(x + 3, y - 9, x + 3, y - 18, k.pal.woodDark); R(k, x + 2, y - 20, 3, 2, k.pal.woodDark);
 }
-export function piano(k: K27, x: number, y: number, grand = false): void {
+/** R29: objeto contornado (ver ink27). */
+export function piano(...a: Parameters<typeof piano0>): void { ink27(a[0], () => piano0(...a)); }
+function piano0(k: K27, x: number, y: number, grand = false): void {
   if (grand) {
     k.p.poly([[x, y - 12], [x + 30, y - 12], [x + 36, y - 16], [x + 28, y - 20], [x + 4, y - 18]], k.c('#16141a'));
     R(k, x + 2, y - 12, 24, 3, k.c('#f0ece0')); for (let i = 0; i < 12; i++) k.p.set(x + 3 + i * 2, y - 12, k.c('#16141a'));
@@ -215,30 +245,42 @@ export function piano(k: K27, x: number, y: number, grand = false): void {
     R(k, x - 1, y - 10, 24, 3, k.c('#f0ece0')); for (let i = 0; i < 11; i++) k.p.set(x + i * 2, y - 10, k.c('#16141a'));
   }
 }
-export function desk(k: K27, x: number, y: number, w = 30): void {
+/** R29: objeto contornado (ver ink27). */
+export function desk(...a: Parameters<typeof desk0>): void { ink27(a[0], () => desk0(...a)); }
+function desk0(k: K27, x: number, y: number, w = 30): void {
   const top = k.band >= 3 ? k.c('#d8d4cc') : k.pal.wood;
   R(k, x, y - 12, w, 3, top); R(k, x, y - 9, w, 1, shade(top, -0.3));
   R(k, x + 1, y - 9, 3, 9, shade(top, -0.25)); R(k, x + w - 4, y - 9, 3, 9, shade(top, -0.25));
   if (k.band < 3) R(k, x + w - 11, y - 9, 7, 7, shade(top, -0.15));
 }
-export function chair(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function chair(...a: Parameters<typeof chair0>): void { ink27(a[0], () => chair0(...a)); }
+function chair0(k: K27, x: number, y: number): void {
   const c = k.band >= 2 ? k.c('#26262c') : k.pal.woodDark;
   R(k, x, y - 7, 6, 2, c); R(k, x + 5, y - 13, 1, 8, c); k.p.vline(x, y - 5, y - 1, c); k.p.vline(x + 5, y - 5, y - 1, c);
 }
-export function lampDesk(k: K27, x: number, y: number, on = true): void {
+/** R29: objeto contornado (ver ink27). */
+export function lampDesk(...a: Parameters<typeof lampDesk0>): void { ink27(a[0], () => lampDesk0(...a)); }
+function lampDesk0(k: K27, x: number, y: number, on = true): void {
   k.p.vline(x + 2, y - 8, y - 1, k.pal.metalDark); R(k, x, y - 10, 5, 2, k.band === 0 ? k.c('#2f6a3a') : k.pal.metal);
   if (on) halo(k, x + 2, y - 4, 10, k.pal.lamp, 70);
 }
-export function phone(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function phone(...a: Parameters<typeof phone0>): void { ink27(a[0], () => phone0(...a)); }
+function phone0(k: K27, x: number, y: number): void {
   if (k.band <= 1) { R(k, x, y - 3, 6, 3, k.c('#18181c')); R(k, x - 1, y - 5, 8, 2, k.c('#18181c')); k.p.set(x + 3, y - 2, k.c('#c0c0c0')); }
   else if (k.band === 2) { R(k, x, y - 3, 7, 3, k.c('#d8d0c0')); R(k, x, y - 5, 7, 1, k.c('#b8b0a0')); }
   else { R(k, x + 1, y - 5, 3, 5, k.c('#18181c')); k.p.set(x + 2, y - 4, k.c('#7ac0ff')); }
 }
-export function typewriter(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function typewriter(...a: Parameters<typeof typewriter0>): void { ink27(a[0], () => typewriter0(...a)); }
+function typewriter0(k: K27, x: number, y: number): void {
   R(k, x, y - 5, 10, 5, k.c('#2a2a2e')); R(k, x + 2, y - 9, 6, 4, k.c('#f4ecd8')); R(k, x - 1, y - 6, 12, 1, k.c('#5a5a62'));
 }
 /** Tela de computador por geração (terminal verde, PC bege, monitor fino com gráfico). */
-export function computer(k: K27, x: number, y: number, chart = false): void {
+/** R29: objeto contornado (ver ink27). */
+export function computer(...a: Parameters<typeof computer0>): void { ink27(a[0], () => computer0(...a)); }
+function computer0(k: K27, x: number, y: number, chart = false): void {
   if (k.band <= 1) { typewriter(k, x, y); return; }
   if (k.band === 2) {
     R(k, x, y - 12, 13, 11, k.c('#d8d0bc')); R(k, x + 2, y - 10, 9, 7, k.c('#0a2a12'));
@@ -251,7 +293,9 @@ export function computer(k: K27, x: number, y: number, chart = false): void {
     R(k, x + 7, y - 3, 2, 3, k.c('#3a3c44')); R(k, x + 4, y - 1, 8, 1, k.c('#3a3c44'));
   }
 }
-export function tvSet(k: K27, x: number, y: number, glow?: Col): void {
+/** R29: objeto contornado (ver ink27). */
+export function tvSet(...a: Parameters<typeof tvSet0>): void { ink27(a[0], () => tvSet0(...a)); }
+function tvSet0(k: K27, x: number, y: number, glow?: Col): void {
   const g = glow ?? k.c('#9ac0ff');
   if (k.band <= 1) { R(k, x, y - 16, 20, 14, k.pal.woodDark); R(k, x + 2, y - 14, 12, 10, shade(g, -0.35)); k.p.vline(x + 3, y - 2, y - 1, k.pal.woodDark); k.p.vline(x + 16, y - 2, y - 1, k.pal.woodDark); }
   else if (k.band === 2) { R(k, x, y - 14, 18, 14, k.c('#2a2a2e')); R(k, x + 2, y - 12, 14, 10, shade(g, -0.25)); }
@@ -259,13 +303,17 @@ export function tvSet(k: K27, x: number, y: number, glow?: Col): void {
   halo(k, x + 10, y - 9, 12, g, 40);
 }
 /** Aparelho de ouvir música da geração: rádio-capela, vitrola, walkman/boombox, celular. */
-export function radio(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function radio(...a: Parameters<typeof radio0>): void { ink27(a[0], () => radio0(...a)); }
+function radio0(k: K27, x: number, y: number): void {
   if (k.band === 0) { k.p.disc(x + 7, y - 10, 7, k.pal.wood); R(k, x, y - 10, 15, 10, k.pal.wood); R(k, x + 3, y - 12, 9, 6, k.c('#c8a868')); for (let i = 0; i < 4; i++) k.p.vline(x + 4 + i * 2, y - 12, y - 7, k.pal.woodDark); R(k, x + 5, y - 4, 2, 2, k.pal.gold); R(k, x + 9, y - 4, 2, 2, k.pal.gold); }
   else if (k.band === 1) { R(k, x, y - 9, 18, 9, k.pal.accent); R(k, x + 2, y - 8, 7, 7, shade(k.pal.accent, -0.3)); R(k, x + 11, y - 7, 5, 2, k.c('#e8e0c8')); }
   else if (k.band === 2) { R(k, x, y - 10, 22, 10, k.c('#26262c')); k.p.disc(x + 5, y - 5, 3, k.c('#4a4a52')); k.p.disc(x + 16, y - 5, 3, k.c('#4a4a52')); R(k, x + 8, y - 8, 6, 3, k.c('#7ac0ff')); R(k, x + 3, y - 13, 16, 1, k.c('#8a8a92')); }
   else { R(k, x + 3, y - 10, 6, 10, k.c('#16161a')); R(k, x + 4, y - 9, 4, 7, k.c('#3aa0ff')); k.p.set(x + 6, y - 7, k.c('#ffffff')); }
 }
-export function jukebox(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function jukebox(...a: Parameters<typeof jukebox0>): void { ink27(a[0], () => jukebox0(...a)); }
+function jukebox0(k: K27, x: number, y: number): void {
   k.p.disc(x + 8, y - 20, 8, k.c('#c84a2a')); R(k, x, y - 20, 17, 20, k.c('#c84a2a'));
   k.p.disc(x + 8, y - 20, 6, k.c('#ffd27a')); R(k, x + 2, y - 20, 13, 8, k.c('#ffd27a'));
   R(k, x + 3, y - 11, 11, 5, k.c('#3a2a2a')); for (let i = 0; i < 4; i++) k.p.vline(x + 4 + i * 3, y - 10, y - 7, k.c(i % 2 ? '#6ad0ff' : '#ff7ad0'));
@@ -282,7 +330,9 @@ export function disc(k: K27, cx: number, cy: number, r: number, label: Col, ang 
   k.p.set(Math.round(cx + Math.cos(a) * (r / 3)), Math.round(cy + Math.sin(a) * (r / 3)), shade(label, -0.4));
 }
 /** Prateleira de discos (lombadas coloridas). */
-export function shelf(k: K27, x: number, y: number, w: number, h: number, fill = 0.8): void {
+/** R29: objeto contornado (ver ink27). */
+export function shelf(...a: Parameters<typeof shelf0>): void { ink27(a[0], () => shelf0(...a)); }
+function shelf0(k: K27, x: number, y: number, w: number, h: number, fill = 0.8): void {
   R(k, x, y - h, w, h, k.pal.woodDark);
   for (let row = 0; row < Math.floor(h / 8); row++) {
     const yy = y - h + 1 + row * 8;
@@ -290,24 +340,32 @@ export function shelf(k: K27, x: number, y: number, w: number, h: number, fill =
     for (let i = 0; i < w - 2; i++) if (noise(i, row, k.seed + 3) < fill) k.p.vline(x + 1 + i, yy, yy + 5, [k.pal.accent, k.pal.accent2, k.pal.fabric2, k.pal.paper, k.c('#2a2a30')][Math.floor(noise(i, row + 9) * 5)]);
   }
 }
-export function poster(k: K27, x: number, y: number, w: number, h: number, col: Col, s?: string): void {
+/** R29: objeto contornado (ver ink27). */
+export function poster(...a: Parameters<typeof poster0>): void { ink27(a[0], () => poster0(...a)); }
+function poster0(k: K27, x: number, y: number, w: number, h: number, col: Col, s?: string): void {
   R(k, x, y, w, h, col); R(k, x, y, w, 1, shade(col, 0.3));
   k.p.disc(x + w / 2, y + h / 2 - 1, Math.min(w, h) / 4, shade(col, -0.35));
   if (s) text(k, s.slice(0, Math.max(1, Math.floor((w - 2) / 4))), x + 2, y + h - 7, k.c('#fffaf0'));
 }
-export function windowPane(k: K27, x: number, y: number, w: number, h: number, out: Col, night = true): void {
+/** R29: objeto contornado (ver ink27). */
+export function windowPane(...a: Parameters<typeof windowPane0>): void { ink27(a[0], () => windowPane0(...a)); }
+function windowPane0(k: K27, x: number, y: number, w: number, h: number, out: Col, night = true): void {
   R(k, x - 1, y - 1, w + 2, h + 2, k.pal.trim);
   grad(k, x, y, w, y + h, out, shade(out, night ? -0.2 : 0.3));
   if (night) for (let i = 0; i < w / 4; i++) k.p.set(x + Math.floor(noise(i, 1, k.seed) * w), y + Math.floor(noise(i, 2, k.seed) * h * 0.6), k.c('#ffe8a0'));
   k.p.vline(x + Math.floor(w / 2), y, y + h - 1, k.pal.trim); k.p.hline(x, x + w - 1, y + Math.floor(h / 2), k.pal.trim);
 }
-export function trophy(k: K27, x: number, y: number, kind: 0 | 1 | 2 = 0): void {
+/** R29: objeto contornado (ver ink27). */
+export function trophy(...a: Parameters<typeof trophy0>): void { ink27(a[0], () => trophy0(...a)); }
+function trophy0(k: K27, x: number, y: number, kind: 0 | 1 | 2 = 0): void {
   const g = k.pal.gold;
   if (kind === 1) { disc(k, x + 3, y - 6, 5, g); R(k, x - 2, y - 12, 11, 12, withAlpha(k.c('#c0a050'), 60)); return; } // disco de ouro emoldurado
   if (kind === 2) { R(k, x + 1, y - 2, 5, 2, k.pal.woodDark); k.p.vline(x + 3, y - 9, y - 3, g); k.p.disc(x + 3, y - 11, 2, g); return; } // estatueta
   R(k, x, y - 2, 7, 2, k.pal.woodDark); R(k, x + 2, y - 4, 3, 2, g); k.p.disc(x + 3, y - 7, 3, g); R(k, x, y - 9, 7, 2, g); k.p.set(x + 2, y - 8, shade(g, 0.5));
 }
-export function candle(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function candle(...a: Parameters<typeof candle0>): void { ink27(a[0], () => candle0(...a)); }
+function candle0(k: K27, x: number, y: number): void {
   R(k, x, y - 4, 2, 4, k.c('#f4f0e0'));
   const f = k.t === 0 || Math.sin(k.t * 11 + x) > -0.6;
   k.p.set(x, y - 5, k.c(f ? '#ffd040' : '#ff8020')); k.p.set(x + (f ? 0 : 1), y - 6, k.c('#ffb040', 200));
@@ -317,7 +375,9 @@ export function candle(k: K27, x: number, y: number): void {
 // ---------------------------------------------------------------- estúdio
 
 /** Equipamento de gravação da geração: torno de acetato, fita de rolo, mesa analógica, DAW. */
-export function console27(k: K27, x: number, y: number, w = 44, rec = false): void {
+/** R29: objeto contornado (ver ink27). */
+export function console27(...a: Parameters<typeof console270>): void { ink27(a[0], () => console270(...a)); }
+function console270(k: K27, x: number, y: number, w = 44, rec = false): void {
   if (k.band === 0) {
     R(k, x, y - 12, 20, 12, k.pal.woodDark); disc(k, x + 10, y - 13, 7, k.pal.paper, k.t * 6); k.p.line(x + 17, y - 18, x + 12, y - 14, k.pal.metal); // torno
     R(k, x + 24, y - 16, 12, 16, k.pal.metalDark); for (let i = 0; i < 3; i++) k.p.disc(x + 28 + (i % 2) * 4, y - 12 + i * 3, 1, k.c(rec && blink(k, 1.5, i) ? '#ff5040' : '#ffd889'));
@@ -352,7 +412,9 @@ export function meters(k: K27, x: number, y: number, n: number, live: boolean): 
     k.p.line(x + i * 8 + 3, y + 4, Math.round(x + i * 8 + 3 + Math.cos(a) * 3), Math.round(y + 4 + Math.sin(a) * 3), k.c('#202020'));
   }
 }
-export function recLight(k: K27, x: number, y: number, on: boolean): void {
+/** R29: objeto contornado (ver ink27). */
+export function recLight(...a: Parameters<typeof recLight0>): void { ink27(a[0], () => recLight0(...a)); }
+function recLight0(k: K27, x: number, y: number, on: boolean): void {
   R(k, x, y, 16, 6, k.c('#1a1416'));
   text(k, k.band === 0 ? 'REC' : 'ON AIR', x + 1 + (k.band === 0 ? 3 : 0), y + 1, on ? k.c('#ff4030') : k.c('#4a2420'));
   if (on) halo(k, x + 8, y + 3, 12, k.c('#ff4030'), 60);
@@ -361,7 +423,9 @@ export function recLight(k: K27, x: number, y: number, on: boolean): void {
 // ---------------------------------------------------------------- veículos
 
 /** Ônibus/van de turnê da geração (frente para a direita). */
-export function tourVehicle(k: K27, x: number, y: number, name?: string): void {
+/** R29: objeto contornado (ver ink27). */
+export function tourVehicle(...a: Parameters<typeof tourVehicle0>): void { ink27(a[0], () => tourVehicle0(...a)); }
+function tourVehicle0(k: K27, x: number, y: number, name?: string): void {
   const body = k.band === 0 ? k.c('#5a6a4a') : k.band === 1 ? k.c('#d8c8a0') : k.band === 2 ? k.c('#e8e8f0') : k.c('#1a1c24');
   const stripe = k.band === 0 ? k.pal.gold : k.band === 1 ? k.c('#c86a2a') : k.band === 2 ? k.c('#3a6ad0') : k.pal.accent;
   const L = k.band === 1 ? 46 : 66, Hh = k.band === 1 ? 20 : 24;
@@ -374,7 +438,9 @@ export function tourVehicle(k: K27, x: number, y: number, name?: string): void {
   k.p.set(x + L - 1, y - 7, k.c('#fff4b0')); halo(k, x + L + 2, y - 7, 8, k.c('#fff4b0'), 50);
 }
 /** Viatura da geração com giroflex (azul/vermelho alternando). */
-export function policeCar(k: K27, x: number, y: number): void {
+/** R29: objeto contornado (ver ink27). */
+export function policeCar(...a: Parameters<typeof policeCar0>): void { ink27(a[0], () => policeCar0(...a)); }
+function policeCar0(k: K27, x: number, y: number): void {
   const body = k.band <= 1 ? k.c('#18181c') : k.c('#e8e8ec');
   R(k, x, y - 9, 34, 6, body); R(k, x + 7, y - 14, 18, 5, body); R(k, x + 9, y - 13, 6, 3, k.c('#9ac0d8')); R(k, x + 17, y - 13, 6, 3, k.c('#9ac0d8'));
   if (k.band >= 2) R(k, x, y - 7, 34, 2, k.c('#2a4ad0'));
@@ -384,7 +450,9 @@ export function policeCar(k: K27, x: number, y: number): void {
   else { R(k, x + 12, y - 16, 4, 2, k.c(ph ? '#ff3030' : '#801818')); R(k, x + 16, y - 16, 4, 2, k.c(ph ? '#182880' : '#3060ff')); halo(k, ph ? x + 13 : x + 18, y - 15, 16, k.c(ph ? '#ff3030' : '#3060ff'), 70); }
 }
 /** Câmera de imprensa da geração (com flash). */
-export function pressCam(k: K27, x: number, y: number, flash: boolean): void {
+/** R29: objeto contornado (ver ink27). */
+export function pressCam(...a: Parameters<typeof pressCam0>): void { ink27(a[0], () => pressCam0(...a)); }
+function pressCam0(k: K27, x: number, y: number, flash: boolean): void {
   if (k.band === 0) { R(k, x, y - 6, 6, 5, k.c('#2a2a2e')); k.p.disc(x + 7, y - 9, 2, k.c('#d8d8e0')); }
   else if (k.band <= 2) { R(k, x, y - 5, 7, 5, k.c('#1a1a1e')); R(k, x + 2, y - 7, 3, 2, k.c('#1a1a1e')); k.p.set(x + 3, y - 3, k.c('#8090a0')); }
   else { R(k, x, y - 7, 4, 7, k.c('#16161a')); R(k, x + 1, y - 6, 2, 4, k.c('#3aa0ff')); }
@@ -394,7 +462,9 @@ export function pressCam(k: K27, x: number, y: number, flash: boolean): void {
 // ---------------------------------------------------------------- fábrica / loja
 
 /** Prensa de discos (a máquina): prato hidráulico + pilha de discos. */
-export function press(k: K27, x: number, y: number, label: Col, beat = 0): void {
+/** R29: objeto contornado (ver ink27). */
+export function press(...a: Parameters<typeof press0>): void { ink27(a[0], () => press0(...a)); }
+function press0(k: K27, x: number, y: number, label: Col, beat = 0): void {
   R(k, x, y - 30, 26, 30, k.pal.metalDark); R(k, x + 2, y - 28, 22, 4, k.pal.metal);
   const down = Math.round(Math.max(0, Math.sin(beat)) * 4);
   R(k, x + 5, y - 24 + down, 16, 4, k.c('#5a5a62')); R(k, x + 12, y - 28, 2, 4 + down, k.c('#8a8a92'));
@@ -402,6 +472,8 @@ export function press(k: K27, x: number, y: number, label: Col, beat = 0): void 
   R(k, x + 3, y - 8, 20, 8, shade(k.pal.metalDark, -0.2));
   halo(k, x + 13, y - 18, 8, k.c('#ffb060'), down > 2 ? 60 : 20);
 }
-export function stackDiscs(k: K27, x: number, y: number, n: number, label: Col): void {
+/** R29: objeto contornado (ver ink27). */
+export function stackDiscs(...a: Parameters<typeof stackDiscs0>): void { ink27(a[0], () => stackDiscs0(...a)); }
+function stackDiscs0(k: K27, x: number, y: number, n: number, label: Col): void {
   for (let i = 0; i < n; i++) { R(k, x, y - 2 - i * 2, 12, 2, k.c('#121214')); k.p.set(x + 5, y - 2 - i * 2, label); }
 }

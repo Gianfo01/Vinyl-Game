@@ -475,6 +475,10 @@ for (const tab of ['panel', 'inbox']) registerHelp18(`tab:ck20:${tab}`, help18('
 T('act', 'insp29', ['Resumo', 'Summary'],
   ['Visão rápida do artista: formação atual, projetos, contrato, agenda e saúde, com as mesmas ações do clique direito.', 'Quick view of the act: current lineup, projects, contract, schedule and health, with the same actions as right-click.'],
   ['Use o Resumo para decidir sem abrir cada aba. Ex.: contrato vencendo + estresse alto → renovar antes de marcar turnê.', 'Use the Summary to decide without opening every tab. E.g. contract expiring + high stress → renew before booking a tour.']);
+// R29 (DEMO): aba Público (idade e região do público)
+T('act', 'demo29', ['Público por idade e região', 'Audience by age and region'],
+  ['Fatias do público por faixa (13–17, 18–24, 25–34, 35–49, 50+) e por mercado/país, somando o total de fãs; as faixas envelhecem a cada ano.', 'Audience shares by band (13–17, 18–24, 25–34, 35–49, 50+) and by market/country, adding up to the fan total; bands age every year.'],
+  ['Público velho compra vinil e paga ingresso caro; jovem vai de single, streaming e vídeo curto. Uma redescoberta por vídeo curto traz filhos; um comercial de TV traz a geração original.', 'Older audiences buy vinyl and pay for pricey tickets; the young go for singles, streaming and short video. A short-video rediscovery brings the kids; a TV ad brings back the original generation.']);
 T('act', 'connect29', ['Conexões', 'Connections'],
   ['Tudo o que outros sistemas registraram sobre o artista e as pessoas dele: feats, relíquias, prêmios, processos, Submundo, ex-integrantes e favores.', 'Everything other systems recorded about the act and its people: feats, relics, awards, lawsuits, underworld, former members and favors.'],
   ['É a mesma fonte da ficha da pessoa e da wiki: se algo aparece aqui, aparece lá. Ex.: um feat com uma pessoa específica entra em "Participações".', 'Same source as the person sheet and the wiki: if it shows here, it shows there. E.g. a feat with a specific person goes under "Participations".']);

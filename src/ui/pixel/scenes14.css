@@ -1,11 +1,11 @@
 /* Rodada 14 — cenas ilustradas (molduras via variáveis de tema: funcionam no claro e no escuro) */
 .s14 { margin: 0 0 12px; display: flex; gap: 12px; align-items: stretch; background: var(--panel-2); border: 2px solid var(--line); border-radius: var(--radius); padding: 8px; color: var(--ink); }
 .s14-banner { flex-wrap: wrap; }
-.s14-banner .s14-stage { flex: 1 1 320px; max-width: 512px; }
+.s14-banner .s14-stage { flex: 1 1 320px; max-width: 516px; } /* R29: 512 + borda = 2× inteiro */
 .s14-banner figcaption { flex: 1 1 200px; min-width: 0; display: flex; align-items: center; }
-.s14-card { flex-direction: column; max-width: 768px; }
-.s14-stage { position: relative; line-height: 0; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; background: var(--hq-bg); }
-.s14-canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.s14-card { flex-direction: column; max-width: 792px; } /* R29: 768 (3×) + borda e respiro */
+.s14-stage { position: relative; line-height: 0; min-width: 0; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; background: var(--hq-bg); }
+.s14-canvas { width: 100%; height: auto; display: block; margin-inline: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
 .s14-info { display: flex; flex-direction: column; gap: 4px; line-height: 1.35; }
 .s14-title { font-size: 1rem; }
 .s14-title small { color: var(--muted); font-weight: normal; }

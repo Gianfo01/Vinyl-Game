@@ -76,7 +76,7 @@ describe('r29 (4) — nomes traduzidos no lugar das chaves', () => {
   });
   it('o despejo genérico "Mais dados" saiu da ficha (dossiê da pessoa)', () => {
     const src = SRC('ui/sys/dossier13.ts');
-    expect(src).not.toMatch(/Mais dados/);
+    expect(src).not.toMatch(/l\('Mais dados'/); // o comentário pode citar; o texto da tela não existe mais
     expect(src).not.toMatch(/personExtraFacts\(/);
   });
   it('nenhum texto do jogo cita o nome interno de um módulo (ex.: "(bonds9)", "love17:", "real27")', () => {

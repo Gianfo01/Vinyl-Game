@@ -15,6 +15,7 @@ import {
   BUDGETS, DEADLINES, DIRS, INTENTS, NEXT, PROBLEM_NAME, attentionCount, chooseNext, commitProject, nextStepBlock, planOf12, problemOptions, resolveProblem, slack, weeksNeeded,
   type BudgetLvl, type Deadline, type Dir, type Intent, type NextStep,
 } from '../../sim/sys/project12';
+import { audLine29 } from './demo29'; // R29 demo29: quem é o público-alvo (faixas) × onde o público está
 import { AUDIENCES, effectName, focusIdeal, recipeFit, stageName, studioContext, type Aud12 } from '../../sim/sys/recipe12';
 import type { GameState, ReleaseType } from '../../sim/types';
 import { playerActs, rngOf } from '../../sim/util';
@@ -60,7 +61,7 @@ function commitPanel(s: GameState, p: MusicProject): HTMLElement {
         h('label', null, t(l('Orçamento', 'Budget')), select(d.budget, opt(BUDGETS), (v) => { d.budget = v; rerender(); }), h('small', { class: 'muted' }, t(BUDGETS[d.budget].fx))),
         h('label', null, t(l('Direção artística', 'Artistic direction')), select(d.dir, opt(DIRS), (v) => { d.dir = v; rerender(); }), h('small', { class: 'muted' }, t(DIRS[d.dir].fx))),
         h('label', null, t(l('Prazo', 'Deadline')), select(d.deadline, opt(DEADLINES), (v) => { d.deadline = v; rerender(); }), h('small', { class: 'muted' }, `${t(DEADLINES[d.deadline].fx)} (${DEADLINES[d.deadline].weeks + (p.type === 'lp' ? 8 : p.type === 'ep' ? 3 : 0)} ${t(l('sem.', 'wk'))})`)),
-        h('label', null, t(l('Público-alvo', 'Target audience')), select(d.aud, opt(AUDIENCES), (v) => { d.aud = v; rerender(); }), h('small', { class: 'muted' }, t(AUDIENCES[d.aud].desc), ' ', INTENTS[d.intent].aud === d.aud ? t(l('Casa com a intenção (apelo ×1,03).', 'Matches the intent (appeal ×1.03).')) : t(l('Não é o público natural da intenção (apelo ×0,98).', 'Not the intent\'s natural audience (appeal ×0.98).')))),
+        h('label', null, t(l('Público-alvo', 'Target audience')), select(d.aud, opt(AUDIENCES), (v) => { d.aud = v; rerender(); }), h('small', { class: 'muted' }, t(AUDIENCES[d.aud].desc), ' ', INTENTS[d.intent].aud === d.aud ? t(l('Casa com a intenção (apelo ×1,03).', 'Matches the intent (appeal ×1.03).')) : t(l('Não é o público natural da intenção (apelo ×0,98).', 'Not the intent\'s natural audience (appeal ×0.98).')), s.acts[p.actId] ? audLine29(s, s.acts[p.actId], d.aud) : null)),
       ),
       h('p', { class: 'muted small' }, t(l('A meta do projeto passa a ser: ', 'The project goal becomes: ')), t(GOALS[INTENTS[d.intent].goal].desc), ' ', t(l('O público-alvo também muda o que funciona no estúdio (foco por etapa e receita sonora).', 'The target audience also changes what works in the studio (stage focus and sound recipe).'))),
       h('div', { class: 'row wrap' },
@@ -162,6 +163,7 @@ function commitSummary(s: GameState, p: MusicProject): HTMLElement | null {
     h('div', { class: 'p12-chips' },
       tag(INTENTS[pl.intent].name, INTENTS[pl.intent].fx), tag(BUDGETS[pl.budget].name, BUDGETS[pl.budget].fx), tag(DIRS[pl.dir].name, DIRS[pl.dir].fx),
       tag(DEADLINES[pl.deadlineKind].name, DEADLINES[pl.deadlineKind].fx), tag(AUDIENCES[pl.aud].name, AUDIENCES[pl.aud].desc)),
+    s.acts[p.actId] ? audLine29(s, s.acts[p.actId], pl.aud) : null,
     h('div', { class: 'row wrap' },
       kv(t(l('Comprometido', 'Committed')), h('b', { class: p.budget && c.committed > p.budget ? 'bad' : '' }, $(c.committed), p.budget ? ` / ${$(p.budget)}` : '')),
       kv(t(l('Caixa', 'Cash')), h('b', { class: c.remaining > s.player.cash ? 'bad' : 'good' }, $(s.player.cash))),

@@ -19,6 +19,7 @@ import { PRODUCERS } from '../../sim/studio';
 import { h } from '../dom';
 import { store } from '../store';
 import './eggs27.css';
+import { C, Px, inked, lv } from '../pixel/px';
 
 const T = (x: L): string => t(x);
 const say = (x: L, kind = 'info'): void => { toast(T(x), kind); };
@@ -184,24 +185,37 @@ export interface Prop27 { id: string; slot: string; w: number; h: number; title:
 export const hqPropEggs27: ((g: GameState) => Prop27 | null)[] = [
   (g) => (garage27(g) ? { id: 'calhambeque', slot: 'garage', w: 26, h: 16, title: l('Calhambeque (presente de um fã, 1965)', 'Old jalopy (a fan\'s gift, 1965)'), draw: drawJalopy } : null),
 ];
-function px(c: CanvasRenderingContext2D, col: string, x: number, y: number, w = 1, hh = 1): void { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), w, hh); }
+// R29 (arte consistente): os ovos eram desenhados com fillRect direto no contexto (cores chapadas, sem contorno);
+// agora saem de um buffer Px com o acabamento do resto (rampas, luz de cima à esquerda, contorno INK de 1 px) e o
+// canvas fica em cache (o mesmo quadro sempre dá os mesmos pixels).
+const sprite27 = new Map<string, HTMLCanvasElement>();
+function spr27(key: string, w: number, h: number, draw: (q: Px) => void): HTMLCanvasElement {
+  let cv = sprite27.get(key);
+  if (!cv) { const p = new Px(w + 2, h + 2); inked(p, (q) => draw(q)); cv = p.canvas(); sprite27.set(key, cv); }
+  return cv;
+}
 /** Calhambeque 26×16 px: carro dos anos 1920 (capota alta, para-lamas soltos, estribo, estepe, rodas raiadas). */
 export function drawJalopy(c: CanvasRenderingContext2D, x: number, y: number, t = 0): void {
-  const k = Math.round(Math.sin(t * 9)) > 0 ? 1 : 0; // chacoalha de leve
-  const Y = y + k * 0;
-  px(c, '#1b1b22', x + 7, Y, 11, 1); px(c, '#1b1b22', x + 7, Y + 1, 1, 6); px(c, '#1b1b22', x + 17, Y + 1, 1, 6); px(c, '#1b1b22', x + 12, Y + 1, 1, 5); // capota alta
-  px(c, '#bfe3f0', x + 8, Y + 2, 4, 3); px(c, '#bfe3f0', x + 13, Y + 2, 4, 3); // janelas
-  px(c, '#b3262e', x + 6, Y + 6, 13, 4); px(c, '#d94b4b', x + 6, Y + 6, 13, 1); // cabine
-  px(c, '#b3262e', x + 18, Y + 7, 5, 3); px(c, '#d94b4b', x + 18, Y + 7, 5, 1); // capô baixo
-  px(c, '#e9c46a', x + 23, Y + 6, 1, 4); px(c, '#8a6a10', x + 23, Y + 7, 1, 1); // radiador
-  px(c, '#f4e3a1', x + 24, Y + 6, 1, 1); px(c, '#555', x + 24, Y + 7, 1, 2); // farol no suporte
-  px(c, '#222', x + 2, Y + 5, 3, 5); px(c, '#777', x + 3, Y + 6, 1, 3); // estepe atrás
-  px(c, '#1b1b22', x + 4, Y + 10, 8, 1); px(c, '#1b1b22', x + 16, Y + 10, 8, 1); // para-lamas
-  px(c, '#1b1b22', x + 11, Y + 11, 6, 1); // estribo
-  for (const wx of [5, 17]) { // rodas raiadas
-    px(c, '#111', x + wx, y + 11, 5, 5); px(c, '#111', x + wx - 1, y + 12, 7, 3);
-    px(c, '#9a9a9a', x + wx + 2, y + 12, 1, 3); px(c, '#9a9a9a', x + wx + 1, y + 13, 3, 1); px(c, '#e9c46a', x + wx + 2, y + 13, 1, 1);
-  }
+  void t;
+  const red = C('#b3262e'), blk = C('#26222c'), glass = C('#bfe3f0');
+  const cv = spr27('jalopy', 26, 16, (q) => {
+    const X = 1, Y = 1; // margem do contorno
+    q.rect(X + 7, Y, 11, 1, lv(blk, 4)); q.rect(X + 7, Y + 1, 1, 6, lv(blk, 3.6)); q.rect(X + 17, Y + 1, 1, 6, lv(blk, 2)); q.rect(X + 12, Y + 1, 1, 5, blk); // capota alta
+    q.rect(X + 8, Y + 2, 4, 3, glass); q.rect(X + 13, Y + 2, 4, 3, glass); q.put(X + 8, Y + 2, C('#ffffff')); q.put(X + 13, Y + 2, C('#ffffff')); q.hline(X + 8, X + 11, Y + 4, lv(glass, 2.4)); q.hline(X + 13, X + 16, Y + 4, lv(glass, 2.4)); // janelas
+    q.rect(X + 6, Y + 5, 12, 1, lv(blk, 2)); // beiral da capota
+    q.rect(X + 6, Y + 6, 13, 4, red); q.hline(X + 6, X + 18, Y + 6, lv(red, 4)); q.hline(X + 6, X + 18, Y + 9, lv(red, 2)); q.vline(X + 12, Y + 7, Y + 8, lv(red, 1.6)); // cabine e porta
+    q.rect(X + 18, Y + 7, 5, 3, red); q.hline(X + 18, X + 22, Y + 7, lv(red, 4.2)); q.hline(X + 18, X + 22, Y + 9, lv(red, 2)); // capô baixo
+    q.rect(X + 23, Y + 6, 1, 4, C('#e9c46a')); q.put(X + 23, Y + 6, lv(C('#e9c46a'), 5)); q.put(X + 23, Y + 8, lv(C('#e9c46a'), 2)); // radiador de latão
+    q.put(X + 24, Y + 6, C('#fff2b0')); q.rect(X + 24, Y + 7, 1, 2, C('#5a5a62')); // farol no suporte
+    q.rect(X + 2, Y + 5, 3, 5, blk); q.rect(X + 3, Y + 6, 1, 3, C('#8a8a92')); q.put(X + 2, Y + 5, lv(blk, 4)); // estepe atrás
+    q.rect(X + 4, Y + 10, 8, 1, lv(blk, 3)); q.rect(X + 16, Y + 10, 8, 1, lv(blk, 3)); // para-lamas
+    q.rect(X + 11, Y + 11, 6, 1, lv(blk, 2.4)); // estribo
+    for (const wx of [5, 17]) { // rodas raiadas: pneu em 2 tons, raios cromados, cubo de latão
+      q.rect(X + wx, Y + 11, 5, 5, C('#1a1a20')); q.rect(X + wx - 1, Y + 12, 7, 3, C('#1a1a20')); q.put(X + wx, Y + 11, C('#3a3a44')); q.put(X + wx - 1, Y + 12, C('#3a3a44'));
+      q.rect(X + wx + 2, Y + 12, 1, 3, C('#a8acb8')); q.rect(X + wx + 1, Y + 13, 3, 1, C('#a8acb8')); q.put(X + wx + 2, Y + 13, C('#e9c46a')); q.put(X + wx + 1, Y + 12, C('#d8dce4'));
+    }
+  });
+  c.drawImage(cv, Math.round(x) - 1, Math.round(y) - 1);
 }
 
 // ================================================================ mapa da cidade
@@ -226,12 +240,17 @@ export function cityShake27(g: GameState, city: string, t: number): [number, num
 /** Músico de rua 9×13 px: chapéu, violão e o estojo aberto com moedas. */
 export function drawBusker(c: CanvasRenderingContext2D, x: number, y: number, t = 0): void {
   const strum = Math.floor(t * 3) % 2;
-  px(c, '#2b2340', x + 2, y, 4, 1); px(c, '#2b2340', x + 1, y + 1, 6, 1); // chapéu
-  px(c, '#e0ac69', x + 3, y + 2, 3, 2); // rosto
-  px(c, '#3d5a80', x + 2, y + 4, 5, 5); // casaco
-  px(c, '#a0522d', x + 1, y + 6, 5, 3); px(c, '#5c3317', x + 3, y + 7, 1, 1); px(c, '#c8a165', x + 6, y + 5 - strum, 3, 1); // violão
-  px(c, '#222', x + 3, y + 9, 1, 3); px(c, '#222', x + 5, y + 9, 1, 3); // pernas
-  px(c, '#4a2c17', x, y + 12, 5, 1); px(c, '#f4d35e', x + 1, y + 11, 1, 1); px(c, '#f4d35e', x + 3, y + 11, 1, 1); // estojo e moedas
+  const coat = C('#3d5a80'), wood = C('#a0522d'), hat = C('#2b2340');
+  const cv = spr27(`busker${strum}`, 9, 13, (q) => {
+    const X = 1, Y = 1;
+    q.rect(X + 2, Y, 4, 1, lv(hat, 4)); q.rect(X + 1, Y + 1, 6, 1, hat); // chapéu
+    q.rect(X + 3, Y + 2, 3, 2, C('#e0ac69')); q.put(X + 5, Y + 3, lv(C('#e0ac69'), 2)); // rosto
+    q.rect(X + 2, Y + 4, 5, 5, coat); q.vline(X + 2, Y + 4, Y + 8, lv(coat, 4)); q.vline(X + 6, Y + 4, Y + 8, lv(coat, 2)); // casaco
+    q.rect(X + 1, Y + 6, 5, 3, wood); q.hline(X + 1, X + 5, Y + 6, lv(wood, 4)); q.put(X + 3, Y + 7, C('#3a1e0e')); q.rect(X + 6, Y + 5 - strum, 3, 1, C('#c8a165')); // violão
+    q.rect(X + 3, Y + 9, 1, 3, C('#26222c')); q.rect(X + 5, Y + 9, 1, 3, C('#26222c')); // pernas
+    q.rect(X, Y + 12, 5, 1, C('#4a2c17')); q.put(X + 1, Y + 11, C('#f4d35e')); q.put(X + 3, Y + 11, C('#f4d35e')); // estojo e moedas
+  });
+  c.drawImage(cv, Math.round(x) - 1, Math.round(y) - 1);
 }
 
 // ================================================================ desfazer fevereiro de 1959
