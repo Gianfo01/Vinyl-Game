@@ -26,6 +26,7 @@ import { registerArea } from '../registry';
 import { tabs } from '../vis';
 import { why18 } from '../explain18';
 import { placeArt29 } from '../art29ui'; // r29 (arte)
+import { ent27 } from '../ps/ent27';
 
 const pc = (v: number) => `${Math.round(v * 100)}%`;
 const res = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
@@ -122,7 +123,7 @@ function stockTab(s: GameState): HTMLElement {
       ret ? pill(t(l('{n} devolvidas pelo varejo', '{n} returned by retail'), { n: N(ret) }), 'bad') : null),
     muted(l('O varejo devolve o que não vende (frete e triagem por sua conta). Ponta de estoque: vende o encalhe a ~15% para o cesto de saldão — entra dinheiro e o armazém zera, mas o artista se ofende. Destruir só custa a trituração.', 'Retail returns what does not sell (freight and sorting on you). Cut-outs: sell the overstock at ~15% to bargain bins — cash in and storage cleared, but the artist is offended. Destroying only costs the shredding.')),
     list.length ? h('table', { class: 'tbl small' }, h('tr', null, ...[l('Disco', 'Record'), l('Estoque', 'Stock'), l('Vende/sem.', 'Sells/wk'), l('Armazém/mês', 'Storage/mo'), l('', '')].map((x) => h('th', null, t(x)))),
-      ...list.slice(0, 25).map((x) => h('tr', null, h('td', null, x.rel.title, h('div', { class: 'muted' }, s.acts[x.rel.actId]?.name ?? '')), h('td', null, N(x.stock)), h('td', null, N(x.weekly)), h('td', null, $(x.cost)),
+      ...list.slice(0, 25).map((x) => h('tr', null, h('td', null, h('span', ent27('release', x.rel.id), x.rel.title), h('div', { class: 'muted', ...ent27('act', x.rel.actId) }, s.acts[x.rel.actId]?.name ?? '')), h('td', null, N(x.stock)), h('td', null, N(x.weekly)), h('td', null, $(x.cost)),
         h('td', null, s.week - x.rel.week >= 12 ? h('span', null, h('button', { class: 'btn tiny', onclick: () => res(cutOut18(s, x.rel.id), l('Vendido como ponta de estoque.', 'Sold off as cut-outs.')) }, t(l('Ponta de estoque', 'Cut-out'))), ' ',
           h('button', { class: 'btn tiny ghost', onclick: () => res(cutOut18(s, x.rel.id, true), l('Estoque destruído.', 'Stock destroyed.')) }, t(l('Destruir', 'Destroy')))) : h('span', { class: 'muted' }, t(l('recente', 'recent'))))))) : muted(l('Nada parado no armazém.', 'Nothing idle in the warehouse.')));
 }

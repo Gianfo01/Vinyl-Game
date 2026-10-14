@@ -101,7 +101,7 @@ export function hearOdds19(s: GameState, b: Boy19): { p: number; why: WhyPart[] 
   const a = s.acts[b.act], why: WhyPart[] = [];
   let p = 0.15; why.push({ label: l('Base: o gigante tem advogados e lobby', 'Base: the giant has lawyers and lobbyists'), value: 0.15, fmt: 'pct' });
   const fm = (a?.fame ?? 0) / 250; p += fm; why.push({ label: l('Fama do ato', 'Act fame'), value: fm, fmt: 'pct', tone: 'good' });
-  const mo = mobilization19(s, b.act) / 300; p += mo; why.push({ label: l('Mobilização dos fãs (fans18)', 'Fan mobilization (fans18)'), value: mo, fmt: 'pct', tone: 'good' });
+  const mo = mobilization19(s, b.act) / 300; p += mo; why.push({ label: l('Mobilização dos fãs', 'Fan mobilization'), value: mo, fmt: 'pct', tone: 'good' });
   const others = lv19(s).npcBoy * 0.06 + (activeBoy19(s).length - 1) * 0.05; if (others > 0) { p += others; why.push({ label: l('Outros artistas também boicotam', 'Other artists boycott too'), value: others, fmt: 'pct', tone: 'good' }); }
   if (s.year >= 2010) { p += 0.1; why.push({ label: l('Era das "taxas-surpresa": reguladores atentos (2010+)', '"Junk fee" era: regulators watching (2010+)'), value: 0.1, fmt: 'pct', tone: 'good' }); }
   return { p: clamp(p, 0.05, 0.8), why };

@@ -620,6 +620,11 @@ for (const [id, pt, en, fam, born, parents, cities] of G19) {
 
 export const genreById = Object.fromEntries(GENRES.map((x) => [x.id, x])) as Record<string, Genre>;
 
+/** r29 (dados crus): nome de um gênero OU de uma família de gêneros ('pop_rock', 'blues_jazz'…); id desconhecido vira texto legível. */
+export function gfName(id: string): L {
+  return genreById[id]?.name ?? FAMILIES.find((f) => f.id === id)?.name ?? l(id.replace(/_/g, ' '));
+}
+
 export function familyOf(genreId: string): FamilyId {
   return genreById[genreId]?.family ?? 'pop';
 }

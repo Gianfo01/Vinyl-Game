@@ -21,6 +21,7 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { actLink, pill, section } from '../common';
 import { registerPageTab } from '../registry';
 import { h } from '../dom';
+import { awardTxt29 } from '../ps/raw29';
 import { PERSON_TABS } from '../pages';
 import { factsList17 } from './found17';
 import { ents27 } from './mail27model';
@@ -50,7 +51,8 @@ function relicsAwards(s: GameState, ids: string[], pid?: string): HTMLElement | 
   if (!rs.length && !aw.length) return null;
   return section(t(l('Relíquias e prêmios', 'Relics and awards')),
     rs.length ? h('ul', { class: 'small' }, ...rs.map((r) => h('li', null, h('b', null, t(r.n)), ` · ${r.y}`, r.a && s.acts[r.a] ? [' · ', actLink(s, r.a)] : null))) : null,
-    aw.length ? h('ul', { class: 'small' }, ...aw.map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`, a.actId && s.acts[a.actId] ? [' · ', actLink(s, a.actId)] : null))) : null);
+    aw.length ? h('ul', { class: 'small' }, ...aw.map((a) => h('li', null, `${a.year} · ${awardTxt29(a)}`, // r29: sem o id da categoria
+       a.actId && s.acts[a.actId] ? [' · ', actLink(s, a.actId)] : null))) : null);
 }
 
 /** r29: facções que rondam a CENA do ato (gênero + país) — afinidade cultural, nunca afirmação sobre as pessoas. */

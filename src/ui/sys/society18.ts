@@ -21,6 +21,7 @@ import { why18 } from '../explain18';
 import { registerArea } from '../registry';
 import { tabs } from '../vis';
 import { CP_TABS18, CP_VIS18 } from './careerpages17';
+import { gfName } from '../../data/world';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null | string, ok: L = l('Feito.', 'Done.')) => { toast(T(r ?? ok), r ? 'info' : 'good'); rerender(); };
@@ -83,7 +84,7 @@ function awardsTab(s: GameState): HTMLElement {
   const rels = Object.values(s.releases).filter((r) => r.year === s.year && (r.owner === 'player' || s.acts[r.actId]?.playerBand) && r.totalUnits > 0).sort((a, b) => (a.peak || 999) - (b.peak || 999)).slice(0, 8);
   return h('div', null,
     section(t(l('Quem vota', 'Who votes')), card(row(h('b', null, t(v.era))), row(pill(fmtS(l('{n} membros', '{n} members'), { n: v.n.toLocaleString() })), pill(fmtS(l('idade média {a}', 'average age {a}'), { a: v.age })), pill(fmtS(l('{p}% jovens', '{p}% young'), { p: Math.round(v.young * 100) }))),
-      row(...Object.entries(v.bias).filter(([, b]) => b).map(([f, b]) => pill(`${f} ${b! > 0 ? '+' : ''}${b}`, b! > 0 ? 'good' : 'bad'))),
+      row(...Object.entries(v.bias).filter(([, b]) => b).map(([f, b]) => pill(`${t(gfName(f))} ${b! > 0 ? '+' : ''}${b}`, b! > 0 ? 'good' : 'bad') /* r29: nome, não o id */)),
       !v.reformed ? row(btn(l('Lobby pela reforma dos votantes', 'Lobby for voter reform'), () => say(lobbyReform18(s, 1))), muted(altHist18(s) ? ALT_NOTE18 : l('Modo exato: a reforma é em 2019.', 'Exact mode: the reform comes in 2019.'))) : null)),
     section(t(l('Campanhas deste ano', 'This year\'s campaigns')), ...(rels.length ? rels.map((r) => row(h('b', null, `"${r.title}"`), r.peak ? pill(`#${r.peak}`) : null, why18(s, 'aw18.adj', { rel: r.id }, pill(t(l('política', 'politics')))),
       ...(Object.keys(CAMP18) as Camp18[]).filter((k) => s.year >= CAMP18[k].from).map((k) => btn(`${t(CAMP18[k].name)} (${$(money(s, CAMP18[k].cost))})`, () => say(campaign18(s, r.id, k)), st.camps.some((c) => c.rel === r.id && c.k === k && c.y === s.year))))) : [muted(l('Nenhum lançamento seu este ano.', 'None of your releases this year.'))]),

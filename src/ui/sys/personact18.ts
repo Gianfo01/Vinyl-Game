@@ -3,7 +3,7 @@
 // família…) e, na página do artista, um atalho por integrante. Cada linha: custo, chance (com tooltip do porquê),
 // motivo do bloqueio e o resultado logo abaixo. Bolinhas aparecem como ⏱ (a confirmação do agenda17 vale).
 
-import { l } from '../../data/world';
+import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { costMoney18, doPersonAction18, PA_GROUP, paLog18, personActions18, type PAGroup, type PARow } from '../../sim/personact18';
 import type { Act, GameState } from '../../sim/types';
@@ -16,7 +16,7 @@ import { fmtL } from '../../sim/util';
 import { ACT_HEAD_EXTRAS, PERSON_HEAD_EXTRAS } from '../pages';
 import { ic } from '../vis';
 import { PAGE16_HEAD } from './people16';
-import { CTXHOOK27, ctxMenu27, menuSections27, type CtxItem27, type CtxMenu27 } from '../ps/ctx27model';
+import { CTXHOOK27, NO_ACTIONS29, ctxMenu27, liveCount29, menuSections27, secOf27, type CtxItem27, type CtxMenu27 } from '../ps/ctx27model';
 import './core18.css';
 
 const ORDER: PAGroup[] = ['social', 'career', 'press', 'care', 'love', 'dark'];
@@ -79,7 +79,7 @@ export function actionMenu18(s: GameState, key: string): HTMLElement {
     try { m = ctxMenu27(s, 'person', key, CTXHOOK27.env?.(s) ?? {}); } catch { m = null; }
     const secs = m ? menuSections27(m).map((x) => ({ ...x, items: x.items.filter((i) => i.id !== 'copy' && i.id !== 'person.open') })).filter((x) => x.sec !== 'open' && x.items.length) : [];
     const grouped = m ? secs.map((x) => h('div', { class: 'pa18-grp', 'data-sec': x.sec }, h('b', null, t(x.label)), x.items.map((i) => {
-      if (i.id.startsWith('pa:')) { const r = rows.find((y) => y.def.id === i.id.slice(3)); return r ? row(s, key, r, done) : null; }
+      if (i.id.startsWith('pa:')) { const r = rows.find((y) => y.def.id === i.id.slice(3)); return r ? row(s, key, i.block && !r.block ? { ...r, block: i.block } : r, done) : null; } // r29: o bloqueio do menu vale aqui também
       return ctxRow29(s, m!, i);
     }))) : ORDER.map((g) => { const rs = rows.filter((r) => r.def.group === g); return rs.length ? h('div', { class: 'pa18-grp' }, h('b', null, t(PA_GROUP[g])), rs.map((r) => row(s, key, r, done))) : null; });
     box.replaceChildren(...([
@@ -94,8 +94,23 @@ export function actionMenu18(s: GameState, key: string): HTMLElement {
   return box;
 }
 
+/** r29 (menus): a pessoa tem alguma ação possível agora? (o mesmo modelo do clique direito, sem "Abrir ficha"/"Copiar") */
+export function hasActions29(s: GameState, key: string): boolean {
+  let m: CtxMenu27 | null = null;
+  try { m = ctxMenu27(s, 'person', key, CTXHOOK27.env?.(s) ?? {}); } catch { m = null; }
+  if (m) return liveCount29(m, (x) => secOf27(x) === 'open') > 0; // o painel não mostra "Ver / Abrir" (já está na ficha)
+  try { return personActions18(s, key).some((r) => !r.block); } catch { return false; }
+}
+/** r29 (menus): botão "Ações…" desabilitado, com o motivo no tooltip e para leitores de tela. */
+export function offBtn29(label: L, why: L = NO_ACTIONS29): HTMLElement {
+  return h('button', { type: 'button', class: 'btn small pa18-off', disabled: true, 'aria-disabled': 'true', title: t(why), 'aria-label': `${t(label)} — ${t(why)}`, 'data-noacts29': '' },
+    ic('handshake'), ' ', t(label));
+}
+
 /** Bloco recolhível "Ações" para cabeçalhos de página. */
 export function actionDetails18(s: GameState, key: string, open = false): HTMLElement {
+  // r29 (menus): sem nenhuma ação possível agora, o botão aparece desabilitado com o motivo (nada de painel vazio)
+  if (!hasActions29(s, key)) return offBtn29(l('Ações com esta pessoa', 'Actions with this person'));
   const d = h('details', { class: 'pa18-d', open }, h('summary', { class: 'btn small' }, ic('handshake'), ' ', t(l('Ações com esta pessoa', 'Actions with this person'))));
   let filled = false;
   const fill = () => { if (!filled && d.open) { filled = true; d.appendChild(actionMenu18(s, key)); } };
@@ -108,6 +123,7 @@ export function actionDetails18(s: GameState, key: string, open = false): HTMLEl
 function actActions(s: GameState, a: Act): HTMLElement | null {
   const ms = a.members.filter((m) => s.persons[m] && !s.persons[m].isPlayer);
   if (!ms.length) return null;
+  if (!ms.some((m) => hasActions29(s, `p:${m}`))) return offBtn29(l('Ações', 'Actions')); // r29 (menus)
   const d = h('details', { class: 'pa18-d' }, h('summary', { class: 'btn small' }, ic('handshake'), ' ', t(l('Ações', 'Actions'))));
   const body = h('div');
   const pick = (id: string) => body.replaceChildren(h('p', { class: 'small' }, h('b', null, s.persons[id].name)), actionMenu18(s, `p:${id}`));

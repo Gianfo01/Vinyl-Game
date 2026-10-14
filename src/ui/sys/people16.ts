@@ -195,7 +195,7 @@ function workPopup(s: GameState, w: Work16): void {
     r?.owner ? kv(t(l('Selo', 'Label')), labelLink(s, r.owner)) : w.label && !w.you ? kv(t(l('Contratado por', 'Hired by')), w.label) : null,
     w.q !== undefined ? kv(t(l('Qualidade', 'Quality')), String(w.q)) : null,
     w.you ? h('p', null, pill(t(l('com você', 'with you')), 'good')) : null,
-    r ? h('button', { class: 'btn small', onclick: () => openRelease(r.id) }, ic('disc'), ' ', t(l('Abrir lançamento', 'Open release'))) : null,
+    r ? h('button', { ...ent27('release', r.id), class: 'btn small', onclick: () => openRelease(r.id) }, ic('disc'), ' ', t(l('Abrir lançamento', 'Open release'))) : null,
   ));
 }
 
@@ -366,10 +366,10 @@ ACT_HEAD_EXTRAS.push((s, a) => {
   const m = repOf(s, a.id);
   const pr = mainProducer16(s, a);
   return h('span', { class: 'row wrap small' },
-    m ? h('button', { class: 'btn small ghost', title: t(l('Quem cuida da carreira: negocia por ele nas propostas.', 'Who runs their career: negotiates for them in offers.')), onclick: () => openPerson16(mgrKey(m.id), 'r_manager') }, ic('handshake'), ` ${t(l('Empresário', 'Manager'))}: ${mgrName(s, m)}`)
+    m ? h('button', { ...ent27('person', mgrKey(m.id)), class: 'btn small ghost', title: t(l('Quem cuida da carreira: negocia por ele nas propostas.', 'Who runs their career: negotiates for them in offers.')), onclick: () => openPerson16(mgrKey(m.id), 'r_manager') }, ic('handshake'), ` ${t(l('Empresário', 'Manager'))}: ${mgrName(s, m)}`)
       : ventures(s).mg.clients.some((c) => c.actId === a.id) ? h('span', { class: 'good' }, ic('handshake'), ` ${t(l('Empresário: você', 'Manager: you'))}`) // R29 (contratos+): a sua carteira de empresário
       : h('span', { class: 'muted' }, ic('handshake'), ` ${t(l('Sem empresário', 'No manager'))}`),
-    pr ? (pr.real ? h('button', { class: 'btn small ghost', onclick: () => openPerson16(prodKey(pr.real!), 'r_producer') }, ic('cd'), ` ${t(l('Produtor', 'Producer'))}: ${pr.name}`) : h('span', { class: 'muted' }, ic('cd'), ` ${t(l('Produtor', 'Producer'))}: ${pr.name}`)) : null);
+    pr ? (pr.real ? h('button', { ...ent27('person', prodKey(pr.real!)), class: 'btn small ghost', onclick: () => openPerson16(prodKey(pr.real!), 'r_producer') }, ic('cd'), ` ${t(l('Produtor', 'Producer'))}: ${pr.name}`) : h('span', { class: 'muted' }, ic('cd'), ` ${t(l('Produtor', 'Producer'))}: ${pr.name}`)) : null);
 });
 
 RELEASE_EXTRAS.push((s, r) => {

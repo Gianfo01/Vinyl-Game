@@ -27,6 +27,7 @@ import { ent27 } from '../ps/ent27';
 import { actOfPerson } from '../../sim/sys/social8';
 import { fameText } from '../../sim/sys/fame15';
 import { kinLabel15, kinOf15 } from '../../sim/sys/kin15';
+import { personKey27 } from '../ps/ent27';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const band = (p: number) => (p >= 0.6 ? 'likely' : p >= 0.3 ? 'uncertain' : 'unlikely') as 'likely' | 'uncertain' | 'unlikely';
@@ -59,7 +60,7 @@ function heirSection(s: GameState): HTMLElement {
       h('tbody', null, cands.map((c) => {
         const pv = inheritancePreview(s, c, 'death');
         return h('tr', null,
-          h('td', null, c.personId ? h('button', { class: 'link', onclick: () => openPersonPage(c.personId!) }, c.name) : c.name),
+          h('td', null, c.personId ? h('button', { ...ent27('person', personKey27(c.personId!)), class: 'link', onclick: () => openPersonPage(c.personId!) }, c.name) : c.name),
           h('td', null, t(REL_NAME[c.rel])), h('td', null, s.year - c.born), h('td', null, bar(c.aptitude), ` ${Math.round(c.aptitude)}`),
           h('td', null, `${$(pv.wealth)}${pv.tax ? ` (−${pct(pv.tax)})` : ''}`));
       }))) : h('p', { class: 'bad small' }, t(l('Ninguém para assumir. Case-se, tenha filhos, forme um funcionário de confiança (2+ anos, habilidade 55+) ou conquiste a confiança de um artista (70+).', 'Nobody to take over. Marry, have children, groom a trusted staffer (2+ years, skill 55+) or earn an artist\'s trust (70+).'))),
@@ -202,7 +203,7 @@ function tieRow(s: GameState, t0: Tie, me: string, closeAll: () => void): HTMLEl
   const p = s.persons[other];
   const act = actOfPerson(s, other);
   return h('li', null,
-    p ? h('button', { class: 'link', onclick: () => { closeAll(); openPersonPage(other); } }, p.name) : '?',
+    p ? h('button', { ...ent27('person', personKey27(other)), class: 'link', onclick: () => { closeAll(); openPersonPage(other); } }, p.name) : '?',
     act ? h('span', null, ' (', actLink(s, act.id), ')') : null, ' ',
     pill(t(TIE_NAME[t0.k]), KIND_CLS[t0.k] ?? ''), t0.m === other ? pill(t(l('mentor(a)', 'mentor')), 'gold') : t0.m === me ? pill(t(l('aprendiz', 'mentee'))) : null, ' ',
     bar(Math.abs(t0.v), 100, t0.v >= 0 ? 'good' : 'bad'),
@@ -231,7 +232,7 @@ ACT_TABS.push((s, a, close) => {
     id: 'rel8', label: l('Relações', 'Relationships'), icon: 'handshake',
     render: () => h('div', null,
       kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 16).map(({ m, k }) => h('li', null,
-        h('small', { class: 'muted' }, `${s.persons[m]?.name ?? ''} ↔ `), h('button', { class: 'link', onclick: () => { close(); openPersonPage(k.id); } }, k.p.name), ` · ${t(kinLabel15(k))}`,
+        h('small', { class: 'muted' }, `${s.persons[m]?.name ?? ''} ↔ `), h('button', { ...ent27('person', personKey27(k.id)), class: 'link', onclick: () => { close(); openPersonPage(k.id); } }, k.p.name), ` · ${t(kinLabel15(k))}`,
         actOfPerson(s, k.id) && actOfPerson(s, k.id)?.id !== a.id ? h('small', { class: 'muted' }, ` · ${actOfPerson(s, k.id)!.name}`) : null)))) : null,
       canFeat ? h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => { close(); openFeatModal(s, mine ? { host: a.id } : { guest: a.id }); } }, mine ? t(l('Convidar alguém para um feat', 'Invite someone to feature')) : t(l('Convidar para um feat', 'Invite to a feature')))) : null,
       ts.length ? h('ul', { class: 'attr-list' }, ts.slice(0, 24).map(({ t: x, me }) => h('div', null, h('small', { class: 'muted' }, `${s.persons[me]?.name ?? ''} ↔ `), tieRow(s, x, me, close)))) : h('p', { class: 'muted small' }, t(l('Ainda sem laços fora da banda.', 'No ties outside the band yet.'))),

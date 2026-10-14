@@ -20,6 +20,7 @@ import { hasTech, money, playerActs, rngOf } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
 import { $, N, memoText, actLink, branchName, cityName, cover, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
+import { awardTxt29 } from '../ps/raw29';
 import { openRelease } from '../ficha';
 import { type HqView, hqHooks } from '../hq';
 import { hqPeek27 } from '../ps/hqpeek27';
@@ -44,6 +45,7 @@ import { price20 } from '../price20';
 import { chartRow27 } from '../sys/mundo27model';
 import { placeArt29 } from '../art29ui'; // r29 (arte)
 import { chartHeaderImg29 } from '../pixel/badge29';
+import { ent27 } from '../ps/ent27';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -138,7 +140,7 @@ export function catalogPanel(s: GameState): HTMLElement {
       h('p', { class: 'muted small' }, t(l('Masters próprios geram cauda de catálogo. Obras com 8+ anos podem ser reeditadas (remaster), sobretudo com nostalgia em alta.', 'Owned masters earn a catalog tail. Works 8+ years old can be reissued (remaster), especially when nostalgia runs high.'))),
       h('table', sortTable27('catalog'),
         sortHead27(SC, [['', null], [S.title, 'title'], [l('Ato', 'Act'), 'act'], [S.type, 'type'], [l('Ano', 'Year'), 'year'], [S.peak, 'peak'], [S.totalUnits, 'units'], [S.revenue, 'rev'], ['', null]], rerender, mine),
-        h('tbody', null, pg18.items.map((r) => h('tr', { onclick: () => openRelease(r.id), class: 'clickable' },
+        h('tbody', null, pg18.items.map((r) => h('tr', { ...ent27('release', r.id), onclick: () => openRelease(r.id), class: 'clickable' },
           h('td', null, cover(s, r, 32)),
           h('td', null, r.title, r.certified ? pill(r.certified, 'gold') : null),
           h('td', null, actLink(s, r.actId)),
@@ -365,8 +367,18 @@ const CAT_NAMES: Record<string, [string, string]> = {
   loans: ['Empréstimos', 'Loans'], financing: ['Financiamento', 'Financing'], equipment: ['Equipamento', 'Equipment'], hq: ['Sede', 'HQ'],
   marketing: ['Marketing avulso', 'Ad-hoc marketing'], taxes: ['Impostos', 'Taxes'], outsourcing: ['Terceirização', 'Outsourcing'], neural: ['Era neural', 'Neural era'], acquisitions: ['Aquisições', 'Acquisitions'], asset_sales: ['Venda de ativos', 'Asset sales'],
   overhead: ['Despesas gerais', 'Overhead'], promo: ['Promoção mínima de lançamentos', 'Baseline release promo'], dividends: ['Dividendos', 'Dividends'], owner_draw: ['Retiradas e aportes do dono', 'Owner draws and injections'],
+  // r29 (dados crus): categorias que apareciam com a chave interna (other_income, misc…)
+  other_income: ['Outras receitas', 'Other income'], misc: ['Diversos', 'Miscellaneous'], other: ['Outros', 'Other'], business: ['Negócios', 'Business'], capex: ['Investimentos fixos', 'Capital spending'],
+  licensing: ['Licenciamento', 'Licensing'], manufacturing: ['Fabricação', 'Manufacturing'], rights: ['Direitos', 'Rights'], admin: ['Administração', 'Administration'],
+  transfers: ['Transferências', 'Transfers'], investments: ['Investimentos', 'Investments'], investment: ['Investimento', 'Investment'], services: ['Serviços', 'Services'], merch: ['Merchandising', 'Merchandise'],
+  brands: ['Marcas e patrocínio', 'Brands and sponsorship'], retail: ['Varejo', 'Retail'], touring: ['Turnês', 'Touring'], shows: ['Shows', 'Shows'], plant: ['Fábrica', 'Plant'],
+  staff_training: ['Treinamento da equipe', 'Staff training'], securitization: ['Securitização', 'Securitization'], production: ['Produção', 'Production'], owner_capital: ['Capital do dono', 'Owner capital'],
+  benefits: ['Benefícios', 'Benefits'], clubs: ['Clubes e casas', 'Clubs and venues'], finexp: ['Despesas financeiras', 'Financial expenses'], fx: ['Câmbio', 'Exchange'], insurance: ['Seguros', 'Insurance'],
+  investor_share: ['Parte do investidor', 'Investor share'], management: ['Empresariamento', 'Management'], media: ['Mídia', 'Media'], pr_agency: ['Assessoria de imprensa', 'PR agency'], reno: ['Reformas', 'Renovations'],
+  security: ['Segurança', 'Security'], signing: ['Assinaturas', 'Signings'], tourism: ['Turismo', 'Tourism'], interest: ['Juros', 'Interest'], lawyer: ['Advogados', 'Lawyers'], guest: ['Convidados', 'Guests'],
+  guitar: ['Instrumentos', 'Instruments'], curfew: ['Multa de horário', 'Curfew fine'], set: ['Cenário', 'Stage set'], tribute: ['Tributos', 'Tributes'],
 };
-export const catName = (c: string) => t(CAT_NAMES[c] ? l(CAT_NAMES[c][0], CAT_NAMES[c][1]) : l(c));
+export const catName = (c: string) => t(CAT_NAMES[c] ? l(CAT_NAMES[c][0], CAT_NAMES[c][1]) : l(c.replace(/_/g, ' '))); // r29: sem chave crua
 
 function finances(s: GameState): HTMLElement {
   const last = Object.entries(s.lastMonthLedger).sort((a, b) => b[1] - a[1]);
@@ -482,7 +494,7 @@ function legacyTab(s: GameState): HTMLElement {
     h('div', { class: 'col-main' },
       section(`${t(LABEL_LEGACY20)} — ${legacyTotal(s)}`, /* r20 (B21) */ LEGACY_DIMS.map((d) => kv(t(d.name), h('span', null, Math.round(s.player.legacy[d.id]), ' ', bar(s.player.legacy[d.id]))))),
       section(t(l('Marcos', 'Milestones')), h('ul', null, milestones(s).map((m) => h('li', { class: m.done ? 'good' : 'muted' }, m.done ? '☑ ' : '◻ ', t(m.text))))),
-      section(t(l('Prêmios do selo', 'Label awards')), h('ul', { class: 'small' }, s.awards.filter((a) => a.byPlayer).slice(-20).reverse().map((a) => h('li', null, `${a.year} · ${a.category} · ${a.name}`)))),
+      section(t(l('Prêmios do selo', 'Label awards')), h('ul', { class: 'small' }, s.awards.filter((a) => a.byPlayer).slice(-20).reverse().map((a) => h('li', null, `${a.year} · ${awardTxt29(a)}`)))),
     ),
     h('aside', { class: 'col-side' },
       section(t(l('Fim da história', 'End of the story')), h('p', { class: 'small muted' }, t(l('Em 2040 a run termina num dos 20 finais, escolhido pelo seu legado e pelas escolhas que você fizer até lá.', 'In 2040 the run ends in one of 20 endings, chosen by your legacy and the choices you make until then.'))), h('p', { class: 'small' }, `${ENDINGS.length} ${t(l('finais possíveis', 'possible endings'))}`)),

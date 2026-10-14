@@ -268,5 +268,5 @@ registerConseq18('ib:ch19_crisis:skip', { later: [{ in: [1, 4], p: 0.25, tone: '
 registerDeadline('charity19', (s, from, to) => ch19(s).cr.filter((c) => !c.done && !c.mine).map((c) => ({ id: `charity19-${c.id}`, w: c.w + Math.round(2 * W), w0: c.w + 4, kind: 'other' as const, t: l('Megashow beneficente de outro selo', 'Another label\'s benefit mega-show'), tone: 'info' as const, goto: { area: 'live19', tab: ['live19', 'charity'] as [string, string] } })).filter((d) => d.w >= from && d.w <= to));
 registerExplain('ch19.vanish', (s, c) => {
   const o = vanishOdds19(s, !!c.aud, !!c.mine);
-  return { title: l('Risco de o dinheiro sumir', 'Risk of the money vanishing'), value: o.p, fmt: 'pct', parts: o.why, note: l('Se sumir: escândalo de dinheiro, inquérito policial (crime17) e manchete.', 'If it vanishes: money scandal, police inquiry (crime17) and a headline.') };
+  return { title: l('Risco de o dinheiro sumir', 'Risk of the money vanishing'), value: o.p, fmt: 'pct', parts: o.why, note: l('Se sumir: escândalo de dinheiro, inquérito policial e manchete.', 'If it vanishes: money scandal, police inquiry and a headline.') };
 });

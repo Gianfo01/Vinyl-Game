@@ -25,6 +25,7 @@ import { getTab, ic, setTab, tabs } from '../vis';
 import './talentos23.css';
 import { playBtn27 } from '../act27/mode27';
 import { openNight27 } from '../act27/night27';
+import { ent27 } from '../ps/ent27';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
@@ -151,7 +152,7 @@ function card(s: GameState, k: Knowledge): HTMLElement {
     h('div', { class: 'row wrap t23-cact' },
       a.owner ? null : stepBtn(s, a.id),
       h('label', { class: 'check small', title: t(l('Comparar em Decidir (até 3)', 'Compare in Decide (up to 3)')) }, h('input', { type: 'checkbox', checked: cmp, onchange: () => { toggleCompare(s, a.id); rerender(); } }), t(l('Comparar', 'Compare'))),
-      h('button', { class: 'btn tiny ghost', title: t(l('Dossiê de A&R', 'A&R dossier')), onclick: () => openDossier(a.id) }, t(l('Dossiê', 'Dossier'))),
+      h('button', { ...ent27('act', a.id), class: 'btn tiny ghost', title: t(l('Dossiê de A&R', 'A&R dossier')), onclick: () => openDossier(a.id) }, t(l('Dossiê', 'Dossier'))),
       offer ? null : h('button', { class: 'btn tiny ghost', title: t(l('Descartar', 'Drop')), onclick: () => { dropSignal(s, a.id); rerender(); } }, '✕')),
   );
 }
@@ -235,7 +236,7 @@ function decidir(s: GameState): HTMLElement {
       h('thead', null, h('tr', null, h('th', null, ''), ...ids.map((id) => h('th', null, logo(s.acts[id], 28), ' ', actLink(s, id), ' ', h('button', { class: 'btn tiny ghost', title: t(l('Remover', 'Remove')), onclick: () => { toggleCompare(s, id); rerender(); } }, '✕'))))),
       h('tbody', null, rows.map(([lab, f]) => h('tr', null, h('th', null, t(lab)), ...ids.map((id) => h('td', null, f(id))))),
         h('tr', null, h('th', null, ''), ...ids.map((id) => h('td', null, s.acts[id].owner ? pill(t(l('contratado', 'signed')), 'bad')
-          : h('button', { class: 'btn primary', onclick: () => openOffer(id) }, t(l('Abrir proposta', 'Open offer'))), ' ', h('button', { class: 'btn small ghost', onclick: () => openDossier(id) }, t(l('Dossiê', 'Dossier'))))))))),
+          : h('button', { class: 'btn primary', onclick: () => openOffer(id) }, t(l('Abrir proposta', 'Open offer'))), ' ', h('button', { ...ent27('act', id), class: 'btn small ghost', onclick: () => openDossier(id) }, t(l('Dossiê', 'Dossier'))))))))),
   );
 }
 
@@ -255,7 +256,7 @@ function lista(s: GameState): HTMLElement {
           h('td', { class: 'small muted' }, t(originText23(s, k))),
           ...(['fame', 'talent', 'potential'] as const).map((f) => { const u = unc23(s, k.actId, f); return h('td', { class: `t23-u ${u.kind === '?' ? 'unk' : u.kind === '~' ? 'est' : 'ok'}` }, u.kind === '?' ? '?' : u.kind === '✓' ? `✓ ${u.v}` : `~ ${u.lo}–${u.hi}`); }),
           h('td', { class: age.stale ? 'warn-t' : '' }, t(l('{n} m', '{n} mo'), { n: age.months })),
-          h('td', null, h('button', { class: 'btn tiny ghost', onclick: () => openDossier(k.actId) }, t(l('Dossiê', 'Dossier')))));
+          h('td', null, h('button', { ...ent27('act', k.actId), class: 'btn tiny ghost', onclick: () => openDossier(k.actId) }, t(l('Dossiê', 'Dossier')))));
       })))),
   );
 }

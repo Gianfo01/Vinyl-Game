@@ -24,6 +24,7 @@ import { reviewCard, reviewSummary } from '../reviewView';
 import { quickChance29, quickPrice29 } from '../../sim/sys/featp29';
 import { featChips29, featPicker29 } from './featp29';
 import { fameText } from '../../sim/sys/fame15';
+import { ent27 } from '../ps/ent27';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { recipeSong: '', featSong: '', featGuest: '', clipSong: '', commAct: '', featPersons: [] as string[], featQ: { v: '' } };
@@ -352,7 +353,7 @@ function visualsTab(s: GameState): HTMLElement {
     h('p', { class: 'muted small' }, t(l('A capa é escolhida entre três propostas na hora de programar o lançamento.', 'The cover is picked from three proposals when scheduling the release.'))),
     h('table', { class: 'tbl compact' }, h('tbody', null, songs.map((so) => {
       const x = s.x4.creation.songs[so.id] ?? {};
-      return h('tr', null, h('td', null, so.title),
+      return h('tr', null, h('td', ent27('song', so.id), so.title),
         h('td', null, x.cover !== undefined ? scoreBadge(x.cover / 10) : h('small', { class: 'muted' }, t(l('capa: escolhida ao programar o lançamento', 'cover: picked when scheduling the release')))),
         h('td', null, x.clip ? pill(`${t(l('clipe', 'video'))} ${Math.round(x.clip.result * 50)}`, 'good') : vid ? h('button', { class: 'btn small', onclick: () => openClipEditor(s, so.id) }, ic('film'), ` ${t(l('Clipe', 'Video'))}`) : h('small', { class: 'muted' }, '—')),
         h('td', null, x.viral ? pill(x.viral.result > 0.5 ? t(l('viralizou', 'went viral')) : t(l('não pegou', "didn't catch on")), x.viral.result > 0.5 ? 'good' : '') : hasTech(s, 'short_video') && so.recorded ? h('button', { class: 'btn small', onclick: () => openViral(s, so.id) }, ic('stream'), ` ${t(l('Viral', 'Viral'))}`) : h('small', { class: 'muted' }, '—')));

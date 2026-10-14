@@ -700,7 +700,7 @@ registerExplain('reg19.law', (s, c) => {
   return { title: l('Leis, cotas e rádio', 'Laws, quotas and radio'), value: xs.reduce((t, [k]) => t * k, 1), fmt: 'mult', parts: [
     ...xs.map(([value, label]) => ({ label, value, fmt: 'mult' as const, tone: value >= 1 ? 'good' as const : 'bad' as const })),
     ...(nd ? [{ label: sessRecent(s, a.id) ? l('Sessão de rádio recente (Reino Unido)', 'Recent radio session (UK)') : l('Needle time limita discos na rádio britânica', 'Needle time limits records on British radio'), value: sessRecent(s, a.id) ? 1.06 : nd === 2 ? 0.96 : 0.98, fmt: 'mult' as const }] : [])],
-    note: l('Leis do more19 entram na data real; antes do início da partida já valem.', 'more19 laws take effect on the real date; those before the start already apply.') };
+    note: l('As leis entram na data real; as anteriores ao início da partida já valem.', 'Laws take effect on the real date; those before the start already apply.') };
 });
 registerAdvisorTip('regions19', (s) => {
   const out: AdvTip18[] = [];
@@ -712,6 +712,6 @@ registerAdvisorTip('regions19', (s) => {
 });
 export const LINKS_REG19 = [
   { id: 'visa', a: l('Prisões e ativismo', 'Arrests and activism'), b: l('Vistos de turnê', 'Touring visas'), how: l('Prisão na ficha e calor político derrubam a chance do visto; sem visto, a procura de ingressos no país cai e o pedido negado vira notícia.', 'Arrests on record and political heat lower visa odds; without a visa, ticket demand in that country falls and a refusal makes news.') },
-  { id: 'commune', a: l('Comuna-república', 'Commune-republic'), b: l('Censura e exílio', 'Censorship and exile'), how: l('A comuna dá núcleo de fãs e prestígio, mas esquenta o regime: batida → exílio pelo society18.', 'The commune grows core fans and prestige but heats up the regime: a raid → exile via society18.') },
+  { id: 'commune', a: l('Comuna-república', 'Commune-republic'), b: l('Censura e exílio', 'Censorship and exile'), how: l('A comuna dá núcleo de fãs e prestígio, mas esquenta o regime: batida → exílio.', 'The commune grows core fans and prestige but heats up the regime: a raid → exile.') },
 ];
 for (const d of LINKS_REG19) if (!LINKS18.some((x) => x.id === d.id)) LINKS18.push(d);

@@ -14,6 +14,7 @@ import { h, rangeBar } from './dom';
 import { openOffer } from './ficha';
 import { store } from './store';
 import { actNegLine } from './sys/persona13';
+import { ent27 } from './ps/ent27';
 
 const CONSULT: Src[] = ['producer', 'promoter', 'critic', 'local'];
 
@@ -92,7 +93,7 @@ export function dossierTab(s: GameState): HTMLElement {
           h('td', { class: c.judged === 'early' || c.judged === 'right' || c.judged === 'dodged' ? 'good' : c.judged ? 'bad' : 'muted' }, t(verdict(c))))))) : h('p', { class: 'muted small' }, t(l('Contratações e recusas ficam registradas e são julgadas pelo mercado dois anos depois.', 'Signings and passes are logged and judged by the market two years later.'))),
     ),
     section(t(l('Dossiês abertos', 'Open dossiers')),
-      ids.length ? h('div', { class: 'row wrap' }, ids.map((id) => h('button', { class: 'btn small ghost', onclick: () => openDossier(id) }, s.acts[id].name, dos(s).d[id].pending?.length ? ' ⏳' : ''))) : h('p', { class: 'muted small' }, t(l('Abra o dossiê de qualquer nome do radar (botão "Dossiê").', 'Open the dossier of any name on the radar ("Dossier" button).'))),
+      ids.length ? h('div', { class: 'row wrap' }, ids.map((id) => h('button', { ...ent27('act', id), class: 'btn small ghost', onclick: () => openDossier(id) }, s.acts[id].name, dos(s).d[id].pending?.length ? ' ⏳' : ''))) : h('p', { class: 'muted small' }, t(l('Abra o dossiê de qualquer nome do radar (botão "Dossiê").', 'Open the dossier of any name on the radar ("Dossier" button).'))),
       h('p', { class: 'muted small' }, SRC_IDS.map((x) => `${t(SOURCES8[x].name)}: ${t(SOURCES8[x].sees)}`).join(' · ')),
     ),
   );

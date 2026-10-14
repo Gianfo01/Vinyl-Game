@@ -24,6 +24,7 @@ import { ic } from '../vis';
 import { moodBlock19, quick19 } from './prof19';
 import './home18.css';
 import { nameSvg20 } from '../ux20';
+import { ent27 } from '../ps/ent27';
 
 const go = (area: string) => { store.area = area as typeof store.area; rerender(); };
 const mine = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
@@ -88,7 +89,7 @@ function roster(s: GameState): HTMLElement | null {
       const ps = a.members.map((id) => s.persons[id]).filter((p) => p?.alive);
       const v = ps.length ? Math.round(ps.reduce((x, p) => x + p.morale - p.stress * 0.5 + 25, 0) / ps.length) : 50;
       const hot = ps.some((p) => p.stress > 70 || p.resentment > 50);
-      return h('button', { class: `hm18-face ${hot ? 'hot' : ''}`, title: `${a.name}: ${t(l('moral − estresse/2', 'morale − stress/2'))} = ${v}`, onclick: () => inspect.act(a.id) },
+      return h('button', { ...ent27('act', a.id), class: `hm18-face ${hot ? 'hot' : ''}`, title: `${a.name}: ${t(l('moral − estresse/2', 'morale − stress/2'))} = ${v}`, onclick: () => inspect.act(a.id) },
         h('span', { class: 'hm18-emo' }, face(v)), h('small', null, a.name), h('i', { class: 'hm18-bar' }, h('i', { style: `width:${Math.max(4, Math.min(100, v))}%` })));
     })));
 }

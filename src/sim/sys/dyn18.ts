@@ -3,7 +3,7 @@
 // obrigações (talks/holds17), estresse (stress17), moral e lealdade da equipe — e devolve hierarquia (pirâmide
 // de influência), grupos, porta-voz, quem apoia quem e alertas ("se irritar um, irrita o grupo"). Puro.
 
-import { l, type L } from '../../data/world';
+import { gfName, l, type L } from '../../data/world';
 import { holdsBetween } from '../holds17';
 import { actState } from '../people';
 import { stressOf, type StressLevel } from '../stress17';
@@ -108,7 +108,7 @@ export function dynRoster(s: GameState): Dyn18 {
     const c = a.contractId ? s.contracts[a.contractId] : undefined;
     if (c && c.endWeek - s.week < 26 && c.endWeek > s.week) tags.push(l('contrato no fim', 'contract ending'));
     if (a.fame >= 60) tags.push(l('estrela da casa', 'house star'));
-    return { key: `a:${a.id}`, name: a.name, role: l(a.genre, a.genre), infl: Math.round(v), tier: tierOf(i, acts.length), mood: Math.round(st.morale), moodWhy: fmtL(l('confiança {t}', 'trust {t}'), { t: Math.round(a.trust) }), promises: prom, friends: [], foes: [], tags };
+    return { key: `a:${a.id}`, name: a.name, role: gfName(a.genre), infl: Math.round(v), tier: tierOf(i, acts.length), mood: Math.round(st.morale), moodWhy: fmtL(l('confiança {t}', 'trust {t}'), { t: Math.round(a.trust) }), promises: prom, friends: [], foes: [], tags };
   });
   const groups = cliques(s, 'genre').filter((c) => c.acts.length >= 2).map((c) => ({ name: c.label, members: c.acts.map((x) => `a:${x}`), leader: c.leader ? `a:${c.leader}` : undefined }));
   const notes: L[] = [];

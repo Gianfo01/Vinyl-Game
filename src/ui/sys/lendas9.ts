@@ -32,6 +32,8 @@ import { setTab, tabs } from '../vis';
 import './lendas9.css';
 import { relics18Tab } from './talent18';
 import { post18Tab } from './cine18';
+import { ent27 } from '../ps/ent27';
+import { personKey27 } from '../ps/ent27';
 
 const WORLD_KEY = 'vtn.world9';
 const F: { dec: number; city: string; genre: string; who: string; minI: number; bioQ: string; city2: string; rf: string } = { dec: 0, city: '', genre: '', who: '', minI: 2, bioQ: '', city2: '', rf: '' };
@@ -43,12 +45,14 @@ const ST_CLS: Record<Relic['st'], string> = { auction: 'gold', player: 'good', s
 
 function who(s: GameState, id: string): HTMLElement {
   if (s.acts[id]) return actLink(s, id);
-  if (s.persons[id]) return h('button', { class: 'link', onclick: () => openPerson(id) }, s.persons[id].name);
+  if (s.persons[id]) return h('button', { ...ent27('person', personKey27(id)), class: 'link', onclick: () => openPerson(id) }, s.persons[id].name);
   return h('button', { class: 'link muted', onclick: () => openLegend(s, id) }, nameOf(s, id));
 }
 function card(cls: string, onclick: () => void, ...kids: (Node | string | null)[]): HTMLElement {
   return h('button', { class: `ln-card ${cls}`, onclick }, ...kids);
 }
+/** r29 (menus): carimba a marca de clique direito num card já montado. */
+const marked = (el: HTMLElement, at: Record<string, string>): HTMLElement => { for (const [k, v] of Object.entries(at)) el.setAttribute(k, v); return el; };
 const grid = (...kids: HTMLElement[]) => h('div', { class: 'ln-cards' }, ...kids);
 const empty = (x: L) => h('p', { class: 'muted' }, t(x));
 
@@ -90,8 +94,8 @@ function openLegend(s: GameState, id: string): void {
     h('div', { class: 'row wrap' },
       p ? h('span', { class: 'muted' }, p.alive ? t(l('nascido em {y}', 'born {y}'), { y: p.born }) : `${p.born}–${p.died ?? '?'}`) : null,
       A ? pill(t(genreL(A.genre))) : null, A ? pill(t(cityL(A.city))) : null, A?.legend ? pill(t(l('lenda', 'legend')), 'gold') : null,
-      p ? h('button', { class: 'btn small', onclick: () => openPerson(id) }, t(l('Abrir ficha', 'Open profile'))) : null,
-      A ? h('button', { class: 'btn small', onclick: () => openActPage(id) }, t(l('Abrir página do ato', 'Open act page'))) : null),
+      p ? h('button', { ...ent27('person', personKey27(id)), class: 'btn small', onclick: () => openPerson(id) }, t(l('Abrir ficha', 'Open profile'))) : null,
+      A ? h('button', { ...ent27('act', id), class: 'btn small', onclick: () => openActPage(id) }, t(l('Abrir página do ato', 'Open act page'))) : null),
     p ? h('div', null, bandPath(s, id), soulBlock(s, p), section(t(l('Vida', 'Life')), chronList(s, biography29(s, id))))
       : h('div', null, A ? null : bandPath(s, id), actLegend(s, id))), true);
 }
@@ -180,12 +184,12 @@ function figureCard(s: GameState, id: string, score?: number): HTMLElement {
   const A = s.acts[id];
   const p = s.persons[id];
   const sub = A ? `${t(genreL(A.genre))} · ${A.formed ?? ''}` : p ? (p.alive ? t(l('em atividade', 'active')) : `${p.born}–${p.died ?? '?'}`) : t(l('figura da história', 'historical figure'));
-  return card(A?.legend ? 'gold' : '', () => openLegend(s, id), A ? logo(A, 36) : h('span', { class: 'ln-ico' }, p ? '👤' : '📜'),
-    h('div', null, h('b', null, nameOf(s, id)), h('small', { class: 'muted' }, sub), score !== undefined ? h('small', { class: 'muted' }, t(l('peso histórico {v}', 'historical weight {v}'), { v: Math.round(score) })) : null));
+  return marked(card(A?.legend ? 'gold' : '', () => openLegend(s, id), A ? logo(A, 36) : h('span', { class: 'ln-ico' }, p ? '👤' : '📜'),
+    h('div', null, h('b', null, nameOf(s, id)), h('small', { class: 'muted' }, sub), score !== undefined ? h('small', { class: 'muted' }, t(l('peso histórico {v}', 'historical weight {v}'), { v: Math.round(score) })) : null)), A ? ent27('act', id) : p ? ent27('person', `p:${id}`) : {});
 }
 function relicCard(s: GameState, rl: Relic): HTMLElement {
-  return card(ST_CLS[rl.st], () => openRelic(s, rl.id), h('span', { class: 'ln-ico' }, relicArt(rl, 48)),
-    h('div', null, h('b', null, t(rl.n)), h('small', { class: 'muted' }, `${t(RELIC_KIND[rl.k])} · ${rl.y}`), h('span', null, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), ' ', h('small', null, $(relicPrice(s, rl))))));
+  return marked(card(ST_CLS[rl.st], () => openRelic(s, rl.id), h('span', { class: 'ln-ico' }, relicArt(rl, 48)),
+    h('div', null, h('b', null, t(rl.n)), h('small', { class: 'muted' }, `${t(RELIC_KIND[rl.k])} · ${rl.y}`), h('span', null, pill(t(RELIC_ST[rl.st]), ST_CLS[rl.st]), ' ', h('small', null, $(relicPrice(s, rl)))))), ent27('relic', rl.id));
 }
 
 function pantheon(s: GameState): HTMLElement {

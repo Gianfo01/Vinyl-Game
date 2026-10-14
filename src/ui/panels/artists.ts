@@ -134,7 +134,7 @@ function header20(s: GameState, a: Act): HTMLElement {
       h('div', { class: 'ar21-right' },
         h('div', { class: 'ar21-tiles' }, tile('star', S.fame, a.fame), tile('heart', S.morale, st.morale), tile('sleep', S.fatigue, st.fatigue, true), tile('stress', S.stress, st.stress, true)),
         h('div', { class: 'ar20-actions ar21-actions' }, quickPins20(s, a.id),
-          h('button', { class: 'btn', onclick: () => openAct(a.id) }, '🔍 ', t(S.inspect)), actionsButton20(s, a.id, 'btn primary')))),
+          h('button', { ...ent27('act', a.id), class: 'btn', onclick: () => openAct(a.id) }, '🔍 ', t(S.inspect)), actionsButton20(s, a.id, 'btn primary')))),
     crit.length ? h('ul', { class: 'ar20-crit', 'aria-label': t(l('Alertas críticos', 'Critical alerts')) }, crit.map((x) => h('li', { class: x.tone },
       x.nav ? h('button', { class: 'link', onclick: () => applyNav20(s, { act: a.id, ...x.nav }) }, '⚠ ', t(x.text), ' ›') : h('span', null, '⚠ ', t(x.text))))) : null,
   );

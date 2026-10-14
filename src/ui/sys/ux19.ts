@@ -356,7 +356,7 @@ registerSection('diary', { id: 'ux19-dec', order: 55, render: (s) => {
       h('div', null, h('small', null, t(l('Nº 1', '#1s'))), h('b', null, String(yy.reduce((a, x) => a + x.n1, 0)))),
       h('div', null, h('small', null, t(l('Pós-venda bom / ruim', 'Post-mortems good / bad'))), h('b', null, `${pm.filter((x) => x.tone === 'good').length} / ${pm.filter((x) => x.tone === 'bad').length}`))),
     rels.length ? h('div', null, h('h4', null, t(l('Discos da década', 'Records of the decade'))),
-      h('ol', { class: 'ux19-top' }, rels.map((r) => h('li', null, h('b', null, r.title), ` — ${s.acts[r.actId]?.name ?? ''} (${r.year})`, r.peak < 999 ? h('span', { class: 'pill' }, `#${r.peak}`) : null, ' ', h('small', { class: 'muted' }, $(r.revenue))))))
+      h('ol', { class: 'ux19-top' }, rels.map((r) => h('li', null, h('b', { ...ent27('release', r.id) }, r.title), ` — ${s.acts[r.actId]?.name ?? ''} (${r.year})`, r.peak < 999 ? h('span', { class: 'pill' }, `#${r.peak}`) : null, ' ', h('small', { class: 'muted' }, $(r.revenue))))))
       : h('p', { class: 'muted small' }, t(l('Nenhum disco seu nesta década.', 'None of your records this decade.'))),
     ux19(s).turns.filter((x) => Math.floor(x.y / 10) * 10 === d + 10 || x.y === d).slice(-1).map((T) => h('button', { class: 'btn small', onclick: () => openTurn19(s, T) }, t(l('Rever o cartão da virada', 'Review the turning-point card')), ` (${T.y})`)));
 } });
@@ -447,3 +447,5 @@ if (typeof document !== 'undefined') {
 
 // verificação no navegador (só com ?debug19 na URL): acesso ao estado para forçar fim de partida/quase falência
 if (typeof location !== 'undefined' && location.search.includes('debug19')) (window as unknown as { __vtn19: unknown }).__vtn19 = { store, openLoss19, openTurn19 };
+
+import { ent27 } from '../ps/ent27';

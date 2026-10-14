@@ -152,7 +152,7 @@ export function controlRoom20(s: GameState): HTMLElement | null {
       c.why.length ? h('ul', { class: 'small' }, c.why.map((w) => h('li', null, ic('fans'), ' ', T(w)))) : null,
       h('p', { class: 'muted small' }, T(l('O que cada fator move: segurança de público pesa nos incidentes com a plateia (não conserta falha técnica — isso é equipamento e ensaio); transporte e hospedagem pesam no cansaço; concorrência e preço pesam na bilheteria.', 'What each factor moves: crowd security weighs on audience incidents (it does not fix technical failures — that is gear and rehearsal); transport and lodging weigh on fatigue; competition and price weigh on the box office.'))),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn small', onclick: () => (hqHooks.onAct ? hqHooks.onAct(x.actId) : inspect.act(x.actId)) }, ic('guitar'), ' ', T(l('Abrir artista', 'Open act'))),
+        h('button', { ...ent27('act', x.actId), class: 'btn small', onclick: () => (hqHooks.onAct ? hqHooks.onAct(x.actId) : inspect.act(x.actId)) }, ic('guitar'), ' ', T(l('Abrir artista', 'Open act'))),
         playerActs(s).includes(x.actId) ? actionsButton20(s, x.actId, 'btn small') : null,
         tr ? h('button', { class: 'btn small', onclick: () => { copyTourPolicy20(tr); setKitDraft18(tr.kit18 ?? KIT0); setTab('showsHub', 'tours'); toast(T(l('Política copiada para o próximo planejamento (a rota não).', 'Policy copied to the next plan (not the route).')), 'good'); rerender(); } }, ic('pen'), ' ', T(l('Copiar política', 'Copy policy'))) : null,
         tr ? h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(T(l('Cancelar a turnê inteira? Pelas regras atuais, metade da logística volta.', 'Cancel the whole tour? Under current rules, half the logistics is refunded.')))) return; const e = cancelTour(s, tr.id); if (e) toast(T(e), 'bad'); rerender(); } }, T(l('Cancelar turnê (devolve metade)', 'Cancel tour (half refunded)'))) : null),
@@ -392,3 +392,5 @@ function hqHub20(s: GameState): HTMLElement {
 registerAreaView20('hq', hqHub20);
 
 void cityById;
+
+import { ent27 } from '../ps/ent27';

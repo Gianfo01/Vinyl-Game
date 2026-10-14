@@ -60,7 +60,7 @@ function itemRow(s: GameState, it: DigestItem27): HTMLElement {
       h('span', null, h('b', null, T(it.title)), it.mine ? [' ', pill(T(l('seu', 'yours')), 'mine27')] : null),
       it.text ? h('small', { class: 'muted' }, T(it.text)) : null,
       it.act && s.acts[it.act] && it.kind !== 'chart' ? h('small', null, actLink(s, it.act)) : null),
-    h('button', { type: 'button', class: 'btn small mw27-go', 'aria-label': `${T(l('Ver', 'View'))}: ${T(it.title)}`, onclick: () => (it.kind === 'chart' && it.act ? go27(it.go) : it.go.act && !it.go.tab ? inspect.act(it.go.act) : go27(it.go)) }, T(l('Ver', 'View')), ' →'));
+    h('button', { ...ent27('act', it.go.act), type: 'button', class: 'btn small mw27-go', 'aria-label': `${T(l('Ver', 'View'))}: ${T(it.title)}`, onclick: () => (it.kind === 'chart' && it.act ? go27(it.go) : it.go.act && !it.go.tab ? inspect.act(it.go.act) : go27(it.go)) }, T(l('Ver', 'View')), ' →'));
 }
 
 function digestPage(s: GameState): HTMLElement {

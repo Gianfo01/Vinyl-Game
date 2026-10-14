@@ -22,12 +22,14 @@ import { fmtL, money, playerActs, rngOf } from '../../sim/util';
 import { existsNow } from '../../sim/future';
 import { $, N, actLink, cityName, kv, modal, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
+import { awardTxt29 } from '../ps/raw29';
 import { registerSection } from '../registry';
 import { store } from '../store';
 import { ficha13 } from './persona13';
 import { personRoute16 } from '../route16';
 import { festivalPinImg28, festivalPosterImg28, mastheadImg28 } from '../pixel/extras28'; // r28 (arte)
 import { relicImg28 } from '../pixel/relic28';
+import { ent27 } from '../ps/ent27';
 
 /** r28 (arte): estatueta da premiação (gramofone, astronauta, taça ou estrela, pela semente do id). */
 const trophyImg = (c: { id: string; name: string }, size: number) => relicImg28('trophy', c.id === 'gramo' ? 'gramophone' : c.id === 'critics' ? 'critics cup' : c.name, 1990, `aw:${c.id}`, size, c.name);
@@ -61,7 +63,7 @@ export function festivalsTab(s: GameState): HTMLElement {
             const mine = ed?.lineup.filter((x) => mineAct(s, x.actId)) ?? [];
             return h('tr', { class: mine.length ? 'mine' : '' },
               h('td', null, t(MONTHS[festMonth(f, fi)])),
-              h('td', null, festivalPinImg28(f.name, f.start, 16), ' ', h('button', { class: 'link', onclick: () => openFestivalPage(fi) }, f.name)),
+              h('td', null, festivalPinImg28(f.name, f.start, 16), ' ', h('button', { class: 'link', ...ent27('festival', String(fi)), onclick: () => openFestivalPage(fi) }, f.name)),
               h('td', null, cityName(f.city)),
               h('td', null, bar(f.prestige, 100)),
               h('td', { class: 'small' }, heads.join(', ') || (festActive(f, s.year) ? '—' : t(l('extinto', 'defunct')))),
@@ -80,7 +82,7 @@ function invitesBox(s: GameState, bare = false): HTMLElement {
   // r27 INT: na mesa o convite já está dentro do cartão "Convites" — sem segundo cartão (bare)
   const title = t(l('Convites de festivais', 'Festival invitations'));
   const body = st.invites.length ? h('ul', { class: 'small' }, st.invites.map((inv) => h('li', null,
-      h('button', { class: 'link', onclick: () => openFestivalPage(inv.fi) }, FESTIVALS[inv.fi]?.name), ': ', actLink(s, inv.actId), ` — ${t(TIER_NAME[inv.tier])} · ${$(inv.fee)} `,
+      h('button', { class: 'link', ...ent27('festival', String(inv.fi)), onclick: () => openFestivalPage(inv.fi) }, FESTIVALS[inv.fi]?.name), ': ', actLink(s, inv.actId), ` — ${t(TIER_NAME[inv.tier])} · ${$(inv.fee)} `,
       h('button', { class: 'btn small primary', onclick: () => { const e = acceptInvite(s, inv.id); toast(e ? t(e) : t(l('Confirmado no line-up.', 'Confirmed on the line-up.')), e ? 'bad' : 'good'); rerender(); } }, t(l('Aceitar', 'Accept'))),
       h('button', { class: 'btn small ghost', onclick: () => { declineInvite(s, inv.id); rerender(); } }, t(l('Recusar', 'Decline'))),
     ))) : h('p', { class: 'muted small' }, t(l('Nenhum convite agora. Festivais convidam de 1 a 4 meses antes da data, conforme fama, rede e o seu booking.', 'No invitations now. Festivals invite 1–4 months ahead, based on fame, network and your booking staff.')));
@@ -105,11 +107,11 @@ export function openFestivalPage(fi: number): void {
     refreshFee();
     const showReply = (res: PitchResult) => {
       reply.replaceChildren(h('p', { class: res.result === 'accepted' ? 'good' : res.result === 'rejected' ? 'bad' : '' }, t(res.text)),
-        ...(res.result === 'counter' && res.tier && res.fee ? [h('button', { class: 'btn small primary', onclick: () => { const r2 = pitchAct(s, rngOf(s), fi, form.actId, res.tier!, res.fee!); toast(t(r2.text), r2.result === 'accepted' ? 'good' : 'bad'); close(); openFestivalPage(fi); rerender(); } }, t(l('Aceitar a contraproposta', 'Accept the counter-offer')))] : []));
+        ...(res.result === 'counter' && res.tier && res.fee ? [h('button', { ...ent27('festival', String(fi)), class: 'btn small primary', onclick: () => { const r2 = pitchAct(s, rngOf(s), fi, form.actId, res.tier!, res.fee!); toast(t(r2.text), r2.result === 'accepted' ? 'good' : 'bad'); close(); openFestivalPage(fi); rerender(); } }, t(l('Aceitar a contraproposta', 'Accept the counter-offer')))] : []));
     };
     const tierBlock = (tier: FestTier) => {
       const slots = ed?.lineup.filter((x) => x.tier === tier) ?? [];
-      return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: () => { if (confirm(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')))) { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); } } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
+      return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { ...ent27('festival', String(fi)), class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: () => { if (confirm(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')))) { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); } } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
     };
     const body = h('div', { class: 'ficha' },
       h('div', { style: 'float:right;margin-left:0.6rem' }, festivalPosterImg28(f.name, s.year, (ed?.lineup.filter((x) => x.tier === 'headline').map((x) => s.acts[x.actId]?.name).filter((x): x is string => !!x)) ?? [], 96)), // r28 (arte): cartaz da edição
@@ -183,7 +185,7 @@ export function ceremoniesTab(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' }, select(cui.filter, [{ value: 'main', label: t(l('Mundiais, crítica, indústria e regionais', 'World, critics, industry and regional')) }, { value: 'national', label: t(l('Nacionais (por país)', 'National (by country)')) }, { value: 'mine', label: t(l('Onde já ganhei', 'Where I have won')) }], (v) => { cui.filter = v as typeof cui.filter; rerender(); })),
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Premiação', 'Ceremony'))), h('th', null, t(l('Tipo', 'Type'))), h('th', null, t(l('Mês', 'Month'))), h('th', null, t(l('Seus prêmios', 'Your awards'))))),
-      h('tbody', null, list.map((c) => h('tr', null, h('td', null, trophyImg(c, 24), ' ', h('button', { class: 'link', onclick: () => openCeremonyPage(c.id) }, c.name)), h('td', null, t(c.kind)), h('td', null, t(MONTHS[c.month])), h('td', null, myWins(c) || '—'))))),
+      h('tbody', null, list.map((c) => h('tr', null, h('td', null, trophyImg(c, 24), ' ', h('button', { class: 'link', ...ent27('award', c.id), onclick: () => openCeremonyPage(c.id) }, c.name)), h('td', null, t(c.kind)), h('td', null, t(MONTHS[c.month])), h('td', null, myWins(c) || '—'))))),
   );
 }
 
@@ -222,7 +224,7 @@ export function openCeremonyPage(id: string): void {
       if (info?.award) blocks.push(h('p', { class: 'muted small' }, t(l('Criado em {y}.', 'Created in {y}.'), { y: info.award[2] })));
     } else {
       const hist = s.awards.filter((a) => (c.id === 'gramo' ? GRAMO_CATS.some((x) => x.id === a.category) : c.cats.includes(a.category))).slice(-48).reverse();
-      blocks.push(section(t(l('Vencedores', 'Winners')), hist.length ? h('table', { class: 'tbl compact' }, h('tbody', null, hist.map((a) => h('tr', { class: a.byPlayer ? 'mine' : '' }, h('td', null, a.year), h('td', null, t(GRAMO_CATS.find((x) => x.id === a.category)?.name ?? l(''))), h('td', null, a.releaseId && s.releases[a.releaseId] ? releaseLink(s, a.releaseId) : a.name), h('td', null, a.actId ? actLink(s, a.actId) : ''))))) : h('p', { class: 'muted small' }, t(l('Ainda sem vencedores na partida.', 'No winners yet in this run.')))));
+      blocks.push(section(t(l('Vencedores', 'Winners')), hist.length ? h('table', { class: 'tbl compact' }, h('tbody', null, hist.map((a) => h('tr', { class: a.byPlayer ? 'mine' : '' }, h('td', null, a.year), h('td', null, t(GRAMO_CATS.find((x) => x.id === a.category)?.name ?? l(''))), h('td', null, a.releaseId && s.releases[a.releaseId] ? releaseLink(s, a.releaseId) : awardTxt29(a)), h('td', null, a.actId ? actLink(s, a.actId) : ''))))) : h('p', { class: 'muted small' }, t(l('Ainda sem vencedores na partida.', 'No winners yet in this run.')))));
     }
     close = modal(c.name, h('div', { class: 'ficha' }, ...blocks), { wide: true });
   };
@@ -265,7 +267,7 @@ export function criticsTab(s: GameState): HTMLElement {
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, t(l('Crítico', 'Critic'))), h('th', null, t(l('Veículo', 'Outlet'))), h('th', null, t(l('Região', 'Region'))), h('th', null, t(l('Gosta de', 'Likes'))), h('th', null, t(l('Rigor', 'Harshness'))), h('th', null, t(l('Relação', 'Relationship'))))),
       h('tbody', null, list.map((c) => h('tr', null,
-        h('td', null, h('button', { class: 'link', onclick: () => openCriticPage(c.name) }, c.name)),
+        h('td', null, h('button', { ...ent27('person', `c:${c.name}`), class: 'link', onclick: () => openCriticPage(c.name) }, c.name)),
         h('td', { class: 'small' }, mastheadImg28(c.outlet, undefined, 64), ' ', outletName(s, c)),
         h('td', { class: 'small' }, regionName(c.region)),
         h('td', { class: 'small' }, c.favors.map(famName).join(', ')),
@@ -333,7 +335,7 @@ registerSection('desk', { id: 'invites8', order: 20, render: (s) => {
   if (!st.invites.length && !perf) return null;
   return section(t(l('Convites', 'Invitations')),
     st.invites.length ? invitesBox(s, true) : null,
-    perf ? h('p', { class: 'small' }, actLink(s, perf.actId), ' ', t(l('foi convidado para tocar nos Gramófonos de Ouro.', 'was invited to play at the Golden Gramophones.')), ' ', h('button', { class: 'btn small', onclick: () => openCeremonyPage('gramo') }, t(l('Responder', 'Respond')))) : null,
+    perf ? h('p', { class: 'small' }, actLink(s, perf.actId), ' ', t(l('foi convidado para tocar nos Gramófonos de Ouro.', 'was invited to play at the Golden Gramophones.')), ' ', h('button', { ...ent27('award', 'gramo'), class: 'btn small', onclick: () => openCeremonyPage('gramo') }, t(l('Responder', 'Respond')))) : null,
   );
 } });
 

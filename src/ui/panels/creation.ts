@@ -17,6 +17,7 @@ import { emptyState27 } from '../ps/ui27';
 import { store } from '../store';
 import { hasSinger, hireSessionSinger, sessionSingerCost, voiceLabel } from '../../sim/sys/vocals10';
 import { afterSchedule27, campRow27 } from '../act27/flow27p2'; // r27 FLOW2: o quadro da campanha É o marketing do lançamento
+import { ent27 } from '../ps/ent27';
 
 export function creationPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
@@ -105,7 +106,7 @@ export function creationPanel(s: GameState): HTMLElement {
       section(`${a.name}: ${t(S.unrecorded)} (${written.length})`,
         written.length ? h('table', { class: 'tbl compact' },
           h('thead', null, h('tr', null, h('th', null, t(S.title)), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.originality)), h('th', null, ''))),
-          h('tbody', null, written.map((so) => h('tr', null, h('td', null, so.title, ' ', voiceLabel(so) ? pill(t(voiceLabel(so)!), so.instrumental ? 'warn' : '') : ''),
+          h('tbody', null, written.map((so) => h('tr', null, h('td', ent27('song', so.id), so.title, ' ', voiceLabel(so) ? pill(t(voiceLabel(so)!), so.instrumental ? 'warn' : '') : ''),
             h('td', null, Math.round(so.melody)), h('td', { class: so.instrumental ? 'muted' : '' }, so.instrumental ? `— (${Math.round(so.lyrics)})` : Math.round(so.lyrics)), h('td', null, Math.round(so.originality)),
             h('td', null, so.instrumental ? h('button', { class: 'btn small ghost', title: t(l('Um cantor contratado grava a voz: a letra passa a contar.', 'A hired singer records the vocals: the lyrics start to count.')), onclick: () => { toast(t(hireSessionSinger(s, so.id))); rerender(); } }, t(l('Cantor de estúdio', 'Session singer')), ` ${$(sessionSingerCost(s))}`) : '')))),
         ) : h('p', { class: 'muted' }, t(l('Nenhuma. Coloque "Compor" na agenda do artista.', 'None. Add "Write songs" to the artist agenda.'))),

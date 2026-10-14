@@ -16,6 +16,8 @@ import { openAct, openOffer, openPerson } from '../ficha';
 import { registerArea } from '../registry';
 import { setSort27, sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { ic } from '../vis';
+import { ent27 } from '../ps/ent27';
+import { personKey27 } from '../ps/ent27';
 
 const F = {
   mode: 'acts' as 'acts' | 'people' | 'gone',
@@ -83,7 +85,7 @@ function actRows(s: GameState): HTMLElement {
           h('td', null, tal ? `${tal.lo}–${tal.hi}` : '?'),
           h('td', null, a.owner === 'player' ? '—' : k ? `${k.degree}/5` : '—'),
           h('td', { class: 'row' },
-            h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page'))),
+            h('button', { ...ent27('act', a.id), class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page'))),
             a.owner !== 'player' && !k && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small', onclick: () => { watchAct(s, a.id); toast(t(l('{a} entrou no seu radar (Mercado → Pipeline).', '{a} is on your radar (Market → Pipeline).'), { a: a.name }), 'good'); rerender(); } }, t(l('Seguir', 'Follow'))) : null,
             !a.owner && a.status !== 'retired' && a.status !== 'split' ? h('button', { class: 'btn small primary', onclick: () => openOffer(a.id) }, t(l('Oferta', 'Offer'))) : null,
           ),
@@ -137,7 +139,7 @@ function personRows(s: GameState): HTMLElement {
           h('td', null, String(s.year - p.born)),
           h('td', null, a ? actLink(s, a.id) : '—'),
           h('td', null, deg >= 4 ? String(o) : deg >= 2 ? `${Math.max(0, o - 8)}–${Math.min(99, o + 8)}` : '?'),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
+          h('td', null, h('button', { ...ent27('person', personKey27(p.id)), class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
         );
       })),
     )),
@@ -169,7 +171,7 @@ function goneRows(s: GameState): HTMLElement {
           h('td', null, t(roleLine27(s, p))),
           h('td', null, `${p.born}–${p.died ?? '?'}${p.died ? ` (${p.died - p.born})` : ''}`),
           h('td', null, (actsOf[p.id] ?? []).map((a) => actLink(s, a.id))),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
+          h('td', null, h('button', { ...ent27('person', personKey27(p.id)), class: 'btn small ghost', onclick: () => openPerson(p.id) }, ic('newspaper'), ' ', t(l('Ficha', 'Profile')))),
         ))))),
       pager(pages));
   }
@@ -198,7 +200,7 @@ function goneRows(s: GameState): HTMLElement {
           h('td', null, `${a.releases.length} · ${a.hits} top 10 · ${a.number1s} #1`),
           h('td', null, N0(catalog(a))),
           h('td', null, a.deceased || !live ? '—' : t(l('{n} vivos', '{n} alive'), { n: live })),
-          h('td', null, h('button', { class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page')))),
+          h('td', null, h('button', { ...ent27('act', a.id), class: 'btn small ghost', onclick: () => openAct(a.id) }, ic('newspaper'), ' ', t(l('Página', 'Page')))),
         );
       })))),
     pager(pages));

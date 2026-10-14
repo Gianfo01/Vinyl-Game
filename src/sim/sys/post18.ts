@@ -147,7 +147,7 @@ export function block18(s: GameState, pid: string, k: PK18): L | null {
   if (e && e.dispute > s.week) return l('Herdeiros brigando na justiça: o espólio não assina nada.', 'Heirs fighting in court: the estate signs nothing.');
   if ((post18(s).cd[pid] ?? 0) > s.week) return l('O espólio pediu um tempo antes de ouvir outra proposta.', 'The estate asked for time before hearing another pitch.');
   if (post18(s).proj.some((x) => x.pid === pid && x.k === k && x.st === 'run')) return l('Já em andamento.', 'Already running.');
-  if (k === 'ai_album' && p.alive) return l('Voz por IA de artista vivo: use os acordos de imagem (image17).', 'AI voice of a living artist: use image deals (image17).');
+  if (k === 'ai_album' && p.alive) return l('Voz por IA de artista vivo: use os acordos de imagem.', 'AI voice of a living artist: use image deals.');
   const xb = POST19.block?.(s, pid, k);
   if (xb) return xb;
   if (freeCash20(s) < money(s, def.cost)) return cashWhy20(s, money(s, def.cost), l('Caixa insuficiente.', 'Not enough cash.'));

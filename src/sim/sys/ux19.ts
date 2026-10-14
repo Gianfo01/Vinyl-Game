@@ -409,5 +409,5 @@ registerExplain('ux19.receipt', (s, ctx) => {
   const parts: WhyPart[] = Object.entries(r.d ?? {}).map(([k, v]) => ({ label: k, value: v, fmt: k === 'cash' ? 'money' : 'signed', tone: v > 0 ? 'good' : v < 0 ? 'bad' : '' }));
   parts.push({ label: l('Ecos pendentes', 'Pending echoes'), value: e.pend, fmt: 'num', why: { key: 'dec18.pending' } });
   for (const b of e.back) parts.push({ label: b.t, tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : '' });
-  return { title: fmtL(l('{t} → {o}', '{t} → {o}'), { t: r.t, o: r.o }), value: e.pend, fmt: 'num', parts, note: l('"Agora" = diferença entre antes e depois do clique; "depois" = ecos agendados pelo decide18.', '"Now" = difference between before and after the click; "later" = echoes scheduled by decide18.') };
+  return { title: fmtL(l('{t} → {o}', '{t} → {o}'), { t: r.t, o: r.o }), value: e.pend, fmt: 'num', parts, note: l('"Agora" = diferença entre antes e depois do clique; "depois" = ecos agendados para os próximos meses.', '"Now" = difference between before and after the click; "later" = echoes scheduled for the coming months.') };
 });

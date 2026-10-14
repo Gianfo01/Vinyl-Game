@@ -54,8 +54,10 @@ export function actQuick18(s: GameState, a: Act): HTMLElement {
   return h('span', { class: 'qa18', onclick: stop },
     h('span', { class: 'pill why18', 'data-why': 'act.hype', 'data-why-ctx': JSON.stringify({ act: a.id }), tabindex: '0', title: t(l('Hype agora', 'Hype now')) }, `🔥${hv}`),
     worst && (worst.level === 'strained' || worst.level === 'breaking') ? h('span', { class: `pill ${worst.level === 'breaking' ? 'bad' : 'warn'}`, title: t(l('Alguém sob estresse', 'Someone under stress')) }, '⚠') : null,
-    h('button', { class: 'btn small ghost', title: t(l('Página do artista', 'Artist page')), 'aria-label': t(l('Página do artista', 'Artist page')), onclick: () => inspect.act(a.id) }, '🔎'),
+    h('button', { ...ent27('act', a.id), class: 'btn small ghost', title: t(l('Página do artista', 'Artist page')), 'aria-label': t(l('Página do artista', 'Artist page')), onclick: () => inspect.act(a.id) }, '🔎'),
     lead ? h('button', { class: 'btn small ghost', disabled: !!blk, title: t(blk ?? l('Elogiar o líder (moral)', 'Praise the leader (morale)')), 'aria-label': t(l('Elogiar o líder', 'Praise the leader')), onclick: () => { const r = talk(s, lead, 'praise'); toast(t(r.text), r.ok ? 'good' : 'bad'); rerender(); } }, '💬') : null,
     a.members.length >= 2 ? h('button', { class: 'btn small ghost', title: t(l('Dinâmica da banda', 'Band dynamics')), 'aria-label': t(l('Dinâmica da banda', 'Band dynamics')), onclick: () => { setTab('dyn18', 'band'); store.area = 'dyn18' as typeof store.area; rerender(); } }, '👥') : null,
   );
 }
+
+import { ent27 } from './ps/ent27';

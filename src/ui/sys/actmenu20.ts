@@ -16,6 +16,7 @@ import {
 } from '../actions20';
 import { $, inspect, modal, rerender, toast } from '../common';
 import { undo29 } from '../ps/batch29model'; // r29 (M41)
+import { NO_ACTIONS29 } from '../ps/ctx27model';
 import { h, select } from '../dom';
 import { openCutscene } from '../registry';
 import { savePrefs, store } from '../store';
@@ -209,6 +210,11 @@ export function openRoomMenu20(s: GameState, room: string, roomName: L, anchor: 
   menu20(anchor, at, t(roomName), t(l('sala', 'room')), t(l('Ações da sala {r}', 'Room actions: {r}')).replace('{r}', t(roomName)), groups);
 }
 
+/** r29 (menus): o artista tem alguma ação possível agora no registro único? */
+export function live20(s: GameState, actId: string): boolean {
+  try { return actionRows20(s, { act: actId }).some((r) => !r.block); } catch { return true; }
+}
+
 /** Botão `Ações ▾` (nome acessível inclui o artista). */
 export function actionsButton20(s: GameState, actId: string, cls = 'btn'): HTMLElement {
   const a = s.acts[actId];
@@ -216,6 +222,8 @@ export function actionsButton20(s: GameState, actId: string, cls = 'btn'): HTMLE
     onclick: (e: Event) => { e.stopPropagation(); if (b.getAttribute('aria-expanded') === 'true') { openMenu?.(); b.focus(); } else openActionMenu20(s, actId, b); },
     onkeydown: (e: KeyboardEvent) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openActionMenu20(s, actId, b); if (e.key === 'ArrowUp') { const its = document.querySelectorAll<HTMLElement>('.am20 [role=menuitem]'); its[its.length - 1]?.focus(); } } } },
   t(l('Ações', 'Actions')), ' ▾') as HTMLButtonElement;
+  // r29 (menus): nenhuma ação possível agora → desabilitado com o motivo (não abre menu só de itens cinza)
+  if (!live20(s, actId)) { b.setAttribute('disabled', ''); b.setAttribute('aria-disabled', 'true'); b.setAttribute('title', t(NO_ACTIONS29)); b.setAttribute('data-noacts29', ''); }
   return b;
 }
 
@@ -224,11 +232,12 @@ export function bindContext20(s: GameState, el: HTMLElement, actId: string): HTM
   el.addEventListener('contextmenu', (e) => {
     const tg = e.target as HTMLElement;
     if (tg.closest('a, input, textarea, select, [contenteditable]')) return;
+    if (!live20(s, actId)) return; // r29 (menus): nada a fazer → menu nativo do navegador, sem menu vazio
     e.preventDefault();
     openActionMenu20(s, actId, el, { x: e.clientX, y: e.clientY });
   });
   el.addEventListener('keydown', (e) => {
-    if ((e.key === 'F10' && e.shiftKey) || e.key === 'ContextMenu') { e.preventDefault(); openActionMenu20(s, actId, el); }
+    if (((e.key === 'F10' && e.shiftKey) || e.key === 'ContextMenu') && live20(s, actId)) { e.preventDefault(); openActionMenu20(s, actId, el); }
   });
   return el;
 }

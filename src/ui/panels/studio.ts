@@ -20,6 +20,7 @@ import { compose23 } from '../sys/journey23';
 import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
 import { stylePill17 } from '../sys/style17';
+import { ent27 } from '../ps/ent27';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -52,7 +53,7 @@ function sessionTab(s: GameState): HTMLElement {
   return h('div', null,
     section(t(l('Repertório escrito', 'Written songs')), written.length ? h('div', { class: 'song-pick' }, written.map((so) => h('label', { class: `song-card ${sess.songs.has(so.id) ? 'on' : ''}` },
       h('input', { type: 'checkbox', checked: sess.songs.has(so.id), onchange: () => { if (sess.songs.has(so.id)) sess.songs.delete(so.id); else sess.songs.add(so.id); rerender(); } }),
-      ic('disc'), h('b', null, so.title), stylePill17(so.genre),
+      ic('disc'), h('b', ent27('song', so.id), so.title), stylePill17(so.genre),
       h('span', { class: 'mini-bars' }, h('i', { style: `height:${so.melody}%`, title: t(l('Melodia', 'Melody')) }), h('i', { style: `height:${so.lyrics}%`, title: t(l('Letra', 'Lyrics')) }), h('i', { style: `height:${so.originality}%`, title: t(l('Originalidade', 'Originality')) })),
       so.sampleOf ? pill('sample') : null,
     ))) : h('p', { class: 'muted small' }, t(l('Nada escrito ainda: o repertório vem de Composição (compor, encomendar) ou de um cover.', 'Nothing written yet: songs come from Songwriting (write, commission) or a cover.')))),
@@ -61,7 +62,7 @@ function sessionTab(s: GameState): HTMLElement {
       prods.map((p) => {
         const busy = (s.producerBusy[p.id] ?? 0) > s.week;
         const fit = producerFit(p, a.genre);
-        return h('button', { class: `tile ${sess.producer === p.id ? 'on' : ''} ${busy ? 'muted' : ''}`, disabled: busy, onclick: () => { sess.producer = p.id; rerender(); } },
+        return h('button', { class: `tile ${sess.producer === p.id ? 'on' : ''} ${busy ? 'muted' : ''}`, ...ent27('person', p.real ? `pd:${p.real}` : null), disabled: busy, onclick: () => { sess.producer = p.id; rerender(); } }, // r29: produtor real → clique direito
           h('div', { class: 'tile-ic' }, ic('mic', 2)),
           h('div', { class: 'tile-body' }, h('b', null, p.name), h('small', null, t(soundOf(p).name)),
             chips(stat('sparkle', p.skill, l('Habilidade', 'Skill')), stat('money', $(money(s, p.fee)), l('Por faixa', 'Per track')), stat(fit === 1 ? 'heart' : 'warning', fit === 1 ? '✓' : '~', l('Afinidade com o gênero', 'Genre fit'))),
@@ -92,7 +93,7 @@ function splitsSection(s: GameState): HTMLElement {
   if (!songs.length) return h('div');
   return section(t(l('Créditos de autoria (somam 100%)', 'Writing credits (add up to 100%)')), h('table', { class: 'tbl compact' }, h('tbody', null, songs.map((so) => {
     const splits = so.splits ?? so.writers.map((w) => ({ personId: w, share: 1 / Math.max(1, so.writers.length) }));
-    return h('tr', null, h('td', null, so.title), h('td', null, splits.map((sp) => h('span', { class: 'pill' }, portrait(s.persons[sp.personId], 18), ` ${Math.round(sp.share * 100)}%`))),
+    return h('tr', null, h('td', ent27('song', so.id), so.title), h('td', null, splits.map((sp) => h('span', { class: 'pill' }, portrait(s.persons[sp.personId], 18), ` ${Math.round(sp.share * 100)}%`))),
       h('td', null, a.members.length > 1 ? h('button', { class: 'btn small ghost', title: t(l('Dividir igualmente entre toda a banda', 'Split equally across the band')), onclick: () => { const ms = a.members.filter((id) => s.persons[id]?.alive); const e = setSplits(s, so.id, ms.map((id, i) => ({ personId: id, share: i === ms.length - 1 ? 1 - Math.round((1 / ms.length) * 1000) / 1000 * (ms.length - 1) : Math.round((1 / ms.length) * 1000) / 1000 }))); say(e, l('Créditos redistribuídos.', 'Credits redistributed.')); rerender(); } }, t(l('Dividir com a banda', 'Share with the band'))) : null));
   }))));
 }
@@ -111,7 +112,7 @@ function versionsTab(s: GameState): HTMLElement {
       h('td', null, writtenMine.length ? h('button', { class: 'btn small ghost', onclick: () => { const req = requestSample(s, r, writtenMine[0].id, so.id, 'sample'); if ('status' in req) toast(t(req.status === 'cleared' ? l('Sample liberado e pago.', 'Sample cleared and paid.') : req.status === 'denied' ? l('Detentor NEGOU o sample. Usar mesmo assim pode dar processo.', 'The holder DENIED the sample. Using it anyway may lead to a lawsuit.') : l('Sem caixa para liberar: sample não liberado.', 'No cash to clear: sample uncleared.')), req.status === 'cleared' ? 'good' : 'bad'); else toast(t(req), 'bad'); rerender(); } }, t(l('Samplear em "{s}"', 'Sample into "{s}"'), { s: writtenMine[0].title })) : null),
     ))))),
     section(t(l('Remixes e versões', 'Remixes and versions')), own.length ? h('table', { class: 'tbl compact' }, h('tbody', null, own.map((so) => h('tr', null,
-      h('td', null, so.title),
+      h('td', ent27('song', so.id), so.title),
       h('td', null, h('button', { class: 'btn small', onclick: () => { say(makeRemix(s, so.id), l('Remix criado: mesma composição, nova produção.', 'Remix created: same composition, new production.')); rerender(); } }, 'Remix')),
       h('td', null, select('', [{ value: '', label: t(l('Versão em…', 'Version in…')) }, { value: 'es', label: 'Español' }, { value: 'en', label: 'English' }, { value: 'pt', label: 'Português' }, { value: 'ja', label: '日本語' }, { value: 'fr', label: 'Français' }, { value: 'ko', label: '한국어' }], (v) => { if (v) { say(makeTranslation(s, r, so.id, v), l('Versão adaptada criada.', 'Adapted version created.')); rerender(); } })),
     )))) : h('p', { class: 'muted small' }, t(l('Grave algo primeiro.', 'Record something first.')))),

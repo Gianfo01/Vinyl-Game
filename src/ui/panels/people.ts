@@ -19,6 +19,8 @@ import { h, select } from '../dom';
 import { chips, ic, meter, portrait, stat, tile } from '../vis';
 import { a29 } from '../art29ui'; // r29 (arte)
 import { fanBannerImg29 } from '../pixel/badge29';
+import { ent27 } from '../ps/ent27';
+import { personKey27 } from '../ps/ent27';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 
@@ -58,7 +60,7 @@ export function membersSection(s: GameState, a: Act): HTMLElement {
     const group = fac?.groups.findIndex((g) => g.includes(pid)) ?? -1;
     return h('article', { class: `member ${p.alive ? '' : 'gone'}` },
       // rodada 10: o cabeçalho abre a ficha completa da pessoa
-      h('header', { class: 'click', role: 'button', tabindex: 0, title: t(l('Abrir ficha completa', 'Open full card')), onclick: () => openPersonPage(pid), onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter') openPersonPage(pid); } },
+      h('header', { ...ent27('person', personKey27(pid)), class: 'click', role: 'button', tabindex: 0, title: t(l('Abrir ficha completa', 'Open full card')), onclick: () => openPersonPage(pid), onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter') openPersonPage(pid); } },
         portrait(p, 56), h('div', null, h('button', { class: 'link', type: 'button' }, h('b', null, p.name)), h('small', null, `${s.year - p.born} ${t(l('anos', 'yrs'))} · ${t(roleLine27(s, p))}`), a.leaderId === pid ? pill(t(l('líder', 'leader')), 'good') : null, group >= 0 && (fac?.groups.length ?? 0) > 1 ? pill(`${t(l('facção', 'faction'))} ${group + 1}`) : null, !p.alive ? pill('✝') : null)),
       mainTraits(s, a, p, !!known),
       chips(stat('heart', Math.round(p.morale), l('Moral', 'Morale'), p.morale < 35 ? 'warn' : ''), stat('stress', Math.round(p.stress), l('Estresse', 'Stress'), p.stress > 65 ? 'warn' : ''), p.health !== 'ok' ? stat('warning', t(HEALTH[p.health] ?? l(p.health, p.health)), l('Saúde', 'Health'), 'warn') : null),
@@ -133,7 +135,7 @@ export function reunionSection(s: GameState): HTMLElement | null {
       h('small', null, t(tm.reason)),
       tm.ok ? chips(stat('money', $(tm.cost), l('Proposta', 'Offer')), stat('chart-up', `${Math.round(tm.chance * 100)}%`, l('Chance estimada', 'Estimated chance'))) : null,
       tm.ok ? h('button', { class: 'btn small', onclick: () => { toast(t(negotiateReunion(s, r, a.id)), 'info'); rerender(); } }, t(l('Negociar reunião', 'Negotiate reunion'))) : null,
-      h('button', { class: 'link small', onclick: () => inspect.act(a.id) }, t(l('Ver ficha', 'View sheet'))),
+      h('button', { ...ent27('act', a.id), class: 'link small', onclick: () => inspect.act(a.id) }, t(l('Ver ficha', 'View sheet'))),
     ]);
   }));
 }

@@ -31,6 +31,7 @@ import { applyNewBlend, newBlendSelect, p13Panel } from './project13';
 import { phaseReview20 } from './review20';
 import { empty20 } from '../st20';
 import { journey23 } from './journey23';
+import { ent27 } from '../ps/ent27';
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -133,7 +134,7 @@ function contextLinks(s: GameState, p: MusicProject): HTMLElement {
     h('button', { class: 'btn small ghost', onclick: () => { sel(); setTab('creation-write', 'cr-recipe'); area('creation'); } }, ic('note'), ' ', t(l('Receita sonora', 'Sound recipe'))),
     h('button', { class: 'btn small ghost', onclick: () => { sel(); area('artists'); } }, ic('calendar'), ' ', t(l('Agenda do artista', 'Act agenda'))),
     h('button', { class: 'btn small ghost', onclick: () => { sel(); setTab('creation-release', p.type === 'lp' ? 'rollout' : 'launch'); area('releases'); } }, ic('radio'), ' ', t(l('Marketing e rollout', 'Marketing and rollout'))),
-    act?.contractId ? h('button', { class: 'btn small ghost', onclick: () => openActPage(p.actId, 'contract') }, ic('contract'), ' ', t(l('Contrato', 'Contract'))) : null);
+    act?.contractId ? h('button', { ...ent27('act', p.actId), class: 'btn small ghost', onclick: () => openActPage(p.actId, 'contract') }, ic('contract'), ' ', t(l('Contrato', 'Contract'))) : null);
 }
 
 function studioFit(s: GameState, p: MusicProject): HTMLElement | null {
@@ -184,7 +185,7 @@ function results(s: GameState, p: MusicProject): HTMLElement | null {
       kv(t(l('Meta', 'Goal')), h('span', null, t(GOALS[p.goal].name), ' ', res.goalMet === null ? pill(t(l('em aberto', 'open'))) : res.goalMet ? pill(t(l('cumprida', 'met')), 'good') : pill(t(l('não cumprida', 'missed')), 'bad')))),
     h('p', { class: 'muted small' }, t(res.goalText)),
     explainBox(s, rel),
-    h('button', { class: 'btn small ghost', onclick: () => openRelease(rel.id) }, ic('disc'), ' ', t(l('Ficha do lançamento', 'Release sheet'))),
+    h('button', { ...ent27('release', rel.id), class: 'btn small ghost', onclick: () => openRelease(rel.id) }, ic('disc'), ' ', t(l('Ficha do lançamento', 'Release sheet'))),
     h('h4', null, t(l('Próximo passo', 'Next step'))),
     pl?.next ? h('p', null, pill(t(NEXT[pl.next].name), 'good'), ' ', t(NEXT[pl.next].fx)) :
       h('div', { class: 'p12-next' }, (Object.keys(NEXT) as NextStep[]).map((k) => {

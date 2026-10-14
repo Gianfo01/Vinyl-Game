@@ -10,6 +10,7 @@ import { playerActs } from '../../sim/util';
 import { canSee } from '../../sim/sys/fame15';
 import { inspect, pill, section } from '../common';
 import { h } from '../dom';
+import { ent27 } from '../ps/ent27';
 import { ACT_TABS } from '../pages';
 import { registerArea } from '../registry';
 import { personRoute16 } from '../route16';
@@ -19,10 +20,12 @@ import './core18.css';
 
 const open = (key: string) => (key.startsWith('a:') ? inspect.act(key.slice(2)) : personRoute16.f?.(key));
 const moodCls = (m: number) => (m >= 65 ? 'happy' : m < 40 ? 'unhappy' : '');
+/** r29 (menus): marca de clique direito pela chave do nó ('a:' artista; 'p:'/'s:' pessoa). */
+const entOf29 = (key: string) => (key.startsWith('a:') ? ent27('act', key.slice(2)) : ent27('person', key));
 const nameOf = (d: Dyn18, key: string) => d.nodes.find((n) => n.key === key)?.name ?? '?';
 
 function chip(n: DynNode, spokes?: string): HTMLElement {
-  return h('button', { class: `dyn18-p ${moodCls(n.mood)}`, title: `${t(n.role)} · ${t(l('influência', 'influence'))} ${n.infl} · ${t(l('humor', 'mood'))} ${n.mood}`, onclick: () => open(n.key) },
+  return h('button', { class: `dyn18-p ${moodCls(n.mood)}`, ...entOf29(n.key), title: `${t(n.role)} · ${t(l('influência', 'influence'))} ${n.infl} · ${t(l('humor', 'mood'))} ${n.mood}`, onclick: () => open(n.key) },
     n.key === spokes ? '📣 ' : '', n.name, n.promises ? ` ✋${n.promises}` : '');
 }
 
@@ -41,7 +44,7 @@ export function dynView(s: GameState, d: Dyn18, empty: L): HTMLElement {
       h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl compact dyn18-tbl' },
         h('thead', null, h('tr', null, ...[l('Nome', 'Name'), l('Papel', 'Role'), l('Influência', 'Influence'), l('Humor', 'Mood'), l('Estresse', 'Stress'), l('Apoia / atrita', 'Backs / clashes'), l('Notas', 'Notes')].map((x) => h('th', null, t(x))))),
         h('tbody', null, d.nodes.map((n) => h('tr', null,
-          h('td', null, h('button', { class: 'link', onclick: () => open(n.key) }, n.name)),
+          h('td', null, h('button', { class: 'link', ...entOf29(n.key), onclick: () => open(n.key) }, n.name)),
           h('td', null, t(n.role), ' ', h('small', { class: 'muted' }, t(TIER18[n.tier]))),
           h('td', null, n.infl),
           h('td', { class: n.mood >= 65 ? 'good' : n.mood < 40 ? 'bad' : '' }, `${n.mood} `, h('small', { class: 'muted' }, t(n.moodWhy))),

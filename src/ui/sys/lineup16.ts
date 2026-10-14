@@ -9,6 +9,7 @@ import { actLink, pill } from '../common';
 import { h } from '../dom';
 import { ACT_TABS, PERSON_TABS, openPersonPage } from '../pages';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
+import { personKey27 } from '../ps/ent27';
 
 const MO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const live = (a: Act) => a.status === 'active' || a.status === 'emerging' || a.status === 'hiatus';
@@ -45,7 +46,7 @@ function lineupTab(s: GameState, a: Act): HTMLElement {
         ];
       })),
     log.length ? h('div', null, h('h4', null, t(l('Mudanças nesta partida', 'Changes in this run'))),
-      h('ul', { class: 'small' }, log.slice(0, 14).map(([m, , pid, k]) => h('li', null, h('span', { class: 'muted' }, `${MO[m % 12]}/${Math.floor(m / 12)} · `), k === 'j' ? pill(t(l('entrou', 'joined')), 'good') : pill(t(l('saiu', 'left')), 'bad'), ' ', s.persons[pid] ? h('button', { class: 'link', onclick: () => openPersonPage(pid) }, s.persons[pid].name) : '?')))) : null,
+      h('ul', { class: 'small' }, log.slice(0, 14).map(([m, , pid, k]) => h('li', null, h('span', { class: 'muted' }, `${MO[m % 12]}/${Math.floor(m / 12)} · `), k === 'j' ? pill(t(l('entrou', 'joined')), 'good') : pill(t(l('saiu', 'left')), 'bad'), ' ', s.persons[pid] ? h('button', { ...ent27('person', personKey27(pid)), class: 'link', onclick: () => openPersonPage(pid) }, s.persons[pid].name) : '?')))) : null,
   );
 }
 
