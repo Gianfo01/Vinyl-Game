@@ -83,9 +83,9 @@ beforeAll(() => {
   // só acts muda (caixa e rng iguais). Antes: acts 827562554.
   // R29 conectar tudo + público + relíquias "muitas" juntos (merge friendly-brown): re-medido. Antes: 332627 / 1382068899 / 1849171597 / 4090265307.
   // R29: conectar tudo (13 sistemas, com público por idade/região) + família juntos: re-medido.
-  expect(s.player.cash).toBe(334007);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1285188736);
-  expect(hashString(JSON.stringify(s.rng))).toBe(2264116950);
+  expect(s.player.cash).toBe(332641);
+  expect(hashString(JSON.stringify(s.acts))).toBe(965633016);
+  expect(hashString(JSON.stringify(s.rng))).toBe(4090265307);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

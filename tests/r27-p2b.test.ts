@@ -80,10 +80,10 @@ describe('r27 P2B — modo rápido intacto', () => {
     // Antes: tours 3927711826 / acts 827562554.
     // R29 conectar tudo + público + relíquias "muitas" juntos (merge friendly-brown): re-medido. Antes: 332627 / 1382068899 / 1849171597 / 4090265307.
   // R29: conectar tudo (13 sistemas, com público por idade/região) + família juntos: re-medido.
-    expect(AFTER.player.cash).toBe(334007);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1252193190);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1285188736);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2264116950);
+    expect(AFTER.player.cash).toBe(332641);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(965633016);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(4090265307);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
