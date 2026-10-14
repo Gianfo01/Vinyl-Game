@@ -10,7 +10,11 @@ import { MOVEMENTS } from '../../data/content';
 import { countryName, countryOfCity } from '../../data/geo';
 import { CITIES, FAMILIES, GENRES, cityById, genreById, l, marketById, type Genre } from '../../data/world';
 import { GEAR19 } from '../../data/more19';
-import { KIND_NAME, ORGS17, RACKET_NAME } from '../../data/orgs17';
+import { KIND_NAME, ORGS17 as ORGS17_, RACKET_NAME } from '../../data/orgs17';
+import { CYBER29, STREET29 } from '../../data/cyber29';
+import { AFF29 } from '../../sim/sys/aff29';
+import { JOBS29 } from '../../sim/sys/mob29';
+const ORGS17 = [...ORGS17_, ...CYBER29, ...STREET29];
 import { OUTLETS17 } from '../../data/media17';
 import { RELICS18 } from '../../data/relics18';
 import { TECHS } from '../../data/rules';
@@ -253,6 +257,11 @@ export function pageOrg29(c: W29, id: string): Page29 | null {
     [T('Origem', 'Source'), [o.real ? T('organização real documentada', 'documented real organization') : T('organização fictícia', 'fictional organization')]],
   ] }, ...safeP29(c, tx(o.desc))];
   if (ties.length) blocks.push(H(T('Laços documentados', 'Documented ties')), { k: 'ul', items: ties.map((x) => [`${x.y} · ${tx(x.text)}`]) });
+  const aff = AFF29.filter((a) => a.o === o.id && !hidden29(c, a.from));
+  if (aff.length) blocks.push(H(T('Cena e gêneros (afinidade)', 'Scene and genres (affinity)')), { k: 'ul', items: aff.map((a): Inline29[] => [`${tx(a.scene)} — ${a.genres.map((g) => genreById[g] ? tx(genreById[g].name) : g).join(', ')} · ${span29(a.from, a.to >= 2100 ? undefined : a.to)} · ${a.doc ? T('cena documentada', 'documented scene') : T('afinidade de jogo', 'game affinity')}. `, futureText29(c, tx(a.note)) ? '' : tx(a.note)]) },
+    P(T('A afinidade é de gênero e cena, nunca de pessoa: não diz que os artistas do gênero pertencem à organização.', 'The affinity is by genre and scene, never by person: it does not say the genre\'s artists belong to the organization.')));
+  const jobs = JOBS29.filter((j) => (!j.for || (j.for === 'cyber') === (o.kind === 'cyber')) && (!j.racket || j.racket.some((r) => (o.rackets as string[]).includes(r))));
+  if (jobs.length) blocks.push(H(T('Serviços que dá para contratar', 'Services you can hire')), { k: 'ul', items: jobs.map((j) => [tx(j.name)]) });
   if (hid) blocks.push({ k: 'spoiler', n: hid });
   blocks.push(P(T('Aproximar-se, lavar dinheiro ou denunciar mexem no calor policial — veja ', 'Approaching, laundering or reporting moves police heat — see '), ln29('mech:underworld', T('Submundo', 'Underworld')), '.'));
   return { id: `org:${id}`, title: tx(o.name), kind: T('organização do submundo', 'underworld organization'), art: { k: 'emblem', id: o.id, kind: o.kind, a3: countryOfCity(o.city) ?? undefined, name: tx(o.name) }, crumbs: crumbs29('mundo', 'orgs'), blocks };

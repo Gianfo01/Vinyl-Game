@@ -25,6 +25,7 @@ import { EQUAL_REP, EQUAL_START_REAL, LABELS_MAX22 } from '../../sim/worldgen';
 import { RIVS29, riv29ById, rivOf29 } from '../../sim/rivals29data';
 import { eraBig29 } from '../../sim/sys/rivals29start';
 import { FREQS29, NS29, eraCap29, eraWave29 } from '../../sim/labels29data';
+import { AGE29_MAX, AGE29_MIN, EXTRA29_MAX, ROLES29_MAX, ROLE_FROM29 } from '../../sim/char29data';
 import { COMMISSION29, PROD_PTS29, PROD_SPLIT29, SHARE29, TARGET29, advFactor29 } from '../../sim/terms29';
 
 // centavos nominais → texto; dólares reais (2020) → texto
@@ -321,6 +322,8 @@ export const MECH_A: MechArt29[] = [
       l('Agressividade dos rivais em leilões, aliciamento e propostas.', 'Rival aggression in auctions, poaching and bids.'),
     ],
     rules: [
+      l(`Seu personagem (R29): na Nova run rápida você escolhe nome (🎲 sorteia da cidade e da época), idade (${AGE29_MIN}–${AGE29_MAX}, sugerida pela atividade e pela situação), sexo e aparência (🎲). Artista escolhe a função principal e até ${EXTRA29_MAX} extras ("Também toca ou canta"; ${ROLES29_MAX} no máximo, também na ficha completa), o gênero, solo/dupla/trio/banda e o nome da banda. Funções com época: produtor-integrante ${ROLE_FROM29.producer}+, DJ ${ROLE_FROM29.dj}+, MC ${ROLE_FROM29.mc}+. Se você canta (vocal ou MC), a banda gerada não ganha outro cantor; integrante com a mesma função que a sua passa para uma função que falta no gênero.`,
+        `Your character (R29): in the quick New run you pick a name (🎲 rolls one from the city and era), age (${AGE29_MIN}–${AGE29_MAX}, suggested by activity and situation), sex and look (🎲). Artists pick a main role and up to ${EXTRA29_MAX} extras ("Also plays or sings"; ${ROLES29_MAX} at most, also in the full setup), the genre, solo/duo/trio/band and the band name. Era-gated roles: producer-member ${ROLE_FROM29.producer}+, DJ ${ROLE_FROM29.dj}+, MC ${ROLE_FROM29.mc}+. If you sing (vocal or MC), the generated band gets no extra singer; a member with your role switches to one the genre is missing.`),
       l('Caixa base de quem tem selo (dólares de 2020): 34 mil do zero, 100 mil emergente, 650 mil estabelecido; artista 60 mil e híbrido 55 mil. Fácil ×1,5, difícil ×0,7.',
         'Base cash for a label (2020 dollars): 34k from zero, 100k emerging, 650k established; artist 60k and hybrid 55k. Easy ×1.5, hard ×0.7.'),
       l('A escada multiplica o caixa do começo emergente da carreira: do zero ×0,34, médio ×2, hipster ×0,8, estabelecido ×6,5, top 5 ×14, líder ×28, em crise ×2,2.',
@@ -372,7 +375,7 @@ export const MECH_A: MechArt29[] = [
       if (s) out.push(row('Nível dos rivais nesta partida', 'Rival level in this run', riv29ById(rivOf29(s.config))?.name.pt ?? '—'));
       return out;
     },
-    docs: ['docs/fixes29.md', 'docs/f4-r28.md', 'docs/rodada17.md', 'docs/reorg29.md', 'docs/rivais29.md', 'docs/gravadoras29.md'],
+    docs: ['docs/fixes29.md', 'docs/f4-r28.md', 'docs/rodada17.md', 'docs/reorg29.md', 'docs/rivais29.md', 'docs/gravadoras29.md', 'docs/personagem29.md'],
   },
 ];
 

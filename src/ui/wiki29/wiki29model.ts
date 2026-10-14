@@ -4,7 +4,9 @@
 import { CITIES, GENRES, cityById, genreById, l } from '../../data/world';
 import { countryName } from '../../data/geo';
 import { GEAR19 } from '../../data/more19';
-import { ORGS17 } from '../../data/orgs17';
+import { ORGS17 as ORGS17_ } from '../../data/orgs17';
+import { CYBER29, STREET29 } from '../../data/cyber29';
+const ORGS17 = [...ORGS17_, ...CYBER29, ...STREET29];
 import { OUTLETS17 } from '../../data/media17';
 import { MOVEMENTS } from '../../data/content';
 import { REAL_EXECS } from '../../data/labels10';

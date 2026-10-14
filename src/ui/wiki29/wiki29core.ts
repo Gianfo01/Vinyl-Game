@@ -126,7 +126,7 @@ export const span29 = (a?: number, b?: number): string => (a === undefined && b 
 
 // ---------------------------------------------------------------- funções e papéis
 
-const ROLE_L: Record<string, L> = {
+export const ROLE_L: Record<string, L> = {
   vocal: l('Voz', 'Vocals'), guitar: l('Guitarra', 'Guitar'), bass: l('Baixo', 'Bass'), drums: l('Bateria', 'Drums'), keys: l('Teclados', 'Keys'),
   horns: l('Sopros', 'Horns'), dj: l('DJ', 'DJ'), producer: l('Produção', 'Producer'), mc: l('MC', 'MC'), strings: l('Cordas', 'Strings'), synthetic: l('IA', 'AI'),
   harmonica: l('Gaita', 'Harmonica'), piano: l('Piano', 'Piano'), rhythm: l('Guitarra base', 'Rhythm guitar'),

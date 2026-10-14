@@ -7,6 +7,14 @@ import { METER29, MOB29 } from '../../sim/sys/mob29';
 import { LINK29 } from '../../sim/sys/orglinks29';
 import { CONTRACT_MODELS, ROLES } from '../../data/rules';
 import { END29_NAME, HOW29, advFactor29, expRoy29 } from '../../sim/terms29';
+import { ASKS29, JOBS29 } from '../../sim/sys/mob29';
+import { RIGM29 } from '../../sim/sys/rig29';
+import { AFF29 } from '../../sim/sys/aff29';
+import { ORGS17 } from '../../data/orgs17';
+import { CYBER29, STREET29 } from '../../data/cyber29';
+import { genreById } from '../../data/world';
+import { ROLES29, ROLE_FROM29 } from '../../sim/char29data';
+import { ROLE_L } from './wiki29core';
 import type { Cat29, CatItem29 } from './wiki29types';
 
 type Row = [L, string | L];
@@ -55,4 +63,40 @@ export const CATS_C: Cat29[] = [
       { id: 'fins-acordos', title: l('Como os acordos especiais terminam', 'How special deals end'), rows: Object.entries(END29_NAME).map(([k, v]): Row => [l(k, k), v]), see: ['mech:contracts'] },
       ...ROLES.map((r): CatItem29 => ({ id: 'papel-' + r.id, title: r.name, sub: r.desc, rows: [[l('Atividades em que começa', 'Starting activities'), r.careers.join(', ')]], see: ['mech:careers'] })),
     ] },
+  { id: 'voto-comprado', title: l('Submundo: métodos de voto comprado', 'Underworld: rigged-vote methods'), icon: 'trophy', group: 'regras',
+    desc: l('Como manipular a votação de um prêmio (rig29): força e chance base de vazar de cada método. Vale para Gramófonos, Prêmios do Ofício, Prêmio da Crítica, prêmios nacionais de júri local e Hall da Fama.', 'How to rig an award vote (rig29): power and base leak odds of each method. Works for the Gramophones, Craft Awards, Critics\' Prize, national local-jury awards and the Hall of Fame.'),
+    items: () => {
+      const era: Record<string, L> = { jury: l('sempre', 'always'), lobby: l('sempre', 'always'), ballot: l('1950–1999', '1950–1999'), bots: l('2005+ (a chance de vazar sobe com os anos)', '2005+ (leak odds rise over the years)'), vote: l('com voto na academia (reputação institucional 50+ ou 3+ prêmios)', 'with an academy vote (institutional reputation 50+ or 3+ awards)') };
+      return Object.entries(RIGM29).map(([id, m]): CatItem29 => ({ id, title: m.name, rows: [[l('Força', 'Power'), String(m.pow)], [l('Chance base de vazar', 'Base leak odds'), `${Math.round(m.q * 100)}%`], [l('Quando', 'When'), era[id] ?? '—']], see: ['mech:underworld', 'mech:awards'] }));
+    } },
+  { id: 'servicos-submundo', title: l('Submundo: serviços das famílias e do crime digital', 'Underworld: family and cybercrime services'), icon: 'skull', group: 'regras',
+    desc: l('O que dá para contratar de uma organização ("Contratar … para…"): tradicionais, crime digital ou ambas, e quem oferece cada serviço.', 'What you can hire an organization for ("Hire … to…"): traditional, cybercrime or both, and who offers each service.'),
+    items: () => {
+      const all = [...ORGS17, ...CYBER29, ...STREET29];
+      return JOBS29.map((j): CatItem29 => {
+        const who = all.filter((o) => (!j.for || (j.for === 'cyber') === (o.kind === 'cyber')) && (!j.racket || j.racket.some((r) => (o.rackets as string[]).includes(r))));
+        return { id: j.id.replace(/[:]/g, '-'), title: j.name, rows: [[l('Quem oferece', 'Offered by'), j.for === 'cyber' ? l('crime digital', 'cybercrime') : j.for === 'trad' ? l('famílias tradicionais', 'traditional families') : l('todas', 'all')], [l('Organizações', 'Organizations'), l(who.map((o) => o.name.pt).join(', ') || '—', who.map((o) => o.name.en).join(', ') || '—')]], see: ['mech:underworld'] };
+      });
+    } },
+  { id: 'pedidos-familia', title: l('Submundo: pedidos das famílias', 'Underworld: family requests'), icon: 'scroll', group: 'regras',
+    desc: l('O que uma família pode pedir a você (com prazo, no Cockpit "Favores e dívidas" e no calendário): cumprir, negociar prazo, recusar ou pagar.', 'What a family may ask of you (with a deadline, in the Cockpit "Favors and debts" card and the calendar): fulfill, negotiate the deadline, refuse or pay.'),
+    items: () => ASKS29.map((a): CatItem29 => ({ id: a.k, title: a.name, sub: a.desc, rows: [[l('Consequências', 'Consequences'), a.fx]], see: ['mech:underworld'] })) },
+  { id: 'faccoes-cenas', title: l('Submundo: facções × gêneros e cenas', 'Underworld: factions × genres and scenes'), icon: 'network', group: 'regras',
+    desc: l('Afinidade cultural de uma organização com um gênero ou cena, com época e território. É de gênero e cena, nunca de pessoa.', 'An organization\'s cultural affinity with a genre or scene, with period and territory. By genre and scene, never by person.'),
+    items: () => {
+      const all = [...ORGS17, ...CYBER29, ...STREET29];
+      return AFF29.map((a, i): CatItem29 => {
+        const o = all.find((x) => x.id === a.o);
+        const gs = a.genres.map((g) => genreById[g]?.name ?? l(g, g));
+        return { id: `${a.o}-${i}`, title: l(`${o?.name.pt ?? a.o} — ${a.scene.pt}`, `${o?.name.en ?? a.o} — ${a.scene.en}`), rows: [
+          [l('Gêneros', 'Genres'), l(gs.map((g) => g.pt).join(', '), gs.map((g) => g.en).join(', '))],
+          [l('Época', 'Period'), `${a.from}–${a.to >= 2100 ? '' : a.to}`],
+          [l('Tipo', 'Kind'), a.doc ? l('cena documentada', 'documented scene') : l('afinidade de jogo', 'game affinity')],
+          [l('Estigma (pânico moral, censura)', 'Stigma (moral panic, censorship)'), `${Math.round(a.stigma * 100)}%`],
+        ], text: [a.note], see: ['mech:underworld', `org:${a.o}`] };
+      });
+    } },
+  { id: 'funcoes-personagem', title: l('Seu personagem: funções', 'Your character: roles'), icon: 'mic', group: 'pessoas',
+    desc: l('Funções que o seu personagem artista pode ter (principal + até 2 extras), com o ano a partir do qual existem.', 'Roles your artist character can have (main + up to 2 extras), with the year they exist from.'),
+    items: () => ROLES29.map((r): CatItem29 => ({ id: r, title: ROLE_L[r] ?? r, rows: [[l('Existe desde', 'Exists since'), ROLE_FROM29[r] ? String(ROLE_FROM29[r]) : l('sempre', 'always')], [l('Conta como cantor', 'Counts as singer'), r === 'vocal' || r === 'mc' ? l('sim (a banda não ganha outro)', 'yes (the band gets no extra singer)') : l('não', 'no')]], see: ['mech:start'] })) },
 ];
