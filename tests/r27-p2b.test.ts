@@ -84,6 +84,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // produtoras NPC assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng
     // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
   // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
+    // R29c (facções × artistas do mundo, aff29npc — de propósito, docs/submundo29.md): Outfit, Genovese e Sumiyoshi
+    // abordam atos NPC de jazz/blues/pop/enka nesta semente (cerca de uma dezena de abordagens em 8 meses: bailes/boates com cachê e embalo,
+    // pedágios, recusas com ameaça e rixas de cena), o mercado e os sorteios do fluxo comum mudam: caixa, acts e rng
+    // mudam; tours igual. O caixa do playbot oscila centenas de milhares de mês a mês nesta semente (o 8º mês caiu num
+    // vale). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+  // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
     expect(AFTER.player.cash).toBe(215781);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(1494032110);

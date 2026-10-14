@@ -56,12 +56,18 @@ export function cedeTerritory(s: GameState, actId: string, labelId: string, mark
   return null;
 }
 
+/** R29c (aff29npc): ajustes do buyout — ato sob pressão de facção sai mais barato e o selo vende mais fácil.
+ *  Lista guardada numa função (hoisted), como os ganchos do contracts.ts: quem registra pode carregar antes. */
+export interface BuyoutAdj29 { price?: (s: GameState, act: Act) => number; willing?: (s: GameState, act: Act) => number }
+export function buyoutAdj29(): BuyoutAdj29[] { const f = buyoutAdj29 as unknown as { l?: BuyoutAdj29[] }; return (f.l ??= []); }
+
 /** Buyout: comprar o contrato de um artista de um selo rival. */
 export function buyoutPrice(s: GameState, act: Act): number {
   const k = contractOf(s, act);
   if (!k) return 0;
   const left = Math.max(0, k.endWeek - s.week) / 52;
-  return Math.round((k.buyout ?? 0) || money(s, 5000 + act.fame * act.fame * 40 * (0.5 + left / 2)) + k.recoupBalance * 0.6);
+  const mult = buyoutAdj29().reduce((m, x) => m * (x.price?.(s, act) ?? 1), 1);
+  return Math.round(((k.buyout ?? 0) || money(s, 5000 + act.fame * act.fame * 40 * (0.5 + left / 2)) + k.recoupBalance * 0.6) * mult);
 }
 
 export function buyoutContract(s: GameState, r: Rng, actId: string): L | null {
@@ -71,7 +77,7 @@ export function buyoutContract(s: GameState, r: Rng, actId: string): L | null {
   const lb = s.labels[k.party];
   const price = buyoutPrice(s, act);
   if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
-  const willing = (lb?.cash ?? 0) < money(s, 100000) ? 0.85 : 0.45 - (s.rivalries[k.party] ?? 0) / 200;
+  const willing = ((lb?.cash ?? 0) < money(s, 100000) ? 0.85 : 0.45 - (s.rivalries[k.party] ?? 0) / 200) + buyoutAdj29().reduce((t, x) => t + (x.willing?.(s, act) ?? 0), 0);
   if (!r.chance(willing)) {
     s.rivalries[k.party] = (s.rivalries[k.party] ?? 0) + 5;
     return fmtL(l('{b} recusou vender o contrato.', '{b} refused to sell the contract.'), { b: lb?.name ?? '' });

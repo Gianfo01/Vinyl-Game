@@ -30,7 +30,7 @@ import type { Act, GameState } from '../../sim/types';
 import { fmtL, money, playerActs } from '../../sim/util';
 import { actionRow20, actionRows20, type Cat20 } from '../actions20';
 import { personKey27, type Ent27 } from './ent27';
-import { hireMenu29, mobHireItems29, mobLinkItems29, mobOrgItems29 } from './ctxmob29'; // r29 Submundo: famílias
+import { hireMenu29, mobAffItems29, mobHireItems29, mobLinkItems29, mobOrgItems29 } from './ctxmob29'; // r29 Submundo: famílias
 
 export type Grp27 = 'open' | 'do' | 'info';
 /** r29: seções do menu (a mesma divisão no clique direito e no painel "Ações" da ficha). */
@@ -230,7 +230,7 @@ function actMenu(s: GameState, id: string, env: CtxEnv27): CtxMenu27 | null {
   out.push(it('act.compare', N('Comparar com outros', 'Compare with others'), 'network', 'info', pool ? null : N('Você ainda não conhece este artista (observe ou mande olheiro).', 'You don\'t know this act yet (watch or scout them).')));
   out.push(it('act.charts', N('Ver nas paradas', 'See on the charts'), 'chart-up', 'info', chartBlock(s, inCharts(s, (r) => s.releases[r]?.actId === id))));
   out.push(it('act.known', N('Notícias e boatos (O que sabemos)', 'News and rumors (What we know)'), 'newspaper', 'info'));
-  out.push(...mobLinkItems29(s, id), ...(a.status !== 'retired' && a.status !== 'split' ? mobHireItems29(s, id, env) : [])); // r29 Submundo: famílias (ctxmob29)
+  out.push(...mobLinkItems29(s, id), ...mobAffItems29(s, id, env), ...(a.status !== 'retired' && a.status !== 'split' ? mobHireItems29(s, id, env) : [])); // r29 Submundo: famílias (ctxmob29); r29c: facção abordou o ato
   out.push(COPY());
   void env;
   return { ent: 'act', id, name: a.name, kind: KIND27.act, items: out };

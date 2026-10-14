@@ -87,6 +87,9 @@ beforeAll(() => {
   // assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng. Antes: 450735 /
   // 2386675548 / 2839816166.
   // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
+  // R29c (facções × artistas do mundo, aff29npc — de propósito; mesmos do r27-p2b, que explica): as facções das cenas
+  // abordam atos NPC (cachê, embalo, pedágio, ameaça, rixa) e caixa, acts e rng mudam. Antes: 450735 / 2386675548 / 2839816166.
+  // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
   expect(s.player.cash).toBe(215781);
   expect(hashString(JSON.stringify(s.acts))).toBe(1494032110);
   expect(hashString(JSON.stringify(s.rng))).toBe(3946783658);

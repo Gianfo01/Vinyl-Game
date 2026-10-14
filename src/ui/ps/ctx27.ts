@@ -44,6 +44,7 @@ import { leaderOf } from '../../sim/sys/leaders10';
 import { runPA18 } from '../sys/personact18';
 import { crimeForm17, presetCrimeFor29, presetHire29 } from '../sys/crimeform29';
 import { delay29, doMob29, fulfill29, hire29, jobOf29, refuse29 } from '../../sim/sys/mob29'; // r29 Submundo: famílias
+import { denounce29n, rescue29n } from '../../sim/sys/aff29npc'; // r29c: facções × artistas do mundo
 import { runMember29 } from '../sys/member29';
 import { memberFeatPreset29 } from '../../sim/sys/member29';
 import { isEnt27, type Ent27 } from './ent27';
@@ -212,6 +213,8 @@ function mobRun29(s: GameState, m: CtxMenu27, item: CtxItem27, anchor: HTMLEleme
   if (id.startsWith('mob.do:')) { res(doMob29(s, m.id, id.slice(7))); return true; }
   if (id.startsWith('mob.ask:')) { res(fulfill29(s, id.slice(8))); return true; }
   if (id.startsWith('mob.refuse:')) { res(refuse29(s, id.slice(11))); return true; }
+  if (id === 'mob.affden') { res(denounce29n(s, m.id)); return true; } // r29c: facção abordou o ato (sim/sys/aff29npc)
+  if (id === 'mob.afffree') { res(rescue29n(s, m.id)); return true; }
   return id.startsWith('mob.');
 }
 

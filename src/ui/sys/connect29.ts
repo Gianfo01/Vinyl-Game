@@ -10,7 +10,8 @@ import { t } from '../../i18n/strings';
 import { crime17, orgById } from '../../sim/sys/crime17';
 import { tieOf } from '../../sim/sys/crimenpc17';
 import { actAff29 } from '../../sim/sys/aff29'; // r29: facções × cenas
-import { LINK29, LINKSIM29, linksOfKey29 } from '../../sim/sys/orglinks29'; // r29 Submundo: fonte única pessoa ↔ organização
+import { LINK29, linksOfKey29 } from '../../sim/sys/orglinks29'; // r29 Submundo: fonte única pessoa ↔ organização
+import { ASK29N, DEC29N, OUT29N, actLog29n, labelLog29n, pressure29n } from '../../sim/sys/aff29npc'; // r29c: facções × artistas do mundo
 import { ent27 } from '../ps/ent27';
 import { careerActs29, personFeats29 } from '../../sim/sys/connect29';
 import { items18 } from '../../sim/sys/inbox18';
@@ -60,9 +61,25 @@ function sceneAff(s: GameState, a: Act): HTMLElement | null {
   const xs = actAff29(s, a);
   if (!xs.length) return null;
   return section(t(l('A cena e o submundo', 'The scene and the underworld')), h('ul', { class: 'small' }, ...xs.map((x) => h('li', null,
-    h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, t(x.org.name)), ' — ', t(x.scene), ' ', pill(t(x.doc ? l('cena documentada', 'documented scene') : l('afinidade de jogo', 'game affinity')), x.doc ? 'trait' : ''),
+    h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, t(x.org.name)), ' — ', t(x.scene),
     h('div', { class: 'muted' }, t(x.note))))),
-    h('p', { class: 'small muted' }, t(l('É uma afinidade da cena: não diz que o artista ou as pessoas dele pertencem à facção.', 'This is a scene affinity: it does not say the act or its people belong to the faction.'))));
+    h('p', { class: 'small muted' }, t(l('É uma afinidade da cena (gênero e país). O que o artista fez com ela aparece em "Facções e o artista".', 'This is a scene affinity (genre and country). What the act did about it shows under "Factions and the act".'))));
+}
+
+/** r29c (aff29npc): as abordagens das facções a este artista do mundo — o pedido, a decisão e o que veio depois. As
+ *  ações (denunciar / tirar do esquema) ficam no menu de ações do ato (um caminho só). */
+function factionsOf(s: GameState, a: Act): HTMLElement | null {
+  const xs = actLog29n(s, a.id).slice(0, 8);
+  if (!xs.length) return null;
+  return section(t(l('Facções e o artista', 'Factions and the act')), h('ul', { class: 'small' }, ...xs.map((e) => h('li', null,
+    h('span', { class: 'muted' }, `${e.y} · `), h('b', { class: 'ent27', tabindex: '0', ...ent27('org', e.o) }, t(orgById(s, e.o)?.name ?? l(e.o, e.o))), ' ',
+    pill(t(ASK29N[e.k])), ' ', pill(t(DEC29N[e.d]), e.d === 'refuse' ? 'good' : 'warn'), ' ',
+    ...e.out.filter((k) => k !== 'cash' && k !== 'movement').map((k) => pill(t(OUT29N[k]), k === 'drop' || k === 'raid' || k === 'scandal' ? 'bad' : '')),
+    e.lb && s.labels[e.lb] ? h('small', { class: 'muted' }, ` · ${s.labels[e.lb].name}`) : null,
+    h('div', { class: 'muted' }, t(e.t))))),
+    pressure29n(s, a.id) ? h('p', { class: 'small warn' }, t(pressure29n(s, a.id)!.k === 'res'
+      ? l('Você tirou este artista do esquema: ele(a) deve um favor e ouve melhor as suas propostas.', 'You got this act out of the scheme: they owe you a favor and listen better to your offers.')
+      : l('Sob pressão da facção: topa mais mudar de selo (proposta e buyout).', 'Under pressure from the faction: more willing to switch labels (offer and buyout).'))) : null);
 }
 
 function underworld(s: GameState, acts: Act[], keys: string[], linkKey?: string): HTMLElement | null {
@@ -75,7 +92,7 @@ function underworld(s: GameState, acts: Act[], keys: string[], linkKey?: string)
   if (!links.length && !ties.length && !feuds.length && !log.length) return null;
   return section(t(l('Submundo', 'Underworld')),
     links.length ? h('ul', { class: 'small' }, ...links.map((x) => { const o = orgById(s, x.o); return h('li', null,
-      h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, o ? t(o.name) : x.o), ' ', pill(t(LINK29[x.kind]), x.kind === 'doc' ? 'trait' : x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''), x.sim ? pill(t(LINKSIM29), 'warn') : null,
+      h('b', { class: 'ent27', tabindex: '0', ...ent27('org', x.o) }, o ? t(o.name) : x.o), ' ', pill(t(LINK29[x.kind]), x.kind === 'enemy' ? 'bad' : x.kind === 'owes' ? 'warn' : ''),
       x.y ? ` ${x.y}` : '', x.via && s.acts[x.via] ? [` · ${t(l('via', 'via'))} `, actLink(s, x.via)] : null,
       h('div', { class: 'muted' }, t(x.text))); })) : null,
     ties.length ? h('p', { class: 'small' }, ...ties.flatMap((x) => [actLink(s, x.a.id), ` ${t(l('ligado(a) a', 'tied to'))} `, h('b', null, t(x.o!.name)), ' ']) ) : null,
@@ -102,7 +119,7 @@ PERSON_TABS.push((s, p: Person) => {
 registerPageTab('act', { id: 'connect29', label: l('Conexões', 'Connections'), icon: 'handshake', order: 86, render: (s, id) => {
   const a = s.acts[id];
   if (!a) return h('div');
-  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)], id), sceneAff(s, a)].filter((x): x is HTMLElement => !!x);
+  const xs = [mailOf(s, id), underworld(s, [a], [id, ...a.members, ...a.members.map((x) => `p:${x}`)], id), factionsOf(s, a), sceneAff(s, a)].filter((x): x is HTMLElement => !!x);
   return xs.length ? h('div', null, ...xs) : h('p', { class: 'muted small' }, t(l('Nada registrado em outros sistemas ainda.', 'Nothing recorded in other systems yet.')));
 } });
 
@@ -113,6 +130,16 @@ registerPageTab('label', { id: 'facts29', label: l('Fatos e rivalidade', 'Facts 
       h('p', { class: 'small' }, `${t(l('Mágoa', 'Grudge'))}: ${m.g}`),
       m.mem.length ? h('ul', { class: 'small' }, ...m.mem.slice(0, 10).map((x) => h('li', null, `${x.y} · `, t(x.t)))) : null,
       m.copies.length ? h('p', { class: 'small muted' }, t(l('Cópias em andamento: {n}', 'Copies in progress: {n}'), { n: m.copies.length })) : null) : null,
+    labelFactions(s, id),
     factsList17(s, id, false));
 } });
+
+/** r29c (aff29npc): facções que procuraram artistas do elenco deste selo, o que eles decidiram e se o selo dispensou. */
+function labelFactions(s: GameState, lbId: string): HTMLElement | null {
+  const xs = labelLog29n(s, lbId).slice(0, 10);
+  if (!xs.length) return null;
+  return section(t(l('Elenco e facções', 'Roster and factions')), h('ul', { class: 'small' }, ...xs.map((e) => h('li', null,
+    h('span', { class: 'muted' }, `${e.y} · `), s.acts[e.a] ? actLink(s, e.a) : '?', ' · ', h('b', { class: 'ent27', tabindex: '0', ...ent27('org', e.o) }, t(orgById(s, e.o)?.name ?? l(e.o, e.o))), ' ',
+    pill(t(DEC29N[e.d]), e.d === 'refuse' ? 'good' : 'warn'), e.out.includes('drop') ? pill(t(OUT29N.drop), 'bad') : null))));
+}
 

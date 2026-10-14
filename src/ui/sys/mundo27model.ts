@@ -65,7 +65,7 @@ const FACT27: Record<string, Kind27> = {
   death: 'death',
   law: 'law', mandate: 'law',
   signing: 'rival', poach: 'rival', label_sold: 'rival',
-  scene: 'scene', zine_scene: 'scene', tribute_born: 'scene',
+  scene: 'scene', zine_scene: 'scene', tribute_born: 'scene', faction_approach: 'scene', // r29c: facção aborda artista da cena (aff29npc)
   world_crisis: 'world', boycott: 'world', visa_denied: 'world', video_banned: 'world', disaster: 'world',
   chart: 'chart',
 };

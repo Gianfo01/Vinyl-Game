@@ -21,7 +21,7 @@ import { leaderOf, leaders } from './leaders10';
 import { CLOUT_ADJ12, CLOUT_WHY12 } from './clout28';
 
 export type FounderKind28 = 'conduct' | 'money' | 'sex';
-export interface LabelRep28 { suits: number[]; founder?: { w: number; y: number; sev: number; kind: FounderKind28; who: string } }
+export interface LabelRep28 { suits: number[]; /** r29c: semanas em que um artista do elenco topou uma facção (aff29npc) */ fac?: number[]; founder?: { w: number; y: number; sev: number; kind: FounderKind28; who: string } }
 export interface LRep28State { lb: Record<string, LabelRep28>; done: string[] }
 declare module '../ext4' { interface Ext4 { lrep28: LRep28State } }
 const fresh = (): LRep28State => ({ lb: {}, done: [] });
@@ -49,10 +49,18 @@ function suit(s: GameState, ids: string[]): void {
 }
 onFact('case_ruling', (s, f) => { if (f.tags.includes('lawsuit') || f.tags.includes('law') || f.tags.includes('strike')) suit(s, f.actors); }, 'lrep28:case');
 onFact('law', (s, f) => { if (f.tags.includes('ag18')) suit(s, f.actors.map((k) => (k.startsWith('l:') ? leaders(s).L[k.slice(2)]?.label ?? '' : k))); }, 'lrep28:law');
+// r29c (aff29npc): artista do elenco que toca no baile / grava faixa para uma facção — o mercado comenta
+onFact('faction_approach', (s, f) => {
+  const lb = String(f.data?.lb ?? '');
+  if (!lb || !s.labels[lb] || (f.data?.d !== 'play' && f.data?.d !== 'write')) return;
+  const r = rec(s, lb);
+  (r.fac ??= []).push(s.week);
+  if (r.fac.length > 8) r.fac.shift();
+}, 'lrep28:faction');
 
 // ---------------------------------------------------------------- leitura (pura)
 
-export interface RepPart28 { k: 'suits' | 'ceo' | 'debt' | 'founder'; v: number; why: L }
+export interface RepPart28 { k: 'suits' | 'ceo' | 'debt' | 'founder' | 'faction'; v: number; why: L }
 /** Descontos da reputação de um selo NPC aos olhos do artista (valores negativos, somam no máximo −0,4). */
 export function labelRepParts28(s: GameState, lbId: string): RepPart28[] {
   const lb = s.labels[lbId];
@@ -64,6 +72,8 @@ export function labelRepParts28(s: GameState, lbId: string): RepPart28[] {
   const L0 = leaderOf(s, lbId);
   const closed = (L0?.jobs ?? []).filter((j) => j.end === 'closed' && j.lb !== lbId).length;
   if (closed) out.push({ k: 'ceo', v: -Math.min(0.15, closed * 0.08), why: fmtL(l('o CEO, {c}, já quebrou {n} selo(s)', 'the CEO, {c}, already ran {n} label(s) into the ground'), { c: L0!.name, n: closed }) });
+  const nf = (r?.fac ?? []).filter((w) => s.week - w <= 52 * 3).length;
+  if (nf) out.push({ k: 'faction', v: -Math.min(0.1, nf * 0.04), why: fmtL(l('{n} artista(s) do elenco ligado(s) a facções nos últimos 3 anos', '{n} roster act(s) tied to factions in the last 3 years'), { n: nf }) });
   if ((lb.debt ?? 0) > Math.max(0, lb.cash) * 1.5 && (lb.debt ?? 0) > 0) out.push({ k: 'debt', v: -0.05, why: l('selo endividado (risco de não pagar a verba)', 'label in debt (may not pay the budget)') });
   const fd = r?.founder;
   if (fd) {
