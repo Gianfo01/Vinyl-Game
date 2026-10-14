@@ -35,6 +35,10 @@ import { pr18 } from './sys/press18';
 import { influence } from './sys/world4/laws';
 import { ageMix29, demo29, regionMix29, taste29, youth29 } from './sys/demo29';
 import { countryOfCity } from '../data/geo';
+import { cityById } from '../data/world';
+import { runSimHooks } from './ext4';
+import { channels27, setPlan27, startCamp27, targets27 } from './sys/camp27';
+import { addMinor, divorce29, marry29 } from './sys/family29';
 
 export const SYS29 = ['dinheiro', 'reputacao', 'imprensa', 'projetos', 'aovivo', 'sede', 'fama', 'mundo', 'vida', 'contratos', 'premios', 'submundo', 'publico'] as const;
 export type Sys29 = (typeof SYS29)[number];
@@ -59,6 +63,8 @@ export function base29(seed = 'r29all', year = 1985): Base29 {
   for (let i = 0; i < 3; i++) advanceWeek(s);
   act.fame = Math.max(act.fame, 30);
   act.fans.core = Math.max(act.fans.core, 2000); act.fans.active = Math.max(act.fans.active, 8000); act.fans.casual = Math.max(act.fans.casual, 40000);
+  // o demo29 guarda o total da última conta: sem atualizar, o 1º fechamento de mês leria os 50 mil como fãs novos e trocaria a mistura inteira
+  { const d = demo29(s).a[act.id]; if (d) d.n = act.fans.core + act.fans.active + act.fans.casual; }
   const spare = composeSongs(s, r, act, 3).map((x) => x.id);
   // 2º single estreia DENTRO do mês sondado: o apelo (calculado na estreia) e as vendas dele refletem o empurrão
   const nx = composeSongs(s, r, act, 1);
@@ -78,6 +84,7 @@ const members = (c: Ctx) => c.a.members.filter((id) => c.s.persons[id]?.alive);
 export const METRICS29: Metric29[] = [
   { id: 'caixa', sys: 'dinheiro', kind: 'mes', name: 'caixa do selo', f: (c) => c.s.player.cash },
   { id: 'receita', sys: 'dinheiro', kind: 'mes', name: 'receita do período (vendas, shows, edição)', f: (c) => c.s.ledger.filter((x) => x.week >= c.b.s.week && x.amount > 0 && /sales|live|publishing|rights|merch|sync/.test(x.cat)).reduce((t, x) => t + x.amount, 0) },
+  { id: 'receita_ja', sys: 'dinheiro', kind: 'pura', name: 'receita lançada logo depois (cachê, bilheteria)', f: (c) => c.s.ledger.filter((x) => x.week >= c.b.s.week && x.amount > 0).reduce((t, x) => t + x.amount, 0) },
   { id: 'despesas', sys: 'dinheiro', kind: 'mes', name: 'despesas do período', f: (c) => -c.s.ledger.filter((x) => x.week >= c.b.s.week && x.amount < 0).reduce((t, x) => t + x.amount, 0) },
   { id: 'custos', sys: 'dinheiro', kind: 'pura', name: 'custos mensais', f: (c) => { const m = monthlyCosts(c.s); return m.rent + m.salaries + m.outsourcing + m.loans + m.equipment; } },
   { id: 'mercado', sys: 'projetos', kind: 'pura', name: 'tamanho do mercado', f: (c) => weeklyPool(c.s) },
@@ -121,6 +128,7 @@ export const METRICS29: Metric29[] = [
   // R29 DEMO: o público por idade e região (demo29) como 13º sistema
   { id: 'jovens', sys: 'publico', kind: 'mes', name: 'fatia do público até 24 anos', f: (c) => youth29(ageMix29(c.s, c.a)) },
   { id: 'fora', sys: 'publico', kind: 'mes', name: 'fatia do público fora do país natal', f: (c) => { const h = countryOfCity(c.a.city); return regionMix29(c.s, c.a).top.filter((x) => x.a3 !== h).reduce((t, x) => t + x.v, 0); } },
+  { id: 'crime_chantagem', sys: 'submundo', kind: 'pura', name: 'chance de chantagem contra o ato', f: (c) => crimeOdds(c.s, { actor: 'player', target: c.a.id, partners: [] }, 'blackmail').p },
   { id: 'gosto_jovem', sys: 'publico', kind: 'pura', name: 'gosto de quem tem 20 anos pelo gênero do ato', f: (c) => taste29(c.s, 20, c.s.config.homeCity ? countryOfCity(c.s.config.homeCity) ?? undefined : undefined, c.a.genre) },
 ];
 
@@ -145,6 +153,15 @@ export const NUDGES29: Nudge29[] = [
   { id: 'rival', sys: 'contratos', name: 'rival em guerra (+60 de calor)', f: (c) => { const lb = Object.values(c.s.labels).filter((l) => l.active).sort((x, y) => y.reputation - x.reputation)[0]; if (lb) c.s.rivalries[lb.id] = (c.s.rivalries[lb.id] ?? 0) + 60; } },
   { id: 'premios', sys: 'premios', name: '4 prêmios do selo e do ato', f: (c) => { for (let i = 0; i < 4; i++) c.s.awards.push({ year: c.s.year, category: 'sonda', name: 'Sonda', byPlayer: true, actId: c.a.id, releaseId: c.rel.id }); c.a.awards += 4; c.s.player.stats.awards += 4; } },
   { id: 'jaba', sys: 'submundo', name: 'jabá nas rádios', f: (c) => { payDJs(c.s, 1); } },
+  // rodada 11 (§11): entradas que a sonda não enxergava
+  { id: 'divulgacao', sys: 'dinheiro', name: 'campanha de divulgação paga (camp27, todos os canais nível 2)', f: (c) => { const tg = targets27(c.s).find((x) => x.actId === c.a.id); const cp = tg ? startCamp27(c.s, tg) : null; if (cp && 'plan' in cp) for (const ch of channels27(c.s)) setPlan27(c.s, cp, ch.id, 2); } },
+  { id: 'disco_lp', sys: 'projetos', name: 'próximo lançamento vira LP', f: (c) => { const p = c.s.pendingReleases.find((x) => x.songs.includes(c.b.next)); if (p) p.type = 'lp'; } },
+  { id: 'turne_fora', sys: 'aovivo', name: '4 shows lotados no exterior', f: (c) => { const home = countryOfCity(c.a.city); const city = Object.keys(cityById).sort().find((k) => { const a3 = countryOfCity(k); return !!a3 && a3 !== home; }); if (city) for (let i = 0; i < 4; i++) runSimHooks('show', c.s, Rng.fromSeed(`${c.b.seed}|fora${i}`), { show: { actId: c.a.id, cityId: city, sold: 3000, capacity: 3000, revenue: 0, tourId: 'sonda' } }); } },
+  { id: 'digital', sys: 'sede', name: 'departamento digital nível 2', f: (c) => { hq6(c.s).depts.digital = 2; bumpPerks(); } },
+  { id: 'jv', sys: 'contratos', name: 'assina uma joint venture (sem departamento de finanças)', f: (c) => { const n = c.s.acts[c.b.npc]; if (n && !n.contractId) acceptOffer(c.s, n, { ...defaultOffer(c.s, n), model: 'jv', id: 'ojv', week: c.s.week, status: 'pending', advance: 0 }); } },
+  { id: 'casamento', sys: 'vida', name: 'casa com estrela de outro ato', f: (c) => { const q = Object.values(c.s.acts).filter((x) => x.id !== c.a.id && x.status === 'active' && x.members.length).sort((x, y) => y.fame - x.fame || (x.id < y.id ? -1 : 1))[0]?.members[0]; if (q) marry29(c.s, c.a.members[0], q); } },
+  { id: 'divorcio', sys: 'vida', name: 'casamento e divórcio', f: (c) => { if (marry29(c.s, c.a.members[0])) divorce29(c.s, c.a.members[0]); } },
+  { id: 'mirim', sys: 'vida', name: 'vocalista é estrela mirim (14 anos)', f: (c) => { const p = c.s.persons[c.a.members[0]]; if (p) { p.born = c.s.year - 14; addMinor(c.s, p, c.a, 'family'); } } },
   { id: 'jovem', sys: 'publico', name: 'público jovem (70% até 24 anos)', f: (c) => { const d = demo29(c.s).a[c.a.id]; if (d) d.b = [250, 450, 220, 60, 20]; else demo29(c.s).a[c.a.id] = { b: [250, 450, 220, 60, 20], n: c.a.fans.casual + c.a.fans.active + c.a.fans.core }; } },
   { id: 'velho', sys: 'publico', name: 'público maduro (70% com 35+)', f: (c) => { const d = demo29(c.s).a[c.a.id]; if (d) d.b = [20, 80, 200, 400, 300]; else demo29(c.s).a[c.a.id] = { b: [20, 80, 200, 400, 300], n: c.a.fans.casual + c.a.fans.active + c.a.fans.core }; } },
   { id: 'calor', sys: 'submundo', name: 'polícia de olho (+60 de calor)', f: (c) => { const k = a3home(c.s); crime17(c.s).heat[k] = (crime17(c.s).heat[k] ?? 0) + 60; } },
@@ -234,7 +251,7 @@ export const EDGES29: { a: Sys29; b: Sys29; check?: [nudge: string, metric: stri
   { a: 'imprensa', b: 'premios', check: ['escandalo', 'gramofone', -1] }, { a: 'imprensa', b: 'vida', check: ['escandalo', 'estresse', 1] }, { a: 'imprensa', b: 'dinheiro' },
   { a: 'projetos', b: 'dinheiro', check: ['qualidade', 'receita', 1] }, { a: 'projetos', b: 'fama', check: ['qualidade', 'fama', 1] },
   { a: 'projetos', b: 'premios', check: ['qualidade', 'gramofone', 1] }, { a: 'projetos', b: 'imprensa', check: ['qualidade', 'critica2', 1] },
-  { a: 'aovivo', b: 'fama', check: ['shows', 'fama', 1] }, { a: 'aovivo', b: 'dinheiro' }, { a: 'aovivo', b: 'vida', check: ['shows', 'estresse', 1] },
+  { a: 'aovivo', b: 'fama', check: ['shows', 'fama', 1] }, { a: 'aovivo', b: 'dinheiro', check: ['shows', 'receita_ja', 1] }, { a: 'aovivo', b: 'vida', check: ['shows', 'estresse', 1] },
   { a: 'aovivo', b: 'imprensa', check: ['shows', 'atencao', 1] },
   { a: 'sede', b: 'projetos', check: ['sede', 'vendas', 1] }, { a: 'sede', b: 'aovivo', check: ['sede', 'show', 1] }, { a: 'sede', b: 'imprensa', check: ['sede', 'reacao', -1] },
   { a: 'sede', b: 'contratos', check: ['sede', 'oferta', 1] }, { a: 'sede', b: 'dinheiro', check: ['sede', 'custos', 1] },
@@ -243,7 +260,7 @@ export const EDGES29: { a: Sys29; b: Sys29; check?: [nudge: string, metric: stri
   { a: 'fama', b: 'dinheiro', check: ['fama', 'receita', 1] },
   { a: 'mundo', b: 'projetos', check: ['moda', 'apelo', 1] }, { a: 'mundo', b: 'aovivo', check: ['crise', 'show', -1] }, { a: 'mundo', b: 'dinheiro' },
   { a: 'mundo', b: 'imprensa' }, { a: 'mundo', b: 'submundo' }, { a: 'mundo', b: 'sede' },
-  { a: 'vida', b: 'aovivo', check: ['estresse', 'show', -1] }, { a: 'vida', b: 'projetos', check: ['estresse', 'gravacao', -1] }, { a: 'vida', b: 'imprensa' },
+  { a: 'vida', b: 'aovivo', check: ['estresse', 'show', -1] }, { a: 'vida', b: 'projetos', check: ['estresse', 'gravacao', -1] }, { a: 'vida', b: 'imprensa', check: ['divorcio', 'fatos', 1] },
   { a: 'vida', b: 'dinheiro', check: ['estresse', 'despesas', 1] },
   { a: 'contratos', b: 'dinheiro' }, { a: 'contratos', b: 'projetos', check: ['desconfianca', 'gravacao', -1] }, { a: 'contratos', b: 'aovivo', check: ['desconfianca', 'show', -1] },
   { a: 'contratos', b: 'imprensa', check: ['desconfianca', 'fatos', 1] }, { a: 'contratos', b: 'vida', check: ['desconfianca', 'estresse', 1] },
@@ -254,6 +271,19 @@ export const EDGES29: { a: Sys29; b: Sys29; check?: [nudge: string, metric: stri
   // R29 DEMO (13º sistema): público por idade e região
   { a: 'publico', b: 'projetos', check: ['velho', 'apelo', -1] }, { a: 'publico', b: 'aovivo', check: ['velho', 'show', -1] }, { a: 'publico', b: 'premios', check: ['velho', 'gramofone', 1] },
   { a: 'publico', b: 'contratos' }, { a: 'publico', b: 'dinheiro' },
-  { a: 'mundo', b: 'publico', check: ['decada', 'jovens', -1] }, { a: 'fama', b: 'publico', check: ['fama', 'fora', 1] },
+  { a: 'mundo', b: 'publico', check: ['decada', 'gosto_jovem', -1] }, { a: 'fama', b: 'publico', check: ['fama', 'fora', 1] },
   { a: 'premios', b: 'imprensa', check: ['premios', 'fatos', 1] },
+  // rodada 11 (§11): público como destino e como origem, sede como destino, família e o resto
+  { a: 'aovivo', b: 'publico', check: ['turne_fora', 'fora', 1] }, { a: 'projetos', b: 'publico', check: ['disco_lp', 'jovens', -1] },
+  { a: 'imprensa', b: 'publico', check: ['escandalo', 'jovens', 1] }, { a: 'vida', b: 'publico' }, { a: 'contratos', b: 'publico', check: ['confianca', 'fora', 1] },
+  { a: 'sede', b: 'publico', check: ['digital', 'jovens', 1] }, { a: 'submundo', b: 'publico', check: ['calor', 'jovens', 1] },
+  { a: 'publico', b: 'imprensa', check: ['velho', 'fatos', -1] }, { a: 'publico', b: 'fama', check: ['velho', 'embalo', -1] }, { a: 'publico', b: 'reputacao' },
+  { a: 'publico', b: 'submundo', check: ['jovem', 'crime_pirata', 1] }, { a: 'publico', b: 'sede' },
+  { a: 'fama', b: 'sede', check: ['fama', 'equipe', 1] }, { a: 'premios', b: 'sede', check: ['premios', 'equipe', 1] },
+  { a: 'submundo', b: 'sede', check: ['calor', 'equipe', -1] }, { a: 'contratos', b: 'sede', check: ['jv', 'equipe', -1] },
+  { a: 'submundo', b: 'fama' }, { a: 'dinheiro', b: 'fama' }, { a: 'premios', b: 'vida', check: ['premios', 'estresse', -1] },
+  { a: 'premios', b: 'submundo', check: ['premios', 'crime_chantagem', 1] }, { a: 'fama', b: 'mundo', check: ['fama', 'gosto', 1] },
+  { a: 'mundo', b: 'premios', check: ['moda', 'gramofone', 1] },
+  // família (dentro de vida): casal célebre, divórcio, estrela mirim
+  { a: 'vida', b: 'fama', check: ['casamento', 'fama', 1] }, { a: 'vida', b: 'contratos', check: ['mirim', 'renova', -1] },
 ];

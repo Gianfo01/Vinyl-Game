@@ -84,10 +84,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // produtoras NPC assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng
     // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
   // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
-    expect(AFTER.player.cash).toBe(215781);
+    // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
+    // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
+    expect(AFTER.player.cash).toBe(797288);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1494032110);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3946783658);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(898363739);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1724870893);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

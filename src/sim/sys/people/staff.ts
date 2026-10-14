@@ -34,6 +34,9 @@ export function careerOf(s: GameState, st: StaffMember): StaffCareer {
   return (c[st.id] ??= { xp: 0, level: st.skill > 75 ? 2 : st.skill > 55 ? 1 : 0, loyalty: 60 });
 }
 
+/** Leitura sem criar a ficha (quem só lê não pode mexer no estado): sem ficha, a lealdade inicial (60). */
+export const careerLoyalty = (s: GameState, st: StaffMember): number => P(s).career[st.id]?.loyalty ?? 60;
+
 export function marketSalary(s: GameState, role: string, skill: number): number {
   const def = staffRoleById[role];
   return nominal((def?.salary ?? 2500) * (0.5 + skill / 100), s.year);
