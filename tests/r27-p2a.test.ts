@@ -90,9 +90,9 @@ beforeAll(() => {
   // R29c (facções × artistas do mundo, aff29npc — de propósito; mesmos do r27-p2b, que explica): as facções das cenas
   // abordam atos NPC (cachê, embalo, pedágio, ameaça, rixa) e caixa, acts e rng mudam. Antes: 450735 / 2386675548 / 2839816166.
   // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
-  expect(s.player.cash).toBe(215781);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1494032110);
-  expect(hashString(JSON.stringify(s.rng))).toBe(3946783658);
+  expect(s.player.cash).toBe(1045968);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3352616534);
+  expect(hashString(JSON.stringify(s.rng))).toBe(1362224447);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

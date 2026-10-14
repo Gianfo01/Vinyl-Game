@@ -90,10 +90,10 @@ describe('r27 P2B — modo rápido intacto', () => {
     // mudam; tours igual. O caixa do playbot oscila centenas de milhares de mês a mês nesta semente (o 8º mês caiu num
     // vale). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
   // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
-    expect(AFTER.player.cash).toBe(215781);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1494032110);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(3946783658);
+    expect(AFTER.player.cash).toBe(1045968);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1278216602);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3352616534);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1362224447);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
