@@ -61,9 +61,21 @@ describe('r17 vida pessoal', () => {
     comeOut(s, m, 'outed', 'Tabloide');
     expect(a.scandals).toBe(n0 + 1);
     expect(sexOf(s, m).c).toBe('out');
-    // pessoa real nunca é exposta
-    const r = npcAct(s); r.catalogNo = 998; const rn = r.scandals;
-    comeOut(s, r.members[0], 'outed');
+    // pessoa real nunca é exposta pelo jogo.
+    // R29b: desde o r18 a história alternativa (o padrão) sorteia a orientação de quem é real SEM registro público, como
+    // a de qualquer personagem; o comeOut protege sempre o documentado e, no modo exato, todo mundo do catálogo. O teste
+    // antigo pegava o ato mais famoso e contava com o sorteio dar hétero: depois do merge do r28-f3 o mais famoso de 1965
+    // nesta semente (Yumi Sakai, Tóquio) sorteia bi no armário e a "pessoa real" virava escândalo. Agora o teste usa alguém
+    // que de fato seria exposto (no armário, época hostil) e cobre as duas proteções.
+    const [r, rm] = queer(s); r.catalogNo = 998; const rn = r.scandals;
+    const h0 = s.config.history;
+    s.config.history = 'strict'; // modo exato: ninguém do catálogo
+    expect(comeOut(s, rm, 'outed').pt).toMatch(/^Pessoa real/);
+    expect(r.scandals).toBe(rn);
+    s.config.history = h0; // história alternativa: quem tem registro público (Elton John só se declara em 1976)
+    s.persons[rm].name = 'Elton John';
+    expect(sexOf(s, rm)).toMatchObject({ o: 'private', real: true });
+    comeOut(s, rm, 'outed');
     expect(r.scandals).toBe(rn);
     const s2 = createGame(defaultConfig('r17-life-out2', { startYear: 2020 }));
     const [b, m2] = queer(s2);

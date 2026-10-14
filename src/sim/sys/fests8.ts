@@ -120,6 +120,11 @@ export type PitchResult = { result: 'accepted' | 'counter' | 'rejected'; tier?: 
 export function pitchOdds8(s: GameState, fi: number, actId: string, tier: FestTier, fee: number): number {
   const f = FESTIVALS[fi], act = s.acts[actId];
   if (!f || !act || !fits(f, act)) return 0;
+  // R29b: as mesmas recusas de saída do pitchAct (sem edição, line-up fechado, já escalado, produção pediu para não
+  // insistir) — antes a previsão mostrava 100% para um ato que já estava no line-up e o sorteio recusava
+  const ed = editionOf(s, fi);
+  if (!ed || ed.done || ed.month <= s.month || ed.lineup.some((x) => x.actId === actId)) return 0;
+  if ((fest8(s).cooldown[`${fi}:${actId}`] ?? 0) > s.week) return 0;
   const can = festTierFor(s, f, fi, act);
   if (!can || TIER_ORDER.indexOf(tier) < TIER_ORDER.indexOf(can)) return 0;
   const ratio = fee / Math.max(1, festFee(s, f, act, tier)), b = staffSkill(s, 'booking') / 400;

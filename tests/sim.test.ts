@@ -115,4 +115,7 @@ describe('arco completo', () => {
     expect(endingScores(s).length).toBe(20);
     expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
   }, 300000); // r21: já levava ~170 s de 180 s; o acervo (+210 atos modernos na base média) soma ~10%
+  // R29b: sozinho, na mesma máquina: antes do R29 (2269a63) 145 s; com o R29 216 s (demo29 recalculava a semente do
+  // público de todos os atos todo mês; pressões do conn29 refaziam a busca do ato 4× por leitura de estresse); depois da
+  // otimização (mesmos números, docs/fixes29b.md) 182 s. O teto fica em 300 s; o estouro na suíte inteira vinha da carga.
 });
