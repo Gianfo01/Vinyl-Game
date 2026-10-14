@@ -108,7 +108,7 @@ export function actLore29(a: RArt29): Block29[] {
   if (rl.length) out.push(H(T('Relíquias', 'Relics')), { k: 'arts', items: rl.map((d) => ({ art: { k: 'relic' as const, kind: d.kind, name: tx(d.name), year: d.year, seed: d.id }, cap: `${tx(d.name)} (${d.year})`, link: `relic:${d.id}` })) });
   const mo = MONTHS27[a.n];
   if (mo) {
-    const M = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const M = T('jan fev mar abr mai jun jul ago set out nov dez', 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec').split(' ');
     out.push(H(T('Mês documentado de entradas e saídas', 'Documented month of joins and exits')), { k: 'ul', items: Object.entries(mo).map(([n, [j, s0]]) => [`${n}: ${j ? `${T('entra em', 'joins in')} ${M[j - 1]}` : ''}${j && s0 ? ' · ' : ''}${s0 ? `${T('sai em', 'leaves in')} ${M[s0 - 1]}` : ''}`]) });
   }
   return out;

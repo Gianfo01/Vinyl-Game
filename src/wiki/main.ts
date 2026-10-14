@@ -20,13 +20,12 @@ import { icon17 } from '../ui/pixel/icons17';
 // mesmos ícones em pixel art do jogo (no jogo quem registra é app.ts)
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale)));
 
-// mesmas preferências de idioma e tema do jogo (só leitura; a wiki não grava nada)
+// mesmo idioma do jogo (só leitura; a wiki não grava nada). O tema é o pergaminho da wiki (botão ☀/☾ no cabeçalho).
 let lang: Lang = navigator.language?.startsWith('pt') ? 'pt' : 'en';
-let theme = 'dark';
+const theme = 'light';
 try {
-  const p = JSON.parse(localStorage.getItem('vtn:prefs') ?? '{}') as { lang?: Lang; theme?: string };
+  const p = JSON.parse(localStorage.getItem('vtn:prefs') ?? '{}') as { lang?: Lang };
   if (p.lang) lang = p.lang;
-  if (p.theme === 'light') theme = 'light';
 } catch { /* sem armazenamento */ }
 setLang(lang);
 document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';

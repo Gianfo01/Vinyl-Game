@@ -242,3 +242,60 @@ esconde do jogador (potencial, fim de carreira previsto).
 - Lacunas: a ficha é de uma partida de referência (outra semente dá outros números dentro das faixas); quem só entra na
   base pequena/média ou como substituto pode não aparecer nela; algumas explicações dos catálogos são texto escrito a
   partir do código (os números são lidos ao vivo).
+
+## 10. Conteúdo novo do jogo base (R29: família, público, conectar tudo, contratos+, submundo 29c, relíquias, gênero sugerido)
+
+Só conteúdo (modelo puro); o visual é de outra frente. Números lidos do código sempre que exportados.
+
+- **Vida pessoal** (`mech29w_c.ts`, `family29`): família de todo artista NPC (rodízio `CAP29`, namoro/casamento/filhos/
+  separação com as chances reais, natalidade `birthRate29` por época, casais célebres, divórcio na banda, guarda, herança),
+  filhos que estreiam (17–24, prodígio 12–16), filhos da indústria com carreira e nepotismo, estrelas mirins (fontes por
+  época, responsável, fundo pelas leis `LAWS29`, escola/limite de horas, tutor, exploração, maldição), pessoas reais
+  (exato × "simulado"). Glossário: estrela mirim, casal célebre, fundo Coogan, nepo baby. FAQ: contratar estrela mirim;
+  filho simulado de artista real. Catálogos: **Família: leis do artista menor** e **Estrelas mirins: de onde vêm, por época**.
+- **Fama** (`mech29w_b.ts`, `demo29`, o 13º sistema): faixas `AGE29` que envelhecem, entrada de fãs, gosto por geração
+  (nostalgia), tendência regional, até 8 países por ato, efeitos (formato, streaming, físico, show, preço, banca,
+  festivais, prêmios, escândalo, ofertas), redescoberta e reunião, aba Público. Glossário: faixa etária, nostalgia,
+  tendência regional. FAQ: "meu público envelheceu". Catálogo: **Público: faixas de idade** (perfis `ATT29`, `EL29`,
+  `MERCH29`, `PHYS_AGE29`, `FMT_AGE29`, `REF29`, demografia `demog29`).
+- **Conexões** (`mech29w_d.ts`, `conn29`/`conn29b`): texto do mapa medido lido de `connmap29` (`SYSTEMS29`/`CONNMAP29`:
+  13 sistemas, 137 de 156 pares, fortes/médias/fracas contadas ao vivo por `connStats29`), o que foi ligado, o que fica de
+  fora de propósito, regras sem espiral (terapia só com caixa livre, piso 35, caixa negativo só na comercial, crise e
+  jurídico pela metade), estrela mirim sem ligação automática ao submundo. O bloco `{ k: 'diagram' }` continua onde
+  estava (`wiki29model.ts`). Glossário: mapa medido. FAQ: espiral de caixa.
+- **Contratos** (`mech29w_a.ts`, `npc29`): corrigida a frase "só o jogador oferece esses modelos"; propostas pelo clique
+  direito; o mundo usa os três modelos (comissão `MGR_COMM29` por estilo, produtoras NPC, masters na Caixa — licenciar /
+  comprar 2,2× / recusar —, JV de selo NPC, disputa com JV, estrela propõe JV) e as curvas `mgrEra29`/`prodEra29`/`jvEra29`.
+  FAQ: masters oferecidas. Catálogo "Modelos de contrato": "Quem oferece" atualizado.
+- **Submundo** (`mech29w_c.ts`, `aff29npc`): facções abordam atos do mundo (ritmo, decisão do NPC com os fatores, desfechos,
+  onde aparece), denunciar a ligação / tirar do esquema / bônus na proposta e no buyout, regra do modo exato; número vivo de
+  abordagens. Glossário: abordagem de facção. FAQ: facção abordou artista de outro selo.
+- **Prêmios e legado** (`mech29w_d.ts`, `relics29`): densidade poucas/normal/muitas/tudo (padrão muitas, ~23/ano) com os
+  tetos de `DENS29`, acervo histórico, leilão do ano, falsários e mercado negro, navegador com filtros. Glossário: acervo
+  histórico. FAQ: relíquias demais/de menos. Catálogo: **Relíquias: densidade**; o catálogo de arquétipos deixou de citar os
+  tetos de "poucas" como se fossem os únicos.
+- **Escada de início** (`mech29w_a.ts`, `genre29data`): gênero sugerido por cidade × ano (pesos, 🎲, exemplos calculados ao
+  vivo) e número vivo "Gêneros sugeridos para {cidade} em {ano}". FAQ. Catálogo: **Gêneros sugeridos por cena** (24 cenas
+  de 1925 a 2020, calculadas por `suggestGenres29`).
+- **Menus** (menus29): FAQ do menu nativo (sem ações → o menu do jogo não abre; seções recolhidas; digitar filtra).
+- `SYS_OF_MECH29`: `family29` → vida, `demo29` → fama, `conn29`/`conn29b` → conexões, `npc29` → contratos, `aff29npc` →
+  submundo (todos os 303 imports de sistema do `index.ts` cobertos).
+
+## 11. Visual novo (inspirado nas wikis de jogos, como a Stardew Valley Wiki)
+
+Base: o arquivo Masters_30.html (mesmo código de `claude/friendly-brown-vpsmfl`). Só a camada visual mudou
+(`src/ui/wiki29/wiki29.ts` e `wiki29.css`); o modelo de páginas e os testes são os mesmos.
+
+- **Cabeçalho de madeira** com o disco e o logotipo em pixel, a busca no centro, PT/EN e o botão ☀/☾ (pergaminho claro
+  por padrão; o tema escuro vale só na aba aberta, nada é gravado).
+- **Barra lateral** fixa: Navegação (as 9 seções), as 18 Mecânicas com ícone e Ferramentas (página aleatória, voltar,
+  avançar). No celular ela abre pelo ☰.
+- **Página inicial em quadros** com faixa de título: boas-vindas com a contagem de artigos, Primeiros passos, grade de
+  ícones das Mecânicas, Personagens, Mundo, Objetos (blocos com ícone e contagem), Artista em destaque do dia, Linha do
+  tempo por década, Regras e dados e Ajuda.
+- **Artigo**: título com filete, "De Masters Wiki", **caixa de informações** à direita (arte grande + a primeira tabela do
+  artigo), **índice** (Conteúdo) com 3+ seções, tabelas no estilo wikitable e **quadros de navegação** recolhíveis no
+  rodapé (as mecânicas em 3 grupos, os itens do catálogo, as décadas, as listas da seção e o quadro geral da wiki).
+- **Mapa das ligações** agora lê o mapa medido (`src/sim/connmap29.ts`): matriz 13 × 13 com força (forte/média/fraca) e
+  direção (↑/↓), dica com o "como" em cada célula e a tabela de ligações de cada sistema.
+- Capturas novas em `docs/shots29wiki/` (`node scripts/shots29wiki.mjs file:///…/dist-wiki/Masters-Wiki.html`).

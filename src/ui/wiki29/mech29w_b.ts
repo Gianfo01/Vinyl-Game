@@ -3,6 +3,7 @@
 // market.ts, live.ts, tours.ts, lifecycle.ts, fandom.ts, contracts.ts, src/sim/sys/producers15.ts, world4/charts.ts,
 // press18.ts, creation/core.ts, bridge17.ts, fests8.ts, merch17.ts, show27.ts, fame15.ts, fame16.ts, fans18.ts,
 // hype12.ts, standing9.ts, labelrep28.ts, mech29.ts, caps18.ts) e de docs/connect29.md e docs/econ18.md.
+import '../../sim/tick';
 import { l } from '../../data/world';
 import type { GameState } from '../../sim/types';
 import type { Faq29, MechArt29, Term29 } from './wiki29types';
@@ -15,6 +16,7 @@ import { PRODUCTION_COST, TICKET } from '../../sim/tours';
 import { TEAM_FROM18 } from '../../sim/sys/fans18';
 import { FEAT_MAX_P29 } from '../../sim/sys/featp29';
 import { STAND_KEYS, STAND_NAME } from '../../sim/sys/standing9';
+import { AGE29, NB29, demog29, ageMix29 } from '../../sim/sys/demo29';
 
 // dólares reais (2020) — as tabelas guardam dólares, não centavos
 const usd = (d: number): string => 'US$ ' + Math.round(d).toLocaleString('pt-BR');
@@ -210,7 +212,7 @@ export const MECH_B: MechArt29[] = [
     ],
     pages: ['shows', 'tour12', 'live19', 'festivals', 'cal17'],
     see: ['mech:fame', 'mech:money', 'mech:hq', 'glossario:demanda-da-cidade'],
-    nums: () => {
+    nums: (s) => {
       const rows: [ReturnType<typeof l>, string][] = [];
       for (const v of VENUE_TIERS) rows.push([v.name, `${v.cap[1].toLocaleString('pt-BR')} · ${usd(TICKET[v.id] ?? 0)}`]);
       rows.push([l('Produção de palco por show', 'Stage production per show'), PRODUCTION_COST.map(usd).join(' / ')]);
@@ -242,6 +244,14 @@ export const MECH_B: MechArt29[] = [
         'Os fãs têm motivos (novidade, letras, dança, virtuosismo, identidade, comunidade) que formam facções: puristas, mainstream, colecionadores e comunidade. Cada facção tem humor próprio e reage às suas escolhas. Superfãs compram na estreia; haters crescem com fama e escândalos.',
         'Fans have motives (novelty, lyrics, dance, virtuosity, identity, community) that form factions: purists, mainstream, collectors and community. Each faction has its own mood and reacts to your choices. Superfans buy at launch; haters grow with fame and scandals.',
       ),
+      l(
+        `Público por idade e região (R29, o 13º sistema): os fãs de cada ato se dividem em ${NB29} faixas de idade (${AGE29.map((x) => x.name.pt).join(' · ')}) e em mercados e países. As faixas envelhecem: na virada do ano parte de cada faixa sobe para a próxima, então quem tinha 15 anos em 1965 está nos 35–49 nos anos 90 — e um ato parado envelhece junto com o público. Quem vira fã agora depende da demografia da época e da região (baby boom, envelhecimento), de quem descobre música nova (rádio e TV → streaming e vídeo curto puxam jovens), do gosto de cada geração pelo gênero, da idade da formação, do posicionamento, do público-alvo do projeto e dos canais de marketing e de lançamento.`,
+        `Audience by age and region (R29, the 13th system): each act's fans split into ${NB29} age bands (${AGE29.map((x) => x.name.en).join(' · ')}) and into markets and countries. The bands age: at the turn of the year part of each band moves up to the next, so someone who was 15 in 1965 is 35–49 in the 90s — and an idle act ages along with its audience. Who becomes a fan now depends on the era's and region's demographics (baby boom, ageing), on who discovers new music (radio and TV → streaming and short video pull the young), on each generation's taste for the genre, the lineup's age, positioning, the project's target audience and the marketing and release channels.`,
+      ),
+      l(
+        'Gosto por geração e região: o jovem adota gênero novo e quem passou dos 30 estranha; cada geração guarda nostalgia pela música dos seus 18 anos (o peso cresce com a idade); e cada mercado tem a sua tendência por família de gênero, medida todo mês nas paradas daquele mercado. Até 8 países por ato seu: herói local e favorito da diáspora aparecem ali, e os fãs ganhos num show nascem no país onde ele aconteceu. Tudo isso fica na aba Público da ficha do ato (pirâmide, tabela por faixa, mercados e países com bandeira, "Por que esse público?"), em Artistas › Público e mídia, em Paradas ("Quem ouve cada estilo"), no Projeto (público-alvo × público do ato) e na camada "Fãs por idade" do mapa.',
+        'Taste by generation and region: the young adopt a new genre and people past 30 find it strange; each generation keeps nostalgia for the music of its 18th year (the weight grows with age); and each market has its own trend per genre family, measured every month on that market\'s charts. Up to 8 countries per act of yours: local heroes and diaspora favorites show up there, and fans won at a show are born in the country where it happened. All of this sits in the act sheet\'s Audience tab (pyramid, table by band, markets and countries with flags, "Why this audience?"), in Artists › Audience and media, in Charts ("Who listens to each style"), in the Project (target audience × the act\'s audience) and in the map\'s "Fans by age" layer.',
+      ),
     ],
     inputs: [
       l('Vendas (cada unidade traz casuais e alguns ativos) e posição nas paradas.', 'Sales (each unit brings casuals and some actives) and chart position.'),
@@ -250,6 +260,8 @@ export const MECH_B: MechArt29[] = [
       l('Lançamentos recentes (momento) e campanhas de rollout (hype).', 'Recent releases (momentum) and rollout campaigns (hype).'),
       l('Escândalos, morte de integrante, rixas e virais.', 'Scandals, a member\'s death, feuds and virals.'),
       l('Confiança do ato em você e fã-clube organizado (superfãs).', 'The act\'s trust in you and an organized fan club (superfans).'),
+      l('Idade da formação, época e região (demografia por mercado), gosto da geração pelo gênero e público-alvo do projeto (público por idade).', 'Lineup age, era and region (demographics per market), each generation\'s taste for the genre and the project\'s target audience (audience by age).'),
+      l('Shows no exterior (os fãs convertidos nascem naquele país) e diáspora do gênero.', 'Shows abroad (converted fans are born in that country) and the genre\'s diaspora.'),
     ],
     outputs: [
       l('Apelo dos lançamentos e público dos shows.', 'Release appeal and show attendance.'),
@@ -257,6 +269,8 @@ export const MECH_B: MechArt29[] = [
       l('Paparazzi e estresse a partir do degrau Internacional.', 'Paparazzi and stress from the International tier up.'),
       l('O que você vê de outros atos: famosos têm quase tudo público.', 'What you can see of other acts: famous ones have almost everything public.'),
       l('Demanda de merch, edições de luxo e mobilização de fãs.', 'Merch demand, deluxe editions and fan mobilization.'),
+      l('A idade do público mexe em quase tudo: single rende com base jovem, LP, ao vivo e luxo com adultos, relançamento e coletânea com 35+; no streaming o single jovem e o álbum adulto rendem mais; base mais velha compra físico por mais tempo; quem vai a show e quanto aceita pagar no ingresso e na banca dependem da faixa ([[mech:music]], [[mech:live]]).', 'Audience age touches almost everything: singles do well with a young base, LPs, live and deluxe with adults, reissues and compilations with 35+; on streaming the young single and the adult album earn more; an older base keeps buying physical longer; who goes to shows and how much they will pay for tickets and merch depend on the band ([[mech:music]], [[mech:live]]).'),
+      l('Paradas por país e fama regional (tendência do gênero no mercado), festivais (idade do público do festival × do ato), prêmios (votantes mais velhos ou mais jovens), escândalo (base jovem perdoa mais, purista velho abandona) e ofertas (artistas preferem selo cujo elenco fala com a mesma geração).', 'Country charts and regional fame (genre trend in the market), festivals (festival audience age × the act\'s), awards (older or younger voters), scandals (a young base forgives more, an old purist leaves) and offers (artists prefer a label whose roster speaks to the same generation).'),
     ],
     rules: [
       l(
@@ -284,6 +298,14 @@ export const MECH_B: MechArt29[] = [
         'Superfans trend to 6% of core (12% with an organized fan club), adjusted by trust. At launch they give up to +35% appeal.',
       ),
       l(
+        'Público por idade: a mistura de cada ato soma 1000 milésimos sobre o total de fãs que já existe (nenhum fã novo é criado). Guardados: os atos do jogador e as 60 maiores estrelas de fora (fama 45+); os outros são derivados da carreira. Troca mensal de 0,3% + 1% × momento (+1% se viral); saída de fãs tira mais dos jovens (mais volúveis); 50+ perde cerca de 4% ao ano. Os efeitos são medidos contra a mistura de um ato em início/meio de carreira, então só a diferença entre públicos pesa: apelo 0,82–1,18, tendência regional 0,85–1,15, demanda do show 0,82–1,15, banca ±8%, streaming ±10%.',
+        'Audience by age: each act\'s mix adds up to 1000 per-mille over the existing fan total (no new fans are created). Stored: the player\'s acts and the 60 biggest outside stars (fame 45+); the rest are derived from the career. Monthly churn of 0.3% + 1% × momentum (+1% if viral); fan losses come mostly from the young (more fickle); 50+ loses about 4% a year. Effects are measured against the mix of an early/mid-career act, so only the difference between audiences counts: appeal 0.82–1.18, regional trend 0.85–1.15, show demand 0.82–1.15, merch ±8%, streaming ±10%.',
+      ),
+      l(
+        'Redescoberta: o ciclo de nostalgia dura cerca de 25 anos; vídeo curto, viral, remix, jogo e série trazem fãs de 13–24, e comercial, filme e documentário trazem a geração original. Reunião de banda: por 2 anos o público 35+ lota a volta.',
+        'Rediscovery: the nostalgia cycle runs about 25 years; short video, virals, remixes, games and series bring 13–24 fans, while commercials, films and documentaries bring back the original generation. Band reunion: for 2 years the 35+ crowd packs the comeback.',
+      ),
+      l(
         'Momento cai 6% por mês, +2 se houve disco nas últimas 20 semanas, −1 se não. Hype: o público espera Q = 32 + 0,45 × expectativa. Com expectativa 40+ e disco 6 pontos abaixo, vem a ressaca; expectativa baixa e Q 80+ vira sucesso tardio.',
         'Momentum drops 6% a month, +2 with a record in the last 20 weeks, −1 without. Hype: the public expects Q = 32 + 0.45 × expectation. With expectation 40+ and a record 6 points short, backlash hits; low expectation with Q 80+ becomes a sleeper hit.',
       ),
@@ -294,17 +316,26 @@ export const MECH_B: MechArt29[] = [
       l('Para estourar fora, comece pelos países do mesmo mercado e idioma.', 'To break abroad, start with countries sharing market and language.'),
       l('Segurança paga corta paparazzi e tumultos a partir do degrau Internacional.', 'Paid security cuts paparazzi and mobs from the International tier up.'),
       l('Virada comercial agrada o mainstream e irrita os puristas; decida quem você quer manter.', 'A commercial turn pleases the mainstream and annoys purists; decide whom you want to keep.'),
+      l('Público envelheceu? Aposte em LP, vinil, edição de luxo e turnê de reunião; para rejuvenescer, singles, vídeo curto e canais jovens (veja a aba Público e as dicas do conselheiro).', 'Has your audience aged? Bet on LPs, vinyl, deluxe editions and a reunion tour; to get younger, singles, short video and youth channels (see the Audience tab and the advisor tips).'),
+      l('Mire o público-alvo do projeto onde o ato já tem fãs: rende agora; mirar longe muda quem chega, mas devagar.', 'Aim the project\'s target audience where the act already has fans: it pays now; aiming elsewhere changes who arrives, but slowly.'),
     ],
     pages: ['artists', 'people', 'charts', 'artist18'],
-    see: ['mech:live', 'mech:music', 'mech:press', 'glossario:faccao', 'glossario:superfas', 'glossario:momento'],
-    nums: () => {
+    see: ['mech:live', 'mech:music', 'mech:press', 'glossario:faccao', 'glossario:superfas', 'glossario:momento', 'glossario:faixa-etaria', 'glossario:nostalgia', 'glossario:tendencia-regional', 'cat:publico-faixas'],
+    nums: (s: GameState | null) => {
       const rows: [ReturnType<typeof l>, string][] = [];
       for (const v of VENUE_TIERS) rows.push([l(`Fama mínima: ${v.name.pt}`, `Minimum fame: ${v.name.en}`), `${v.fameMin}+`]);
       rows.push([l('Teto suave de bônus de apelo (joelho)', 'Soft cap on appeal bonuses (knee)'), `+${pct(MOD_CAP18.appeal.knee)}`]);
       rows.push([l('Equipe de rua disponível desde', 'Street team available from'), String(TEAM_FROM18)]);
+      rows.push([l('Faixas de idade do público', 'Audience age bands'), AGE29.map((x) => x.name.pt).join(' · ')]);
+      const y = s?.year ?? 1965;
+      rows.push([l(`América do Norte em ${y}: estrutura etária (13+)`, `North America in ${y}: age structure (13+)`), demog29('na', y).map((x) => `${Math.round(x * 100)}%`).join(' · ')]);
+      if (s) {
+        const mine = Object.values(s.acts).find((a) => a.owner === 'player' && a.status !== 'retired' && a.status !== 'split');
+        if (mine) rows.push([l(`Público de ${mine.name} por faixa`, `${mine.name}'s audience by band`), ageMix29(s, mine).map((x) => `${Math.round(x * 100)}%`).join(' · ')]);
+      }
       return rows;
     },
-    docs: ['docs/connect29.md'],
+    docs: ['docs/connect29.md', 'docs/demo29.md'],
   },
 
   // ------------------------------------------------------------------------------------------------ reputação
@@ -405,6 +436,33 @@ export const MECH_B: MechArt29[] = [
 
 export const TERMS_B: Term29[] = [
   {
+    id: 'faixa-etaria',
+    term: l('Faixa etária do público', 'Audience age band'),
+    def: l(
+      `Uma das ${NB29} faixas em que os fãs de cada ato se dividem (${AGE29.map((x) => x.name.pt).join(', ')}). As faixas envelhecem na virada do ano e mudam apelo por formato, ida a shows, preço do ingresso, banca e físico.`,
+      `One of the ${NB29} bands each act's fans split into (${AGE29.map((x) => x.name.en).join(', ')}). The bands age at the turn of the year and change appeal by format, show attendance, ticket price, merch and physical sales.`,
+    ),
+    see: ['mech:fame', 'cat:publico-faixas'],
+  },
+  {
+    id: 'nostalgia',
+    term: l('Nostalgia (gosto por geração)', 'Nostalgia (taste by generation)'),
+    def: l(
+      'Cada geração guarda afinidade com a música que estava em alta quando tinha 18 anos; o peso cresce com a idade. O jovem adota gênero novo, quem passou dos 30 estranha.',
+      'Each generation keeps an affinity for the music that was big when it was 18; the weight grows with age. The young adopt a new genre, people past 30 find it strange.',
+    ),
+    see: ['mech:fame'],
+  },
+  {
+    id: 'tendencia-regional',
+    term: l('Tendência regional', 'Regional trend'),
+    def: l(
+      'Quanto cada família de gênero está em alta num mercado, medida todo mês nas paradas dali e normalizada para a média mundial = 1. Pesa no apelo (0,85–1,15) e nas paradas por país.',
+      'How hot each genre family is in a market, measured every month on its charts and normalized to a world average of 1. It weighs on appeal (0.85–1.15) and on country charts.',
+    ),
+    see: ['mech:fame', 'mech:world'],
+  },
+  {
     id: 'apelo',
     term: l('Apelo', 'Appeal'),
     def: l(
@@ -479,6 +537,15 @@ export const TERMS_B: Term29[] = [
 ];
 
 export const FAQ_B: Faq29[] = [
+  {
+    id: 'publico-envelheceu',
+    q: l('O conselheiro diz que meu público envelheceu. E agora?', 'The advisor says my audience has aged. Now what?'),
+    a: l(
+      'Ato parado envelhece com a base: na virada do ano parte de cada faixa sobe para a próxima. Público maduro compra LP, vinil, luxo e coletânea e paga mais pelo ingresso, mas vai menos a show e rende menos no single. Para rejuvenescer, lance singles, use vídeo curto e canais jovens e mire o público-alvo "jovens" no projeto — a mudança é lenta.',
+      'An idle act ages with its base: at the turn of the year part of each band moves up to the next. A mature audience buys LPs, vinyl, deluxe and compilations and pays more for tickets, but goes to fewer shows and does less for singles. To get younger, release singles, use short video and youth channels and aim the project at "young" listeners — the change is slow.',
+    ),
+    see: ['mech:fame', 'glossario:faixa-etaria'],
+  },
   {
     id: 'apelo-depois-da-estreia',
     q: l('Contratei um publicitário depois do lançamento. Por que o apelo não mudou?', 'I hired a publicist after the release. Why did the appeal not change?'),
