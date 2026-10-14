@@ -574,8 +574,10 @@ export function identityYear27(m: RealMember[], debut: number): number {
 
 /** Dados reais que decorate recebe (subconjunto usado pela formação inicial). */
 type RealDec29 = { n: string; t: number; d?: number; m?: RealMember[]; exact?: false; ap?: RealArtist['ap'] };
-/** Idade mínima para alguém da história real existir no mundo (como integrante ou pessoa livre). */
-const AGE29 = 15;
+/** Idade mínima para alguém da história real existir no mundo (como integrante ou pessoa livre). R29 (família): com as
+ *  regras de estrela mirim (responsável, fundo, escola e limite de horas — sys/family29), 12 anos em vez de 15: Michael
+ *  Jackson entra no Jackson 5 com 12 num mundo de 1970 (no modo exato vale a idade real, pelo roteiro). */
+const AGE29 = 12;
 
 /** R29 (formação): índices (em `m`) da formação inicial escolhida.
  *  - 'famous': a formação clássica (classicLineup25) ou, sem ela, a da estreia (inLineupAt no ano da estreia);
@@ -694,7 +696,7 @@ function free29(s: GameState, act: Act, d: RealDec29, i: number, shift: number, 
   (st.free29 ??= {})[p.id] = act.id;
 }
 
-/** R29 (formação): pessoas livres que eram jovens demais no início surgem aos 15 anos (sem banda). */
+/** R29 (formação): pessoas livres que eram jovens demais no início surgem aos 12 anos (AGE29; sem banda). */
 function pending29(s: GameState): void {
   const st = rw(s);
   if (!st.pend29?.length || !lineup29Of(s.config)) return;

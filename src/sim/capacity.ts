@@ -81,8 +81,12 @@ export function personLoad(s: GameState, personId: string, idx: number, excludeP
     const td = tourDaysInMonth(s, act.id, idx);
     if (td) parts.push({ label: fmtL(l('Turnê de {a}', '{a} tour'), { a: act.name }), load: Math.min(100, Math.round(((td + 4) / 28) * 100)) });
   }
+  // R29 (família): cargas extras da pessoa (menor de idade: escola e limite de horas — sys/family29)
+  for (const f of PERSON_LOAD29) { const x = f(s, personId, idx, parts); if (x) parts.push(x); }
   return { total: parts.reduce((t, x) => t + x.load, 0), parts };
 }
+/** R29 (família): fontes de carga extra por pessoa e mês (recebem as partes já somadas). Sem dependências: sys/family29 preenche. */
+export const PERSON_LOAD29: ((s: GameState, personId: string, idx: number, parts: { label: L; load: number }[]) => { label: L; load: number } | null)[] = [];
 
 let nameLookup: (id: string) => L = (id) => l(id);
 export function setActionNameLookup(f: (id: string) => L): void {

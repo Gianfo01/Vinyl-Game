@@ -13,6 +13,8 @@ import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { defaultOffer, evaluateOffer, expectedAdvance, signWithRival } from '../contracts';
 import type { Act, GameState, Label, Offer } from '../types';
+import type { ContractModel } from '../../data/rules';
+import { defaultRights } from '../rights';
 import { fmtL, money, playerActs } from '../util';
 import { labelClout } from './offers12';
 
@@ -108,13 +110,21 @@ export function rivalReserve28(s: GameState, lb: Label, act: Act): number {
 }
 
 /** Termos do rival: o padrão do mercado (prazo e discos do contrato de selo) com o adiantamento do lance. */
-export function rivalTerms28(s: GameState, act: Act, bid: number): Omit<Offer, 'id' | 'week' | 'status'> {
-  return { ...defaultOffer(s, act), advance: bid, termMonths: 48, releasesOwed: 4 };
+export function rivalTerms28(s: GameState, act: Act, bid: number, model: ContractModel = 'classic'): Omit<Offer, 'id' | 'week' | 'status'> {
+  const o = { ...defaultOffer(s, act), advance: bid, termMonths: 48, releasesOwed: 4 };
+  // R29 (contratos+): o rival pode oferecer uma joint venture (selo próprio da estrela) para roubá-la
+  return model === 'jv' ? { ...o, model, x29: { artistShare: JV_SHARE29, target: 4 }, rights: defaultRights('jv') } : o;
+}
+/** R29: participação que o rival dá numa JV de disputa. */
+export const JV_SHARE29 = 0.4;
+/** R29: o rival usa a JV para roubar uma estrela? (a partir dos anos 1970; selo agressivo e ato famoso; sorte própria) */
+export function rivalJV29(s: GameState, lb: Label, act: Act, key: string): boolean {
+  return s.year >= 1970 && act.fame >= 30 && lb.cash > money(s, 100000) && rng28(s, 'jv29', key, act.id).chance(clamp(0.15 + lb.aggression * 0.3, 0, 0.5));
 }
 
 /** Placar da proposta rival aos olhos do artista: mesma régua da sua (evaluateOffer) + diferença de força do selo. */
-export function rivalScore28(s: GameState, act: Act, lb: Label, bid: number): number {
-  return evaluateOffer(s, act, rivalTerms28(s, act, bid)).score + (labelClout(s, lb.id) - labelClout(s, 'player')) * 0.25;
+export function rivalScore28(s: GameState, act: Act, lb: Label, bid: number, model: ContractModel = 'classic'): number {
+  return evaluateOffer(s, act, rivalTerms28(s, act, bid, model)).score + (labelClout(s, lb.id) - labelClout(s, 'player')) * 0.25;
 }
 
 /** Contraproposta do rival (sorteio): cobre se a reserva deixa e a agressividade manda. Devolve o lance novo ou null. */
@@ -124,8 +134,8 @@ export function rivalCounter28(lb: Label, bid: number, reserve: number, r: Rng):
 }
 
 /** Assina com o rival pelo lance dele (o contrato e o caixa do selo ficam com o valor do lance). */
-export function rivalSign28(s: GameState, act: Act, lb: Label, bid: number, r: Rng): boolean {
-  signWithRival(s, act, lb.id, r);
+export function rivalSign28(s: GameState, act: Act, lb: Label, bid: number, r: Rng, model?: ContractModel): boolean {
+  signWithRival(s, act, lb.id, r, false, model);
   if (act.owner !== lb.id || !act.contractId) return false;
   const c = s.contracts[act.contractId];
   if (c) { lb.cash += c.advance - bid; c.advance = bid; c.recoupBalance = bid; }
@@ -137,7 +147,7 @@ export function contender28(s: GameState): Label | undefined {
   return Object.values(s.labels).filter((x) => x.active && x.cash > money(s, 50000)).sort((a, b) => b.aggression - a.aggression || (a.id < b.id ? -1 : 1))[0];
 }
 
-export interface Contest28 { lb: Label; bid: number; reserve: number; countered: boolean; log: L[] }
+export interface Contest28 { lb: Label; bid: number; reserve: number; countered: boolean; log: L[]; /** R29: o rival venceu com uma joint venture */ jv?: boolean }
 /** Disputa de uma oferta (ao vivo ou no fechamento). Devolve o rival vencedor (já assinado) ou null.
  *  `r` = RNG do jogo, usado só para a tirada de interesse (mesma do código antigo). */
 export function rivalContest28(s: GameState, r: Rng, act: Act, o: Offer, playerScore: number, live: boolean): Contest28 | null {
@@ -152,8 +162,10 @@ export function rivalContest28(s: GameState, r: Rng, act: Act, o: Offer, playerS
   const reserve = rivalReserve28(s, lb, act);
   let bid = Math.round(reserve * rr.float(0.7, 0.9) / 100) * 100;
   const noise = rr.normal(0, 0.05);
-  const edge = (b: number) => playerScore - rivalScore28(s, act, lb, b) + noise;
-  const log: L[] = [fmtL(l('{l} entra na disputa com {a} de adiantamento.', '{l} joins the bidding with a {a} advance.'), { l: lb.name, a: usd28(bid) })];
+  const jv = rivalJV29(s, lb, act, o.id); // R29: estrela pode ser roubada com um selo próprio (JV)
+  const model: ContractModel = jv ? 'jv' : 'classic';
+  const edge = (b: number) => playerScore - rivalScore28(s, act, lb, b, model) + noise;
+  const log: L[] = [fmtL(jv ? l('{l} entra na disputa com uma joint venture (selo próprio) e {a} de capital.', '{l} joins the bidding with a joint venture (own imprint) and {a} of capital.') : l('{l} entra na disputa com {a} de adiantamento.', '{l} joins the bidding with a {a} advance.'), { l: lb.name, a: usd28(bid) })];
   let countered = false;
   if (edge(bid) >= 0) {
     const nb = rivalCounter28(lb, bid, reserve, rr);
@@ -164,9 +176,9 @@ export function rivalContest28(s: GameState, r: Rng, act: Act, o: Offer, playerS
     log.push(fmtL(l('{l} sobe o lance: {a}.', '{l} raises its bid: {a}.'), { l: lb.name, a: usd28(bid) }));
     if (edge(bid) >= 0) { st.backoffs += 1; return null; }
   }
-  if (!rivalSign28(s, act, lb, bid, rng28(s, 'sign', o.id, act.id))) return null;
+  if (!rivalSign28(s, act, lb, bid, rng28(s, 'sign', o.id, act.id), jv ? 'jv' : undefined)) return null;
   st.wins += 1;
-  return { lb, bid, reserve, countered, log };
+  return { lb, bid, reserve, countered, log, jv };
 }
 
 export const usd28 = (c: number): string => `$${Math.round(c / 100).toLocaleString('en-US')}`;

@@ -14,7 +14,7 @@ import { lookOf, type Pose } from '../pixel/avatar';
 import { avatarSprite } from '../pixel/avatar';
 import { drawLandmark19 } from '../pixel/landmarks19px';
 import { eraOf, paletteOf, type EraId, type Palette } from '../pixel/palette';
-import { C, INK, Px, dith, lv, mix, noise, tint, withAlpha, type Col } from '../pixel/px';
+import { C, INK, Px, dith, inked, lv, mix, noise, tint, withAlpha, type Col } from '../pixel/px';
 import { gearPx } from '../pixel/gear21';
 import type { GearId } from '../pixel/gear21-atlas';
 import { drawText, fitText, textWidth } from '../pixel/font';
@@ -49,6 +49,8 @@ export interface Plan27 {
   crown: [number, number] | null;
   /** r27 INT: caixa do toca-discos/gramofone do lounge [x, y, w, h] (preenchida ao pintar; clique do ovo) */
   gramo?: [number, number, number, number];
+  /** R29: a vaga da garagem está ocupada por um objeto extra (calhambeque do ovo) — a van não é pintada */
+  garageTaken?: boolean;
 }
 export interface Spot27 { id: string; room: Room25; x: number; y: number; pose: Pose; dir: 'SE' | 'SW'; sprite: Sprite25 }
 export interface More27 { room: Room25; x: number; y: number; n: number }
@@ -361,10 +363,21 @@ function street(g: Ctx): void {
   // postes
   for (let x = 14; x < pl.W; x += 120) {
     if (x > pl.bx - 10 && x < pl.bx + pl.bw + 10) continue;
-    p.vline(x, y - 34, y, C('#2a2a32'));
-    if (pl.year < 1940) { p.rect(x - 2, y - 38, 5, 4, C('#2a2a32')); p.rect(x - 1, y - 37, 3, 2, C('#ffd889')); }
-    else { p.hline(x, x + 6, y - 34, C('#2a2a32')); p.rect(x + 5, y - 33, 3, 1, pl.year >= 2010 ? C('#e8f4ff') : C('#ffc870')); }
-    p.poly([[x + 6, y - 32], [x + 1, y], [x + 12, y]], withAlpha(pl.year >= 2010 ? C('#e8f4ff') : C('#ffd27a'), 22));
+    // R29: poste em 2 tons (aresta clara à esquerda), base e luminária com vidro aceso, contorno INK
+    const iron = pl.year < 1960 ? C('#3a3a2e') : C('#4a4a56');
+    const bulb = pl.year >= 2010 ? C('#e8f4ff') : pl.year >= 1960 ? C('#ffc870') : C('#ffd889');
+    inked(p, (q) => {
+      q.vline(x, y - 34, y - 1, lv(iron, 3.8)); q.vline(x + 1, y - 34, y - 1, lv(iron, 2));
+      q.rect(x - 1, y - 4, 4, 4, lv(iron, 2.6)); q.hline(x - 1, x + 2, y - 4, lv(iron, 4));
+      if (pl.year < 1940) { // lampião a gás
+        q.rect(x - 2, y - 40, 6, 6, lv(iron, 2)); q.rect(x - 1, y - 39, 4, 4, bulb); q.hline(x - 1, x + 2, y - 39, lv(bulb, 5)); q.hline(x - 2, x + 3, y - 41, lv(iron, 3.6));
+      } else { // braço com luminária
+        q.hline(x + 1, x + 6, y - 35, lv(iron, 3.4)); q.hline(x + 1, x + 6, y - 34, lv(iron, 1.8));
+        q.rect(x + 4, y - 33, 5, 2, lv(iron, 2.4)); q.hline(x + 5, x + 7, y - 31, bulb);
+      }
+    });
+    p.ellipse(pl.year < 1940 ? x + 1 : x + 6, pl.year < 1940 ? y - 37 : y - 31, 4, 3, withAlpha(bulb, 60));
+    p.poly([[x + 6, y - 31], [x + 1, y], [x + 12, y]], withAlpha(bulb, 22));
   }
 }
 
@@ -374,6 +387,9 @@ function neighbours(g: Ctx): void {
   const bh = pl.gy - (pl.H - STREET - FOUND - pl.floors * (FH27 + SLAB));
   const col = pl.year < 1960 ? C('#3a2a2e') : pl.year < 1990 ? C('#33283a') : C('#262a40');
   const lit = withAlpha(C('#ffc870'), 170);
+  // R29 (arte consistente): vizinhos com o mesmo acabamento do resto — contorno INK, cornija com luz em cima,
+  // aresta esquerda clara e direita em meia-sombra, janelas com moldura, peitoril e vidro aceso em degradê
+  // (ou apagado com reflexo), porta/vitrine no térreo. Continuam mais escuros que a sede (plano de trás).
   const draw = (x0: number, x1: number) => {
     let x = x0;
     while (x < x1) {
@@ -381,12 +397,25 @@ function neighbours(g: Ctx): void {
       if (w < 8) break;
       const h = Math.max(30, Math.floor(bh * (0.55 + g.r() * 0.6)));
       const y = pl.gy - h;
-      p.rect(x, y, w, h, col);
-      p.rect(x, y, w, 2, tint(col, 0.12));
-      for (let yy = y + 6; yy < pl.gy - 8; yy += 11) for (let xx = x + 4; xx < x + w - 5; xx += 9) {
-        const on = noise(xx, yy, pl.seed + 7) < 0.35;
-        p.rect(xx, yy, 4, 6, on ? lit : tint(col, -0.25));
-      }
+      const xs = x;
+      inked(p, (q) => {
+        for (let yy = y; yy < pl.gy; yy++) for (let xx = xs; xx < xs + w; xx++) {
+          let c = col;
+          if (xx === xs) c = lv(col, 3.6); else if (xx >= xs + w - 2) c = lv(col, 2.2);
+          else if ((yy - y) % 4 === 3 && pl.year < 1960) c = lv(col, 2.6); // fiadas de tijolo
+          q.put(xx, yy, c);
+        }
+        q.rect(xs - 1, y, w + 2, 3, lv(col, 3.4)); q.hline(xs - 1, xs + w, y, lv(col, 4.4)); q.hline(xs - 1, xs + w, y + 3, lv(col, 1.2)); // cornija
+        for (let yy = y + 7; yy < pl.gy - 14; yy += 11) for (let xx = xs + 4; xx < xs + w - 6; xx += 9) {
+          const on = noise(xx, yy, pl.seed + 7) < 0.35;
+          q.rect(xx - 1, yy - 1, 6, 8, lv(col, 1.3)); // moldura
+          for (let r = 0; r < 6; r++) q.hline(xx, xx + 3, yy + r, on ? (r < 2 ? C('#ffe6a8') : r < 4 ? lit : C('#e0a050')) : lv(col, r < 2 ? 1.9 : 1.1));
+          if (!on) q.put(xx, yy, lv(col, 2.8)); else if (noise(xx, yy, pl.seed + 9) < 0.3) q.rect(xx + 1, yy + 2, 2, 4, C('#5a3a3a')); // reflexo / alguém na janela
+          q.hline(xx - 1, xx + 4, yy + 7, lv(col, 4)); // peitoril
+        }
+        const dx = xs + Math.floor(w / 2) - 3; // térreo: porta com bandeira acesa
+        q.rect(dx - 1, pl.gy - 13, 8, 13, lv(col, 1.2)); q.rect(dx, pl.gy - 12, 6, 12, lv(col, 0.6)); q.hline(dx, dx + 5, pl.gy - 12, C('#e0a050'));
+      });
       x += w + 1;
     }
   };
@@ -643,7 +672,7 @@ function sign(g: Ctx, x: number, y: number, text: string, maxW: number, lit = tr
   const { p, pl } = g;
   const t = fitText(text, maxW - 6);
   const w = textWidth(t) + 6;
-  blk(p, x - (w >> 1), y, w, 9, C('#1a1214'));
+  inked(p, (q) => blk(q, x - (w >> 1), y, w, 9, C('#2a2026'))); // R29: placa com contorno INK
   drawText(p, t, x - (w >> 1) + 3, y + 2, lit ? (pl.year < 1960 ? C('#ffe2a0') : pl.year < 1990 ? C('#ff9a4a') : C('#7af0ff')) : C('#c8c0b0'));
 }
 
@@ -815,7 +844,7 @@ function furnish(g: Ctx, c: Cell27): void {
         for (let yy = y + 4 + Math.floor(dh * 0.55); yy < y + 4 + dh; yy++) for (let xx = dx + 1; xx < dx + dw - 1; xx++) p.put(xx, yy, mix(C('#3a2d62'), C('#e07a5a'), (yy - y) / h));
         for (let yy = y + 5; yy < y + 4 + Math.floor(dh * 0.55); yy += 3) p.hline(dx + 1, dx + dw - 2, yy, C('#a8a8b0'));
         p.rect(dx, y + 4 + Math.floor(dh * 0.55), dw, 2, C('#6a6a72'));
-        van(g, x - 18, fy);
+        if (!pl.garageTaken) van(g, x - 18, fy); // R29: com o calhambeque na vaga, ele substitui a van (não cabem os dois)
         break;
       }
       sign(g, x + Math.floor(w * (w < 140 ? 0.55 : 0.68)), w < 140 ? y + 30 : y + 7, pl.brand, Math.floor(w * 0.8), true);
@@ -906,18 +935,64 @@ function extras(g: Ctx, c: Cell27): void {
 }
 
 function van(g: Ctx, x: number, fy: number): void {
+  // R29 (arte consistente): a van da garagem no estilo da mobília — silhueta por linhas (sem formas "vetoriais"),
+  // lataria em 3 tons (teto na luz, flanco, saia na sombra), vincos, vidros com reflexo diagonal, para-choque
+  // cromado, caixa de roda escura, pneu em 2 tons e calota com brilho. A camada da mobília contorna em INK.
   const { p, pl, pal } = g;
-  const body = pl.year < 1960 ? C('#5a7a6a') : pl.year < 1990 ? pal.accent : C('#d8d8dc');
-  const roofY = fy - 24;
-  if (pl.year < 1960) { // furgão arredondado
-    p.ellipse(x + 30, roofY + 10, 28, 10, body); p.rect(x + 2, roofY + 10, 56, 10, body);
-  } else if (pl.year < 1990) { // kombi
-    p.rect(x + 2, roofY + 2, 58, 18, body); p.rect(x + 2, roofY + 12, 58, 8, C('#f2ece0')); p.ellipse(x + 58, roofY + 11, 4, 9, body);
-  } else { p.rect(x + 2, roofY + 3, 54, 17, body); p.poly([[x + 56, roofY + 3], [x + 62, roofY + 12], [x + 62, roofY + 20], [x + 56, roofY + 20]], body); }
-  for (let i = 0; i < 3; i++) p.rect(x + 10 + i * 14, roofY + 5, 10, 5, C('#2a3048'));
-  p.rect(x + 2, fy - 4, 60, 2, tint(body, -0.3));
-  for (const wx of [x + 14, x + 48]) { p.disc(wx, fy - 2, 4, INK); p.disc(wx, fy - 2, 1.6, C('#9aa0aa')); }
-  p.rect(x + 60, roofY + 14, 2, 2, C('#ffe0a0'));
+  const era = pl.year < 1960 ? 0 : pl.year < 1990 ? 1 : 2;
+  const body = era === 0 ? C('#5a7a6a') : era === 1 ? pal.accent : C('#d8d8dc');
+  const top2 = era === 1 ? C('#f2ece0') : body; // kombi saia-e-blusa
+  const L = 60, y0 = fy - 23, x0 = x + 2; // caixa: x0..x0+L-1, y0..fy-4
+  // perfil (meia-largura do teto ao chão): quantos px a linha encolhe em cada lado, de cima para baixo
+  const inset = (r: number): [number, number] => {
+    if (era === 0) return [[7, 4, 3, 2, 1, 1][r] ?? 0, [9, 6, 4, 3, 2, 1, 1][r] ?? 0]; // furgão arredondado
+    if (era === 1) return [r < 2 ? 2 - r : 0, r < 2 ? 2 - r : r < 4 ? 1 : 0]; // kombi: frente reta e redonda
+    return [r < 1 ? 1 : 0, r < 8 ? 8 - r : 0]; // minivan: capô inclinado
+  };
+  const H = fy - 4 - y0;
+  for (let r = 0; r < H; r++) {
+    const [a, b] = inset(r);
+    const yy = y0 + r;
+    for (let xx = x0 + a; xx < x0 + L - b; xx++) {
+      const upper = r < Math.floor(H * 0.48);
+      const base = upper ? top2 : body;
+      let c = base;
+      if (r === 0 || xx === x0 + a) c = lv(base, 4); // teto e traseira na luz
+      else if (r >= H - 3) c = lv(base, 1.7); // saia na sombra
+      else if (!upper && r >= H - 6) c = lv(base, 2.4);
+      if (xx >= x0 + L - b - 1 && r > 0) c = lv(c, 2); // borda da frente em meia-sombra
+      if (r === Math.floor(H * 0.48)) c = lv(body, 4.4); // vinco/friso
+      p.put(xx, yy, c);
+    }
+  }
+  if (era === 1) for (let i = 0; i < 3; i++) p.put(x0 + L - 6 - i, y0 + Math.floor(H * 0.48) + 2 + i, lv(top2, 3)); // o "V" da kombi
+  // janelas
+  const wy = y0 + 3, wh = era === 0 ? 5 : 6;
+  const wins = era === 2 ? [[x0 + 6, 12], [x0 + 21, 12], [x0 + 36, 10]] : [[x0 + 7, 10], [x0 + 20, 10], [x0 + 33, 10]];
+  for (const [wx, ww] of wins) {
+    p.rect(wx - 1, wy - 1, ww + 2, wh + 2, lv(body, 1.4));
+    for (let yy = 0; yy < wh; yy++) p.hline(wx, wx + ww - 1, wy + yy, yy < 2 ? C('#4a5a7a') : C('#2a3048'));
+    p.line(wx + 2, wy + wh - 1, wx + 2 + wh - 1, wy, C('#8ab0d0')); p.line(wx + 4, wy + wh - 1, wx + 4 + wh - 2, wy + 1, C('#5a7aa0')); // reflexo
+  }
+  // para-brisa (frente à direita, inclinado)
+  const fx = x0 + L - (era === 2 ? 14 : 11);
+  for (let yy = 0; yy < wh; yy++) p.hline(fx + (era === 2 ? yy : 0), fx + 7 + (era === 2 ? yy : 0), wy + yy, yy < 2 ? C('#5a6a8a') : C('#2a3048'));
+  p.put(fx + 2, wy + 1, C('#c8e0f0'));
+  // porta: vinco e maçaneta
+  const dx = x0 + 31;
+  p.vline(dx, wy + wh + 2, fy - 7, lv(body, 1.6)); p.vline(dx + 1, wy + wh + 2, fy - 7, lv(body, 3.8));
+  p.hline(dx + 3, dx + 5, wy + wh + 4, lv(C('#c8ccd4'), 4));
+  // para-choques cromados, farol e lanterna
+  for (const bx of [x0 - 1, x0 + L - 3]) { p.rect(bx, fy - 8, 4, 3, C('#a8acb8')); p.hline(bx, bx + 3, fy - 8, lv(C('#a8acb8'), 5)); p.hline(bx, bx + 3, fy - 6, lv(C('#a8acb8'), 1.6)); }
+  p.rect(x0 + L - 2, y0 + H - 11, 2, 3, C('#fff2c0')); p.put(x0 + L - 1, y0 + H - 11, C('#ffffff'));
+  p.rect(x0, y0 + H - 11, 1, 3, C('#d03030'));
+  // rodas: caixa escura, pneu em 2 tons, calota com brilho em cima à esquerda
+  for (const wx of [x0 + 12, x0 + 46]) {
+    p.disc(wx, fy - 3, 6, lv(body, 0.6));
+    p.disc(wx, fy - 2, 4.6, C('#26242c')); p.ring(wx, fy - 2, 4.2, C('#3a3842'));
+    p.disc(wx, fy - 2, 2.2, C('#a8acb8')); p.put(Math.floor(wx) - 1, fy - 4, C('#f4f4f8')); p.put(Math.floor(wx), fy - 2, C('#5a5e68'));
+  }
+  if (era === 0) for (let i = 0; i < 3; i++) p.put(x0 + 4 + i * 2, y0 + H - 6, lv(body, 4.4)); // frisos cromados
 }
 
 // ---------------------------------------------------------------- casca
@@ -932,7 +1007,7 @@ function shell(g: Ctx): void {
     : fc === 'glass' ? C('#3a4a6a') : fc === 'contemporary' ? C('#4a6278') : fc === 'future' ? C('#d8dee6')
     : fc === 'deco' ? C('#b09a78') : fc === 'stone' ? C('#a89a84') : pl.year < 1960 ? C('#a88a6a') : C('#8a7a6e');
   // torre e campus: a fachada continua acima do corte (cortada pelo topo da imagem), estreita para deixar o céu e os marcos à vista
-  if (pl.crown) crown27(g, topY - SLAB - 6);
+  if (pl.crown) inkLayer(g, () => crown27(g, topY - SLAB - 6)); // R29: coroa com contorno INK
   const slab = glass ? (fc === 'future' ? C('#b8c2cc') : C('#4a5068')) : masonry ? tint(outer, -0.3) : C('#5a5458');
   p.rect(pl.bx, pl.gy - FOUND, pl.bw, FOUND, tint(outer, -0.35));
   for (let f = 0; f < pl.floors; f++) {
@@ -952,26 +1027,54 @@ function shell(g: Ctx): void {
         else { const row = Math.floor(yy / 3), off = row % 2 ? 3 : 0; if (yy % 3 === 2 || (xx + off) % 6 === 0) c = tint(outer, -0.25); }
       }
       if (glass && (xx - wx) === OW - 2) c = fc === 'future' ? C('#2ee8d8') : C('#8aa0c8');
+      if (xx === wx && wx === pl.bx) c = lv(c, 4); // R29: aresta da esquerda na luz, da direita em meia-sombra
+      if (xx === wx + OW - 1 && wx !== pl.bx) c = lv(c, 2);
       p.put(xx, yy, c);
     }
   }
+  // R29: contorno INK da silhueta do prédio (as paredes são opacas sobre a rua: o contorno vai à mão)
+  p.vline(pl.bx - 1, topY - SLAB, pl.gy - 1, INK); p.vline(pl.bx + pl.bw, topY - SLAB, pl.gy - 1, INK);
   // paredes internas (andar fechado ou em obra: vão livre, sem divisórias)
   if (pl.shell !== 'garage') for (const c of pl.cells) if (c.x + c.w < pl.bx + pl.bw - OW - 1 && !pl.flock[c.floor]) p.rect(c.x + c.w, c.y, IWALL, c.h, tint(outer, -0.15)), p.rect(c.x + c.w + 1, c.y, 1, c.h, tint(outer, 0.08));
   // telhado
   if (pl.shell === 'garage') {
     const ry = topY - SLAB;
-    p.poly([[pl.bx - 6, ry + 1], [pl.bx + pl.bw + 6, ry + 1], [pl.bx + pl.bw - 30, ry - 16], [pl.bx + 30, ry - 16]], C('#5a4a48'));
-    for (let yy = ry - 14; yy < ry; yy += 3) p.hline(pl.bx + 30 - (yy - ry + 16) * 1.5, pl.bx + pl.bw - 30 + (yy - ry + 16) * 1.5, yy, C('#4a3c3a'));
+    // R29: telhado de telhas onduladas/fibrocimento em fiadas (fio de luz em cima de cada uma), cumeeira clara,
+    // beiral em sombra, contorno INK
+    const roofC = C('#5a4a48');
+    inkLayer(g, () => {
+      const q = g.p;
+      for (let yy = ry - 16; yy <= ry + 1; yy++) {
+        const t = (yy - (ry - 16)) / 17;
+        const xa = Math.round(pl.bx + 30 - t * 36), xb = Math.round(pl.bx + pl.bw - 30 + t * 36);
+        const r = (yy - (ry - 16)) % 3;
+        for (let xx = xa; xx <= xb; xx++) {
+          let c = r === 0 ? lv(roofC, 3.8) : r === 2 ? lv(roofC, 1.8) : roofC;
+          if (r === 1 && (xx + Math.floor((yy - ry) / 3) * 3) % 6 === 0) c = lv(roofC, 2.3); // ondas
+          if (xx <= xa + 1) c = lv(roofC, 4.2); else if (xx >= xb - 1) c = lv(roofC, 1.6);
+          q.put(xx, yy, c);
+        }
+      }
+      q.hline(pl.bx + 30, pl.bx + pl.bw - 30, ry - 16, lv(roofC, 4.6)); // cumeeira
+      q.hline(pl.bx - 6, pl.bx + pl.bw + 6, ry + 1, lv(roofC, 1.2)); // beiral
+    });
     sign(g, pl.bx + (pl.bw >> 1), ry - 12, pl.brand, 120, false);
     house(g);
   } else {
     const ry = topY - SLAB;
-    p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 6, tint(outer, -0.1)); p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 1, tint(outer, 0.2));
+    // R29: platibanda com rufo claro em cima, sombra embaixo e contorno INK
+    p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 6, tint(outer, -0.1)); p.rect(pl.bx - 2, ry - 6, pl.bw + 4, 1, tint(outer, 0.2)); p.hline(pl.bx - 2, pl.bx + pl.bw + 1, ry - 1, lv(tint(outer, -0.1), 1.4));
+    p.hline(pl.bx - 3, pl.bx + pl.bw + 2, ry - 7, INK); p.vline(pl.bx - 3, ry - 6, ry - 1, INK); p.vline(pl.bx + pl.bw + 2, ry - 6, ry - 1, INK);
     if (pl.shell === 'loft' || (pl.shell === 'building' && pl.year < 1990)) { // caixa-d'água
       const wx = pl.bx + pl.bw - 46;
-      p.rect(wx, ry - 30, 16, 16, C('#6a4a32')); for (let yy = ry - 28; yy < ry - 14; yy += 4) p.hline(wx, wx + 15, yy, C('#4a3222'));
-      p.poly([[wx - 1, ry - 30], [wx + 17, ry - 30], [wx + 8, ry - 38]], C('#4a3222'));
-      p.vline(wx + 2, ry - 14, ry - 6, INK); p.vline(wx + 13, ry - 14, ry - 6, INK);
+      const wood = C('#6a4a32');
+      inkLayer(g, () => { // R29: aduelas com luz à esquerda, aros de ferro, tampa cônica em 2 águas, pés
+        const q = g.p;
+        for (let yy = ry - 30; yy < ry - 14; yy++) for (let xx = wx; xx < wx + 16; xx++) q.put(xx, yy, (xx - wx) % 3 === 0 ? lv(wood, 1.8) : xx - wx < 5 ? lv(wood, 3.6) : xx - wx > 12 ? lv(wood, 2.2) : wood);
+        for (const yy of [ry - 27, ry - 21, ry - 16]) q.hline(wx, wx + 15, yy, lv(C('#5a5a62'), 3));
+        q.poly([[wx - 1, ry - 30], [wx + 8, ry - 30], [wx + 8, ry - 38]], lv(C('#4a3222'), 3.4)); q.poly([[wx + 8, ry - 30], [wx + 17, ry - 30], [wx + 8, ry - 38]], lv(C('#4a3222'), 2));
+        q.vline(wx + 2, ry - 14, ry - 7, lv(C('#3a3a42'), 3)); q.vline(wx + 13, ry - 14, ry - 7, lv(C('#3a3a42'), 2)); q.line(wx + 2, ry - 8, wx + 13, ry - 13, C('#3a3a42'));
+      });
     }
     if (!pl.crown) {
       // letreiro no telhado
@@ -986,10 +1089,12 @@ function shell(g: Ctx): void {
       const fx = pl.bx - 16;
       for (let f = 0; f < pl.floors; f++) {
         const y0 = pl.gy - FOUND - (f + 1) * FH27 - f * SLAB;
-        p.rect(fx, y0 + FH27 - 1, 16, 2, C('#2a2a32'));
-        for (let i = 0; i < 6; i++) p.hline(fx + 1, fx + 15, y0 + FH27 - 8 - i * 0, C('#2a2a32'));
-        p.line(fx + 2, y0 + FH27 + SLAB + FH27 - 2, fx + 14, y0 + FH27, C('#3a3a44'));
-        p.vline(fx, y0 + FH27 - 10, y0 + FH27, C('#2a2a32'));
+        inkLayer(g, () => { // R29: ferro em 2 tons (fio de luz em cima), grade com balaústres, escada com degraus
+          const q = g.p, iron = C('#4a4a56');
+          q.rect(fx, y0 + FH27 - 1, 16, 2, lv(iron, 2)); q.hline(fx, fx + 15, y0 + FH27 - 1, lv(iron, 3.8));
+          q.hline(fx, fx + 15, y0 + FH27 - 8, lv(iron, 3.4)); for (let xx = fx; xx < fx + 16; xx += 3) q.vline(xx, y0 + FH27 - 8, y0 + FH27 - 2, lv(iron, 2.4));
+          if (f > 0) { q.line(fx + 2, y0 + FH27 + SLAB + FH27 - 2, fx + 14, y0 + FH27, lv(iron, 3)); for (let i = 2; i < 13; i += 3) q.hline(fx + i, fx + i + 1, y0 + FH27 + SLAB + FH27 - 2 - Math.round(((i - 2) * (SLAB + FH27 - 2)) / 12), lv(iron, 4)); }
+        });
       }
     }
   }
@@ -1046,24 +1151,118 @@ function crown27(g: Ctx, base: number): void {
     p.put(xx, yy, c);
   }
   if (fc === 'contemporary' || fc === 'future') { // topo chanfrado (um canto cortado)
-    for (let i = 0; i < 18; i++) p.hline(cx1 - 18 + i, cx1 - 1, i, C('#0f1430'));
+    for (let i = 0; i < 18; i++) for (let xx = cx1 - 18 + i; xx < cx1; xx++) p.put(xx, i, 0); // R29: recorta (transparente) — o céu aparece e o contorno segue o chanfro
     p.line(cx1 - 18, 0, cx1 - 1, 17, C('#8ab0d0'));
   }
   if (fc === 'future') for (let i = 0; i < 3; i++) p.rect(cx0 - 4, 14 + i * 16, cw + 8, 2, withAlpha(C('#2ee8d8'), 170));
   if (fc === 'glass') { p.rect(cx0 + 4, 0, cw - 8, 2, C('#1a2034')); }
 }
 
-/** Casa da família ao lado da garagem. */
+/** R29 (arte consistente): desenha numa camada própria e contorna a silhueta com INK (como a mobília). */
+function inkLayer(g: Ctx, draw: () => void): void {
+  const p0 = g.p;
+  inked(p0, (q) => { g.p = q; try { draw(); } finally { g.p = p0; } });
+}
+
+/** Casa da família ao lado da garagem — R29: contorno INK, telhado de telhas com água clara à esquerda e escura à
+ *  direita, revestimento da época (tábuas até 1959, tijolo à vista 1960–89, siding de vinil depois), janelas com
+ *  moldura, peitoril, cortinas e luz acesa (vazando na parede), porta almofadada com luz de varanda, chaminé/antena. */
 function house(g: Ctx): void {
-  const { p, pl, pal } = g;
-  const x = pl.bx - 80, w = 74, top = pl.gy - 58;
-  const wall = pl.year < 1960 ? C('#d8c8a8') : pl.year < 1990 ? C('#c89a6a') : C('#b8c0c8');
-  p.rect(x, top, w, pl.gy - top, wall);
-  for (let yy = top; yy < pl.gy; yy += 3) p.hline(x, x + w - 1, yy, tint(wall, -0.08));
-  p.poly([[x - 5, top + 1], [x + w + 5, top + 1], [x + w / 2, top - 22]], C('#6a3a32'));
-  for (const wx of [x + 10, x + 46]) { p.rect(wx, top + 12, 16, 14, C('#2a2a34')); p.rect(wx + 1, top + 13, 14, 12, C('#ffd889')); p.vline(wx + 8, top + 13, top + 24, C('#2a2a34')); p.hline(wx + 1, wx + 14, top + 19, C('#2a2a34')); }
-  p.rect(x + 30, pl.gy - 20, 12, 20, pal.woodDark); p.put(x + 39, pl.gy - 10, pal.gold);
-  plant(g, x + 4, pl.gy, true);
+  const { pl, pal } = g;
+  const x = pl.bx - 80, w = 74, top = pl.gy - 58, gy = pl.gy;
+  const era = pl.year < 1960 ? 0 : pl.year < 1990 ? 1 : 2;
+  const wall = era === 0 ? C('#d8c8a8') : era === 1 ? C('#b8704a') : C('#b8c0c8');
+  const trim = era === 0 ? C('#f2ecdc') : era === 1 ? C('#5a3a2a') : C('#f4f4f0');
+  const roofC = era === 2 ? C('#4a4a58') : C('#7a3a30');
+  const glow = C('#ffd27a');
+  const midX = x + (w >> 1);
+  inkLayer(g, () => {
+    const p = g.p;
+    // fachada: revestimento com fio de luz em cima de cada fiada; lado direito e base em meia-sombra
+    for (let yy = top; yy < gy; yy++) for (let xx = x; xx < x + w; xx++) {
+      const ry = yy - top, rx = xx - x;
+      let c = wall;
+      if (era === 1) { // tijolo
+        const row = Math.floor(ry / 3), off = row % 2 ? 3 : 0;
+        if (ry % 3 === 2 || (rx + off) % 6 === 0) c = lv(wall, 1.5);
+        else if (ry % 3 === 0) c = lv(wall, 3.6);
+        else if (noise(Math.floor((rx + off) / 6), row, 31) < 0.2) c = lv(wall, 2.5);
+      } else { // tábuas / siding
+        const k = ry % (era === 0 ? 4 : 3);
+        c = k === 0 ? lv(wall, 3.7) : k === (era === 0 ? 3 : 2) ? lv(wall, 1.8) : wall;
+      }
+      if (rx >= w - 3) c = lv(c, 2.3);
+      p.put(xx, yy, c);
+    }
+    for (let yy = 0; yy < 3; yy++) p.rect(x, top + yy, w, 1, withAlpha(OCC, 130 - yy * 40)); // sombra do beiral
+    p.rect(x, gy - 4, w, 4, lv(C('#8a8478'), 2)); p.hline(x, x + w - 1, gy - 4, lv(C('#8a8478'), 3.6)); // soco de pedra
+    for (let xx = x + 5; xx < x + w; xx += 9) p.put(xx, gy - 2, lv(C('#8a8478'), 1));
+    // chaminé (antes de 1990) atrás do telhado, na água direita
+    if (era < 2) {
+      const cx = x + w - 20;
+      p.rect(cx, top - 24, 7, 18, C('#8a4a36'));
+      for (let yy = top - 24; yy < top - 6; yy++) if ((yy - top) % 3 === 0) p.hline(cx, cx + 6, yy, lv(C('#8a4a36'), 1.5));
+      p.vline(cx, top - 24, top - 7, lv(C('#8a4a36'), 3.8));
+      p.rect(cx - 1, top - 26, 9, 2, lv(C('#6a6a72'), 3));
+    }
+    // telhado: telhas em fiadas; água esquerda na luz, direita na sombra; testeira clara
+    const peak = top - 22;
+    for (let yy = peak; yy <= top; yy++) {
+      const t = (yy - peak) / 22;
+      const xa = Math.round(midX - t * (w / 2 + 6)), xb = Math.round(midX + t * (w / 2 + 6));
+      for (let xx = xa; xx <= xb; xx++) {
+        const left = xx < midX;
+        const row = Math.floor((yy - peak) / 3);
+        let c = left ? lv(roofC, 3.4) : lv(roofC, 2.2);
+        if ((yy - peak) % 3 === 2) c = lv(roofC, left ? 2 : 1.2); // sombra da fiada
+        else if (era < 2 && (xx + (row % 2) * 2) % 4 === 0) c = lv(roofC, left ? 2.6 : 1.6); // junta da telha
+        if (xx === xa || xx === xa + 1) c = lv(trim, 4); // testeira
+        if (xx === xb || xx === xb - 1) c = lv(trim, 2);
+        p.put(xx, yy, c);
+      }
+    }
+    p.hline(x - 6, x + w + 5, top + 1, lv(trim, 2)); // beiral
+    p.vline(midX, peak, peak + 1, lv(roofC, 4));
+    if (era === 2) { p.hline(x - 5, x + w + 4, top + 2, C('#d8dce0')); p.vline(x + w + 4, top + 2, gy - 5, C('#c8ccd2')); } // calha e condutor
+    if (era === 1) { p.vline(x + 16, peak - 4, top - 10, C('#3a3a42')); p.hline(x + 11, x + 21, peak - 4, C('#3a3a42')); p.hline(x + 13, x + 19, peak - 1, C('#3a3a42')); } // antena de TV
+    if (era === 2) { // antena parabólica na parede, perto do beiral
+      const sx = x + w - 11, sy = top + 4;
+      p.ellipse(sx + 3, sy + 3, 3, 3, lv(C('#d8dce0'), 3)); p.vline(sx + 1, sy + 1, sy + 5, lv(C('#d8dce0'), 4.4)); p.put(sx + 5, sy + 3, lv(C('#d8dce0'), 1.8));
+      p.line(sx + 3, sy + 3, sx + 7, sy + 1, C('#5a5a62')); p.hline(sx + 4, sx + 7, sy + 6, C('#5a5a62'));
+    }
+    // janelas: moldura, vidro aceso em degradê, cortinas, cruz, peitoril
+    for (const wx of [x + 7, x + 52]) {
+      const wy = top + 12;
+      p.rect(wx - 1, wy - 1, 18, 16, lv(trim, 3)); p.hline(wx - 1, wx + 16, wy - 1, lv(trim, 4)); p.vline(wx + 16, wy, wy + 14, lv(trim, 2));
+      for (let yy = 0; yy < 14; yy++) p.hline(wx, wx + 15, wy + yy, yy < 5 ? C('#fff0c0') : yy < 10 ? C('#ffd889') : C('#f0b860'));
+      p.rect(wx, wy, 3, 14, lv(pal.fabric, 3)); p.vline(wx + 2, wy, wy + 13, lv(pal.fabric, 2)); // cortinas
+      p.rect(wx + 13, wy, 3, 14, lv(pal.fabric, 2.4));
+      p.vline(wx + 8, wy, wy + 13, lv(trim, 2.5)); p.hline(wx, wx + 15, wy + 6, lv(trim, 2.5));
+      p.put(wx + 5, wy + 1, C('#ffffff')); p.put(wx + 6, wy + 2, C('#ffffff')); // reflexo
+      p.rect(wx - 2, wy + 15, 20, 2, lv(trim, 3.6)); p.hline(wx - 2, wx + 17, wy + 16, lv(trim, 1.6)); // peitoril
+      if (era < 2) { p.rect(wx - 5, wy - 1, 3, 16, lv(roofC, 2.8)); p.rect(wx + 17, wy - 1, 3, 16, lv(roofC, 2.2)); for (let yy = wy + 1; yy < wy + 15; yy += 2) { p.put(wx - 4, yy, lv(roofC, 1.6)); p.put(wx + 18, yy, lv(roofC, 1.4)); } } // venezianas
+    }
+    // porta almofadada com bandeira, maçaneta de latão, degrau
+    const dx = x + 31, dh = 21;
+    p.rect(dx - 2, gy - dh - 2, 16, dh + 2, lv(trim, 3)); p.hline(dx - 2, dx + 13, gy - dh - 2, lv(trim, 4));
+    p.rect(dx, gy - dh, 12, dh, pal.woodDark);
+    p.vline(dx, gy - dh, gy - 1, lv(pal.woodDark, 3.8)); p.vline(dx + 11, gy - dh, gy - 1, lv(pal.woodDark, 1.6));
+    for (const [py, ph] of [[gy - dh + 3, 6], [gy - dh + 12, 6]] as const) { p.rect(dx + 2, py, 8, ph, lv(pal.woodDark, 2.4)); p.hline(dx + 2, dx + 9, py + ph - 1, lv(pal.woodDark, 3.8)); }
+    if (era === 2) p.rect(dx + 3, gy - dh + 3, 6, 5, C('#ffd889'));
+    p.put(dx + 9, gy - 10, pal.gold); p.put(dx + 9, gy - 11, lv(pal.gold, 5));
+    p.rect(dx - 3, gy - 2, 18, 2, lv(C('#8a8478'), 3.4)); p.hline(dx - 3, dx + 14, gy - 1, lv(C('#8a8478'), 2));
+    p.rect(dx + 4, gy - dh - 6, 4, 3, C('#2a2a32')); p.hline(dx + 5, dx + 6, gy - dh - 4, C('#fff2c0')); // luz da varanda
+    // caixa de correio
+    const mx = x - 7;
+    p.vline(mx + 2, gy - 9, gy - 1, lv(pal.woodDark, 2.6));
+    p.rect(mx, gy - 13, 6, 4, era === 0 ? C('#3a5a3a') : era === 1 ? C('#2a4a8a') : C('#5a5a62')); p.hline(mx, mx + 5, gy - 13, C('#c8ccd4'));
+    p.put(mx + 6, gy - 13, C('#d03030'));
+    plant(g, x + 4, gy, true);
+  });
+  // luz das janelas e da varanda na parede e na calçada (depois do contorno, em cima)
+  const { p } = g;
+  for (const wx of [x + 7, x + 52]) { p.ellipse(wx + 8, top + 19, 13, 11, withAlpha(glow, 22)); for (let xx = wx - 2; xx < wx + 18; xx++) if ((xx & 1) === 0) p.set(xx, top + 31, withAlpha(glow, 60)); }
+  p.ellipse(x + 37, gy - 24, 6, 4, withAlpha(C('#fff2c0'), 40));
 }
 
 // ---------------------------------------------------------------- API
@@ -1185,6 +1384,7 @@ export interface DrawOpts27 { /** objetos extras (ovos) */ props?: PropIn27[]; /
 export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25, 'hq' | 'year' | 'rooms'> & { city?: string; brand?: string; seedKey?: string; facadeYear?: number; units?: { id: string; status: 'open' | Lock27 }[] }, o: DrawOpts27 = {}): Drawn27 {
   const units = model.units ? Object.fromEntries(model.units.map((u) => [u.id, u.status])) : undefined;
   const plan = plan27({ hq: model.hq, year: model.year, facadeYear: model.facadeYear, city: model.city, brand: model.brand, seedKey: model.seedKey, minW: o.minW, units });
+  if (plan.shell === 'garage' && (o.props ?? []).some((pr) => pr.slot === 'garage')) plan.garageTaken = true;
   const px = paint27(plan);
   canvas.width = plan.W; canvas.height = plan.H;
   const ctx = canvas.getContext('2d');

@@ -15,12 +15,13 @@ import { histMode } from '../history15';
 import { l, type L } from '../../data/world';
 import { realSafe } from '../dynasty';
 import { registerExt4, registerSimHook } from '../ext4';
-import { langForCity, personName } from '../people';
+import { langForCity, makePerson, personName } from '../people';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, notify, remember } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { canonKey } from './realworld';
 import { actsNow27 } from '../tickcache27';
+import { actsTouched17 } from '../actidx17';
 
 export type Rel15 = 'parent' | 'child' | 'sibling' | 'spouse' | 'ex' | 'cousin' | 'uncle' | 'nephew' | 'grandparent' | 'grandchild';
 export const REL15: Record<Rel15, L> = {
@@ -137,6 +138,9 @@ function graph(s: GameState): Edges {
     if (r) add(e, ib, ia, r, meta ? { ...meta } : undefined);
   }
   for (const [a, b, r] of st.g) if (s.persons[a] && s.persons[b]) add(e, a, b, r);
+  // R29 (família): filho(a) que virou pessoa pela dinastia do jogador (dynasty.ts) aponta o pai/mãe em parentId — o mesmo
+  // laço do grafo, para a ficha, a árvore e o connect29 concordarem (antes só a aba Carreira lia o parentId)
+  for (const p of Object.values(s.persons)) if (p.parentId && s.persons[p.parentId]) add(e, p.parentId, p.id, 'child');
   // filhos do mesmo pai/mãe (de sangue ou genérico) são irmãos — meio-irmãos se os outros pais declarados diferem
   for (const [pid, ks] of Object.entries(e)) {
     if (!s.persons[pid]) continue;
@@ -279,6 +283,8 @@ function generate(s: GameState, r: Rng): void {
     if (!p) continue;
     const age = s.year - p.born;
     if (age < 28 || age > 55 || st.kids.some((k) => k.parent === p.id) || roll > 0.012 + a.fame / 8000) continue;
+    // R29 (família): com o sys/family29 na partida, é ele quem faz nascer (sem filho em dobro) — pelo estado, não pela ordem dos imports
+    if (KIN15X.births === false || (s.x4 as unknown as { family29?: unknown }).family29) continue;
     const sur = p.name.split(' ').slice(1).join(' ') || p.name;
     const first = personName(r, langForCity(a.city, r)).split(' ')[0];
     st.kids.push({ parent: p.id, name: `${first} ${sur}`, born: s.year, debut: s.year + r.int(17, 24) });
@@ -288,22 +294,63 @@ function generate(s: GameState, r: Rng): void {
     const par = s.persons[k.parent], pa = par && actOf15(s, par.id);
     k.done = true;
     if (!par || !pa) continue;
-    const pick = r.chance(0.7);
-    const act = spawnProceduralAct(s, r, { city: pa.city, genre: pick ? pa.genre : undefined, formedYear: s.year });
-    const kid = s.persons[act.members[0]];
-    if (!kid) continue;
-    kid.name = k.name; kid.born = k.born; kid.origin = 'family';
-    st.g.push([par.id, kid.id, 'child']);
-    act.fame = clamp(act.fame + Math.min(14, 3 + pa.fame * 0.12), 0, 100);
-    const tot = pa.fans.casual + pa.fans.active + pa.fans.core;
-    act.fans.casual += Math.round(tot * 0.02); act.fans.active += Math.round(tot * 0.004);
-    st.inh.push(kid.id);
-    kid.rel[par.id] = BASE.parent; par.rel[kid.id] = BASE.child;
-    const t = fmtL(l('{k}, filho(a) de {p} ({a}), estreia como {x}. O sobrenome abre portas, mas a comparação pesa.', '{k}, child of {p} ({a}), debuts as {x}. The surname opens doors, but the comparison weighs.'), { k: kid.name, p: par.name, a: pa.name, x: act.name });
-    say(s, t);
-    if (pa.fame >= 40 || pa.owner === 'player') { remember(s, 'dynasty', t, { actId: act.id, important: true }); notify(s, t, 'event'); }
+    debutKid15(s, r, { par, pa, name: k.name, born: k.born }); // R29 (família): o mesmo caminho do family29
   }
   st.kids = st.kids.filter((k) => !k.done || s.year - k.debut < 3);
+}
+
+/** R29 (família): ganchos que o sys/family29 preenche — `births: false` desliga os nascimentos daqui (a família de todo
+ *  artista NPC nasce lá, sem filho em dobro) e `debut` é avisado de cada estreia (liga o registro leve do filho à pessoa). */
+export const KIN15X: { births?: boolean; debut?: (s: GameState, kid: Person, act: Act, o: Debut15) => void } = {};
+export interface Debut15 {
+  /** pai/mãe artista (pessoa do mundo) e o ato dele(a): fama e fãs herdados; sem eles valem `city`/`genre`/`boost` */
+  par?: Person; pa?: Act; name: string; born: number; city?: string; genre?: string;
+  /** fama inicial extra (filho de gente da indústria: o sobrenome do empresário, do produtor, do CEO) */
+  boost?: number;
+  /** banda de família: o filho entra no ato do pai/mãe em vez de estrear sozinho */
+  band?: Act;
+  /** complemento do texto de estreia sem pai artista (ex.: ", filho(a) de X, produtor(a)") */
+  note?: L;
+  /** formato pedido (1 = solo); sem ele, o sorteio de sempre do spawnProceduralAct */
+  members?: number;
+}
+/** Estreia de filho(a) de músico ou de gente da indústria — um caminho só (kin15 e family29). Devolve a pessoa nova. */
+export function debutKid15(s: GameState, r: Rng, o: Debut15): Person | undefined {
+  const st = kin15(s), par = o.par, pa = o.pa;
+  if (o.band && par && o.band.members.includes(par.id)) {
+    const roles: Person['role'][] = ['vocal', 'guitar', 'keys', 'drums', 'bass'];
+    const kid = makePerson(s, r, { lang: langForCity(o.band.city, r), role: r.pick(roles), potential: clamp(o.band.potential + r.normal(4, 8), 25, 98), born: o.born, startFrac: 0.45, name: o.name });
+    kid.origin = 'family';
+    s.persons[kid.id] = kid;
+    o.band.members.push(kid.id); actsTouched17(s);
+    for (const id of o.band.members) { const q = s.persons[id]; if (q && q.id !== kid.id) { q.rel[kid.id] ??= 25; kid.rel[q.id] ??= 25; } }
+    st.g.push([par.id, kid.id, 'child']);
+    kid.rel[par.id] = BASE.parent; par.rel[kid.id] = BASE.child;
+    const t = fmtL(l('{k} entra em {x}, a banda de {p}: agora é banda de família.', '{k} joins {x}, {p}\'s band: it is a family band now.'), { k: kid.name, p: par.name, x: o.band.name });
+    say(s, t);
+    remember(s, 'dynasty', t, { actId: o.band.id, pid: kid.id, important: o.band.fame >= 40 || o.band.owner === 'player' });
+    KIN15X.debut?.(s, kid, o.band, o);
+    return kid;
+  }
+  const pick = r.chance(0.7);
+  const act = spawnProceduralAct(s, r, { city: pa?.city ?? o.city, genre: pick ? (pa?.genre ?? o.genre) : undefined, formedYear: s.year, ...(o.members ? { members: o.members } : {}) });
+  const kid = s.persons[act.members[0]];
+  if (!kid) return undefined;
+  const old = kid.name;
+  kid.name = o.name; kid.born = o.born; kid.origin = 'family';
+  if (act.members.length === 1 && act.name === old) act.name = o.name; // solo com o nome do filho (antes ficava o sorteado)
+  if (par) st.g.push([par.id, kid.id, 'child']);
+  act.fame = clamp(act.fame + (pa ? Math.min(14, 3 + pa.fame * 0.12) : 0) + (o.boost ?? 0), 0, 100);
+  if (pa) { const tot = pa.fans.casual + pa.fans.active + pa.fans.core; act.fans.casual += Math.round(tot * 0.02); act.fans.active += Math.round(tot * 0.004); }
+  st.inh.push(kid.id);
+  if (par) { kid.rel[par.id] = BASE.parent; par.rel[kid.id] = BASE.child; }
+  const t = par && pa
+    ? fmtL(l('{k}, filho(a) de {p} ({a}), estreia como {x}. O sobrenome abre portas, mas a comparação pesa.', '{k}, child of {p} ({a}), debuts as {x}. The surname opens doors, but the comparison weighs.'), { k: kid.name, p: par.name, a: pa.name, x: act.name })
+    : fmtL(l('{k} estreia como {x}{n}.', '{k} debuts as {x}{n}.'), { k: kid.name, x: act.name, n: o.note ?? '' });
+  say(s, t);
+  if ((pa && (pa.fame >= 40 || pa.owner === 'player')) || (o.boost ?? 0) >= 6) { remember(s, 'dynasty', t, { actId: act.id, important: true }); notify(s, t, 'event'); }
+  KIN15X.debut?.(s, kid, act, o);
+  return kid;
 }
 
 /** Herança de fama para filhos reais (uma vez, quando o ato do filho existe). */

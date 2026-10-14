@@ -77,10 +77,19 @@ beforeAll(() => {
   // R29 relíquias, "bem mais relíquias por save" (densidade padrão "muitas" — docs/reliquias29.md): ~7× mais peças
   // procedurais (22 em 8 meses de 1975 nesta semente, contra 3), mais lotes em leilão e ofertas no mercado negro; caixa, acts e rng mudam
   // (tours igual). Antes: 450735 / 1382068899 / 2386675548 / 2839816166. Com relicDensity 'few' o mundo é o de antes.
+  // R29 conectar tudo + relíquias juntos: re-medido.
+  // R29 família (sys/family29, de propósito — docs/familia29.md): artistas NPC namoram, casam, se separam e têm filhos
+  // (Rng próprio; famílias semeadas no 1º mês; nesta semente em 8 meses: 1 casamento de casal célebre, 1 filho, 1 divórcio):
+  // só acts muda (caixa e rng iguais). Antes: acts 827562554.
   // R29 conectar tudo + público + relíquias "muitas" juntos (merge friendly-brown): re-medido. Antes: 332627 / 1382068899 / 1849171597 / 4090265307.
-  expect(s.player.cash).toBe(332641);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2093687834);
-  expect(hashString(JSON.stringify(s.rng))).toBe(4090265307);
+  // R29: conectar tudo (13 sistemas, com público por idade/região) + família juntos: re-medido.
+  // R29 (contratos+, de propósito — docs/contratos29.md): empresários NPC com contrato e comissão, produtoras NPC
+  // assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng. Antes: 450735 /
+  // 2386675548 / 2839816166.
+  // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
+  expect(s.player.cash).toBe(215781);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1494032110);
+  expect(hashString(JSON.stringify(s.rng))).toBe(3946783658);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

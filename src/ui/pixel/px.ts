@@ -210,12 +210,57 @@ export function rectV(p: Px, x: number, y: number, w: number, h: number, base: C
  * Desenha numa camada própria, contorna a silhueta com 1 px (INK) e cola no destino.
  * Use para objetos desenhados por cima de um fundo já preenchido (o contorno do Px só enxerga o vazio).
  */
-export function inked(dst: Px, draw: (q: Px) => void, ink: Col = INK): void {
-  const q = new Px(dst.w, dst.h);
-  draw(q);
-  q.outline(ink);
-  dst.blit(q, 0, 0);
+export function inked(dst: Px, draw: (q: Px) => void, ink: Col = INK, o: { relief?: boolean } = {}): void {
+  // R29 (arte consistente): camada reaproveitada e contorno só na caixa usada — o resultado é o mesmo de
+  // `outline` no buffer inteiro, mas barato o bastante para contornar cada objeto de uma cena animada.
+  const pool = INK_POOL.get(`${dst.w}x${dst.h}`) ?? [];
+  INK_POOL.set(`${dst.w}x${dst.h}`, pool);
+  const q = pool.pop() ?? new Px(dst.w, dst.h);
+  try {
+    draw(q);
+    const { w, h, d } = q;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) {
+      const row = y * w;
+      for (let x = 0; x < w; x++) if (d[row + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; y1 = y; }
+    }
+    if (x1 < 0) return;
+    x0 = Math.max(0, x0 - 1); y0 = Math.max(0, y0 - 1); x1 = Math.min(w - 1, x1 + 1); y1 = Math.min(h - 1, y1 + 1);
+    // só o que é (quase) opaco forma a silhueta: luzes e véus translúcidos (cones, halos, vidro) não ganham contorno
+    const op = (i: number) => (d[i] >>> 24) > 150;
+    if (o.relief) { // volume pela silhueta: borda de cima/esquerda sobe um tom, de baixo/direita desce um (luz de cima à esquerda)
+      const src = d.slice();
+      const sol = (i: number) => (src[i] >>> 24) > 40;
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) {
+          const i = y * w + x;
+          if ((src[i] >>> 24) < 255) continue;
+          const up = y === 0 || !sol(i - w), lf = x === 0 || !sol(i - 1), dn = y === h - 1 || !sol(i + w), rt = x === w - 1 || !sol(i + 1);
+          if (up || lf) d[i] = lv(src[i], 4);
+          else if (dn || rt) d[i] = lv(src[i], 2);
+        }
+    }
+    const add: number[] = [];
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++) {
+        const i = y * w + x;
+        if ((d[i] >>> 24) > 40) continue; // o contorno só ocupa pixels vazios
+        if ((x > 0 && op(i - 1)) || (x < w - 1 && op(i + 1)) || (y > 0 && op(i - w)) || (y < h - 1 && op(i + w))) add.push(i);
+      }
+    for (const i of add) d[i] = ink;
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++) {
+        const i = y * w + x;
+        if (d[i]) { dst.set(x, y, d[i]); d[i] = 0; }
+      }
+  } catch (e) {
+    q.d.fill(0);
+    throw e;
+  } finally {
+    pool.push(q);
+  }
 }
+const INK_POOL = new Map<string, Px[]>();
 
 /** Brilho especular (tom 5) em material brilhante: latão, cromado, verniz, vidro. */
 export function glint(p: Px, x: number, y: number, base: Col, len = 1, vertical = false): void {
@@ -515,6 +560,61 @@ export function upscale(src: HTMLCanvasElement, w: number, h = w): HTMLCanvasEle
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(src, 0, 0, w, h);
   return c;
+}
+
+/**
+ * R29 (arte consistente): mostra o canvas em escala INTEIRA (1×, 2×, 3×…) da largura disponível no `host`
+ * (padrão: o avô do canvas), em vez de `width: 100%` — escala fracionária deixa pixels de tamanhos diferentes.
+ * Abaixo de 1× (tela estreita) cai para 100% (reduzir é inevitável). `pad` desconta bordas/preenchimento do host.
+ */
+export function fitIntPx(cv: HTMLCanvasElement, w: number, o: { max?: number; pad?: number; host?: () => HTMLElement | null | undefined; on?: (n: number) => void } = {}): void {
+  if (typeof ResizeObserver === 'undefined') return;
+  const host = () => o.host?.() ?? cv.parentElement?.parentElement ?? cv.parentElement;
+  let last = -1;
+  const apply = (hw: number) => {
+    const avail = Math.min(o.max ?? Infinity, hw - (o.pad ?? 0));
+    const n = Math.floor(avail / w);
+    if (n === last) return;
+    last = n;
+    if (n >= 1) { cv.style.width = `${n * w}px`; cv.style.maxWidth = '100%'; }
+    else { cv.style.width = '100%'; }
+    o.on?.(n);
+  };
+  let seen = false;
+  const ro = new ResizeObserver((es) => {
+    if (!cv.isConnected) { if (seen) ro.disconnect(); return; }
+    seen = true;
+    const cw = es[0]?.contentRect.width;
+    if (cw) apply(cw);
+  });
+  queueMicrotask(() => { const el = host(); if (el) ro.observe(el); });
+}
+
+/**
+ * R29 (arte consistente): polígono e elipse no <canvas> SEM antialiasing — varredura por linha com fillRect em
+ * coordenadas inteiras (o `fill()` de um caminho suaviza as bordas diagonais e foge do pixel art). Usa o fillStyle atual.
+ */
+export function ctxPoly(ctx: CanvasRenderingContext2D, pts: [number, number][]): void {
+  let y0 = Infinity, y1 = -Infinity;
+  for (const [, y] of pts) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  for (let y = Math.floor(y0); y <= Math.ceil(y1); y++) {
+    const yc = y + 0.5, xs: number[] = [];
+    for (let i = 0; i < pts.length; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length];
+      if ((ay <= yc && by > yc) || (by <= yc && ay > yc)) xs.push(ax + ((yc - ay) / (by - ay)) * (bx - ax));
+    }
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) { const a = Math.ceil(xs[k] - 0.5), b = Math.ceil(xs[k + 1] - 0.5); if (b > a) ctx.fillRect(a, y, b - a, 1); }
+  }
+}
+export function ctxEllipse(ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number): void {
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+    const dy = (y + 0.5 - cy) / (ry + 0.3);
+    if (Math.abs(dy) > 1) continue;
+    const hw = (rx + 0.3) * Math.sqrt(1 - dy * dy);
+    const a = Math.ceil(cx - hw - 0.5), b = Math.ceil(cx + hw - 0.5);
+    if (b > a) ctx.fillRect(a, y, b - a, 1);
+  }
 }
 
 /** Sprite pronto para desenhar: canvas + âncora (pixel que toca o ponto do mundo). */

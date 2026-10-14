@@ -4,7 +4,7 @@
 
 import { h } from '../../dom';
 import { avatarSprite, crowdLook27, type Dir, type Pose, type Role } from '../avatar';
-import { C, css } from '../px';
+import { C, css, fitIntPx } from '../px';
 import type { Appearance } from '../../../sim/types';
 import { H, W } from './kit';
 import type { PlaceKind } from '../../../sim/sys/scenes/state';
@@ -43,6 +43,7 @@ export function placeView(kind: PlaceKind, o: PlaceViewOpts): HTMLElement {
   if (model.filter) cv.style.filter = model.filter;
   const ctx = cv.getContext('2d');
   const wrap = h('figure', { class: `place-view ${o.cls ?? ''}` }, cv, h('figcaption', { class: 'sr-only' }, o.alt));
+  fitIntPx(cv, W, { max: 768, host: () => wrap }); // R29 (arte consistente): escala inteira em vez de 100% da largura
   if (!ctx) return wrap;
   ctx.imageSmoothingEnabled = false;
   const energy = o.energy ?? 0.5;
