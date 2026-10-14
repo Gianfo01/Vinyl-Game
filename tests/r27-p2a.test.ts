@@ -90,6 +90,9 @@ beforeAll(() => {
   // R29c (facções × artistas do mundo, aff29npc — de propósito; mesmos do r27-p2b, que explica): as facções das cenas
   // abordam atos NPC (cachê, embalo, pedágio, ameaça, rixa) e caixa, acts e rng mudam. Antes: 450735 / 2386675548 / 2839816166.
   // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
+  // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
+  // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
+  // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
   expect(s.player.cash).toBe(1045968);
   expect(hashString(JSON.stringify(s.acts))).toBe(3352616534);
   expect(hashString(JSON.stringify(s.rng))).toBe(1362224447);

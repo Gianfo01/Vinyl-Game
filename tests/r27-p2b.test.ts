@@ -90,6 +90,9 @@ describe('r27 P2B — modo rápido intacto', () => {
     // mudam; tours igual. O caixa do playbot oscila centenas de milhares de mês a mês nesta semente (o 8º mês caiu num
     // vale). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
   // R29: facções × artistas do mundo (aff29npc) junto com o resto: re-medido.
+    // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
+    // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
+  // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
     expect(AFTER.player.cash).toBe(1045968);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1278216602);
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(3352616534);

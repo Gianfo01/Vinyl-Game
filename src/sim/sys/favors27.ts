@@ -24,10 +24,7 @@ import { cashWhy20, freeCash20 } from '../oblig20';
 import { addHype } from './hype12';
 import { lunch, lunchBlock, mgrKey, repOf } from './managers14';
 import { askFavor, favorBlock, giftBlock, opine, opinionOf, per13, sendGift } from './persona13';
-import { careerOf } from './people/staff';
-import { P as people16 } from './people/state';
-/** Lealdade só para LEITURA (o quadro é puro: careerOf cria o registro na primeira chamada). */
-const loy27 = (s: GameState, st: { id: string }): number => people16(s).career[st.id]?.loyalty ?? 60;
+import { careerLoyalty, careerOf } from './people/staff';
 import { dinner, dinnerBlock, p15, prodKey } from './producers15';
 import { know23, knownAbout23, raise23, secretsOf23 } from './secrets23';
 
@@ -86,7 +83,7 @@ export function contacts27(s: GameState, max = 12): Contact27[] {
   for (const [k, o] of Object.entries((s.x4 as unknown as { persona13?: { op: Record<string, { v: number }> } }).persona13?.op ?? {})) bump(k, 8 + Math.abs(o.v) / 3);
   const cr = (CRITICS as unknown as { name: string; start?: number; end?: number; from?: number; to?: number }[]).filter((c) => (c.start ?? c.from ?? 0) <= s.year && s.year <= (c.end ?? c.to ?? 9999)).slice(0, 2);
   for (const c of cr) bump(`c:${c.name}`, 6);
-  for (const st of s.player.staff) { const loy = loy27(s, st); bump(`s:${st.id}`, loy < 35 ? 25 : 3); }
+  for (const st of s.player.staff) { const loy = careerLoyalty(s, st); bump(`s:${st.id}`, loy < 35 ? 25 : 3); }
   const out: Contact27[] = [];
   for (const [key] of [...keys.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))) {
     if (out.length >= max) break;
@@ -119,7 +116,7 @@ export function contact27(s: GameState, key: string, all: Hold[] = allHolds(s)):
     grudges: all.filter((h) => theirs(h) && h.kind === 'grievance'), dirt: all.filter((h) => mine(h) && (h.kind === 'secret' || h.kind === 'blackmail')),
     dirtOnMe: all.filter((h) => theirs(h) && (h.kind === 'secret' || h.kind === 'blackmail')),
     know: subj ? knownAbout23(s, subj).filter((x) => x.k.p >= 2).length : 0,
-    ...(sm && loy27(s, sm) < 35 ? { leak: true } : {}),
+    ...(sm && careerLoyalty(s, sm) < 35 ? { leak: true } : {}),
     gestures,
   };
 }
