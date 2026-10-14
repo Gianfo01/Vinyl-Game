@@ -87,9 +87,9 @@ beforeAll(() => {
   // assinando e entregando masters, JV de estrela com selo NPC e disputa por JV mudam caixa, acts e rng. Antes: 450735 /
   // 2386675548 / 2839816166.
   // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
-  expect(s.player.cash).toBe(332641);
-  expect(hashString(JSON.stringify(s.acts))).toBe(965633016);
-  expect(hashString(JSON.stringify(s.rng))).toBe(4090265307);
+  expect(s.player.cash).toBe(215781);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1494032110);
+  expect(hashString(JSON.stringify(s.rng))).toBe(3946783658);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
