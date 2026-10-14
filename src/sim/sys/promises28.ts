@@ -64,7 +64,11 @@ const openP = (s: GameState, c: Contract, p: ContractPromise) => c.party === 'pl
 /** Caixa comprometido com promessas ainda abertas (sai do caixa livre). */
 export function committed28(s: GameState): number {
   let t = 0;
-  for (const c of Object.values(s.contracts)) {
+  // R29b (desempenho): for…in na mesma ordem do Object.values, sem copiar a lista — o caixa livre é lido a cada leitura
+  // de estresse dos seus artistas (conn29) e os contratos NPC do R29 (npc29) multiplicaram a lista
+  const cs = s.contracts;
+  for (const k in cs) {
+    const c = cs[k];
     if (c.party !== 'player' || c.endWeek < s.week || !c.promises.length) continue;
     for (const p of c.promises) if (openP(s, c, p)) t += Math.max(0, (p.budget ?? 0) - (p.spent ?? 0));
   }
@@ -150,7 +154,8 @@ export function payOwed28(s: GameState): void {
 /** Multas ainda devidas ao artista (todas as promessas do jogador). */
 export function owed28(s: GameState): number {
   let t = 0;
-  for (const c of Object.values(s.contracts)) if (c.party === 'player') for (const p of c.promises) t += p.owed28 ?? 0;
+  const cs = s.contracts; // R29b: for…in, mesma ordem, sem cópia (ver committed28)
+  for (const k in cs) { const c = cs[k]; if (c.party === 'player') for (const p of c.promises) t += p.owed28 ?? 0; }
   return t;
 }
 

@@ -169,12 +169,15 @@ const bin5 = (y: number) => Math.floor(y / 5) * 5;
 // cache das curvas (desempenho: taste29 roda milhares de vezes na semente dos atos); vale por partida/ano/mês
 // Chave = objeto do estado + ano + versão do demo29: os valores só dependem de dados estáticos e do que o próprio gancho
 // mensal grava (gh, gp, rp) — calcular antes ou depois de outro sistema no mesmo mês dá o mesmo (save/load idêntico).
-interface HC29 { k: string; h: Map<string, number>; avg: Map<number, number>; der: Map<string, number[]> }
+interface HC29 { k: string; h: Map<string, number>; avg: Map<number, number>; der: Map<string, number[]>; g: string; m: Map<string, MixMemo29> }
+/** última leitura derivada de cada ato no mês: os campos da assinatura sig29, soltos, e o valor */
+interface MixMemo29 { g: string; c: string; d: number; f: number; lr: number; lv: boolean; p: number; b: number[]; v: number[] }
 const HCS = new WeakMap<object, HC29>();
 function hc(s: GameState): HC29 {
   const k = `${s.year}|${demo29(s).v ?? 0}`;
   let c = HCS.get(s);
-  if (!c || c.k !== k) { c = { k, h: new Map(), avg: new Map(), der: new Map() }; HCS.set(s, c); }
+  // R29b: g = fotografia do registro gh (só muda no recordHistory, junto com a troca de versão) — chave da semente
+  if (!c || c.k !== k) { c = { k, h: new Map(), avg: new Map(), der: new Map(), g: JSON.stringify(demo29(s).gh), m: new Map() }; HCS.set(s, c); }
   return c;
 }
 /** Popularidade de uma família num ano: curva histórica, misturada ao que a partida registrou (genrePop). */
@@ -296,16 +299,31 @@ function revivalSkew(s: GameState, a: Act, y: number): { w: number[]; why: L } |
 }
 export interface Inflow29 { w: number[]; parts: { label: L; w: number[] }[] }
 /** Perfil de quem vira fã do ato no ano `y` (soma 1), com as partes (para o "por quê"). `extra` liga alvo/canais/revival. */
-export function inflow29(s: GameState, a: Act, y = s.year, extra = true): Inflow29 {
+/** R29b (desempenho): os cinco fatores-base do perfil de entrada — a mesma conta para inflow29 e para a semente. */
+function base29(s: GameState, a: Act, y: number): { dem: number[]; rch: number[]; tst: number[]; A: number; art: number[]; pos: number[] } {
   const mk = cityById[a.city]?.market ?? 'na';
-  const parts: Inflow29['parts'] = [];
-  const dem = demog29(mk, y); parts.push({ label: l('Demografia do mercado na época', 'Market demographics in the era'), w: dem });
-  const rch = reach29(s, y); parts.push({ label: l('Quem descobre música nova (mídia da época)', 'Who discovers new music (era media)'), w: rch });
-  const tst = AGE29.map((b) => taste29(s, b.mid, mk, a.genre, y)); parts.push({ label: l('Gosto de cada geração pelo gênero', 'Each generation\'s taste for the genre'), w: tst });
+  const dem = demog29(mk, y);
+  const rch = reach29(s, y);
+  const tst = AGE29.map((b) => taste29(s, b.mid, mk, a.genre, y));
   const A = artistAge29(s, a, y);
   const aim = A * 0.85;
-  const art = AGE29.map((b) => Math.pow(Math.exp(-Math.max(0, Math.abs(b.mid - aim) - 6) / 18), 0.7)); parts.push({ label: fmtL(l('Idade do artista ({n})', 'Artist age ({n})'), { n: Math.round(A) }), w: art });
-  const pos = YS.map((k) => 1 + ((a.positioning - 50) / 250) * k); parts.push({ label: l('Posicionamento (crossover puxa jovens)', 'Positioning (crossover pulls youth)'), w: pos });
+  const art = AGE29.map((b) => Math.pow(Math.exp(-Math.max(0, Math.abs(b.mid - aim) - 6) / 18), 0.7));
+  const pos = YS.map((k) => 1 + ((a.positioning - 50) / 250) * k);
+  return { dem, rch, tst, A, art, pos };
+}
+/** só o perfil, sem as partes e seus textos: é o inflow29(…, extra = false).w, com as contas na mesma ordem */
+function inflowW29(s: GameState, a: Act, y: number): number[] {
+  const { dem, rch, tst, art, pos } = base29(s, a, y);
+  return norm(dem.map((x, i) => x * rch[i] * tst[i] * art[i] * pos[i]));
+}
+export function inflow29(s: GameState, a: Act, y = s.year, extra = true): Inflow29 {
+  const parts: Inflow29['parts'] = [];
+  const { dem, rch, tst, A, art, pos } = base29(s, a, y);
+  parts.push({ label: l('Demografia do mercado na época', 'Market demographics in the era'), w: dem });
+  parts.push({ label: l('Quem descobre música nova (mídia da época)', 'Who discovers new music (era media)'), w: rch });
+  parts.push({ label: l('Gosto de cada geração pelo gênero', 'Each generation\'s taste for the genre'), w: tst });
+  parts.push({ label: fmtL(l('Idade do artista ({n})', 'Artist age ({n})'), { n: Math.round(A) }), w: art });
+  parts.push({ label: l('Posicionamento (crossover puxa jovens)', 'Positioning (crossover pulls youth)'), w: pos });
   let w = dem.map((x, i) => x * rch[i] * tst[i] * art[i] * pos[i]);
   if (extra) {
     const rels = a.releases.slice(-4).map((id) => s.releases[id]).filter((r): r is Release => !!r && s.week - r.week <= 26 && s.week >= r.week);
@@ -344,15 +362,34 @@ export function seed29(s: GameState, a: Act): number[] {
   const y1 = s.year;
   const y0 = clamp(Math.min(a.debutYear || a.formed || y1, y1), y1 - 70, y1);
   const lr = lastRelYear(s, a);
-  let b = inflow29(s, a, y0, false).w;
-  for (let y = y0 + 1; y <= y1; y++) {
-    b = roll29(b);
-    const act = y <= lr + 1 && liveA(a) ? 1 : y <= lr + 1 ? 0.8 : 0.25;
-    const repl = (y - y0 <= 3 ? 0.35 : 0.12) * act;
-    const w = inflow29(s, a, y, false).w;
-    b = b.map((x, i) => x * (1 - repl) + w[i] * repl);
+  if (y0 >= y1) return norm(inflowW29(s, a, y0));
+  // R29b (desempenho): os anos passados (y0 … y1−1) só leem dados fixos, o registro gh e o próprio ato — ficam guardados
+  // pelo ano; só o ano corrente (fotografia do mês: gp, rp) é refeito todo mês. Mesmas contas, mesma ordem, mesmo valor.
+  return norm(seedStep29(s, a, seedPrefix29(s, a, y0, y1, lr), y1, y0, lr));
+}
+/** um ano da semente: a base envelhece e entra o público daquele ano */
+function seedStep29(s: GameState, a: Act, b0: number[], y: number, y0: number, lr: number): number[] {
+  const b = roll29(b0);
+  const act = y <= lr + 1 && liveA(a) ? 1 : y <= lr + 1 ? 0.8 : 0.25;
+  const repl = (y - y0 <= 3 ? 0.35 : 0.12) * act;
+  const w = inflowW29(s, a, y);
+  return b.map((x, i) => x * (1 - repl) + w[i] * repl);
+}
+/** Semente até o ano passado. Chave do mundo: ano, datas das tecnologias (reach29) e o registro gh (o que muda as curvas
+ *  de anos passados). Chave do ato: tudo o que inflowW29/seedStep29 leem dele (posicionamento exato, não arredondado). */
+const PFX29 = new WeakMap<object, { k: string; m: Map<string, number[]> }>();
+function seedPrefix29(s: GameState, a: Act, y0: number, y1: number, lr: number): number[] {
+  const ck = `${y1}|${s.techDates.streaming ?? ''}|${s.techDates.short_video ?? ''}|${hc(s).g}`;
+  let P = PFX29.get(s);
+  if (!P || P.k !== ck) { P = { k: ck, m: new Map() }; PFX29.set(s, P); }
+  const k = `${a.id}|${a.genre}|${a.city}|${a.debutYear}|${a.formed}|${y0}|${lr}|${liveA(a) ? 1 : 0}|${a.positioning}|${a.members.map((id) => s.persons[id]?.born ?? 0).join(',')}`;
+  let b = P.m.get(k);
+  if (!b) {
+    b = inflowW29(s, a, y0);
+    for (let y = y0 + 1; y < y1; y++) b = seedStep29(s, a, b, y, y0, lr);
+    P.m.set(k, b);
   }
-  return norm(b);
+  return b;
 }
 /** assinatura do que a semente lê do ato (a mistura derivada é função pura disso + curvas do ano) */
 const sig29 = (s: GameState, a: Act): string => `${a.id}|${a.genre}|${a.city}|${a.debutYear}|${a.formed}|${lastRelYear(s, a)}|${liveA(a) ? 1 : 0}|${Math.round(a.positioning)}|${a.members.map((id) => s.persons[id]?.born ?? 0).join(',')}`;
@@ -360,9 +397,15 @@ const sig29 = (s: GameState, a: Act): string => `${a.id}|${a.genre}|${a.city}|${
 export function ageMix29(s: GameState, a: Act): number[] {
   const d = demo29(s).a[a.id];
   if (d) return d.b.map((x) => x / 1000);
-  const c = hc(s), k = sig29(s, a);
+  const c = hc(s);
+  // R29b (desempenho): as paradas leem a mistura de cada ato várias vezes por semana; antes de montar a assinatura (texto),
+  // confere campo a campo a última leitura deste ato no mês — campos iguais = mesma assinatura = mesmo valor guardado
+  const m = c.m.get(a.id), lr = lastRelYear(s, a), lv = liveA(a), pos = Math.round(a.positioning);
+  if (m && m.g === a.genre && m.c === a.city && m.d === a.debutYear && m.f === a.formed && m.lr === lr && m.lv === lv && m.p === pos && m.b.length === a.members.length && a.members.every((id, i) => (s.persons[id]?.born ?? 0) === m.b[i])) return m.v;
+  const k = sig29(s, a);
   let v = c.der.get(k);
   if (!v) { v = seed29(s, a); c.der.set(k, v); }
+  c.m.set(a.id, { g: a.genre, c: a.city, d: a.debutYear, f: a.formed, lr, lv, p: pos, b: a.members.map((id) => s.persons[id]?.born ?? 0), v });
   return v;
 }
 /** fãs por faixa (inteiros que somam o total atual) */
@@ -481,11 +524,12 @@ function stepRegional(s: GameState): void {
   const world = share('world');
   const size = Object.fromEntries(MK.map((m) => [m, MARKETS.find((x) => x.id === m)!.size(s.year)])) as Record<MarketId, number>;
   const sz = MK.reduce((t, m) => t + size[m], 0) || 1;
+  const shares = new Map(MK.map((m) => [m, share(`r:${m}`)])); // R29b: uma leitura da parada por mercado (antes: por família × mercado)
   for (const f of FAMS) {
     const raw: Record<string, number> = {};
     for (const m of MK) {
       const base = MARKET_PREF[m][f as FamilyId] ?? 0.6;
-      const sh = share(`r:${m}`);
+      const sh = shares.get(m)!;
       const chart = Object.keys(sh).length ? Math.sqrt(clamp(((sh[f] ?? 0) + 0.03) / ((world[f] ?? 0) + 0.03), 0.4, 2.5)) : 1;
       raw[m] = base * chart;
     }

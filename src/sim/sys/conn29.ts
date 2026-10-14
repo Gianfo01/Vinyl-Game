@@ -32,7 +32,7 @@ import { registerContractHook } from '../contracts';
 import { emitFact, onFact } from '../facts17';
 import { freeCash20 } from '../oblig20';
 import { lastScandal, REACT29 } from '../scandal17';
-import { PRESSURE29, stressOf } from '../stress17';
+import { PRESSURE29, stressOf, type Px29 } from '../stress17';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, playerActs, post, rememberListeners, staffAdjusters, staffSkill } from '../util';
 import { monthlyCosts } from '../economy';
@@ -51,13 +51,15 @@ registerExt4('conn29', () => ({ aw: -1 }));
 const st29 = (s: GameState): C29 => { const x = (s as unknown as { x4: { conn29?: C29 } }).x4; return (x.conn29 ??= { aw: -1 }); };
 
 const mine = (a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
-const actOfP = (s: GameState, pid: string): Act | undefined => playerActs(s).map((id) => s.acts[id]).find((a) => a?.members.includes(pid));
+const actOfP = (s: GameState, pid: string): Act | undefined => { for (const id of playerActs(s)) { const a = s.acts[id]; if (a?.members.includes(pid)) return a; } return undefined; };
+/** R29b (desempenho): o mesmo, guardado no rascunho da leitura de shortOf (as quatro pressões leem o mesmo ato). */
+const actOfC = (s: GameState, p: Person, cx: Px29): Act | undefined => (cx.a !== undefined ? cx.a ?? undefined : (cx.a = actOfP(s, p.id) ?? null) ?? undefined);
 const heatHome = (s: GameState) => crime17(s).heat[a3Of(s, s.config.homeCity)] ?? 0;
 const recentAwards = (s: GameState, actId: string, years = 3) => (s.awards ?? []).filter((x) => x.actId === actId && s.year - x.year < years).length;
 
 // ---------------------------------------------------------------- vida (pressões de curto prazo)
-PRESSURE29.push((s: GameState, p: Person) => {
-  const a = actOfP(s, p.id);
+PRESSURE29.push((s: GameState, p: Person, cx: Px29) => {
+  const a = actOfC(s, p, cx);
   if (!a || !on('caixa_vida')) return null;
   const fc = freeCash20(s);
   if (fc >= 0) {
@@ -67,15 +69,15 @@ PRESSURE29.push((s: GameState, p: Person) => {
   }
   return { v: 6 * K(), why: l('selo sem caixa: cachê atrasado', 'label out of cash: late fees') };
 });
-PRESSURE29.push((s, p) => {
-  const a = actOfP(s, p.id);
+PRESSURE29.push((s, p, cx) => {
+  const a = actOfC(s, p, cx);
   if (!a || !on('confianca')) return null;
   if (a.trust < 35) return { v: 5 * K(), why: l('desconfiança do selo', 'distrust of the label') };
   if (a.trust > 75) return { v: -3 * K(), why: l('confiança no selo', 'trust in the label') };
   return null;
 });
-PRESSURE29.push((s, p) => {
-  const a = actOfP(s, p.id);
+PRESSURE29.push((s, p, cx) => {
+  const a = actOfC(s, p, cx);
   if (!a || !on('submundo')) return null;
   const h = heatHome(s), tie = crime17(s).ties?.[a.id];
   const v = Math.min(8, h >= 25 ? h / 12 : 0) + (tie ? 3 : 0);
@@ -348,8 +350,8 @@ registerMod('cityDemand', 'rep29', (s, v, { act }) => {
   const k = Math.max(-0.06, Math.min(0.1, (s.player.reputation.commercial - 40) / 400)) * K();
   return Math.abs(k) > 0.005 ? { value: v * (1 + k), label: l('Nome do selo pesa com promotores', 'The label\'s name carries weight with promoters') } : null;
 });
-PRESSURE29.push((s, p) => {
-  if (!actOfP(s, p.id) || !on('rep_vida')) return null;
+PRESSURE29.push((s, p, cx) => {
+  if (!actOfC(s, p, cx) || !on('rep_vida')) return null;
   const r = s.player.reputation.artists;
   return r > 60 ? { v: -2 * K(), why: l('selo respeitado pelos artistas', 'label respected by artists') } : r < 25 ? { v: 2 * K(), why: l('selo mal falado entre artistas', 'label badly spoken of by artists') } : null;
 });
