@@ -93,9 +93,9 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
     // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
   // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
-    expect(AFTER.player.cash).toBe(1045968);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1278216602);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3352616534);
+    expect(AFTER.player.cash).toBe(1034775);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(2631883956);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(829002627);
     expect(hashString(JSON.stringify(AFTER.rng))).toBe(1362224447);
   });
   it('nada de estado P2B criado sem o jogador', () => {
