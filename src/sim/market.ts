@@ -442,8 +442,8 @@ function distribute(s: GameState, rel: Release, gross: number, units: number): v
   if (!act) return;
   // subselo: liquidação no caixa próprio (sublabels.ts), nunca no da matriz
   if (s.subLabels.some((x) => x.id === rel.owner)) return;
-  // R29 (contratos+): master entregue pela sua produtora a um selo rival — o selo fica com o master e paga pontos (sys/contracts29)
-  if (rel.owner !== 'player' && prod29().dist?.(s, rel, act, gross, units)) return;
+  // R29 (contratos+): master entregue por contrato de produção (sua produtora → selo rival; produtora NPC → selo rival ou o seu)
+  if (prod29().dist?.(s, rel, act, gross, units)) return; // (também o seu selo, quando licencia masters de produtora NPC)
   const current = act.contractId ? s.contracts[act.contractId] : undefined;
   // master do selo: vale o acordo da época do disco; master que voltou ao artista não é do selo
   const deal = !act.playerBand && rel.owner === 'player' ? dealOfRelease(s, rel) : undefined;

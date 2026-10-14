@@ -9,10 +9,13 @@ import { mgmtOf29 } from '../../sim/terms29';
 import { h } from '../dom';
 import { openOffer } from '../ficha';
 import { ACT_HEAD_EXTRAS } from '../pages';
+import { c29Open } from '../ps/ctx29c';
 
 ACT_HEAD_EXTRAS.push((s, a, close) => {
   if (!a.owner || a.owner === 'player' || a.playerBand || a.status === 'retired' || a.status === 'split' || mgmtOf29(s, a.id)) return null;
   const el = offerEligible29(s, a, 'management');
   return h('button', { class: 'btn small', 'data-c29': 'management', disabled: !el.ok, title: el.ok ? t(l('O ato continua no selo dele; você vira o empresário (comissão).', 'The act stays on its label; you become its manager (commission).')) : t(el.why ?? l('Indisponível.', 'Unavailable.')),
-    onclick: () => { close(); openOffer(a.id, false, 'management'); } }, t(l('Propor empresariamento', 'Offer to manage')));
+    onclick: () => { close(); c29Open().f?.(a.id, 'management'); } }, t(l('Propor empresariamento', 'Offer to manage')));
 });
+// o handler único dos três modelos (botão da ficha e clique direito): a proposta de sempre já no modelo
+c29Open().f = (actId, model) => openOffer(actId, false, model);

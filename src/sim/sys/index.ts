@@ -372,4 +372,5 @@ import './contracts29'; // R29 (contratos+): empresariamento, produção e joint
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './family29'; // R29 (família): vida familiar de todo artista NPC, filhos da indústria com carreira, estrelas mirins (docs/familia29.md)
 import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
+import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

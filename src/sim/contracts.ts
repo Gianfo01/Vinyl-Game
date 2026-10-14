@@ -44,6 +44,8 @@ export interface Special29 {
   signed?: (s: GameState, act: Act, o: Offer, c: Contract) => void;
   eligible?: (s: GameState, act: Act, model: ContractModel) => { ok: boolean; why?: L } | null;
   reach?: (s: GameState, act: Act, model: ContractModel) => number | null;
+  /** NPC assinou (signWithRival): pode virar JV (sorteio próprio ou `model` pedido pela disputa) e compra a produção */
+  npcSigned?: (s: GameState, act: Act, lb: import('./types').Label, c: Contract, model?: ContractModel) => void;
 }
 // guardado numa função (hoisted), como contractHooks: o módulo que registra pode carregar antes deste terminar (ciclo de imports)
 export function special29(): Special29 { const f = special29 as unknown as { o?: Special29 }; return (f.o ??= {}); }
@@ -234,7 +236,7 @@ export function resolveOne(s: GameState, r: Rng, o: Offer, live = false): Offer[
       o.status = 'sniped';
       o.note = rival.name;
       s.rivalries[rival.id] = (s.rivalries[rival.id] ?? 0) + 15;
-      notify(s, fmtL(won.countered ? l('{label} cobriu a sua proposta e assinou com {act} ({v} de adiantamento).', '{label} topped your offer and signed {act} ({v} advance).') : l('{label} assinou com {act} antes da sua resposta ({v} de adiantamento).', '{label} signed {act} before your answer ({v} advance).'), { label: rival.name, act: act.name, v: usd28(won.bid) }), 'bad');
+      notify(s, fmtL(won.jv ? l('{label} roubou {act} com uma joint venture: selo próprio para a estrela ({v} de capital).', '{label} stole {act} with a joint venture: an own imprint for the star ({v} of capital).') : won.countered ? l('{label} cobriu a sua proposta e assinou com {act} ({v} de adiantamento).', '{label} topped your offer and signed {act} ({v} advance).') : l('{label} assinou com {act} antes da sua resposta ({v} de adiantamento).', '{label} signed {act} before your answer ({v} advance).'), { label: rival.name, act: act.name, v: usd28(won.bid) }), 'bad'); // R29: JV de disputa
       remember(s, 'sniped', fmtL(l('{label} levou {act} numa disputa com você.', '{label} took {act} from you in a bidding war.'), { label: rival.name, act: act.name }), { actId: act.id });
       return 'sniped';
     }
@@ -390,17 +392,19 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
   return true;
 }
 
-export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, force = false): void {
+export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, force = false, model29?: ContractModel): void {
   if (!force && !rivalSignOk(s, labelId, act)) return; // rodada 14: A&R do rival tem limite por mês
   const lb = s.labels[labelId];
   const id = nextId(s, 'k');
+  const def = lb.family === 'A' && r.chance(0.3) ? '360' : 'classic';
   s.contracts[id] = {
-    id, actId: act.id, party: labelId, model: lb.family === 'A' && r.chance(0.3) ? '360' : 'classic',
+    id, actId: act.id, party: labelId, model: def,
     advance: money(s, expectedAdvance(s, act)), royalty: r.float(0.12, 0.2), termMonths: 48,
     startWeek: s.week, endWeek: s.week + 208, releasesOwed: 4, releasesDone: 0, creativeControl: r.chance(0.3),
     publishing: lb.family === 'D', share360: 0, recoupBalance: money(s, expectedAdvance(s, act)), promises: [],
   };
   lb.cash -= money(s, expectedAdvance(s, act));
+  special29().npcSigned?.(s, act, lb, s.contracts[id], model29); // R29 (contratos+): JV/selo-vaidade de estrela, compra do contrato de produção
   act.owner = labelId;
   act.contractId = id;
   lb.roster.push(act.id);

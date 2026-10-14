@@ -132,4 +132,34 @@ const dt = p.getByRole('tab', { name: /Contratos e selos/ }).first();
 if (await dt.count()) { await dt.click(); await p.waitForTimeout(800); }
 else { const bt = p.getByRole('button', { name: /Contratos e selos/ }).first(); if (await bt.count()) { await bt.click(); await p.waitForTimeout(800); } }
 await snap('09-ficha-ato-empresariado-contratos');
+await esc(4);
+
+// clique direito num ato de selo rival: "Carreira e contrato" com as três propostas (as bloqueadas mostram o motivo)
+await p.evaluate(async (id) => {
+  document.querySelectorAll('.overlay, .scene-overlay').forEach((e) => e.remove());
+  const st = await import('/src/ui/store.ts'); const c = await import('/src/ui/ps/ctx27.ts');
+  c.openCtx27(st.store.game, 'act', id, document.querySelector('main h1, main h2') ?? document.body, { x: 520, y: 160 });
+}, info.other);
+await p.waitForTimeout(800);
+{ const sec = p.locator('.cx27-shead[data-sec="career"]').first(); if (await sec.count() && (await sec.getAttribute('aria-expanded')) !== 'true') { await sec.click(); await p.waitForTimeout(400); } }
+await snap('10-clique-direito-propostas');
+await esc(3);
+
+// Caixa de entrada: uma produtora NPC oferece as masters de um ato; uma estrela propõe JV
+await p.evaluate(async () => {
+  const st = await import('/src/ui/store.ts'); const N = await import('/src/sim/sys/npc29.ts'); const P = await import('/src/sim/production.ts'); const S = await import('/src/sim/scout20.ts');
+  const { Rng } = await import('/src/core/rng.ts');
+  const g = st.store.game;
+  const free = Object.values(g.acts).filter((a) => !a.owner && S.scoutEligible20(g, a).ok && a.fame >= 4 && a.status === 'active').sort((a, b) => b.fame - a.fame);
+  const a = free[5] ?? free[0];
+  const co = N.prodCos29(g)[0] ?? { key: 'pd:shot', name: 'Produtora Independente' };
+  const c = N.signNpcProd29(g, a, co);
+  const r = Rng.fromSeed('shots29npc'); const songs = P.composeSongs(g, r, a, 3); P.recordSongs(g, r, a, songs.map((x) => x.id), 2, 'balanced', c.party);
+  N.offerMasters29(g, c.id);
+  if (g.year >= 1970 && free[0]) N.proposeJV29(g, free[0]);
+  const cm = await import('/src/ui/common.ts'); cm.rerender();
+});
+await p.evaluate(() => { location.hash = '#/S02'; });
+await p.waitForTimeout(1500);
+await snap('11-caixa-masters-da-produtora');
 await b.close();

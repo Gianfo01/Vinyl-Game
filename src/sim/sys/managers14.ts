@@ -26,6 +26,7 @@ import { activeAct } from './ventures12';
 import { mgAdj9, ventures } from './ventures9';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
+import { mgrEra29 } from '../terms29';
 
 // ---------------------------------------------------------------- estado
 
@@ -302,7 +303,7 @@ export function managersMonth(s: GameState, r: Rng): void {
     if (!feud && op <= -45) startFeud(s, m, l('a opinião dele sobre você chegou ao fundo do poço', 'their opinion of you hit rock bottom'));
     const roster = rosterOf(s, m.id);
     const mk = cityById[m.city]?.market;
-    if (roster.length < mgrCap(m) && r.chance(0.08)) {
+    if (roster.length < mgrCap(m) && r.chance(0.08 * mgrEra29(s.year))) { // R29: curva de época (forte na era do rock); vira contrato em npc29
       const cands = actsNow27(s).filter((a) => activeAct(a) && !a.playerBand && !taken.has(a.id) && a.fame >= 12 && a.debutYear <= s.year && !isMyClient(s, a.id) && (simStart20(s) || !realDataOf(a))
         && cityById[a.city]?.market === mk && m.fam.includes(familyOf(a.genre)) && (a.owner !== 'player' || a.trust < 55 || feud));
       cands.sort((a, b) => b.fame - a.fame);
