@@ -10,6 +10,7 @@ import { readSetupCode17, setupCode17 } from '../src/sim/start17';
 import { acoustic1889, formatWar1889, marks1889, plugSong1889 } from '../src/sim/sys/era1889';
 import { START_YEARS13 } from '../src/ui/ngdata13';
 import type { GameState } from '../src/sim/types';
+import { ownerOf } from '../src/sim/sys/people/owner';
 
 const actByName = (s: GameState, n: string) => Object.values(s.acts).find((a) => a.name === n);
 
@@ -20,6 +21,9 @@ describe('era1889', () => {
     expect(START_YEARS13.some((y) => y.year === 1889)).toBe(true);
     const s = createGame(cfg);
     s.player.cash += 1e10; s.player.initialCash += 1e10; // só para atravessar a era sem falir
+    // Dono sem herdeiro que morre = fim da run (de propósito: game over com resumo). Este teste é sobre a ERA, então o
+    // dono nasce em 1870 (o padrão, 1853, morre por volta de 1915 conforme a semente e encerraria a run antes de 1919).
+    ownerOf(s).born = 1870; for (const p of Object.values(s.persons)) if (p.isPlayer) p.born = 1870;
     expect(priceIndex(1889)).toBeLessThan(priceIndex(1919));
     expect(availableFormats(s)).toContain('cylinder');
     expect(availableFormats(s)).not.toContain('shellac');
@@ -30,7 +34,7 @@ describe('era1889', () => {
     expect(s.labels.x_columbia_ph?.active).toBe(true);
     expect(s.labels.x_victor?.active).toBe(false);
     const seen: Record<string, number> = {};
-    while (s.year < 1919 || s.month < 11) {
+    while ((s.year < 1919 || s.month < 11) && !s.ended) { // sem o !s.ended, uma run encerrada travava o teste para sempre
       advanceMonth(s);
       if (s.labels.x_victor?.active && !seen.victor) seen.victor = s.year;
       if (availableFormats(s).includes('shellac') && !seen.disc) seen.disc = s.year;
