@@ -28,8 +28,9 @@ O autor fez três pedidos:
 - os favores, dívidas, segredos e mágoas do `holds17`;
 - a sociedade com o jogador.
 
-Cada ligação tem um rótulo: **ligação documentada**, **membro**, **associado**, **deve favor**, **a família deve a
-ele(a)**, **inimizade** ou **sócio(a)**.
+Cada ligação tem um rótulo: **ligação**, **membro**, **associado**, **deve favor**, **a família deve a ele(a)**,
+**inimizade** ou **sócio(a)**. Até a rodada 29b, o primeiro se chamava "ligação documentada" e havia um selo extra
+"nesta partida (simulado)". Os dois saíram da interface na 29c, a pedido do autor (veja a regra de segurança).
 
 As vistas que leem dessa fonte:
 
@@ -257,23 +258,109 @@ Efeitos, sempre pelos sistemas de sempre e sobre o que é **seu** (o mundo sem v
     (credibilidade, rixas), marcado como desta partida, com pânico moral, censura e calor.
 - **Movimentos** (`movements9`) de um gênero da facção, no território dela e com ato seu dentro, crescem mais rápido,
   mas carregam estigma (escândalo de vez em quando).
-- A **cena** aparece no card da organização ("cena documentada" / "afinidade de jogo") e na página do ato (Conexões ›
-  "A cena e o submundo"), com o aviso de que é uma afinidade da cena e não diz que as pessoas pertencem à facção.
+- A **cena** aparece no card da organização e na página do ato (Conexões › "A cena e o submundo"): o nome da cena e a
+  nota. Desde a rodada 29c não há selo "cena documentada" / "afinidade de jogo" (pedido do autor).
 
-### Regra de segurança (pessoas reais)
+### Regra de segurança (pessoas reais) — revista na rodada 29c
 
-- A afinidade é de **gênero e cena**, nunca de pessoa.
-- Nenhuma pessoa real viva aparece como membro ou associada de uma facção real sem registro público. Esses registros
-  são os laços documentados do `orgs17` (Sinatra, Morris Levy…), rotulados **"ligação documentada"** e com nota
-  factual neutra.
-- Na história alternativa, laços simulados só valem para atos e pessoas **inventados** ou para **jogadas desta
-  partida**. Por exemplo, o seu ato aceita escrever sobre a facção; aí o laço aparece como **"nesta partida
-  (simulado)"**, nunca como documentado.
-- O `orglinks29` aplica a regra para a ficha, o card, o menu e a busca. Filiação, dívida, segredo ou laço de rua
-  sorteados para gente real (por exemplo, um ato do catálogo ligado a uma gangue no modo livre, ou um artista real
-  devendo a um agiota de NPC) não viram afirmação em lugar nenhum.
-- A cena real de um ato real pode gerar **interações** no jogo (convites, pressão), mas não a afirmação de que a
-  pessoa pertence à facção.
+O autor mudou a regra duas vezes nesta rodada. A versão em vigor:
+
+- A afinidade é de **gênero e cena**, nunca de pessoa. O que vira ligação é o que **acontece** na partida: um ato
+  (seu ou do mundo) aceita a facção.
+- **Modos livres** (inclusive o padrão de nomes reais, em que tudo depois do início é história desta partida):
+  qualquer facção aborda qualquer ato da cena dela, real ou inventado, e o laço que nasce disso aparece na ficha e no
+  card como qualquer ligação.
+- **Modo "Vida real exata"** (`history: 'strict'`, opção "exato" do Mundo): a facção **não** aborda artista real
+  (ato do catálogo ou com integrante real) sem um laço documentado (`ORGS17.ties`) entre ela e alguém da formação.
+  Atos inventados podem ser abordados.
+- **Sem rótulo na interface.** Ficha, card, menu, feed e busca não distinguem "ligação documentada" de "nesta partida
+  (simulado)": mostram só o tipo da ligação (ligação, membro, associado, deve favor…). A marca `OrgLink29.sim` ficou
+  só interna, para o filtro do modo exato e para a auditoria R10.
+- O `orglinks29` continua escondendo o que é sorteado **em segundo plano** para gente real (filiação do `crimemem23`,
+  laço de rua aleatório do `crimenpc17`, dívida com agiota de NPC). Só aparece o documentado e o que aconteceu na
+  partida (jogada sua, abordagem aceita). No modo exato, a defesa se repete: laço de abordagem de ato real sem
+  documentado com a mesma organização some.
+
+## Facções e artistas do mundo (rodada 29c, `src/sim/sys/aff29npc.ts`)
+
+O autor pediu: "ajuste isso — Limitação: por enquanto, só os seus artistas recebem esses pedidos das facções". Agora
+as facções das cenas abordam também os **atos NPC** (de selos rivais e independentes), com os mesmos gatilhos: gênero
+ou família na lista da afinidade, cidade no país da organização, época da afinidade, da organização e do gênero.
+
+**Ritmo.** Chance mensal por ato de 1% a 5%: sobe com a fama do ato e o estigma da cena, e cai quando a cena tem
+muitos atos (mais de 40). Cada organização faz no máximo 1 abordagem por mês (2 nas cenas de estigma 0,6+), e a mesma
+facção espera 1 ano para voltar ao mesmo ato. Organização desmantelada não aborda. Numa partida de 1975 são cerca de
+dez abordagens por ano no mundo todo.
+
+**O pedido** é o mesmo sorteio dos seus atos (`pickAsk`): tocar no baile/boate, pagar o pedágio ou escrever sobre eles.
+
+**A decisão do NPC** (`decide29n`, pura, com o porquê):
+
+| Fator | Efeito na chance de aceitar |
+|---|---|
+| Traços do líder | rua, rebelde, polêmico, oportunista, festeiro + · disciplinado, reservado, religioso, engajado, tímido − · pedágio: ansioso paga, resiliente bate o pé · enraizado topa o baile |
+| Personalidade | ambição (baile) +, disciplina −, abertura + |
+| Selo | major −25% (mais com estigma alto) · selo de cena +8% · sem selo +12% |
+| Época | anos 1945–79 com máfia/sindicato/firma: +10% no convite para a boate |
+| Dinheiro e fama | caixa baixo +10% · fama 50+ −12% · fama abaixo de 15 +6% |
+
+**Os desfechos**, sempre pelos sistemas de sempre:
+
+- **Tocou**: cachê no caixa do ato, embalo, fama e fãs fiéis; calor para a facção. Risco de **batida policial** (fato
+  `arrest`, estresse da formação, caso no `crime17` contra a facção — fora no modo exato com organização real) e de
+  **pânico moral** (`scandal17`). Batida ou escândalo podem fazer o selo **dispensar** o ato.
+- **Gravou a faixa**: o laço de rua de sempre (`crime17.ties` → credibilidade de rua e rixas do `crimenpc17`), imagem
+  pública menor, **censura** (escândalo com a etiqueta `censorship`) e chance alta de dispensa por major.
+- **Pagou o pedágio**: sai do caixa do ato.
+- **Recusou o pedágio**: recados para a equipe e shows cancelados no território (fora de cena, sem detalhe), embalo e
+  estresse; o ato fica **sob pressão** por 6 meses.
+- **Recusou o convite ou a faixa**: profissionalismo sobe; se outro ato da mesma facção e família de gênero topou no
+  último ano, nasce uma **rixa de cena** (`crime17.feud`, fato `feud`).
+- **Selo dispensa** (`contracts.endContract` + fato `exit`): major quase sempre, selo de cena raramente. O ato
+  dispensado fica sob pressão.
+- **Movimento** do gênero (`movements9`) com ato que topou cresce mais rápido.
+- **Reputação de selo** (`labelrep28`): selo com artista do elenco que topou uma facção nos últimos 3 anos perde peso
+  nas ofertas ("2 artistas do elenco ligados a facções").
+
+Cada abordagem gera o fato novo **`faction_approach`**. Ele é público quando o ato topa e boato quando recusa ou paga.
+O `labelrep28` é o consumidor, e o teste r19-infra passa. Nenhum modificador de apelo novo, então o `caps18` não muda.
+
+**Onde aparece.**
+
+- **Feed do Mundo**: o resumo do mês trata `faction_approach` como notícia de cena.
+- **Ficha do ato** (Conexões): a seção "Facções e o artista" mostra o pedido, a decisão, os desfechos e o selo da
+  época, e avisa quando o ato está sob pressão ou foi tirado do esquema por você. A ligação também aparece no bloco
+  Submundo.
+- **Card da organização**: "Artistas da cena que eles procuraram", e o nome de cada ato abre o menu dele.
+- **Ficha do selo rival** (Fatos e rivalidade): "Elenco e facções", com quem topou, quem recusou e quem foi
+  dispensado.
+- **Aviso**: se você conhece o ato (está no seu radar), recebe a notícia.
+
+**O que você pode fazer** (um caminho só: o menu de ações do ato chama as funções do sistema, e o card leva ao menu):
+
+- **Denunciar a ligação** (`denounce29n`): só depois de o ato topar (tocou ou gravou), uma vez por ano, e nunca contra
+  artista real no modo exato. A chance é de 45% mais a reputação institucional/200, e sobe se houve faixa ou laço.
+  - Se colar: escândalo para o ato, caso contra a facção, reputação institucional +2, rivalidade com o selo do ato,
+    confiança do ato em você cai. A facção guarda mágoa e a hostilidade dela no `mob29` sobe.
+  - Se não colar: reputação −1, e a facção fica sabendo de onde veio.
+- **Tirar do esquema (oferecer proteção)** (`rescue29n`): para ato com laço ou sob pressão. Você paga o acerto à
+  facção; o ato sai do laço, ganha confiança em você e fica **devendo um favor** (`holds17`).
+- **Negociação**:
+  - Ato sob pressão: a sua proposta pesa +8% ("quer mudar de ares").
+  - Ato tirado do esquema por você: a proposta pesa +15%.
+  - Ato com selo sob pressão, com laço ou tirado do esquema: o **buyout** sai 25% mais barato e o selo vende mais
+    fácil (+20%).
+
+**Determinismo.** O módulo usa `Rng.fromSeed` com a chave `aff29npc` por mês (e por ação do jogador) e não consome
+fluxo compartilhado. O gancho vem logo depois do `aff29` e antes do `facades19`. O estado `x4.aff29n` nasce na
+primeira abordagem; `OFF29N.all` desliga o módulo para bisecção.
+
+**Testes de referência re-medidos** (o mundo muda de propósito):
+
+- `r27-p2a` e `r27-p2b`: caixa 450735 → 18103, acts 2386675548 → 3004344608, rng 2839816166 → 2202780102; tours
+  igual. O caixa do playbot nessa semente oscila centenas de milhares de mês a mês.
+- `r27-m2`: o fixture r16pb-8 quebra antes do show e passa a ser r16pb-4.
+- `r27-m3` não muda.
 
 ## Testes da rodada 29b
 
@@ -297,17 +384,30 @@ O mesmo arquivo `tests/r29-underworld.test.ts` agora cobre:
 - **Facções × cenas:**
   - CV ↔ funk (1995+), PCC (2001+), Sinaloa ↔ norteño (1989+), Yamaguchi ↔ enka (até 1992);
   - um ato seu no Rio recebe pedidos da facção;
-  - a homenagem vira laço **simulado**, com R10 = 0;
-  - pessoa/ato real nunca ganha laço não documentado (varredura);
+  - a homenagem vira laço da partida (marca interna), com R10 = 0;
+  - laço sorteado em segundo plano para pessoa/ato real nunca aparece (varredura);
   - determinismo.
+
+`tests/r29-aff-npc.test.ts` (rodada 29c) cobre:
+
+- atos NPC abordados no mundo sem o jogador, com o teto por organização e mês;
+- decisões que variam com o selo, os traços e a fama;
+- desfechos na ficha do ato, no card, na ficha do selo, no `labelrep28`, no feed do Mundo e no menu de ações;
+- batida com caso contra a facção, ameaça do pedágio e rixa de cena;
+- denunciar, tirar do esquema, proposta e buyout;
+- a regra: no modo padrão, ato real pode ser abordado por facção real; no modo exato, só com laço documentado
+  (Sinatra × Outfit), com varredura;
+- determinismo, e nenhum estado com o módulo desligado.
 
 ## Determinismo
 
 - Os sorteios usam `Rng.fromSeed` com a chave `mob29`.
 - O estado (`x4.mob29`) só nasce na primeira interação do jogador, e o gancho mensal não faz nada sem ele.
 - Os ganchos de chance (proteção de artista) e de pizzo (sócio) também só agem com esse estado.
-- Nenhum tipo novo de fato ou fonte de apelo: as cenas são as de sempre (`arrest` → batida; memória `payola` → jabá).
-- Os testes de referência `r27-p2a`, `r27-p2b` e `r27-m2` passam sem nenhuma remedição.
+- Nenhum tipo novo de fato ou fonte de apelo no `mob29`: as cenas são as de sempre (`arrest` → batida; memória
+  `payola` → jabá). O `aff29npc` (rodada 29c) criou um tipo: `faction_approach`, ouvido pelo `labelrep28`.
+- Os testes de referência `r27-p2a`, `r27-p2b` e `r27-m2` passaram sem remedição na rodada 29b. Na 29c foram
+  re-medidos por causa das abordagens aos artistas do mundo (veja "Facções e artistas do mundo").
 
 ## Testes e capturas
 

@@ -4,7 +4,8 @@
 // Nível CULTURAL (afinidade organização ↔ gênero/cena, com época e região). Datas reais só onde são bem documentadas;
 // o resto tem corte de época razoável. Organizações especulativas são INVENTADAS (data/cyber29: STREET29).
 //
-// Efeitos (todos pelos sistemas de sempre, sobre o que é SEU — o mundo sem você fica igual):
+// Efeitos (todos pelos sistemas de sempre). Sobre o que é SEU (este arquivo) e, desde a rodada 29c, também sobre os
+// artistas do MUNDO (sys/aff29npc: atos de selos rivais e independentes recebem as mesmas abordagens e decidem sozinhos):
 //  • um ato seu do gênero/cena no território recebe a família: convite para o baile/evento (cachê, fama, divulgação
 //    de rua; batida policial → cena; pânico moral → escândalo), "pedágio" para tocar, pressão para escrever sobre eles
 //    (laço de rua da partida: credibilidade, rixas, censura) — pedidos do mob29 com prazo;
@@ -12,11 +13,14 @@
 //    rápido, mas carrega estigma (escândalo de vez em quando);
 //  • a cena aparece no card da organização e na ficha do gênero/cena (sceneAff29).
 //
-// REGRA DE SEGURANÇA (pessoas reais): afinidade é de GÊNERO e CENA, nunca de pessoa. Nenhuma pessoa real viva aparece
-// como membro/associada de facção real sem registro público (os laços documentados do orgs17, rotulados "ligação
-// documentada"). Laço simulado só nasce de jogada desta partida (o seu ato aceita a família) ou com ato inventado, e
-// aparece como "nesta partida (simulado)" — nunca como documentado (orglinks29 filtra o resto).
-// Determinismo: Rng.fromSeed('aff29'); o gancho só age com ato seu na cena.
+// REGRA DE SEGURANÇA (pessoas reais), revista na rodada 29c a pedido do autor: a afinidade é de GÊNERO e CENA, nunca
+// de pessoa; o que vira laço é o que ACONTECE na partida (um ato aceita a facção). Nos modos livres — inclusive o padrão
+// de nomes reais, em que tudo depois do início é história desta partida — qualquer facção aborda qualquer ato da cena,
+// real ou inventado. Só no modo "Vida real exata" (history 'strict'), em que o mundo segue o roteiro documentado, a
+// facção NÃO aborda artista real sem laço documentado (ORGS17.ties) com alguém da formação; atos inventados, sim.
+// A interface não distingue laço documentado de laço da partida (pedido do autor): mostra só a ligação. A marca interna
+// (OrgLink29.sim) existe apenas para o filtro do modo exato e para a auditoria (orglinks29).
+// Determinismo: Rng.fromSeed('aff29'); o gancho deste arquivo só age com ato seu na cena (o do mundo é o aff29npc).
 
 import { Rng, clamp } from '../../core/rng';
 import { familyOf, genreById, l, type FamilyId, type L } from '../../data/world';
@@ -50,7 +54,7 @@ export interface Aff29 {
 export const AFF29: Aff29[] = [
   { o: 'cv', genres: ['funk_carioca'], from: 1995, to: 2100, scene: N('Funk "proibidão" nos bailes de comunidade do Rio', '"Proibidão" funk at Rio community parties'), doc: true, stigma: 0.7,
     note: N('Desde os anos 1990, o "proibidão" — funk que cita facções — circula em bailes e mixtapes no Rio; bailes foram alvo de operações policiais e de projetos de proibição.', 'Since the 1990s, "proibidão" — funk that names factions — has circulated at parties and on mixtapes in Rio; parties were targeted by police operations and ban proposals.') },
-  { o: 'fbonde', genres: ['funk_carioca'], from: 1995, to: 2100, scene: N('Bailes da laje (inventado)', 'Rooftop parties (invented)'), doc: false, stigma: 0.5,
+  { o: 'fbonde', genres: ['funk_carioca'], from: 1995, to: 2100, scene: N('Bailes da laje', 'Rooftop parties'), doc: false, stigma: 0.5,
     note: N('Afinidade de jogo: gangue inventada que banca bailes na sua praça.', 'Game affinity: an invented crew that funds parties in its turf.') },
   { o: 'pcc', genres: ['funk_carioca', 'funk_ostentacao'], from: 2001, to: 2100, scene: N('Funk "proibidão" e ostentação nas periferias de São Paulo', '"Proibidão" and ostentação funk in São Paulo\'s outskirts'), doc: true, stigma: 0.7,
     note: N('Músicas de funk que citam a facção circulam em São Paulo desde os anos 2000.', 'Funk songs naming the faction have circulated in São Paulo since the 2000s.') },
@@ -66,9 +70,9 @@ export const AFF29: Aff29[] = [
     note: N('Associados de gangues de Los Angeles trabalharam como seguranças no rap dos anos 90 (processos públicos).', 'Los Angeles gang associates worked as security in 1990s rap (public court records).') },
   { o: 'sscrips', genres: ['gfunk', 'hiphop'], from: 1988, to: 2100, scene: N('Gangsta rap da Costa Oeste', 'West Coast gangsta rap'), doc: false, stigma: 0.6,
     note: N('Afinidade de cena (rivalidade de gangues no rap de LA); nenhum artista é ligado a ela por isso.', 'Scene affinity (gang rivalry in LA rap); no artist is tied to it because of this.') },
-  { o: 'fblock', genres: ['drill'], from: 2012, to: 2100, scene: N('Drill de Chicago (gangue inventada)', 'Chicago drill (invented gang)'), doc: false, stigma: 0.7,
+  { o: 'fblock', genres: ['drill'], from: 2012, to: 2100, scene: N('Drill de Chicago (Os do Quarteirão)', 'Chicago drill (The Block Boys)'), doc: false, stigma: 0.7,
     note: N('Afinidade de jogo: gangue inventada que disputa o bairro em faixas de drill.', 'Game affinity: an invented gang fighting over the block in drill tracks.') },
-  { o: 'fpost', genres: ['uk_drill'], from: 2014, to: 2100, scene: N('Drill britânico / road rap (turma inventada)', 'UK drill / road rap (invented crew)'), doc: false, stigma: 0.7,
+  { o: 'fpost', genres: ['uk_drill'], from: 2014, to: 2100, scene: N('Drill britânico / road rap', 'UK drill / road rap'), doc: false, stigma: 0.7,
     note: N('Afinidade de jogo; na vida real a polícia de Londres pediu a remoção de clipes de drill — aqui, censura e pânico moral.', 'Game affinity; in real life London police asked for drill videos to be removed — here, censorship and moral panic.') },
   { o: 'shower_posse', genres: ['dancehall'], from: 1980, to: 2010, scene: N('Dancehall dos "garrisons" de Kingston', 'Dancehall from Kingston\'s garrisons'), doc: true, stigma: 0.5,
     note: N('Sound systems e festas de rua dos bairros-guarnição de Kingston tinham patronos ligados a gangues políticas, segundo a imprensa e estudos da época.', 'Sound systems and street dances in Kingston\'s garrison communities had patrons tied to political gangs, per contemporary press and studies.') },
@@ -105,8 +109,8 @@ export const orgAff29 = (s: GameState, oid: string): (Aff29 & { org: Org17 })[] 
 /** Facções que rondam um ato (pela cena dele — nunca uma afirmação sobre as pessoas). */
 export const actAff29 = (s: GameState, a: Act): (Aff29 & { org: Org17 })[] => sceneAff29(s, a.genre, a.city);
 
-/** Qual pedido a facção faz a um ato seu da cena. */
-function pickAsk(o: Org17, a: Aff29, r: Rng): AskKind29 {
+/** Qual pedido a facção faz a um ato da cena (seu ou do mundo — aff29npc usa o mesmo sorteio). */
+export function pickAsk(o: Org17, a: Aff29, r: Rng): AskKind29 {
   const opts: AskKind29[] = [];
   if (hasRacket(o, 'clubs') || o.kind === 'gang' || o.kind === 'cartel') opts.push('baile', 'baile');
   if (a.stigma >= 0.5) opts.push('homage');

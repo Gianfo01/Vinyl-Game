@@ -48,14 +48,13 @@ export interface OrgLink29 {
   via?: string;
   /** obrigação de origem */
   hold?: string;
-  /** r29: laço criado por jogada DESTA partida (nunca "documentado") */
+  /** r29: laço criado por jogada DESTA partida (mob29/aff29/aff29npc). Marca INTERNA: a interface não distingue
+   *  documentado de simulado (pedido do autor, r29c); serve ao filtro do modo "Vida real exata" e à auditoria. */
   sim?: 1;
 }
-/** Rótulo do laço simulado (pessoa/ato real só aparece ligado a facção assim, por jogada da partida). */
-export const LINKSIM29: L = l('nesta partida (simulado)', 'in this save (simulated)');
 
 export const LINK29: Record<OrgLinkKind29, L> = {
-  doc: l('ligação documentada', 'documented tie'),
+  doc: l('ligação', 'tie'), // r29c: sem rótulo "documentada" na interface (pedido do autor)
   member: l('membro', 'member'),
   assoc: l('associado', 'associate'),
   owes: l('deve favor', 'owes a favor'),
@@ -118,7 +117,9 @@ function index29(s: GameState): Ix29 {
   const st = crime17(s);
   const mem = st.mem23 ?? {};
   const mob = (s.x4 as unknown as { mob29?: { seq?: number; o?: Record<string, { partner?: 1 }>; sim?: Record<string, string> } }).mob29;
-  const k = `${s.week}|${s.year}|${holds17(s).seq}|${holds17(s).h.length}|${Object.keys(mem).length}|${Object.values(mem).reduce((t, m) => t + m.k, 0)}|${Object.keys(st.ties).length}|${mob?.seq ?? 0}`;
+  // r29c: laços nascidos de abordagem aceita por artista do mundo (aff29npc) — lido direto do estado (sem import: ciclo)
+  const npc = (s.x4 as unknown as { aff29n?: { seq?: number; tie?: Record<string, string> } }).aff29n;
+  const k = `${s.week}|${s.year}|${holds17(s).seq}|${holds17(s).h.length}|${Object.keys(mem).length}|${Object.values(mem).reduce((t, m) => t + m.k, 0)}|${Object.keys(st.ties).length}|${mob?.seq ?? 0}|${npc?.seq ?? 0}|${Object.keys(npc?.tie ?? {}).length}|${histMode(s)}`;
   const c = IX.get(s);
   if (c && c.k === k) return c;
   const all: OrgLink29[] = [];
@@ -145,8 +146,11 @@ function index29(s: GameState): Ix29 {
   // 5) sociedade com o jogador (mob29)
   for (const [oid, x] of Object.entries(mob?.o ?? {})) if (x.partner) all.push({ o: oid, key: 'player', kind: 'partner', text: l('sócio(a) nos negócios da família', 'partner in the family business'), src: 'mob29' });
   // r29 (Facções × cenas) — REGRA DE SEGURANÇA: pessoa/ato REAL só aparece ligado a uma organização por laço
-  // DOCUMENTADO (ORGS17.ties) ou por jogada desta partida (mob29/aff29, marcado "simulado"). Filiação, dívida, segredo
-  // ou laço de rua sorteados para gente real (história alternativa) não viram afirmação na ficha nem no card.
+  // DOCUMENTADO (ORGS17.ties) ou por algo que ACONTECEU nesta partida: jogada sua (mob29/aff29) ou abordagem de facção
+  // aceita por um artista do mundo (aff29npc — nos modos livres, qualquer artista da cena, real ou não). Filiação,
+  // dívida, segredo ou laço de rua sorteados em segundo plano para gente real (crimemem23, crimenpc17) não viram
+  // afirmação na ficha nem no card. No modo "Vida real exata" o aff29npc nem aborda artista real sem laço documentado;
+  // aqui a regra se repete (defesa): laço da partida de ato real sem documentado com a mesma organização some.
   const mine = new Set(Object.values(s.acts).filter((a) => a.owner === 'player' || a.playerBand).map((a) => a.id));
   const realKey = (k: string): boolean => {
     if (!k || k === 'player' || k.startsWith('s:')) return false;
@@ -155,10 +159,15 @@ function index29(s: GameState): Ix29 {
     try { return isReal(s, k); } catch { return false; }
   };
   const kept: OrgLink29[] = [];
+  const strict = histMode(s) === 'strict';
+  const docOf = new Set(all.filter((x) => x.kind === 'doc').map((x) => `${x.o}|${x.key}`));
+  const docAct = (o: string, key: string): boolean => { const a = s.acts[key]; return !!a && a.members.some((m) => docOf.has(`${o}|p:${m}`)); };
   for (const x of all) {
-    const game = x.src === 'mob29' || (x.src === 'tie17' && (mine.has(x.key) || !!mob?.sim?.[x.key]));
+    const npcTie = x.src === 'tie17' && npc?.tie?.[x.key] === x.o;
+    const game = x.src === 'mob29' || (x.src === 'tie17' && (mine.has(x.key) || !!mob?.sim?.[x.key] || npcTie));
     if (game && x.kind !== 'doc') x.sim = 1;
     if (x.kind !== 'doc' && realKey(x.key) && !game) continue;
+    if (strict && npcTie && realKey(x.key) && !docAct(x.o, x.key)) continue;
     kept.push(x);
   }
   all.length = 0;

@@ -68,9 +68,11 @@ beforeAll(() => {
   // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
   // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
   // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-  expect(s.player.cash).toBe(450735);
-  expect(hashString(JSON.stringify(s.acts))).toBe(2386675548);
-  expect(hashString(JSON.stringify(s.rng))).toBe(2839816166);
+  // R29c (facções × artistas do mundo, aff29npc — de propósito; mesmos do r27-p2b, que explica): as facções das cenas
+  // abordam atos NPC (cachê, embalo, pedágio, ameaça, rixa) e caixa, acts e rng mudam. Antes: 450735 / 2386675548 / 2839816166.
+  expect(s.player.cash).toBe(18103);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3004344608);
+  expect(hashString(JSON.stringify(s.rng))).toBe(2202780102);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

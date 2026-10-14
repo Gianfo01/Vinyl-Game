@@ -32,7 +32,12 @@ beforeAll(() => {
   // R29 (CONNECT): com a ordem dos ganchos de início corrigida (atos reais marcados no lineup16 e renomes depois que eles
   // existem — antes dependia da ordem dos imports) e os perks religados, r16pb-7 quebra antes do show; r16pb-4 volta a ter
   // show no 9º mês, mas o ato mais famoso livre fecha com um rival na mesa; r16pb-8 tem show no 9º mês e vira o fixture.
-  const s = createGame(defaultConfig('r16pb-8', { startYear: 1975, realNames: true }));
+  // R29c (facções × artistas do mundo, aff29npc — de propósito): Outfit/Genovese/Sumiyoshi passam a abordar atos NPC de
+  // jazz/pop/enka em 1975 (cachê, embalo, rixas, pressão no selo), o mercado muda e r16pb-8 quebra (insolvência em 1976)
+  // antes do show; r16pb-4 volta a ter show no 9º mês com todas as calibrações abaixo dentro da faixa e vira o fixture.
+  // (A ordem dos imports do arquivo de teste já mudava o mundo antes desta rodada — r16pb-8 sem show com worldgen
+  // importado primeiro —, por isso o fixture é medido com os imports exatamente como estão aqui.)
+  const s = createGame(defaultConfig('r16pb-4', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
     const hit = m >= 7 && playableShows27(s, 40).length > 0;
@@ -56,7 +61,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     // Aqui fica o que não pode quebrar: a mesma seed dá exatamente o mesmo mundo, e o bot toca shows pelo playStop.
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBeGreaterThan(0);
-    const again = createGame(defaultConfig('r16pb-8', { startYear: 1975, realNames: true }));
+    const again = createGame(defaultConfig('r16pb-4', { startYear: 1975, realNames: true }));
     for (let m = 0; m < MONTHS && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));

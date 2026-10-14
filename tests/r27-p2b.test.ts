@@ -65,10 +65,15 @@ describe('r27 P2B — modo rápido intacto', () => {
     // nas próprias faixas (6 nesta semente em 8 meses): performance/Q da faixa, cachê, laços, reação da banda e público
     // cruzado mudam caixa, acts e rng (tours igual). Antes: 252 / 1382068899 / 2817744560 / 1576372716.
     // R29 relíquias procedurais (relics29): viram notícia e mexem um pouco em fama/fãs (acts) e no caixa; antes 450730 / acts 2126210917.
-    expect(AFTER.player.cash).toBe(450735);
+    // R29c (facções × artistas do mundo, aff29npc — de propósito, docs/submundo29.md): Outfit, Genovese e Sumiyoshi
+    // abordam atos NPC de jazz/blues/pop/enka nesta semente (cerca de uma dezena de abordagens em 8 meses: bailes/boates com cachê e embalo,
+    // pedágios, recusas com ameaça e rixas de cena), o mercado e os sorteios do fluxo comum mudam: caixa, acts e rng
+    // mudam; tours igual. O caixa do playbot oscila centenas de milhares de mês a mês nesta semente (o 8º mês caiu num
+    // vale). Antes: 450735 / 1382068899 / 2386675548 / 2839816166.
+    expect(AFTER.player.cash).toBe(18103);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2386675548);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2839816166);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3004344608);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(2202780102);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
