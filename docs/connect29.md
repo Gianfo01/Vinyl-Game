@@ -432,3 +432,117 @@ e escândalos. Botão: `CONN29.k` (0–1) suaviza tudo de uma vez; `CONN29_OFF` 
 - **Público → Imprensa / Fama / Vida / Sede / Mundo / Reputação / Submundo**: sem ligação direta; passa por Projetos e
   Ao vivo.
 - Shows simples (`playGigs`) seguem sem os modificadores de show (§9).
+
+## 11. Conectar tudo, rodada 11 (o que fazia sentido e ainda não existia)
+
+Pedido do autor ("sim": ligar as que fazem sentido e ainda não existem), depois do merge do friendly-brown com a
+família (`family29`), a arte e as relíquias b. Código novo em **`src/sim/sys/conn29b.ts`**, com as mesmas regras do
+`conn29`: interruptor por aresta (`CONN29_OFF`), o botão `CONN29.k`, teto em tudo, determinístico.
+
+### Matriz antes: 114 de 156 pares
+| de \ para | dinh | repu | impr | proj | aovi | sede | fama | mund | vida | cont | prem | subm | publ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dinh | — |   | ◐ | ● | ● | ● |   |   | ● | ● | ● | ● |   |
+| repu | ◐ | — | ◐ | · | ◐ | ◐ | · |   | ◐ | ● | ◐ | · |   |
+| impr | ◐ | ◐ | — | ● | ● | · | · |   | ● | ◐ | ● | ● | · |
+| proj | ● | · | ● | — | ◐ |   | · |   | ● | ◐ | ● | ◐ |   |
+| aovi | · | · | ● | · | — |   | ◐ |   | ● | ◐ | ◐ | ◐ |   |
+| sede | ● |   | ● | ◐ | ● | — | · | · | ◐ | ● | · | ● |   |
+| fama | ● | · | ● | ● | ● |   | — |   | ● | ● | ● | ● | ◐ |
+| mund | ◐ | · | ● | ● | ● | · | · | — | ● | ◐ | · | ● | ● |
+| vida | ◐ |   | ● | ◐ | ● |   |   |   | — | ◐ | ◐ | ◐ |   |
+| cont | ◐ |   | ◐ | ◐ | ◐ |   |   |   | ● | — | · | ◐ |   |
+| prem | ◐ | · | ● | ● | ● |   | ◐ |   |   | ◐ | — |   | · |
+| subm | ● | · | ● | ● | · |   |   |   | ● | ● | · | — |   |
+| publ | · |   |   | ● | ● |   |   |   |   | ◐ | ◐ |   | — |
+
+### Matriz depois: 137 de 156 pares (as 95 esperadas medidas; 79 com sinal conferido)
+| de \ para | dinh | repu | impr | proj | aovi | sede | fama | mund | vida | cont | prem | subm | publ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dinh | — |   | ◐ | ● | ● | ● | · | ● | ● | ● | ● | ● |   |
+| repu | ◐ | — | ◐ | · | ◐ | ◐ | · |   | ◐ | ● | ◐ | · |   |
+| impr | ◐ | ◐ | — | ● | ● | · | · |   | ● | ◐ | ● | ● | · |
+| proj | ● | · | ● | — | ◐ |   | · | ● | ● | ◐ | ● | ◐ | ◐ |
+| aovi | ● | · | ● | · | — |   | ◐ |   | ● | ◐ | ◐ | ◐ | ◐ |
+| sede | ● |   | ● | ◐ | ● | — | · | · | ◐ | ● | · | ● | · |
+| fama | ● | · | ● | ● | ● | · | — | · | ● | ● | ● | ● | ◐ |
+| mund | ◐ | · | ● | ● | ● | · | · | — | ● | · | · | ● | · |
+| vida | ◐ |   | ● | ● | ● |   | ● |   | — | ◐ | ◐ | ◐ | · |
+| cont | ◐ |   | ◐ | ◐ | ◐ | · |   | · | ● | — | · | ◐ | · |
+| prem | ◐ | · | ● | ● | ● | ◐ | ◐ |   | ◐ | ◐ | — | ● | · |
+| subm | ● | · | ● | ● | · | ◐ | · |   | ● | ● | · | — | · |
+| publ | · | · | ◐ | ● | ● |   | · |   |   | ◐ | ◐ | ● | — |
+
+### O que foi ligado (medido na sonda, 3 sementes, mediana)
+| de → para | o que acontece | medido |
+|---|---|---|
+| Ao vivo → Público | shows no exterior criam fãs naquele país (o mecanismo já existia no demo29; a sonda ganhou o empurrão "4 shows no exterior") | média, +6,8% fora do país |
+| Projetos → Público | o tipo do disco puxa a faixa etária na estreia (single → jovem; LP/ao vivo → maduro) | média, LP −4,9% de jovens |
+| Imprensa → Público | escândalo afasta o público maduro e atrai o jovem | fraca, +2,9% de jovens |
+| Vida → Público | banda esgotada perde o público jovem; casal célebre puxa público adulto | fraca |
+| Contratos → Público | ato que confia no selo (≥ 75) topa a promoção internacional: +1% do público no maior país de fora | fraca, +1,7% fora |
+| Sede → Público | departamento digital puxa público jovem | fraca, +1,5% |
+| Submundo → Público | calor policial numa cena de rua (hip-hop, latino, caribenho, brasileiro, punk…) puxa o jovem da periferia | fraca, +1,0% |
+| Público → Imprensa | público jovem atrai a mídia jovem (nota a cada 3 meses) | média, público maduro −7,7% de notas |
+| Público → Fama | fã jovem engaja: embalo ±0,5/mês, centrado no público típico de um ato do jogador (60% até 24 anos) | fraca |
+| Público → Reputação | público maduro e fiel dá respeito artístico ao selo | fraca |
+| Público → Submundo | público jovem compra pirata (chance de piratear o ato) | forte, maduro −11% |
+| Fama / Prêmios → Sede | ato famoso e prêmios recentes atraem gente melhor (habilidade efetiva; fama só dá bônus) | fraca / média |
+| Submundo → Sede | calor alto: medo na equipe; ≥ 60: arrombamento na sede (no máx. 1 a cada 26 semanas, custo e nota) | média, −3,2% |
+| Contratos → Sede | JV / produção / empresariamento sem o departamento certo (finanças / estúdio / booking) sobrecarregam a equipe | fraca, −2,1% |
+| Submundo → Fama | notoriedade: sobe em gênero de rua, cai nos outros | fraca |
+| Prêmios → Vida | prêmio recente dá confiança ao elenco | média, −9,3% de estresse |
+| Prêmios → Submundo | prêmio recente atrai chantagem contra o ato | forte, +10% |
+| Fama → Mundo | ato seu com fama ≥ 45 cria onda do gênero no gosto do mundo (teto acumulado +0,12 por gênero, decai 8%/mês) | fraca, +1,2% |
+| Mundo → Prêmios | o júri do Gramofone acompanha a época: gênero em alta pontua mais | fraca, +2,4% |
+| Família → Fama / Imprensa / Contratos | casal célebre dá fama aos dois atos; casamento e divórcio viram notícia; estrela mirim: o responsável negocia duro (renova −5%), a imprensa acompanha (nota), escola + fama estressam, alvará e tutor custam ao selo | forte / forte / média |
+| Dinheiro → Fama | a sonda passou a enxergar o gasto direto de divulgação (campanha paga, todos os canais) | fraca; a fama sobe só 0,3% em 6 semanas e o embalo oscila (−0,8%): o efeito da campanha chega na estreia, depois da janela |
+
+**Estrela mirim e submundo**: sem ligação automática (correção do autor: nem toda estrela mirim está no submundo). A
+exploração de menor é legal/familiar (multa, escândalo, responsável que some com o fundo — já existia no family29) e
+passa por contratos, imprensa, dinheiro e vida. O submundo só entra pelos caminhos que já existiam, como risco raro.
+
+**Público → Sede** existe só com internet: sem o departamento digital, o público jovem tira rendimento da assessoria e
+do booking; com ele, soma. A sonda (1985) não vê, por isso a aresta não é exigida no teste.
+
+### Ajustes da sonda (a aresta existia, a sonda não via)
+- A base subia os fãs para 50 mil depois de o demo29 guardar a mistura com o total antigo: no 1º fechamento de mês os
+  50 mil eram lidos como fãs novos e a mistura inteira era trocada, apagando qualquer empurrão no público. Agora a base
+  acerta o total. (O "dez anos depois o público envelheceu −60%" do §10 era esse defeito; medido de novo, a mistura só
+  envelhece na virada do ano, fora da janela de 6 semanas — fica a mudança de gosto, fraca.)
+- Empurrões novos: divulgação paga, LP, turnê no exterior, departamento digital, JV, casamento, divórcio, estrela
+  mirim. Saídas novas: chance de chantagem e receita imediata (a série de shows paga na hora; o braço de controle fazia
+  shows sozinho semanas depois e diluía "Ao vivo → Dinheiro").
+
+### Correção que a rodada achou
+`favors27` lia a lealdade do funcionário com `careerOf`, que **cria** a ficha de carreira: um quadro só de leitura
+mudava o estado (pego pelo `r27-p2a`, "sem mexer no estado"). Agora lê com `careerLoyalty` (sem ficha, 60 — o mesmo
+valor inicial). Os ajustes novos também leem departamento, mistura, calor e menores sem criar estado.
+
+### Equilíbrio (`tools/balance19.ts --quick --seeds 6`, bot equilibrado, 3 anos; arestas da rodada 11 ligadas × desligadas)
+| | quebra | caixa mediano | patrimônio mediano | fama | prestígio |
+|---|---|---|---|---|---|
+| desligadas | 0% (0/6) | 46k | 2,03 mi | 18 | 53 |
+| ligadas | 17% (1/6) | 19k | 1,60 mi | 19 | 52 |
+
+Partida a partida, ligado × desligado (patrimônio): melhor em 1 de 6 (2005). A quebra é a de 1975, que já terminava no
+limite com tudo desligado (patrimônio ≈ 0). A primeira versão quebrava 2 de 6: o embalo pelo público jovem era
+centrado em 50% (os atos do jogador têm ~60–85% até 24 anos, então todo ato ganhava embalo de graça), a fama punia selo
+novo com ato pequeno e o digital era cobrado antes da internet existir — os três foram corrigidos. **Com 6 sementes o
+resultado é ruidoso** (desligar um grupo salva uma semente e derruba outra), mas a direção é clara: a rodada 11 deixa
+o jogo um pouco mais apertado de caixa. Botão: `CONN29.k`; para medir de verdade, rodar 24 sementes.
+
+### Testes
+- `tests/r29-connect-all.test.ts`: 95 arestas esperadas (79 com sinal) medidas; o mapa da wiki tem todas.
+- Golden `r27-p2a`/`p2b` re-medidos com comentário: 216027 / 1382068899 / 490145844 / 3946783658.
+- `r18-era1889`: o dono morria por vício em 1900 depois do merge; o teste ganha uma herdeira (funcionária leal) para
+  atravessar a era pela sucessão normal.
+- Lote verde: r29-connect-all, r19-infra, r27-p2a/p2b/m2/m3, r29-demo, r29-family, r29-connect, r13-persona,
+  r8-rights, r19-links-b, r18-era1889.
+
+### Lacunas (19 pares vazios)
+- **Fora de propósito** (pedido do autor): dinheiro, reputação e contratos não mudam época nem tecnologia; também
+  ficam sem ligação imprensa, ao vivo, vida, prêmios, submundo e público → mundo (o jogador só mexe no mundo pela cena,
+  pelas leis e agora pela onda de gênero).
+- Sem sentido de jogo ou só indiretos: dinheiro/reputação → público, projetos/ao vivo/vida → sede, sede/vida/contratos →
+  reputação, contratos → fama, público → vida.

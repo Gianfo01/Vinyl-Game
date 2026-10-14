@@ -33,7 +33,7 @@ import { registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
 import { PRESSURE29, stressOf } from '../stress17';
 import type { Act, GameState, Person } from '../types';
-import { fmtL, money, playerActs, post, staffAdjusters } from '../util';
+import { fmtL, hasTech, money, playerActs, post, staffAdjusters } from '../util';
 import { CONN29 } from './conn29';
 import { a3Of, ODDS17 } from './crime17';
 import { GRAMO_ADJ } from './ceremonies8';
@@ -134,11 +134,11 @@ registerSimHook('month', 'conn29r', (s: GameState) => {
       const yo = youth29(mix), ol = older29(mix);
       if (on('publico_fama')) { // público → fama. Centro em 60% até 24 anos (o típico de um ato do jogador: neutro no
         // equilíbrio; centrar em 50% dava embalo de graça a todo ato e quadruplicava o caixa do golden)
-        a.momentum = clamp(a.momentum + clamp((yo - 0.6) * 10, -1.5, 1.5) * K(), 0, 100);
-        a.fame = clamp(a.fame + clamp((yo - 0.6) * 0.6, -0.15, 0.15) * (1 - a.fame / 100) * K(), 0, 100);
+        // equilíbrio (6 sementes): ±1,5 de embalo + fama direta empurrava partidas no limite para a quebra; fica só o embalo, ±0,5
+        a.momentum = clamp(a.momentum + clamp((yo - 0.6) * 4, -0.5, 0.5) * K(), 0, 100);
       }
       if (on('publico_imprensa') && yo >= 0.55 && a.fame >= 15 && every12(s, `young:${a.id}`)) // público → imprensa
-        emitFact(s, { kind: 'statement', actors: [a.id], severity: Math.round(clamp(10 + a.fame / 3, 10, 40)), visibility: 'public', tags: ['media', 'youth', 'conn29'], src: 'conn29',
+        emitFact(s, { kind: 'statement', actors: [a.id], severity: Math.round(clamp(10 + a.fame / 3, 10, 40)), visibility: 'public', tags: ['good', 'media', 'youth', 'conn29'], src: 'conn29',
           text: fmtL(l('Revistas e programas jovens disputam {a}: o público dele(a) tem menos de 25 anos', 'Youth magazines and shows fight over {a}: their audience is under 25'), { a: a.name }) });
       olderW += ol * fans(a); fansW += fans(a);
     }
@@ -177,14 +177,15 @@ const recentAwards = (s: GameState, pred: (x: { year: number; byPlayer?: boolean
 staffAdjusters().push((s, sf) => {
   let v = 0;
   const acts = playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a);
-  if (on('fama_sede') && acts.length) v += clamp((Math.max(...acts.map((a) => a.fame)) - 40) / 15, -1, 2); // fama → sede
+  if (on('fama_sede') && acts.length) v += clamp((Math.max(...acts.map((a) => a.fame)) - 40) / 15, 0, 2); // fama → sede (só bônus: selo novo com ato pequeno não é punido)
   if (on('premios_sede')) v += Math.min(2, recentAwards(s, (x) => !!x.byPlayer) * 0.5); // prêmios → sede
   const hh = heatOf(s, s.config.homeCity);
   if (on('submundo_sede') && hh >= 30) v -= Math.min(2, (hh - 30) / 20); // submundo → sede: medo
   if (on('publico_sede') && (sf.role === 'publicist' || sf.role === 'booking')) { // público → sede
     let yw = 0, fw = 0;
     for (const a of acts) { const m = mixOf(s, a); if (m) { yw += youth29(m) * fans(a); fw += fans(a); } }
-    if (fw > 0 && yw / fw > 0.55) v += dept(s, 'digital') > 0 ? 1.5 : -1.5;
+    // sem internet não há departamento digital: nada a cobrar (antes da internet o público jovem só soma onde há o depto)
+    if (fw > 0 && yw / fw > 0.55) v += dept(s, 'digital') > 0 ? 1.5 : hasTech(s, 'internet') ? -1.5 : 0;
   }
   if (on('contratos_sede')) { // contratos → sede: serviço sem o departamento certo
     const need: Record<string, string> = { jv: 'finance', production: 'studio', management: 'booking' };

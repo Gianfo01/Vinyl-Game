@@ -278,7 +278,7 @@ export const EDGES29: { a: Sys29; b: Sys29; check?: [nudge: string, metric: stri
   { a: 'imprensa', b: 'publico', check: ['escandalo', 'jovens', 1] }, { a: 'vida', b: 'publico' }, { a: 'contratos', b: 'publico', check: ['confianca', 'fora', 1] },
   { a: 'sede', b: 'publico', check: ['digital', 'jovens', 1] }, { a: 'submundo', b: 'publico', check: ['calor', 'jovens', 1] },
   { a: 'publico', b: 'imprensa', check: ['velho', 'fatos', -1] }, { a: 'publico', b: 'fama', check: ['velho', 'embalo', -1] }, { a: 'publico', b: 'reputacao' },
-  { a: 'publico', b: 'submundo', check: ['jovem', 'crime_pirata', 1] }, { a: 'publico', b: 'sede' },
+  { a: 'publico', b: 'submundo', check: ['jovem', 'crime_pirata', 1] }, // público → sede só existe com internet (departamento digital): a sonda de 1985 não vê — docs/connect29.md §11
   { a: 'fama', b: 'sede', check: ['fama', 'equipe', 1] }, { a: 'premios', b: 'sede', check: ['premios', 'equipe', 1] },
   { a: 'submundo', b: 'sede', check: ['calor', 'equipe', -1] }, { a: 'contratos', b: 'sede', check: ['jv', 'equipe', -1] },
   { a: 'submundo', b: 'fama' }, { a: 'dinheiro', b: 'fama' }, { a: 'premios', b: 'vida', check: ['premios', 'estresse', -1] },

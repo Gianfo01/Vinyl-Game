@@ -89,9 +89,9 @@ beforeAll(() => {
   // R29: contratos+ (NPCs) junto com conectar tudo/público/família: re-medido.
   // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
   // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
-  expect(s.player.cash).toBe(797288);
-  expect(hashString(JSON.stringify(s.acts))).toBe(898363739);
-  expect(hashString(JSON.stringify(s.rng))).toBe(1724870893);
+  expect(s.player.cash).toBe(216027);
+  expect(hashString(JSON.stringify(s.acts))).toBe(490145844);
+  expect(hashString(JSON.stringify(s.rng))).toBe(3946783658);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
