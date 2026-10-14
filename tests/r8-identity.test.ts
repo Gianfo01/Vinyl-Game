@@ -151,7 +151,10 @@ describe('perfis do selo emergem das decisões', () => {
       export: {
         opp: oppOpen('export') && ratio('export', () => applyMods(s, 'cityDemand', 100, { act, cityId: Object.values(cityById).find((c) => c.market !== home)!.id }).value) > 1.08,
         cost: monthDelta('export').cash < 0,
-        reaction: offer('export', act, 'status') > 0 && (forceProfile(s, 'export'), (profileOfferEffect(s, local)?.score ?? 0) < 0) && (forceProfile(s, null), true),
+        // R29b: o local mede "o selo esqueceu a cidade" com ambição neutra; quem quer fama também ganha o "carreira
+        // internacional" (+0,07 contra −0,05). Depois do merge do r28-f3 o 1º ato de Londres desta semente (Reggie Graves)
+        // quer fama — antes era um que queria arte — e a soma virava positiva.
+        reaction: offer('export', act, 'status') > 0 && (() => { const amb0 = local.members.map((id) => s.persons[id]?.ambition); setAmbition(s, local, 'security'); forceProfile(s, 'export'); const v = (profileOfferEffect(s, local)?.score ?? 0) < 0; forceProfile(s, null); local.members.forEach((id, i) => { if (s.persons[id]) (s.persons[id] as { ambition: string }).ambition = amb0[i]!; }); return v; })(),
       },
       dev: {
         // r19: traços do dono (sorteados) também mexem na confiança — mede só o que o perfil acrescenta
