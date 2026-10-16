@@ -101,7 +101,7 @@ function mapCanvas(v: View): HTMLCanvasElement {
     if (v.live && hqSp) for (const f of cityEggs27) {
       const e = f(v.s, { t: tm, night, city });
       if (!e) continue;
-      const x = Math.round(hqSp.door[0] + 12), y = Math.round(hqSp.door[1] - e.h + 3);
+      const x = Math.round(hqSp.door[0] + 12 + (e.dx ?? 0)), y = Math.round(hqSp.door[1] - e.h + 3 + (e.dy ?? 0));
       e.draw(ctx, x, y, tm);
       eggs.push({ box: [x + dx, y + dy, e.w, e.h], e });
     }

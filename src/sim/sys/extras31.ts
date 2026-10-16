@@ -19,6 +19,7 @@ import { cityById, genreById, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
 import { registerSwitch, sw } from '../r31/switches';
+import { registerRunnable } from '../r31/editor';
 import { CO31, ME31, relicHolder31, relicTierOf31 } from '../r31/relic31';
 import type { Act, GameState } from '../types';
 import { fmtL, money, playerActs, post, yearOfWeek } from '../util';
@@ -310,4 +311,25 @@ registerSimHook('month', 'extras31', (s) => {
   ficMonthTick(s);
   popMonthTick(s);
   filmTick(s);
+});
+
+// ================================================================ editor (regra 10)
+
+registerRunnable({
+  id: 'x31.pop', area: 'scenes', label: l('Cultura pop: publicar agora uma referência possível', 'Pop culture: publish a possible reference now'),
+  run: (s) => { const p = popEligible31(s)[0]; if (!p) return l('Nenhuma referência possível nesta época e lugar.', 'No reference possible in this era and place.'); firePop31(s, p); return popText31(s, p); },
+});
+registerRunnable({
+  id: 'x31.fic', area: 'world', label: l('Bandas de ficção: fazer surgir as desta época agora', 'Fiction bands: make this era\'s appear now'),
+  run: (s) => {
+    const st = x31(s);
+    const due = ficActive31().filter((f) => !st.fic[f.id] && s.year >= f.ano && s.year <= f.ano + 12);
+    for (const f of due) spawnFic(s, f);
+    return fmtL(l('{n} banda(s) de ficção no mundo agora.', '{n} fiction band(s) in the world now.'), { n: due.length });
+  },
+});
+registerRunnable({
+  id: 'x31.film', area: 'scenes', label: l('Filme de 2027: abrir a vaga da trilha', '2027 film: open the soundtrack slot'),
+  run: (s) => { if (s.year !== FILM_YEAR31) return l('Só em 2027.', 'Only in 2027.'); x31(s).film = { open: s.week }; return l('Vaga da trilha aberta.', 'Soundtrack slot open.'); },
+  raw: true,
 });

@@ -56,6 +56,7 @@ import { tx20 } from '../core/save20';
 import { runCard17body } from './newgame17';
 import { syncRealShow31 } from '../sim/r31/realshow31';
 import { settingsRealNames31 } from './r31/realshow31ui';
+import { settingsExtras31 } from './sys/extras31';
 import { ensureBase31 } from '../sim/r31/base31'; // R31 (EDT)
 import { INT_PREF23 } from '../sim/interrupt23';
 import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
@@ -712,6 +713,7 @@ function settings(): void {
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo
     settingsRealNames31(), // R31 (X): Nomes e obras reais (só exibição)
+    settingsExtras31(), // R31 (N): controle central de frequência e de tom da cultura pop
     settingsLook31(), // R31 (AP): Pressão estética: normal / suave / desligada
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),
