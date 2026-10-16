@@ -64,5 +64,7 @@ describe('r31 EMO — emojis viram pixel art', () => {
     expect(emoPlain31('🔒')).toBe('bloqueado');
     expect(emoPlain31('★ Líder')).toBe('★ Líder'); // marca monocromática fica onde não cabe imagem
     expect(emoPlain31('⚠️ Alerta ★')).toBe('Alerta ★');
+    // idempotente: o observador só reescreve quando muda (★ fica; reescrever igual reabriria o observador em laço)
+    for (const x of ['★ Líder', '🔒', '⚠️ Alerta ★', '✓', 'Nome ♪']) expect(emoPlain31(emoPlain31(x))).toBe(emoPlain31(x));
   });
 });

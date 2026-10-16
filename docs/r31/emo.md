@@ -24,3 +24,12 @@ Pedido do dono: "hoje as cenas estão com emojis; troque por emojis em pixel art
 - Auditoria: `docs/r31/emo-auditoria.md` (gerada por `npx tsx scripts/r31/emo-audit.ts`).
 - Números do jogo: nada no motor mudou (só exibição) — sem interruptor, sem medição; goldens iguais.
 - Capturas: `docs/r31/shots/onda4-emo-*-antes.png` / `-depois.png` (cenas de lançamento, banco e negociação; salas de troféus e estúdio; sede; loja; casa Fossati; conquistas; avisos; finanças; Hoje) e `onda4-emo-folha.png` (todos os ícones do mapa). Roteiro: `scripts/shots31emo.mjs`. As partidas de antes e depois são sorteadas, então nomes e números diferem; o que se compara são os ícones.
+
+## Conserto depois da junção
+
+- Laço do observador: com as marcas monocromáticas (★ ✓) mantidas em `title`/SVG/`<option>`, reescrever o mesmo valor gerava outra mutação e travava a página (salas não abriam). Agora o observador só escreve quando o valor muda; o teste confere que `emoPlain31` é idempotente.
+- ⚓ (aeroporto/porto, vindo da junção) ganhou o ícone `anchor` — o teste pegou o pictograma novo fora do mapa, como devia.
+
+## Testes
+
+Suíte inteira rodada (antes da junção) e, depois da junção, os arquivos restantes + os obrigatórios: falham só os que também falham na base `claude/friendly-brown-vpsmfl` sem esta mudança (r17-data "lote novo", r14-db "< 3s", r31-w2rev "proposta padrão pela cena", r29-connect-all "arestas", r19-data-base e r31-base "curadoria") e o `sim.test` "arco 2030", que só estoura o limite de 300 s com a máquina carregada (293 s na base). `r31-contrast` atualizado: o reforço sem cor do modo daltônico agora é `var(--pxi-check|cross)`.

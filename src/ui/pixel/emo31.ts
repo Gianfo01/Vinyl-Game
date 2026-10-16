@@ -297,7 +297,8 @@ function fixText(n: Text): void {
   if (!hasEmo31(s)) return;
   const par = n.parentElement;
   if (!par) return;
-  if (plainHost(par)) { n.data = emoPlain31(s); return; }
+  // só escreve se mudar: marca monocromática (★ ✓) fica no texto, e reescrever o mesmo valor reabriria o observador em laço
+  if (plainHost(par)) { const v = emoPlain31(s); if (v !== s) n.data = v; return; }
   const lone = (par.tagName === 'BUTTON' || par.getAttribute('role') === 'button') && par.childNodes.length === 1;
   const frag = document.createDocumentFragment();
   for (const x of pxNodes31(s, lone)) frag.appendChild(x);
@@ -308,7 +309,7 @@ const ATTRS = ['title', 'aria-label', 'placeholder', 'alt'];
 function fixAttrs(el: Element): void {
   for (const a of ATTRS) {
     const v = el.getAttribute(a);
-    if (v && hasEmo31(v)) el.setAttribute(a, emoPlain31(v));
+    if (v && hasEmo31(v)) { const w = emoPlain31(v); if (w !== v) el.setAttribute(a, w); }
   }
 }
 
@@ -366,7 +367,7 @@ export function installEmo31(root: HTMLElement = document.body): void {
     if (pendingSize.size && !sizeQueued) { sizeQueued = true; requestAnimationFrame(flushSizes); }
   });
   mo.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
-  document.title = emoPlain31(document.title);
+  if (emoPlain31(document.title) !== document.title) document.title = emoPlain31(document.title);
   // ícones usados no CSS (::before/::after): variáveis --pxi-<nome>
   for (const n of ['fame', 'check', 'cross', 'lock']) document.documentElement.style.setProperty(`--pxi-${n}`, `url(${pxIconUrl31(n, 2)})`);
   installCanvasEmo31();
