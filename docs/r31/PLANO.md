@@ -77,6 +77,13 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   - mapa sem nomes amontoados;
   - fichário com retratos dos bonecos e cartões de papel em pixel art;
   - um passe de acabamento (regra POL) antes de cada entrega.
+- **Padrão visual aprovado (2026-10-16):** todas as telas seguem o padrão dos mocks do mural do elenco, do quadro de
+  planejamento, da agenda e do bolso (`docs/r31/mocks/onda5/onda5-mock-elenco-*.png` e `onda5-mock-bolso-*.png`):
+  - cada tela é um objeto do mundo aberto por cima da cena (cortiça, quadro, caderno, livro-caixa, revista, caixa de
+    entrada da época), sem trocar de tela;
+  - abas como marcadores do próprio objeto;
+  - topo fixo (data, caixa, fama, avançar) e embaixo os botões de viagem com ícone e o bolso;
+  - Esc fecha e cada objeto tem tecla própria.
 - **EXP-1 · Sede como centro** — interface · aceite: as abas do topo somem; cada função abre por um objeto da sede.
   Mapa inicial: porta da rua → cidade (meu mundo); mapa-múndi → outros países/aeroporto; mural de cortiça → artistas
   conhecidos/elenco; arquivo de aço → contratos e catálogo; mesa com livro-caixa → Finanças; caderno na estante →
