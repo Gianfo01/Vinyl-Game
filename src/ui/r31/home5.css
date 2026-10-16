@@ -1,0 +1,33 @@
+/* R31 · onda 5 (INI, EXP-10) — tela inicial com o palco (mock onda5-mock-inicio.png, 1440×900). */
+.h5 { position: relative; min-height: 100vh; overflow: hidden; background: #06080e; color: #e9e2d0; font-family: var(--sans); }
+.h5-stage { position: absolute; left: 0; top: 0; width: 100%; height: 90vh; object-fit: cover; object-position: center 70%; image-rendering: pixelated; display: block; }
+.h5-shade { position: absolute; left: 0; right: 0; top: 66.6vh; height: 33.4vh; background: linear-gradient(rgba(6, 8, 14, 0), rgba(6, 8, 14, 0.75) 35%, #06080e 75%); pointer-events: none; }
+.h5-head { position: absolute; left: 0; right: 0; top: 7.4vh; text-align: center; pointer-events: none; }
+.h5-h1 { margin: 0; line-height: 0; }
+.h5-logo { width: min(480px, 70vw); height: auto; image-rendering: pixelated; }
+.h5-tag { margin: 1.6vh 0 0; font-family: var(--pixel); font-size: 13px; letter-spacing: 0.14em; color: #ffd9e8; text-shadow: 2px 2px 0 #000; }
+.h5-menu { position: absolute; left: 50%; top: 76.6vh; transform: translateX(-50%); display: flex; gap: 12px; flex-wrap: nowrap; }
+.h5-b { white-space: nowrap; font-family: var(--pixel); font-size: 13px; letter-spacing: 0.04em; padding: 13px 18px; background: #1c3048; border: 3px solid #0a121a; border-radius: 6px; box-shadow: inset 0 0 0 2px #3f5f84; color: #e9edf5; cursor: pointer; }
+.h5-b:hover:not(:disabled), .h5-b:focus-visible { background: #24405e; box-shadow: inset 0 0 0 2px #7fa0c8; }
+.h5-b:disabled { opacity: 0.55; cursor: default; }
+.h5-b.h5-main { background: #f0c060; color: #1a1214; box-shadow: inset 0 -4px 0 #b08a30; }
+.h5-b.h5-main::before { content: ''; display: inline-block; width: 0; height: 0; margin-right: 10px; border-left: 8px solid #1a1214; border-top: 5px solid transparent; border-bottom: 5px solid transparent; vertical-align: 1px; }
+.h5-b.h5-main:hover { background: #ffd27a; }
+.h5-links { position: absolute; left: 0; right: 0; top: 84.4vh; display: flex; justify-content: center; align-items: center; gap: 24px; font-size: 15px; }
+.h5-l { background: none; border: 0; padding: 2px 0; color: #9aa8b8; font: inherit; cursor: pointer; }
+.h5-l:hover, .h5-l:focus-visible { color: #e9e2d0; text-decoration: underline; }
+.h5 select.h5-lang { background: transparent !important; color: #9aa8b8 !important; border: 0 !important; font: inherit; cursor: pointer; padding: 2px 0; }
+.h5-lang option { color: #1a1214; }
+.h5-ded { position: absolute; left: 0; right: 0; bottom: 36px; margin: 0; text-align: center; font-size: 14px; font-style: italic; color: #9aa8b8; }
+.h5-foot { position: absolute; left: 24px; right: 24px; bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-family: var(--pixel); font-size: 9px; color: #5d7088; }
+.h5-foot .h5-l { font-size: 9px; color: #5d7088; font-family: var(--pixel); }
+/* Carregar */
+.h5-saves { display: grid; gap: 6px; margin-bottom: 12px; }
+.h5-save { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 8px 12px; border: 2px solid var(--line, #2b4260); border-radius: 6px; background: var(--panel, #13202e); color: inherit; cursor: pointer; }
+.h5-save:hover, .h5-save:focus-visible { border-color: #f0c060; }
+.h5-save small { opacity: 0.75; }
+.h5-load-acts { gap: 8px; }
+@media (max-width: 900px) {
+  .h5-menu { flex-wrap: wrap; justify-content: center; width: 92vw; top: 70vh; }
+  .h5-links { top: auto; bottom: 64px; flex-wrap: wrap; gap: 12px; }
+}
