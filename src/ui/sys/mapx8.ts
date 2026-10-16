@@ -18,7 +18,10 @@ import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, genreName, ownerName, pill, releaseLink, rerender, toast } from '../common';
 import { h, select } from '../dom';
-import type { MapOverlay } from '../map';
+import { MODE_L31, type MapOverlay } from '../map';
+import type { TransportMode } from '../../sim/travel';
+import { transition31 } from '../r31/trn31';
+import { ticketInfo31 } from '../r31/trn31model';
 import { addTourStop } from '../panels/misc';
 import { store } from '../store';
 import { ic } from '../vis';
@@ -59,6 +62,17 @@ export function cityScene(s: GameState, cityId: string): HTMLElement {
   );
 }
 
+/** R31 onda 5 (TRN): viaja (a regra de sempre, sem mudança) e, se a viagem aconteceu, mostra a rota e a passagem com
+ *  origem, destino, data, meio, tempo e preço da cotação real. A transição só cobre a tela. */
+function trip31(s: GameState, cityId: string, go: () => void): void {
+  const from = ownerCity(s);
+  const q = travelQuote(s, cityId);
+  const k = ticketInfo31({ from: t(cityById[from]?.name) || from, to: t(cityById[cityId]?.name) || cityId, fromId: from, toId: cityId, month: s.month, year: s.year,
+    mode: q.mode, modeName: MODE_L31[q.mode as TransportMode], days: q.days, cost: $(q.cost) });
+  go();
+  if (ownerCity(s) === cityId) transition31('trip', { year: s.year, ticket: k });
+}
+
 /** Ações na cidade. */
 export function cityActions(s: GameState, cityId: string): HTMLElement {
   const city = cityById[cityId];
@@ -86,8 +100,8 @@ export function cityActions(s: GameState, cityId: string): HTMLElement {
     h('div', { class: 'row wrap' },
       here ? pill(t(l('você está aqui até a semana {w}', 'you are here until week {w}'), { w: m.here!.until }), 'good') : null,
       here ? btn(`${t(l('Conhecer a cena', 'Meet the scene'))} ⏱`, () => run(meetScene(s, r(), cityId)), { primary: true }) : null,
-      !here && cityId !== s.config.homeCity ? btn(`${t(l('Viajar até lá', 'Travel there'))} (${$(q.cost)}${q.energy ? ` · ${'⏱'.repeat(q.energy)}` : ''})`, () => run(travelTo(s, r(), cityId)), { disabled: !!tErr, title: tErr ? t(tErr) : t(l('{km} km, {d} dias. Do seu bolso. Três semanas na cidade.', '{km} km, {d} days. From your pocket. Three weeks in the city.'), { km: N(q.km), d: q.days }) }) : null,
-      cityId === s.config.homeCity && where !== s.config.homeCity ? btn(`${t(l('Voltar para casa', 'Go back home'))} (${$(q.cost)})`, () => run(travelTo(s, r(), cityId))) : null,
+      !here && cityId !== s.config.homeCity ? btn(`${t(l('Viajar até lá', 'Travel there'))} (${$(q.cost)}${q.energy ? ` · ${'⏱'.repeat(q.energy)}` : ''})`, () => trip31(s, cityId, () => run(travelTo(s, r(), cityId))), { disabled: !!tErr, title: tErr ? t(tErr) : t(l('{km} km, {d} dias. Do seu bolso. Três semanas na cidade.', '{km} km, {d} days. From your pocket. Three weeks in the city.'), { km: N(q.km), d: q.days }) }) : null,
+      cityId === s.config.homeCity && where !== s.config.homeCity ? btn(`${t(l('Voltar para casa', 'Go back home'))} (${$(q.cost)})`, () => trip31(s, cityId, () => run(travelTo(s, r(), cityId)))) : null,
       q.plane ? pill(t(l('voo particular', 'private flight')), 'good') : null,
       q.visa && !here ? pill(t(l('visto: {p}% de recusa', 'visa: {p}% refusal'), { p: Math.round(q.deny * 100) }), q.deny > 0.3 ? 'bad' : 'warn') : null,
     ),
