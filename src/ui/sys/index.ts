@@ -8,7 +8,8 @@ import './scenes';
 import './live';
 import './life';
 import './songmkt27'; // r27 (SONG): Mercado de canções — comprar, ganhar, vender/dar e licenciar (Projetos › Criar)
-import './knownacts27'; // r27 (KNOWN): Artistas conhecidos — quem a sua empresa conhece e por quê (antes de Todos os artistas)
+import './knownacts27';
+import './known31'; // R31 onda 3 (F): Conhecidos — quem você conhece, a relação (5 dimensões) e como se conheceram // r27 (KNOWN): Artistas conhecidos — quem a sua empresa conhece e por quê (antes de Todos os artistas)
 import './directory';
 import './capital';
 import './hq6';
