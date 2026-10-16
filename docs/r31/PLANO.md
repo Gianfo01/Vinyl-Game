@@ -51,7 +51,8 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 - **Pedidos do dono durante a onda 4 (2026-10-16):** CAR2 (pendências das carreiras) · FIX (suíte verde) · ART (uniformizar
   assets das cenas, ex.: bateria) · ART2 (assets novos interativos) · FOS (casa da família Fossati e praça como cenas) ·
   VIT (vitrine do mês: interiores dinâmicos no estilo da loja de instrumentos, motor único) · LOTE (≥ 90% dos prédios do
-  mapa são negócio, lote comprável ou casa de CEO/artista da cidade).
+  mapa são negócio, lote comprável ou casa de CEO/artista da cidade) · EMO (emojis da tela viram ícones em pixel art,
+  fonte única em `ui/pixel/icons.ts`).
 
 ## Onda 5 (31.5) · jogo explorável (pedido do dono, 2026-10-16)
 > Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
