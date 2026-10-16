@@ -1,6 +1,9 @@
 // Planejador de turnê sobre a rota do mapa: setlist, produção, papel (headline/co/abertura),
 // equipe, forma de pagamento, previsão e confirmação; turnês ativas com o status de cada data.
 
+import { lockBtn31 } from '../r31/lock31';
+import { tourLock31 } from '../r31/quick31core';
+import { cashLock31 } from '../../sim/r31/lock';
 import { VENUE_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -30,6 +33,8 @@ import { a29 } from '../art29ui'; // r29 (arte)
 import { merchImg29, vehicleImg29 } from '../pixel/things29';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
+/** R31 (O): o painel rápido abre o planejador já no artista escolhido. */
+export function setTourAct31(actId: string): void { draft.actId = actId; }
 
 const PROD = [l('Básica', 'Basic'), l('Luzes e telão', 'Lights and screens'), l('Cenografia', 'Stage design'), l('Espetáculo', 'Spectacle')];
 
@@ -108,7 +113,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
         cf.hard.length ? h('div', null, h('b', { class: 'bad' }, ic('lock'), ' ', t(l('Conflitos duros (o artista estaria em dois lugares)', 'Hard conflicts (the act would be in two places)'))), h('ul', { class: 'small' }, cf.hard.map((x) => h('li', null, t(x))))) : null,
         cf.soft.length ? h('div', null, h('b', { class: 'warn' }, ic('fans'), ' ', t(l('Conflitos brandos (disputa de público — a mesma conta entra no acerto do show)', 'Soft conflicts (audience competition — the same math applies at settlement)'))), h('ul', { class: 'small' }, cf.soft.map((x) => h('li', null, t(x))))) : null) : null,
       forecastBox(forecastTour(s, plan, est)),
-      h('button', { class: 'btn primary', onclick: () => bookTour27(s, act.id, stops, draft.startInDays, () => {
+      lockBtn31([ic('tour-bus'), ' ', t(l('Confirmar turnê', 'Confirm tour'))], tourLock31(s, act) ?? cashLock31(s, est.logistics, l('Caixa insuficiente para reservar a logística.', 'Not enough cash to book logistics.')), () => bookTour27(s, act.id, stops, draft.startInDays, () => {
         const res = planTour(s, plan);
         if ('pt' in res) toast(t(res), 'bad');
         else {
@@ -116,7 +121,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
           afterBook20?.();
           rerender();
         }
-      }) }, ic('tour-bus'), ' ', t(l('Confirmar turnê', 'Confirm tour'))),
+      }), { cls: 'btn primary' }), // R31 (RN-04): turnê já marcada, pausa ou caixa aparecem antes do clique
     ) : null,
     !all && step === 4 && !est ? h('p', { class: 'muted small' }, t(l('Sem rota ainda: volte à etapa Rota.', 'No route yet: go back to the Route step.'))) : null,
   );

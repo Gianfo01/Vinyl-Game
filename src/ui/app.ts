@@ -35,6 +35,7 @@ import { compareActs } from './compare';
 import { restartTutorial, tutorialCard, tutorialTick28 } from './tutorial';
 import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
+import { paletteBase31, paletteCmds31 } from './r31/quick31'; // R31 (O): busca que abre a ação, favoritos e metas
 import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)
 import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
@@ -161,6 +162,7 @@ export function boot(el: HTMLElement): void {
     view: () => ({ menuView: view27(), textScale: store.prefs.textScale, density: (store.prefs as { dens20?: string }).dens20, reducedMotion: store.prefs.reducedMotion, audio: !!(store.prefs as { audio28?: boolean }).audio28 }) });
   initRouter15((r) => { if (store.game && r.area === LISTS31) { goLists31(r.tab?.[0] === LKEY31 ? r.tab[1] : undefined); return true; } if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (store.game && (REDIRECT29[r.area] || !areaExists(r.area))) { const x = resolve29(r.area); if (x && (x.util || (x.area && areaExists(x.area)))) { open29(x); return true; } } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
+  document.addEventListener('vtn31-go', (e) => { if (!store.game) return; e.preventDefault(); go((e as CustomEvent<string>).detail); }); // R31 (O): destino do painel rápido/favoritos
   titleScreen(root, startGame);
 }
 
@@ -769,6 +771,7 @@ function palette(): void {
       run: () => { if (x.tab) setTab(x.tab[0], x.tab[1]); go(x.area!); } })),
     ...paletteCmds29(), // r29 REORG: as 17 telas canônicas (com aliases), intenções "Quero…", Índice e Central da campanha
     ...paletteCmds20(g), // r20 G4: ações do artista selecionado (mesmo custo/bloqueio do menu Ações ▾)
+    ...paletteBase31(g), // R31 (O): favoritos e metas
     ...[...mine].map((id): PCmd => ({ label: g.acts[id].name, kind: 'mine', icon: 'guitar', weight: 12, run: () => inspect.act(id) })),
     // rodada 16: abas extras (Sync, Disputas...) também aparecem no Ir para… — antes só se achavam abrindo a área certa
     ...([['charts', 'chartsHub'], ['market', 'marketHub'], ['media', 'mediaHub'], ['catalog', 'catalogHub'], ['world', 'worldHub']] as const).flatMap(([area, host]) =>
@@ -787,6 +790,7 @@ function palette(): void {
     for (const id of Object.keys(rw(g).free29 ?? {})) { const p = g.persons[id]; if (p && !actOf[p.id] && p.born <= g.year && p.name.toLowerCase().includes(qq.slice(0, 2))) out.push({ label: p.name, kind: 'person', icon: 'star', hint: t(l('sem banda', 'no band')) + (p.alive ? '' : ' · †'), run: () => openPerson(p.id) }); }
     for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     out.push(...paletteCmds20(g, true)); // r20 G4: ações dos outros artistas do elenco
+    out.push(...paletteCmds31(g, q)); // R31 (O): "contratar X", "gravar com Y"… abrem o painel rápido na ação
     out.push(...eggCmds27(g, qq)); // r27 ovos: códigos secretos da busca (payola, hall da fama, 1889…)
     return out;
   };

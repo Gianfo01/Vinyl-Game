@@ -1,6 +1,8 @@
 // Interface do projeto musical (rodada 8): aba "Projetos" em Criação, que conduz um disco inteiro de um
 // lugar só, e a leitura do resultado ("por que deu nisso?") na ficha de cada lançamento.
 
+import { basisTag31, lockBtn31, moneyTag31, tagged31 } from '../r31/lock31';
+import { releaseLock31 } from '../r31/quick31core';
 import './project8.css';
 import { APPROACHES, STUDIO_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
@@ -199,15 +201,16 @@ function budgetSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
             h('input', { type: 'number', min: 0, step: 50, value: Math.round(m.budget / 100), disabled: locked, 'aria-label': t(l('Verba', 'Budget')), onchange: (e: Event) => { m.budget = Math.max(0, Math.round(Number((e.target as HTMLInputElement).value) * 100)); rerender(); } }),
             !locked ? h('button', { class: 'icon', 'aria-label': t(l('Remover', 'Remove')), onclick: () => { p.marketing.splice(i, 1); rerender(); } }, '✕') : null)),
           !locked && channels.length ? h('button', { class: 'btn small ghost', onclick: () => { p.marketing.push({ channel: channels[0].id, budget: money(s, 1000) }); rerender(); } }, '+ ', t(l('Canal', 'Channel'))) : null),
-        fc ? kv(t(l('Previsão (10 semanas)', 'Forecast (10 weeks)')), `${N(fc.lo)}–${N(fc.hi)} ${t(l('unid.', 'units'))}`) : null,
+        fc ? kv(t(l('Previsão (10 semanas)', 'Forecast (10 weeks)')), tagged31(`${N(fc.lo)}–${N(fc.hi)} ${t(l('unid.', 'units'))}`, basisTag31('calc', true))) : null, // R31 (RN-27/28)
       ),
       h('div', { class: 'pj-budget' },
-        kv(t(l('Já gasto', 'Already spent')), $(p.spent)),
-        c.recording ? kv(t(l('Gravação (a pagar)', 'Recording (to pay)')), $(c.recording)) : null,
-        c.feat ? kv(t(l('Participação (a pagar)', 'Feature (to pay)')), $(c.feat)) : null,
-        c.cover ? kv(t(l('Capa', 'Cover')), $(c.cover)) : null,
-        c.pressing ? kv(t(l('Fabricação', 'Manufacturing')), $(c.pressing)) : null,
-        c.marketing ? kv(t(l('Divulgação', 'Promotion')), $(c.marketing)) : null,
+        // R31 (RN-03): cada valor diz se já saiu (pago), se é devido (a pagar) ou se é conta do plano (estimado)
+        kv(t(l('Já gasto', 'Already spent')), tagged31($(p.spent), moneyTag31('paid'))),
+        c.recording ? kv(t(l('Gravação', 'Recording')), tagged31($(c.recording), moneyTag31('payable'))) : null,
+        c.feat ? kv(t(l('Participação', 'Feature')), tagged31($(c.feat), moneyTag31('payable'))) : null,
+        c.cover ? kv(t(l('Capa', 'Cover')), tagged31($(c.cover), moneyTag31('estimated'))) : null,
+        c.pressing ? kv(t(l('Fabricação', 'Manufacturing')), tagged31($(c.pressing), moneyTag31('estimated'))) : null,
+        c.marketing ? kv(t(l('Divulgação', 'Promotion')), tagged31($(c.marketing), moneyTag31('estimated'))) : null,
         kv(t(l('Comprometido', 'Committed')), h('b', { class: over ? 'bad' : '' }, $(c.committed), p.budget ? ` / ${$(p.budget)}` : '')),
         kv(t(l('Caixa disponível', 'Available cash')), h('b', { class: short ? 'bad' : 'good' }, $(cash))),
         h('div', { class: 'pj-meter', title: t(l('Falta pagar × caixa', 'Still to pay × cash')) }, bar(Math.min(c.remaining, Math.max(1, cash)), Math.max(1, cash), short ? 'bad' : c.remaining > cash * 0.5 ? 'warn' : 'good')),
@@ -219,7 +222,6 @@ function budgetSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
 function calendarSection(s: GameState, p: MusicProject, st: ProjStage): HTMLElement {
   const pr = s.pendingReleases.find((x) => x.id === p.pendingId);
   const ro = p.rolloutId ? s.rollouts.find((x) => x.id === p.rolloutId) : undefined;
-  const ready = st === 'finishing';
   return section(t(l('Promoção e calendário', 'Promotion and release calendar')),
     st === 'scheduled' && pr ? h('div', null,
       kv(t(l('Lançamento', 'Release')), t(l('semana {w} (em {n} sem.)', 'week {w} (in {n} wk)'), { w: pr.week, n: Math.max(0, pr.week - s.week) })),
@@ -228,9 +230,8 @@ function calendarSection(s: GameState, p: MusicProject, st: ProjStage): HTMLElem
     st !== 'scheduled' && st !== 'released' && st !== 'followup' ? h('div', { class: 'form' },
       h('label', { class: 'pj-inline' }, t(l('Lançar daqui a (semanas)', 'Release in (weeks)')), h('input', { type: 'number', min: 1, max: 26, value: p.weeksAhead, onchange: (e: Event) => { p.weeksAhead = Math.max(1, Math.min(26, Number((e.target as HTMLInputElement).value) || 1)); } })),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn primary', disabled: !ready, onclick: () => say(scheduleProject(s, rng19(s, 'act'), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
-        p.type === 'lp' ? h('button', { class: 'btn', disabled: !ready, title: t(l('Teaser, pré-save, singles de trabalho, clipe e álbum, fase a fase.', 'Teaser, pre-save, lead singles, video and album, phase by phase.')), onclick: () => say(rolloutProject(s, p), l('Rollout planejado.', 'Rollout planned.')) }, ic('calendar'), ' ', t(l('Lançar com rollout', 'Release with a rollout'))) : null),
-      !ready ? h('p', { class: 'muted small' }, t(l('Disponível quando todas as faixas estiverem gravadas.', 'Available once every track is recorded.'))) : null,
+        lockBtn31([ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))], releaseLock31(s, p.actId, p.id), () => say(scheduleProject(s, rng19(s, 'act'), p), l('Lançamento programado.', 'Release scheduled.')), { cls: 'btn primary' }), // R31 (RN-04)
+        p.type === 'lp' ? lockBtn31([ic('calendar'), ' ', t(l('Lançar com rollout', 'Release with a rollout'))], releaseLock31(s, p.actId, p.id), () => say(rolloutProject(s, p), l('Rollout planejado.', 'Rollout planned.')), { cls: 'btn', compact: true, title: t(l('Teaser, pré-save, singles de trabalho, clipe e álbum, fase a fase.', 'Teaser, pre-save, lead singles, video and album, phase by phase.')) }) : null),
     ) : null,
   );
 }

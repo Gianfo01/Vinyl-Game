@@ -1,6 +1,8 @@
 // Rodada 20 (G2, uiux §4.6): Finanças → "Posição". Caixa, competência, AR/AP e obrigações como conceitos separados;
 // "Agora" × "Último fechamento" (com data); obrigações consolidadas (empréstimos, credores, títulos, a pagar, reservas,
 // compromissos) com detalhe por instrumento; reconciliação simples do caixa. Mesma fonte do Balanço (sim/oblig20).
+import { moneyTag31 } from '../r31/lock31';
+import { oblMoney31 } from '../../sim/r31/tags';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { fin18, mIdx18, netProfit18 } from '../../sim/ledger18';
@@ -52,7 +54,7 @@ function obligations(s: GameState): HTMLElement {
   const cv = cov19(s);
   return h('div', null,
     gs.map((g) => h('details', { class: 'fin20-grp' },
-      h('summary', null, h('b', null, t(g.name)), ' — ', $(g.total), ' ', h('small', { class: 'muted' }, g.liability ? t(l('passivo', 'liability')) : t(l('compromete caixa, não é passivo', 'commits cash, not a liability')))),
+      h('summary', null, h('b', null, t(g.name)), ' — ', $(g.total), ' ', moneyTag31(oblMoney31(g.kind)), ' ', h('small', { class: 'muted' }, g.liability ? t(l('passivo', 'liability')) : t(l('compromete caixa, não é passivo', 'commits cash, not a liability')))),
       h('ul', { class: 'small' }, g.items.map((o) => h('li', null, typeof o.label === 'string' ? o.label : t(o.label), ': ', h('b', null, $(o.amt)),
         o.monthly ? ` · ${$(o.monthly)}/${t(l('mês', 'mo'))}` : '', o.rate ? ` · ${(o.rate * 100).toFixed(1)}% ${t(l('a.a.', '/yr'))}` : '',
         o.bank ? h('span', { class: 'pill small' }, t(l('covenant bancário', 'bank covenant'))) : null,

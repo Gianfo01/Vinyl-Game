@@ -1,6 +1,8 @@
 // Rodada 12 — interface do "Por que deu nisso?" ampliado: caixa de previsão (antes) e leituras (depois)
 // para contratações, renovações, turnês e festivais.
 
+import { basisTag31 } from '../r31/lock31';
+import { forecastBasis31, ONE_RESULT31 } from '../../sim/r31/tags';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { ex12, forecastFestival, type Debrief12, type Forecast12 } from '../../sim/sys/explain12';
@@ -20,10 +22,10 @@ export function forecastBox(fc: Forecast12): HTMLElement {
   const qc = fc.info.q < 0.35 ? 'bad' : fc.info.q < 0.55 ? 'warn' : 'good';
   return h('div', { class: 'eval x12-fc' },
     h('div', null, ic('chart-up'), ' ', h('b', null, t(fc.headline)), ': ', pill(range, fc.unit === 'chance' ? (fc.lo > 0.6 ? 'good' : fc.hi < 0.35 ? 'bad' : 'warn') : ''),
-      ' ', h('small', { class: 'muted' }, t(l('informação', 'information')), ' '), pill(t(fc.info.label), qc)),
+      ' ', h('small', { class: 'muted' }, t(l('informação', 'information')), ' '), pill(t(fc.info.label), qc), ' ', basisTag31(forecastBasis31(fc.info.q), true)), // R31 (RN-27/28)
     fc.risks.length ? h('ul', { class: 'small' }, fc.risks.slice(0, 4).map((r) => h('li', null, ic('warning'), ' ', t(r)))) : null,
     fc.info.why.length ? h('p', { class: 'muted small' }, fc.info.why.map((w) => t(w)).join(' ')) : null,
-    h('p', { class: 'muted small' }, t(l('Faixa, não promessa: humor, mercado e acaso ainda mexem no resultado. Informação ruim também pode enganar o centro da faixa.', 'A range, not a promise: mood, market and chance still move the outcome. Poor information can also skew the center of the range.'))),
+    h('p', { class: 'muted small' }, t(l('Faixa, não promessa: humor, mercado e acaso ainda mexem no resultado. Informação ruim também pode enganar o centro da faixa.', 'A range, not a promise: mood, market and chance still move the outcome. Poor information can also skew the center of the range.')), ' ', t(ONE_RESULT31)),
   );
 }
 
