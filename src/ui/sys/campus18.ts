@@ -368,7 +368,11 @@ const fmt27 = (x: L, o: Record<string, string | number>): L => ({ pt: x.pt.repla
 function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const s = v.s;
   const nav5 = v.live && nav5On(s); // R31 onda 5 (MAPA): placas no lugar da lista; camadas, "!" e setas
-  if (nav5) { ui.f.mine = true; ui.f.nb = true; ui.f.lm = true; }
+  if (nav5) {
+    ui.f.mine = true; ui.f.nb = true; ui.f.lm = true;
+    const key5 = `${s.config.seed}:${s.config.homeCity}`; // outra partida ou cidade: o mapa abre inteiro de novo
+    if (CITY5.seen !== key5) { CITY5.seen = key5; ui.z = 1; ui.px = 0; ui.py = 0; ui.pop = undefined; ui.inside = undefined; }
+  }
   const pins5 = nav5 ? cityPins5(s) : [];
   for (const old of document.querySelectorAll('body > .c27-sheet')) old.remove(); // folha antiga (celular) de um render anterior
   const { mw: MW, mh: MH } = v.scene.geo;
@@ -586,7 +590,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   };
   document.addEventListener('pointerdown', outside, true);
   if (nav5) { // R31 onda 5 (MAPA): camadas e "!" nos pontos, setas de prédio em prédio, busca apontando
-    decorateCity5(layer, pins5);
+    decorateCity5(layer, pins5, tip);
     cityKeys5(vp, layer, { zoom: (f) => setZ(ui.z * f), reset: () => { ui.z = 1; ui.px = 0; ui.py = 0; apply(); }, pan: (dx, dy) => { ui.px += dx; ui.py += dy; clampPan(); apply(); }, show: show5 });
     const want = CITY5.want;
     CITY5.want = undefined;

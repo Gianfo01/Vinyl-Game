@@ -32,7 +32,7 @@ import './mundo27.css';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
 import { nav5On } from '../../sim/r31/exp5'; // R31 onda 5 (MAPA): mundo só pelo mapa atrás de exp5.nav
 import { country5 } from '../r31/map5model';
-import { CITY5_SHEET, WORLD5, countryKeys5, countryPanel5, openCityMap5, telexCard5, worldHint5 } from '../r31/map5ui';
+import { CITY5_SHEET, WORLD5, countryKeys5, countryPanel5, openCityMap5, pinTelex5, telexCard5, worldHint5, worldIdle5 } from '../r31/map5ui';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 import { a29, placeArt29, venueArt29 } from '../art29ui'; // r29 (arte)
@@ -264,12 +264,12 @@ function mapTab(s: GameState): HTMLElement {
     getYear: () => store.game?.year ?? s.year,
     getMonth: () => store.game?.month ?? s.month,
     cities: () => cities,
-    selected: mapSel ? [mapSel] : [],
+    selected: nav5 && WORLD5.country ? country5(s, WORLD5.country)?.cities ?? [] : mapSel ? [mapSel] : [], // R31 onda 5 (MAPA): cidades do país aceso
     mode: 'scenes' as const,
     onCityClick: (id: string) => { if (nav5) { openCityMap5(s, id); return; } mapSel = id; rerender(); },
     onCountryClick: (a3: string) => { if (nav5) { WORLD5.country = country5(s, a3)?.id; WORLD5.focus = WORLD5.country; rerender(); return; } openMapInfo17(s, 'country', a3); },
     overlays: () => ov,
-    countryShade: (a3: string) => { if (nav5 && WORLD5.country && selA3s5.has(a3)) return { color: 'rgba(240, 176, 48, 0.55)' }; const c = closed.get(a3); if (!c && ages) { const x = ages.get(a3); if (x) return { color: ageLayerColor29(x.band, x.v) }; } return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
+    countryShade: (a3: string) => { if (nav5 && WORLD5.country && selA3s5.has(a3)) return { color: '#ffc428' }; const c = closed.get(a3); if (!c && ages) { const x = ages.get(a3); if (x) return { color: ageLayerColor29(x.band, x.v) }; } return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
     cityTipExtra: (id: string) => { const v = st.get(id) ?? 0; const mine = layers.has('mine') ? sites.get(id) ?? [] : []; return h('div', { class: 'small' }, `${T(l('Cena', 'Scene'))}: ${T(TIER27[sceneTier27(v)])}`, mine.length ? h('div', { class: 'mine27' }, ic('building'), ` ${mine.map((x) => `${x.name} (${T(x.kindName)})`).join(' · ')}`) : null); },
     countryTipExtra: (a3: string) => { const c = closed.get(a3); const x = ages?.get(a3); return c ? h('div', { class: 'small bad' }, ic('lock'), ' ', T(c.why)) : x ? h('div', { class: 'small' }, ic('fans'), ' ', x.mix.map((v, i) => `${['13–17', '18–24', '25–34', '35–49', '50+'][i]} ${Math.round(v * 100)}%`).join(' · ')) : null; },
     legendExtra: () => [
@@ -289,16 +289,19 @@ function mapTab(s: GameState): HTMLElement {
   if (nav5) { // R31 onda 5 (MAPA)
     const want = WORLD5.want; WORLD5.want = undefined;
     if (want && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => map27?.centerOn(want.lon, want.lat, want.span));
+    const openC = (id: string) => { WORLD5.country = id; WORLD5.focus = id; const c = country5(s, id); if (c) map27?.centerOn(c.lon, c.lat, c.span); rerender(); };
     const side = (WORLD5.country ? countryPanel5(s, WORLD5.country, { close: () => { WORLD5.country = undefined; rerender(); }, full: (a3) => openMapInfo17(s, 'country', a3), market: () => go27({ area: 'regions19' }) }) : null)
-      ?? h('aside', { class: 'card sheet27 sheet27-hint' }, h('h3', null, T(l('Clique num país', 'Click a country'))),
-        h('p', { class: 'small muted' }, T(l('O país mostra mercado, cidades e cultura; a cidade abre o mapa dela. As rotas das suas turnês aparecem desenhadas; o telex do mês fica no canto do mapa.', 'A country shows its market, cities and culture; a city opens its own map. Your tour routes are drawn; the month\'s telex sits in the map corner.'))));
-    return h('div', { class: 'map27 m5-world' },
+      ?? worldIdle5(s, { open: openC });
+    pinTelex5(map27.element, telexCard5(s, go27));
+    const root = h('div', { class: 'map27 m5-world', onkeydown: (e: KeyboardEvent) => { if (e.key === 'Escape' && WORLD5.country) { e.preventDefault(); e.stopPropagation(); WORLD5.country = undefined; rerender(); } } });
+    root.append(
       h('div', { class: 'map27-bar', role: 'group', 'aria-label': T(l('Camadas do mapa', 'Map layers')) },
         LAYERS27.map((x) => h('button', { type: 'button', class: `chip-btn ${layers.has(x.id) ? 'on' : ''}`, 'aria-pressed': layers.has(x.id) ? 'true' : 'false',
           onclick: () => { if (layers.has(x.id)) layers.delete(x.id); else layers.add(x.id); rerender(); } }, ic(x.icon), ' ', T(x.name)))),
-      h('div', { class: 'map27-body' }, h('div', { class: 'map27-map' }, map27.element, telexCard5(s, go27)), side),
-      countryKeys5(s, { center: (c) => map27?.centerOn(c.lon, c.lat, 34), open: (a3) => { WORLD5.country = a3; rerender(); } }),
+      h('div', { class: 'map27-body' }, h('div', { class: 'map27-map' }, map27.element), side),
+      countryKeys5(s, { center: (c) => map27?.centerOn(c.lon, c.lat, c.span), open: openC }),
       worldHint5());
+    return root;
   }
   return h('div', { class: 'map27' },
     h('div', { class: 'map27-bar', role: 'group', 'aria-label': T(l('Camadas do mapa', 'Map layers')) },

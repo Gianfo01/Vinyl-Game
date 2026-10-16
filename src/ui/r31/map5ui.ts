@@ -15,6 +15,7 @@ import { nav5On } from '../../sim/r31/exp5';
 import { registerRegion5 } from './nav5';
 import { buildScene18, drawFrame18, env18 } from '../pixel/campus18px';
 import { mapLms27 } from '../pixel/city27';
+import { skylineThumbImg29 } from '../pixel/geo29';
 import { LOTS18, DIST18 } from '../../sim/sys/campus18';
 import { citySheet27, type Go27 } from '../sys/mundo27model';
 import { genreName, pill, rerender } from '../common';
@@ -28,6 +29,10 @@ import {
 } from './map5model';
 import './map5.css';
 
+/** Ícone de cada placa (a mesma família de ícones dos pinos do mapa). */
+const LAYER_IC5: Record<Layer5, string> = { mine: 'building', nb: 'crown', shops: 'guitar', venues: 'radio', sale: 'coin', real: 'star', homes: 'house', lm: 'map', fn: 'eye' };
+/** Tecla desenhada. O texto entra cru (sem o filtro de nomes reais da exibição: "Enter" e "N" também são nomes de artistas). */
+const kbd5 = (k: string): HTMLElement => h('span', { class: 'm5-kbd' }, document.createTextNode(k));
 const T = (x: L | string | undefined): string => (x === undefined ? '' : typeof x === 'string' ? x : t(x));
 const DIRS5: Record<string, Dir5> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
 
@@ -46,7 +51,7 @@ export function regionCmds5(s: GameState, q: string): RegionCmd5[] {
 
 // ---------------------------------------------------------------- estado da sessão (não vai para o save)
 
-export const CITY5: { layers: Set<Layer5>; want?: string } = { layers: defaultLayers5() };
+export const CITY5: { layers: Set<Layer5>; want?: string; /** partida+cidade já vista (zera o zoom ao trocar) */ seen?: string } = { layers: defaultLayers5() };
 export const WORLD5: { country?: string; city?: string; focus?: string; want?: { lon: number; lat: number; span: number } } = {};
 
 const goArea5 = (area: string): void => { (store as { area: string }).area = area; rerender(); };
@@ -58,7 +63,7 @@ export function pointWorld5(s: GameState, key: string, city?: string): void {
   const c = country5(s, key);
   WORLD5.country = c?.id; WORLD5.focus = c?.id; WORLD5.city = undefined;
   const cc = city ? cityById[city] : undefined;
-  WORLD5.want = cc ? { lon: cc.lon, lat: cc.lat, span: 14 } : c ? { lon: c.lon, lat: c.lat, span: 34 } : undefined;
+  WORLD5.want = cc ? { lon: cc.lon, lat: cc.lat, span: 14 } : c ? { lon: c.lon, lat: c.lat, span: c.span } : undefined;
   goArea5('world');
 }
 /** Clicar numa cidade do mundo: a da sede abre "Nosso mundo"; as outras, o mapa daquela cidade. */
@@ -94,18 +99,18 @@ export function cityPanel5(s: GameState, pins: Pin5[], o: { fn: boolean; setFn: 
       CITY_LAYERS5.map((x) => h('button', {
         type: 'button', class: `m5-layer ${on(x.id) ? 'on' : ''}`, 'aria-pressed': on(x.id) ? 'true' : 'false', 'data-layer': x.id, title: T(x.tip),
         onclick: () => flip(x.id),
-      }, h('span', { class: 'm5-lname' }, T(x.name)), x.id === 'fn' ? null : h('small', { class: 'm5-ln' }, String(count(x.id)))))),
+      }, h('span', { class: 'm5-lname' }, ic(LAYER_IC5[x.id]), ' ', T(x.name)), x.id === 'fn' ? null : h('small', { class: 'm5-ln' }, String(count(x.id)))))),
     h('div', { class: 'm5-news' },
       h('button', { type: 'button', class: 'btn small', disabled: bangs ? undefined : true, 'data-m5': 'nextbang', onclick: o.nextBang, title: T(l('Vitrine do mês, à venda, recados', 'Showcase, for sale, messages')) },
         h('i', { class: 'm5-bang', 'aria-hidden': 'true' }, '!'), ' ', T(l('Próxima novidade', 'Next news')), ` (${bangs})`)),
     o.good ? h('p', { class: 'small muted' }, T(l('Vizinhanças boas: {n} (passe o mouse nos seus prédios).', 'Good neighbours: {n} (hover your buildings).')).replace('{n}', String(o.good))) : null,
-    h('h4', null, T(l('Atalhos', 'Shortcuts'))),
+    h('header', { class: 'm5-ph' }, h('b', null, T(l('Atalhos', 'Shortcuts')))),
     h('ul', { class: 'm5-keys small' },
-      h('li', null, h('kbd', null, '← ↑ → ↓'), ' ', T(l('anda de prédio em prédio', 'moves building to building'))),
-      h('li', null, h('kbd', null, 'Enter'), ' ', T(l('entra / abre o painel', 'enters / opens the panel'))),
-      h('li', null, h('kbd', null, '+ −'), ' ', T(l('aproxima e afasta', 'zoom in and out')), ' · ', h('kbd', null, '0'), ' ', T(l('cidade inteira', 'whole city'))),
-      h('li', null, h('kbd', null, 'N'), ' ', T(l('próxima novidade', 'next news'))),
-      h('li', null, h('kbd', null, 'Ctrl K'), ' ', T(l('busca e aponta no mapa', 'search and point on the map')))),
+      h('li', null, kbd5('← ↑ → ↓'), ' ', T(l('anda de prédio em prédio', 'moves building to building'))),
+      h('li', null, kbd5('Enter'), ' ', T(l('entra / abre o painel', 'enters / opens the panel'))),
+      h('li', null, kbd5('+ −'), ' ', T(l('aproxima e afasta', 'zoom in and out')), ' · ', kbd5('0'), ' ', T(l('cidade inteira', 'whole city'))),
+      h('li', null, kbd5('N'), ' ', T(l('próxima novidade', 'next news'))),
+      h('li', null, kbd5('Ctrl K'), ' ', T(l('busca e aponta no mapa', 'search and point on the map')))),
     h('p', { class: 'small muted' }, `${T(city?.name ?? l('Sua cidade', 'Your city'))} · ${s.year}`));
 }
 
@@ -113,7 +118,7 @@ const center5 = (b: HTMLElement): Pt5 => ({ id: b.dataset.id ?? '', x: b.offsetL
 const shown5 = (layer: HTMLElement): HTMLElement[] => [...layer.querySelectorAll<HTMLElement>('.w19-hs[data-id]')].filter((b) => !b.hidden);
 
 /** Marca os pontos do mapa: esconde as camadas desligadas, põe "!" e completa o rótulo de leitor de tela. */
-export function decorateCity5(layer: HTMLElement, pins: Pin5[]): void {
+export function decorateCity5(layer: HTMLElement, pins: Pin5[], tip?: HTMLElement): void {
   const by = new Map(pins.map((p) => [p.id, p]));
   for (const b of layer.querySelectorAll<HTMLElement>('.w19-hs[data-id]')) {
     const id = b.dataset.id ?? '';
@@ -126,6 +131,8 @@ export function decorateCity5(layer: HTMLElement, pins: Pin5[]): void {
       b.append(h('i', { class: 'm5-bang m5-pinbang', 'aria-hidden': 'true' }, '!'));
       const why = p.bang.map((x) => T(x.text)).join(', ');
       b.setAttribute('aria-label', `${b.getAttribute('aria-label') ?? T(p.name)} — ! ${why}`);
+      // a dica do passar do mouse também diz o motivo do "!" (o desenho antigo escreve o rótulo; aqui completa)
+      if (tip) b.addEventListener('mouseenter', () => { tip.replaceChildren(b.getAttribute('aria-label')?.replace(/ — ! .*$/, '') ?? '', h('br'), h('i', { class: 'm5-bang', 'aria-hidden': 'true' }, '!'), ` ${why}`); });
     }
   }
 }
@@ -185,7 +192,8 @@ export function countryPanel5(s: GameState, key: string, o: { close: () => void;
   const n = (v?: number) => (v === undefined ? '' : v >= 10 ? Math.round(v).toLocaleString(getLang() === 'pt' ? 'pt-BR' : 'en-US') : v.toFixed(1));
   return h('aside', { class: 'card sheet27 m5-country', 'aria-label': `${T(l('País', 'Country'))}: ${T(c.name)}`, 'data-m5': 'country', 'data-a3': c.a3 },
     h('header', { class: 'sheet27-h' }, h('div', null, h('h3', null, T(c.name)), h('small', { class: 'muted' }, `${T(l('fronteiras de', 'borders of'))} ${s.year}`)),
-      h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar país', 'Close country')), onclick: o.close }, 'x')),
+      h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar país', 'Close country')), onclick: o.close }, '✕')),
+    c.cities[0] ? (() => { const i = skylineThumbImg29(c.cities[0].id, s.year, 280); i.className = 'm5-sky px'; i.alt = ''; return i; })() : null,
     c.closed.length ? h('div', { class: 'chips' }, c.closed.map((x) => pill(T(x), 'bad'))) : null,
     h('div', { class: 'sheet27-blk' }, h('h4', null, ic('coin'), ' ', T(l('Mercado', 'Market'))),
       h('div', { class: 'chips' },
@@ -198,7 +206,7 @@ export function countryPanel5(s: GameState, key: string, o: { close: () => void;
         h('button', { type: 'button', class: 'btn small ghost', onclick: () => o.full(c.a3) }, T(l('Tudo sobre o país', 'Everything about the country'))))),
     h('div', { class: 'sheet27-blk' }, h('h4', null, ic('skyline'), ' ', T(l('Cidades (clique = mapa da cidade)', 'Cities (click = city map)'))),
       h('div', { class: 'm5-cities' }, c.cities.map((x) => h('button', {
-        type: 'button', class: `btn small ${x.home ? 'primary' : 'ghost'} m5-city`, 'data-city': x.id, onclick: () => openCityMap5(s, x.id),
+        type: 'button', class: `btn small ${x.home ? 'primary' : 'ghost'} m5-cbtn`, 'data-city': x.id, onclick: () => openCityMap5(s, x.id),
         title: x.unit && T(x.unit) !== T(c.name) ? T(x.unit) : undefined,
       }, T(x.name), x.tier >= 2 ? [' ', h('span', { class: `pill ${tierCls5[x.tier]}` }, T(l('cena forte', 'strong scene')))] : null, x.tour ? [' ', h('span', { class: 'pill warn' }, T(l('turnê', 'tour')))] : null, x.home ? [' ', h('span', { class: 'pill good' }, T(l('sede', 'HQ')))] : x.mine ? [' ', h('span', { class: 'pill mine27' }, T(l('seu lugar', 'your place')))] : null)))),
     h('div', { class: 'sheet27-blk' }, h('h4', null, ic('book'), ' ', T(l('Cultura', 'Culture'))),
@@ -239,6 +247,11 @@ export function countryKeys5(s: GameState, o: { center: (c: Country5) => void; o
     h('small', { class: 'muted' }, T(l('setas = país vizinho · Enter = abrir · {n} países', 'arrows = neighbouring country · Enter = open · {n} countries')).replace('{n}', String(cs.length))));
 }
 
+/** Prende o telex no palco do mapa (sem cobrir a legenda nem os botões de zoom); troca o anterior. */
+export function pinTelex5(mapEl: HTMLElement, card: HTMLElement): void {
+  for (const x of mapEl.querySelectorAll('.m5-telex')) x.remove();
+  (mapEl.querySelector('.wmap-stage') ?? mapEl).append(card);
+}
 /** O telex (ou jornal, pela época) do mês, preso no canto do mapa. */
 export function telexCard5(s: GameState, go: (g: Go27) => void): HTMLElement {
   const xs = telex5(s);
@@ -247,7 +260,21 @@ export function telexCard5(s: GameState, go: (g: Go27) => void): HTMLElement {
     h('header', null, h('b', null, T(form).toUpperCase()), h('small', null, ` · ${T(l('este mês no mundo', 'this month in the world'))}`)),
     xs.length ? h('ul', null, xs.map((x) => h('li', null, h('button', { type: 'button', class: `m5-tx ${x.mine ? 'mine' : ''}`, onclick: () => go(x.go) }, T(x.title)))))
       : h('p', { class: 'small muted' }, T(l('Mês calmo no mundo.', 'A quiet month in the world.'))),
-    h('button', { type: 'button', class: 'btn tiny ghost', onclick: () => goArea5('mundo27') }, T(l('Ler tudo', 'Read all')), ' →'));
+    h('button', { type: 'button', class: 'm5-tx m5-txall', onclick: () => goArea5('mundo27') }, T(l('ler tudo', 'read all')), ' →'));
+}
+
+/** Sem país escolhido: o que clicar faz e dois atalhos (o seu país e as turnês marcadas), sem lista. */
+export function worldIdle5(s: GameState, o: { open: (id: string) => void }): HTMLElement {
+  const home = country5(s, s.config.homeCity);
+  const tours = worldCountries5(s).filter((c) => c.bang.some((b) => b.k === 'event'));
+  return h('aside', { class: 'card sheet27 sheet27-hint m5-idle', 'data-m5': 'idle' },
+    h('h3', null, T(l('Clique num país', 'Click a country'))),
+    h('p', { class: 'small muted' }, T(l('O país mostra mercado, cidades e cultura; a cidade abre o mapa dela. As rotas das suas turnês aparecem desenhadas e o telex do mês fica no canto do mapa.', 'A country shows its market, cities and culture; a city opens its own map. Your tour routes are drawn and the month\'s telex sits in the map corner.'))),
+    h('div', { class: 'row wrap' },
+      home ? h('button', { type: 'button', class: 'btn small', onclick: () => o.open(home.id) }, ic('house'), ' ', T(home.name)) : null,
+      tours.length ? h('button', { type: 'button', class: 'btn small ghost', onclick: () => o.open(tours[0].id), title: tours.map((c) => T(c.name)).join(', ') },
+        ic('bus'), ' ', T(l('Turnê: {n}', 'Tour: {n}')).replace('{n}', T(tours[0].name)), tours.length > 1 ? ` +${tours.length - 1}` : '') : null),
+    h('p', { class: 'small muted' }, kbd5('Esc'), ' ', T(l('fecha o país', 'closes the country')), ' · ', kbd5('Ctrl K'), ' ', T(l('acha país ou cidade', 'finds a country or city'))));
 }
 
 /** Faixa de baixo do mapa-múndi (como no mock): o que cada clique faz. */
@@ -263,7 +290,7 @@ export const CITY_AREA5 = 'cidade5';
 /** Sheet completo da cidade (o mesmo da ficha do mapa-múndi), ligado por mundo27 para não duplicar. */
 export const CITY5_SHEET: { fn?: (s: GameState, id: string) => HTMLElement | null } = {};
 
-interface VisitSpot5 { id: string; box: [number, number, number, number]; name: string; what: string; kind: 'venue' | 'radio' | 'lm' | 'store' }
+interface VisitSpot5 { id: string; box: [number, number, number, number]; name: string; what: string; kind: 'venue' | 'radio' | 'lm' | 'fest' }
 /** O mapa isométrico de uma cidade que não é a sua: marcos da época e os lugares reais (casas de show, rádios). Só leitura. */
 export function visitCity5(s: GameState, id: string): HTMLElement {
   const c = cityById[id];
@@ -275,7 +302,8 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
   const free = [...fill].sort((a, b) => (LOTS18[b].vis ?? 1) - (LOTS18[a].vis ?? 1));
   for (const v of sh.venues.slice(0, 5)) { const lot = free.shift(); if (lot !== undefined) named.push({ lot, name: v.name, what: `${T(l('Casa de shows', 'Venue'))} · ${v.cap} ${T(l('lugares', 'seats'))}`, kind: 'venue' }); }
   for (const r of sh.radios.slice(0, 4)) { const lot = free.shift(); if (lot !== undefined) named.push({ lot, name: r.name, what: T(r.kind === 'tv' ? l('TV', 'TV') : l('Rádio', 'Radio')), kind: 'radio' }); }
-  const fillKind = new Map(named.map((x) => [x.lot, x.kind === 'venue' ? 'venue' as const : 'media' as const]));
+  for (const f of sh.festivals.slice(0, 1)) { const lot = free.shift(); if (lot !== undefined) named.push({ lot, name: f, what: T(l('Festival da cidade', 'City festival')), kind: 'fest' }); }
+  const fillKind = new Map(named.map((x) => [x.lot, x.kind === 'venue' ? 'venue' as const : x.kind === 'fest' ? 'fest' as const : 'media' as const]));
   let seed = 7; for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
   const lms = mapLms27(id, s.year);
   const scene = buildScene18([], new Map(), env18(s.year, s.month, c.lat, id), [], seed % 9973, 'REC', [], lms, { filler: fill, dist: 1, fillKind });
@@ -291,18 +319,19 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
   const showSheet = () => side.replaceChildren(CITY5_SHEET.fn?.(s, id) ?? h('p', { class: 'muted' }, T(sh.name)));
   const pick = (sp: VisitSpot5) => side.replaceChildren(h('aside', { class: 'card sheet27', 'data-m5': 'vspot' },
     h('header', { class: 'sheet27-h' }, h('div', null, h('h3', null, sp.name), h('small', { class: 'muted' }, sp.what)),
-      h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar', 'Close')), onclick: showSheet }, 'x')),
+      h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar', 'Close')), onclick: showSheet }, '✕')),
     h('p', { class: 'small' }, sp.kind === 'venue' ? T(l('Palco da cidade: marque shows e turnês por aqui na agenda do artista.', 'A stage in town: book shows and tours here from the artist\'s planner.'))
       : sp.kind === 'radio' ? T(l('Emissora da cidade: tocar aqui leva o disco ao público local.', 'A local station: airplay here takes the record to the local audience.'))
+        : sp.kind === 'fest' ? T(l('Festival que acontece aqui: inscreva seus artistas no circuito.', 'A festival held here: enter your acts on the circuit.'))
         : T(l('Cartão-postal da época.', 'A postcard sight of the era.'))),
-    h('div', { class: 'row wrap' }, h('button', { type: 'button', class: 'btn small', onclick: () => goArea5(sp.kind === 'radio' ? 'media' : sp.kind === 'venue' ? 'shows' : 'world') },
-      T(sp.kind === 'radio' ? l('Mídia', 'Media') : sp.kind === 'venue' ? l('Shows', 'Shows') : l('Mundo', 'World')), ' →'))));
+    h('div', { class: 'row wrap' }, h('button', { type: 'button', class: 'btn small', onclick: () => goArea5(sp.kind === 'radio' ? 'media' : sp.kind === 'venue' ? 'shows' : sp.kind === 'fest' ? 'festivals' : 'world') },
+      T(sp.kind === 'radio' ? l('Mídia', 'Media') : sp.kind === 'venue' ? l('Shows', 'Shows') : sp.kind === 'fest' ? l('Festivais', 'Festivals') : l('Voltar ao mundo', 'Back to the world')), ' →'))));
   const layer = h('div', { class: 'w19-hot m5-vhot' }, spots.map((sp) => h('button', {
     type: 'button', class: `w19-hs fill m5-vs m5-${sp.kind}`, 'data-id': sp.id, 'aria-label': `${sp.name} · ${sp.what}`, title: `${sp.name} · ${sp.what}`,
     style: `left:${pct(sp.box[0], MW)};top:${pct(sp.box[1], MH)};width:${pct(Math.max(6, sp.box[2] - sp.box[0]), MW)};height:${pct(Math.max(6, sp.box[3] - sp.box[1]), MH)}`,
     onclick: () => pick(sp),
   }, h('span', { class: 'm5-vtag', 'aria-hidden': 'true' }, sp.name))));
-  const vp = h('div', { class: 'w19-vp m5-vvp', style: `--ar:${(MW / MH).toFixed(4)}` }, h('div', { class: 'w19-zoom' }, cv, layer));
+  const vp = h('div', { class: 'm5-vvp', style: `--ar:${(MW / MH).toFixed(4)}` }, h('div', { class: 'w19-zoom' }, cv, layer));
   cityKeys5(vp, layer, { zoom: () => {}, reset: () => {}, pan: () => {}, show: () => {} });
   const back = () => { WORLD5.city = undefined; WORLD5.country = country5(s, id)?.id; WORLD5.focus = WORLD5.country; goArea5('world'); };
   vp.addEventListener('keydown', (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); back(); } });
@@ -310,7 +339,8 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
   return h('div', { class: 'm5-visit', 'data-m5': 'visit', 'data-city': id },
     h('div', { class: 'm5-vhead' }, h('h2', null, T(sh.name)), h('small', { class: 'muted' }, `${T(sh.country)} · ${s.year}`),
       h('button', { type: 'button', class: 'btn small', onclick: back }, '← ', T(l('Voltar ao mundo', 'Back to the world')))),
-    h('div', { class: 'm5-vbody' }, h('div', { class: 'm5-vmap c27-frame w19-frame' }, vp), side));
+    h('div', { class: 'm5-vbody' }, h('div', { class: 'm5-vmap' }, vp,
+      h('p', { class: 'small muted m5-vnote' }, T(l('Casas de show, rádios e festivais desta cidade e época; os marcos aparecem ao passar o mouse. Setas andam pelos lugares, Enter abre, Esc volta ao mundo.', 'Venues, radios and festivals of this city and era; landmarks show on hover. Arrows move between places, Enter opens, Esc goes back to the world.')))), side));
 }
 
 registerArea({ id: CITY_AREA5, label: l('Cidade (visita)', 'City (visit)'), icon: 'skyline', key: '',

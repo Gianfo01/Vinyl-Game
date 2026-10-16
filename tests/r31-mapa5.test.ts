@@ -56,12 +56,15 @@ describe('MAPA · cidade sem lista', () => {
     expect(visiblePins5(pins, off).some((p) => p.id === 'hq')).toBe(false);
   });
 
-  it('"!" de novidade: à venda que cabe no caixa, recados e eventos marcados (com o motivo)', () => {
+  it('"!" de novidade: prédio à venda, vitrine, recados e eventos marcados (com o motivo; um por tipo de lugar)', () => {
     const g = game(1975, 'rio');
     const pins = cityPins5(g);
     for (const p of pins) for (const b of p.bang) expect(b.text.pt.length).toBeGreaterThan(2);
     const sale = pins.filter((p) => p.k === 'sale');
     expect(sale.length).toBeGreaterThan(0);
+    for (const p of sale) expect(p.bang.length).toBe(0); // a placa com o preço já está no desenho
+    // um "!" de recado/vitrine por tipo de lugar, não em todos (o mapa não vira um mar de "!")
+    for (const k of ['msg', 'vit'] as const) expect(pins.filter((p) => p.bang.some((b) => b.k === k)).length).toBeLessThanOrEqual(14);
   });
 
   it('setas: de qualquer começo, as 4 direções alcançam todos os prédios (grade real dos lotes)', () => {

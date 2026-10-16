@@ -136,7 +136,17 @@ export function cityPins5(s: GameState): Pin5[] {
     out.push({ id: p.id, k: 'place', layer: placeLayer5({ k: p.k, src: p.src, real: realIds.has(p.id) }), name: p.name, what: p.what, bang });
   }
   for (const x of lots.sale) {
-    out.push({ id: `lot:${x.lot}`, k: 'sale', layer: 'sale', name: LOTS18[x.lot]?.name ?? `#${x.lot}`, what: x.name, bang: !x.dis && !x.own ? [{ k: 'sale', text: BANG_TXT5.sale }] : [] });
+    // terreno à venda já tem a placa com o preço no desenho: sem "!" por cima (o "!" de à venda fica para prédios)
+    out.push({ id: `lot:${x.lot}`, k: 'sale', layer: 'sale', name: LOTS18[x.lot]?.name ?? `#${x.lot}`, what: x.name, bang: [] });
+  }
+  // um "!" por tipo de lugar e motivo (o recado da rádio acende UMA rádio, não todas): vizinho e lugar real primeiro
+  const kindOf = new Map(lots.places.map((p) => [p.id, p.k]));
+  const rank = (p: Pin5) => (p.k === 'nb' ? 0 : p.layer === 'real' ? 1 : 2);
+  const lit = new Set<string>();
+  for (const p of [...out].sort((a, b) => rank(a) - rank(b))) {
+    const k = kindOf.get(p.id);
+    if (!k) continue;
+    p.bang = p.bang.filter((b) => { if (b.k !== 'vit' && b.k !== 'msg') return true; const key = `${k}:${b.k}`; if (lit.has(key)) return false; lit.add(key); return true; });
   }
   for (const e of live19ev(s)) out.push({ id: `ev:${e.id}`, k: 'event', layer: 'mine', name: EV19[e.k].n, what: EV19[e.k].d, bang: [{ k: 'event', text: BANG_TXT5.event }] });
   for (const m of mapLms27(s.config.homeCity, s.year)) if (!lots.cx.lmOut.has(m.id)) out.push({ id: `lm:${m.id}`, k: 'lm', layer: 'lm', name: m.n, what: l('Marco da cidade', 'City landmark'), bang: [] });
@@ -206,6 +216,8 @@ export interface Country5 {
   cities: string[];
   /** centro (média das cidades do jogo): o teclado anda por ele */
   lon: number; lat: number;
+  /** graus de longitude para enquadrar o país inteiro (país grande = mapa mais afastado) */
+  span: number;
   bang: Bang5[];
 }
 const tx5 = (x: L | string): string => (typeof x === 'string' ? x : x.pt);
@@ -240,7 +252,9 @@ export function worldCountries5(s: GameState): Country5[] {
     if (closed.get(a3)?.hard) bang.push({ k: 'msg', text: l('fechado agora', 'closed now') });
     const lon = cs.reduce((a, c) => a + (cityById[c]?.lon ?? 0), 0) / cs.length;
     const lat = cs.reduce((a, c) => a + (cityById[c]?.lat ?? 0), 0) / cs.length;
-    out.push({ id, a3, name, cities: cs, lon, lat, bang });
+    const lons = cs.map((c) => cityById[c]?.lon ?? lon), lats = cs.map((c) => cityById[c]?.lat ?? lat);
+    const span = Math.max(16, Math.min(110, Math.max(Math.max(...lons) - Math.min(...lons), (Math.max(...lats) - Math.min(...lats)) * 1.6) * 1.8));
+    out.push({ id, a3, name, cities: cs, lon, lat, span, bang });
   }
   return out.sort((a, b) => tx5(a.name).localeCompare(tx5(b.name)));
 }
