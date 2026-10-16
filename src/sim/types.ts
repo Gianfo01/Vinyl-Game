@@ -47,6 +47,8 @@ export interface RunConfig {
   labels?: LabelSetup;
   /** rodada 14: tamanho da base de dados (artistas reais + gerados); ausente = médio */
   dbSize?: 'small' | 'medium' | 'large' | 'huge';
+  /** R31 (BASE-IT): base italiana nova (data/base31it) — ausente = ligada; false = os atos dela não nascem (interruptor base31.it). */
+  base31it?: boolean;
   /** R29 (relíquias): densidade das relíquias procedurais (relics29); ausente = 'many' */
   relicDensity?: 'few' | 'normal' | 'many' | 'all';
   /** rodada 12: carreiras escolhidas no começo (atividades principais, origem profissional, ambição) */
