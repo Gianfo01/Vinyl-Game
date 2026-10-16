@@ -145,6 +145,8 @@ export function shopCities31(s: GameState): string[] {
   return out;
 }
 const ymOf = (s: GameState) => `${s.year}-${s.month}`;
+/** O gancho mensal roda no fechamento do mês (antes de virar): o estoque novo é o do mês que começa. */
+const nextYm = (s: GameState) => (s.month >= 11 ? `${s.year + 1}-0` : `${s.year}-${s.month + 1}`);
 
 const FIRST = ['Ada', 'Bento', 'Clara', 'Dino', 'Elsa', 'Fábio', 'Greta', 'Hugo', 'Irene', 'Jonas', 'Lina', 'Marco', 'Nina', 'Otto', 'Paula', 'Rui', 'Sara', 'Tito', 'Vera', 'Zeca'];
 const LAST = ['Amaral', 'Becker', 'Costa', 'Duarte', 'Esposito', 'Ferraz', 'Gallo', 'Hansen', 'Ibarra', 'Jansen', 'Klein', 'Lopes', 'Moretti', 'Novak', 'Ortiz', 'Prado', 'Quintana', 'Rossi', 'Sandoval', 'Toledo'];
@@ -165,9 +167,8 @@ export const SHOWCASE31 = [0.5, 0.3, 0.08, 0.02, 0.002];
 const DENS_M: Record<string, number> = { few: 0.5, normal: 0.8, many: 1, all: 1.3 };
 
 /** Gera o estoque do mês da loja (só no motor). Nunca repete modelo do mês anterior; tira o que sobrou. */
-export function restock31(s: GameState, city: string): Stock31 {
+export function restock31(s: GameState, city: string, ym = ymOf(s)): Stock31 {
   const st = items31(s);
-  const ym = ymOf(s);
   const old = st.stock[city];
   if (old?.ym === ym) return old;
   const venue = shopId31(city);
@@ -234,7 +235,7 @@ function syncRelicObjForShop(s: GameState, rl: Relic): void {
 registerSimHook('newgame', 'items31', (s) => { if (objectsOn31(s)) for (const c of shopCities31(s)) restock31(s, c); });
 registerSimHook('month', 'items31', (s) => {
   if (!objectsOn31(s)) return;
-  for (const c of shopCities31(s)) restock31(s, c);
+  for (const c of shopCities31(s)) restock31(s, c, nextYm(s));
   const st = items31(s);
   st.gifts = st.gifts.filter(([, w]) => s.week - w < 104);
 });

@@ -223,7 +223,7 @@ export function syncRelicObj31(s: GameState, rl: Relic): void {
     if (!r.ok) return;
     o = r.v; m.ob = o.id;
   }
-  if (o.owner !== owner) transfer(s, o.id, owner);
+  if (o.owner !== owner && rl.st !== 'stolen') transfer(s, o.id, owner); // roubo não muda o dono
   if (rl.st === 'stolen' && o.holder === o.owner) steal(s, o.id, 'world:thief');
   else if (rl.st !== 'stolen' && o.holder !== o.owner) recover(s, o.id);
   const of = o.offer ? st.offers[o.offer] : undefined;
@@ -251,6 +251,8 @@ export function syncRelic31(s: GameState, rl: Relic): void {
     if (rl.st === 'stolen') { relicEvent31(rl, `stolen:${s.week}`, 'stolen', s.year); rl.own.push([ownerName(rl), s.year, 'roubada']); }
     if (prev === 'stolen' && (rl.st === 'kept' || rl.st === 'player' || rl.st === 'museum')) {
       relicEvent31(rl, `recov:${s.week}`, 'recov', s.year);
+      // era sua quando sumiu: volta para você (o relics9 devolve "ao último dono")
+      if (rl.st === 'kept' && realOwners9(rl).at(-1)?.[0] === s.config.companyName) rl.st = 'player';
       const last = rl.own[rl.own.length - 1];
       if (!(last && last[1] === s.year && last[2] === 'achado')) rl.own.push([ownerName(rl), s.year, 'reapareceu']);
     }

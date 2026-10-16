@@ -11,6 +11,8 @@
 // Salas: Estúdio, Elenco, Equipe, Catálogo, Talentos, Troféus e relíquias, e a cena-assinatura de cada uma das 12
 // carreiras ('sig:<carreira>'). A pintura fica em salas31px.ts; a tela em salas31.ts.
 
+import { TIER_NAME31, relicTierOf31 } from '../../sim/r31/relic31';
+import type { Relic } from '../../sim/sys/relics9';
 import { HQ_LEVELS, STAFF_ROLES, STUDIO_TIERS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
 import { hqCaps } from '../../sim/branches';
@@ -600,20 +602,17 @@ function talentM(s: GameState): SalaM31 {
 /** Posição dos 5 pedestais (a placa do nível em cima usa a mesma conta). */
 export const TIER_X31 = (i: number): number => 0.19 + i * 0.16;
 export const TIER_W31 = 0.13;
-export const TIER31: L[] = [l('Comum', 'Common'), l('Notável', 'Notable'), l('Rara', 'Rare'), l('Lendária', 'Legendary'), l('Mítica', 'Mythic')];
-/** Nível de exibição da peça (1–5) pela faixa de valor em dólares da época real; peças reais documentadas começam em Rara.
- *  (O sistema de níveis completo da onda de objetos substitui esta faixa; a cena só agrupa.) */
-export function relicTier31(rl: { v: number; rr?: string }): number {
-  const base = rl.v < 1000 ? 1 : rl.v < 10000 ? 2 : rl.v < 100000 ? 3 : rl.v < 1000000 ? 4 : 5;
-  return rl.rr ? Math.max(3, base) : base;
-}
+export const TIER31: L[] = TIER_NAME31;
+/** Nível real da peça (1–5): sai do valor e da história (r31/relic31). */
+export function relicTier31(s: GameState, rl: Relic): number { return relicTierOf31(s, rl); }
 
 function trophyM(s: GameState): SalaM31 {
   const art = artOf31('trophy', s.year, s.player.hq ?? 0, { city: s.config.homeCity });
-  const list = (x4<{ list?: { id: string; k: string; n: L; v: number; st: string; rr?: string; y: number; ex?: 1 }[] }>(s, 'relics9')?.list ?? []).filter((x) => x.st === 'player');
+  const list = ((s.x4 as unknown as { relics9?: { list?: Relic[] } }).relics9?.list ?? []).filter((x) => x.st === 'player');
+  const tierOf = new Map(list.map((x) => [x.id, relicTier31(s, x)]));
   const hots: Hot31[] = [];
   for (let lvl = 1; lvl <= 5; lvl++) {
-    const at = list.filter((x) => relicTier31(x) === lvl).sort((a, b) => b.v - a.v || (a.id < b.id ? -1 : 1));
+    const at = list.filter((x) => tierOf.get(x.id) === lvl).sort((a, b) => b.v - a.v || (a.id < b.id ? -1 : 1));
     const best = at[0];
     hots.push({
       id: `tier:${lvl}`, kind: best ? 'object' : 'empty', prop: 'pedestal', x: TIER_X31(lvl - 1), w: TIER_W31,
@@ -638,7 +637,7 @@ function trophyM(s: GameState): SalaM31 {
     sub: fmtL(l('{n} peça(s) no acervo da empresa', '{n} piece(s) in the company collection'), { n: list.length }),
     intro: l('Cada pedestal é um nível (uma a cinco estrelas). Clique na peça para emprestar ao museu, vender ou presentear.', 'Each pedestal is a level (one to five stars). Click a piece to lend it to a museum, sell or gift it.'),
     art, hots, deco: [{ prop: 'tiers', x: 0.02, w: 0.96 }], you: youIn(s, 'trophy', 0.97), details: { k: 'go', area: 'lendas' }, alerts: [],
-    list: list.slice(0, 30).map((x) => ({ id: x.id, t: x.n, d: fmtL(l('{t} · {y}', '{t} · {y}'), { t: TIER31[relicTier31(x) - 1], y: x.y }), do: { k: 'relic', id: x.id } })), listTitle: l('Acervo', 'Collection'),
+    list: list.slice(0, 30).map((x) => ({ id: x.id, t: x.n, d: fmtL(l('{t} · {y}', '{t} · {y}'), { t: TIER31[(tierOf.get(x.id) ?? 1) - 1], y: x.y }), do: { k: 'relic', id: x.id } })), listTitle: l('Acervo', 'Collection'),
   };
 }
 
