@@ -83,9 +83,10 @@ const TINTS: { id: MapTint; name: L }[] = [
 ];
 
 const BLOC_NAMES: Record<string, L> = { west: l('Bloco ocidental', 'Western bloc'), east: l('Bloco socialista', 'Eastern bloc'), nonaligned: l('Não alinhado', 'Non-aligned') };
-const MODE_NAMES: Record<TransportMode, L> = {
+export const MODE_L31: Record<TransportMode, L> = {
   train: l('trem', 'train'), bus: l('ônibus', 'bus'), ship: l('navio', 'ship'), prop_plane: l('avião a hélice', 'prop plane'), jet: l('jato', 'jet'), hyperloop: l('hyperloop', 'hyperloop'),
 };
+const MODE_NAMES = MODE_L31;
 export const transportName = (m: TransportMode) => t(MODE_NAMES[m]);
 
 // ---------------------------------------------------------------- glifos pixel art
@@ -285,6 +286,12 @@ export class WorldMap {
     const cx = (lo0 + lo1) / 2 + 180;
     const cy = 85 - (la0 + la1) / 2;
     this.animateTo(k, this.w / 2 - cx * k, this.hgt / 2 - cy * k);
+  }
+
+  /** R31 onda 5 (MAPA): centra num ponto (lon, lat) mostrando ~`span` graus na largura (busca e teclado). */
+  centerOn(lon: number, lat: number, span = 40): void {
+    const k = this.clampK(this.w / Math.max(4, span));
+    this.animateTo(k, this.w / 2 - (lon + 180) * k, this.hgt / 2 - (85 - lat) * k);
   }
 
   reset(): void {
@@ -515,6 +522,15 @@ export class WorldMap {
       this.ty += this.hgt / 2 - y;
       this.clampView();
     }
+  }
+
+  /** R31 onda 5 (TRN): posição da cidade na tela (para a rota da transição de viagem); null fora da página. */
+  screenOf(id: string): { x: number; y: number } | null {
+    const c = cityById[id];
+    if (!c || !this.canvas.isConnected || !this.w) return null;
+    const r = this.canvas.getBoundingClientRect();
+    const [x, y] = this.project(c.lon, c.lat);
+    return { x: r.left + x * (r.width / this.w), y: r.top + y * (r.height / this.hgt) };
   }
 
   private project(lon: number, lat: number): [number, number] {

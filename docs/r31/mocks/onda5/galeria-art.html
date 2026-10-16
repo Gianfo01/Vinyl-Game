@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeria da arte da onda 5</title>
+<style>body{margin:0;background:#12141c;color:#e8e0c8;font-family:sans-serif}nav{padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap}nav a{color:#f0c060;font:600 13px sans-serif;padding:4px 8px;border:2px solid #2b3550;border-radius:3px;text-decoration:none}nav a.on{background:#4a3a10;border-color:#f0c060}</style>
+</head>
+<body>
+<!-- Galeria para aprovação (R31 onda 5, ART5). Abra com o vite rodando: /docs/r31/mocks/onda5/galeria-art.html?s=recepcao -->
+<nav id="nav"></nav>
+<main id="gal"></main>
+<script type="module">
+import { exp5Gallery, GAL5 } from '/src/ui/pixel/exp5gallery.ts';
+const sec = new URLSearchParams(location.search).get('s') || 'recepcao';
+const nav = document.getElementById('nav');
+for (const s of GAL5) { const a = document.createElement('a'); a.href = `?s=${s}`; a.textContent = s; if (s === sec) a.className = 'on'; nav.append(a); }
+document.getElementById('gal').append(exp5Gallery(GAL5.includes(sec) ? sec : 'recepcao'));
+document.body.dataset.ready = '1';
+</script>
+</body>
+</html>

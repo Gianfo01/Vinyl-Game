@@ -130,18 +130,20 @@ O lote também não entra nas tabelas de pessoas reais quando o interruptor est�
   interruptor;
 - a harmonização de nascimento e morte (`harmonize27`) ignora o lote, para não mudar os dados de quem já existia.
 
-**Goldens:** com o interruptor desligado, r27-p2a, r27-p2b, r27-m3 e r16-playbot voltam aos valores de antes do lote
-(182 589 / 3 575 668 786 / 1 693 608 899 / 3 302 724 126), conferido nos dois turnos. Ligado, r27-p2a e r27-p2b mudam de
-propósito, porque mais atos reais estreiam:
+**Goldens (mundo combinado depois da integração BR, IT e HITS):** com o BR desligado, r27-p2a e r27-p2b voltam aos
+valores da integração com IT e HITS: caixa 2 343, turnês 1 382 068 899 e rng 2 898 923 487. Os atos diferem só pelo número
+de catálogo dos atos IT e HITS, que vêm depois do lote BR na ordem combinada. Descontado esse deslocamento, o hash é
+3 720 502 148, o mesmo da integração (conferido). Com o BR ligado:
 
-| Golden | Antes | Depois |
+| Golden | Integração (sem BR) | Com BR |
 |---|---:|---:|
-| Caixa | 182 589 | 9 071 |
-| Turnês | 3 575 668 786 | 283 887 455 |
-| Acts | 1 693 608 899 | 1 695 895 254 |
-| RNG | 3 302 724 126 | 4 020 433 329 |
+| Caixa | 2 343 | 452 809 |
+| Turnês | 1 382 068 899 | 4 058 172 360 |
+| Acts | 3 720 502 148 | 3 810 020 408 |
+| RNG | 2 898 923 487 | 4 020 433 329 → 2 332 586 623 |
 
-O caixa do bot nesta semente oscila centenas de milhares de mês a mês, como já estava anotado no UNI-4.
+A linha do RNG mostra antes o valor do BR sem IT e HITS (4 020 433 329) e depois o do mundo combinado (2 332 586 623).
+r27-m3 não muda.
 
 - **r16-playbot:** a semente pb-11 deixou de ter todas as ações no 1º ano. Na varredura pb-1 a pb-16, 6 sementes têm todas
   as ações (pb-2, 5, 8, 10, 12 e 13), e o teste passou a usar a pb-10.
@@ -157,6 +159,10 @@ Armandinho do reggae. Conflito de nascimento com a base fica omitido e anotado:
 - Alexandre Pires: 1976 contra 1975 no Só Pra Contrariar.
 
 ## Medição (desempenho do mês e tamanho do save, 337 atos)
+
+A medição foi feita antes de a integração receber as bases IT e HITS. Os números comparam só o lote BR ligado e
+desligado.
+
 
 Rodei `npx tsx scripts/r31/measure.ts` com 4 sementes × 5 eras e 36 meses por partida, com o interruptor ligado e
 desligado. Os arquivos completos são `docs/r31/base-br-medida.md` / `.json` e `base-br-medida-off.md` / `.json`.

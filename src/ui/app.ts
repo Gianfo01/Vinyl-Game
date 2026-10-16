@@ -4,7 +4,9 @@ import { attnSeq, notes } from '../sim/attention';
 import { LABEL_LEGACY20 } from '../sim/oblig20';
 import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
-import { l, type L } from '../data/world';
+import { cityById, l, type L } from '../data/world';
+import type { GameState } from '../sim/types';
+import { ownerCity } from '../sim/sys/mapx8';
 import { rw } from '../sim/sys/realworld';
 import { S, t, type Lang } from '../i18n/strings';
 import { endingScores, legacyTotal } from '../sim/legacy';
@@ -42,6 +44,8 @@ import './r31/learn31ui'; // R31 onda 4 (R): resultados e aprendizados — por p
 import './r31/socio31ui'; // R31 onda 3 (SOC): sócios e compras (Negócios, ficha da empresa, painel rápido da cidade)
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
 import './r31/city31ui'; // R31 onda 4 (H): loja e casa em cena (áreas 'loja31' e 'casa31')
+import { area5Of } from './r31/casa5'; // R31 onda 5 (CASA): casa como "Você", sede que cresce e maquete (atrás de exp5.nav)
+import { nav5On } from '../sim/r31/exp5';
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
@@ -114,8 +118,16 @@ import { PURPOSE27, kpis27 } from './ps/ui27model';
 import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em nomes abre o menu de ações
 // R31 (onda 1, A): menu "mundo primeiro" (entradas ≤ 10 + Lugares + Listas), Hoje, cabeçalho único e topo enxuto
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
+import { regionCmds5 } from './r31/map5ui'; // R31 onda 5 (MAPA): busca aponta prédio/país no mapa (só com exp5.nav)
+import { NAV5, TRANS5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
+import { paperGo5, paperKey5Ev } from './r31/papers5'; // R31 onda 5 (PAPEL): páginas dentro dos papéis (registradas na casca; só com exp5.nav)
+import { chordLabel5 } from './r31/keys5';
+import { help5, shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
+import './r31/elenco5'; // R31 onda 5 (ELENCO): mural, quadro, agenda, fichário, contratação e chefe como papéis (só com exp5.nav ligado)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
+import { settingsTrn31, transition31, trnBack31, trnGate31 } from './r31/trn31'; // R31 onda 5 (TRN): transições entre telas
+import { cardInfo31, monthInfo31, type TrnPend31, type TrnPlace31 } from './r31/trn31model';
 import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale) ?? (isIcon31(name) ? pxEmoImg31(name, undefined, scale) : null))); // r17: + ícones do menu; r31 EMO: + icons31
@@ -179,6 +191,16 @@ export function boot(el: HTMLElement): void {
     view: () => ({ menuView: view27(), textScale: store.prefs.textScale, density: (store.prefs as { dens20?: string }).dens20, reducedMotion: store.prefs.reducedMotion, audio: !!(store.prefs as { audio28?: boolean }).audio28 }) });
   initRouter15((r) => { if (store.game && r.area === LISTS31) { goLists31(r.tab?.[0] === LKEY31 ? r.tab[1] : undefined); return true; } if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (store.game && (REDIRECT29[r.area] || !areaExists(r.area))) { const x = resolve29(r.area); if (x && (x.util || (x.area && areaExists(x.area)))) { open29(x); return true; } } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
+  // R31 onda 5 (TEC): ganchos da navegação nova (só usados com exp5.nav ligado)
+  NAV5.go = (x) => { paperGo5(store.game ?? undefined, x); if (shell5On(store.game)) show5(x.area, x.tab); else open29({ area: x.area, tab: x.tab }); }; NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings(); // PAPEL: abrir o dono sem aba devolve a aba emprestada (Z depois de ⇧Z)
+  NAV5.paper = () => document.querySelector<HTMLElement>('[data-paper5]')?.dataset.paper5 ?? (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined); // caixa de entrada aberta: as teclas dela ganham
+  // R31 onda 5 (NAV × TRN): as viagens e o abrir/fechar papel da casca passam pelas transições (sem animação, troca direto)
+  TRANS5.run = (x, swap) => {
+    const g = store.game;
+    const card = x.kind === 'travel' && x.to && g ? cardInfo31({ to: x.to, city: t(cityById[ownerCity(g)]?.name) || ownerCity(g), month: g.month, year: g.year, pend: trnPend31(g) }) : undefined;
+    if (!transition31(x.kind, { year: x.year, rect: x.rect, card }, swap)) swap();
+  };
+  NAV5.help = (rows) => shortcutsHelp15(rows.map((r) => ({ key: chordLabel5(r.key), label: t(r.label) })));
   document.addEventListener('vtn31-go', (e) => { if (!store.game) return; e.preventDefault(); go((e as CustomEvent<string>).detail); }); // R31 (O): destino do painel rápido/favoritos
   titleScreen(root, startGame);
 }
@@ -200,8 +222,17 @@ function onKey(e: KeyboardEvent): void {
   const tag = (e.target as HTMLElement)?.tagName;
   // r25: Ctrl/Cmd+K (Buscar) vale também de dentro de um campo (ex.: filtro do "Mais")
   const ck = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
-  if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')) return;
+  const nav5 = shell5On(store.game); // R31 onda 5 (NAV): casca nova (exp5.nav); desligado, nada abaixo muda
+  if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') && !(nav5 && e.key === 'Escape')) return;
   if (document.querySelector('.overlay')) return;
+  if (paperKey5Ev(e, store.game)) { e.preventDefault(); return; } // R31 onda 5 (PAPEL): A, 1–4 e Esc do papel aberto
+  if (keyNav5(store.game, e)) { e.preventDefault(); return; } // R31 onda 5 (TEC): só com exp5.nav ligado
+  if (nav5) {
+    if (shellKey5(e)) { e.preventDefault(); return; }
+    if (ck) { e.preventDefault(); palette(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doAdvance('month'); }
+    return; // teclas antigas (KEY17, Shift+1…6) não valem na casca nova: o mapa é o de keys5
+  }
   if (ck) {
     e.preventDefault();
     palette();
@@ -219,6 +250,8 @@ function onKey(e: KeyboardEvent): void {
     return;
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // R31 onda 5 (TRN): Esc numa página aberta pelo zoom de um objeto da sede faz o papel descer e volta à sede
+  if (e.key === 'Escape' && trnBack31(store.area)) { e.preventDefault(); go(entryHome31('sede', menuCtx31()) ?? SEDE25); return; }
   // R31 (A): Shift+1…6 = entradas do menu (Hoje, Sede, Cidade, Mundo, Você, Listas); e.code não depende do teclado
   if (e.shiftKey && /^Digit[1-6]$/.test(e.code)) { const en = menu31(menuCtx31()).find((x) => x.key === e.code.slice(5)); if (en) { e.preventDefault(); openEntry31(en); return; } }
   // r17: { e } trocam de aba na página atual
@@ -257,6 +290,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
   const prevUndo = store.undoSnapshot;
   if (!g.config.ironman) store.undoSnapshot = snap0;
   const before = attnSeq(g); // r31 UNI-1: avisos = itens da fila única
+  const m0: [number, number] = [g.month, g.year]; // R31 onda 5 (TRN): mês que sai (para a folha do calendário)
   // rodada 8: avanços longos terminam num resumo agrupado em vez de uma chuva de avisos
   let digest = null as { d: Digest; why?: L } | null;
   let res = {} as { stopReason?: L };
@@ -293,6 +327,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
     return;
   }
   render();
+  if (g.month !== m0[0] || g.year !== m0[1]) transition31('month', { year: g.year, month: monthInfo31({ old: m0, now: [g.month, g.year], pend: trnPend31(g) }) }); // R31 onda 5 (TRN): virada do mês (só a tela)
   INT_PREF23.v = store.prefs.interrupt23 ?? 'milestones'; // r23 (A)
   for (const f of AFTER_ADVANCE) f(g); // r18 decide18: resumo do mês
   if (digest) showDigest(g, digest.d, digest.why, () => showPendingCutscene(g, render, store.prefs.cutscenes === false));
@@ -427,6 +462,7 @@ function go(id: string): void {
   if (hubById27(id) && id.startsWith('hub:')) { const x = hubById27(id)!; id = resolveHub27(id, areaExists, hubHome27(x, x.areas.filter(areaExists))) ?? 'cockpit'; }
   const r = resolve17(alias14(id), groups());
   if (r.tab) setTab(r.tab[0], r.tab[1]);
+  if (shell5On(store.game)) return show5(r.area, r.tab); // R31 onda 5 (NAV): a página abre como papel do objeto dono
   store.area = r.area;
   lastInGroup[groupOf(r.area).id] = r.area;
   render();
@@ -447,7 +483,7 @@ function menuCtx31(): MenuCtx31 {
   const ids = new Set(navItems().map((x) => x.id));
   const has = (a: string) => ids.has(a) && (!UX19UI.has || UX19UI.has(g, a) || a === store.area);
   const listed = new Set(groups().flatMap((x) => x.areas));
-  const ctx0: MenuCtx31 = { active: careers(g).active, pages: careerPages17(g), pins: store17.pins.filter((id) => listed.has(id)).length, sede: !!sedeHome25, has };
+  const ctx0: MenuCtx31 = { active: careers(g).active, pages: careerPages17(g), pins: store17.pins.filter((id) => listed.has(id)).length, sede: !!sedeHome25, has, nav5: nav5On(g) || undefined };
   // páginas registradas sem casa na tabela: Listas › Outras páginas (nada some)
   ctx0.extra = [...ids].filter((a) => placeOf31(a, ctx0).id === 'list:other');
   return (menuMemo31 = ctx0);
@@ -508,13 +544,19 @@ function subnav(): HTMLElement | null {
 function places31(): HTMLElement | null {
   const c = menuCtx31();
   const en = (['hoje', 'sede', 'cidade', 'mundo', 'voce'] as EntryId31[]).find((e) => entryHome31(e, c) === store.area);
-  if (!en) return null;
+  if (!en || (c.nav5 && (en === 'voce' || store.area === SEDE25))) return null; // R31 onda 5 (CASA): a casa e a sede nova substituem a faixa de lugares
   return placesStrip31({ entry: en, menu: c, places: placesOf31(en, c), badge: badge31().place, label: areaLabel,
     go: (a, tab) => { if (tab) setTab(tab[0], tab[1]); go(a); } });
 }
 const SEDE_L25 = l('Sua sede', 'Your HQ');
 
 function panel(): HTMLElement {
+  // R31 onda 5 (CASA): com exp5.nav ligado, a casa, a sede que cresce e a maquete trocam (ou encabeçam) a página antiga
+  const r5 = store.game && nav5On(store.game) ? area5Of(store.area) : undefined;
+  if (r5?.mode === 'replace') { stopHq(); return r5.render(store.game!); }
+  return r5 ? h('div', null, r5.render(store.game!), panel0()) : panel0();
+}
+function panel0(): HTMLElement {
   const g = store.game!;
   // r25: tela da Sede (encaixe em ps/slot25.ts); sem tela registrada a área nem aparece no menu
   if (store.area === SEDE25) { stopHq(); const el = h('div', { class: 'sede25 page21-host' }); if (sedeHome25) sedeHome25(el); else el.append(deskPanel(g)); return el; }
@@ -562,8 +604,31 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
   }
 }
 
+// ---------------------------------------------------------------- R31 onda 5 (TRN): lugares das transições
+/** Lugar (Sede/Casa/Cidade/Mundo) de uma área, pelo menu (a casa do jogador mora na cidade, mas é o lugar Casa). */
+function trnPlace31(area: string): TrnPlace31 | null {
+  if (area === 'casa31') return 'casa';
+  const e = placeOf31(area, menuCtx31()).entry;
+  return e === 'sede' || e === 'hoje' ? 'sede' : e === 'cidade' || e === 'mundo' ? e : e === 'voce' ? 'casa' : null;
+}
+/** Pendências únicas com o lugar dono (só leitura). */
+function trnPend31(g: GameState): TrnPend31[] {
+  let xs: ReturnType<typeof pendingList> = [];
+  try { xs = pendingList(g); } catch { xs = []; }
+  return xs.map((p) => ({ title: p.title, prio: p.prio, due: p.due, place: trnPlace31(p.owner.area) }));
+}
+function trnNav31() {
+  const g = store.game!;
+  const c = menuCtx31();
+  const sede = entryHome31('sede', c) ?? SEDE25;
+  const homeOf = (a: string): TrnPlace31 | null => a === 'casa31' ? 'casa' : a === sede ? 'sede' : a === entryHome31('cidade', c) ? 'cidade' : a === entryHome31('mundo', c) ? 'mundo' : null;
+  return { from: shownArea, to: alias14(store.area), year: g.year, sede, placeOf: (a: string) => trnPlace31(alias14(a)), homeOf,
+    info: (to: TrnPlace31) => ({ year: g.year, card: cardInfo31({ to, city: t(cityById[ownerCity(g)]?.name) || ownerCity(g), month: g.month, year: g.year, pend: trnPend31(g) }) }) };
+}
+
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
+  if (!shell5On(store.game) && trnGate31(trnNav31(), render)) return; // R31 onda 5 (TRN): a página nova entra com a cortina fechada / o zoom cheio
   const t0 = performance.now();
   renderApp();
   perfNote('render', performance.now() - t0);
@@ -585,6 +650,7 @@ function renderApp(): void {
   syncRealShow31(g); // r31 (X): interruptor "Nomes e obras reais" (exibição; inclui o filtro antigo da rodada 6)
   ensureBase31(g); // r31 (EDT): base da partida aberta (idempotente; troca de partida/preview de outra não vaza)
   applySkin31(g.year, g.signature); // r31 (C): estilo da interface por era (data-era-skin, data-era) e aviso de troca
+  if (shell5On(g)) { renderShell5(g); return; } // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav ligado)
   // rodada 15: rolagem lembrada por área (mesma área mantém; área nova volta onde estava ou abre no topo)
   const old = document.querySelector('main');
   if (old && shownArea) scroll15.save(shownArea, old.scrollTop);
@@ -613,6 +679,33 @@ function renderApp(): void {
   afterRender18(g, store.area, go); // r18 tutorial18: dicas de 1ª vez e trilhas (r27: tour só no "?")
   tutorialTick28(g, store.area, render); // r28 (F4): o passo do tutorial se conclui fazendo
   kick27(g); // r27: a próxima janela da fila (metas de abertura) entra logo
+}
+
+/** R31 onda 5 (NAV): a tela inteira pela casca nova (topo, cena da região, papel, viagem e bolso). */
+function renderShell5(g: NonNullable<typeof store.game>): void {
+  const host: Shell5Host = {
+    page: (area) => {
+      const rd = REDIRECT29[area]; // nomes antigos (inbox, desk) abrem a aba certa da página dona
+      if (rd?.area) { if (rd.tab) setTab(rd.tab[0], rd.tab[1]); area = rd.area; }
+      store.area = alias14(area) as Area;
+      const r = resolve17(store.area, groups());
+      if (r.tab) setTab(r.tab[0], r.tab[1]);
+      store.area = r.area;
+      return withPlayerActsCache(g, () => { const b = panel0(); enhanceSelects27(b); return b; }); // página de hoje pura: o que é da CASA/ELENCO entra pelos registros da casca
+    },
+    label: areaLabel, has: (a) => areaExists(a),
+    advance: () => doAdvance('month'), advMore: () => advMenu31(g), search: palette, options: settings,
+    files: () => saveManagerModal17((x) => { store.game = x; startGame(); }),
+    save: async () => { const ok = await saveGame(`slot-${store.game?.signature}`); toast(ok ? t(S.saved) : 'Erro', ok ? 'good' : 'bad'); },
+    mainMenu: () => { void saveGame('auto'); store.game = null; titleScreen(root, startGame); },
+    rerender: render, saveChip: () => saveChip20(),
+    extra: () => (mayShow27('tutorial', g) ? tutorialCard(g, render) : null),
+  };
+  const area0 = store.area;
+  const el = shell5(g, host);
+  root.replaceChildren(el);
+  if (store.area !== area0 && !el.querySelector('.p5')) store.area = area0 as Area;
+  kick27(g);
 }
 
 /** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
@@ -694,6 +787,7 @@ function settings(): void {
       h('button', { class: 'btn small ghost', onclick: () => { close(); openCampaign29(); } }, '⚑ ', t(l('Campanha', 'Campaign'))),
       h('button', { class: 'btn small ghost', onclick: () => { close(); openIndex29(); } }, '☰ ', t(l('Índice de todas as páginas', 'Index of every page'))),
       h('button', { class: 'btn small ghost', onclick: () => { close(); go('tut18'); } }, '? ', t(l('Ajuda', 'Help'))),
+      shell5On(store.game) ? h('button', { class: 'btn small ghost', onclick: () => { close(); help5(); } }, t(l('Teclas (trocar)', 'Keys (rebind)'))) : null, // R31 onda 5 (NAV): teclas configuráveis
       themeButton(() => render())),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: fullMenu31(), onchange: (e: Event) => { setFullMenu31((e.target as HTMLInputElement).checked); render(); } }),
       ' ', t(l('Menu completo: mostrar também a árvore com todas as páginas no menu lateral', 'Full menu: also show the tree with every page in the side menu'))),
@@ -715,6 +809,7 @@ function settings(): void {
     settingsAudio28(), // r28 (F4): Som — desligado por padrão
     alertsSettings29(), // r29 REORG (M44): alertas por categoria (preferência, fora do save)
     editorModeSetting31(), // R31 (EDT): Modo editor (testes)
+    settingsTrn31(), // R31 onda 5 (TRN): Transições completas / rápidas / desligadas
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo
@@ -810,6 +905,7 @@ function palette(): void {
     for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     out.push(...paletteCmds20(g, true)); // r20 G4: ações dos outros artistas do elenco
     out.push(...paletteCmds31(g, q)); // R31 (O): "contratar X", "gravar com Y"… abrem o painel rápido na ação
+    out.push(...regionCmds5(g, q).map((x): PCmd => ({ label: x.label, kind: 'area', icon: x.icon, hint: x.hint, weight: 6, run: x.run }))); // R31 onda 5 (MAPA)
     out.push(...eggCmds27(g, qq)); // r27 ovos: códigos secretos da busca (payola, hall da fama, 1889…)
     return out;
   };

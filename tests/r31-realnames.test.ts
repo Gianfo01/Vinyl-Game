@@ -9,7 +9,7 @@ import { FESTIVALS, MEDIA } from '../src/data/catalog';
 import { AWARDS, PLATFORMS } from '../src/data/content';
 import { REAL_ACTS } from '../src/data/realnames';
 import { CITIES } from '../src/data/world';
-import { CUR31 } from '../src/data/cur31';
+import { CUR31, CUR31_HITS } from '../src/data/cur31';
 import { SCENARIOS17 } from '../src/sim/sys/scenarios17';
 import { SCENARIOS23 } from '../src/sim/sys/scenarios23';
 import { SCENARIOS } from '../src/sim/sys/live/scenarios';
@@ -27,6 +27,7 @@ const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   mode: (k) => [...SCENARIOS17, ...SCENARIOS23, ...SCENARIOS].some((c) => c.id === k), // R31 (X): modos e cenários
   place: (k) => PLACES31.some((p) => p.id === k), // R31 (H): lugares reais da música
   br31: (k) => CURBR31.some((c) => c.id === k), // R31 (BASE-BR): artistas brasileiros novos
+  hit: (k) => CUR31_HITS.some((c) => c.id === k), // R31 (BASE-HITS): sucessos de 1992 até hoje
 };
 
 describe('registro de nomes reais (W0-RN)', () => {

@@ -30,6 +30,8 @@ import { applyAudit27, applyFix27, applySongs27, type AnyArtist27 } from '../../
 import { NEW27_C1 } from '../../data/new27c1';
 import { BASE31_ACTS } from '../../data/base31acts';
 import { BASE31BR_ACTS } from '../../data/base31br';
+import { BASE31_IT } from '../../data/base31it';
+import { BASE31_HITS } from '../../data/base31hits';
 import { frontmanSings27, lineupMonth27, realRoles27 } from '../../data/lineup27';
 import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
 import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
@@ -94,6 +96,34 @@ registerSwitch({
 });
 /** R31 (BASE-BR): índice de REAL_ALL do lote brasileiro com o interruptor desligado nesta partida. */
 export const brOff31 = (s: GameState, i: number): boolean => i >= BASE31BR_FROM && i < BASE31BR_TO && !sw<boolean>(s, 'base31.br');
+/** R31 (BASE-IT): base italiana (data/base31it) no FIM, depois do lote BR (ordem BR, IT, HITS); atrás do interruptor base31.it. */
+export const BASE31IT_FROM = REAL_ALL.length;
+for (const a of BASE31_IT) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+export const BASE31IT_TO = REAL_ALL.length;
+registerSwitch({
+  id: 'base31.it', def: true, scope: 'game',
+  desc: l('Base italiana ampliada: centenas de artistas reais da Itália (napolitana, Sanremo, cantautori, prog, italo disco, rap…). Vale ao criar a partida; desligada, eles não nascem.',
+    'Expanded Italian database: hundreds of real Italian artists (Neapolitan song, Sanremo, cantautori, prog, Italo disco, rap…). Applies when the game is created; off, they are not born.'),
+  read: (s) => s.config.base31it !== false,
+  write: (s, v) => { if (v) delete s.config.base31it; else s.config.base31it = false; },
+});
+/** R31 (BASE-IT): o ato `i` de REAL_ALL pode nascer nesta partida (só a base italiana tem interruptor). */
+const it31Ok = (s: GameState, i: number): boolean => i < BASE31IT_FROM || i >= BASE31IT_TO || s.config.base31it !== false;
+/** R31 · onda 4 (BASE-HITS): sucessos de 1992 até hoje (data/base31hits) no FIM, depois das frentes BR e IT (ordem BR, IT, HITS); interruptor 'base31.hits'. */
+export const BASE31H_FROM = REAL_ALL.length;
+// dono (2026-10-16): os hits só entram com base de dados Enorme (z 3) — custam até +60% no mês a partir de 2012
+for (const a of BASE31_HITS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); a.z ??= 3; REAL_ALL.push(a); } }
+export const BASE31H_TO = REAL_ALL.length;
+export const SW_HITS31 = 'base31.hits';
+registerSwitch({
+  id: SW_HITS31, def: true, scope: 'game',
+  desc: l('Base de sucessos (1992 em diante; só com base de dados Enorme): artistas reais do mundo inteiro com hit no top 10 das grandes paradas, inclusive one-hit wonders, estreiam no ano real; desligado, ficam fora do mundo (desligar no meio da partida segura só quem ainda vai surgir).',
+    'Hits database (1992 on; Huge database only): real artists from all over the world with a top-10 hit on major charts, one-hit wonders included, debut in their real year; off, they stay out of the world (switching off mid-game only holds back those still to come).'),
+  read: (s) => s.config.base31hits !== false,
+  write: (s, v) => { if (v) delete s.config.base31hits; else s.config.base31hits = false; },
+});
+/** índice de REAL_ALL fora do mundo nesta partida (base de sucessos desligada): lido no início e a cada mês para quem ainda vai surgir. */
+const hitOff31 = (s: GameState, i: number): boolean => i >= BASE31H_FROM && i < BASE31H_TO && s.config.base31hits === false;
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
 // r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
 {
@@ -813,7 +843,7 @@ function newgame(s: GameState, r: Rng): void {
   for (let i = 0; i < REAL_ALL.length; i++) {
     const r = i >= ACERVO21_FROM ? rAc : rMain;
     const a = REAL_ALL[i];
-    if (!realAllowed(s.config, a) || brOff31(s, i)) continue;
+    if (!realAllowed(s.config, a) || brOff31(s, i) || !it31Ok(s, i) || hitOff31(s, i)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
     const debut = a.d + jitter(s, r, 2);
@@ -896,8 +926,10 @@ function monthly(s: GameState, r: Rng): void {
     const rMain = r, rAc = acRng(s, `m${s.year * 12 + s.month}`);
     for (const i of st.upcoming) {
       const r = i >= ACERVO21_FROM ? rAc : rMain;
+      if (hitOff31(s, i)) { keep.push(i); continue; } // base de sucessos desligada depois de criar a partida: quem ainda não surgiu espera (religar devolve)
       const a = REAL_ALL[i];
       if (brOff31(s, i)) continue; // R31 (BASE-BR): desligado no meio da partida — sai da fila
+      if (a && !it31Ok(s, i)) continue; // R31 (BASE-IT): interruptor desligado no meio da partida — some da fila
       if (!a || s.year < a.d - 1 || (s.year === a.d - 1 && s.month < 6)) { keep.push(i); continue; }
       const act = spawnReal(s, r, i, false);
       if (!act) continue;

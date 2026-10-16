@@ -59,7 +59,10 @@ async function runOne(j: Job): Promise<Res30> {
 
   const t0 = performance.now();
   // mesma configuração do lote balance19 (selo, rock, base padrão do jogo)
-  const cfg0 = defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' });
+  // R31 onda 4 (BASE-IT): R31_CFG="chave=valor,..." entra na configuração ANTES de criar (interruptores que valem na criação, ex.: base31it=false)
+  const cfgOver: Record<string, unknown> = {};
+  for (const kv of (process.env.R31_CFG ?? '').split(',').filter(Boolean)) { const [k, v] = kv.split('='); cfgOver[k] = v === 'true' ? true : v === 'false' ? false : Number.isFinite(Number(v)) ? Number(v) : v; }
+  const cfg0 = defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste', ...cfgOver });
   // R31 (BASE-BR): interruptor que mora na configuração (read/write) vale já na criação do mundo
   { const { switchDef } = await import('../../src/sim/r31/switches'); const all = { ...(j.sw ?? {}), ...Object.fromEntries((process.env.R31_SW ?? '').split(',').filter(Boolean).map((kv) => kv.split('='))) };
     for (const [id, raw] of Object.entries(all)) { const d = switchDef(id); if (d?.write) d.write({ config: cfg0 } as never, typeof d.def === 'boolean' ? raw === true || raw === 'true' : raw as never); } }

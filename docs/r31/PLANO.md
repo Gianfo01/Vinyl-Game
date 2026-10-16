@@ -165,7 +165,15 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   - **Por época:** veludo vermelho (1889–1949), veludo vinho (1950–79), lâminas de metal e neon (1980–2009), painel de
     LED (2010–40). O calendário da virada acompanha: folha de parede, relógio de virar, tela do celular.
   - **Opção:** transições completas, rápidas ou desligadas. Nunca bloqueiam nem atrasam a simulação.
+- **EXP-12 · Tutorial guiado opcional** — interface · proposta aceita pelo dono em 2026-10-16 (sem mocks); fazer DEPOIS que NAV, PAPEL, ELENCO e CASA estiverem juntos:
+  - Entrada: "Aprender a jogar" na tela inicial, cenário "Primeiro selo" e chave "Tutorial guiado" na nova run rápida. Partida normal com semente fixa e acontecimentos roteirizados.
+  - Foco: tela escurece, só o alvo fica recortado com o contorno "aceso"; guia fala num balão em pixel art; clique/tecla fora do alvo não faz nada ("primeiro aqui"); Esc = pular capítulo / sair.
+  - Fazer, não ler: o passo conclui quando a ação é feita. Usa as transições da onda 5.
+  - 12 capítulos (~15 min): sede e topo; caixa de entrada; fichário/jornal (contratar); mural/quadro (gravação); mesa de som; revista/quadro branco (lançar); virada do mês; livro-caixa; cidade (show); mundo (viagem); casa; teclas e bolso. Fim com diploma; o guia segue no telefone.
+  - Modo dica (acende sem bloquear) para veteranos; capítulo extra curto por carreira. Alvos vêm de objects5/keys5. Guia: mentor da época ou alguém da família Fossati — escolha do dono pendente.
 - Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
+
+> **Etapa 2 liberada (dono, 2026-10-16: "podemos fazer o que falta da onda 5"):** frentes NAV (EXP-1, EXP-2), MAPA (EXP-3), PAPEL (EXP-4 + caixa de entrada), ELENCO (EXP-7) e CASA (EXP-5, EXP-6), todas atrás de `exp5.nav` desligado até a aprovação; TRN (EXP-11) e SALAS (EXP-8, salas antigas) já rodando. Regras em `docs/r31/onda5-cabecalho.md` (Etapa 2). Arte da ART5 (galeria `docs/r31/shots/onda5-art-galeria-*.png`: objetos, papéis, caixa de entrada) aprovada pelo dono em 2026-10-16.
 
 ## Onda 6 (31.6) · fechamento
 > **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a próxima. Juntar tudo, gerar a build `Masters_31_onda4.html`

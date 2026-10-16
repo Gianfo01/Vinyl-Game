@@ -1,3 +1,4 @@
+import { artOfPlace31 } from '../pixel/pred31place';
 import { hqFloors27 } from '../../sim/sys/hqrooms27';
 // Rodada 18 (campus18) + Rodada 19 (world19) + Rodada 27 (D2): página "Nosso mundo" — o BAIRRO da sede em pixel
 // art isométrica. R27: painel lateral FIXO (no celular, folha no rodapé): clicar num prédio mostra o que é, custo
@@ -46,6 +47,9 @@ import { shortNames31 } from '../r31/scene31model';
 import { coverPx } from '../art';
 import { openAct, openRelease } from '../ficha';
 import { portrait31 } from '../r31/city31face';
+import { nav5On } from '../../sim/r31/exp5'; // R31 onda 5 (MAPA): cidade só pelo mapa atrás de exp5.nav
+import { cityPins5 } from '../r31/map5model';
+import { CITY5, cityKeys5, cityPanel5, decorateCity5, nextBang5, point5 } from '../r31/map5ui';
 
 /** r27 INT: sprite de ovo desenhado no quadro e sua caixa (coordenadas do mapa). */
 interface Egg27Box { box: [number, number, number, number]; e: CityEgg27 }
@@ -86,7 +90,7 @@ function makeView(s: GameState, year?: number): View {
   const places = lots ? lots.places : [...places27(s, cx.filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1), ...cx.places];
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n })), ...cx.amb];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms.filter((m) => !cx.lmOut.has(m.id)),
-    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: lots ? lots.filler : cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), extra31: cx.extra, minGw: cx.minGw });
+    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: lots ? lots.filler : cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), fillArt: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, artOfPlace31(s, p)])), extra31: cx.extra, minGw: cx.minGw });
   const ov = cityOv31(s, cx, places, scene.sprites.map((x) => ({ id: x.id, kind: x.kind, top: x.box[1] })), t(l('a', 'b')) === 'a');
   // R31 (POL): onde a página vai pôr os ícones (seus prédios, vizinhos, lugares com pino) — as etiquetas do mapa desviam
   const pinned = new Set(places.filter((p) => PINNED27.has(p.k)).map((p) => `fl:${p.id.slice(3)}`));
@@ -363,6 +367,13 @@ const fmt27 = (x: L, o: Record<string, string | number>): L => ({ pt: x.pt.repla
 
 function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const s = v.s;
+  const nav5 = v.live && nav5On(s); // R31 onda 5 (MAPA): placas no lugar da lista; camadas, "!" e setas
+  if (nav5) {
+    ui.f.mine = true; ui.f.nb = true; ui.f.lm = true;
+    const key5 = `${s.config.seed}:${s.config.homeCity}`; // outra partida ou cidade: o mapa abre inteiro de novo
+    if (CITY5.seen !== key5) { CITY5.seen = key5; ui.z = 1; ui.px = 0; ui.py = 0; ui.pop = undefined; ui.inside = undefined; }
+  }
+  const pins5 = nav5 ? cityPins5(s) : [];
   for (const old of document.querySelectorAll('body > .c27-sheet')) old.remove(); // folha antiga (celular) de um render anterior
   const { mw: MW, mh: MH } = v.scene.geo;
   const frame = h('div', { class: 'w19-frame c27-frame' });
@@ -374,7 +385,10 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const pct = (x: number, w: number) => `${((x / w) * 100).toFixed(2)}%`;
   const cv = mapCanvas(v) as HTMLCanvasElement & { redraw27?: () => void };
   let lastHs: HTMLElement | null = null;
-  const showOverview = () => { side.replaceChildren(overview27(v, (id) => open(id, layer.querySelector(`[data-id="${CSS.escape(id)}"]`) as HTMLElement | null))); };
+  const showOverview = () => {
+    if (nav5) { side.replaceChildren(cityPanel5(s, pins5, { fn: !!ui.fn, setFn: (x) => { ui.fn = x; rerender(); }, nextBang: () => nextBang5(layer, show5), good: syn19(s, v.bs).filter((x) => !x.rule.neg).length })); return; }
+    side.replaceChildren(overview27(v, (id) => open(id, layer.querySelector(`[data-id="${CSS.escape(id)}"]`) as HTMLElement | null)));
+  };
   const close = () => {
     ui.pop = undefined; v.scene.sel = undefined; v.scene.selLot = undefined; cv.redraw27?.();
     sheet.hidden = true; sheet.replaceChildren(); document.body.classList.remove('w19-open');
@@ -515,6 +529,14 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const apply = () => { zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z})`; vp.classList.toggle('c27-far', ui.z < 1.5); (cv as HTMLCanvasElement & { redraw27?: () => void }).redraw27?.(); };
   const clampPan = () => { const w = vp.clientWidth, hh = vp.clientHeight; ui.px = Math.min(0, Math.max(w - w * ui.z, ui.px)); ui.py = Math.min(0, Math.max(hh - hh * ui.z, ui.py)); };
   const setZ = (z: number, cx = vp.clientWidth / 2, cy = vp.clientHeight / 2) => { const nz = Math.max(1, Math.min(3, z)); ui.px = cx - ((cx - ui.px) * nz) / ui.z; ui.py = cy - ((cy - ui.py) * nz) / ui.z; ui.z = nz; clampPan(); apply(); };
+  /** R31 onda 5 (MAPA): centraliza um ponto (busca) e acompanha o foco do teclado. */
+  const centerOn5 = (b: HTMLElement, z: number) => { ui.z = Math.max(1, Math.min(3, z)); ui.px = vp.clientWidth / 2 - (b.offsetLeft + b.offsetWidth / 2) * ui.z; ui.py = vp.clientHeight / 2 - (b.offsetTop + b.offsetHeight / 2) * ui.z; clampPan(); apply(); };
+  const show5 = (b: HTMLElement) => {
+    const x = b.offsetLeft * ui.z + ui.px, y = b.offsetTop * ui.z + ui.py, m = 30;
+    if (x < m || y < m || x > vp.clientWidth - m || y > vp.clientHeight - m) centerOn5(b, ui.z);
+    const fr = frame.getBoundingClientRect(), r = b.getBoundingClientRect();
+    tip.textContent = b.getAttribute('aria-label') ?? ''; tip.hidden = false; tip.style.left = `${r.right - fr.left + 6}px`; tip.style.top = `${r.top - fr.top}px`;
+  };
   const pts = new Map<number, [number, number]>();
   let moved = false, d0 = 0, z0 = 1, start: [number, number, number, number] = [0, 0, 0, 0];
   vp.addEventListener('pointerdown', (e) => { pts.set(e.pointerId, [e.clientX, e.clientY]); moved = false; start = [e.clientX, e.clientY, ui.px, ui.py]; if (pts.size === 2) { const [a, b] = [...pts.values()]; d0 = Math.hypot(a[0] - b[0], a[1] - b[1]); z0 = ui.z; } });
@@ -548,13 +570,13 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const modes: [typeof ui.mode, L][] = [['cycle', l('Dia e noite', 'Day & night')], ['day', l('Dia', 'Day')], ['night', l('Noite', 'Night')]];
   const tog = (k: keyof typeof ui.f, n: L) => h('button', { type: 'button', class: `btn small ${ui.f[k] ? '' : 'ghost'}`, 'aria-pressed': String(ui.f[k]), onclick: () => { ui.f[k] = !ui.f[k]; rerender(); } }, t(n));
   const bar = h('div', { class: 'w19-bar' },
-    h('div', { class: 'w19-grp', role: 'group', 'aria-label': t(l('Filtro', 'Filter')) }, tog('mine', l('Meus', 'Mine')), tog('nb', l('Vizinhos', 'Neighbours')), tog('lm', l('Marcos', 'Landmarks'))),
+    nav5 ? null : h('div', { class: 'w19-grp', role: 'group', 'aria-label': t(l('Filtro', 'Filter')) }, tog('mine', l('Meus', 'Mine')), tog('nb', l('Vizinhos', 'Neighbours')), tog('lm', l('Marcos', 'Landmarks'))),
     h('div', { class: 'w19-grp', role: 'group', 'aria-label': t(l('Luz', 'Light')) }, modes.map(([m, n]) => h('button', { type: 'button', class: `btn small ${ui.mode === m ? '' : 'ghost'}`, 'aria-pressed': String(ui.mode === m), onclick: () => { ui.mode = m; rerender(); } }, t(n)))),
     h('div', { class: 'w19-grp' },
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': t(l('Aproximar', 'Zoom in')), onclick: () => setZ(ui.z * 1.4) }, '+'),
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': t(l('Afastar', 'Zoom out')), onclick: () => setZ(ui.z / 1.4) }, '−'),
       h('button', { type: 'button', class: `btn small ${ui.legend ? '' : 'ghost'}`, 'aria-pressed': String(!!ui.legend), onclick: () => { ui.legend = !ui.legend; rerender(); } }, t(l('Legenda', 'Legend'))),
-      v.lots ? h('button', { type: 'button', class: `btn small ${ui.fn ? '' : 'ghost'}`, 'aria-pressed': String(!!ui.fn), title: t(l('Marca a função de cada prédio: negócio, casa, terreno à venda ou seu.', 'Marks each building\'s purpose: business, home, plot for sale or yours.')), onclick: () => { ui.fn = !ui.fn; rerender(); } }, t(l('Funções', 'Purposes'))) : null));
+      v.lots && !nav5 ? h('button', { type: 'button', class: `btn small ${ui.fn ? '' : 'ghost'}`, 'aria-pressed': String(!!ui.fn), title: t(l('Marca a função de cada prédio: negócio, casa, terreno à venda ou seu.', 'Marks each building\'s purpose: business, home, plot for sale or yours.')), onclick: () => { ui.fn = !ui.fn; rerender(); } }, t(l('Funções', 'Purposes'))) : null));
   const mv = ui.moving ? h('div', { class: 'w19-moving' }, ic('building'), ' ', t(l('Escolha um lote livre (→) para a mudança.', 'Pick a free lot (→) for the move.')), ' ',
     h('button', { type: 'button', class: 'btn small ghost', onclick: () => { ui.moving = undefined; rerender(); } }, t(l('Cancelar', 'Cancel')))) : null;
   frame.append(bar, mv ?? '', ui.fn && v.lots ? coverLine31(v.lots) : '', vp, tip);
@@ -567,6 +589,13 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
     if (!sheet.hidden && !sheet.contains(e.target as Node) && !(e.target as HTMLElement).closest?.('.w19-hs, .c2-in')) close();
   };
   document.addEventListener('pointerdown', outside, true);
+  if (nav5) { // R31 onda 5 (MAPA): camadas e "!" nos pontos, setas de prédio em prédio, busca apontando
+    decorateCity5(layer, pins5, tip);
+    cityKeys5(vp, layer, { zoom: (f) => setZ(ui.z * f), reset: () => { ui.z = 1; ui.px = 0; ui.py = 0; apply(); }, pan: (dx, dy) => { ui.px += dx; ui.py += dy; clampPan(); apply(); }, show: show5 });
+    const want = CITY5.want;
+    CITY5.want = undefined;
+    if (want) requestAnimationFrame?.(() => { const b = layer.querySelector(`[data-id="${CSS.escape(want)}"]`) as HTMLElement | null; if (!b) return; b.hidden = false; centerOn5(b, Math.max(ui.z, 2)); point5(b); });
+  }
   showOverview();
   if (ui.inside && v.live) showInside(ui.inside, false); // r27 (CITY2): continua por dentro depois de uma ação
   // r27 (CITY2): chegando da sede ("Ver a cidade"): o mapa abre aproximado na sede e se afasta até o bairro
@@ -632,13 +661,14 @@ function campusArea(s: GameState): HTMLElement {
     : h('p', { class: 'small muted' }, t(l('A linha do tempo ganha um retrato do quarteirão a cada virada de ano.', 'The timeline gets a snapshot of the block at every new year.')));
   const evs = v.live ? live19ev(s) : [];
   const side = h('aside', { class: 'c27-side', 'aria-label': t(l('Painel do bairro', 'Neighbourhood panel')), 'aria-live': 'polite' });
-  return h('div', { class: 'c18 w19 c27' },
+  const nav5 = v.live && nav5On(s); // R31 onda 5 (MAPA): sem a lista "Vizinhança" (os eventos já têm "!" no mapa)
+  return h('div', { class: `c18 w19 c27${nav5 ? ' m5-city' : ''}` },
     section(`${t(l('Nosso mundo', 'Our world'))} — ${s.config.companyName}`,
       placeTabs27('city'), // r27 (CITY2): Sua sede | Nosso mundo — o mesmo lugar, por dentro e por fora
       h('p', { class: 'w19-hood' }, ic('house'), ' ', why18(s, 'h19.hood', {}, h('b', null, t(hs.h.n)), ` · ${t(STAGE19[hs.stage])}`), h('span', { class: 'muted small' }, ` — ${t(hs.h.d)}${hs.note ? ` ${t(hs.note)}` : ''}`)),
       sum,
       h('div', { class: 'c27-main' }, h('div', { class: 'c27-mapcol' }, mapFrame(v, side), tl), side)),
-    v.live && (sy.length || evs.length) ? section(t(l('Vizinhança', 'Neighbourhood')),
+    v.live && !nav5 && (sy.length || evs.length) ? section(t(l('Vizinhança', 'Neighbourhood')),
       h('ul', { class: 'small w19-list' },
         sy.map((x) => h('li', { class: x.rule.neg ? 'bad' : 'good' }, h('b', null, t(x.rule.name)), ` — ${t(x.rule.eff)}`)),
         evs.map((e) => h('li', { class: 'warn' }, ic('warning'), ' ', h('button', { type: 'button', class: 'linklike', onclick: () => { ui.pop = `ev:${e.id}`; rerender(); } }, t(EV19[e.k].n)), ` — ${t(EV19[e.k].d)}`)))) : null,

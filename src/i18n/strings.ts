@@ -22,7 +22,8 @@ export function locale(): string {
 
 export function t(text: L | undefined, params?: Record<string, Param>): string {
   if (!text) return '';
-  return realText(params ? fmtL(text, params)[lang] : text[lang]);
+  // texto sem {campo} é rótulo da interface: "Elenco" não vira o nome de homenagem da gravadora real Elenco
+  return params ? realText(fmtL(text, params)[lang], !/\{\w+\}/.test(text[lang])) : realText(text[lang], true);
 }
 
 const s = (pt: string, en: string): L => ({ pt, en });

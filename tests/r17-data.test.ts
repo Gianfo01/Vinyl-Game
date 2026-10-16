@@ -5,6 +5,8 @@ import { NEW27_C1 } from '../src/data/new27c1';
 import { NEW27_F } from '../src/data/research27'; // r27 (F): artistas da pesquisa no fim
 import { BASE31_ACTS } from '../src/data/base31acts'; // R31 Z: base nova no fim
 import { BASE31BR_ACTS } from '../src/data/base31br';
+import { BASE31_HITS } from '../src/data/base31hits'; // R31 onda 4: base de sucessos no fim
+import { BASE31_IT } from '../src/data/base31it';
 import { ACERVO21 } from '../src/data/acervo21';
 import { LIKES22_ARTISTS } from '../src/data/songs22';
 import { describe, expect, it } from 'vitest';
@@ -78,7 +80,7 @@ describe('r17 dados reais', () => {
     expect(tail).toContain('Jeff Buckley');
     // r19: o lote more19 (ARTISTS19) entra depois do de 1889
     // r21: o acervo pesquisado (ACERVO21) entra depois do more19
-    expect(REAL_ALL.slice(i89).every((a) => REAL_1889.some((b) => b.n === a.n) || ARTISTS19.some((b) => b.n === a.n) || ACERVO21.some((b) => b.n === a.n) || LIKES22_ARTISTS.some((b) => b.n === a.n) || ARTISTS27.some((b) => b === a) || NEW27_C1.some((b) => b.n === a.n) || NEW27_F.some((b) => b.n === a.n) || BASE31_ACTS.some((b) => b === a) || BASE31BR_ACTS.some((b) => b === a))).toBe(true); // r31 (Z): base nova no fim; r31 (BASE-BR): lote brasileiro depois do Z; r22: artistas das curtidas no fim; r27: auditoria
+    expect(REAL_ALL.slice(i89).every((a) => REAL_1889.some((b) => b.n === a.n) || ARTISTS19.some((b) => b.n === a.n) || ACERVO21.some((b) => b.n === a.n) || LIKES22_ARTISTS.some((b) => b.n === a.n) || ARTISTS27.some((b) => b === a) || NEW27_C1.some((b) => b.n === a.n) || NEW27_F.some((b) => b.n === a.n) || BASE31_ACTS.some((b) => b === a) || BASE31BR_ACTS.some((b) => b === a) || BASE31_IT.some((b) => b === a) || BASE31_HITS.some((b) => b === a))).toBe(true); // r31 (Z): base nova no fim; r31 (BASE-IT): base italiana depois; r22: artistas das curtidas no fim; r27: auditoria
     expect(REAL_ALL.filter((a) => a.n === 'Luis Fonsi').length).toBe(1);
     const r = DB_SIZES.map((d) => realCount(d.id));
     expect(r[0]).toBeLessThan(r[1]); expect(r[2]).toBeLessThan(r[3]);

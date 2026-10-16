@@ -86,7 +86,7 @@ export const resetAsk17 = () => { noAsk = false; try { localStorage.removeItem('
 // ================================================================ aba Agenda
 
 let hireFor = '';
-function candTable(s: GameState, cs: Cand[], short = false): HTMLElement {
+export function candTable(s: GameState, cs: Cand[], short = false): HTMLElement {
   if (!cs.length) return h('p', { class: 'muted small' }, t(l('Ninguém disponível neste trimestre com esses filtros.', 'Nobody available this quarter with these filters.')));
   return h('table', { class: 'tbl compact' },
     h('thead', null, h('tr', null, ...[l('Nome', 'Name'), l('Função', 'Role'), l('Habilidade', 'Skill'), l('Pede/mês', 'Asks/mo'), l('Oferta (chance)', 'Offer (odds)')].map((x) => h('th', null, t(x))))),
@@ -101,7 +101,7 @@ function candTable(s: GameState, cs: Cand[], short = false): HTMLElement {
       }, `${pct(p)} · ${pct(acceptChance(s, c, p))}`))))))));
 }
 
-function careerRows(s: GameState): HTMLElement {
+export function careerRows(s: GameState): HTMLElement {
   const st = careers(s), a = ag17(s);
   const vs = ventures(s);
   const extra = Object.entries(CAREER_KIND).filter(([c, k]) => !st.active.includes(c) && vs.list.some((v) => v.kind === k)).map(([c]) => c);
@@ -153,7 +153,7 @@ function agendaTab(s: GameState): HTMLElement {
 // ================================================================ aba Você
 
 let mentorId = '';
-function youTab(s: GameState): HTMLElement {
+export function youTab(s: GameState): HTMLElement {
   const p = playerPerson(s), o = ownerOf(s), a = ag17(s), R = s.player.reputation;
   const sr = p ? stressOf(s, p.id) : null;
   const heads = Object.values(a.heads).reduce((x, y) => x + y.salary, 0) + (a.chief?.salary ?? 0);
@@ -202,7 +202,7 @@ export function hireBlock(s: GameState, short = false): HTMLElement {
 // ================================================================ aba Freelancers
 
 let flAct = '';
-function freeTab(s: GameState): HTMLElement {
+export function freeTab(s: GameState): HTMLElement {
   const acts = hireableActs(s);
   if (!acts.length) return section(t(l('Freelancers', 'Freelancers')), h('p', { class: 'muted' }, t(l('Sem atos no elenco para trabalhar.', 'No acts on the roster to work on.'))));
   const act = acts.find((x) => x.id === flAct) ?? acts[0];
@@ -220,7 +220,7 @@ function freeTab(s: GameState): HTMLElement {
 // ================================================================ aba Músicos de estúdio
 
 let ssAct = '';
-function sessionTab(s: GameState): HTMLElement {
+export function sessionTab(s: GameState): HTMLElement {
   const acts = hireableActs(s), a = ag17(s);
   if (!acts.length) return section(t(l('Músicos de estúdio', 'Session players')), h('p', { class: 'muted' }, t(l('Sem atos no elenco.', 'No acts on the roster.'))));
   const act = acts.find((x) => x.id === ssAct) ?? acts[0];
