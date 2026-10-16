@@ -146,19 +146,24 @@ export function rivalDeg31(s: GameState, lbId: string, a: Act): number {
  * próprio observador quando ele sabe o bastante; senão, o burburinho público (fama e momento). Nunca o valor real —
  * salvo com o interruptor know31.rivals desligado (medição).
  */
-const GUESS = new WeakMap<GameState, { w: number; m: Map<string, number> }>();
+const GUESS = new WeakMap<GameState, { w: number; m: Map<string, Map<string, number>> }>();
 export function guessPot31(s: GameState, actId: string, obs: string): number {
   const a = s.acts[actId];
   if (!a) return 0;
   if (!sw<boolean>(s, 'know31.rivals')) return a.potential;
   let c = GUESS.get(s);
   if (!c || c.w !== s.week) { c = { w: s.week, m: new Map() }; GUESS.set(s, c); }
-  const ck = `${obs}|${actId}|${a.owner ?? ''}|${Math.round(a.fame)}|${Math.round(a.potential)}`;
-  const hit = c.m.get(ck);
-  if (hit !== undefined) return hit;
-  const v = guessRaw(s, a, obs);
-  c.m.set(ck, v);
+  let mo = c.m.get(obs);
+  if (!mo) c.m.set(obs, (mo = new Map()));
+  let v = mo.get(actId);
+  if (v === undefined) mo.set(actId, (v = guessRaw(s, a, obs)));
   return v;
+}
+/** Comparador "maior palpite primeiro" para ordenar candidatos pelo que `obs` sabe (calcula cada ato uma vez). */
+export function byGuess31(s: GameState, obs: string): (x: Act, y: Act) => number {
+  const m = new Map<string, number>();
+  const g = (a: Act) => { let v = m.get(a.id); if (v === undefined) m.set(a.id, (v = guessPot31(s, a.id, obs))); return v; };
+  return (x, y) => g(y) - g(x);
 }
 function guessRaw(s: GameState, a: Act, obs: string): number {
   const actId = a.id;

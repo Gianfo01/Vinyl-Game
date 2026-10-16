@@ -31,7 +31,7 @@ import { ROLE17, becomeManager17, career17, foundLabel17, move17, npc17, okPerso
 import { opine, opinionOf, per13, type P13 } from './persona13';
 import { rivals8 } from './rivals8';
 import { actsOfPerson17 } from '../actidx17';
-import { guessPot31 } from '../know';
+import { byGuess31 } from '../know';
 
 // ---------------------------------------------------------------- estado
 
@@ -245,7 +245,7 @@ function careerEffects(s: GameState, r: Rng): void {
       // o A&R ex-artista acha um estreante livre do gênero na praça e o selo corteja
       const lb = s.labels[c.lb];
       const pool = Object.values(s.acts).filter((a) => live(a) && !a.owner && !st.court[a.id] && familyOf(a.genre) === c.fam && mkOf(a.city) === mkOf(c.city) && s.year - a.debutYear <= 2);
-      const a = pool.sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
+      const a = pool.sort(byGuess31(s, lb.id))[0];
       if (a) { courtNewcomer18(s, a, lb.id, fmtL(l('o A&R {p} (ex-artista) viu antes de todo mundo', 'A&R {p} (a former artist) spotted them before anyone'), { p: p.name })); }
     }
     if (s.month !== 0) continue;
