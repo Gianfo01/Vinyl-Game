@@ -1,0 +1,78 @@
+/* R31 · onda 5 (MAPA · EXP-3): cidade e mundo só pelo mapa (só com exp5.nav ligado) */
+
+/* cidade: o mapa é a tela; o painel ao lado vira "Placas" (camadas) ou o painel do prédio escolhido */
+.m5-city .c27-main { grid-template-columns: minmax(0, 1fr) 280px; }
+.m5-city .w19-vp:focus-visible { outline: 2px solid #ffd040; outline-offset: 2px; }
+.m5-placas { display: flex; flex-direction: column; gap: 8px; }
+.m5-ph { display: flex; align-items: baseline; gap: 6px; text-transform: uppercase; letter-spacing: .04em; font-size: 12px; }
+.m5-layers { display: flex; flex-direction: column; gap: 4px; }
+.m5-layer { display: flex; align-items: center; justify-content: space-between; gap: 6px; text-align: left; padding: 7px 10px; border: 1px solid var(--line, #3a3f4a); border-left: 3px solid transparent; border-radius: 4px; background: rgba(255, 255, 255, 0.03); color: var(--muted, #aab); cursor: pointer; font: inherit; font-size: 13px; }
+.m5-layer.on { border-left-color: #f0b030; color: var(--ink, #eee); background: rgba(240, 176, 48, 0.08); }
+.m5-layer:hover, .m5-layer:focus-visible { outline: 2px solid #ffd040; outline-offset: 1px; }
+.m5-ln { font-variant-numeric: tabular-nums; opacity: .8; }
+.m5-keys { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.m5-kbd { font-weight: 700; font-size: 11px; line-height: 1.2; font-family: inherit; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0, "dlig" 0; letter-spacing: 0; text-transform: none; padding: 1px 4px; border-radius: 3px; background: #2a2f3a; color: #fff; border: 1px solid #4a5060; }
+
+/* "!" de novidade: quadradinho vermelho com borda clara, como o ícone dos botões de viagem */
+.m5-bang { display: inline-grid; place-items: center; min-width: 14px; height: 14px; padding: 0 2px; border-radius: 3px; background: #d8302c; color: #fff; font: 900 11px/1 system-ui, sans-serif; font-style: normal; box-shadow: 0 0 0 1.5px #fff4e0; }
+.w19-hs .m5-pinbang { position: absolute; left: calc(50% + 10px); bottom: calc(100% + 12px); z-index: 2; pointer-events: none; }
+.w19-hs.fill .m5-pinbang { bottom: calc(100% + 2px); left: calc(50% + 4px); }
+
+/* busca: seta "aqui" pulando em cima do prédio apontado */
+.w19-hs.m5-point { outline: 3px solid #ffd040; outline-offset: 2px; background: rgba(255, 220, 90, 0.18); z-index: 4; }
+.m5-arrow { position: absolute; left: 50%; bottom: calc(100% + 26px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0; pointer-events: none; font: 800 11px/1 system-ui, sans-serif; color: #1a1416; animation: m5bob .6s infinite alternate; z-index: 5; }
+.m5-arrow { background: #ffd040; padding: 3px 6px; border-radius: 4px; box-shadow: 0 0 0 2px #1a1416; }
+.m5-arrow i { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #ffd040; }
+@keyframes m5bob { from { transform: translate(-50%, 0); } to { transform: translate(-50%, -5px); } }
+@media (prefers-reduced-motion: reduce) { .m5-arrow { animation: none; } }
+
+/* mundo */
+.m5-world .map27-map { position: relative; }
+.m5-telex { position: absolute; left: 8px; bottom: 8px; z-index: 3; width: min(250px, 40%); background: #f4ecd4; color: #2a2016; border: 2px solid #2a2016; border-radius: 3px; box-shadow: 3px 3px 0 rgba(0, 0, 0, .35); padding: 6px 8px; font: 12px/1.3 ui-monospace, 'Courier New', monospace; }
+.m5-telex header { border-bottom: 1px dashed #6a5a40; margin-bottom: 4px; padding-bottom: 2px; }
+.m5-telex ul { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.m5-tx { all: unset; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-transform: uppercase; font-size: 10.5px; line-height: 1.3; }
+.m5-txall { display: inline-block; text-transform: none; text-decoration: underline; font-size: 11px; }
+.m5-txall::before { content: ''; }
+.m5-tx::before { content: '> '; }
+.m5-tx.mine { font-weight: 700; }
+.m5-tx:hover, .m5-tx:focus-visible { background: #e8d8a8; outline: 1px solid #2a2016; }
+
+.m5-whint { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 12px; border: 1px solid var(--line, #3a3f4a); border-radius: 6px; background: var(--panel, #1c2028); font-size: 13px; }
+.m5-whint b { text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
+.m5-hit { border-left: 3px solid #f0b030; padding: 2px 8px; background: rgba(255, 255, 255, .04); }
+.m5-cbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.m5-cpick { min-width: 200px; justify-content: flex-start; gap: 4px; }
+.m5-cname { display: inline-flex; align-items: center; gap: 4px; }
+.m5-cities { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* cidade de outro país */
+.m5-vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.m5-vhead h2 { margin: 0; }
+.m5-vhead .btn { margin-left: auto; }
+.m5-vbody { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; align-items: start; }
+.m5-vmap { width: 100%; min-width: 0; }
+.m5-vvp { position: relative; width: 100%; border-radius: 6px; overflow: hidden; }
+.m5-vvp:focus-visible { outline: 2px solid #ffd040; outline-offset: 2px; }
+.m5-vvp .w19-zoom, .m5-vcv { width: 100%; height: auto; display: block; }
+.m5-vvp .w19-zoom { position: relative; }
+.m5-vhot { position: absolute; inset: 0; }
+.m5-vs { overflow: visible; }
+.m5-vtag { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -2px); white-space: nowrap; pointer-events: none; font: 700 10px/1 system-ui, sans-serif; color: #fff; background: #1a1416; padding: 2px 4px; border-radius: 3px; box-shadow: 0 0 0 1px #f0b030; }
+.m5-vs.m5-lm .m5-vtag { box-shadow: 0 0 0 1px #8ac; display: none; }
+.m5-vs.m5-lm:hover .m5-vtag, .m5-vs.m5-lm:focus-visible .m5-vtag { display: block; z-index: 3; }
+.m5-vs:hover .m5-vtag, .m5-vs:focus-visible .m5-vtag { z-index: 3; background: #f0b030; color: #1a1416; }
+.m5-vnote { margin: 6px 0 0; }
+@media (max-width: 860px) { .m5-vbody, .m5-city .c27-main { grid-template-columns: 1fr; } .m5-telex { position: static; width: auto; margin-top: 6px; } }
+
+.m5-lname { display: inline-flex; align-items: center; gap: 6px; }
+.m5-lname .ic-px { width: 16px; height: 16px; opacity: .55; }
+.m5-layer.on .m5-lname .ic-px { opacity: 1; }
+.m5-sky { width: 100%; height: auto; display: block; image-rendering: pixelated; border-radius: 3px; }
+.m5-idle .row { gap: 6px; }
+.m5-idle .m5-kbd { font-weight: 700; font-size: 11px; font-family: inherit; padding: 1px 4px; border-radius: 3px; background: #2a2f3a; color: #fff; border: 1px solid #4a5060; }
+.c18-tip .m5-bang { margin-top: 3px; }
+.m5-cbtn { white-space: nowrap; gap: 4px; }
+.m5-cbtn .pill { font-size: 9.5px; padding: 0 4px; line-height: 1.5; }
+/* dentro da casca nova (reg5) a região não tem margem própria: o mapa ganha a calha de 16px */
+.reg5 .m5-world, .reg5 .m5-visit { padding: 8px 16px 16px; box-sizing: border-box; }

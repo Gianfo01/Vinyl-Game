@@ -288,6 +288,12 @@ export class WorldMap {
     this.animateTo(k, this.w / 2 - cx * k, this.hgt / 2 - cy * k);
   }
 
+  /** R31 onda 5 (MAPA): centra num ponto (lon, lat) mostrando ~`span` graus na largura (busca e teclado). */
+  centerOn(lon: number, lat: number, span = 40): void {
+    const k = this.clampK(this.w / Math.max(4, span));
+    this.animateTo(k, this.w / 2 - (lon + 180) * k, this.hgt / 2 - (85 - lat) * k);
+  }
+
   reset(): void {
     const k = this.kMin();
     this.animateTo(k, (this.w - WORLD_W * k) / 2, (this.hgt - WORLD_H * k) / 2);

@@ -18,7 +18,7 @@ await p.goto('file://' + file); await p.waitForTimeout(4000);
 p.setDefaultTimeout(30000);
 await p.getByText('NOVA RUN', { exact: false }).first().click(); await p.waitForTimeout(1500);
 await p.getByText('COMEÇAR MINHA HISTÓRIA', { exact: false }).first().click(); await p.waitForTimeout(5000);
-const label = async () => (await p.locator('.topbar').first().innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160);
+const label = async () => (await p.locator('.topbar, .t5').first().innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160);
 const before = await label();
 for (let i = 0; i < months; i++) {
   for (let k = 0; k < 3; k++) { await p.keyboard.press('Escape'); await p.waitForTimeout(150); }
