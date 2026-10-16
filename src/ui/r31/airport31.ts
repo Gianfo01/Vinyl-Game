@@ -15,8 +15,10 @@ import { $, modal, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf } from '../pixel/avatar';
 import { drawText, fitText } from '../pixel/font';
-import { C, INK, Px, tint, type Col } from '../pixel/px';
-import { vehiclePx29 } from '../pixel/things29';
+import { box, floor, screen, sign, wall, windowPane } from '../pixel/places/kit';
+import { eraOf, paletteOf, type Palette } from '../pixel/palette';
+import { C, INK, Px, discV, ellipseV, lv, rectV, tint, volume, withAlpha, type Col } from '../pixel/px';
+import { furniture } from '../pixel/sprites';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
@@ -29,74 +31,132 @@ const cityN = (id: string): string => T(cityById[id]?.name ?? l(id, id));
 
 // ---------------------------------------------------------------- pintura
 
+// Saguão em vista frontal 2.5D, com o kit dos lugares (pixel/places/kit): parede e piso da paleta da época, janelas
+// com a pista (trem, biplano, avião a hélice ou jato) e o mar com o navio, telão de partidas, balcões com volume e
+// contorno escuro quente, placas e gente. Luz de cima à esquerda.
+const TXT = C('#ffd040');
+
+function outside(p: Px, m: Air31, x: number, y: number, w: number, h: number): void {
+  const gy = y + h - 9;
+  // chão lá fora: trilho, grama ou pista
+  p.rect(x, gy, w, 9, m.era === 'rail' ? C('#8a7a5c') : m.era === 'field' ? C('#6e9a50') : C('#6a6a70'));
+  if (m.era === 'rail') { for (let i = 0; i < w; i += 5) p.rect(x + i, gy + 4, 3, 3, C('#5a3a22')); p.hline(x, x + w - 1, gy + 4, C('#30303a')); p.hline(x, x + w - 1, gy + 6, C('#30303a')); }
+  else if (m.era !== 'field') for (let i = 2; i < w; i += 12) p.rect(x + i, gy + 4, 6, 1, C('#f0f0e8'));
+  const vx = x + 10, vy = gy - 14;
+  if (m.era === 'rail') {
+    rectV(p, vx, vy - 2, 34, 12, C('#2a2e38'));
+    rectV(p, vx + 26, vy - 10, 10, 10, C('#2a2e38'));
+    rectV(p, vx + 4, vy - 8, 5, 7, C('#3a3e48'));
+    discV(p, vx + 8, vy + 11, 3, C('#3a3a40')); discV(p, vx + 24, vy + 11, 3, C('#3a3a40'));
+    for (let i = 0; i < 4; i++) p.disc(vx + 6 - i * 3, vy - 12 - i * 3, 2 + i, withAlpha(C('#e8e8e8'), 170 - i * 30));
+  } else if (m.era === 'field') {
+    rectV(p, vx, vy + 2, 32, 6, C('#c8a040'));
+    rectV(p, vx + 6, vy - 4, 22, 3, C('#d8b050')); rectV(p, vx + 6, vy + 9, 22, 3, C('#d8b050'));
+    p.vline(vx + 10, vy - 1, vy + 8, INK); p.vline(vx + 24, vy - 1, vy + 8, INK);
+    rectV(p, vx - 3, vy, 3, 10, C('#5a4020'));
+    discV(p, vx + 10, vy + 14, 2, C('#2a2a2a')); discV(p, vx + 24, vy + 14, 2, C('#2a2a2a'));
+    // biruta
+    p.vline(x + w - 12, gy - 18, gy, INK); p.poly([[x + w - 11, gy - 18], [x + w - 2, gy - 16], [x + w - 11, gy - 14]], C('#e8742a'));
+  } else {
+    // avião a hélice (até 1958) ou jato: fuselagem, asa, cauda e janelinhas
+    const jet = m.era === 'jet', L = jet ? 64 : 50, fy = gy - 12;
+    const body = jet ? C('#eef2f6') : C('#c8ccd2');
+    ellipseV(p, vx + L / 2, fy, L / 2, 4, body);
+    volume(p, vx + L - 10, fy - 13, 10, 12, (xx, yy) => xx - (vx + L - 10) >= (fy - yy) * 0.5 - 2, jet ? C('#c83030') : body);
+    rectV(p, vx + L / 2 - 8, fy + 1, 20, 3, tint(body, -0.12));
+    for (let i = vx + 8; i < vx + L - 12; i += 4) p.rect(i, fy - 2, 2, 1, C('#3a5a80'));
+    if (!jet) { p.vline(vx, fy - 5, fy + 5, INK); discV(p, vx + L / 2 - 2, fy + 3, 2, C('#4a4a50')); }
+    else { rectV(p, vx + L / 2 - 4, fy + 3, 8, 3, C('#9aa0a8')); p.rect(vx + L / 2 - 6, fy, L / 2, 1, C('#c83030')); }
+    discV(p, vx + 12, fy + 6, 1, INK); discV(p, vx + L / 2, fy + 6, 1, INK);
+  }
+}
+
+function sea(p: Px, m: Air31, x: number, y: number, w: number, h: number): void {
+  const sy = y + Math.floor(h * 0.55);
+  for (let j = sy; j < y + h; j++) p.hline(x, x + w - 1, j, tint(C('#3a78a8'), -(j - sy) / 60));
+  for (let j = sy + 2; j < y + h; j += 4) for (let i = (j * 3) % 9; i < w; i += 9) p.rect(x + i, j, 3, 1, C('#8ac0e0'));
+  const bx = x + 8, by = sy - 2;
+  if (m.year < 1960) {
+    rectV(p, bx, by, 40, 8, C('#22262e'));
+    rectV(p, bx + 6, by - 6, 28, 6, C('#ece6d6'));
+    rectV(p, bx + 12, by - 14, 5, 8, C('#c03028')); rectV(p, bx + 22, by - 14, 5, 8, C('#c03028'));
+  } else {
+    volume(p, bx, by - 2, 44, 10, (xx, yy) => yy - (by - 2) < 10 - Math.max(0, (xx - bx - 36)), C('#f0f0f2'));
+    rectV(p, bx + 6, by - 10, 30, 8, C('#e4e6ec'));
+    for (let i = bx + 8; i < bx + 34; i += 4) p.rect(i, by - 7, 2, 2, C('#3a5a80'));
+    rectV(p, bx + 26, by - 16, 5, 6, C('#1a4a8a'));
+  }
+}
+
+function desk(p: Px, x: number, y: number, w: number, col: Col, label: string, pal: Palette): void {
+  box(p, x, y, w, 16, col, 4);
+  p.rect(x + 2, y + 2, w - 4, 2, lv(col, 4.4));
+  sign(p, x + Math.round(w / 2), 78, label, pal.paper, tint(pal.accent2, -0.35));
+}
+
 function paint(cv: HTMLCanvasElement, s: GameState, m: Air31): void {
   const p = new Px(m.W, m.H);
-  const old = m.year < 1950;
-  // céu
-  for (let y = 0; y < 96; y++) { const c = old ? C('#c8d8d0') : C('#9cc8e8'); p.hline(0, m.W - 1, y, tint(c, (y - 48) / 400)); }
-  for (const [cx, cy] of [[40, 18], [190, 10], [280, 24]]) { p.ellipse(cx, cy, 14, 4, C('#f4f8fa')); p.ellipse(cx + 8, cy - 2, 9, 4, C('#ffffff')); }
-  // chão: grama (campo de pouso / trilhos), pista
-  const ground: Col = m.era === 'rail' ? C('#9a8a68') : m.era === 'field' ? C('#7aa058') : C('#8a8a88');
-  p.rect(0, 96, m.W, m.H - 96, ground);
-  if (m.era !== 'rail') { p.rect(0, 92, 250, 6, C('#5a5a5c')); for (let x = 4; x < 250; x += 16) p.rect(x, 94, 8, 1, C('#f0f0e8')); }
-  else { for (let x = 0; x < 250; x += 6) p.rect(x, 93, 3, 4, C('#5a3a20')); p.hline(0, 249, 93, C('#3a3a40')); p.hline(0, 249, 96, C('#3a3a40')); }
-  // mar e cais à direita
-  p.rect(250, 112, 70, 68, C('#3a78a8'));
-  for (let y = 116; y < 180; y += 6) for (let x = 252 + (y % 12); x < 320; x += 12) p.rect(x, y, 4, 1, C('#7ab0d8'));
-  p.rect(246, 132, 30, 4, C('#7a5a38'));
-  // navio (vapor até 1950; cruzeiro depois)
-  if (m.year < 1960) { p.rect(268, 124, 44, 10, C('#20242c')); p.rect(272, 118, 32, 6, C('#f0ece0')); p.rect(280, 108, 6, 10, C('#c83028')); p.rect(292, 108, 6, 10, C('#c83028')); }
-  else { p.poly([[262, 124], [316, 124], [310, 136], [266, 136]], C('#f4f4f4')); p.rect(272, 114, 36, 10, C('#e8e8ec')); for (let x = 274; x < 306; x += 4) p.rect(x, 117, 2, 2, C('#3a5a80')); p.rect(296, 106, 6, 8, C('#1a4a8a')); }
-  // prédio principal pela época
-  if (m.era === 'rail') {
-    p.rect(100, 40, 120, 56, INK); p.rect(101, 41, 118, 54, C('#b86a48'));
-    p.poly([[96, 42], [224, 42], [160, 22]], C('#6a3a28'));
-    p.disc(160, 34, 6, C('#f4ecd8')); p.line(160, 34, 160, 30, INK); p.line(160, 34, 163, 34, INK);
-    for (let x = 108; x < 214; x += 14) p.rect(x, 60, 8, 14, C('#3a4050'));
-    // locomotiva
-    p.rect(20, 78, 40, 14, C('#20242c')); p.rect(52, 70, 10, 8, C('#20242c')); p.rect(24, 72, 6, 6, C('#30343c')); p.disc(30, 92, 3, INK); p.disc(46, 92, 3, INK);
-  } else if (m.era === 'field') {
-    p.rect(120, 56, 80, 40, INK); p.rect(121, 57, 78, 38, C('#a89070')); p.poly([[116, 58], [204, 58], [160, 40]], C('#6a5a48'));
-    p.rect(150, 74, 20, 21, C('#3a3020'));
-    // biruta
-    p.vline(230, 60, 92, INK); p.poly([[231, 60], [246, 63], [231, 66]], C('#e8742a'));
-    // biplano
-    p.rect(20, 74, 34, 5, C('#c8a040')); p.rect(26, 68, 22, 2, C('#c8a040')); p.rect(26, 80, 22, 2, C('#c8a040')); p.rect(18, 72, 3, 9, C('#5a4020')); p.disc(30, 88, 2, INK); p.disc(46, 88, 2, INK);
-  } else {
-    const modern = m.era === 'jet';
-    p.rect(96, 30, 128, 66, INK); p.rect(97, 31, 126, 64, modern ? C('#d8e0e8') : C('#e8dcc0'));
-    if (modern) for (let x = 100; x < 220; x += 6) p.rect(x, 50, 4, 30, C('#6a9ac0'));
-    else { for (let x = 104; x < 216; x += 12) p.rect(x, 54, 6, 22, C('#4a5a70')); p.rect(150, 22, 20, 10, C('#e8dcc0')); }
-    // torre de controle
-    p.rect(232, 30, 8, 62, C('#c8ccd0')); p.rect(226, 22, 20, 10, C('#4a7aa0'));
-    // avião (DC-3 ou jato)
-    const plane = vehiclePx29('fly', m.year, 'airport');
-    p.blit(plane, 16, 66);
-  }
-  if (m.hangar) { p.rect(220, 58, 60, 36, INK); p.ellipse(250, 60, 30, 10, C('#9aa4ac')); p.rect(221, 60, 58, 33, C('#9aa4ac')); p.rect(232, 70, 36, 23, C('#3a4048')); }
-  if (m.holo) { p.rect(22, 30, 56, 40, INK); p.rect(23, 31, 54, 38, C('#1a2030')); p.ellipse(50, 56, 12, 4, C('#40e0ff', 120)); p.rect(46, 36, 8, 20, C('#80f0ff', 140)); }
-  // painel de partidas
-  p.rect(112, 14, 96, 30, INK); p.rect(113, 15, 94, 28, C('#141418'));
-  drawText(p, fitText(T(l('PARTIDAS', 'DEPARTURES')), 90), 116, 17, C('#f0c040'));
-  m.dep.slice(0, 3).forEach((f, i) => drawText(p, fitText(`${cityN(f.city)} ${Math.max(0, f.w - s.week)}S`.toUpperCase(), 88), 116, 24 + i * 6, C('#f4ecd8')));
-  if (!m.dep.length) drawText(p, '---', 116, 26, C('#808080'));
-  // balcões: desembarque, alfândega, VIP, banca
-  const desk = (x: number, y: number, w: number, label: L, c: Col): void => { p.rect(x, y, w, 20, INK); p.rect(x + 1, y + 1, w - 2, 18, c); drawText(p, fitText(T(label).toUpperCase(), w - 4), x + 2, y + 3, C('#ffffff')); };
-  desk(14, 110, 64, l('Desembarque', 'Arrivals'), C('#3a6a4a'));
-  desk(92, 110, 52, l('Alfândega', 'Customs'), C('#6a4a2a'));
-  desk(156, 110, 52, l('VIP', 'VIP'), C('#6a2a4a'));
-  p.rect(220, 104, 24, 28, INK); p.rect(221, 105, 22, 26, C('#c8a060')); for (let y = 108; y < 128; y += 5) p.rect(223, y, 18, 3, C('#f4ecd8'));
+  const pal = paletteOf(m.year);
+  const glassy = m.era === 'jet';
+  wall(p, pal, 0, 96, m.era === 'rail' ? pal.wall : glassy ? tint(pal.metal, 0.15) : pal.wall, m.era === 'rail' ? 'wainscot' : glassy ? 'glass' : pal.wallKind);
+  floor(p, 96, pal.floors.hall.a, pal.floors.hall.b, m.era === 'rail' ? 'boards' : m.era === 'field' ? 'checker' : 'tiles');
+  // janela grande: a pista (ou os trilhos)
+  windowPane(p, 8, 8, 120, 56, pal, 'day');
+  outside(p, m, 8, 8, 120, 56);
+  // janela do cais
+  windowPane(p, 254, 8, 58, 56, pal, 'day');
+  sea(p, m, 254, 8, 58, 56);
+  // telão / quadro de partidas
+  const chalk = m.year < 1950;
+  screen(p, 144, 10, 94, 40, chalk ? C('#24382c') : C('#121216'), chalk ? pal.woodDark : pal.metalDark, !chalk);
+  drawText(p, fitText(T(m.era === 'rail' ? l('PARTIDAS: TRENS E NAVIOS', 'DEPARTURES: TRAINS AND SHIPS') : l('PARTIDAS', 'DEPARTURES')).toUpperCase(), 88), 147, 12, chalk ? C('#f0f0e0') : TXT);
+  const rows = m.dep.slice(0, 4);
+  rows.forEach((f, i) => {
+    const t = fitText(`${cityN(f.city)}`.toUpperCase(), 62);
+    drawText(p, t, 147, 20 + i * 7, chalk ? C('#e0e8d8') : C('#f4ecd8'));
+    drawText(p, `${Math.max(0, f.w - s.week)}S`, 226, 20 + i * 7, chalk ? C('#e0e8d8') : TXT);
+  });
+  // o resto do quadro: as linhas regulares da cidade (apagadas: não são seus artistas)
+  ['london', 'new_york', 'paris', 'rio', 'tokyo'].filter((c) => c !== s.config.homeCity && !rows.some((f) => f.city === c)).slice(0, 4 - rows.length)
+    .forEach((c, i) => drawText(p, fitText(cityN(c).toUpperCase(), 62), 147, 20 + (rows.length + i) * 7, chalk ? C('#7a8a74') : C('#6a6658')));
+  // portas (hangar e cais) e relógio
+  discV(p, 248 - 6, 76, 6, pal.paper);
+  p.line(242, 76, 242, 72, INK); p.line(242, 76, 245, 77, INK);
+  if (m.hangar) { box(p, 214, 60, 30, 36, tint(pal.metal, -0.1), 0); p.rect(218, 64, 22, 32, C('#2a2e36')); sign(p, 229, 52, T(l('HANGAR', 'HANGAR')), pal.paper, C('#2a3a5a')); }
+  box(p, 266, 70, 34, 26, pal.woodDark, 0); p.rect(270, 74, 26, 22, C('#1e2a38')); sign(p, 283, 64, T(l('CAIS', 'PIER')), pal.paper, C('#1a4a6a'));
+  // estúdio de holograma (2027+)
+  // balcões
+  desk(p, 14, 120, 58, pal.wood, T(l('DESEMBARQUE', 'ARRIVALS')), pal);
+  desk(p, 92, 120, 50, pal.woodDark, T(l('ALFANDEGA', 'CUSTOMS')), pal);
+  // sala VIP: tapete e cordão
+  p.rect(154, 110, 58, 30, tint(pal.fabric, -0.15));
+  for (let x = 156; x < 210; x += 4) p.put(x, 112, lv(pal.fabric, 4));
+  sign(p, 183, 78, m.year < 1950 ? T(l('SALA DE ESPERA', 'WAITING ROOM')) : 'VIP', pal.paper, tint(pal.gold, -0.35));
+  // banca de jornal
+  box(p, 222, 116, 26, 20, C('#b07a40'), 3);
+  for (let i = 0; i < 3; i++) p.rect(225 + i * 7, 118, 5, 8, [C('#f4ecd8'), C('#e8d0a0'), C('#f0e0c8')][i]);
   const ctx = blitPx31(cv, p.d, m.W, m.H);
   if (!ctx) return;
+  const fur = (k: Parameters<typeof furniture>[0], x: number, y: number, f: 'SW' | 'SE' = 'SW'): void => { const sp = furniture(k, eraOf(m.year), f); ctx.drawImage(sp.c, x - sp.ax, y - sp.ay); };
+  fur('sofa', 176, 136); fur('plant', 160, 128); fur('lamp', 212, 126);
+  if (m.holo) { fur('holo', 46, 92); }
+  const dude = (id: string, x: number, y: number, dir: 'SE' | 'SW' | 'NE' | 'NW', scale = 1): void => {
+    const sp = avatarSprite(lookOf({ id }), { year: m.year, role: null, pose: 'stand', dir });
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x - 6 * scale, y, 12 * scale, 2);
+    ctx.drawImage(sp.c, x - sp.ax * scale, y - sp.ay * scale, sp.c.width * scale, sp.c.height * scale);
+  };
+  // funcionários nos balcões
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, m.W, 117); ctx.clip();
+  dude('desk-arr', 43, 124, 'SE'); dude('desk-cus', 117, 124, 'SW');
+  ctx.restore();
   // multidão no portão (fama de quem voltou)
-  for (let i = 0; i < m.crowd * 3; i++) {
-    const sp = avatarSprite(lookOf({ id: `fan-${i}` }), { year: m.year, role: null, pose: 'stand', dir: i % 2 ? 'SE' : 'SW' });
-    ctx.drawImage(sp.c, 16 + (i % 6) * 10 - sp.ax / 2, 150 + Math.floor(i / 6) * 8 - sp.ay / 2, sp.c.width / 2, sp.c.height / 2);
-  }
+  for (let i = 0; i < m.crowd * 3; i++) dude(`fan-${i}`, 10 + (i % 6) * 11, 152 + Math.floor(i / 6) * 10, i % 2 ? 'NE' : 'NW');
+  // viajantes
+  for (let i = 0; i < 3; i++) dude(`trav-${m.year}-${i}`, 96 + i * 46, 168 - (i % 2) * 6, i % 2 ? 'SW' : 'SE');
   const me = playerPerson(s);
   const sp = avatarSprite(lookOf(me ?? { id: 'player' }), { year: m.year, role: me?.role ?? null, pose: 'stand', dir: 'SE' });
-  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(150, 172, 12, 2);
-  ctx.drawImage(sp.c, 156 - sp.ax, 173 - sp.ay);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(150, 176, 12, 2);
+  ctx.drawImage(sp.c, 156 - sp.ax, 177 - sp.ay);
 }
 
 // ---------------------------------------------------------------- painéis

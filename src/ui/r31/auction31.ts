@@ -19,7 +19,7 @@ import type { GameState } from '../../sim/types';
 import { $, modal, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf } from '../pixel/avatar';
-import { drawText, drawTextOutlined, fitText, textWidth } from '../pixel/font';
+import { drawText, fitText } from '../pixel/font';
 import { C, INK, Px, tint, type Col } from '../pixel/px';
 import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { registerArea } from '../registry';
@@ -92,7 +92,7 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
   p.rect(236, 14, 64, 66, INK); p.rect(238, 16, 60, 62, C('#f4ecd8'));
   drawText(p, fitText(t(l('CATÁLOGO', 'CATALOGUE')), 56), 240, 18, C('#5a3a20'));
   const next = m.picks.slice(0, 3);
-  next.forEach((x, i) => { p.rect(241, 27 + i * 16, 54, 13, C('#e8dcc0')); drawText(p, fitText(`${t(HOUSE31[x.house].name)}`.toUpperCase(), 52), 243, 29 + i * 16, C('#3a2a1a')); drawText(p, `${x.lots.length} · ${Math.max(0, x.w - s.week)}S`, 243, 35 + i * 16, C('#8a5a30')); });
+  next.forEach((x, i) => { p.rect(241, 27 + i * 16, 54, 13, C('#e8dcc0')); drawText(p, fitText(`${t(HOUSE31[x.house].name)}`.toUpperCase(), 52), 243, 29 + i * 16, C('#3a2a1a')); drawText(p, `${x.lots.length} - ${Math.max(0, x.w - s.week)}S`, 243, 35 + i * 16, C('#8a5a30')); });
   // balcão de consignação
   p.rect(262, 104, 54, 30, INK); p.rect(263, 105, 52, 8, C('#c09048')); p.rect(263, 113, 52, 20, C('#6e2e20'));
   drawText(p, fitText(t(l('CONSIGNAÇÃO', 'CONSIGNMENT')), 50), 265, 106, INK);
@@ -103,7 +103,7 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
     p.rect(150, 74, 20, 36, INK); p.rect(151, 75, 18, 34, C('#ece4d4')); p.rect(148, 72, 24, 4, C('#d8cebc')); p.rect(148, 108, 24, 4, C('#b8ae9c'));
     const art = relicArtOf28(m.lot.k, m.lot.n.pt, m.lot.y, m.lot.id);
     p.blit(relicPx28(art, m.lot.id, m.lot.y, m.lot.n.pt), 148, 48);
-    drawTextOutlined(p, tierStars31(m.tier).replace(/☆/g, '.'), 160 - Math.round(textWidth(tierStars31(m.tier)) / 2), 40, glow, INK);
+    for (let i = 0; i < 5; i++) { p.disc(148 + i * 6, 42, 2, INK); p.disc(148 + i * 6, 42, 1, i < m.tier ? glow : C('#5a5048')); }
   }
   // púlpito do leiloeiro
   p.rect(40, 84, 30, 26, INK); p.rect(41, 85, 28, 24, C('#6e2e20')); p.rect(41, 85, 28, 3, C('#c09048'));
@@ -125,7 +125,6 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
     ctx.fillStyle = '#170e12'; ctx.fillRect(x.x + 5, x.y - 28 - up + 8, 1, up + 6);
     ctx.fillStyle = x.outAt !== undefined ? '#8a8a8a' : x.lead ? '#f0c040' : '#f4ecd8';
     ctx.fillRect(x.x + 1, x.y - 34 - up + 8, 9, 7);
-    ctx.fillStyle = '#170e12'; ctx.font = '5px monospace'; ctx.fillText(String(x.plate), x.x + 2, x.y - 28 - up + 8);
   }
   // você, de costas, com a sua plaquinha
   const me = playerPerson(s);

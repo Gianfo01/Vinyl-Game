@@ -46,22 +46,22 @@ export function airport31Model(s: GameState): Air31 {
   const spots: Spot31[] = [];
   const sp = (x: Omit<Spot31, 'go'> & { panel: string }): void => { const { panel, ...rest } = x; spots.push({ ...rest, go: { panel } }); };
   const rail = era === 'rail';
-  sp({ id: 'dep', x: 112, y: 14, w: 96, h: 30, label: rail ? l('Quadro de partidas (trens e navios)', 'Departures board (trains and ships)') : l('Painel de partidas', 'Departures board'),
+  sp({ id: 'dep', x: 141, y: 7, w: 100, h: 46, label: rail ? l('Quadro de partidas (trens e navios)', 'Departures board (trains and ships)') : l('Painel de partidas', 'Departures board'),
     tip: l('Para onde seus artistas estão indo; daqui se abre turnê internacional e se manda o olheiro para fora.', 'Where your acts are headed; from here you open an international tour and send the scout abroad.'), panel: 'dep',
     badge: dep.length ? { text: String(dep.length), level: dep.some((x) => x.w <= s.week + 1) ? 'soon' : 'info' } : undefined });
-  sp({ id: 'arr', x: 14, y: 96, w: 64, h: 50, label: l('Desembarque', 'Arrivals'),
+  sp({ id: 'arr', x: 8, y: 100, w: 66, h: 60, label: l('Desembarque', 'Arrivals'),
     tip: crowd ? l('Seu artista voltou famoso: fãs e imprensa no portão.', 'Your act came back famous: fans and press at the gate.') : l('Artistas de fora chegando para tocar na sua cidade: conhecer e convidar.', 'Foreign acts arriving to play your city: meet and invite them.'), panel: 'arr',
     badge: arr.length ? { text: String(arr.length), level: 'info' } : undefined });
-  sp({ id: 'customs', x: 92, y: 100, w: 52, h: 40, label: l('Alfândega', 'Customs'), tip: l('Importar peças de leilões de fora (imposto e prazo) e exportar discos (licenciamento).', 'Import pieces from foreign auctions (duty and delay) and export records (licensing).'), panel: 'customs',
+  sp({ id: 'customs', x: 90, y: 100, w: 54, h: 40, label: l('Alfândega', 'Customs'), tip: l('Importar peças de leilões de fora (imposto e prazo) e exportar discos (licenciamento).', 'Import pieces from foreign auctions (duty and delay) and export records (licensing).'), panel: 'customs',
     badge: imports ? { text: String(imports), level: 'normal', sym: '📦' } : undefined });
-  sp({ id: 'vip', x: 156, y: 100, w: 52, h: 40, label: vipPlace31(s.year), tip: l('O intermediário das facções de fora e executivos estrangeiros com propostas.', 'The broker for foreign factions and foreign executives with proposals.'), panel: 'vip' });
-  sp({ id: 'sea', x: 252, y: 118, w: 64, h: 40, label: l('Cais (temporadas no mar)', 'Pier (seasons at sea)'),
+  sp({ id: 'vip', x: 152, y: 96, w: 62, h: 46, label: vipPlace31(s.year), tip: l('O intermediário das facções de fora e executivos estrangeiros com propostas.', 'The broker for foreign factions and foreign executives with proposals.'), panel: 'vip' });
+  sp({ id: 'sea', x: 252, y: 6, w: 62, h: 92, label: l('Cais (temporadas no mar)', 'Pier (seasons at sea)'),
     tip: cruiseOpen31(s).length ? l('Orquestra de transatlântico, navio de cruzeiro ou cruzeiro temático, conforme a época.', 'Ocean-liner orchestra, cruise ship or theme cruise, depending on the era.') : l('Nesta época não há temporadas no mar.', 'No seasons at sea in this era.'), panel: 'sea',
     badge: atSea.length ? { text: String(atSea.length), level: 'info', sym: '⚓' } : undefined });
-  if (hangar) sp({ id: 'hangar', x: 220, y: 54, w: 60, h: 40, label: l('Hangar de jatinhos', 'Private-jet hangar'), tip: l('Fretar avião para a turnê: poupa tempo e cansaço, custa caro.', 'Charter a plane for the tour: saves time and fatigue, costs a lot.'), panel: 'hangar' });
-  if (holo) sp({ id: 'holo', x: 22, y: 30, w: 56, h: 40, label: l('Estúdio de holograma', 'Hologram studio'), tip: l('Um show transmitido para várias cidades ao mesmo tempo (menos receita e fama que o ao vivo).', 'A show broadcast to several cities at once (less revenue and fame than live).'), panel: 'holo' });
-  sp({ id: 'news', x: 220, y: 100, w: 24, h: 34, label: l('Banca de jornal', 'Newsstand'), tip: l('As notícias da aviação e do transporte.', 'Aviation and transport news.'), panel: 'news',
+  if (hangar) sp({ id: 'hangar', x: 212, y: 48, w: 34, h: 48, label: l('Hangar de jatinhos', 'Private-jet hangar'), tip: l('Fretar avião para a turnê: poupa tempo e cansaço, custa caro.', 'Charter a plane for the tour: saves time and fatigue, costs a lot.'), panel: 'hangar' });
+  if (holo) sp({ id: 'holo', x: 30, y: 62, w: 34, h: 32, label: l('Estúdio de holograma', 'Hologram studio'), tip: l('Um show transmitido para várias cidades ao mesmo tempo (menos receita e fama que o ao vivo).', 'A show broadcast to several cities at once (less revenue and fame than live).'), panel: 'holo' });
+  sp({ id: 'news', x: 220, y: 110, w: 30, h: 28, label: l('Banca de jornal', 'Newsstand'), tip: l('As notícias da aviação e do transporte.', 'Aviation and transport news.'), panel: 'news',
     badge: news.some((f) => f.w >= s.week - 8) ? { text: l('nova', 'new'), level: 'info' } : undefined });
-  if (events) sp({ id: 'events', x: 84, y: 54, w: 28, h: 30, label: l('Imigração', 'Immigration'), tip: fmtL(l('{n} visto(s) negado(s) nas turnês dos seus artistas.', '{n} visa(s) denied on your acts\' tours.'), { n: events }), panel: 'events', badge: { text: String(events), level: 'normal', sym: '!' } });
+  if (events) sp({ id: 'events', x: 92, y: 74, w: 50, h: 22, label: l('Imigração', 'Immigration'), tip: fmtL(l('{n} visto(s) negado(s) nas turnês dos seus artistas.', '{n} visa(s) denied on your acts\' tours.'), { n: events }), panel: 'events', badge: { text: String(events), level: 'normal', sym: '!' } });
   return { W: AIR_W31, H: AIR_H31, year: s.year, era, name: AIRPORT_NAME31[era], hangar, holo, dep, arr, crowd, imports, atSea, news, events, spots };
 }
