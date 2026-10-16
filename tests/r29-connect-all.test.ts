@@ -8,7 +8,9 @@ import { CONNMAP29 } from '../src/sim/connmap29';
 let RUN: Run29;
 let CELLS: Map<string, Cell29>;
 beforeAll(() => {
-  RUN = median29(['r29all', 'r29all-b', 'r29all-c'].map((sd) => run29(base29(sd))));
+  // r31 (W0-RNG): o ato da sonda sai do fluxo 'act' — com 'r29all-b' (glam) só 1 de 3 sondas tinha gênero de rua e a aresta
+  // submundo → público (só vale para gênero de rua) sumia na mediana; 'r29all-d' (punk) no lugar
+  RUN = median29(['r29all', 'r29all-c', 'r29all-d'].map((sd) => run29(base29(sd))));
   CELLS = new Map(matrix29(RUN).map((c) => [`${c.a}>${c.b}`, c]));
 }, 600_000);
 

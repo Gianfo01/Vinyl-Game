@@ -93,9 +93,12 @@ beforeAll(() => {
   // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
   // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
   // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
-  expect(s.player.cash).toBe(1034775);
-  expect(hashString(JSON.stringify(s.acts))).toBe(829002627);
-  expect(hashString(rngSnapshot19(s))).toBe(1362224447);
+  // R31 (W0-RNG, de propósito — docs/r31/DECISOES.md): o fluxo único s.rng saiu; o mundo nasce no fluxo 'world', o motor sorteia
+  // em 'tick' e o playbot em 'act': caixa, acts e rng mudam; nesta semente o bot não marca turnê nos 8 meses (tours = []).
+  // Antes: 1034775 / 2631883956 / 829002627 / 1362224447.
+  expect(s.player.cash).toBe(178753);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3472429155);
+  expect(hashString(rngSnapshot19(s))).toBe(3703770621);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

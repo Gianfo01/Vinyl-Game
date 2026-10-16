@@ -211,4 +211,6 @@ describe('r27 M3 — operações jogáveis do Submundo', () => {
 // R29 (conectar tudo, conn29): alvo famoso expõe mais (fama → submundo) e o calor/jurídico entram nas chances — re-medido.
 // R29 DEMO (público por idade e região, merge r29-demo): o mundo inicial e o alvo mudam um pouco — re-medido.
 // Antes: "10:0.70/0.34:10331957", "10:0.78/0.34:10332304".
-const QUICK_SNAPSHOT: string[] = ["11:0.70/0.34:10331252", "10:0.70/0.34:10331434"];
+// R31 (W0-RNG, docs/r31/DECISOES.md): mundo gerado no fluxo 'world' e ações no fluxo 'act' (o fluxo único s.rng saiu):
+// alvo e sorte mudam — re-medido. Antes: "11:0.70/0.34:10331252", "10:0.70/0.34:10331434".
+const QUICK_SNAPSHOT: string[] = ["10:0.70/0.28:10331967", "01:0.70/0.34:9926500"];

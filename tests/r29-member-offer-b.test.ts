@@ -24,7 +24,7 @@ import { advanceWeek } from '../src/sim/tick';
 import { rngSnapshot19 } from '../src/sim/rng19';
 
 const BEATLES = 26;
-function world(seed = 'b3'): GameState {
+function world(seed = 'b4') /* r31 (W0-RNG): em 'b3' os Beatles ainda não existem no início */: GameState {
   const c = defaultConfig(seed, { startYear: 1962 });
   applyWorld17(c, 'random');
   c.lineup29 = 'famous';
@@ -242,7 +242,7 @@ describe('R29 — oferta a uma pessoa SEM banda', () => {
     if (solo) expect(memberBlock29(s, solo.members[0])?.pt).toMatch(/Fazer proposta/);
   }, 60_000);
 
-  it('determinismo: mesma semente e mesmas ações → mesmo resultado; s.rng intocado', () => {
+  it('determinismo: mesma semente e mesmas ações → mesmo resultado; fluxos de sorteio (rng19) intocados', () => {
     const run = () => {
       const s = world();
       const mine = myBand(s);

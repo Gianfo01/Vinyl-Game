@@ -68,7 +68,7 @@ describe('R29 — oferta a um integrante específico', () => {
   }, 60_000);
 
   it('solo sem acordo: o solo-proposta some, a pessoa fica e não dá para insistir logo', () => {
-    const s = game('r29mo-b');
+    const s = game('r29mo-b2'); // r31 (W0-RNG): em 'r29mo-b' a pessoa aceita até a proposta irrisória
     const band = freeBand(s);
     const pid = band.members[1];
     const before = Object.keys(s.acts).length;

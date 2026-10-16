@@ -13,7 +13,7 @@ import { f16, fameIn, homeA3, worldFame16 } from '../src/sim/sys/fame16';
 
 describe('fama regional 16', () => {
   it('base local, shows constroem o nome lá e o desvio decai', () => {
-    const s = createGame(defaultConfig('r16-rf'));
+    const s = createGame(defaultConfig('r16-rf2')) // r31 (W0-RNG): em 'r16-rf' o ato escolhido é hit mundial e o teto de 12 países tira o país dos shows;
     const a = Object.values(s.acts).find((x) => x.owner !== 'player' && !x.playerBand && homeA3(x) && x.status !== 'retired' && x.status !== 'split')!;
     a.fame = 40;
     const home = homeA3(a)!;

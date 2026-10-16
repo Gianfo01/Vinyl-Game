@@ -95,10 +95,10 @@ describe('R29 família — artistas NPC: casamento, filhos, casal célebre e div
       if (!a) continue;
       const [p, q] = a.members.map((id) => s.persons[id]);
       expect(marry29(s, p.id, q.id)).toBe(true);
-      const n0 = a.members.length;
       expect(divorce29(s, p.id)).toBe(true);
       expect(kinOf15(s, p.id).find((k) => k.id === q.id)?.rel).toBe('ex');
-      const left = a.members.length < n0;
+      // r31 (W0-RNG): a banda pode rachar e repor a vaga na hora (departNpc16): conta quem saiu, não o tamanho
+      const left = !a.members.includes(p.id) || !a.members.includes(q.id);
       const feud = kin15(s).feud[p.id < q.id ? `${p.id}|${q.id}` : `${q.id}|${p.id}`] !== undefined;
       expect(left || feud).toBe(true);
       if (!left) expect(pressure16(s, a, p).why).toBe('feud');

@@ -54,7 +54,7 @@ describe('r27 knownArtists27', () => {
   });
 
   it('olheiro/radar entra na lista com o motivo certo (e o memo da semana se renova)', () => {
-    const s = game(1975);
+    const s = game(1975, 'small', 'r27known-c'); // r31 (W0-RNG): 'r27known' ficou sem candidato estrangeiro desconhecido
     const before = knownArtists27(s);
     expect(knownArtists27(s)).toBe(before); // mesma semana, nada mudou: memo
     const ids = new Set(before.map((k) => k.id));

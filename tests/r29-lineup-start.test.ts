@@ -17,6 +17,7 @@ import { canonKey, lineupPick29, realDataOf, rw } from '../src/sim/sys/realworld
 import { buildRun27, draftDefaults27, quickDefaults27, quickRunConfig27 } from '../src/ui/ps/home27model';
 
 const BEATLES = 26;
+// r31 (W0-RNG): mundo gerado no fluxo 'world' — 'b4' tem os Beatles no início (antes 'b3') e 'b3' os tem por surgir (antes 'b1')
 const cfgOf = (seed: string, year: number, world: string, lineup?: RunConfig['lineup29']): RunConfig => {
   const c = defaultConfig(seed, { startYear: year });
   applyWorld17(c, world);
@@ -61,7 +62,7 @@ describe('R29 formação — escolha da formação (puro)', () => {
 
 describe('R29 formação — Beatles em 1962 (mundo aleatório)', () => {
   it("'famous': 4 com Ringo; Pete Best e Stuart Sutcliffe livres, sem serem ex-integrantes", () => {
-    const s = game('b3', 1962, 'random', 'famous');
+    const s = game('b4', 1962, 'random', 'famous');
     const b = beatles(s)!;
     expect(b, 'semente com os Beatles no início').toBeTruthy();
     expect(names(s, b.members)).toEqual(['George Harrison', 'John Lennon', 'Paul McCartney', 'Ringo Starr']);
@@ -77,7 +78,7 @@ describe('R29 formação — Beatles em 1962 (mundo aleatório)', () => {
   }, 60_000);
 
   it("'original': a formação da estreia (com Pete Best); Ringo e Stuart livres", () => {
-    const s = game('b3', 1962, 'random', 'original');
+    const s = game('b4', 1962, 'random', 'original');
     const b = beatles(s)!;
     expect(names(s, b.members)).toEqual(['George Harrison', 'John Lennon', 'Paul McCartney', 'Pete Best']);
     expect(exMembers29(s, b)).toEqual([]);
@@ -86,7 +87,7 @@ describe('R29 formação — Beatles em 1962 (mundo aleatório)', () => {
   }, 60_000);
 
   it('sem o campo: o comportamento de antes (Stuart e Pete ex-integrantes, nenhuma pessoa livre nova)', () => {
-    const s = game('b3', 1962, 'random');
+    const s = game('b4', 1962, 'random');
     const b = beatles(s)!;
     expect(lineup29Of(s.config)).toBeUndefined();
     expect(names(s, b.members)).toEqual(['George Harrison', 'John Lennon', 'Paul McCartney', 'Ringo Starr']);
@@ -99,7 +100,7 @@ describe('R29 formação — Beatles em 1962 (mundo aleatório)', () => {
 describe('R29 formação — regras', () => {
   it('banda que surge depois do início também usa a formação escolhida', () => {
     for (const k of ['famous', 'original'] as const) {
-      const s = game('b1', 1962, 'random', k);
+      const s = game('b3', 1962, 'random', k);
       expect(beatles(s), 'Beatles ainda por surgir nesta semente').toBeUndefined();
       for (let i = 0; i < 36 && !(beatles(s) && rw(s).done[beatles(s)!.id]); i++) { if (s.ended) (s.flags as Record<string, number>).sandbox = 1; advanceMonth(s); }
       const b = beatles(s)!;
@@ -118,7 +119,7 @@ describe('R29 formação — regras', () => {
       expect(rw(s).sched.filter((x) => x.lin || x.kind === 'join' || x.kind === 'leave'), `${world} ${k}`).toEqual([]);
     }
     // controle: sem o campo, o mundo real agenda as trocas da formação de identidade (r27 LIN)
-    expect(rw(game('b3', 1962, 'random')).sched.some((x) => x.lin)).toBe(true);
+    expect(rw(game('b4', 1962, 'random')).sched.some((x) => x.lin)).toBe(true);
   }, 180_000);
 
   it("'famous' tira quem já morreu no início (The Who 1981 sem Keith Moon, que fica ex-integrante por morte)", () => {
@@ -133,7 +134,7 @@ describe('R29 formação — regras', () => {
   }, 60_000);
 
   it('vistas do connect29 concordam e a auditoria R29 fica limpa nas duas opções', () => {
-    for (const [seed, year, world] of [['b3', 1962, 'random'], ['d1', 1981, 'real'], ['r29c-0', 1990, 'chaos']] as const) for (const k of ['famous', 'original'] as const) {
+    for (const [seed, year, world] of [['b4', 1962, 'random'], ['d1', 1981, 'real'], ['r29c-0', 1990, 'chaos']] as const) for (const k of ['famous', 'original'] as const) {
       const s = game(seed, year, world, k);
       const c = count29(audit29(s));
       for (const code of BAD) expect(c[code] ?? 0, `${seed} ${year} ${world} ${k} ${code}: ${JSON.stringify(c)}`).toBe(0);
@@ -150,7 +151,7 @@ describe('R29 formação — regras', () => {
   }, 300_000);
 
   it('saída simulada antes da estreia não vira passagem invertida (auditoria: Macklemore "2009–2008", Compay Segundo)', () => {
-    const s = game('b3', 1962, 'random', 'famous');
+    const s = game('b4', 1962, 'random', 'famous');
     const b = beatles(s)!;
     const pid = b.members[3];
     const y = b.debutYear - 1;
@@ -163,16 +164,16 @@ describe('R29 formação — regras', () => {
   }, 60_000);
 
   it('o modo exato não muda com o campo', () => {
-    const a = game('b3', 1962, 'exact');
-    const b = game('b3', 1962, 'exact', 'famous');
+    const a = game('b4', 1962, 'exact');
+    const b = game('b4', 1962, 'exact', 'famous');
     expect(lineup29Of(b.config)).toBeUndefined();
     expect(snap(b)).toBe(snap(a));
   }, 120_000);
 
   it('determinismo: mesma configuração = mesmo mundo (nas duas opções)', () => {
-    for (const k of ['famous', 'original'] as const) expect(snap(game('b3', 1962, 'random', k)), k).toBe(snap(game('b3', 1962, 'random', k)));
+    for (const k of ['famous', 'original'] as const) expect(snap(game('b4', 1962, 'random', k)), k).toBe(snap(game('b4', 1962, 'random', k)));
     // as pessoas reais livres saem de gerador próprio (semente|free29|nome): a mesma pessoa nasce igual nas duas opções
-    const f = person(game('b3', 1962, 'random', 'famous'), 'Stuart Sutcliffe')!, o = person(game('b3', 1962, 'random', 'original'), 'Stuart Sutcliffe')!;
+    const f = person(game('b4', 1962, 'random', 'famous'), 'Stuart Sutcliffe')!, o = person(game('b4', 1962, 'random', 'original'), 'Stuart Sutcliffe')!;
     expect([o.born, o.role, o.potential, o.skills]).toEqual([f.born, f.role, f.potential, f.skills]);
   }, 180_000);
 });

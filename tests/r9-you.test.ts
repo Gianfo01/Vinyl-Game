@@ -24,7 +24,7 @@ describe('novidades de época', () => {
   it('clipe só existe depois do ano e exige desbloqueio; depois disso aparece como canal', () => {
     const old = mk('r9-era-a', 1960);
     expect(availableChannels(old).some((c) => c.id === 'music_video')).toBe(false);
-    const s = mk('r9-era-b', 1975);
+    const s = mk('r9-era-b2', 1975) // r31 (W0-RNG): em 'r9-era-b' o mundo novo não tem rede de clipes (divergência sorteada);
     expect(isUnlocked(s, 'music_video')).toBe(false);
     s.year = Math.max(s.year, (s.techDates.clipnet ?? 1981) + 1);
     expect(pendingFeatures(s).some((f) => f.id === 'music_video')).toBe(true);
