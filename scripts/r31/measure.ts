@@ -59,7 +59,11 @@ async function runOne(j: Job): Promise<Res30> {
 
   const t0 = performance.now();
   // mesma configuração do lote balance19 (selo, rock, base padrão do jogo)
-  const s = createGame(defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' }));
+  const cfg0 = defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' });
+  // R31 (BASE-BR): interruptor que mora na configuração (read/write) vale já na criação do mundo
+  { const { switchDef } = await import('../../src/sim/r31/switches'); const all = { ...(j.sw ?? {}), ...Object.fromEntries((process.env.R31_SW ?? '').split(',').filter(Boolean).map((kv) => kv.split('='))) };
+    for (const [id, raw] of Object.entries(all)) { const d = switchDef(id); if (d?.write) d.write({ config: cfg0 } as never, typeof d.def === 'boolean' ? raw === true || raw === 'true' : raw as never); } }
+  const s = createGame(cfg0);
   // R31: interruptores para medir ligado/desligado — R31_SW="id=false,outro=3" (aplicado logo depois de criar a partida)
   if (process.env.R31_SW) {
     const { setSw, switchDef } = await import('../../src/sim/r31/switches');

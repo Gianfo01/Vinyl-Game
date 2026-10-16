@@ -31,6 +31,8 @@ export interface RunConfig {
   contentFilters: string[]; // tags desligadas
   /** rodada 6: artistas, selos, festivais e mídia com nomes reais */
   realNames?: boolean;
+  /** R31 (BASE-BR): `false` = o lote brasileiro ampliado (data/base31br) não estreia; ausente = ligado. Interruptor 'base31.br'. */
+  base31br?: boolean;
   /** R31 (X): o que a tela mostra no começo (Nomes e obras reais); ausente = igual a realNames. Só exibição. */
   showReal31?: boolean;
   /** rodada 7: no modo histórico, pessoas reais morrem perto do ano real */

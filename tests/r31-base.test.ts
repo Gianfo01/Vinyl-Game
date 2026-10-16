@@ -11,7 +11,7 @@ import { RELICS31, RELIC_NOSALE31, RELIC_TIER31 } from '../src/data/relics31';
 import { REALNAMES31 } from '../src/data/realnames31';
 import { REAL_ACTS } from '../src/data/realnames';
 import { CITIES, GENRES } from '../src/data/world';
-import { BASE31_FROM, REAL_ALL, dedupKey27 } from '../src/sim/sys/realworld';
+import { BASE31_FROM, BASE31BR_FROM, REAL_ALL, dedupKey27 } from '../src/sim/sys/realworld';
 import { RELICS17 } from '../src/sim/relics17';
 import { relics, negotiateRelic } from '../src/sim/sys/relics9';
 import '../src/sim/sys/fossati31';
@@ -60,7 +60,7 @@ describe('sem duplicata', () => {
     expect(new Set(mine).size).toBe(mine.length);
     expect(BASE31_ACTS.filter((a) => before.has(dedupKey27(a.n))).map((a) => a.n)).toEqual([]);
     // todos entraram de fato na base do mundo, no fim (números de catálogo antigos estáveis)
-    expect(REAL_ALL.length - BASE31_FROM).toBe(BASE31_ACTS.length);
+    expect(BASE31BR_FROM - BASE31_FROM).toBe(BASE31_ACTS.length); // R31 (BASE-BR): o lote brasileiro vem logo depois
     // ficção que já existe como ato real fica marcada (a onda 4 liga, não cria outro)
     for (const f of FICTION31) expect(before.has(dedupKey27(f.n)), f.n).toBe(!!f.naBase);
     // relíquias novas: ids únicos e fora do catálogo antigo

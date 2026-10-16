@@ -1,0 +1,588 @@
+atos aceitos: 165
+
+# fora (skip da pesquisa ou reprovado no gerador)
+Catulo da Paixão Cearense — poeta/compositor; fontes só registram gravações de suas obras por outros intérpretes
+Zequinha de Abreu — compositor; não há gravação própria documentada (Tico-tico gravado pela Orquestra Colbaz, 1931)
+Sinhô — compositor; só aparece acompanhando gravações de outros (sem disco próprio documentado)
+Benedito Lacerda — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Jacob do Bandolim — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Waldir Azevedo — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Garoto — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Dilermando Reis — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Abel Ferreira — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Altamiro Carrilho — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Radamés Gnattali — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Luiz Americano — não pesquisado: limite de buscas web da sessão esgotado — refazer
+K-Ximbinho — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Época de Ouro — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Paulo Moura — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Raphael Rabello — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Yamandu Costa — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Hamilton de Holanda — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Joel Nascimento — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Nó em Pingo d'Água — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Galo Preto — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Heitor Villa-Lobos — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Alberto Nepomuceno — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Guiomar Novaes — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Bidu Sayão — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Magda Tagliaferro — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Francisco Mignone — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Camargo Guarnieri — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Nelson Freire — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Arthur Moreira Lima — não pesquisado: limite de buscas web da sessão esgotado — refazer
+João Carlos Martins — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Antonio Meneses — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Turíbio Santos — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Duo Assad — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Severino Araújo e Orquestra Tabajara — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Mário Zan — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Cornélio Pires — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Alvarenga & Ranchinho — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Jararaca & Ratinho — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Raul Torres — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Cascatinha & Inhana — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Pedro Raymundo — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Teixeirinha — não pesquisado: limite de buscas web da sessão esgotado — refazer
+Bando da Lua — não verificado: limite de buscas web esgotado (refazer)
+João de Barro — não verificado: limite de buscas web esgotado (refazer)
+Linda Batista — não verificado: limite de buscas web esgotado (refazer)
+Dircinha Batista — não verificado: limite de buscas web esgotado (refazer)
+Emilinha Borba — não verificado: limite de buscas web esgotado (refazer)
+Marlene — não verificado: limite de buscas web esgotado (refazer)
+Herivelto Martins — não verificado: limite de buscas web esgotado (refazer)
+Trio de Ouro — não verificado: limite de buscas web esgotado (refazer)
+Jamelão — não verificado: limite de buscas web esgotado (refazer)
+Blecaute — não verificado: limite de buscas web esgotado (refazer)
+Jorge Veiga — não verificado: limite de buscas web esgotado (refazer)
+Moreira da Silva — não verificado: limite de buscas web esgotado (refazer)
+Ciro Monteiro — não verificado: limite de buscas web esgotado (refazer)
+Isaura Garcia — não verificado: limite de buscas web esgotado (refazer)
+Carlos Galhardo — não verificado: limite de buscas web esgotado (refazer)
+Nora Ney — não verificado: limite de buscas web esgotado (refazer)
+Jorge Goulart — não verificado: limite de buscas web esgotado (refazer)
+Anjos do Inferno — não verificado: limite de buscas web esgotado (refazer)
+Quatro Ases e Um Coringa — não verificado: limite de buscas web esgotado (refazer)
+Trio Irakitan — não verificado: limite de buscas web esgotado (refazer)
+Os Cariocas — não verificado: limite de buscas web esgotado (refazer)
+Lúcio Alves — não verificado: limite de buscas web esgotado (refazer)
+Doris Monteiro — não verificado: limite de buscas web esgotado (refazer)
+Dolores Duran — não verificado: limite de buscas web esgotado (refazer)
+Ismael Silva — não verificado: limite de buscas web esgotado (refazer)
+Geraldo Pereira — não verificado: limite de buscas web esgotado (refazer)
+Haroldo Lobo — não verificado: limite de buscas web esgotado (refazer)
+Custódio Mesquita — não verificado: limite de buscas web esgotado (refazer)
+Marília Batista — não verificado: limite de buscas web esgotado (refazer)
+Araci Cortes — não verificado: limite de buscas web esgotado (refazer)
+Patrício Teixeira — não verificado: limite de buscas web esgotado (refazer)
+Gastão Formenti — não verificado: limite de buscas web esgotado (refazer)
+Augusto Calheiros — não verificado: limite de buscas web esgotado (refazer)
+Castro Barbosa — não verificado: limite de buscas web esgotado (refazer)
+Nuno Roland — não verificado: limite de buscas web esgotado (refazer)
+Gilberto Alves — não verificado: limite de buscas web esgotado (refazer)
+Roberto Silva — não verificado: limite de buscas web esgotado (refazer)
+Francisco Carlos — não verificado: limite de buscas web esgotado (refazer)
+Agostinho dos Santos — não verificado: limite de buscas web esgotado (refazer)
+Paulo Vanzolini — compositor; o LP de estreia (Onze sambas e uma capoeira, 1967) é cantado por outros intérpretes
+Waldir Calmon — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Ivon Curi — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Carmélia Alves — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Marinês — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Trio Nordestino — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Genival Lacerda — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Abdias — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Sivuca — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Anastácia — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Os 3 do Nordeste — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Oswaldinho do Acordeon — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Clemilda — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Messias Holanda — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Elino Julião — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Jorge de Altinho — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Santanna o Cantador — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Pinto do Acordeon — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Waldonys — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Petrúcio Amorim — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Nando Cordel — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Alcymar Monteiro — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Frank Aguiar — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Magníficos — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Limão com Mel — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Cavaleiros do Forró — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Garota Safada — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Solteirões do Forró — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Xand Avião — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Solange Almeida — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Jonas Esticado — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Taty Girl — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Desejo de Menina — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Forró do Muído — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Os Barões da Pisadinha — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Unha Pintada — nao pesquisado: limite de buscas da sessao esgotado (refazer)
+Elomar — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Xangai — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Vital Farias — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Cátia de França — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Ednardo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Amelinha — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Mestre Ambrósio — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Siba — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Eddie — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+DJ Dolores — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Devotos — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Mombojó — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Pablo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Silvanno Salles — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Tierry — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Nadson o Ferinha — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Celly Campello — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Tony Campello — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Sérgio Murilo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Ronnie Cord — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Demétrius — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Trio Esperança — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Golden Boys — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+The Fevers — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Renato e Seus Blue Caps — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Os Incríveis — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Jerry Adriani — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Wanderley Cardoso — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Martinha — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Vanusa — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Paulo Sérgio — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Os Vips — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Leno & Lilian — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Eduardo Araújo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Silvinha — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Bobby di Carlo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+A Bolha — não verificado: limite de buscas web da sessão esgotado (refazer)
+Módulo 1000 — não verificado: limite de buscas web da sessão esgotado (refazer)
+Serguei — não verificado: limite de buscas web da sessão esgotado (refazer)
+Arnaldo Baptista — não verificado: limite de buscas web da sessão esgotado (refazer)
+Som Imaginário — não verificado: limite de buscas web da sessão esgotado (refazer)
+O Peso — não verificado: limite de buscas web da sessão esgotado (refazer)
+Terreno Baldio — não verificado: limite de buscas web da sessão esgotado (refazer)
+Bixo da Seda — não verificado: limite de buscas web da sessão esgotado (refazer)
+Sá, Rodrix & Guarabyra — não verificado: limite de buscas web da sessão esgotado (refazer)
+Sá & Guarabyra — não verificado: limite de buscas web da sessão esgotado (refazer)
+A Cor do Som — não verificado: limite de buscas web da sessão esgotado (refazer)
+Jorge Mautner — não verificado: limite de buscas web da sessão esgotado (refazer)
+Fernando Mendes — não verificado: limite de buscas web da sessão esgotado (refazer)
+José Augusto — não verificado: limite de buscas web da sessão esgotado (refazer)
+Lindomar Castilho — não verificado: limite de buscas web da sessão esgotado (refazer)
+Carlos Alexandre — não verificado: limite de buscas web da sessão esgotado (refazer)
+Diana — não verificado: limite de buscas web da sessão esgotado (refazer)
+Perla — não verificado: limite de buscas web da sessão esgotado (refazer)
+Gilliard — não verificado: limite de buscas web da sessão esgotado (refazer)
+Márcio Greyck — não verificado: limite de buscas web da sessão esgotado (refazer)
+Bartô Galeno — não verificado: limite de buscas web da sessão esgotado (refazer)
+Ovelha — não verificado: limite de buscas web da sessão esgotado (refazer)
+Kátia — não verificado: limite de buscas web da sessão esgotado (refazer)
+Peninha — não verificado: limite de buscas web da sessão esgotado (refazer)
+Elymar Santos — não verificado: limite de buscas web da sessão esgotado (refazer)
+Wanderley Andrade — não verificado: limite de buscas web da sessão esgotado (refazer)
+Hyldon — não verificado: limite de buscas web da sessão esgotado (refazer)
+Cassiano — não verificado: limite de buscas web da sessão esgotado (refazer)
+Carlos Dafé — não verificado: limite de buscas web da sessão esgotado (refazer)
+Gerson King Combo — não verificado: limite de buscas web da sessão esgotado (refazer)
+Tony Tornado — não verificado: limite de buscas web da sessão esgotado (refazer)
+Tony Bizarro — não verificado: limite de buscas web da sessão esgotado (refazer)
+Lady Zu — não verificado: limite de buscas web da sessão esgotado (refazer)
+Dom Salvador — não verificado: limite de buscas web da sessão esgotado (refazer)
+Trio Mocotó — não verificado: limite de buscas web da sessão esgotado (refazer)
+Bebeto — não verificado: limite de buscas web da sessão esgotado (refazer)
+Luís Vagner — não verificado: limite de buscas web da sessão esgotado (refazer)
+Marcos Valle — não verificado: limite de buscas web da sessão esgotado (refazer)
+Carlos Lyra — não verificado: limite de buscas web da sessão esgotado (refazer)
+João Donato — não verificado: limite de buscas web da sessão esgotado (refazer)
+Luiz Eça — não verificado: limite de buscas web da sessão esgotado — refazer
+Sérgio Ricardo — não verificado: limite de buscas web da sessão esgotado — refazer
+Rosa Passos — não verificado: limite de buscas web da sessão esgotado — refazer
+Leila Pinheiro — não verificado: limite de buscas web da sessão esgotado — refazer
+Taiguara — não verificado: limite de buscas web da sessão esgotado — refazer
+Paulinho Nogueira — não verificado: limite de buscas web da sessão esgotado — refazer
+Flávio Venturini — não verificado: limite de buscas web da sessão esgotado — refazer
+Toninho Horta — não verificado: limite de buscas web da sessão esgotado — refazer
+Wagner Tiso — não verificado: limite de buscas web da sessão esgotado — refazer
+Tavinho Moura — não verificado: limite de buscas web da sessão esgotado — refazer
+Boca Livre — não verificado: limite de buscas web da sessão esgotado — refazer
+Guilherme Arantes — não verificado: limite de buscas web da sessão esgotado — refazer
+Aldir Blanc — não verificado: limite de buscas web da sessão esgotado — refazer
+Joanna — não verificado: limite de buscas web da sessão esgotado — refazer
+Zizi Possi — não verificado: limite de buscas web da sessão esgotado — refazer
+Sueli Costa — não verificado: limite de buscas web da sessão esgotado — refazer
+Cristina Buarque — não verificado: limite de buscas web da sessão esgotado — refazer
+Olivia Byington — não verificado: limite de buscas web da sessão esgotado — refazer
+Tetê Espíndola — não verificado: limite de buscas web da sessão esgotado — refazer
+Kleiton & Kledir — não verificado: limite de buscas web da sessão esgotado — refazer
+Vitor Ramil — não verificado: limite de buscas web da sessão esgotado — refazer
+Nei Lisboa — não verificado: limite de buscas web da sessão esgotado — refazer
+Zé Geraldo — não verificado: limite de buscas web da sessão esgotado — refazer
+Raimundo Sodré — não verificado: limite de buscas web da sessão esgotado — refazer
+Luli & Lucina — não verificado: limite de buscas web da sessão esgotado — refazer
+Zélia Duncan — não verificado: limite de buscas web da sessão esgotado — refazer
+Ná Ozzetti — não verificado: limite de buscas web da sessão esgotado — refazer
+Rumo — não verificado: limite de buscas web da sessão esgotado — refazer
+Premeditando o Breque — não verificado: limite de buscas web da sessão esgotado — refazer
+Língua de Trapo — não verificado: limite de buscas web da sessão esgotado — refazer
+Vânia Bastos — não verificado: limite de buscas web da sessão esgotado — refazer
+Fátima Guedes — não verificado: limite de buscas web da sessão esgotado — refazer
+Zé Renato — não verificado: limite de buscas web da sessão esgotado — refazer
+Paulinho Pedra Azul — não verificado: limite de buscas web da sessão esgotado — refazer
+Vander Lee — não verificado: limite de buscas web da sessão esgotado — refazer
+Pedro Mariano — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Luciana Mello — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Paula Lima — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Fernanda Porto — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Bebel Gilberto — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Celso Fonseca — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Moreno Veloso — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Mallu Magalhães — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Marcelo Camelo — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Tiago Iorc — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Vitor Kley — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Ana Vilela — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Kell Smith — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Melim — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Ana Cañas — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Karina Buhr — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Tulipa Ruiz — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Mariana Aydar — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Roberta Sá — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Teresa Cristina — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Mônica Salmaso — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Fabiana Cozza — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Ellen Oléria — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Xênia França — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Larissa Luz — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Tim Bernardes — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Carne Doce — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Francisco, el Hombre — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Metá Metá — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Kiko Dinucci — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Rômulo Fróes — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Thiago Pethit — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Mahmundi — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Ava Rocha — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Luiza Lian — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Tagua Tagua — não verificado: limite de buscas web da sessão esgotado antes deste ato
+Plutão Já Foi Planeta — título e ano do álbum de estreia não confirmados nas fontes (formada em Natal em 2013); limite de buscas esgotado
+Bonde do Rolê — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+CSS — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Copacabana Club — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Manu Gavassi — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Sandy — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Lexa — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Pocah — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Urias — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Linn da Quebrada — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Vitão — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Giulia Be — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Agnes Nunes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Day Limns — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Priscilla — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Twister — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Felipe Dylon — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Luka — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Perlla — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Restart — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Cine — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Babado Novo — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Gaab — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Rosana — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Paula Toller — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Fernanda Takai — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Os Replicantes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Garotos Podres — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Inocentes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Ratos de Porão — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Cólera — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Olho Seco — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Metrô — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Gang 90 & Absurdettes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Kid Vinil — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Magazine — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+João Penca e Seus Miquinhos Amestrados — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
+Smack — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Mercenárias — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Voluntários da Pátria — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Zero — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+DeFalla — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+TNT — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Os Cascavelletes — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Graforréia Xilarmônica — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Júpiter Maçã — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Wander Wildner — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Hojerizah — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Uns e Outros — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Marcelo Nova — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Viper — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Korzus — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Dorsal Atlântica — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Sarcófago — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Overdose — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Krisiun — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Shaman — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Andre Matos — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Torture Squad — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Claustrofobia — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Velhas Virgens — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Virgulóides — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Ultramen — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Tianastácia — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Penélope — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Little Quail and the Mad Birds — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Maskavo — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Forfun — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Strike — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Gloria — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Fake Number — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Dibob — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Hevo84 — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Moptop — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Autoramas — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Black Pantera — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Crypta — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+Nervosa — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
+João Nogueira — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Elton Medeiros — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Zé Kéti — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Neguinho da Beija-Flor — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Dudu Nobre — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Sombrinha — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Luiz Carlos da Vila — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Reinaldo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Osvaldinho da Cuíca — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Eduardo Gudin — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Luiz Ayrão — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Dominguinhos do Estácio — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Moyseis Marques — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Nilze Carvalho — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Grupo Raça — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Katinguelê — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Soweto — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Os Morenos — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Kiloucura — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Karametade — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Os Travessos — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Pique Novo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Swing & Simpatia — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Belo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Alexandre Pires — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Rodriguinho — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Bom Gosto — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Mumuzinho — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Suel — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Imaginasamba — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Grupo Vou pro Sereno — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Di Propósito — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Clareou — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Araketu — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Cheiro de Amor — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Banda Mel — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Ricardo Chaves — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Banda Reflexu's — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Companhia do Pagode — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Almir Guineto — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
+Dodô & Osmar — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Edson Gomes — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Tribo de Jah — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Planta & Raiz — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Ponto de Equilíbrio — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Adão Negro — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Mato Seco — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Alma Djem — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Dazaranha — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Sine Calmon — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Leões de Israel — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Liu & Léu — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Zico & Zeca — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Pena Branca & Xavantinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Rolando Boldrin — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Pedro Bento & Zé da Estrada — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Tibagi & Miltinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Vieira & Vieirinha — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Belmonte & Amaraí — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Trio Parada Dura — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Leo Canhoto & Robertinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Rionegro & Solimões — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Matogrosso & Mathias — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Teodoro & Sampaio — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Gilberto & Gilmar — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Di Paullo & Paulino — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+João Mineiro & Marciano — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Duduca & Dalvan — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Lourenço & Lourival — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Peão Carreiro & Zé Paulo — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Edson & Hudson — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Zé Henrique & Gabriel — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Hugo Pena & Gabriel — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Cezar & Paulinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Leonardo — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Eduardo Costa — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Gino & Geno — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+João Bosco & Vinícius — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Cristiano Araújo — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Lucas Lucco — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
+Naiara Azevedo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Lauana Prado — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Henrique & Diego — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Diego & Victor Hugo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Hugo & Guilherme — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Thiago Brava — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Loubet — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Murilo Huff — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Felipe Araújo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Bruno & Barretto — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Clayton & Romário — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Guilherme & Benuto — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Luan Pereira — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Us Agroboy — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Léo & Raphael — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Jads & Jadson — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+George Henrique & Rodrigo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Yasmin Santos — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Luíza & Maurílio — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Gabriel Gava — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Bruna Viola — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Fiduma & Jeca — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Marília Tavares — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Pablo do Arrocha — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Devinho Novaes — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+DJ Marlboro — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Cidinho & Doca — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Amilcka & Chocolate — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+William & Duda — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Junior & Leonardo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Sapão — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Os Hawaianos — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Gaiola das Popozudas — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Valesca Popozuda — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Deize Tigrona — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Créu — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Naldo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Koringa — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Biel — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Livinho — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Fioti — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Carol — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+Heavy Baile — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Kekel — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC Don Juan — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
+MC João — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Shevchenko e Elloco — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Dadá Boladão — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Thaíde & DJ Hum — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+GOG — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Rappin' Hood — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Xis — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Detentos do Rap — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+DMN — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Consciência Humana — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Pavilhão 9 — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Câmbio Negro — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Inquérito — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Kamau — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Marechal — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Sant — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Coruja BC1 — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Tássia Reis — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Pregador Luo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Ndee Naldinho — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Realidade Cruel — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Trilha Sonora do Gueto — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Dexter — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Z'África Brasil — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Mano Brown — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Recayd Mob — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Sidoka — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Derek — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Raffa Moreira — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Chris MC — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+MC Igu — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Borges — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Major RD — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Kyan — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Tz da Coronel — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Budah — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Duquesa — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Aline Barros — não pesquisado: limite de buscas web da sessão esgotado (refazer)
+Catedral — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Kleber Lucas — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Regis Danese — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Toque no Altar — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Trazendo a Arca — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Cristina Mel — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Ludmila Ferber — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Eyshila — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Rose Nascimento — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Elaine de Jesus — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Gabriela Rocha — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Isadora Pompeo — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Midian Lima — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Preto no Branco — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Padre Marcelo Rossi — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Padre Fábio de Melo — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Padre Zezinho — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Padre Reginaldo Manzotti — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Davi Sacer — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+André Valadão — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Rosa de Saron — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Palavrantiga — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Fruto Sagrado — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Katsbarnea — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Vencedores por Cristo — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Sérgio Lopes — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Jotta A — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Leonardo Gonçalves — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Nívea Soares — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Ministério Morada — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+DJ Marky — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Patife — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+XRS — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Gui Boratto — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Renato Cohen — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Anderson Noise — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Amon Tobin — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
+Mestre Lucindo — Aparece essencialmente como compositor (Immub/Discogs); nenhuma gravação própria nem datas de nascimento/morte confirmadas
+Lia Sophia — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Felipe Cordeiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Manoel Cordeiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Aíla — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Gang do Eletro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Viviane Batidão — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Fruto Sensual — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Arraial do Pavulagem — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Nilson Chaves — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Jane Duboc — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Waldemar Henrique — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Billy Blanco — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Sebastião Tapajós — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+David Assayag — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Carrapicho — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Papete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Rita Benneditto — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Flávia Bittencourt — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Airto Moreira — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Flora Purim — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Victor Assis Brasil — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Raul de Souza — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Dom Um Romão — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Azymuth — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Nelson Ayres — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Arismar do Espírito Santo — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Hélio Delmiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Heraldo do Monte — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Quarteto Novo — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Cama de Gato — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Pau Brasil — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Duofel — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Marco Pereira — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Paulo Bellinati — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Badi Assad — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Laurindo Almeida — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Bola Sete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Toninho Ferragutti — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Trio Mossoró — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+
+# correções automáticas

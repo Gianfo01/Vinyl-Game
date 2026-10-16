@@ -1,0 +1,50 @@
+{"n":"Hibria","g":"heavy_metal","c":"porto_alegre","d":2004,"f":1996,"t":3,"al":[["Defying the Rules",2004,"lp"],["The Skull Collectors",2008,"lp"]],"apelidos":[],"fontes":["https://en.wikipedia.org/wiki/Hibria","https://www.discogs.com/artist/1540650-Hibria"],"confirmar":["integrantes não levantados nas buscas; power/speed metal"],"status":"ok"}
+{"n":"Project46","g":"nu_metal","c":"sao_paulo","d":2009,"f":2008,"t":3,"m":[["Caio MacBeserra","vocal"],["Vini Castellari","guitar"],["Jean Patton","guitar",null,null,null,2023],["Baffo Neto","bass",null,null,2016]],"al":[["Doa a Quem Doer",2011,"lp"],["Que Seja Feita a Nossa Vontade",2014,"lp"],["TR3S",2017,"lp"]],"apelidos":[],"fontes":["https://en.wikipedia.org/wiki/Project46","https://www.discogs.com/artist/2634770-Project46"],"confirmar":["estreia = EP de 2009; primeiro álbum 2011; f=2008 é só 1 ano antes (mantido como formação)","gênero nu/groove metal"],"status":"ok"}
+{"n":"Dead Fish","g":"hardcore_punk","c":"bh","cityNote":"Vitória (ES) → bh","d":1995,"f":1991,"ap":["d"],"t":3,"al":[["Sirva-se",1998,"lp"],["Zero e Um",2004,"lp"],["Vitória",2015,"lp"]],"apelidos":[],"fontes":["https://en.wikipedia.org/wiki/Dead_Fish_(band)","https://www.discogs.com/master/819819-Dead-Fish-Vit%C3%B3ria"],"confirmar":["estreia: demo Re-Progresso 1995; primeiro álbum Sirva-se 1997 ou 1998 conforme a fonte","cidade: Vitória mapeada pela proximidade (BH); banda depois baseada em SP?"],"status":"ok"}
+{"n":"Rodox","g":"nu_metal","c":"rio","d":2002,"e":2004,"rj":[[2026]],"t":3,"m":[["Rodolfo Abrantes","vocal"]],"al":[["Estreito",2002,"lp"],["Rodox",2003,"lp"]],"apelidos":[],"fontes":["https://pt.wikipedia.org/wiki/Rodox","https://immub.org/album/rodox"],"confirmar":["cidade de formação não confirmada na busca (Rio sugerido)","volta em 2026 segundo pt.wikipedia"],"status":"ok"}
+{"n":"Candeia","g":"samba","c":"rio","d":1964,"ap":["d"],"e":1978,"b":1935,"x":1978,"r":"vocal","t":3,"al":[["Candeia",1970,"lp"],["Dia de graça",1970,"single"]],"apelidos":["Antônio Candeia Filho"],"fontes":["https://pt.wikipedia.org/wiki/Ant%C3%B4nio_Candeia_Filho","https://dicionariompb.com.br/artista/candeia/"],"confirmar":["1964 = LP com o conjunto Mensageiros do Samba; primeiro disco solo 1970 (Equipe)","'Dia de graça' é faixa do LP de 1970"],"status":"ok"}
+{"n":"Monarco","g":"samba","c":"rio","d":1970,"ap":["d"],"e":2021,"b":1933,"x":2021,"r":"vocal","t":3,"al":[["Portela Passado de Glória",1970,"lp"],["Monarco",1974,"lp"]],"apelidos":["Hildemar Diniz"],"fontes":["https://pt.wikipedia.org/wiki/Monarco","https://dicionariompb.com.br/artista/monarco/"],"confirmar":["1970 = LP coletivo com a Velha Guarda da Portela; solo 1974 (Cravo Albin) ou 1976 (Wikipédia)","ano de morte 2021 não veio nos resultados da busca — conferir"],"status":"ok"}
+{"n":"Velha Guarda da Portela","g":"samba","c":"rio","d":1970,"t":3,"m":[["Manacea","vocal"],["Aniceto da Portela","vocal"],["Alvaiade","vocal"],["Chico Santana","vocal"],["Alberto Lonato","vocal"],["Monarco","vocal",1933]],"al":[["Portela, Passado de Glória",1970,"lp"]],"apelidos":["Velha-Guarda da Portela"],"fontes":["https://pt.wikipedia.org/wiki/Velha_Guarda_da_Portela","https://dicionariompb.com.br/grupo/velha-guarda-da-portela/","https://www.discogs.com/release/8735326-A-Velha-Guarda-da-Portela-Portela-Passado-De-Gl%C3%B3ria"],"confirmar":["anos de nascimento/morte dos integrantes não levantados; Monarco entrou depois da formação original"],"status":"ok"}
+{"n":"Wilson Moreira","g":"samba","c":"rio","d":1967,"e":2018,"b":1936,"x":2018,"r":"vocal","t":3,"al":[["A Arte Negra de Wilson Moreira & Nei Lopes",1980,"lp"],["Peso na Balança",1986,"lp"]],"apelidos":[],"fontes":["https://en.wikipedia.org/wiki/Wilson_Moreira","https://dicionariompb.com.br/artista/wilson-moreira/"],"confirmar":["Peso na Balança: 1986 (Kuarup/Discogs) ou 1987 (Wikipedia)"],"status":"ok"}
+{"n":"Nei Lopes","g":"samba","c":"rio","d":1973,"ap":["d"],"b":1942,"r":"vocal","t":3,"al":[["A Arte Negra de Wilson Moreira & Nei Lopes",1980,"lp"],["Negro Mesmo",1983,"lp"]],"apelidos":[],"fontes":["https://en.wikipedia.org/wiki/Nei_Lopes","https://dicionariompb.com.br/artista/nei-lopes/"],"confirmar":["1973 = duas faixas no LP coletivo 'Tem gente bamba na roda de samba'; solo 1983"],"status":"ok"}
+{"n":"Jovelina Pérola Negra","g":"pagode","c":"rio","d":1985,"e":1998,"b":1944,"x":1998,"r":"vocal","t":3,"al":[["Raça Brasileira",1985,"lp"],["Jovelina Pérola Negra",1985,"lp"]],"apelidos":[],"fontes":["https://en.wikipedia.org/wiki/Jovelina_P%C3%A9rola_Negra","https://dicionariompb.com.br/artista/jovelina-perola-negra/"],"confirmar":["LP solo 1985 (IMMuB diz 1986); gênero pagode/partido-alto (lista sugeria samba)"],"status":"ok"}
+{"n":"João Nogueira","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Elton Medeiros","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Zé Kéti","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Neguinho da Beija-Flor","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Dudu Nobre","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Sombrinha","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Luiz Carlos da Vila","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Reinaldo","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Osvaldinho da Cuíca","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Eduardo Gudin","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Luiz Ayrão","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Dominguinhos do Estácio","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Moyseis Marques","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Nilze Carvalho","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Grupo Raça","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Katinguelê","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Soweto","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Os Morenos","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Kiloucura","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Karametade","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Os Travessos","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Pique Novo","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Swing & Simpatia","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Belo","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Alexandre Pires","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Rodriguinho","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Bom Gosto","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Mumuzinho","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Suel","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Imaginasamba","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Grupo Vou pro Sereno","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Di Propósito","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Clareou","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Araketu","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Cheiro de Amor","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Banda Mel","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Ricardo Chaves","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Banda Reflexu's","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Companhia do Pagode","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}
+{"n":"Almir Guineto","status":"skip","motivo":"não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada"}

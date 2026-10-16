@@ -14,6 +14,7 @@ import { SCENARIOS17 } from '../src/sim/sys/scenarios17';
 import { SCENARIOS23 } from '../src/sim/sys/scenarios23';
 import { SCENARIOS } from '../src/sim/sys/live/scenarios';
 import { PLACES31 } from '../src/data/places31';
+import { CURBR31 } from '../src/data/base31br';
 
 const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   act: (k) => REAL_ACTS[Number(k)] !== undefined,
@@ -25,6 +26,7 @@ const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   cur: (k) => CUR31.some((c) => c.id === k), // R31 (Z): base nova com curadoria
   mode: (k) => [...SCENARIOS17, ...SCENARIOS23, ...SCENARIOS].some((c) => c.id === k), // R31 (X): modos e cenários
   place: (k) => PLACES31.some((p) => p.id === k), // R31 (H): lugares reais da música
+  br31: (k) => CURBR31.some((c) => c.id === k), // R31 (BASE-BR): artistas brasileiros novos
 };
 
 describe('registro de nomes reais (W0-RN)', () => {

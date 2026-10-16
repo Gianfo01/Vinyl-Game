@@ -126,10 +126,14 @@ describe('r27 P2B — modo rápido intacto', () => {
     // UNI-4 (cache da ficha com chave completa — o jogo carregado de um save divergia): caixa 10093 → 10092 e
     // acts 3500990849 → 1560130818 (o r27-p2a, sem os módulos P2B, não muda).
     // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
-    expect(AFTER.player.cash).toBe(182589);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3575668786);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1693608899);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3302724126);
+    // R31 onda 4 (BASE-BR · base brasileira ampliada, de propósito — docs/r31/DECISOES.md e docs/r31/base-br.md): 165 atos
+    // brasileiros reais novos no fim de REAL_ALL estreiam (mais atos reais disputando contratos, paradas e público com
+    // eles) — caixa, turnês, acts e rng mudam; o caixa do bot nesta semente oscila centenas de milhares de mês a mês (já anotado no UNI-4). Com
+    // `base31.br` desligado voltam 182589 / 3575668786 / 1693608899 / 3302724126 (conferido).
+    expect(AFTER.player.cash).toBe(2850185);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1724144784);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1632616710);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(4125773869);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
   it('nada de estado P2B criado sem o jogador', () => {
@@ -168,7 +172,10 @@ function roadFix(): { s: GameState; tid: string } {
   // R29 demo29: com o mundo novo, 6 paradas desta semente não sorteiam nenhum evento de estrada; 10 paradas garantem a amostra
   const cities = CITIES.filter((c) => c !== home).slice(0, 10);
   s.player.cash += money(s, 200000);
-  const r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays: 7 }));
+  let r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays: 7 }));
+  // R31 (BASE-BR): no mundo com a base brasileira um integrante do ato já tem agenda neste mês (outro ato dele); a mesma
+  // estrada marcada com mais folga (o teste é da estrada, não da agenda)
+  for (const d of [21, 35, 49]) if (!('id' in r)) r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays: d }));
   if (!('id' in r)) throw new Error(`book: ${r.pt}`);
   return { s, tid: r.id };
 }
@@ -249,6 +256,8 @@ describe('r27 P2B — turnê no mapa', () => {
   it('sem decisão do jogador, a equipe decide no dia (dentro da política) e o mês corre igual nos dois clones', () => {
     const a = roadFix(), b = roadFix();
     advanceMonth(a.s); advanceMonth(b.s);
+    // R31 (BASE-BR): a estrada pode ter saído com folga (roadFix) — corre mais um mês nos dois clones até ter paradas
+    for (let i = 0; i < 2 && !Object.values(roadOf27(a.s, a.tid)?.ev ?? {}).length; i++) { advanceMonth(a.s); advanceMonth(b.s); }
     const R = roadOf27(a.s, a.tid)!; // UNI-4: estrada na própria turnê
     expect(Object.values(R.ev).length).toBeGreaterThan(0);
     expect(Object.values(R.ev).every((x) => x.auto)).toBe(true);

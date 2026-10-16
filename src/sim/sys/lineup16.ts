@@ -21,11 +21,12 @@ import { deferEvents, registerExt4, registerSimHook } from '../ext4';
 import { histLocked, histMode } from '../history15';
 import { bandName, langForCity, makeAct } from '../people';
 import type { Act, GameState, Person } from '../types';
+import { sw } from '../r31/switches';
 import { fmtL, money, notify, post, remember } from '../util';
 import { personFameV } from './fame15';
 import { feudOf15 } from './kin15';
 import { replaceMember } from './lifecycle7';
-import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
+import { BASE31BR_FROM, BASE31BR_TO, canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
 import { RW_AFTER_NEWGAME } from './after29';
 import { actsTouched17 } from '../actidx17';
 import { simStart20 } from '../worldpolicy20';
@@ -87,25 +88,28 @@ function formerPush(s: GameState, actId: string, pid: string, reason: 'left' | '
 
 // ---------------------------------------------------------------- pessoas reais (não inventar no modo exato)
 
-let REALK: Map<string, number> | null = null;
-/** nome real canônico → estreia mais tardia de um ato real com essa pessoa (solo ou banda). */
-function realKeys(): Map<string, number> {
-  if (REALK) return REALK;
+const REALK: [Map<string, number> | null, Map<string, number> | null] = [null, null];
+/** nome real canônico → estreia mais tardia de um ato real com essa pessoa (solo ou banda).
+ *  R31 (BASE-BR): com o interruptor 'base31.br' desligado o lote brasileiro não conta (mundo igual ao de antes). */
+function realKeys(s: GameState): Map<string, number> {
+  const on = sw<boolean>(s, 'base31.br') ? 1 : 0;
+  const hit = REALK[on];
+  if (hit) return hit;
   const m = new Map<string, number>();
   const put = (n: string, d: number) => { const k = canonKey(n); m.set(k, Math.max(m.get(k) ?? 0, d)); };
-  for (const a of REAL_ALL) { if (!a.m?.length) put(a.n, a.d); for (const x of a.m ?? []) put(x[0], x[4] ?? a.d); }
+  REAL_ALL.forEach((a, i) => { if (!on && i >= BASE31BR_FROM && i < BASE31BR_TO) return; if (!a.m?.length) put(a.n, a.d); for (const x of a.m ?? []) put(x[0], x[4] ?? a.d); });
   for (const [no, ex] of Object.entries(REAL_CLASSIC)) { const n = REAL_ACTS[+no]?.name; if (n && !ex.m?.length) put(n, ex.d ?? 0); for (const x of ex.m ?? []) put(x[0], x[4] ?? ex.d ?? 0); }
-  return (REALK = m);
+  return (REALK[on] = m);
 }
 /** O roteiro real ainda reserva algo para esta pessoa (não inventar carreira por cima). */
 function scripted(s: GameState, p: Person): boolean {
   if (!s.config.realNames) return false;
-  const d = realKeys().get(canonKey(p.name));
+  const d = realKeys(s).get(canonKey(p.name));
   if (d === undefined) return false;
   return histMode(s) === 'strict' || (d >= s.year && !s.config.snap17); // r18: sem estreias reais futuras no modo "real até o início"
 }
 /** Pessoa real fora do modo aleatório: pode sair e seguir solo, mas não entra em bandas inventadas (nem leva estranhos para bandas reais). */
-const realBound = (s: GameState, p: Person) => !!s.config.realNames && histMode(s) === 'strict' && realKeys().has(canonKey(p.name)); // r18: fora do exato, história alternativa
+const realBound = (s: GameState, p: Person) => !!s.config.realNames && histMode(s) === 'strict' && realKeys(s).has(canonKey(p.name)); // r18: fora do exato, história alternativa
 
 // ---------------------------------------------------------------- renomes reais
 
