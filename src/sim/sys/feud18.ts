@@ -22,6 +22,8 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { per13 } from './persona13';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { relAdd } from '../opinion';
+import { relOf } from '../opinion';
 
 // ---------------------------------------------------------------- regras de história
 
@@ -157,7 +159,7 @@ function fx(s: GameState, f: Feud18, st: number, r: Rng): L {
   const x = both(s, f);
   const place = vic.city;
   const fact = (kind: string, sev: number, tags: string[], text: L): Fact => emitFact(s, { kind, actors: [atk.id, vic.id, ...(pa ? [pa.id] : []), ...(pv ? [pv.id] : [])], place, severity: sev, visibility: 'public', tags: ['feud', 'feud18', ...tags], text, src: 'feud18', data: { feud: f.id, st } });
-  if (pa && pv) { pa.rel[pv.id] = clamp((pa.rel[pv.id] ?? 0) - 12 - st * 4, -100, 100); pv.rel[pa.id] = clamp((pv.rel[pa.id] ?? 0) - 12 - st * 4, -100, 100); }
+  if (pa && pv) { relAdd(s, pa.id, pv.id, -(12 - st * 4)); relAdd(s, pv.id, pa.id, -(12 - st * 4)); }
   switch (st) {
     case 1: {
       for (const a of [atk, vic]) { a.momentum = clamp(a.momentum + (a === atk ? 7 : 5), 0, 100); addHype(s, `a:${a.id}`, 'feud18', l('Rixa: diss track', 'Feud: diss track'), a === atk ? 10 : 7); }
@@ -238,7 +240,7 @@ export function mediator18(s: GameState, f: Feud18): Person | undefined {
   for (const [id, v] of Object.entries(pa.rel)) {
     const p = s.persons[id];
     if (!p?.alive || p.isPlayer || id === pb.id || shield18(s, id)) continue;
-    const w = Math.min(v, pb.rel[id] ?? p.rel[pb.id] ?? 0);
+    const w = Math.min(v, relOf(s, pb.id, id) ?? relOf(s, p.id, pb.id) ?? 0);
     if (w > bv) { bv = w; best = p; }
   }
   return best;

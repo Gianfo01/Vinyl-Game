@@ -21,7 +21,7 @@ import { piety, scandal, scandalReaction, type ScandalKind } from '../scandal17'
 import { addStress } from '../stress17';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, playerActs, post } from '../util';
-import { critRel } from '../criticrel';
+import { critRelOf, critRelPut } from '../opinion';
 import { f15, fameTier } from './fame15';
 import { f16, fameIn, mkOf, nudge16 } from './fame16';
 import { addHype } from './hype12';
@@ -433,7 +433,7 @@ registerSituation({
       apply: (s, c, r) => {
         const a = s.acts[c.act ?? '']; const cr = String(c.data.critic);
         if (a) addHype(s, `a:${a.id}`, 'm17reply', fmtL(l('Rixa com o crítico {c}', 'Feud with critic {c}'), { c: cr }), 12);
-        if (a && playerActs(s).includes(a.id)) { const cs = critRel(s); if (cs?.rel) cs.rel[cr] = clamp((cs.rel[cr] ?? 0) - 20, -100, 100); }
+        if (a && playerActs(s).includes(a.id)) critRelPut(s, cr, critRelOf(s, cr) - 20, l('o artista respondeu à resenha em público.', 'the artist hit back at the review in public.'));
         if (a && r.chance(0.3)) { const o = pickOutlet(outlets17(s), `cf${a.id}${s.week}`, ['tabloid', 'fan', 'mainstream']); if (o) addStory(s, { t: fmtL(l('{a} x {c}: a briga entre artista e crítico vira novela', '{a} vs {c}: the artist–critic fight becomes a saga'), { a: a.name, c: cr }), tpl: 'critic_feud', a: a.id, out: o.id, src: 'npc', truth: 1, st: 'confirmed', cred: o.cred, sev: 35, tone: 0, due: s.week, news: 1 }); return l('Virou rixa famosa: hype alto, crítico inimigo.', 'It became a famous feud: big hype, an enemy critic.'); }
         return l('Resposta publicada: hype +12, o crítico anotou o nome.', 'Reply published: hype +12, the critic took note.');
       } },
@@ -442,7 +442,7 @@ registerSituation({
       apply: (s, c, r) => {
         const a = s.acts[c.act ?? '']; const cr = String(c.data.critic);
         const mineA = a && playerActs(s).includes(a.id);
-        if (mineA) { post(s, `m17inv:${a!.id}`, -money(s, 1500), 'marketing', `Convite ao crítico ${cr}`); const cs = critRel(s); if (cs?.rel) cs.rel[cr] = clamp((cs.rel[cr] ?? 0) + 10, -100, 100); }
+        if (mineA) { post(s, `m17inv:${a!.id}`, -money(s, 1500), 'marketing', `Convite ao crítico ${cr}`); critRelPut(s, cr, critRelOf(s, cr) + 10, l('foi convidado(a) para conhecer o artista.', 'was invited to meet the artist.')); }
         if (a && r.chance(0.5)) { addHype(s, `a:${a.id}`, 'm17inv', fmtL(l('{c} revê a opinião depois do show', '{c} reconsiders after the show'), { c: cr }), 6); return l('O crítico foi, gostou e escreveu uma nota mais branda.', 'The critic came, liked it and wrote a kinder note.'); }
         return l('O crítico foi, mas não mudou de ideia.', 'The critic came but did not change their mind.');
       } },

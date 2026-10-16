@@ -13,6 +13,7 @@ import { fmtL, money, nextId, notify } from '../util';
 import type { MedX } from './media12';
 import type { PlatX } from './platform12';
 import { funds, ventures, vpay, type Venture } from './ventures9';
+import { rel0 } from '../opinion';
 
 export type Stance = 'protect' | 'pitch';
 export interface CatX { stance?: Stance; split?: number; co?: string; excl?: { to: string; until: number }; lives?: number; last?: number }
@@ -182,7 +183,7 @@ export function commission(s: GameState, vid: string, pid: string, genre: string
 }
 export function chemistry(s: GameState, v: Venture, a: string, b: string): number {
   const pa = profOf(s, v, a), pb = profOf(s, v, b), A = s.persons[a], B = s.persons[b];
-  const rel = ((A?.rel[b] ?? 0) + (B?.rel[a] ?? 0)) / 2;
+  const rel = (((A ? rel0(s, A.id, b) : 0)) + ((B ? rel0(s, B.id, a) : 0))) / 2;
   return clamp(0.45 + rel / 250 + (pa.spec === pb.spec ? 0.08 : 0.12) - Math.abs(pa.mood - pb.mood) / 400, 0.1, 0.95);
 }
 export function setPair(s: GameState, vid: string, a: string, b: string): { ok: boolean; text: L } {

@@ -51,6 +51,7 @@ import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 import { actsNow27 } from '../tickcache27';
 import { RW_AFTER_NEWGAME } from './after29';
 import { lineup29Of, type Lineup29 } from '../lineup29';
+import { relPut, relTouch } from '../opinion';
 
 const norm16 = (n: string) => n.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 /** r27: chave de deduplicação — "The X" = "X" e "&" = "and" (Carpenters, Four Tops, Smashing Pumpkins apareciam 2×) */
@@ -374,7 +375,7 @@ function writers27(s: GameState, act: Act, actName: string, fates: boolean): voi
     if (died !== undefined && died <= s.year) { p.alive = false; p.died = died; }
     else if (died !== undefined && fates) rw(s).sched.push({ year: died, kind: 'fate', actId: act.id, personId: p.id });
     const lead = s.persons[act.members[0]];
-    if (lead) { p.rel[lead.id] = 40; lead.rel[p.id] = 40; }
+    if (lead) { relPut(s, p.id, lead.id, 40); relPut(s, lead.id, p.id, 40); }
   }
 }
 /** r27 (F): compositores reais de uma obra (Pessoas que existem no jogo), para os créditos da música. */
@@ -499,7 +500,7 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
     if (now.length) act.members = now; actsTouched17(s); // r17: índice pessoa→atos
     act.leaderId = act.members[0];
     // relações entre os integrantes (pessoas reaproveitadas de outros atos)
-    for (const a of act.members) for (const b of act.members) if (a !== b && s.persons[a] && s.persons[a].rel[b] === undefined) s.persons[a].rel[b] = 20;
+    for (const a of act.members) for (const b of act.members) if (a !== b && s.persons[a]) relTouch(s, a, b, 20);
   } else {
     let p = s.persons[act.members[0]];
     // carreira solo de quem já está (ou esteve) numa banda: a mesma pessoa, não um sósia

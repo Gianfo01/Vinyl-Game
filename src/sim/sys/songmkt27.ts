@@ -44,6 +44,7 @@ import { settleVocals } from './vocals10';
 import { ventures } from './ventures9';
 import { openPlagSuit19, pubName19 } from './writers19';
 import { actsNow27 } from '../tickcache27';
+import { shiftOpinion, relAdd } from '../opinion';
 
 export const SONGMKT27 = 'songmkt27';
 
@@ -244,7 +245,7 @@ export function buyLot27(s: GameState, lotId: string, actId: string, kind: 'righ
   const wid = writerOf(s, r, lot);
   const so = newSong(s, a, { t: lot.t, mel: lot.mel, lyr: lot.lyr, org: lot.org, wid });
   const w = s.persons[wid];
-  if (w) w.rel.player = clamp((w.rel.player ?? 0) + 4, -100, 100);
+  if (w) shiftOpinion(s, `p:${w.id}`, 4, { why: l('você gravou uma canção dele(a).', 'you recorded their song.') });
   const d: Deal27 = { id: `md${++st.seq}`, k: kind, song: so.id, act: a.id, t: so.title, wn: lot.wn, pub: kind === 'work' ? s.config.companyName : lot.pub, fee, w: s.week, paid: 0, units: 0,
     ...(lot.sim ? { sim: 1 as const } : {}), ...(lot.dup && s.acts[lot.dup] ? { dup: { act: lot.dup, due: s.week + r.int(6, 14) } } : {}) };
   st.deals.push(d);
@@ -361,7 +362,7 @@ export function acceptGift27(s: GameState, giftId: string): { ok: boolean; text:
   const so = newSong(s, a, { t: g.t, mel: g.q + r.normal(0, 4), lyr: g.q - 2 + r.normal(0, 4), org: 45 + r.normal(0, 12), wid: p.id });
   st.deals.push({ id: `md${++st.seq}`, k: 'gift', song: so.id, act: a.id, t: so.title, wn: p.name, pub: (o.owner && s.labels[o.owner]?.name) || o.name, fee: 0, w: s.week, paid: 0, units: 0, from: o.id });
   if (!g.asked) grantHold(s, { holder: p.id, target: 'player', kind: 'debt', strength: 35, months: 48, src: 'songmkt27', ref: `gift:${g.id}`, quiet: true, text: fmtL(l('{n} deu "{t}" a {a}: você deve um favor.', '{n} gave "{t}" to {a}: you owe a favor.'), { n: p.name, t: so.title, a: a.name }) });
-  for (const x of a.members) for (const y of o.members) if (x !== y && s.persons[x]?.alive) { const pp = s.persons[x]; pp.rel[y] = clamp((pp.rel[y] ?? 0) + 3, -100, 100); }
+  for (const x of a.members) for (const y of o.members) if (x !== y && s.persons[x]?.alive) { const pp = s.persons[x]; relAdd(s, pp.id, y, 3); }
   const t = fmtL(l('{a} recebe "{t}" de {o}. Qualidade real: {q}. Grave pela agenda/estúdio.', '{a} receives "{t}" from {o}. Real quality: {q}. Record it via the schedule/studio.'), { a: a.name, t: so.title, o: o.name, q: Math.round(so.q) });
   emitFact(s, { kind: 'deal', actors: [o.id, a.id, 'player'], severity: 12 + o.fame / 6, visibility: 'rumor', tags: ['good', 'songwriting', 'gift', 'songmkt'], text: t, src: 'songmkt27' });
   log(s, t);
@@ -372,7 +373,7 @@ export function declineGift27(s: GameState, giftId: string): L {
   if (!g) return l('Oferta encerrada.', 'Offer closed.');
   st.gifts = st.gifts.filter((x) => x !== g);
   const p = s.persons[g.pid];
-  if (p) p.rel.player = clamp((p.rel.player ?? 0) - 6, -100, 100);
+  if (p) shiftOpinion(s, `p:${p.id}`, -6, { why: l('você recusou a canção que ofereceu.', 'you turned down the song they offered.') });
   pass(s, { t: g.t, q: g.q, wn: p?.name ?? '', g: o?.genre ?? 'pop' }, `gift:${g.id}`);
   return fmtL(l('Você recusou a canção de {o}.', 'You declined {o}\'s song.'), { o: o?.name ?? '?' });
 }
@@ -404,7 +405,7 @@ export function giveSong27(s: GameState, songId: string, targetId: string): { ok
   const sale = closeSale(s, r, songId, o.id, { fee: 0, royalty: fair.royalty, labelShare: 0.5 });
   if (!sale) return { ok: false, text: l('Algo deu errado.', 'Something went wrong.') };
   const mine = s.acts[so.actId], p = lead(s, o);
-  if (mine) for (const x of mine.members) for (const y of o.members) if (x !== y && s.persons[y]?.alive) { const py = s.persons[y]; py.rel[x] = clamp((py.rel[x] ?? 0) + 8, -100, 100); }
+  if (mine) for (const x of mine.members) for (const y of o.members) if (x !== y && s.persons[y]?.alive) { const py = s.persons[y]; relAdd(s, py.id, x, 8); }
   if (p) grantHold(s, { holder: 'player', target: p.id, kind: 'favor', strength: clamp(30 + so.q / 3, 20, 70), months: 60, src: 'songmkt27', ref: `give:${sale.id}`, quiet: true, text: fmtL(l('{n} te deve um favor: você deu "{t}" a {a}.', '{n} owes you a favor: you gave "{t}" to {a}.'), { n: p.name, t: so.title, a: o.name }) });
   const t = fmtL(l('Presente: {a} grava "{t}". Sem cachê, royalties de {r}% seguem — e {a} fica te devendo.', 'A gift: {a} records "{t}". No fee, {r}% royalties keep flowing — and {a} owes you.'), { a: o.name, t: so.title, r: (fair.royalty * 100).toFixed(1) });
   emitFact(s, { kind: 'deal', actors: [o.id, so.actId, 'player'], severity: 15 + o.fame / 5, visibility: 'public', tags: ['good', 'songwriting', 'gift', 'songmkt'], text: t, src: 'songmkt27' });

@@ -27,6 +27,7 @@ import { askFavor, favorBlock, giftBlock, opine, opinionOf, per13, sendGift } fr
 import { careerLoyalty, careerOf } from './people/staff';
 import { dinner, dinnerBlock, p15, prodKey } from './producers15';
 import { know23, knownAbout23, raise23, secretsOf23 } from './secrets23';
+import { addStaffLoyalty } from '../opinion';
 
 export const FAVORS27_RNG = 'favors27v1';
 export type CKind27 = 'manager' | 'producer' | 'critic' | 'leader' | 'staff' | 'person' | 'act' | 'label' | 'other';
@@ -287,7 +288,7 @@ export function burn27(s: GameState, key: string, ask: Ask27 = 'word'): Burn27 {
   if (peers) costs.push(fmtL(l('{p} colega(s) do ramo ficaram sabendo (−4).', '{p} peer(s) in the trade heard about it (−4).'), { p: peers }));
   emitFact(s, { kind: 'statement', actors: [c.hid, 'player'], severity: 25, visibility: 'rumor', tags: ['rumor', 'favors27', 'burn'], src: 'favors27', text: fmtL(l('{n} fala mal de {c} pelos bastidores.', '{n} badmouths {c} behind the scenes.'), { n: c.name, c: s.config.companyName }) });
   costs.push(l('Corre um boato contra o selo.', 'A rumor against the label is going around.'));
-  if (c.kind === 'staff') { const sm = s.player.staff.find((x) => `s:${x.id}` === key); if (sm) { const cr = careerOf(s, sm); cr.loyalty = clamp(cr.loyalty - 20, 0, 100); costs.push(l('Lealdade da pessoa despenca (e equipe insatisfeita vaza segredos).', 'Their loyalty plummets (and unhappy staff leak secrets).')); } }
+  if (c.kind === 'staff') { const sm = s.player.staff.find((x) => `s:${x.id}` === key); if (sm) { careerOf(s, sm); addStaffLoyalty(s, sm.id, -20, { why: l('você queimou a relação.', 'you burned the relationship.') }); costs.push(l('Lealdade da pessoa despenca (e equipe insatisfeita vaza segredos).', 'Their loyalty plummets (and unhappy staff leak secrets).')); } }
   for (const h of c.dirtOnMe) { const r = useHold(s, h.id, 'expose'); if (r.ok) costs.push(r.text); }
   return { ok: true, text: fmtL(l('Você queimou {n}.', 'You burned {n}.'), { n: c.name }), gains, costs };
 }

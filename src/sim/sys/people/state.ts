@@ -90,7 +90,7 @@ export interface Owner {
 export interface StaffCareer {
   xp: number;
   level: number; // 0 júnior, 1 pleno, 2 sênior, 3 diretor
-  loyalty: number;
+  // r31 (31.3): a lealdade deixou de ser guardada aqui — é derivada da opinião (opinion.ts: staffLoyalty = 50 + op/2)
   trainingUntil?: number;
   raiseAsk?: number; // semana do pedido aberto
   lastRaise?: number;
@@ -322,8 +322,8 @@ export function addPost(s: GameState, p: Omit<FeedPost, 'id' | 'week' | 'year'>)
 
 export const clamp01 = (v: number, lo = 0, hi = 100): number => Math.max(lo, Math.min(hi, v));
 
-/** Ficha de carreira de um funcionário (criada na primeira leitura, lealdade inicial 60). */
+/** Ficha de carreira de um funcionário (criada na primeira leitura; a lealdade vem de opinion.ts, inicial 60). */
 export function careerOf(s: GameState, st: StaffMember): StaffCareer {
   const c = P(s).career;
-  return (c[st.id] ??= { xp: 0, level: st.skill > 75 ? 2 : st.skill > 55 ? 1 : 0, loyalty: 60 });
+  return (c[st.id] ??= { xp: 0, level: st.skill > 75 ? 2 : st.skill > 55 ? 1 : 0 });
 }

@@ -7,7 +7,7 @@
 // Regras de história: assassinato nunca envolve pessoa real (viva ou não); no modo "Vida real exata" pessoas e
 // selos reais não cometem crimes inventados (só a crônica documentada em DOC17).
 
-import { opinionOf } from '../opinion';
+import { opinionOf, relAdd } from '../opinion';
 import { clamp, Rng, seedState } from '../../core/rng';
 import { formatMoney } from '../../core/money';
 import { countryName, countryOfCity } from '../../data/geo';
@@ -172,7 +172,7 @@ const keyDead17 = (s: GameState, id: string): boolean => KEY16.st(s, id) === 'de
 /** Mágoa da vítima com quem agiu: pessoa do banco (relação) ou da indústria (opinião sobre o jogador). */
 function grudge17(s: GameState, target: string, actor: string, d: number): void {
   const p = s.persons[target];
-  if (p) { p.rel[actor] = clamp((p.rel[actor] ?? 0) + d, -100, 100); return; }
+  if (p) { relAdd(s, p.id, actor, d); return; }
   if (isKey17(target) && actor === 'player') opine(s, target, d, l('foi alvo de um "serviço" seu.', 'was the target of one of your "jobs".'));
 }
 
@@ -364,7 +364,7 @@ export const CRIMES17: CrimeDef17[] = [
         return fmtL(l('{p} levou o recado: medo vira vantagem na próxima conversa.', '{p} got the message: fear becomes leverage in the next talk.'), { p: n });
       }
       if (!p) return l('Alvo sumiu.', 'Target gone.');
-      if (!ok) { p.rel[c.actor] = clamp((p.rel[c.actor] ?? 0) - 15, -100, 100); return fmtL(l('{p} reagiu e chamou seguranças.', '{p} fought back and called security.'), { p: p.name }); }
+      if (!ok) { relAdd(s, p.id, c.actor, -15); return fmtL(l('{p} reagiu e chamou seguranças.', '{p} fought back and called security.'), { p: p.name }); }
       addStress(s, p.id, 22, l('Foi intimidado(a)', 'Was intimidated'));
       const a = actOfPerson(s, p.id);
       if (a) a.momentum = clamp(a.momentum - 8, 0, 100);
@@ -375,7 +375,7 @@ export const CRIMES17: CrimeDef17[] = [
     desc: l('Um segredo do alvo vale dinheiro. Com segredo guardado (obrigação) a chance sobe muito.', 'A secret of the target is worth money. With a stored secret (obligation) odds soar.'),
     fx: (s, c, ok) => {
       const fam = famOf(s, c.target);
-      if (!ok) { const p = s.persons[c.target]; if (p) p.rel[c.actor] = clamp((p.rel[c.actor] ?? 0) - 25, -100, 100); else grudge17(s, c.target, c.actor, -25); return fmtL(l('{p} pagou para ver — e não pagou.', '{p} called the bluff — and paid nothing.'), { p: nameOf17(s, c.target) }); }
+      if (!ok) { const p = s.persons[c.target]; if (p) relAdd(s, p.id, c.actor, -25); else grudge17(s, c.target, c.actor, -25); return fmtL(l('{p} pagou para ver — e não pagou.', '{p} called the bluff — and paid nothing.'), { p: nameOf17(s, c.target) }); }
       const amt = Math.round(money(s, 4000 + fam * 450) * glut19(s, 'blackmail', c.actor));
       const got = takeFrom(s, ownerOfTarget(s, c.target) ?? c.target, amt, `Chantagem: ${nameOf17(s, c.actor)}`);
       giveTo(s, c.actor, got || amt, `"Consultoria": ${nameOf17(s, c.target)}`);
@@ -750,7 +750,7 @@ export function commitCrime(s: GameState, cid: string, c: Ctx17, r: Rng = crng(s
   // relações e estresse
   const tOwner = ownerOfTarget(s, c.target);
   if (ex || !ok) {
-    if (s.persons[c.target]) s.persons[c.target].rel[resp] = clamp((s.persons[c.target].rel[resp] ?? 0) - (ex ? 40 : 15), -100, 100);
+    if (s.persons[c.target]) relAdd(s, s.persons[c.target].id, resp, -((ex ? 40 : 15)));
     if (ex && s.persons[c.target]?.alive) grantHold(s, { holder: c.target, target: resp, kind: 'grievance', strength: clamp(o.sev, 30, 90), months: 240, src: 'crime17', text: fmtL(l('Vítima de "{c}"', 'Victim of "{c}"'), { c: d.name }), quiet: true });
     // r29: vítima da indústria (produtor, empresário, líder, crítico) também guarda mágoa e fala mal de você
     if (isKey17(c.target) && !keyDead17(s, c.target)) {

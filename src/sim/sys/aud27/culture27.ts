@@ -12,7 +12,6 @@
 // equipe percebe a distância ("cartaz na parede"): lealdade −0,3 por mês e um aviso no terceiro mês.
 // Sem sorteios (determinístico por construção).
 
-import { clamp } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
 import { registerExplain, type WhyPart } from '../../explain18';
 import { registerDecisionListener, registerExt4, registerSimHook } from '../../ext4';
@@ -26,6 +25,7 @@ import { ident } from '../identity';
 import { link19, log19 } from '../mkb19';
 import { P } from '../people/state';
 import { OFF_AUD27 } from './off';
+import { addStaffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
 const KS: Cul19[] = ['artist', 'profit', 'prestige', 'chaos'];
@@ -96,7 +96,7 @@ export function cultureMonth27(s: GameState): void {
   // distância entre o que se declara e o que se faz
   if (st.decl && c19.c && st.decl !== c19.c) {
     st.gap++;
-    for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr) cr.loyalty = clamp(cr.loyalty - 0.3, 0, 100); }
+    for (const m of s.player.staff) if (P(s).career[m.id]) addStaffLoyalty(s, m.id, -0.3);
     if (st.gap === 3) {
       const t = fmtL(N('A equipe comenta: "{d}" é cartaz na parede; aqui se vive "{a}".', 'The staff say: "{d}" is a poster on the wall; here people live "{a}".'), { d: CUL19[st.decl].name, a: CUL19[c19.c].name });
       notify(s, t, 'bad');

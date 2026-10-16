@@ -128,7 +128,7 @@ export const PLACES31: Place31[] = [
   P('culture', 'mundo', l('Cultura e lendas', 'Culture and legends'), 'hologram', ['movements', 'lendas']),
   // Você — cômodos da sua casa
   P('living', 'voce', l('Sala (perfil)', 'Living room (profile)'), 'fame', ['you'], { home: true }),
-  P('family', 'voce', l('Família e contatos', 'Family and contacts'), 'heart', ['personal']),
+  P('family', 'voce', l('Família e contatos', 'Family and contacts'), 'heart', ['personal', 'known31']),
   P('vault', 'voce', l('Cofre (patrimônio)', 'Safe (wealth)'), 'diamond', ['wealth']),
   P('homeoffice', 'voce', l('Escritório em casa', 'Home office'), 'compass', ['careers', 'ventures', 'shared18']),
   P('shelf', 'voce', l('Estante (álbum de cenas)', 'Shelf (scene album)'), 'shirt', ['scenes17']),

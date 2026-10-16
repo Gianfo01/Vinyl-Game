@@ -18,6 +18,7 @@ import { PAGE16_TABS } from './people16';
 import { ivMark27 } from '../act27/flow27p2'; // r27 FLOW2: a coletiva de crise chega como cartão no Avançar (marcador 🎮)
 
 const LEVEL_CLS = { ok: 'good', tense: '', strained: 'warn', breaking: 'bad' } as const;
+import { see } from '../../sim/know';
 const VIS_CLS = { secret: 'trait', rumor: 'warn', public: '' } as const;
 const nameOf = (s: GameState, id: string): string => id === 'player' ? t(l('você', 'you')) : s.persons[id]?.name ?? s.acts[id]?.name ?? s.labels[id]?.name ?? (id.startsWith('lender:') ? t(l('credor', 'lender')) : id === 'press' ? t(l('a imprensa', 'the press')) : id);
 
@@ -25,7 +26,11 @@ const nameOf = (s: GameState, id: string): string => id === 'player' ? t(l('voc�
 export function stressBlock17(s: GameState, pid: string): HTMLElement | null {
   const p = s.persons[pid];
   if (!p?.alive) return null;
+  // r31 F #14: estresse é dado íntimo — só do que é seu, com convivência ou olheiro a fundo; surto público aparece em rótulo
+  const vis = p.isPlayer ? 'exact' : see(s, pid, 'stress');
+  if (vis === 'hidden') return null;
   const x = stressOf(s, pid);
+  if (vis === 'label') return section(t(l('Estresse', 'Stress')), h('p', { class: 'small' }, pill(t(l('Teve surto público', 'Had a public breakdown')), 'bad'), ' ', h('span', { class: 'muted' }, t(l('(o que saiu na imprensa; o número só com convivência)', '(what the press reported; the number only with closeness)')))));
   return section(t(l('Estresse', 'Stress')),
     h('div', { class: 'row wrap' }, h('span', { class: 'why18', 'data-why': 'stress', 'data-why-ctx': JSON.stringify({ person: pid }), tabindex: '0' }, pill(t(STRESS_LEVEL[x.level]), LEVEL_CLS[x.level]), ` ${x.short}`), x.risk > 0 ? pill(`${t(l('risco de quebra', 'breakdown risk'))} ${Math.round(x.risk * 100)}%/${t(l('mês', 'mo'))}`, 'bad') : null),
     meter('heart', l('Curto prazo', 'Short-term'), x.short, 100, true),
@@ -58,7 +63,10 @@ const VERB_HINT: Record<HoldVerb, L> = {
 export function holdsBlock17(s: GameState, id: string): HTMLElement | null {
   const { has, owes } = holdsOf(s, id);
   const mineOver = id === 'player' ? [] : holdsOf(s, 'player').has.filter((hd) => hd.target === id);
-  const list = [...new Map([...has, ...owes, ...mineOver].map((x) => [x.id, x])).values()].filter((x) => x.holder === 'player' || x.target === 'player' || id !== 'player');
+  // r31 F #21: obrigações entre NPCs só com intimidade alta com a pessoa; segredos e chantagens entre terceiros nunca
+  const deep = id !== 'player' && see(s, id, 'holds') === 'exact';
+  const list = [...new Map([...has, ...owes, ...mineOver].map((x) => [x.id, x])).values()]
+    .filter((x) => x.holder === 'player' || x.target === 'player' || (deep && x.kind !== 'secret' && x.kind !== 'blackmail'));
   if (!list.length) return section(t(l('Obrigações', 'Obligations')), h('p', { class: 'muted small' }, t(l('Ninguém deve nada a ninguém aqui — por enquanto.', 'Nobody owes anybody here — for now.'))));
   return section(t(l('Obrigações', 'Obligations')),
     h('ul', { class: 'small' }, ...list.slice(0, 14).map((x) => holdRow(s, x, x.holder === 'player'))),

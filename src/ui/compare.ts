@@ -9,9 +9,11 @@ import type { GameState } from '../sim/types';
 import { $, N, genreName, logo, modal } from './common';
 import { h, select } from './dom';
 import { ic } from './vis';
+import { knownActIds31 } from '../sim/sys/knownacts27';
 
 export function compareActs(s: GameState, initial: string[]): void {
-  const pool = [...new Set([...Object.values(s.acts).filter((a) => a.owner === 'player').map((a) => a.id), ...Object.keys(s.knowledge)])].filter((id) => s.acts[id]);
+  // r31 F: além do seu elenco e do radar, todo ato que a sua empresa conhece (inclusive a superestrela pública)
+  const pool = [...new Set([...Object.values(s.acts).filter((a) => a.owner === 'player').map((a) => a.id), ...Object.keys(s.knowledge), ...knownActIds31(s)])].filter((id) => s.acts[id]);
   let picks = initial.filter((id) => pool.includes(id)).slice(0, 3);
   while (picks.length < 2 && pool[picks.length]) picks.push(pool.find((x) => !picks.includes(x))!);
   const body = h('div', { class: 'compare' });

@@ -3,7 +3,7 @@
 // por grupo, instrumentos, personalidade, saúde, relações, carreira e aulas.
 // O que o jogador vê de atos alheios depende do grau de conhecimento (faixas, não números exatos).
 
-import { KNOW_WIDTHS, band, bandText, know } from '../sim/know';
+import { KNOW_WIDTHS, band, bandText, know, see, seen } from '../sim/know';
 import { isSpecial29, mgmtOf29, termTxt29 } from '../sim/terms29';
 import { fmtL } from '../sim/util';
 import { CAT_MIN17, catCount17, groupTabs17 } from './popcat17';
@@ -25,6 +25,7 @@ import { activeThoughts, thoughtText } from '../sim/sys/people/thoughts';
 import type { Act, GameState, Person } from '../sim/types';
 import { money } from '../sim/util';
 import { $, N, actLink, cityName, cover, actGenre23, kv, labelLink, logo, modal, monthName, pill, rerender, statusName, toast } from './common';
+import { relation31 } from './sys/persona13';
 import { bar, h, rangeBar, select } from './dom';
 import { openOffer, openRelease } from './ficha';
 import { rightsSheet } from './rightsView';
@@ -172,15 +173,15 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
         h('h3', null, p.name, p.isPlayer ? pill(t(l('você', 'you')), 'gold') : null, !p.alive ? pill(t(l('falecido(a)', 'deceased')), 'bad') : null),
         h('div', null, pill(t(roleLine27(s, p))), ' ', act ? actLink(s, act.id) : h('span', { class: 'muted' }, t(l('sem banda', 'no band'))), mine ? h('span', null, ' ', formIcon(form(p))) : null))),
       chips(
-        stat('calendar', p.real27?.bornEst ? `~${s.year - p.born}` : s.year - p.born, p.real27?.bornEst ? l('Idade aproximada', 'Approximate age') : l('Idade', 'Age')), // r27 (F)
+        stat('calendar', !seen(s, p.id, 'bio') ? '?' : p.real27?.bornEst ? `~${s.year - p.born}` : s.year - p.born, p.real27?.bornEst ? l('Idade aproximada', 'Approximate age') : l('Idade', 'Age')), // r27 (F); r31 F #3: mesma regra do Perfil
         stat('star', potShown, l('Potencial', 'Potential')),
-        vis.skills || mine ? stat('coin', $(money(s, marketValue(s, p, act?.fame ?? 0))), l('Valor de mercado (cachê/passe)', 'Market value (fee/transfer)')) : null,
-        stat('globe', t(ORIGINS.find((o) => o.id === p.origin)?.name) || '—', l('Formação', 'Background')),
+        mine || seen(s, p.id, 'value') ? stat('coin', valueShown(s, p, act, mine), l('Valor de mercado (cachê/passe)', 'Market value (fee/transfer)')) : null, // r31 F #11
+        stat('globe', seen(s, p.id, 'bio') ? t(ORIGINS.find((o) => o.id === p.origin)?.name) || '—' : '?', l('Formação', 'Background')),
       ),
       ...PERSON_HEAD_EXTRAS.map((f) => f(s, p)),
       activity ? h('div', { class: 'small' }, icon(activity.icon, 1), ' ', t(activity.label)) : null,
       h('div', { class: 'row wrap' },
-        mine || vis.private ? h('button', { class: 'btn small', onclick: editLook }, ic('pen'), ' ', t(l('Editar aparência', 'Edit look'))) : null,
+        mine ? h('button', { class: 'btn small', onclick: editLook }, ic('pen'), ' ', t(l('Editar aparência', 'Edit look'))) : null,
         act ? h('button', { ...ent27('act', act.id), class: 'btn small ghost', onclick: () => { closeAll(); openActPage(act.id); } }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))) : null),
     ),
   );
@@ -189,7 +190,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     { id: 'profile', label: l('Perfil', 'Profile'), icon: 'bulb', render: () => profileTab(s, p, vis) },
     { id: 'inst', label: l('Instrumentos', 'Instruments'), icon: 'guitar', render: () => (mine || deg >= 1 ? instrumentsTab(s, p, mine || !!p.isPlayer, redraw) : h('p', { class: 'muted' }, t(HINT15))) },
     mine ? { id: 'mood', label: l('Humor e saúde', 'Mood and health'), icon: 'heart', render: () => moodTab(s, p) } : null,
-    vis.private || mine || canSee(s, p.id, 'rels') ? { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p) } : null,
+    p.isPlayer ? null : { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p, mine || vis.private || canSee(s, p.id, 'rels')) }, // r31 F: a relação com você sempre; a dos outros pela regra
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
     mine && !p.isPlayer ? { id: 'train', label: l('Treino', 'Training'), icon: 'sparkle', render: () => trainTab(s, p, redraw) } : null,
     ...PERSON_TABS.map((f) => f(s, p, closeAll)),
@@ -250,7 +251,7 @@ function profileTab(s: GameState, p: Person, vis: ReturnType<typeof visibleField
       vis.traits && worstFamily(p) ? kv(t(l('Não combina com', 'Does not suit')), pill(t(worstFamily(p)!.name), 'bad')) : null,
       kv(t(S.origin), canSee(s, p.id, 'bio') ? t(ORIGINS.find((o) => o.id === p.origin)?.name) : hid15()),
       kv(t(l('Nascimento', 'Born')), canSee(s, p.id, 'bio') ? p.born : hid15()),
-      kv(t(l('Política e religião', 'Politics and faith')), canSee(s, p.id, 'life') ? viewsLine(s, p.id) : hid15()),
+      kv(t(l('Política e religião', 'Politics and faith')), seen(s, p.id, 'beliefs') ? viewsLine(s, p.id) : hid15()), // r31 F #13
       p.retireAge && canSee(s, p.id, 'traits') ? kv(t(l('Pensa em parar aos', 'Plans to stop at')), p.retireAge) : null,
       canSee(s, p.id, 'traits') ? null : h('p', { class: 'muted small' }, t(HINT15)),
     ),
@@ -280,19 +281,25 @@ function moodTab(s: GameState, p: Person): HTMLElement {
   );
 }
 
-function relTab(s: GameState, p: Person): HTMLElement {
-  const rels = Object.entries(p.rel ?? {}).filter(([id]) => s.persons[id]).sort((a, b) => b[1] - a[1]);
-  const row = ([id, v]: [string, number]) => h('li', null, h('button', { class: 'link', ...ent27('person', `p:${id}`), onclick: () => openPersonPage(id) }, s.persons[id].name), ' ', bar(Math.abs(v), 100, v >= 0 ? 'good' : 'bad'), h('b', { class: v >= 0 ? 'good' : 'bad' }, ` ${v > 0 ? '+' : ''}${Math.round(v)}`));
+function relTab(s: GameState, p: Person, others = true): HTMLElement {
+  const mineRel = relation31(s, `p:${p.id}`, () => rerender());
+  if (!others) return h('div', null, mineRel, h('p', { class: 'muted small' }, t(l('As relações desta pessoa com outras aparecem com convivência, olheiros ou quando são públicas.', 'This person\'s relationships with others show with closeness, scouts or when they are public.'))));
+  // r31 F #19: o número da afinidade só com convivência ou olheiro a fundo; pela imprensa, só rótulos das relações fortes
+  const exact = see(s, p.id, 'rels') === 'exact' && (knownLevel(s, p.id).mine || knownLevel(s, p.id).priv >= 3);
+  const rels = Object.entries(p.rel ?? {}).filter(([id, v]) => s.persons[id] && (exact || Math.abs(v) >= 40)).sort((a, b) => b[1] - a[1]);
+  const lab = (v: number) => (v >= 70 ? l('muito próximos', 'very close') : v > 0 ? l('amigos', 'friends') : v <= -70 ? l('inimigos', 'enemies') : l('brigados', 'at odds'));
+  const row = ([id, v]: [string, number]) => h('li', null, h('button', { class: 'link', ...ent27('person', `p:${id}`), onclick: () => openPersonPage(id) }, s.persons[id].name), ' ',
+    exact ? [bar(Math.abs(v), 100, v >= 0 ? 'good' : 'bad'), h('b', { class: v >= 0 ? 'good' : 'bad' }, ` ${v > 0 ? '+' : ''}${Math.round(v)}`)] : h('small', { class: v >= 0 ? 'good' : 'bad' }, t(lab(v))));
   const rom = (P(s).romances ?? []).filter((r) => r.status === 'together' && (r.a === p.id || r.b === p.id));
   // r25: parentes (grafo kin15 + kin25) também aparecem em Relações
-  const kin = kinOf15(s, p.id);
-  return h('div', { class: 'grid2' },
+  const kin = seen(s, p.id, 'family') ? kinOf15(s, p.id) : [];
+  return h('div', null, mineRel, h('div', { class: 'grid2' },
     kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 12).map((k) => h('li', null,
       h('button', { class: 'link', ...ent27('person', `p:${k.id}`), onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
     h('div', null, h('h4', null, t(l('Afinidades', 'Friends'))), rels.filter(([, v]) => v > 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v > 0).slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—')),
     h('div', null, h('h4', null, t(l('Atritos', 'Frictions'))), rels.filter(([, v]) => v < 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v < 0).reverse().slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—'),
       rom.length ? h('p', null, ic('heart'), ' ', t(l('Namorando: ', 'Dating: ')), rom.map((r) => s.persons[r.a === p.id ? r.b : r.a]?.name).join(', ')) : null),
-  );
+  ));
 }
 
 function careerTab(s: GameState, p: Person): HTMLElement {
@@ -349,7 +356,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
           wordmarkImg28(a.logoSeed, a.name, a.genre, a.formed, 128),
           h('h3', null, a.name, a.legend ? pill(t(l('Lenda', 'Legend')), 'gold') : null, a.archetype === 'synthetic' ? pill('AI', 'neural') : null),
           h('div', { class: 'muted' }, `${actGenre23(s, a)} · ${cityName(a.city)} · ${t(l('desde', 'since'))} ${a.formed} · `, pill(statusName(a.status))),
-          h('div', null, t(S.owner), ': ', labelLink(s, a.owner), ' · ', t(S.knownAs), ': ', pill(t(DEGREES[Math.max(0, deg - 1)])), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null))),
+          h('div', null, t(S.owner), ': ', labelLink(s, a.owner), ' · ', t(S.knownAs), ': ', pill(t(deg >= 1 ? DEGREES[deg - 1] : kl.pub >= 2 ? l('Pela imprensa', 'From the press') : l('Só o nome', 'Name only'))), k ? h('span', { class: 'muted' }, ` · ${t(S.source)}: ${t(sourceName(k.source))}`) : null))),
       h('div', { class: 'row wrap' },
         !mine && !a.owner && s.config.role !== 'artist' ? h('button', { class: 'btn small primary', onclick: () => { close(); openOffer(a.id); } }, t(S.makeOffer)) : null,
         ...ACT_HEAD_EXTRAS.map((f) => f(s, a, close)),
@@ -414,7 +421,7 @@ function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
   const why = { left: l('saiu', 'left'), died: l('faleceu', 'died'), retired: l('aposentou-se', 'retired'), fired: l('foi demitido', 'was fired') };
   return h('div', null,
     h('div', { class: 'pcard-grid' }, ms.map((p) => personCard(s, p))),
-    h('ul', { class: 'small views10' }, ms.map((p) => h('li', null, h('b', null, p.name), ': ', viewsLine(s, p.id)))),
+    h('ul', { class: 'small views10' }, ms.map((p) => h('li', null, h('b', null, p.name), ': ', seen(s, p.id, 'beliefs') ? viewsLine(s, p.id) : hid15()))), // r31 F #13
     former.length ? h('div', null, h('h4', null, t(l('Ex-integrantes', 'Former members'))),
       h('ul', { class: 'small' }, former.map(({ f, p }) => h('li', null, h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, p.name), ` — ${t(why[f.reason])} ${t(l('em', 'in'))} ${f.year}`, !p.alive ? ' †' : '')))) : null,
     h('p', { class: 'muted small' }, t(l('Clique num integrante para ver a carta completa com todos os atributos.', 'Click a member for the full card with every attribute.'))),
@@ -470,4 +477,15 @@ function contractTab(s: GameState, a: Act): HTMLElement {
     kv(t(S.releasesOwed), `${c.releasesDone}/${c.releasesOwed}`),
     c.party === 'player' && !a.playerBand ? rightsSheet(s, c) : null,
   );
+}
+
+/** r31 F #11: valor de mercado — exato do que é seu; de terceiros, faixa a partir do conhecimento profissional (nunca centrada). */
+function valueShown(s: GameState, p: Person, act: Act | undefined, mine: boolean): string {
+  const v = money(s, marketValue(s, p, act?.fame ?? 0));
+  if (mine) return $(v);
+  const w = know(s, p.id).width('potential');
+  const b = band(s, p.id, 'value', 50, Math.min(40, Math.max(8, w * 1.5)));
+  if (!b) return '?';
+  const r = (x: number) => { const y = (v * x) / 50; const k = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(1, y))) - 1); return Math.round(y / k) * k; };
+  return `${$(r(Math.max(1, b.lo)))}–${$(r(b.hi))}`;
 }

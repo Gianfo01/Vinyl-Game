@@ -37,6 +37,7 @@ import { breakChance27, burn27, burnoutMonth27, reliefContext27 } from '../src/s
 import { critMonth27, reviewHistory27 } from '../src/sim/sys/aud27/critic27';
 import { fxHit27, macro27 } from '../src/sim/sys/aud27/macro27';
 import { warmScene27 } from '../src/sim/sys/aud27/reach27';
+import { setStaffLoyalty, staffLoyalty } from '../src/sim/opinion';
 
 const game = (seed: string, startYear = 1985): GameState => createGame(defaultConfig(seed, { startYear }));
 /** Um ato do jogador (assina um ato ativo de NPC se o começo não tem nenhum). */
@@ -180,7 +181,7 @@ describe('r27 AUD2 — cultura que emerge das decisões', () => {
     for (let i = 0; i < 4; i++) runDecisionListeners(s, 'any_event', 'support_artist');
     expect(cul27(s).w.artist).toBeGreaterThan(4);
     expect(actualCulture27(s)).toBe('artist');
-    const loy = () => s.player.staff.map((m) => P(s).career[m.id]?.loyalty ?? 0).join(',');
+    const loy = () => s.player.staff.map((m) => (P(s).career[m.id] ? staffLoyalty(s, m.id) : 0)).join(',');
     const l0 = loy();
     for (let m = 0; m < 3; m++) { runDecisionListeners(s, 'any_event', 'support_artist'); s.week += 4; cultureMonth27(s); }
     expect(cul19(s).c).toBe('artist');
@@ -191,7 +192,7 @@ describe('r27 AUD2 — cultura que emerge das decisões', () => {
   it('declarar outra cultura empurra devagar (recarga de 12 meses) e a distância cansa a equipe', () => {
     const s = game('aud2-cul2');
     if (!s.player.staff.length) s.player.staff.push({ id: 'stx', name: 'X', role: 'admin', skill: 40, salary: 100, hiredWeek: 0 } as never);
-    for (const m of s.player.staff) (P(s).career[m.id] ??= { loyalty: 60 } as never).loyalty = 60;
+    for (const m of s.player.staff) { P(s).career[m.id] ??= { xp: 0, level: 0 }; setStaffLoyalty(s, m.id, 60); }
     for (let i = 0; i < 8; i++) runDecisionListeners(s, 'any_event', 'support_artist');
     expect(setCulture19(s, 'profit')).toBeNull();
     expect(cul27(s).decl).toBe('profit');
@@ -202,7 +203,7 @@ describe('r27 AUD2 — cultura que emerge das decisões', () => {
     expect(cul19(s).c).toBe('artist');
     expect(cul27(s).gap).toBeGreaterThan(0);
     const m0 = s.player.staff[0];
-    expect(P(s).career[m0.id].loyalty).toBeLessThan(60);
+    expect(staffLoyalty(s, m0.id)).toBeLessThan(60);
   });
 });
 

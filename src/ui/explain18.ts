@@ -22,6 +22,7 @@ const tx = (x: L | string | undefined): string => (x === undefined ? '' : typeof
 export function fmtWhy(v: number | string | undefined, fmt: WhyFmt = 'num'): string {
   if (v === undefined) return '';
   if (typeof v === 'string') return v;
+  if (typeof v === 'object' && v) return tx(v as L); // texto bilíngue passado como valor (ex.: faixa da chance)
   switch (fmt) {
     case 'money': return $(Math.round(v));
     case 'signed': return `${v > 0 ? '+' : v < 0 ? '−' : '±'}${N(Math.abs(Math.round(v * 10) / 10))}`;

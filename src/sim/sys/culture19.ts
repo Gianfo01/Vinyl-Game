@@ -21,6 +21,7 @@ import { headline19 } from './factlink19';
 import { addHype } from './hype12';
 import { cnt19, link19, log19, xs19, type Log19 , off19 } from './mkb19';
 import { P } from './people/state';
+import { addStaffLoyalty, staffLoyalty } from '../opinion';
 
 export type Cul19 = 'artist' | 'profit' | 'prestige' | 'chaos';
 export const CUL19: Record<Cul19, { name: L; desc: L; loy: number; trust: number; morale: number; offer: number; real: L }> = {
@@ -39,7 +40,7 @@ export const cul19 = (s: GameState): Culture19 => xs19(s, 'culture19', fresh);
 const rng = (s: GameState) => rng19(s, 'culture19');
 const payroll = (s: GameState) => s.player.staff.reduce((t, m) => t + m.salary, 0);
 export const trainCost19 = (s: GameState) => money(s, 150) * s.player.staff.length;
-export const avgLoy19 = (s: GameState): number => { const xs = s.player.staff.map((m) => P(s).career[m.id]?.loyalty).filter((x): x is number => x !== undefined); return xs.length ? Math.round(xs.reduce((t, x) => t + x, 0) / xs.length) : 0; };
+export const avgLoy19 = (s: GameState): number => { const xs = s.player.staff.map((m) => (P(s).career[m.id] ? staffLoyalty(s, m.id) : undefined)).filter((x): x is number => x !== undefined); return xs.length ? Math.round(xs.reduce((t, x) => t + x, 0) / xs.length) : 0; };
 
 export function setCulture19(s: GameState, c: Cul19): L | null {
   const st = cul19(s);
@@ -67,11 +68,11 @@ export function cultureMonth19(s: GameState): void {
     const v = trainCost19(s);
     post(s, `cul19t:${s.year}-${s.month}`, -v, 'staff_training', 'Treinamento da equipe');
     st.trainPaid += v;
-    for (const m of s.player.staff) { m.skill = clamp(m.skill + 0.15, 0, 100); const cr = P(s).career[m.id]; if (cr) cr.loyalty = clamp(cr.loyalty + 0.4, 0, 100); }
+    for (const m of s.player.staff) { m.skill = clamp(m.skill + 0.15, 0, 100); if (P(s).career[m.id]) addStaffLoyalty(s, m.id, 0.4); }
   }
   if (!c) return;
   const C = CUL19[c];
-  for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr) cr.loyalty = clamp(cr.loyalty + C.loy, 0, 100); }
+  for (const m of s.player.staff) if (P(s).career[m.id]) addStaffLoyalty(s, m.id, C.loy);
   for (const id of playerActs(s)) {
     const a = s.acts[id];
     if (!a || a.playerBand) continue;
@@ -105,7 +106,7 @@ registerSimHook('month', 'culture19', (s) => off19('culture19') || cultureMonth1
 // mudança de cultura: equipe abalada (lealdade −6), elenco reage; manchete pequena
 onFact('culture_shift', (s, f) => {
   if (!f.data?.prev) return;
-  for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr) cr.loyalty = clamp(cr.loyalty - 6, 0, 100); }
+  for (const m of s.player.staff) if (P(s).career[m.id]) addStaffLoyalty(s, m.id, -6, { why: l('a cultura da casa mudou.', 'the house culture changed.') });
   const c = String(f.data.c) as Cul19, d = c === 'artist' ? 4 : c === 'profit' ? -5 : 0;
   if (d) for (const id of playerActs(s)) { const a = s.acts[id]; if (a && !a.playerBand) a.trust = clamp(a.trust + d, 0, 100); }
   headline19(s, f.text, 1);

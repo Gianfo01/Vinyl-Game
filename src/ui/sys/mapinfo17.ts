@@ -19,6 +19,8 @@ import { KIND17, LINE17 } from '../../sim/outlets17';
 import { cal17, clashOf, playerShows } from '../../sim/sys/clash17';
 import { agency, heatIn, orgs17 } from '../../sim/sys/crime17';
 import { FTIERS, canSee, fameTier } from '../../sim/sys/fame15';
+import { fameHere31, shownFame31 } from '../../sim/know';
+import { knownActIds31 } from '../../sim/sys/knownacts27';
 import { fameIn } from '../../sim/sys/fame16';
 import { outlets17, relOf } from '../../sim/sys/media17';
 import { rumorsIn, rumorText } from '../../sim/sys/press9';
@@ -84,9 +86,11 @@ function relevance(s: GameState, sc: Scope): HTMLElement | null {
 /** Atos da região: nomes públicos; fama só se o jogador pode ver (fame15). Nada formado no futuro. */
 function topActs(s: GameState, sc: Scope): HTMLElement | null {
   const set = new Set(sc.cities);
-  const acts = Object.values(s.acts).filter((a) => set.has(a.city) && a.status !== 'retired' && a.formed <= s.year && a.members.length).sort((a, b) => b.fame - a.fame).slice(0, 8);
+  const kn = knownActIds31(s);
+  const acts = Object.values(s.acts).filter((a) => set.has(a.city) && a.status !== 'retired' && a.formed <= s.year && a.members.length && kn.has(a.id))
+    .sort((a, b) => shownFame31(s, b.id) - shownFame31(s, a.id) || a.name.localeCompare(b.name)).slice(0, 8); // r31 F #5: só conhecidos, pela fama mostrada
   return blk('fame', l('Artistas da região', 'Acts from here'),
-    acts.length ? h('ul', { class: 'small mi17-cols' }, acts.map((a) => li(actLink(s, a.id), ' ', canSee(s, a.id, 'fame') ? pill(T(FTIERS[fameTier(a.fame)].name)) : h('small', { class: 'muted', title: T(l('Descubra com olheiros / relacionamento', 'Find out with scouts / relationships')) }, '?'), ' ', h('small', { class: 'muted' }, genreName(a.genre))))) : h('p', { class: 'small muted' }, T(l('Nenhum artista ativo conhecido daqui.', 'No known active acts from here.'))));
+    acts.length ? h('ul', { class: 'small mi17-cols' }, acts.map((a) => li(actLink(s, a.id), ' ', canSee(s, a.id, 'fame') ? pill(T(FTIERS[fameTier(fameHere31(s, a.id))].name)) : h('small', { class: 'muted', title: T(l('Descubra com olheiros / relacionamento', 'Find out with scouts / relationships')) }, '?'), ' ', h('small', { class: 'muted' }, genreName(a.genre))))) : h('p', { class: 'small muted' }, T(l('Nenhum artista ativo conhecido daqui.', 'No known active acts from here.'))));
 }
 
 function myFame(s: GameState, sc: Scope): HTMLElement | null {

@@ -5,6 +5,9 @@ import { FAMILIES, MARKETS, cityById, familyOf, l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { estimate, watchAct } from '../../sim/scouting';
 import { fameText, knownLevel } from '../../sim/sys/fame15';
+import { seen, shownFame31 } from '../../sim/know';
+import { knownActIds31 } from '../../sim/sys/knownacts27';
+import { meNode31, tie31 } from '../../sim/social31';
 import type { Act, GameState, Person } from '../../sim/types';
 import { ROLE_NAMES, overall, type Role } from '../../sim/sys/talent/attrs';
 import { rw } from '../../sim/sys/realworld';
@@ -39,8 +42,10 @@ const F = {
 const kinOk29 = (s: GameState, ids: string[]): boolean => F.kin === 'any' || ids.some((id) => kinTags29(s, id).has(F.kin as Tag29));
 const PAGE = 40;
 
-function actMatches(s: GameState, a: Act, q: string): boolean {
+function actMatches(s: GameState, a: Act, q: string, known: Set<string>): boolean {
   if (!visibleAct(s, a)) return false;
+  // r31 F #1: o diretório lista o que a sua empresa conhece (radar, laços, cena, fama aqui, imprensa) — não o mundo inteiro
+  if (!known.has(a.id)) return false;
   if (F.family !== 'any' && familyOf(a.genre) !== F.family) return false;
   if (F.market !== 'any' && cityById[a.city]?.market !== F.market) return false;
   if (F.owner === 'mine' && a.owner !== 'player') return false;
@@ -54,22 +59,26 @@ function actMatches(s: GameState, a: Act, q: string): boolean {
   if (!kinOk29(s, a.members)) return false;
   if (!q) return true;
   if (a.name.toLowerCase().includes(q) || genreName(a.genre).toLowerCase().includes(q) || cityName(a.city).toLowerCase().includes(q)) return true;
-  return a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q));
+  return seen(s, a.id, 'members') && a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q));
 }
 
 function actRows(s: GameState): HTMLElement {
   const q = F.q.trim().toLowerCase();
-  const list = Object.values(s.acts).filter((a) => actMatches(s, a, q));
+  const kn = knownActIds31(s);
+  const list = Object.values(s.acts).filter((a) => actMatches(s, a, q, kn));
   const known = (a: Act) => (a.owner === 'player' ? 6 : s.knowledge[a.id]?.degree ?? 0);
+  // r31 F #5: ordena só pelo que a coluna mostra (fama/momento escondidos vão para o fim, por nome)
+  const fameV = (a: Act) => shownFame31(s, a.id);
+  const momV = (a: Act) => (seen(s, a.id, 'fans') ? a.momentum ?? 0 : -1);
   list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name)
     : F.sort === 'debut' ? b.debutYear - a.debutYear
-    : F.sort === 'known' ? known(b) - known(a) || b.fame - a.fame
-    : F.sort === 'momentum' ? (b.momentum ?? 0) - (a.momentum ?? 0)
-    : b.fame - a.fame);
+    : F.sort === 'known' ? known(b) - known(a) || fameV(b) - fameV(a) || a.name.localeCompare(b.name)
+    : F.sort === 'momentum' ? momV(b) - momV(a) || a.name.localeCompare(b.name)
+    : fameV(b) - fameV(a) || a.name.localeCompare(b.name));
   // r27: o cabeçalho ordena a lista inteira (todas as páginas) antes de fatiar
   const tal0 = (a: Act) => { const e = estimate(s, a.id, 'talent'); return e ? (e.lo + e.hi) / 2 : null; };
   const SA = sortSpec27<Act>('dir-acts', { name: (a) => a.name, genre: (a) => genreName(a.genre), city: (a) => cityName(a.city), label: (a) => (a.owner === 'player' ? ' ' : a.owner ? s.labels[a.owner]?.name ?? a.owner : null),
-    fame: (a) => a.fame, talent: tal0, radar: (a) => (a.owner === 'player' ? null : s.knowledge[a.id]?.degree ?? null) });
+    fame: (a) => { const v = shownFame31(s, a.id); return v < 0 ? null : v; }, talent: tal0, radar: (a) => (a.owner === 'player' ? null : s.knowledge[a.id]?.degree ?? null) });
   const sorted = SA.apply(list);
   const pages = Math.max(1, Math.ceil(sorted.length / PAGE));
   F.page = Math.min(F.page, pages - 1);
@@ -108,11 +117,15 @@ function personRows(s: GameState): HTMLElement {
   const q = F.q.trim().toLowerCase();
   const actOf: Record<string, Act> = {};
   for (const a of Object.values(s.acts)) for (const m of a.members) actOf[m] = a;
+  const kn = knownActIds31(s);
+  const me = meNode31(s);
   const list = Object.values(s.persons).filter((p) => {
     if (!p.alive && F.status === 'live') return false;
     if (F.role !== 'any' && p.role !== F.role) return false;
     const a = actOf[p.id];
     if (a && !visibleAct(s, a)) return false;
+    // r31 F #2: só quem você sabe quem é — integrante de ato conhecido e público, ou gente com quem há laço
+    if (!p.isPlayer && !(a && kn.has(a.id) && seen(s, a.id, 'members')) && !tie31(s, me, p.id)) return false;
     if (F.owner === 'mine' && a?.owner !== 'player') return false;
     if (F.owner === 'free' && a?.owner) return false;
     if (F.owner === 'rival' && (!a?.owner || a.owner === 'player')) return false;
@@ -123,7 +136,10 @@ function personRows(s: GameState): HTMLElement {
   });
   const ver = `${s.config.seed}|${s.week}`; if (ver !== ocVer) { ocVer = ver; OC.clear(); } const oc = OC; // r15: memo por semana (o sort chamava overall() em cada comparação)
   const ovr = (p: Person) => { let v = oc.get(p.id); if (v === undefined) oc.set(p.id, v = overall(s, p)); return v; };
-  list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.born - a.born : (actOf[b.id]?.fame ?? 0) - (actOf[a.id]?.fame ?? 0) || ovr(b) - ovr(a));
+  // r31 F #5: desempate pelo que é mostrado (fama do ato e geral só quando visíveis), nunca pelo valor real escondido
+  const famP = (p: Person) => (actOf[p.id] ? shownFame31(s, actOf[p.id].id) : -1);
+  const ovrShown = (p: Person) => { const a = actOf[p.id]; const deg = a?.owner === 'player' || p.isPlayer ? 5 : knownLevel(s, p.id).priv; return deg >= 4 ? ovr(p) : deg >= 2 ? Math.max(0, ovr(p) - 8) + 8 : -1; };
+  list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.born - a.born : famP(b) - famP(a) || ovrShown(b) - ovrShown(a) || a.name.localeCompare(b.name));
   // r27: ordenação de todas as páginas; "Geral" só ordena pelo que você consegue ver (o resto fica no fim)
   const SP = sortSpec27<Person>('dir-people', { name: (p) => p.name, role: (p) => t(ROLE_NAMES[p.role as Role] ?? l(p.role, p.role)), age: (p) => s.year - p.born, act: (p) => actOf[p.id]?.name ?? null,
     ovr: (p) => { const a = actOf[p.id]; const deg = a?.owner === 'player' || p.isPlayer ? 5 : knownLevel(s, p.id).priv; return deg >= 2 ? ovr(p) : null; } });
@@ -142,7 +158,7 @@ function personRows(s: GameState): HTMLElement {
         const o = overall(s, p);
         return h('tr', null,
           h('td', null, h('b', null, p.name), p.isPlayer ? pill(t(l('você', 'you')), 'good') : null, !p.alive ? pill('†', 'bad') : null,
-            ...(() => { const kt = kinTags29(s, p.id); return [kt.has('minor') ? pill(t(l('menor', 'minor')), 'warn') : null, kt.has('couple') ? pill('♥', 'gold') : null, kt.has('nepo') ? pill(t(l('filho(a) de famoso', 'famous parent')), '') : null]; })()),
+            ...(() => { const kt = seen(s, p.id, 'family') ? kinTags29(s, p.id) : new Set<Tag29>(); return [kt.has('minor') ? pill(t(l('menor', 'minor')), 'warn') : null, kt.has('couple') ? pill('♥', 'gold') : null, kt.has('nepo') ? pill(t(l('filho(a) de famoso', 'famous parent')), '') : null]; })()),
           h('td', null, t(roleLine27(s, p))),
           h('td', null, String(s.year - p.born)),
           h('td', null, a ? actLink(s, a.id) : '—'),
@@ -184,9 +200,11 @@ function goneRows(s: GameState): HTMLElement {
       pager(pages));
   }
   const want = (a: Act) => F.gone === 'all' ? a.status === 'retired' || a.status === 'split' || a.status === 'hiatus' : F.gone === 'split' ? a.status === 'split' : F.gone === 'retired' ? a.status === 'retired' : a.status === 'hiatus';
-  const list = Object.values(s.acts).filter((a) => want(a) && (F.family === 'any' || familyOf(a.genre) === F.family) && (F.market === 'any' || cityById[a.city]?.market === F.market) && (!q || a.name.toLowerCase().includes(q) || a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q))));
+  // r31 F #1/#5: encerrados também só os que você conhece ou que são públicos; ordem pela fama mostrada
+  const knG = knownActIds31(s);
+  const list = Object.values(s.acts).filter((a) => want(a) && (knG.has(a.id) || shownFame31(s, a.id) >= 0) && (F.family === 'any' || familyOf(a.genre) === F.family) && (F.market === 'any' || cityById[a.city]?.market === F.market) && (!q || a.name.toLowerCase().includes(q) || (seen(s, a.id, 'members') && a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q)))));
   const catalog = (a: Act) => a.releases.reduce((t0, id) => t0 + (s.releases[id]?.totalUnits ?? 0), 0);
-  list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.careerEnd - a.careerEnd : b.fame - a.fame);
+  list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.careerEnd - a.careerEnd : shownFame31(s, b.id) - shownFame31(s, a.id) || a.name.localeCompare(b.name));
   const SG = sortSpec27<Act>('dir-gone', { name: (a) => a.name, genre: (a) => genreName(a.genre), career: (a) => a.debutYear, status: (a) => (a.deceased ? 0 : a.status === 'split' ? 1 : a.status === 'retired' ? 2 : 3),
     recs: (a) => a.releases.length, sales: catalog, back: (a) => (a.deceased ? null : a.members.filter((m) => s.persons[m]?.alive).length || null) });
   const sorted = SG.apply(list);

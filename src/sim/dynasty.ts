@@ -15,6 +15,8 @@ import { histLocked } from './history15';
 import { actsTouched17 } from './actidx17';
 import { cashWhy20, freeCash20 } from './oblig20';
 import { actsNow27 } from './tickcache27';
+import { rel0, relAdd } from './opinion';
+import { joinDelegated31 } from './deleg31';
 
 const JOBS: L[] = [
   l('professora', 'teacher'), l('enfermeiro', 'nurse'), l('fotógrafa', 'photographer'), l('advogado', 'lawyer'),
@@ -205,13 +207,13 @@ export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
   };
   s.acts[act.id] = act;
   actsTouched17(s);
-  s.delegated[act.id] = true;
+  s.delegated[act.id] = joinDelegated31(s, act);
   remember(s, 'heir', fmtL(l('{p} estreia carreira pelo selo, herdeiro(a) de {a}.', '{p} debuts on the label, heir to {a}.'), { p: p.name, a: parentAct?.name ?? '' }), { actId: act.id, important: true });
   return null;
 }
 
 // ---------- Facções e líder ----------
-const ally20 = (s: GameState, a: string, b: string) => (s.persons[a]?.rel[b] ?? 0) > 20 && (s.persons[b]?.rel[a] ?? 0) > 20;
+const ally20 = (s: GameState, a: string, b: string) => (rel0(s, a, b)) > 20 && (rel0(s, b, a)) > 20;
 /** Componentes conexos das alianças, em ordem canônica (ids ordenados): permutar o elenco não muda o resultado. */
 export function factionGroups20(s: GameState, ids: string[]): string[][] {
   const ms = [...new Set(ids)].sort();
@@ -237,7 +239,7 @@ export function hostileEdges20(s: GameState, ids: string[]): [string, string][] 
   const out: [string, string][] = [];
   for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) {
     const a = ms[i], b = ms[j];
-    if ((s.persons[a]?.rel[b] ?? 0) < -20 && (s.persons[b]?.rel[a] ?? 0) < -20) out.push([a, b]);
+    if ((rel0(s, a, b)) < -20 && (rel0(s, b, a)) < -20) out.push([a, b]);
   }
   return out;
 }
@@ -270,7 +272,7 @@ export function setLeader(s: GameState, actId: string, personId: string): L | nu
   for (const id of act.members) {
     const p = s.persons[id];
     if (!p) continue;
-    const aff = p.rel[personId] ?? 0;
+    const aff = rel0(s, p.id, personId);
     p.morale = clamp(p.morale + aff / 20, 0, 100);
     if (id === old) {
       p.stress = clamp(p.stress + (p.goal === 'leadership' ? 25 : 10), 0, 100);
@@ -331,7 +333,7 @@ export function reunionTerms(s: GameState, actId: string): { ok: boolean; cost: 
   let relSum = 0;
   let n = 0;
   for (const a of alive) for (const b of alive) if (a !== b) {
-    relSum += a.rel[b.id] ?? 0;
+    relSum += rel0(s, a.id, b.id);
     n++;
   }
   const rel = n ? relSum / n : 30;
@@ -360,7 +362,7 @@ export function negotiateReunion(s: GameState, r: Rng, actId: string): L {
   act.momentum = 85;
   act.fans.casual += Math.round(act.fans.core * 20);
   for (const id of act.members) s.persons[id].resentment = Math.max(0, s.persons[id].resentment - 20);
-  s.delegated[act.id] = true;
+  s.delegated[act.id] = joinDelegated31(s, act);
   remember(s, 'reunion', fmtL(l('{a} anuncia a reunião! Ingressos esgotam em minutos.', '{a} announces a reunion! Tickets sell out in minutes.'), { a: act.name }), { actId, important: true });
   return l('Reunião fechada! O ato volta ao seu elenco.', 'Reunion signed! The act rejoins your roster.');
 }
@@ -379,7 +381,7 @@ export function soloActFrom29(s: GameState, r: Rng, act: Act, p: Person, o: { ow
   s.acts[solo.id] = solo;
   actsTouched17(s);
   s.soloOf[solo.id] = act.id;
-  s.delegated[solo.id] = true;
+  s.delegated[solo.id] = joinDelegated31(s, solo);
   return solo;
 }
 
@@ -393,7 +395,7 @@ export function startSoloCareer(s: GameState, r: Rng, actId: string, personId: s
   post(s, `solo:${personId}`, -cost, 'artist_dev', `Carreira solo ${p.name}`);
   const solo = soloActFrom29(s, r, act, p, { owner: act.owner, contractId: act.contractId });
   if (p.goal === 'solo') p.morale = clamp(p.morale + 20, 0, 100);
-  for (const id of act.members) if (id !== p.id && s.persons[id]) s.persons[id].rel[p.id] = clamp((s.persons[id].rel[p.id] ?? 0) - 5, -100, 100);
+  for (const id of act.members) if (id !== p.id && s.persons[id]) relAdd(s, s.persons[id].id, p.id, -5);
   remember(s, 'solo', fmtL(l('{p} lança carreira solo paralela a {a}.', '{p} launches a solo career alongside {a}.'), { p: p.name, a: act.name }), { actId: solo.id, important: true });
   return null;
 }

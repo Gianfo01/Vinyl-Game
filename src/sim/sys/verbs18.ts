@@ -19,6 +19,7 @@ import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { opine, per13 } from './persona13';
 import { actOfKey18, adjRel18, ag18, H18, hid18, isPlayerKey, MK18, MOT18, nameOfKey18, pay18, playerSide18, pushMotive18, registerVerb18, relOf18, usd18 } from './agency18';
+import { relAdd } from '../opinion';
 
 const { fac: F, fact } = H18;
 const N = nameOfKey18;
@@ -444,7 +445,7 @@ registerVerb18({
     for (const m of ms) {
       const p = s.persons[m];
       p.resentment = clamp((p.resentment ?? 0) + 8, 0, 100);
-      if (lead) p.rel[lead] = clamp((p.rel[lead] ?? 0) - 10, -100, 100);
+      if (lead) relAdd(s, p.id, lead, -10);
       addStress(s, m, 5, fmtL(l('Intrigas de {a}', 'Whispers from {a}'), { a: N(s, A) }));
       if (playerSide18(s, T)) opine(s, `p:${m}`, -5, fmtL(l('Ouviu coisas de {a}', 'Heard things from {a}'), { a: N(s, A) }));
     }

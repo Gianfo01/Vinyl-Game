@@ -19,6 +19,7 @@ import { MEDIUM_NAME, type InboxMsg } from '../../sim/sys/people/state';
 import type { Decision, GameState } from '../../sim/types';
 import { dateOfDay, fmtL, playerActs } from '../../sim/util';
 import type { Ent27 } from '../ps/ent27';
+import { relOf } from '../../sim/opinion';
 
 // ---------------------------------------------------------------- categorias (rótulo curto de chip, ícone, tom)
 
@@ -189,7 +190,8 @@ export function voice18(s: GameState, m: InboxMsg): Voice18 | null {
   const a = m.ref?.act ? s.acts[String(m.ref.act)] : p ? Object.values(s.acts).find((x) => x.members.includes(p.id)) : undefined;
   if (!p && !a) return null;
   const me = playerPerson(s);
-  const rel = p && me && p.rel[me.id] !== undefined ? p.rel[me.id] : a ? (a.trust - 50) * 1.6 : 0;
+  const rv = p && me ? relOf(s, p.id, me.id) : undefined;
+  const rel = rv !== undefined ? rv : a ? (a.trust - 50) * 1.6 : 0;
   const P = p ? per13(s, `p:${p.id}`) : null;
   const ego = P?.facets.ego ?? 50, emp = P?.facets.empatia ?? 50, hum = P?.facets.humor ?? 50, res = p?.resentment ?? 0;
   const nm = me?.name.split(' ')[0] ?? l('chefe', 'boss').pt;

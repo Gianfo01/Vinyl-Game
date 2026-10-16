@@ -21,8 +21,8 @@ import { agenda27, autoDecide27, board27, closeMeeting27, decide27, directors27,
 import { setDir31 } from '../src/sim/deleg31';
 import { buyIns19 } from '../src/sim/sys/links19b';
 import { ins19 } from '../src/sim/sys/insure19';
-import { careerOf } from '../src/sim/sys/people/staff';
 import { rngSnapshot19 } from '../src/sim/rng19';
+import { staffLoyalty } from '../src/sim/opinion';
 
 let FIX: GameState; // 7º mês da semente r16pb-5 (mesmo fixture do r27-m2)
 let AFTER: GameState; // 8º mês (modo rápido)
@@ -97,10 +97,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R31 (W0-RNG, de propósito — docs/r31/DECISOES.md): o fluxo único s.rng saiu; o mundo nasce no fluxo 'world', o motor sorteia
     // em 'tick' e o playbot em 'act': caixa, acts e rng mudam; nesta semente o bot não marca turnê nos 8 meses (tours = []).
     // Antes: 1034775 / 2631883956 / 829002627 / 1362224447.
+    // R31 (E · Bolsa, de propósito — docs/r31/DECISOES.md): selos rivais com preço pelo valor único (r31/value31) mudam as
+    // participações e compras de NPCs (acts); o humor do mercado ganhou fluxo próprio 'bolsa31' (rng muda só por ele). Antes: acts 3472429155 / rng 3703770621.
     expect(AFTER.player.cash).toBe(178753);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3472429155);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3703770621);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1746594873);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(3786914192);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -375,11 +377,11 @@ describe('r27 P2B — reunião de diretoria', () => {
     const y = withStaff(), n = withStaff();
     const p = agenda27(y).find((x) => y.player.staff.some((m) => m.id === x.by) && x.cost <= y.player.cash)!;
     const st = (s: GameState) => s.player.staff.find((m) => m.id === p.by)!;
-    const l0 = careerOf(y, st(y)).loyalty;
+    const l0 = staffLoyalty(y, st(y).id);
     decide27(y, p.id, true);
     decide27(n, p.id, false);
-    expect(careerOf(y, st(y)).loyalty).toBeGreaterThan(l0);
-    expect(careerOf(n, st(n)).loyalty).toBeLessThan(l0);
+    expect(staffLoyalty(y, st(y).id)).toBeGreaterThan(l0);
+    expect(staffLoyalty(n, st(n).id)).toBeLessThan(l0);
     expect(decide27(y, p.id, false).pt).toMatch(/decidida/);
   });
 

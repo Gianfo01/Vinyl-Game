@@ -27,6 +27,8 @@ import { scene12 } from './scenes12';
 import { actsOfPerson17 } from '../actidx17';
 import { relief27 } from '../relief27';
 import { actsNow27 } from '../tickcache27';
+import { rel0, relAdd, relTouch } from '../opinion';
+import { meNode31, meet31, node31 } from '../social31';
 
 // ---------------------------------------------------------------- dados
 
@@ -220,7 +222,7 @@ function tie(s: GameState, a: string, b: string, dv: number): void {
   if (ka === 'p' && kb === 'p') {
     const A = s.persons[ia];
     const B = s.persons[ib];
-    if (A && B) { A.rel[ib] = clamp((A.rel[ib] ?? 0) + dv, -100, 100); B.rel[ia] = clamp((B.rel[ia] ?? 0) + dv, -100, 100); }
+    if (A && B) { relAdd(s, ia, ib, dv); relAdd(s, ib, ia, dv); }
     return;
   }
   if (ka === 'l' && kb === 'l') {
@@ -240,7 +242,7 @@ function tie(s: GameState, a: string, b: string, dv: number): void {
 }
 /** Laço atual entre duas pessoas (relação nativa quando existe). */
 export function tieOf(s: GameState, a: string, b: string): number {
-  if (a[0] === 'p' && b[0] === 'p') return s.persons[a.slice(2)]?.rel[b.slice(2)] ?? 0;
+  if (a[0] === 'p' && b[0] === 'p') return rel0(s, a.slice(2), b.slice(2));
   if (a[0] === 'l' && b[0] === 'l') return leaders(s).L[a.slice(2)]?.rel[b.slice(2)] ?? 0;
   return lz14(s).r[a]?.t?.[b] ?? 0;
 }
@@ -547,7 +549,8 @@ export function goOut14(s: GameState, k: Spot14): { ok: boolean; text: L; met: {
     const dv = Math.round(clamp(v / 3, -6, 10));
     const why = (dv >= 0 ? c0.pos[0] : c0.neg[0]) ?? (dv >= 0 ? l('frequentam o mesmo lugar', 'same haunt') : l('santo não bateu', 'no chemistry'));
     opine(s, key, dv, fmtL(l('Encontro {p}: {w}', 'Met {p}: {w}'), { p: place, w: why }));
-    if (pp && w.p && w.p.rel[pp.id] === undefined) w.p.rel[pp.id] = 0; // passa a conhecer você
+    if (pp && w.p) relTouch(s, w.p.id, pp.id); // passa a conhecer você (registro em 0 quando não havia)
+    meet31(s, meNode31(s), node31(s, key), 'visit'); // r31 F: visitar o lugar onde a pessoa está
     logTo(s, key, fmtL(dv >= 0 ? l('Encontrou o(a) dono(a) de {c} {p} e gostou ({w}).', 'Met the owner of {c} {p} and liked them ({w}).') : l('Encontrou o(a) dono(a) de {c} {p} e não gostou ({w}).', 'Met the owner of {c} {p} and disliked them ({w}).'), { c: s.config.companyName, p: place, w: why }), dv >= 0 ? 1 : -1);
     met.push({ key, dv, why });
   }

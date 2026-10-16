@@ -31,6 +31,7 @@ import { actsTouched17 } from '../actidx17';
 import { simStart20 } from '../worldpolicy20';
 import { lineup29Of } from '../lineup29';
 import { actsNow27 } from '../tickcache27';
+import { rel0, relAdd, relPut, relTouch } from '../opinion';
 
 export type Why16 = 'creative' | 'solo' | 'feud' | 'addiction' | 'left';
 type Ev16 = [number, string, string, 'j' | 'l'];
@@ -131,7 +132,7 @@ function renames(s: GameState): void {
 export function pressure16(s: GameState, a: Act, p: Person): { w: number; why: Why16 } {
   const ws: [Why16, number][] = [];
   const lead = s.persons[a.leaderId ?? ''];
-  if (lead && lead.id !== p.id && (p.rel[lead.id] ?? 0) < -25) ws.push(['creative', 1]);
+  if (lead && lead.id !== p.id && (rel0(s, p.id, lead.id)) < -25) ws.push(['creative', 1]);
   if (p.resentment > 60) ws.push(['creative', 0.8]);
   if (front(a, p) && (p.goal === 'solo' || p.ambition === 'fame') && a.fame > 35) ws.push(['solo', 0.6 + (personFame(s, p.id).v - a.fame > 5 ? 1 : 0)]);
   if (a.members.some((o) => o !== p.id && feudOf15(s, p.id, o) !== undefined)) ws.push(['feud', 1.5]);
@@ -156,7 +157,7 @@ export function leaveBand16(s: GameState, a: Act, p: Person, why: Why16): void {
   exitMember20(s, a, p.id);
   if (a.leaderId === p.id) a.leaderId = a.members[0];
   formerPush(s, a.id, p.id, why === 'addiction' ? 'fired' : 'left');
-  for (const id of a.members) { const q = s.persons[id]; if (q) q.rel[p.id] = clamp((q.rel[p.id] ?? 0) - 8, -100, 100); }
+  for (const id of a.members) { const q = s.persons[id]; if (q) relAdd(s, q.id, p.id, -8); }
   remember(s, 'member_quits', fmtL(WHY_TXT[why], { p: p.name, a: a.name }), { actId: a.id, pid: p.id, important: a.fame > 30 || mineAct(a) });
   if (!a.members.length) { a.status = 'split'; a.careerEnd = s.year; }
 }
@@ -195,7 +196,7 @@ export function joinBand(s: GameState, p: Person, a: Act, txt: L, q = ''): void 
   if (a.members.includes(p.id)) return;
   BUMP++;
   a.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
-  for (const id of a.members) { const o = s.persons[id]; if (o && o.id !== p.id) { o.rel[p.id] ??= 10; p.rel[o.id] ??= 10; } }
+  for (const id of a.members) { const o = s.persons[id]; if (o && o.id !== p.id) { relTouch(s, o.id, p.id, 10); relTouch(s, p.id, o.id, 10); } }
   const from = s.acts[l16(s).free[p.id]?.[1] ?? ''];
   delete l16(s).free[p.id];
   remember(s, 'lineup', fmtL(txt, { p: p.name, o: from?.name ?? '—', q, a: a.name }), { actId: a.id, pid: p.id, important: a.fame > 30 || (from?.fame ?? 0) > 40 || mineAct(a) });
@@ -254,7 +255,7 @@ export function buildBand16(s: GameState, r: Rng, p: Person, from: Act, partners
   b.status = 'active';
   BUMP++;
   b.name = bandName(r, langForCity(from.city, r), familyOf(from.genre), n);
-  for (const a of crew) for (const c of crew) if (a !== c) a.rel[c.id] = Math.max(a.rel[c.id] ?? 0, 15);
+  for (const a of crew) for (const c of crew) if (a !== c) relPut(s, a.id, c.id, Math.max(rel0(s, a.id, c.id), 15));
   const srcs = crew.map((q) => s.acts[l16(s).free[q.id]?.[1] ?? '']).filter((x): x is Act => !!x);
   b.fans = { casual: Math.round(srcs.reduce((t, x) => t + x.fans.casual, 0) * 0.08), active: Math.round(srcs.reduce((t, x) => t + x.fans.active, 0) * 0.06), core: Math.round(srcs.reduce((t, x) => t + x.fans.core, 0) * 0.04) };
   l16(s).boost[b.id] = 1;
@@ -318,7 +319,7 @@ function returns(s: GameState, r: Rng): void {
     if (!a || !p?.alive || !live(a) || mineAct(a) || histLocked(s, a) || (a.catalogNo && histMode(s) === 'strict') || a.members.length >= 6 || inActive(s, pid)) continue;
     if (mIdx(s) - f[0] < 18 || f[2] === 'addiction' && p.health === 'addiction') continue;
     const lead = s.persons[a.leaderId ?? ''];
-    if (lead && (lead.rel[pid] ?? 0) < -15) continue;
+    if (lead && (rel0(s, lead.id, pid)) < -15) continue;
     if (!r.chance(0.006)) continue;
     joinBand(s, p, a, l('{p} volta para {a}.', '{p} returns to {a}.'));
   }
@@ -344,7 +345,7 @@ function playerDepartures(s: GameState, r: Rng): void {
 /** Chance de convencer a ficar (explicada na carta). */
 export function stayOdds16(s: GameState, a: Act, p: Person, why: Why16): number {
   const lead = s.persons[a.leaderId ?? ''];
-  const relL = lead && lead.id !== p.id ? (p.rel[lead.id] ?? 0) : 20;
+  const relL = lead && lead.id !== p.id ? (rel0(s, p.id, lead.id)) : 20;
   return clamp(0.4 + a.trust / 250 + relL / 300 - (why === 'solo' ? 0.2 : why === 'feud' ? 0.12 : 0) + (why === 'addiction' ? 0.1 : 0), 0.1, 0.9);
 }
 const stayCost = (s: GameState, a: Act, why: Why16) => money(s, (why === 'addiction' ? 4000 : 1500) + a.fame * 60);

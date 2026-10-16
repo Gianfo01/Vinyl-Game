@@ -25,6 +25,7 @@ import { playbookOf } from './rivals8';
 import { rivals12 } from './rivals12';
 import { courtNewcomer18 } from './world18';
 import { perceivedDependence28, perceivedTrust28 } from './rivalsense28';
+import { byGuess31, guessPot31 } from '../know';
 
 export type Sign18K = 'target' | 'court' | 'flood' | 'giveup' | 'develop' | 'abandon' | 'pact' | 'dispute' | 'overexp' | 'badsign' | 'trouble' | 'bankrupt' | 'bid';
 export interface Sign18 { w: number; k: Sign18K; t: L }
@@ -197,7 +198,7 @@ function develop(s: GameState, r: Rng): void {
     }
     if (m.dev && m.dev <= s.week) { m.dev = undefined; m.lost = []; }
     if (m.dev && r.chance(0.12)) {
-      const a = Object.values(s.acts).filter((x) => live(x) && !x.owner && x.fame < 12 && x.potential >= 66 && s.year - x.debutYear <= 2 && !rm18(s).bids[x.id]).sort((x, y) => y.potential - x.potential)[r.int(0, 2)];
+      const a = Object.values(s.acts).filter((x) => live(x) && !x.owner && x.fame < 12 && guessPot31(s, x.id, lb.id) >= 66 && s.year - x.debutYear <= 2 && !rm18(s).bids[x.id]).sort(byGuess31(s, lb.id))[r.int(0, 2)];
       if (a) { courtNewcomer18(s, a, lb.id); if (r.chance(0.5)) sign(s, lb, 'develop', fmtL(l('levou o estreante {a} para a sala de ensaio do selo.', 'took newcomer {a} into the label\'s rehearsal room.'), { a: a.name })); }
     }
   }

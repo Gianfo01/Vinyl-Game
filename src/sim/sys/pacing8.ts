@@ -18,7 +18,7 @@ import { advanceWeek } from '../tick';
 import type { Act, AgendaSlot, GameState } from '../types';
 import { fmtL, money, playerActs, staffCount } from '../util';
 import { attnSeq, notes } from '../attention';
-import { EXEC31, UNDO31, actDir31, autoLog31, logAuto31, modeOf31, rule31, setActDir31, setDir31, staffFor31 } from '../deleg31';
+import { EXEC31, UNDO31, actDir31, autoLog31, blocked31, logAuto31, modeOf31, onceOk31, rule31, setActDir31, setDir31, staffFor31 } from '../deleg31';
 
 export type Prio = 'auto' | 'develop' | 'commercial' | 'tour' | 'rest';
 /** 0 = foco, 1 = normal, 2 = mínimo */
@@ -165,15 +165,20 @@ function resetSpent(s: GameState): void {
   if (st.spentMonth !== m) { st.spent = {}; st.spentMonth = m; }
 }
 
-/** Quanto a equipe ainda pode gastar nesta carreira neste mês (centavos; Infinity = sem limite). */
+/** Gasto do mês corrente por carreira, SÓ LEITURA (W2-REV: a tela de delegação lia por `budgetLeft` e zerava o mês). */
+function spentNow(s: GameState): Record<string, number> {
+  const st = (s.x4 as unknown as { pace8?: Pace8State }).pace8;
+  return st && st.spentMonth === monthIndex(s) ? st.spent : {};
+}
+
+/** Quanto a equipe ainda pode gastar nesta carreira neste mês (centavos; Infinity = sem limite). Só leitura. */
 export function budgetLeft(s: GameState, actId: string): number {
-  resetSpent(s);
-  const st = pace8(s);
+  const spent = spentNow(s);
   const pol = policyOf(s, actId);
   let left = Infinity;
-  if (pol.cap > 0) left = money(s, pol.cap) - (st.spent[actId] ?? 0);
+  if (pol.cap > 0) left = money(s, pol.cap) - (spent[actId] ?? 0);
   const team = teamBudget8(s);
-  if (team > 0) left = Math.min(left, money(s, team) - Object.values(st.spent).reduce((a, b) => a + b, 0));
+  if (team > 0) left = Math.min(left, money(s, team) - Object.values(spent).reduce((a, b) => a + b, 0));
   return Math.max(0, left);
 }
 
@@ -291,6 +296,8 @@ setDelegationHooks({
     const gap = pol.p === 'commercial' ? 14 : pol.p === 'develop' ? 30 : 22;
     let ok = pol.p !== 'rest' && (pol.tier !== 2 && !overCapacity(s).has(act.id) ? true : ready >= 8);
     if (left < money(s, 800)) ok = false;
+    // W2-REV: você desfez o último lançamento automático deste ato — a equipe não relança sozinha por 12 semanas
+    if (blocked31(s, 'exec', act.id) && !onceOk31(s, `exec:${act.id}`)) ok = false;
     if (!ok && ready && s.week - act.lastRelease >= gap && s.week % 4 === 0) {
       log(s, { a: act.id, k: 'hold', x: '', y: [pol.p === 'rest' ? 'p:rest' : '', pol.tier === 2 ? 'tier:2' : '', left < money(s, 800) ? (pol.cap > 0 ? `cap:${pol.cap}` : `team:${teamBudget8(s)}`) : '', `ready:${ready}`].filter(Boolean).join('|') });
     }
@@ -433,4 +440,13 @@ export function advanceUntil(s: GameState, crit: StopCriteria = pace8(s).stop): 
 }
 
 // r31 (Q): desfazer um lançamento automático ainda pendente (mesma regra do cancelamento manual)
-UNDO31.release = (s, id) => (cancelRelease(s, id) ? null : l('O lançamento já saiu (ou não existe mais).', 'The release already came out (or no longer exists).'));
+UNDO31.release = (s, id, e) => {
+  if (!cancelRelease(s, id)) return l('O lançamento já saiu (ou não existe mais).', 'The release already came out (or no longer exists).');
+  // estorna o gasto do mês da carreira (o orçamento da equipe volta a ter o valor)
+  if (e.act && e.amt && e.amt < 0 && e.m === s.year * 12 + s.month) {
+    resetSpent(s);
+    const st = pace8(s);
+    st.spent[e.act] = Math.max(0, (st.spent[e.act] ?? 0) + e.amt);
+  }
+  return null;
+};

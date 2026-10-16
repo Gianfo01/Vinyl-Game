@@ -6,7 +6,7 @@ import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
 import { endorseOdds19 } from '../../sim/sys/careers19';
-import { devChance12 } from '../../sim/sys/manager12';
+import { agentLoyalty, devChance12 } from '../../sim/sys/manager12';
 import {
   AMB_NAME, AREA_NAME, AUTO_NAME, TEAM_NAME, acceptCounter, agencyTier, agentMax, agentSalary, ambitionsOf, answerIssue, arrange, assignAgent, c12, canArrange, capacityHours,
   clashesOf, clientHours, demandHours, devCandidates, endorse, endorseReady, endorseValue, fireAgent, hireAgent, mandateChance, mgr12, negotiateMandate, proposePlan,
@@ -140,7 +140,7 @@ function agencyTab(s: GameState): HTMLElement {
       h('p', { class: 'small muted' }, t(l('Prestígio vem de carreiras longas (5+ anos com você), clientes confiantes e talentos que você descobriu ({n}).', 'Prestige comes from long careers (5+ years with you), trusting clients and talents you discovered ({n}).'), { n: st.devHits }))),
     section(`${t(l('Agentes', 'Agents'))} ${st.agents.length}/${agentMax(s)}`,
       h('p', { class: 'small muted' }, t(l('Cada agente cuida de até 4 clientes ({v}/mês). Agente desleal pode sair levando os clientes que confiam mais nele que em você.', 'Each agent handles up to 4 clients ({v}/mo). A disloyal agent may leave with clients who trust them more than you.'), { v: $(agentSalary(s)) })),
-      st.agents.map((g) => h('div', { class: 'row wrap small' }, h('b', null, g.name), ` ${t(l('talento', 'skill'))} ${g.skill} · ${t(l('lealdade', 'loyalty'))} `, bar(g.loyalty), ` ${Math.round(g.loyalty)}`,
+      st.agents.map((g) => h('div', { class: 'row wrap small' }, h('b', null, g.name), ` ${t(l('talento', 'skill'))} ${g.skill} · ${t(l('lealdade', 'loyalty'))} `, bar(agentLoyalty(s, g)), ` ${Math.round(agentLoyalty(s, g))}`,
         st.successor === g.id ? pill(t(l('sucessor', 'successor')), 'good') : btn(l('Preparar como sucessor', 'Groom as successor'), () => { setSuccessor(s, g.id); rerender(); }, 'btn tiny'),
         btn(l('Bônus', 'Bonus'), () => res(raiseAgent(s, g.id)), 'btn tiny'), btn(l('Demitir', 'Fire'), () => { fireAgent(s, g.id); rerender(); }, 'btn tiny ghost'))),
       btn(l('Contratar agente', 'Hire an agent'), () => res(hireAgent(s)), 'btn small primary', st.agents.length >= agentMax(s)),

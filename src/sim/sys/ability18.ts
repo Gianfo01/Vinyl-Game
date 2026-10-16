@@ -35,6 +35,7 @@ import { realDataOf } from './realworld';
 import { soul } from './soul9';
 import type { Facet } from './soul9';
 import { actsNow27 } from '../tickcache27';
+import { relAdd } from '../opinion';
 
 // ------------------------------------------------------------------ estado
 
@@ -635,10 +636,10 @@ registerPersonAction({
   run: (s, key, _r, ok) => {
     const p = pOf(s, key)!;
     const m = mentorFor18(s, p)!;
-    if (!ok) { m.rel[p.id] = clamp((m.rel[p.id] ?? 0) - 3, -100, 100); return { ok, text: fmtL(l('{m} não quis: "não sou babá".', '{m} declined: "I\'m not a babysitter."'), { m: m.name }) }; }
+    if (!ok) { relAdd(s, m.id, p.id, -3); return { ok, text: fmtL(l('{m} não quis: "não sou babá".', '{m} declined: "I\'m not a babysitter."'), { m: m.name }) }; }
     ab18(s).mt[p.id] = [m.id, s.week + 52];
-    m.rel[p.id] = clamp((m.rel[p.id] ?? 0) + 6, -100, 100);
-    p.rel[m.id] = clamp((p.rel[m.id] ?? 0) + 8, -100, 100);
+    relAdd(s, m.id, p.id, 6);
+    relAdd(s, p.id, m.id, 8);
     return { ok, text: fmtL(l('{m} topou ser mentor de {p} por um ano.', '{m} agreed to mentor {p} for a year.'), { m: m.name, p: p.name }) };
   },
 });

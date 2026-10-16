@@ -18,7 +18,8 @@ import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
-import { band, bandText, know, registerKnowFame } from '../know';
+import { band, bandText, fameHere31, know, registerKnowFame, see } from '../know';
+import { relAdd } from '../opinion';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -113,15 +114,14 @@ export function knownLevel(s: GameState, id: string): Known15 {
   return { mine: k.mine, deg: k.deg, rel: k.rel, exp: k.exp, priv: k.priv, pub: k.pub, tier: k.tier };
 }
 
+// r31 (31.3 · F): a tabela de quais eixos liberam cada campo é KNOW_FIELDS (know.ts); aqui só a leitura antiga.
 const NEED: Record<Field15, [number, 'pub' | 'priv']> = {
   public: [0, 'pub'], bio: [1, 'pub'], fame: [2, 'pub'], fans: [2, 'pub'], image: [2, 'pub'], life: [3, 'pub'], rels: [4, 'pub'],
   health: [4, 'priv'], attrs: [2, 'priv'], potential: [3, 'priv'], traits: [4, 'priv'], mood: [4, 'priv'], contract: [3, 'priv'], songs: [5, 'priv'],
 };
-/** Pode ver este tipo de dado? (ver tabela NEED: públicos melhoram com fama; privados só com olheiros/relação) */
+/** Pode ver este tipo de dado? (regra única: `see` de know.ts — fato público também revela, em rótulo) */
 export function canSee(s: GameState, id: string, f: Field15): boolean {
-  const k = knownLevel(s, id);
-  const [n, w] = NEED[f];
-  return k.mine || k[w] >= n;
+  return see(s, id, f) !== 'hidden';
 }
 export const HINT15 = l('? — descubra com olheiros / relacionamento', '? — find out with scouts / relationships');
 export const HINT15S = l('descubra com olheiros / relacionamento', 'find out with scouts / relationships');
@@ -135,7 +135,7 @@ export function whyHidden(f: Field15): L {
 
 /** Fama mostrada pela regra única de know.ts: exata quando pública no seu país, faixa (nunca centrada) quando só se ouve falar, "?" quando desconhecida. */
 export function fameText(s: GameState, id: string): string {
-  return bandText(band(s, id, 'fame', fameOf(s, id), know(s, id).width('fame')));
+  return bandText(band(s, id, 'fame', fameHere31(s, id), know(s, id).width('fame')));
 }
 
 // ---------------------------------------------------------------- histórico
@@ -281,7 +281,7 @@ export function fameMonth(s: GameState): void {
         if (!p?.alive) continue;
         const gap = pf(s, id) - a.fame;
         if (gap >= 8 && r.chance(0.12)) {
-          for (const o of a.members) if (o !== id && s.persons[o]) { const q = s.persons[o]; q.rel[id] = clamp((q.rel[id] ?? 0) - 3, -100, 100); q.resentment = clamp(q.resentment + 2, 0, 100); }
+          for (const o of a.members) if (o !== id && s.persons[o]) { const q = s.persons[o]; relAdd(s, q.id, id, -3); q.resentment = clamp(q.resentment + 2, 0, 100); }
           if (p.ambition === 'fame' || p.goal === 'solo') p.morale = clamp(p.morale - 3, 0, 100);
           const tx = fmtL(l('Ego: {p} é mais famoso(a) que {a} (fama {v} × {b}); os colegas se ressentem e a ideia de carreira solo cresce.', 'Ego: {p} is more famous than {a} (fame {v} × {b}); bandmates resent it and the solo idea grows.'), { p: p.name, a: a.name, v: Math.round(pf(s, id)), b: Math.round(a.fame) });
           flog(s, a.id, tx, 0); flog(s, id, tx, 0); notify(s, tx, 'bad');

@@ -58,8 +58,8 @@ export const SECTIONS25: Section25[] = [
   // r27 (COCK): Você (a sua vida: perfil, família, casa, patrimônio, noite) virou seção de topo — a última, como o
   // "perfil" no canto dos apps; as páginas da empresa ficam juntas antes dela
   { id: 'you', label: l('Você', 'You'), icon: 'star', blurb: l('Sua vida: perfil, amor e família, patrimônio e noite.', 'Your life: profile, love and family, wealth and nights out.'),
-    main: ['you', 'personal', 'wealth', 'night14', 'scenes17'], themes: [
-    th('life', l('Sua vida', 'Your life'), ['you', 'personal', 'wealth', 'night14', 'scenes17', 'tut18'])] },
+    main: ['you', 'personal', 'known31', 'wealth', 'night14', 'scenes17'], themes: [
+    th('life', l('Sua vida', 'Your life'), ['you', 'personal', 'known31', 'wealth', 'night14', 'scenes17', 'tut18'])] },
 ];
 
 /** Seção de cada página de carreira (a página aparece primeiro na seção quando a carreira está ativa). */

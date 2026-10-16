@@ -12,6 +12,7 @@ import { fmtL, money, nextId, notify, post, remember } from '../../util';
 import { P, addMsg, careerOf, clamp01 } from './state';
 import { gainXp, ownerBonus } from './owner';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { addStaffLoyalty, forgetOpinion, setStaffLoyalty, staffLoyalty } from '../../opinion';
 
 export const LEVEL_NAME: L[] = [l('Júnior', 'Junior'), l('Pleno', 'Mid-level'), l('Sênior', 'Senior'), l('Diretor(a)', 'Director')];
 
@@ -33,7 +34,7 @@ export const ROLE_PATHS: Record<string, string[]> = {
 export { careerOf };
 
 /** Leitura sem criar a ficha (quem só lê não pode mexer no estado): sem ficha, a lealdade inicial (60). */
-export const careerLoyalty = (s: GameState, st: StaffMember): number => P(s).career[st.id]?.loyalty ?? 60;
+export const careerLoyalty = (s: GameState, st: StaffMember): number => staffLoyalty(s, st.id);
 
 export function marketSalary(s: GameState, role: string, skill: number): number {
   const def = staffRoleById[role];
@@ -54,7 +55,7 @@ export function trainStaff(s: GameState, id: string): L | null {
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `train:${st.id}`, -cost, 'staff_training', `Treinamento ${st.name}`);
   c.trainingUntil = s.week + 4;
-  c.loyalty = clamp01(c.loyalty + 6);
+  addStaffLoyalty(s, st.id, 6, { why: l('pagou um treinamento.', 'paid for training.') });
   return null;
 }
 
@@ -70,7 +71,7 @@ export function promote(s: GameState, id: string): L | null {
   const c = careerOf(s, st);
   c.level += 1;
   c.xp = 0;
-  c.loyalty = clamp01(c.loyalty + 20);
+  addStaffLoyalty(s, st.id, 20, { why: l('foi promovido(a).', 'was promoted.') });
   st.salary = Math.round(st.salary * 1.2);
   st.skill = Math.min(99, st.skill + 2);
   c.lastRaise = s.week;
@@ -86,8 +87,8 @@ export function changeRole(s: GameState, id: string, role: string): L | null {
   st.role = role;
   st.skill = Math.max(15, Math.round(st.skill * 0.85));
   st.salary = Math.max(st.salary, marketSalary(s, role, st.skill));
-  const c = careerOf(s, st);
-  c.loyalty = clamp01(c.loyalty + 10);
+  careerOf(s, st); // cria a ficha de carreira (como antes)
+  addStaffLoyalty(s, st.id, 10, { why: l('ganhou uma função nova.', 'got a new role.') });
   remember(s, 'staff_role', fmtL(l('{n} troca de função: {a} → {b}.', '{n} changes role: {a} → {b}.'), { n: st.name, a: from, b: staffRoleById[role]?.name ?? l(role) }));
   return null;
 }
@@ -101,7 +102,7 @@ export function scoutToAnr(s: GameState, scoutId: string): L | null {
   const st: StaffMember = { id: nextId(s, 'st'), name: sc.name, role: 'anr', skill: Math.round(sc.skill * 0.9), salary: Math.max(sc.salary, marketSalary(s, 'anr', sc.skill * 0.9)), hiredWeek: s.week, trait: 'ambitious' };
   s.player.staff.push(st);
   const c = careerOf(s, st);
-  c.loyalty = 75;
+  setStaffLoyalty(s, st.id, 75, l('saiu do campo para a sede.', 'moved from the field to the HQ.'));
   c.xp = 5;
   remember(s, 'staff_role', fmtL(l('O olheiro {n} vira executivo(a) de A&R.', 'Scout {n} becomes an A&R executive.'), { n: sc.name }));
   return null;
@@ -113,13 +114,13 @@ export function answerRaise(s: GameState, id: string, choice: 'full' | 'half' | 
   const c = careerOf(s, st);
   c.raiseAsk = undefined;
   if (choice === 'refuse') {
-    c.loyalty = clamp01(c.loyalty - 18);
+    addStaffLoyalty(s, st.id, -18, { why: l('teve o aumento recusado.', 'had the raise refused.') });
     return fmtL(l('{n} sai da sala calado(a).', '{n} leaves the room in silence.'), { n: st.name });
   }
   const pct = choice === 'full' ? 0.15 : 0.07;
   st.salary = Math.round(st.salary * (1 + pct));
   c.lastRaise = s.week;
-  c.loyalty = clamp01(c.loyalty + (choice === 'full' ? 22 : 6));
+  addStaffLoyalty(s, st.id, choice === 'full' ? 22 : 6, { why: l('ganhou aumento.', 'got a raise.') });
   gainXp(s, 'negotiation', 1);
   return fmtL(l('{n}: salário +{p}%.', '{n}: salary +{p}%.'), { n: st.name, p: Math.round(pct * 100) });
 }
@@ -127,6 +128,7 @@ export function answerRaise(s: GameState, id: string, choice: 'full' | 'half' | 
 function leave(s: GameState, r: Rng, st: StaffMember): void {
   s.player.staff = s.player.staff.filter((x) => x !== st);
   delete P(s).career[st.id];
+  forgetOpinion(s, `s:${st.id}`);
   if (st.skill > 72 && r.chance(0.35)) {
     const id = nextId(s, 'lb');
     const name = `${st.name.split(' ').slice(-1)[0]} Records`;
@@ -160,7 +162,7 @@ export function staffMonth(s: GameState, r: Rng): void {
     }
     const ratio = st.salary / Math.max(1, marketSalary(s, st.role, st.skill));
     const target = 55 + (ratio - 1) * 70 + mgmt * 15 + c.level * 4 + (st.trait === 'loyal' ? 15 : st.trait === 'opportunist' ? -12 : 0);
-    c.loyalty = clamp01(c.loyalty + (target - c.loyalty) * 0.12);
+    { const loy = staffLoyalty(s, st.id); setStaffLoyalty(s, st.id, clamp01(loy + (target - loy) * 0.12)); }
     // pedido de aumento
     if (!c.raiseAsk && ratio < 0.92 && (!c.lastRaise || s.week - c.lastRaise > 40) && r.chance(0.18 - mgmt * 0.05)) {
       c.raiseAsk = s.week;
@@ -175,12 +177,12 @@ export function staffMonth(s: GameState, r: Rng): void {
     }
     if (c.raiseAsk && s.week - c.raiseAsk > 8) {
       c.raiseAsk = undefined;
-      c.loyalty = clamp01(c.loyalty - 10);
+      addStaffLoyalty(s, st.id, -10, { why: l('o pedido de aumento ficou sem resposta.', 'the raise request went unanswered.') });
     }
     // saída
-    if (c.loyalty < 25 && r.chance(0.12 - mgmt * 0.04)) leave(s, r, st);
+    if (staffLoyalty(s, st.id) < 25 && r.chance(0.12 - mgmt * 0.04)) leave(s, r, st);
   }
-  for (const id of Object.keys(P(s).career)) if (!s.player.staff.some((x) => x.id === id)) delete P(s).career[id];
+  for (const id of Object.keys(P(s).career)) if (!s.player.staff.some((x) => x.id === id)) { delete P(s).career[id]; forgetOpinion(s, `s:${id}`); }
 }
 
 export { STAFF_ROLES };
