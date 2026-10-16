@@ -57,7 +57,7 @@ A falência que sobra em 1990 (`r31-base-3`) é de outro tipo. A reputação est
 vermelho; o aporte veio depois, e o robô gastou os 150 mil em um mês.
 
 Partidas de 20 anos (`scripts/r31/long20.ts`, nomes reais, sementes `bal20-0…5` em 1960, 1963, 1966, 1969, 1972 e 1975):
-com `bal31.mercy` 6/6 vivas; sem ele 5/6 (bal20-5 quebra em 1976). `relprobe-d` (1970) quebra em 1971 sem a correção.
+com `bal31.mercy` 6/6 vivas; sem ele 5/6 (bal20-5 quebra em 1976). `relprobe-d` (1970) quebra em 1971 sem a correção e chega viva aos 20 anos com ela; `r29rel-bot` (1970) vive 20 anos nos dois casos.
 Quem sobrevive termina com menos caixa com a correção (bal20-0: 3,2 mi contra 4,6 mi), porque o investidor leva 15% das
 vendas por 5 anos.
 
