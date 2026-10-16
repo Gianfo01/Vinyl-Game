@@ -350,7 +350,7 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     expect(relics(s).list.filter((x) => x.meta?.q && x.st !== 'lost').length).toBeLessThanOrEqual(30);
   }, 900000);
 
-  it('"muitas" (padrão): tetos valem (por ano, por ato, total, falsas) e o save fica abaixo de 110 KB', async () => {
+  it('"muitas" (padrão): tetos valem (por ano, por ato, total, falsas) e o save fica abaixo de 115 KB', async () => {
     const births: { y: number; a: string; arch: string }[] = [];
     onFact('relic', (s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '', arch: f.tags[3] }); }, 'r29test:bot');
     // o mesmo laço do simulatePlayer (bot equilibrado), devolvendo o controle ao vitest a cada mês (run longa)
@@ -374,6 +374,8 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     const list = relics(s).list.filter((x) => x.meta?.q);
     const bytes = JSON.stringify(rel29(s)).length + JSON.stringify(list).length; // R31 G: os metadados moram na peça
     console.log(`r29 bot 20 anos (muitas): ${births.length} nascidas, ${live.length} vivas, acervo histórico ${arc29(s).n}, ${bytes} bytes`, JSON.stringify(rel29(s).n));
-    expect(bytes).toBeLessThan(110000);
+    // R31 Z: com a base nova (68 artistas e 28 relíquias reais) a trajetória desta semente muda e as procedurais somam ~112 KB
+    // (antes < 110 KB); teto 115 KB — a mesma ordem de grandeza, sem crescimento estrutural (docs/r31/DECISOES.md).
+    expect(bytes).toBeLessThan(115000);
   }, 1500000);
 });

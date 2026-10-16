@@ -32,7 +32,7 @@ function member(s: GameState, n: ReturnType<typeof famNow31>[number]): HTMLEleme
     h('p', { class: 'small' }, h('b', null, t(l('Hoje', 'Now'))), ': ', t(famRoleLabel31(s, n.m.id))));
 }
 
-function render(s: GameState): HTMLElement {
+export function famTab31(s: GameState): HTMLElement {
   const acts = playerActs(s);
   if (!acts.includes(actSel)) actSel = acts[0] ?? '';
   const on = sw<boolean>(s, 'fam31');
@@ -69,4 +69,4 @@ function render(s: GameState): HTMLElement {
   );
 }
 
-registerTab('worldHub', { id: 'fossati31', label: l('Família Fossati', 'Fossati family'), icon: 'heart', order: 58, render });
+registerTab('worldHub', { id: 'fossati31', label: l('Família Fossati', 'Fossati family'), icon: 'heart', order: 58, render: famTab31 });
