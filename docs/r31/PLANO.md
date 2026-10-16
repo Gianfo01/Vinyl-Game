@@ -54,7 +54,8 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   mapa são negócio, lote comprável ou casa de CEO/artista da cidade) · EMO (emojis da tela viram ícones em pixel art,
   fonte única em `ui/pixel/icons.ts`) · POL (acabamento visual de todas as cenas e mapas da onda 4: nada flutuando,
   sem placeholder, sem rótulo sobreposto; checagem automática em `tests/r31-pol.test.ts`) · T2 (leilão de catálogos/masters com proposta
-  fechada, leilão silencioso do mercado negro, apreensão de carga na alfândega como mecânica).
+  fechada, leilão silencioso do mercado negro, apreensão de carga na alfândega como mecânica) · AMOR (chamar qualquer adulto para sair, amantes com risco de descoberta,
+  romance com gente do mercado, integrado a vida/família/segredos/opinião; família Fossati nunca é alvo).
 
 ## Onda 5 (31.5) · jogo explorável (pedido do dono, 2026-10-16)
 > Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
