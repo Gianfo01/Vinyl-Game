@@ -31,6 +31,7 @@ import { store } from '../store';
 import { ventureArt29 } from '../art29ui'; // r29 (arte)
 import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -62,7 +63,7 @@ export function ventureHead(s: GameState, v: Venture): HTMLElement {
       h('span', { class: 'small' }, ` ${t(l('Equipe', 'Staff'))}: `),
       btn(l('−', '−'), () => { setStaff(s, v.id, v.staff - 1); rerender(); }), h('b', null, ` ${v.staff} `), btn(l('+', '+'), () => { setStaff(s, v.id, v.staff + 1); rerender(); }),
       btn(v.owner === 'label' ? l(`Comprar para mim (${$(valuation(s, v))})`, `Buy it personally (${$(valuation(s, v))})`) : l(`Vender ao selo (${$(valuation(s, v))})`, `Sell to the label (${$(valuation(s, v))})`), () => say(transferVenture(s, v.id), l('Transferência feita.', 'Transfer done.')), 'btn small ghost'),
-      btn(l('Vender', 'Sell'), () => { if (confirm(t(l('Vender este negócio?', 'Sell this business?')))) say(sellVenture(s, v.id), l('Vendido.', 'Sold.')); }, 'btn small danger')));
+      btn(l('Vender', 'Sell'), async () => { if (await askConfirm(t(l('Vender este negócio?', 'Sell this business?')))) say(sellVenture(s, v.id), l('Vendido.', 'Sold.')); }, 'btn small danger')));
 }
 
 export function foundForm(s: GameState, kind: VKind): HTMLElement {

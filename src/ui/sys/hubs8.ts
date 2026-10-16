@@ -31,6 +31,7 @@ import { festivalPinImg28, festivalPosterImg28, mastheadImg28 } from '../pixel/e
 import { relicImg28 } from '../pixel/relic28';
 import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 /** r28 (arte): estatueta da premiação (gramofone, astronauta, taça ou estrela, pela semente do id). */
 const trophyImg = (c: { id: string; name: string }, size: number) => relicImg28('trophy', c.id === 'gramo' ? 'gramophone' : c.id === 'critics' ? 'critics cup' : c.name, 1990, `aw:${c.id}`, size, c.name);
@@ -112,7 +113,7 @@ export function openFestivalPage(fi: number): void {
     };
     const tierBlock = (tier: FestTier) => {
       const slots = ed?.lineup.filter((x) => x.tier === tier) ?? [];
-      return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { ...ent27('festival', String(fi)), class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: () => { if (confirm(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')))) { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); } } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
+      return h('div', null, h('h4', null, t(TIER_NAME[tier])), slots.length ? h('div', { class: 'chips' }, slots.map((x) => h('span', { class: `chip ${mineAct(s, x.actId) ? 'good' : ''}` }, actLink(s, x.actId), mineAct(s, x.actId) && !ed?.done ? h('button', { ...ent27('festival', String(fi)), class: 'link small', title: t(l('Cancelar (multa de 25% do cachê)', 'Cancel (25% fee penalty)')), onclick: async () => { if (await askConfirm(t(l('Cancelar a participação? Multa de 25% do cachê e o festival não chama de novo tão cedo.', 'Cancel the appearance? 25% fee penalty and the festival will not call again soon.')))) { withdraw(s, fi, x.actId); close(); openFestivalPage(fi); rerender(); } } }, ' ✕') : null))) : h('p', { class: 'muted small' }, '—'));
     };
     const body = h('div', { class: 'ficha' },
       h('div', { style: 'float:right;margin-left:0.6rem' }, festivalPosterImg28(f.name, s.year, (ed?.lineup.filter((x) => x.tier === 'headline').map((x) => s.acts[x.actId]?.name).filter((x): x is string => !!x)) ?? [], 96)), // r28 (arte): cartaz da edição

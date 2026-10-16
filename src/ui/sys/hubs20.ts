@@ -155,7 +155,7 @@ export function controlRoom20(s: GameState): HTMLElement | null {
         h('button', { ...ent27('act', x.actId), class: 'btn small', onclick: () => (hqHooks.onAct ? hqHooks.onAct(x.actId) : inspect.act(x.actId)) }, ic('guitar'), ' ', T(l('Abrir artista', 'Open act'))),
         playerActs(s).includes(x.actId) ? actionsButton20(s, x.actId, 'btn small') : null,
         tr ? h('button', { class: 'btn small', onclick: () => { copyTourPolicy20(tr); setKitDraft18(tr.kit18 ?? KIT0); setTab('showsHub', 'tours'); toast(T(l('Política copiada para o próximo planejamento (a rota não).', 'Policy copied to the next plan (not the route).')), 'good'); rerender(); } }, ic('pen'), ' ', T(l('Copiar política', 'Copy policy'))) : null,
-        tr ? h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(T(l('Cancelar a turnê inteira? Pelas regras atuais, metade da logística volta.', 'Cancel the whole tour? Under current rules, half the logistics is refunded.')))) return; const e = cancelTour(s, tr.id); if (e) toast(T(e), 'bad'); rerender(); } }, T(l('Cancelar turnê (devolve metade)', 'Cancel tour (half refunded)'))) : null),
+        tr ? h('button', { class: 'btn small ghost', onclick: async () => { if (!await askConfirm(T(l('Cancelar a turnê inteira? Pelas regras atuais, metade da logística volta.', 'Cancel the whole tour? Under current rules, half the logistics is refunded.')))) return; const e = cancelTour(s, tr.id); if (e) toast(T(e), 'bad'); rerender(); } }, T(l('Cancelar turnê (devolve metade)', 'Cancel tour (half refunded)'))) : null),
     );
   }
   if (lastStop && lastTour) {
@@ -394,3 +394,4 @@ registerAreaView20('hq', hqHub20);
 void cityById;
 
 import { ent27 } from '../ps/ent27';
+import { askConfirm } from '../ask31';

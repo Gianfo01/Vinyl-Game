@@ -47,6 +47,7 @@ import { placeArt29 } from '../art29ui'; // r29 (arte)
 import { chartHeaderImg29 } from '../pixel/badge29';
 import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -449,7 +450,7 @@ export function branchesSection(s: GameState): HTMLElement {
         h('div', { class: 'row wrap' }, here.length ? here.map((id) => actLink(s, id)) : h('small', { class: 'muted' }, t(l('Nenhum artista designado.', 'No artists assigned.')))),
         h('div', { class: 'row wrap' },
           next ? h('button', { class: 'btn small', onclick: () => { const e = upgradeBranch(s, b.id); toast(t(e ?? l('Filial ampliada!', 'Branch upgraded!')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Ampliar para', 'Upgrade to'))} ${t(next.name)} (${$(money(s, next.cost))})`) : null,
-          h('button', { class: 'btn small ghost', onclick: () => { if (!confirm(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')))) return; closeBranch(s, b.id); rerender(); } }, t(l('Fechar filial', 'Close branch'))),
+          h('button', { class: 'btn small ghost', onclick: async () => { if (!await askConfirm(t(l('Fechar esta filial? O investimento não volta.', 'Close this branch? The investment is not refunded.')))) return; closeBranch(s, b.id); rerender(); } }, t(l('Fechar filial', 'Close branch'))),
         ),
       ]);
     })) : null,

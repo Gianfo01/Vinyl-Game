@@ -9,6 +9,7 @@ import {
 } from '../../sim/sys/aud27/kin27';
 import { $ } from '../common';
 import { h } from '../dom';
+import { askConfirm } from '../ask31';
 
 type Run = (res: unknown, ok?: L) => void;
 
@@ -29,7 +30,7 @@ export function kidChoices27(s: GameState, i: number, age: number, run: Run): HT
       b(fmt(l('Pagar faculdade ({v})', 'Pay for college ({v})'), { v: $(money(s, KIN_COST27.college)) }), schoolBlock27(s, i), () => run(payKidSchool27(s, i, 'college'), l('Faculdade paga.', 'College paid.'))),
       b(fmt(l('Pagar conservatório ({v})', 'Pay for conservatory ({v})'), { v: $(money(s, KIN_COST27.conservatory)) }), schoolBlock27(s, i), () => run(payKidSchool27(s, i, 'conservatory'), l('Conservatório pago.', 'Conservatory paid.'))),
       b(l('Trazer para a empresa', 'Bring into the company'), companyBlock27(s, i), () => run(bringKidIn27(s, i), l('Agora trabalha no selo.', 'Now works at the label.'))),
-      reconcileBlock27(s, i) ? b(l('Deserdar', 'Disinherit'), cutBlock27(s, i), () => { if (confirm(t(l('Deserdar? O vínculo despenca e ele(a) sai da sucessão.', 'Disinherit? The bond collapses and they leave the succession.')))) run(cutOffKid27(s, i), l('Deserdado(a).', 'Disinherited.')); })
+      reconcileBlock27(s, i) ? b(l('Deserdar', 'Disinherit'), cutBlock27(s, i), async () => { if (await askConfirm(t(l('Deserdar? O vínculo despenca e ele(a) sai da sucessão.', 'Disinherit? The bond collapses and they leave the succession.')))) run(cutOffKid27(s, i), l('Deserdado(a).', 'Disinherited.')); })
         : b(l('Fazer as pazes', 'Make peace'), null, () => run(reconcileKid27(s, i), l('Vocês fizeram as pazes.', 'You made peace.'))),
     ));
 }

@@ -22,6 +22,7 @@ import { store } from '../store';
 import { cutscene27, playBtn27 } from './mode27';
 import { paintCork27 } from './p2apx27';
 import './p2a27.css';
+import { askConfirm } from '../ask31';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const SVG = 'http://www.w3.org/2000/svg';
@@ -124,7 +125,7 @@ export function openFavors27(focus?: string, o: { gesture?: Gesture27 | 'ask'; c
       h('div', { class: 'fv27-acts' },
         c.gestures.includes('gift') ? h('button', { class: 'btn small', disabled: !!askBlock27(s2, c.key), title: T(askBlock27(s2, c.key) ?? l('O favor de sempre, na hora — mas agora você deve.', 'The usual favor, right now — but now you owe.')), onclick: () => { const r = askNow27(s2, c.key); say(r.ok, r.text); } }, t(l('Pedir sem crédito', 'Ask without credit'))) : null,
         h('button', { class: 'btn small danger', title: t(l('Cobra tudo agora (efeito dobrado), mas vira mágoa, os pares ficam sabendo e ele fala mal — ou expõe o que sabe.', 'Calls in everything now (double effect), but it becomes a grudge, peers hear about it and they badmouth you — or expose what they know.')),
-          onclick: () => { if (!confirm(t(l('Queimar {n}? Não tem volta.', 'Burn {n}? There is no going back.'), { n: c.name }))) return; const r = burn27(s2, c.key, ask); cutscene27('favors27:burn', { key: c.key }); toast([t(r.text), ...r.gains.map((x) => t(x)), ...r.costs.map((x) => t(x))].join(' '), 'warn'); draw(); } }, t(l('Queimar o contato', 'Burn the contact')))),
+          onclick: async () => { if (!await askConfirm(t(l('Queimar {n}? Não tem volta.', 'Burn {n}? There is no going back.'), { n: c.name }))) return; const r = burn27(s2, c.key, ask); cutscene27('favors27:burn', { key: c.key }); toast([t(r.text), ...r.gains.map((x) => t(x)), ...r.costs.map((x) => t(x))].join(' '), 'warn'); draw(); } }, t(l('Queimar o contato', 'Burn the contact')))),
       h('p', { class: 'small muted' }, t(l('Favores fracos (<60) valem uma vez; fortes voltam a cada 2 anos. O almoço/jantar/presente custam e têm a recarga de sempre.', 'Weak favors (<60) work once; strong ones come back every 2 years. Lunch/dinner/gifts cost and cool down as usual.'))),
     );
   };

@@ -26,6 +26,7 @@ import { tabs } from '../vis';
 import { a29 } from '../art29ui'; // r29 (arte)
 import { merchImg29 } from '../pixel/things29';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 const famName = (f: string) => t(FAMILIES.find((x) => x.id === f)?.name ?? l(f, f));
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -55,7 +56,7 @@ function saleTab(s: GameState): HTMLElement {
           t(l('Não-concorrência: {y} anos nas suas regiões · consultoria: {c}/mês por 2 anos', 'Non-compete: {y} years in your regions · consulting: {c}/month for 2 years'), { y: b.nonCompete, c: b.consult ? $(b.consult) : '—' }),
           cl.cut.length || cl.keyman.length ? t(l('Saem: {n}', 'Leaving: {n}'), { n: [...cl.cut, ...cl.keyman].map((a) => a.name + (cl.keyman.includes(a) ? ` (${t(l('empresário: pessoa-chave', 'manager: key-man'))})` : '')).join(', ') }) : t(l('Todo o elenco fica.', 'The whole roster stays.')),
         ]),
-        h('button', { class: 'btn small primary', onclick: () => { if (confirm(t(l('Vender {c} para {b}? Não há volta.', 'Sell {c} to {b}? There is no going back.'), { c: s.config.companyName, b: b.name }))) res(sellLabel(s, b.id), l('Selo vendido. O que vem agora?', 'Label sold. What now?')); } }, t(l('Vender', 'Sell'))));
+        h('button', { class: 'btn small primary', onclick: async () => { if (await askConfirm(t(l('Vender {c} para {b}? Não há volta.', 'Sell {c} to {b}? There is no going back.'), { c: s.config.companyName, b: b.name }))) res(sellLabel(s, b.id), l('Selo vendido. O que vem agora?', 'Label sold. What now?')); } }, t(l('Vender', 'Sell'))));
     })) : h('p', { class: 'muted' }, '—')),
     section(t(l('Lances por masters antigos', 'Bids for old masters')),
       st.cat.length ? h('div', null, st.cat.map((b) => { const r = s.releases[b.relId]; return r ? h('div', { class: 'row wrap' }, `"${r.title}" — ${s.acts[r.actId]?.name ?? ''}: ${b.fund} ${t(l('oferece', 'offers'))} ${$(b.price)} (${t(l('rende ~{v}/ano', 'earns ~{v}/yr'), { v: $(relIncome(s, r.id)) })})`, ' ',
@@ -84,8 +85,8 @@ function afterSale(s: GameState): HTMLElement {
     section(t(l('3. Outra carreira', '3. Another career')), h('p', { class: 'small' }, t(l('Empresário, festival, casa de shows, estúdio, editora, mídia… Abra em Empreendimentos → Carreiras. Carreiras ativas: {c}.', 'Manager, festival, venue, studio, publisher, media… Open them in Ventures → Careers. Active careers: {c}.'), { c: careers(s).active.join(', ') || '—' }))),
     section(t(l('4. Aposentar-se', '4. Retire')),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn small', onclick: () => { if (confirm(t(l('Passar tudo a um herdeiro?', 'Hand everything to an heir?')))) { beginSuccession(s, rng19(s, 'act'), 'retire'); rerender(); } } }, t(l('Passar a um herdeiro', 'Hand over to an heir'))),
-        h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Encerrar a história aqui?', 'End the story here?')))) { s.ended = { ending: 'quiet_retirement', year: s.year, reason: 'arc' }; rerender(); } } }, t(l('Encerrar a história', 'End the story'))))),
+        h('button', { class: 'btn small', onclick: async () => { if (await askConfirm(t(l('Passar tudo a um herdeiro?', 'Hand everything to an heir?')))) { beginSuccession(s, rng19(s, 'act'), 'retire'); rerender(); } } }, t(l('Passar a um herdeiro', 'Hand over to an heir'))),
+        h('button', { class: 'btn small ghost', onclick: async () => { if (await askConfirm(t(l('Encerrar a história aqui?', 'End the story here?')))) { s.ended = { ending: 'quiet_retirement', year: s.year, reason: 'arc' }; rerender(); } } }, t(l('Encerrar a história', 'End the story'))))),
     section(t(l('Histórico', 'History')), logList(st.log)));
 }
 
@@ -128,7 +129,7 @@ function venuesTab(s: GameState): HTMLElement {
           select<PriceK>(o.price, (Object.keys(PRICE) as PriceK[]).map((k) => ({ value: k, label: t(PRICE[k].name) })), (v) => { setVenue17(s, o.id, { price: v }); rerender(); }),
           o.policy === 'residency' ? select(o.actId ?? '', [{ value: '', label: '—' }, ...myActs(s).map((a) => ({ value: a.id, label: a.name }))], (v) => { setVenue17(s, o.id, { actId: v || undefined }); rerender(); }) : null,
           h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.maint, onchange: () => { setVenue17(s, o.id, { maint: !o.maint }); rerender(); } }), ' ', t(l('Manutenção em dia', 'Maintenance up to date'))),
-          h('button', { class: 'btn tiny ghost', onclick: () => { if (confirm(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(sellValue(s, o)) }))) res(sellVenue17(s, o.id), l('Casa vendida.', 'Venue sold.')); } }, t(l('Vender', 'Sell')))),
+          h('button', { class: 'btn tiny ghost', onclick: async () => { if (await askConfirm(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(sellValue(s, o)) }))) res(sellVenue17(s, o.id), l('Casa vendida.', 'Venue sold.')); } }, t(l('Vender', 'Sell')))),
         h('p', { class: 'small' }, t(POLICY[o.policy].desc)),
         h('p', { class: 'small' }, t(l('Reputação {r} · conservação {c} · estimativa do mês: {a} pessoas em {n} noites, porta {d} + bar {b} − cachês {f} − manutenção {u} = {net}', 'Reputation {r} · condition {c} · month estimate: {a} people over {n} nights, door {d} + bar {b} − fees {f} − upkeep {u} = {net}'),
           { r: Math.round(o.rep), c: Math.round(o.cond), a: N(e.att), n: e.nights, d: $(e.door), b: $(e.bar), f: $(e.fees), u: $(e.upkeep), net: $(e.net) })),

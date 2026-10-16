@@ -86,7 +86,7 @@ export function homeAch27(onSwitch: () => void): HTMLElement {
     h('div', { class: 'ach27-head' },
       h('h2', { tabindex: '-1' }, '🏆 ', T(fmtL(l('Conquistas de {p}', '{p}\'s achievements'), { p: cur.name }))),
       ps.length > 1 ? h('label', { class: 'ach27-switch' }, h('span', { class: 'small muted' }, T(l('Perfil', 'Profile')), ' '),
-        select(cur.id, ps.map((p) => ({ value: p.id, label: `${p.name}${p.pin ? ' 🔒' : ''}` })), (id) => { switchProfile17(id); onSwitch(); }, { 'aria-label': T(l('Ver conquistas do perfil', 'View profile achievements')) })) : null),
+        select(cur.id, ps.map((p) => ({ value: p.id, label: `${p.name}${p.pin ? ' 🔒' : ''}` })), (id) => { void switchProfile17(id).then(() => onSwitch()); }, { 'aria-label': T(l('Ver conquistas do perfil', 'View profile achievements')) })) : null),
     h('p', { class: 'muted small' }, T(l('Ficam no perfil, de todas as partidas — apagar um save não apaga conquistas. Bloqueadas ficam escondidas.', 'Kept in the profile, from every run — deleting a save keeps them. Locked ones stay hidden.'))),
     achGrid27(v, { showRun: true, empty: l('Este perfil ainda não tem conquistas.', 'This profile has no achievements yet.') }),
     medals27(cur.id), marks27(cur.id));

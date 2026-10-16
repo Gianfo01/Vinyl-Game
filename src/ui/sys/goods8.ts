@@ -20,6 +20,7 @@ import { h, select } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
 import { investmentsTab } from './bolsa10';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -125,7 +126,7 @@ function mineTab(s: GameState): HTMLElement {
       h('td', null, $(o.paid)),
       h('td', null, $(o.value), ' ', pill(pct(gain), gain >= 0 ? 'good' : 'bad')),
       h('td', null, d ? `${$(goodUpkeep(s, d))}/${t(l('mês', 'mo'))}` : '—', o.unpaid ? pill(t(l('atrasada', 'overdue')), 'bad') : null),
-      h('td', null, h('button', { class: 'btn small', onclick: () => { if (confirm(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(saleValue(o)) }))) run(sellGood(s, o.uid), l('Vendido.', 'Sold.')); } }, `${t(l('Vender', 'Sell'))} ${$(saleValue(o))}`)));
+      h('td', null, h('button', { class: 'btn small', onclick: async () => { if (await askConfirm(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(saleValue(o)) }))) run(sellGood(s, o.uid), l('Vendido.', 'Sold.')); } }, `${t(l('Vender', 'Sell'))} ${$(saleValue(o))}`)));
   });
   return h('div', null,
     wealthChips(s),
@@ -166,7 +167,7 @@ function staffTab(s: GameState): HTMLElement {
       f ? h('div', null,
         h('p', null, pill(t(FOUNDATION[f.focus].name), 'good'), ` ${t(l('desde', 'since'))} ${f.since} · ${t(l('doado', 'given'))} ${$(f.given)}`),
         h('p', { class: 'small muted' }, t(FOUNDATION[f.focus].desc), ' ', t(l('Repasse de {v}/mês do seu bolso.', 'Transfers {v}/mo from your pocket.'), { v: $(money(s, 1500)) })),
-        h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Encerrar a fundação? A imprensa vai notar.', 'Close the foundation? The press will notice.')))) run(closeFoundation(s), l('Fundação encerrada.', 'Foundation closed.')); } }, t(l('Encerrar', 'Close'))))
+        h('button', { class: 'btn small ghost', onclick: async () => { if (await askConfirm(t(l('Encerrar a fundação? A imprensa vai notar.', 'Close the foundation? The press will notice.')))) run(closeFoundation(s), l('Fundação encerrada.', 'Foundation closed.')); } }, t(l('Encerrar', 'Close'))))
         : h('div', null,
           h('p', { class: 'small muted' }, t(l('Dotação inicial de {v} e repasse mensal de {m}. Dá reputação, fama e efeitos conforme a causa.', 'Initial endowment of {v} and a monthly transfer of {m}. Gives reputation, fame and effects depending on the cause.'), { v: $(money(s, 50000)), m: $(money(s, 1500)) })),
           h('div', { class: 'row wrap' },

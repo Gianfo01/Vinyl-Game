@@ -36,6 +36,7 @@ import './campus18.css';
 import { places27, type Place27 } from '../../sim/sys/place27';
 import { PINNED27, PLACE_IC27, insideView27, ownPlace27, placePanel27, type InsideT27 } from './place27ui';
 import { placeTabs27, zoom27 } from '../ps/zoom27';
+import { askConfirm, askText } from '../ask31';
 
 /** r27 INT: sprite de ovo desenhado no quadro e sua caixa (coordenadas do mapa). */
 interface Egg27Box { box: [number, number, number, number]; e: CityEgg27 }
@@ -167,14 +168,14 @@ function contractorPick(rerun: () => void): HTMLElement {
     CONTRACTORS18.map((c, i) => h('button', { type: 'button', role: 'radio', 'aria-checked': String(ui.q === i), class: ui.q === i ? 'on' : '', title: t(c.desc), onclick: () => { ui.q = i; rerun(); } }, t(c.name))));
 }
 
-function runAct(v: View, id: string, a: PopAct19, close: () => void, sty?: Style18): void {
+async function runAct(v: View, id: string, a: PopAct19, close: () => void, sty?: Style18): Promise<void> {
   const s = v.s;
   if (a.dis) { toast(t(a.dis), 'bad'); return; }
   if (a.go) { close(); go18(a.go); return; }
-  if (a.confirm && !confirm(t(a.confirm))) return;
+  if (a.confirm && !await askConfirm(t(a.confirm))) return;
   let e: L | null = null, ok: L = l('Feito.', 'Done.');
   if (a.ask === 'lot') { ui.moving = id; ui.pop = undefined; toast(t(l('Escolha um lote livre no mapa (marcado com +).', 'Pick a free lot on the map (marked with +).')), 'info'); rerender(); return; }
-  if (a.ask === 'name') { const n = prompt(t(l('Novo nome do prédio (vazio = nome original):', 'New building name (empty = original):')), v.bs.find((b) => b.id === id)?.name ?? ''); if (n === null) return; e = act19(s, id, 'rename', { name: n }); ok = l('Nome trocado.', 'Renamed.'); }
+  if (a.ask === 'name') { const n = await askText({ title: l('Renomear prédio', 'Rename building'), label: l('Novo nome do prédio (vazio = nome original):', 'New building name (empty = original):'), default: v.bs.find((b) => b.id === id)?.name ?? '', allowEmpty: true }); if (n === null) return; e = act19(s, id, 'rename', { name: n }); ok = l('Nome trocado.', 'Renamed.'); }
   else if (a.id.startsWith('ev:')) { e = actEv19(s, id.slice(3), a.id.slice(3)); ok = l('Decidido.', 'Decided.'); ui.pop = undefined; }
   else if (a.id === 'buy') { e = buyNb19(s, +id.slice(3)); ok = l('Imóvel comprado: o lote é seu.', 'Property bought: the lot is yours.'); if (!e) ui.pop = `lot:${id.slice(3)}`; }
   else {

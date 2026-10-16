@@ -20,7 +20,7 @@ import { YEAR_MAX20, YEAR_MIN20 } from '../../sim/worldpolicy20';
 import { cityName, modal, toast } from '../common';
 import { h, select } from '../dom';
 import { deleteSave, importSave, importSaveText, listSaves, loadGame, lastLoadErr20, saveCompatible27, savePrefs, store, type SaveMeta } from '../store';
-import { addProfile17, curProfile17, deleteProfile17, lastSave17, mySaves17, oldRow27, profiles17, renameLocal17, renameProfile17, saveErrText20, saveManagerModal17, switchProfile17 } from '../saves17';
+import { addProfile17, askNewProfile31, curProfile17, deleteProfile17, lastSave17, mySaves17, oldRow27, profiles17, renameLocal17, renameProfile17, saveErrText20, saveManagerModal17, switchProfile17 } from '../saves17';
 import { SaveError20 } from '../../core/save20';
 import { pasteCode20 } from '../newgame17';
 import { launchRun27, newGameScreen, randomSeed } from '../newgame';
@@ -34,6 +34,7 @@ import './home27.css';
 import { quickCharBlock29 } from './char29'; // r29: "Seu personagem" (nome, idade, sexo, instrumentos e banda)
 import { charLine29, isArtist29 } from './char29model';
 import { clampAge29 } from '../../sim/char29data';
+import { askFile, askText } from '../ask31'; // r31 (B): perguntas dentro do jogo
 
 /** r27: arte da tela inicial e da Nova run = a sede em pixel art do próprio jogo (hqpx27), não ilustração externa. */
 const SHOW27: [number, number, string][] = [[2, 1966, 'london'], [3, 1984, 'new_york'], [1, 1956, 'memphis'], [4, 2008, 'sao_paulo'], [0, 1977, 'liverpool'], [3, 1995, 'rio'], [5, 2030, 'tokyo'], [2, 1929, 'chicago']];
@@ -93,12 +94,13 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
     if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
     play(g);
   };
-  const fileInput = h('input', { type: 'file', style: 'display:none', 'aria-hidden': 'true', onchange: async (e: Event) => {
-    const f = (e.target as HTMLInputElement).files?.[0];
+  // r31 (B): importar por área de arrastar arquivo (com botão), dentro do jogo
+  const importFile = async () => {
+    const f = await askFile({ title: l('Importar save', 'Import save'), body: l('Arraste o arquivo do save (.json) para cá ou escolha no computador.', 'Drag the save file (.json) here or pick it from your computer.'), accept: '.json,.txt,application/json,text/plain' });
     if (!f) return;
     try { play(await importSave(f)); } catch (er) { toast(saveErrText20(er), 'bad'); }
-  } }) as HTMLInputElement;
-  const pasteSave = async () => { const tx = window.prompt(t(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'))); if (!tx) return; try { play(await importSaveText(tx)); } catch (er) { toast(saveErrText20(er), 'bad'); } };
+  };
+  const pasteSave = async () => { const tx = await askText({ title: l('Colar save', 'Paste save'), label: l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'), multiline: true, ok: l('Importar', 'Import'), hint: l('Ctrl+Enter importa.', 'Ctrl+Enter imports.') }); if (!tx) return; try { play(await importSaveText(tx)); } catch (er) { toast(saveErrText20(er), 'bad'); } };
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const savesSec = h('section', { class: 'h27-saves', id: 'h27-saves', 'aria-label': t(l('Saves e perfis', 'Saves and profiles')) });
   const redrawAch = () => homeScreen27(root, onStart, 'ach'); // troca de perfil no painel de conquistas
@@ -140,9 +142,8 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
         link(t(l('Conquistas', 'Achievements')), () => toAch(), { 'data-link': 'ach' }),
         link(t(l('Configuração completa', 'Full setup')), () => { newGameScreen(root, onStart); top27(); }),
         link(t(l('Usar código de run', 'Use a run code')), runCode),
-        link(t(l('Importar arquivo', 'Import file')), () => fileInput.click()),
-        link(t(l('Colar save', 'Paste save')), () => void pasteSave()),
-        fileInput)),
+        link(t(l('Importar arquivo', 'Import file')), () => void importFile()),
+        link(t(l('Colar save', 'Paste save')), () => void pasteSave()))),
     h('div', { class: 'h27-foot' }, h('span', null, 'PIXEL STUDIO EDITION'), h('span', null, t(l('1889 — 2040 E ALÉM · SIMULAÇÃO HISTÓRICA & SANDBOX', '1889 — 2040 AND BEYOND · HISTORICAL SIMULATION & SANDBOX')))));
 
   // ---- perfis e saves
@@ -153,8 +154,8 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
     profBox.replaceChildren(...profiles17().map((p) => h('div', { class: `h27-row ${p.id === cur.id ? 'on' : ''}`, 'data-profile': p.id },
       h('span', { class: 'h27-row-main' }, h('b', null, p.name, p.pin ? ' 🔒' : ''), h('small', { class: 'muted' }, p.id === cur.id ? t(l('perfil atual', 'current profile')) : p.id === 'default' ? t(l('perfil padrão', 'default profile')) : '')),
       h('span', { class: 'h27-acts' },
-        p.id === cur.id ? null : h('button', { type: 'button', class: 'btn small', onclick: () => { if (switchProfile17(p.id)) redrawSaves(); } }, t(l('Usar', 'Use'))),
-        h('button', { type: 'button', class: 'btn small ghost', title: t(l('Renomear', 'Rename')), 'aria-label': `${t(l('Renomear', 'Rename'))}: ${p.name}`, onclick: () => { const n = window.prompt(t(l('Nome do perfil:', 'Profile name:')), p.name); if (n) { renameProfile17(p.id, n); redrawSaves(); } } }, '✎'),
+        p.id === cur.id ? null : h('button', { type: 'button', class: 'btn small', onclick: async () => { if (await switchProfile17(p.id)) redrawSaves(); } }, t(l('Usar', 'Use'))),
+        h('button', { type: 'button', class: 'btn small ghost', title: t(l('Renomear', 'Rename')), 'aria-label': `${t(l('Renomear', 'Rename'))}: ${p.name}`, onclick: async () => { const n = await askText({ title: l('Renomear perfil', 'Rename profile'), label: l('Nome do perfil:', 'Profile name:'), default: p.name }); if (n) { renameProfile17(p.id, n); redrawSaves(); } } }, '✎'),
         p.id === 'default' ? null : h('button', { type: 'button', class: 'btn small ghost h27-del', title: t(l('Apagar perfil', 'Delete profile')), 'aria-label': `${t(l('Apagar perfil', 'Delete profile'))}: ${p.name}`, onclick: async () => {
           const n = (await mySavesOf27(p.id)).length;
           const na = profAchCount27(p.id);
@@ -169,12 +170,11 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
           redrawSaves();
         } }, '🗑'))),
     ),
-    h('button', { type: 'button', class: 'btn small ghost h27-add', onclick: () => {
-      const n = window.prompt(t(l('Nome da pessoa:', 'Person\'s name:')));
-      if (!n) return;
-      const pin = window.prompt(t(l('PIN opcional (deixe vazio para nenhum). É uma trava leve contra cliques por engano, não uma senha forte.', 'Optional PIN (leave empty for none). A light lock against accidental clicks, not a strong password.'))) || undefined;
-      const p = addProfile17(n, pin);
-      switchProfile17(p.id);
+    h('button', { type: 'button', class: 'btn small ghost h27-add', onclick: async () => {
+      const prof = await askNewProfile31();
+      if (!prof) return;
+      const p = addProfile17(prof.name, prof.pin);
+      await switchProfile17(p.id);
       redrawSaves();
     } }, '+ ', t(l('Novo perfil', 'New profile'))));
   };
@@ -194,7 +194,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
         h('button', { type: 'button', class: 'btn small h27-load', onclick: () => void loadSlot(m) }, '▶ ', `${m.name || (m.kind === 'auto' || m.slot.startsWith('auto') ? t(l('Autosave', 'Autosave')) : t(l('Save', 'Save')))} — ${monthName(m.month)} ${m.year}`),
         h('small', { class: 'muted h27-row-main' }, [m.cash !== undefined ? formatMoney(m.cash, locale()) : '', ago27(m.savedAt)].filter(Boolean).join(' · ')),
         h('span', { class: 'h27-acts' },
-          h('button', { type: 'button', class: 'btn small ghost', title: t(l('Renomear', 'Rename')), 'aria-label': t(l('Renomear', 'Rename')), onclick: async () => { const n = window.prompt(t(l('Nome do save:', 'Save name:')), m.name || m.company); if (n !== null) { await renameLocal17(m.slot, n); void drawSaves(); } } }, '✎'),
+          h('button', { type: 'button', class: 'btn small ghost', title: t(l('Renomear', 'Rename')), 'aria-label': t(l('Renomear', 'Rename')), onclick: async () => { const n = await askText({ title: l('Renomear save', 'Rename save'), label: l('Nome do save:', 'Save name:'), default: m.name || m.company, allowEmpty: true }); if (n !== null) { await renameLocal17(m.slot, n); void drawSaves(); } } }, '✎'),
           h('button', { type: 'button', class: 'btn small ghost h27-del', title: t(l('Apagar save', 'Delete save')), 'aria-label': t(l('Apagar save', 'Delete save')), onclick: async () => {
             const ok = await choose27(t(l('Apagar save', 'Delete save')), t(l('Apagar "{n}" ({d})? Não dá para desfazer.', 'Delete "{n}" ({d})? This cannot be undone.'), { n: m.name || m.company, d: `${monthName(m.month)} ${m.year}` }), [{ id: 'yes', label: t(l('Apagar', 'Delete')), danger: true }]);
             if (!ok) return;
@@ -212,7 +212,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
       h('div', { class: 'h27-panel h27-panel-wide' }, h('h2', null, t(l('Saves de {p}', '{p}\'s saves'), { p: curProfile17().name })),
         h('div', { class: 'row wrap h27-tools' },
           h('button', { type: 'button', class: 'btn small ghost', onclick: () => saveManagerModal17(play) }, t(l('Exportar, duplicar e nuvem…', 'Export, duplicate and cloud…'))),
-          h('button', { type: 'button', class: 'btn small ghost', onclick: () => fileInput.click() }, t(l('Importar arquivo', 'Import file'))),
+          h('button', { type: 'button', class: 'btn small ghost', onclick: () => void importFile() }, t(l('Importar arquivo', 'Import file'))),
           h('button', { type: 'button', class: 'btn small ghost', onclick: () => void pasteSave() }, t(l('Colar save', 'Paste save')))),
         saveBox),
       achSec = homeAch27(redrawAch)),

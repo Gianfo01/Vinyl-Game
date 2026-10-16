@@ -20,6 +20,7 @@ import './start17.css';
 import { clearProfAch27 } from './ach27store';
 import { encodeSave20, SaveError20 } from '../core/save20';
 import { errName20, health20, isQuota23, quotaText23, retry20, setHealth20 } from './savehealth20';
+import { askConfirm, askFile, askText } from './ask31';
 
 // ---------------------------------------------------------------- armazenamento local cru
 
@@ -59,7 +60,7 @@ export function oldRow27(m: SaveMeta, after: () => void): HTMLElement {
     h('span', { class: 'muted' }, `⚠ ${m.name || m.company} — ${m.year} · `, h('b', null, t(l('incompatível (versão antiga)', 'incompatible (old version)')))),
     h('small', { class: 'muted' }, t(l('O modelo histórico mudou: este save não abre mais.', 'The historical model changed: this save no longer opens.'))),
     h('span', { class: 'sv17-acts' }, h('button', { type: 'button', class: 'btn small danger', onclick: async () => {
-      if (!window.confirm(t(l('Excluir este save antigo?', 'Delete this old save?')))) return;
+      if (!await askConfirm(t(l('Excluir este save antigo?', 'Delete this old save?')))) return;
       await deleteSave(m.slot); after();
     } }, t(l('Excluir', 'Delete')))));
 }
@@ -108,12 +109,19 @@ export function addProfile17(name: string, pin?: string): Profile17 {
   writeJ(PKEY, [...ps, p]);
   return p;
 }
-export function switchProfile17(id: string): boolean {
+export async function switchProfile17(id: string): Promise<boolean> {
   const p = profiles17().find((x) => x.id === id);
   if (!p) return false;
-  if (p.pin) { const v = window.prompt(t(l('PIN de {n}:', 'PIN for {n}:'), { n: p.name })); if (v === null || pinHash(v) !== p.pin) { toast(t(l('PIN errado.', 'Wrong PIN.')), 'bad'); return false; } }
+  if (p.pin) { const v = await askText({ title: l('Perfil com PIN', 'PIN-locked profile'), label: t(l('PIN de {n}:', 'PIN for {n}:'), { n: p.name }), secret: true, allowEmpty: true }); if (v === null || pinHash(v) !== p.pin) { toast(t(l('PIN errado.', 'Wrong PIN.')), 'bad'); return false; } }
   writeJ('vtn:profile17', id);
   return true;
+}
+/** r31 (B): novo perfil dentro do jogo — nome e depois PIN opcional (painel do jogo, sem janela do navegador). */
+export async function askNewProfile31(): Promise<{ name: string; pin?: string } | null> {
+  const name = await askText({ title: l('Novo perfil', 'New profile'), label: l('Nome da pessoa:', 'Person\'s name:') });
+  if (!name) return null;
+  const pin = await askText({ title: l('Novo perfil', 'New profile'), label: l('PIN opcional (deixe vazio para nenhum)', 'Optional PIN (leave empty for none)'), hint: l('É uma trava leve contra cliques por engano, não uma senha forte.', 'A light lock against accidental clicks, not a strong password.'), secret: true, allowEmpty: true, ok: l('Criar perfil', 'Create profile') });
+  return { name, pin: pin || undefined }; // cancelar o PIN = perfil sem PIN (como antes)
 }
 export const curProfile17 = (): Profile17 => profiles17().find((p) => p.id === profileId17()) ?? profiles17()[0];
 /** r27: apaga um perfil (e as conquistas dele). Os saves dele vão para "Jogador 1" (padrão) ou, com `withSaves`, são apagados também.
@@ -213,7 +221,7 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
   const box = h('div', { class: 'sv17' });
   const localBox = h('div', { class: 'sv17-list' }, h('p', { class: 'muted small' }, '…'));
   const cloudBox = h('div', { class: 'sv17-list' }, h('p', { class: 'muted small' }, '…'));
-  const ask = (q: L, v = '') => window.prompt(t(q), v);
+  const ask = (q: L, v = '', o: { title?: L; multiline?: boolean } = {}) => askText({ title: o.title ?? q, label: q, default: v, multiline: o.multiline, allowEmpty: !o.multiline });
   const act = (label: string, fn: () => unknown, cls = 'btn small ghost', title?: string) => h('button', { type: 'button', class: cls, title, onclick: async () => { try { await fn(); } catch (e) { toast((e as Error)?.message === 'nocloud' ? t(l('Nuvem indisponível.', 'Cloud unavailable.')) : String((e as Error)?.message || e), 'bad'); } } }, label);
   const drawLocal = async () => {
     let list: SaveMeta[];
@@ -236,12 +244,12 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
             `▶ ${m.name || (m.kind === 'auto' || m.slot.startsWith('auto') ? t(l('Autosave', 'Autosave')) : t(l('Save', 'Save')))} — ${monthName(m.month)} ${m.year}`),
           h('small', { class: 'muted' }, `${m.cash !== undefined ? formatMoney(m.cash, locale()) + ' · ' : ''}${kb(m.size)} · ${ago(m.savedAt)}`),
           h('span', { class: 'sv17-acts' },
-            act('✎', async () => { const n = ask(l('Nome do save:', 'Save name:'), m.name || m.company); if (n !== null) { await renameLocal17(m.slot, n); void drawLocal(); } }, 'btn small ghost', t(l('Renomear', 'Rename'))),
+            act('✎', async () => { const n = await ask(l('Nome do save:', 'Save name:'), m.name || m.company, { title: l('Renomear save', 'Rename save') }); if (n !== null) { await renameLocal17(m.slot, n); void drawLocal(); } }, 'btn small ghost', t(l('Renomear', 'Rename'))),
             m.ironman ? null : act('⧉', async () => { await duplicateLocal17(m.slot); void drawLocal(); toast(t(l('Cópia criada.', 'Copy created.')), 'good'); }, 'btn small ghost', t(l('Duplicar', 'Duplicate'))),
             act('⇩', async () => { const tx = await exportText17(m.slot); if (!tryDownload(`masters-${m.company.replace(/[^\w-]+/g, '_')}-${m.year}.vtn.txt`, tx, 'text/plain')) { await copyText(tx); toast(t(l('Download bloqueado: texto copiado.', 'Download blocked: text copied.')), 'good'); } }, 'btn small ghost', t(l('Exportar (arquivo)', 'Export (file)'))),
             act('⎘', async () => { const ok = await copyText(await exportText17(m.slot)); toast(ok ? t(l('Save copiado como texto.', 'Save copied as text.')) : t(l('Não deu para copiar.', 'Could not copy.')), ok ? 'good' : 'bad'); }, 'btn small ghost', t(l('Copiar como texto', 'Copy as text'))),
             act('☁', async () => { const j = await recJson(m.slot); if (!j) return; await uploadGame17(await importSaveText(j), m.name).catch((e) => { if ((e as Error).message === 'nocloud') throw e; throw new Error(cloudErr(e)); }); toast(t(l('Enviado para a sua nuvem.', 'Sent to your cloud.')), 'good'); void drawCloud(); }, 'btn small ghost', t(l('Enviar para a nuvem', 'Send to cloud'))),
-            act('🗑', async () => { if (!window.confirm(t(l('Apagar este save?', 'Delete this save?')))) return; await deleteSave(m.slot); void drawLocal(); }, 'btn small ghost', t(l('Apagar', 'Delete'))),
+            act('🗑', async () => { if (!await askConfirm(t(l('Apagar este save?', 'Delete this save?')))) return; await deleteSave(m.slot); void drawLocal(); }, 'btn small ghost', t(l('Apagar', 'Delete'))),
           ))));
     }));
   };
@@ -258,24 +266,24 @@ export function saveManager17(play: (g: GameState) => void, o: { profiles?: bool
         h('button', { type: 'button', class: 'btn small', onclick: async () => { try { const j = await cloudLoad17(c.db, c.uid, m.slot); if (!j) return; const g = await importSaveText(j); await storeGame(g, `cloud-${m.slot}`, m.name); play(g); } catch (e) { toast(cloudErr(e), 'bad'); } } }, `▶ ${m.name} — ${m.year}`),
         h('small', { class: 'muted' }, `${m.player ? m.player + ' · ' : ''}${kb(m.size)} · ${m.chunks} ${t(l('parte(s)', 'part(s)'))} · ${ago(m.ts)}`),
         h('span', { class: 'sv17-acts' },
-          act('✎', async () => { const n = ask(l('Nome do save:', 'Save name:'), m.name); if (n !== null) { await cloudRename17(c.db, c.uid, m.slot, n).catch((e) => { throw new Error(cloudErr(e)); }); void drawCloud(); } }, 'btn small ghost', t(l('Renomear', 'Rename'))),
-          act('🗑', async () => { if (!window.confirm(t(l('Apagar este save da nuvem?', 'Delete this cloud save?')))) return; await cloudDelete17(c.db, c.uid, m.slot).catch((e) => { throw new Error(cloudErr(e)); }); void drawCloud(); }, 'btn small ghost', t(l('Apagar', 'Delete')))))) : [h('p', { class: 'muted small' }, t(l('Nada na nuvem ainda: use ☁ num save local.', 'Nothing in the cloud yet: use ☁ on a local save.')))]),
+          act('✎', async () => { const n = await ask(l('Nome do save:', 'Save name:'), m.name, { title: l('Renomear save', 'Rename save') }); if (n !== null) { await cloudRename17(c.db, c.uid, m.slot, n).catch((e) => { throw new Error(cloudErr(e)); }); void drawCloud(); } }, 'btn small ghost', t(l('Renomear', 'Rename'))),
+          act('🗑', async () => { if (!await askConfirm(t(l('Apagar este save da nuvem?', 'Delete this cloud save?')))) return; await cloudDelete17(c.db, c.uid, m.slot).catch((e) => { throw new Error(cloudErr(e)); }); void drawCloud(); }, 'btn small ghost', t(l('Apagar', 'Delete')))))) : [h('p', { class: 'muted small' }, t(l('Nada na nuvem ainda: use ☁ num save local.', 'Nothing in the cloud yet: use ☁ on a local save.')))]),
     );
   };
-  const file = h('input', { type: 'file', style: 'display:none', onchange: async (e: Event) => {
-    const f = (e.target as HTMLInputElement).files?.[0];
+  // r31 (B): importar por área de arrastar arquivo (com botão), dentro do jogo
+  const importFile = async () => {
+    const f = await askFile({ title: l('Importar save', 'Import save'), body: l('Arraste o arquivo do save para cá ou escolha no computador. Ele entra num slot novo.', 'Drag the save file here or pick it from your computer. It goes into a new slot.'), accept: '.json,.txt,.vtn,application/json,text/plain' });
     if (!f) return;
     try { await importToSlot17(await readSaveFile23(f), f.name.replace(/\.(json|txt|vtn)+$/g, '')); toast(t(l('Save importado para um slot novo.', 'Save imported into a new slot.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); }
-  } }) as HTMLInputElement;
+  };
   box.append(
     o.profiles === false ? '' : profileBar17(() => { void drawLocal(); }),
     h('h4', null, t(l('Neste navegador', 'In this browser'))),
     h('p', { class: 'muted small' }, t(l('O limite depende do navegador; exporte um backup de vez em quando. Cada partida guarda 3 autosaves (o último de cada um dos 3 anos mais recentes; ironman: só 1).', 'The limit depends on the browser; export a backup now and then. Each run keeps 3 autosaves (the last of each of the 3 most recent years; ironman: just 1).'))),
     h('div', { class: 'row wrap' },
-      store.game && !store.game.config.ironman ? act(t(l('Salvar como novo…', 'Save as new…')), async () => { const n = ask(l('Nome do save:', 'Save name:'), `${store.game!.config.companyName} ${store.game!.year}`); if (n === null) return; const ok = await saveGame(`man-${Date.now().toString(36)}`, n); toast(ok ? t(l('Salvo.', 'Saved.')) : (health20.local.err ?? 'Erro'), ok ? 'good' : 'bad'); void drawLocal(); }, 'btn small') : null,
-      act(t(l('Importar arquivo', 'Import file')), () => file.click()),
-      act(t(l('Colar texto de save', 'Paste save text')), async () => { const tx = ask(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)')); if (!tx) return; try { await importToSlot17(tx); toast(t(l('Save importado.', 'Save imported.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); } }),
-      file),
+      store.game && !store.game.config.ironman ? act(t(l('Salvar como novo…', 'Save as new…')), async () => { const n = await ask(l('Nome do save:', 'Save name:'), `${store.game!.config.companyName} ${store.game!.year}`, { title: l('Salvar como novo', 'Save as new') }); if (n === null) return; const ok = await saveGame(`man-${Date.now().toString(36)}`, n); toast(ok ? t(l('Salvo.', 'Saved.')) : (health20.local.err ?? 'Erro'), ok ? 'good' : 'bad'); void drawLocal(); }, 'btn small') : null,
+      act(t(l('Importar arquivo', 'Import file')), () => importFile()),
+      act(t(l('Colar texto de save', 'Paste save text')), async () => { const tx = await ask(l('Cole o texto do save (JSON ou VTN1:...)', 'Paste the save text (JSON or VTN1:...)'), '', { title: l('Colar texto de save', 'Paste save text'), multiline: true }); if (!tx) return; try { await importToSlot17(tx); toast(t(l('Save importado.', 'Save imported.')), 'good'); void drawLocal(); } catch (er) { toast(saveErrText20(er), 'bad'); } })),
     localBox,
     h('h4', null, t(l('Na nuvem (sua conta do claude.ai)', 'In the cloud (your claude.ai account)'))),
     cloudBox,
@@ -292,12 +300,11 @@ export function profileBar17(onSwitch: () => void): HTMLElement {
     const cur = curProfile17();
     bar.replaceChildren(
       h('span', { class: 'small' }, '👤 ', t(l('Perfil:', 'Profile:')), ' '),
-      ...profiles17().map((p) => h('button', { type: 'button', class: `btn small ${p.id === cur.id ? 'primary' : 'ghost'}`, 'aria-pressed': String(p.id === cur.id), onclick: () => { if (p.id !== cur.id && switchProfile17(p.id)) { draw(); onSwitch(); } } }, `${p.name}${p.pin ? ' 🔒' : ''}`)),
-      h('button', { type: 'button', class: 'btn small ghost', onclick: () => {
-        const n = window.prompt(t(l('Nome da pessoa:', 'Person\'s name:')));
-        if (!n) return;
-        const pin = window.prompt(t(l('PIN opcional (deixe vazio para nenhum). É uma trava leve contra cliques por engano, não uma senha forte.', 'Optional PIN (leave empty for none). A light lock against accidental clicks, not a strong password.'))) || undefined;
-        const p = addProfile17(n, pin);
+      ...profiles17().map((p) => h('button', { type: 'button', class: `btn small ${p.id === cur.id ? 'primary' : 'ghost'}`, 'aria-pressed': String(p.id === cur.id), onclick: async () => { if (p.id !== cur.id && await switchProfile17(p.id)) { draw(); onSwitch(); } } }, `${p.name}${p.pin ? ' 🔒' : ''}`)),
+      h('button', { type: 'button', class: 'btn small ghost', onclick: async () => {
+        const prof = await askNewProfile31();
+        if (!prof) return;
+        const p = addProfile17(prof.name, prof.pin);
         writeJ('vtn:profile17', p.id);
         draw(); onSwitch();
       } }, '+ ', t(l('Pessoa', 'Person'))),

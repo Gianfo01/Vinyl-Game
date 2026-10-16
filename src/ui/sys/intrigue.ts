@@ -16,6 +16,7 @@ import { lifeEventsSection } from './lifeevents10';
 import { ic } from '../vis';
 import { visibleAct } from '../../sim/future';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -70,7 +71,7 @@ function secretsSection(s: GameState): HTMLElement {
         h('div', { class: 'small' }, t(def.name)),
         h('small', { class: 'muted' }, def.criminal ? t(l('Crime: reutilizável a cada 5 anos.', 'A crime: reusable every 5 years.')) : t(l('Vergonhoso: uso único.', 'Shameful: single use.'))),
         ready ? h('div', { class: 'row wrap' }, uses.map((u) => h('button', { class: 'btn small', title: t(HOOK_USES[u].desc), onclick: () => say(useHook(s, rng19(s, 'act'), sec.id, u), l('Gancho usado.', 'Hook used.')) }, t(HOOK_USES[u].name)))) : h('small', { class: 'muted' }, t(l('Gancho já usado.', 'Hook already used.'))),
-        h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Expor o segredo publicamente? O gancho se perde.', 'Expose the secret publicly? The hook is lost.')))) say(exposeSecret(s, sec.id), l('Segredo exposto.', 'Secret exposed.')); } }, t(l('Expor publicamente', 'Expose publicly'))),
+        h('button', { class: 'btn small ghost', onclick: async () => { if (await askConfirm(t(l('Expor o segredo publicamente? O gancho se perde.', 'Expose the secret publicly? The hook is lost.')))) say(exposeSecret(s, sec.id), l('Segredo exposto.', 'Secret exposed.')); } }, t(l('Expor publicamente', 'Expose publicly'))),
       );
     })) : h('p', { class: 'muted small' }, t(l('Nenhum segredo conhecido. Use a trama Investigar, ou fique de ouvidos abertos em galas e retiros.', 'No known secrets. Use the Dig scheme, or keep your ears open at galas and retreats.'))),
   );

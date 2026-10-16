@@ -31,6 +31,7 @@ import { fxText } from './sys/persona';
 import { copyText } from './store';
 import { historyCard } from './history15';
 import './start17.css';
+import { askText } from './ask31'; // r31 (B)
 
 // o cartão antigo "História dos artistas reais" virou parte do seletor Mundo
 (historyCard as { hidden17?: boolean }).hidden17 = true;
@@ -93,7 +94,7 @@ export function presetBar17(cfg: RunConfig, rebuild: () => void): HTMLElement {
 /** r20: copiar o código desta configuração (fica na Revisão). */
 export function copyCode20(cfg: RunConfig): HTMLElement {
   return h('div', { class: 'row wrap ng17-code' },
-    h('button', { type: 'button', class: 'btn small ghost', onclick: async () => { const c = setupCode17(cfg); const ok = await copyText(c); if (!ok) window.prompt(t(l('Copie o código:', 'Copy the code:')), c); else toast(t(l('Código da partida copiado.', 'Run code copied.')), 'good'); } }, '⎘ ', t(l('Copiar código desta partida', 'Copy this run\'s code'))),
+    h('button', { type: 'button', class: 'btn small ghost', onclick: async () => { const c = setupCode17(cfg); const ok = await copyText(c); if (!ok) void askText({ title: l('Código da partida', 'Run code'), label: l('Copie o código:', 'Copy the code:'), default: c, readonly: true }); else toast(t(l('Código da partida copiado.', 'Run code copied.')), 'good'); } }, '⎘ ', t(l('Copiar código desta partida', 'Copy this run\'s code'))),
     helpTip(HELP17.code17));
 }
 
@@ -111,8 +112,8 @@ export function restoreDefault20(cfg: RunConfig, rebuild: () => void): HTMLEleme
 }
 
 /** r20: "Usar código de run" — valida ANTES de tocar no rascunho; o código mantém a própria configuração (sem o padrão novo por cima). */
-export function pasteCode20(cfg: RunConfig, after: () => void): void {
-  const tx = window.prompt(t(l('Cole o código (MST17:...)', 'Paste the code (MST17:...)')));
+export async function pasteCode20(cfg: RunConfig, after: () => void): Promise<void> {
+  const tx = await askText({ title: l('Usar código de run', 'Use a run code'), label: l('Cole o código (MST17:...)', 'Paste the code (MST17:...)'), multiline: true, ok: l('Usar', 'Use') });
   if (!tx) return;
   const c = readSetupCode17(tx);
   if (!c) return void toast(setupCodeError20(tx) === 'future' ? t(l('Código de uma versão mais nova do jogo: atualize para usá-lo. Seu rascunho não mudou.', 'Code from a newer game version: update to use it. Your draft did not change.')) : t(l('Código inválido. Seu rascunho não mudou.', 'Invalid code. Your draft did not change.')), 'bad');

@@ -1,0 +1,19 @@
+/* R31 (B) — painel de perguntas do jogo (no lugar de alert/confirm/prompt). Herda .overlay/.modal do tema. */
+.overlay.ask31 { z-index: 300; align-items: center; padding: 1rem; }
+.ask31-panel { width: min(440px, 100%); border-width: 2px; border-color: var(--accent); }
+.ask31-panel header h2 { font-size: 1.05rem; }
+.ask31-body p { margin: 0 0 0.6rem; line-height: 1.45; }
+.ask31-label { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 0.35rem; }
+.ask31-input { width: 100%; box-sizing: border-box; font: inherit; padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--ink); }
+textarea.ask31-input { resize: vertical; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+.ask31-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ask31-hint { display: block; margin-top: 0.35rem; }
+.ask31-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; margin-top: 0.9rem; }
+.ask31-actions .btn { min-width: 6.5rem; justify-content: center; }
+.ask31-actions .btn.danger { background: var(--bad); color: #fff; border-color: var(--bad); font-weight: 600; }
+.ask31-actions .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.ask31-drop { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 1.4rem 1rem; border: 2px dashed var(--line); border-radius: 12px; background: var(--panel-2); color: var(--muted); cursor: pointer; text-align: center; }
+.ask31-drop:hover, .ask31-drop:focus-visible, .ask31-drop.over { border-color: var(--accent); color: var(--ink); outline: none; }
+.ask31-drop-ico { font-size: 1.8rem; line-height: 1; }
+.ask31-file { display: none; }
+@media (max-width: 480px) { .ask31-actions .btn { flex: 1 1 auto; } }

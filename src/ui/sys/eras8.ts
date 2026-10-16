@@ -11,6 +11,7 @@ import { h } from '../dom';
 import { registerSection, registerTab } from '../registry';
 import { ic, setTab } from '../vis';
 import { store } from '../store';
+import { askConfirm } from '../ask31';
 
 const FX_NAMES: Record<keyof StanceFx, L> = {
   appeal: l('apelo', 'appeal'), single: l('singles', 'singles'), ep: l('EPs', 'EPs'), lp: l('LPs', 'LPs'), fresh: l('discos novos', 'new records'),
@@ -45,8 +46,8 @@ function eraPanel(s: GameState): HTMLElement {
               h('b', null, t(x.name), ' ', on ? pill(t(l('sua postura', 'your stance')), 'good') : null),
               h('small', null, t(x.desc)), fxChips(x, 1),
               h('small', { class: 'muted' }, t(l('Rivais: {n}', 'Rivals: {n}'), { n: rivalStances(s, cur.id).find((r) => r.stance.id === x.id)?.labels.length ?? 0 })),
-              !on && !asked ? h('button', { class: 'btn small', disabled: waitPivot > 0, title: waitPivot ? t(l('Carência: {n} semanas', 'Cooldown: {n} weeks'), { n: waitPivot }) : '', onclick: () => {
-                if (!confirm(t(l('Mudar de rumo custa {v} e um pouco de reputação comercial. Confirmar?', 'Changing course costs {v} and some commercial reputation. Confirm?'), { v: $(money(s, PIVOT_COST)) }))) return;
+              !on && !asked ? h('button', { class: 'btn small', disabled: waitPivot > 0, title: waitPivot ? t(l('Carência: {n} semanas', 'Cooldown: {n} weeks'), { n: waitPivot }) : '', onclick: async () => {
+                if (!await askConfirm(t(l('Mudar de rumo custa {v} e um pouco de reputação comercial. Confirmar?', 'Changing course costs {v} and some commercial reputation. Confirm?'), { v: $(money(s, PIVOT_COST)) }))) return;
                 const e = pivotStance(s, x.id);
                 toast(t(e ?? l('Nova postura adotada.', 'New stance adopted.')), e ? 'bad' : 'good');
                 rerender();

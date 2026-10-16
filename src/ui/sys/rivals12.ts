@@ -13,6 +13,7 @@ import { h } from '../dom';
 import { registerPageTab, registerSection, type SectionHost } from '../registry';
 import { ic } from '../vis';
 import './rivals12.css';
+import { askConfirm } from '../ask31';
 
 const ICON: Record<ContestKind, string> = { bid: 'gavel', auction: 'gavel', date: 'calendar', producer: 'mic', market: 'globe', catalog: 'disc', fest: 'star', deal: 'handshake', deal_end: 'broken-heart', info: 'newspaper' };
 const KIND: Record<ContestKind, L> = {
@@ -56,7 +57,7 @@ function dealsBlock(s: GameState): HTMLElement | null {
     h('ul', { class: 'small' }, on.map((d) => h('li', null, labelLink(s, d.lb), ` — ${t(marketById[d.m].name)} · ${$(d.fee)}/${t(l('mês', 'mo'))} · ${t(l('até a semana', 'until week'))} ${d.until} `,
       h('span', { class: 'meter-bar sm', title: `${t(l('Tensão', 'Tension'))} ${Math.round(d.ten)}/100` }, h('span', { style: `width:${Math.round(d.ten)}%;background:${d.ten > 70 ? 'var(--bad, #c33)' : ''}` })),
       ` ${t(l('tensão', 'tension'))} ${Math.round(d.ten)} `,
-      h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Encerrar o acordo? O parceiro não vai gostar.', 'End the deal? The partner will not like it.')))) { endDeal(s, d.id); rerender(); } } }, t(l('Encerrar', 'End')))))),
+      h('button', { class: 'btn small ghost', onclick: async () => { if (await askConfirm(t(l('Encerrar o acordo? O parceiro não vai gostar.', 'End the deal? The partner will not like it.')))) { endDeal(s, d.id); rerender(); } } }, t(l('Encerrar', 'End')))))),
   );
 }
 

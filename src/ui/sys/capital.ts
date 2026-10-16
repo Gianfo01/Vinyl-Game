@@ -15,6 +15,7 @@ import { h, select } from '../dom';
 import { registerTab } from '../registry';
 import { chips, ic, stat } from '../vis';
 import { rng19 } from '../../sim/rng19';
+import { askConfirm } from '../ask31';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
@@ -30,7 +31,7 @@ export function transferSection(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', title: t(l('Seu dinheiro vira capital da empresa. Com sócios, sua fatia cresce.', 'Your money becomes company capital. With partners, your stake grows.')), onclick: () => say(injectCapital(s, amount), l('Aporte feito.', 'Capital injected.')) }, ic('money'), ' ', t(l('Aportar na empresa', 'Inject into the company'))),
       h('button', { class: 'btn small', title: t(l('A empresa devolve 3% do saldo + 1% de juros por mês.', 'The company pays back 3% of the balance + 1% interest a month.')), onclick: () => say(lendToCompany(s, amount), l('Empréstimo feito.', 'Loan made.')) }, t(l('Emprestar à empresa', 'Lend to the company'))),
-      h('button', { class: 'btn small ghost', title: t(l('20% de imposto; sócios, acionistas e artistas reagem.', '20% tax; partners, shareholders and artists react.')), onclick: () => { if (confirm(t(l('Retirar ${v} da empresa? Haverá imposto e reações.', 'Withdraw ${v} from the company? There will be tax and reactions.'), { v: amount }))) say(withdrawFromCompany(s, rng19(s, 'act'), amount), l('Retirada feita.', 'Withdrawal made.')); } }, t(l('Retirar para o bolso', 'Withdraw to your pocket'))),
+      h('button', { class: 'btn small ghost', title: t(l('20% de imposto; sócios, acionistas e artistas reagem.', '20% tax; partners, shareholders and artists react.')), onclick: async () => { if (await askConfirm(t(l('Retirar ${v} da empresa? Haverá imposto e reações.', 'Withdraw ${v} from the company? There will be tax and reactions.'), { v: amount }))) say(withdrawFromCompany(s, rng19(s, 'act'), amount), l('Retirada feita.', 'Withdrawal made.')); } }, t(l('Retirar para o bolso', 'Withdraw to your pocket'))),
     ),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: c.companyCard, onchange: () => { toggleCompanyCard(s); rerender(); } }),
       t(l('Pagar despesas pessoais com o cartão da empresa (economiza seu bolso; uma auditoria pode descobrir — mais provável com sócios ou em bolsa)', 'Pay personal expenses with the company card (saves your pocket; an audit may find out — likelier with partners or when listed)'))),
@@ -58,7 +59,7 @@ function investorsSection(s: GameState): HTMLElement {
       inv.buyout ? h('p', { class: 'bad small' }, t(l('Quer sair: recompre até a semana {w} ou a fatia vai para um rival.', 'Wants out: buy back by week {w} or the stake goes to a rival.'), { w: inv.buyout.until })) : null,
       h('div', { class: 'row wrap' },
         h('button', { class: 'btn small', onclick: () => say(meetInvestor(s, inv.id), l('Boa conversa.', 'Good talk.')) }, t(l('Reunião (1 tempo)', 'Meeting (1 time)'))),
-        h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Recomprar por {v} com caixa da empresa?', 'Buy back for {v} with company cash?'), { v: $(buybackPrice(s, inv)) }))) say(buyBack(s, inv.id, 'company'), l('Participação recomprada.', 'Stake bought back.')); } }, `${t(l('Recomprar (empresa)', 'Buy back (company)'))} ${$(buybackPrice(s, inv))}`),
+        h('button', { class: 'btn small ghost', onclick: async () => { if (await askConfirm(t(l('Recomprar por {v} com caixa da empresa?', 'Buy back for {v} with company cash?'), { v: $(buybackPrice(s, inv)) }))) say(buyBack(s, inv.id, 'company'), l('Participação recomprada.', 'Stake bought back.')); } }, `${t(l('Recomprar (empresa)', 'Buy back (company)'))} ${$(buybackPrice(s, inv))}`),
         h('button', { class: 'btn small ghost', onclick: () => say(buyBack(s, inv.id, 'personal'), l('Participação recomprada com seu dinheiro.', 'Stake bought back with your money.')) }, t(l('Recomprar (seu bolso)', 'Buy back (your pocket)'))),
       ),
     );
@@ -129,7 +130,7 @@ function ipoSection(s: GameState): HTMLElement {
       h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { road = (e.target as HTMLInputElement).checked; draw(); } }), t(l('Roadshow (+5%, 2 tempos)', 'Roadshow (+5%, 2 time)'))),
     ),
     box,
-    h('button', { class: 'btn primary small', onclick: () => { if (confirm(t(l('Abrir capital agora?', 'Go public now?')))) say(goPublic6(s, float, uw, road), l('Sino tocado! A empresa está na bolsa.', 'Bell rung! The company is listed.')); } }, ic('gavel'), ' ', t(l('Abrir capital', 'Go public'))),
+    h('button', { class: 'btn primary small', onclick: async () => { if (await askConfirm(t(l('Abrir capital agora?', 'Go public now?')))) say(goPublic6(s, float, uw, road), l('Sino tocado! A empresa está na bolsa.', 'Bell rung! The company is listed.')); } }, ic('gavel'), ' ', t(l('Abrir capital', 'Go public'))),
   );
 }
 
