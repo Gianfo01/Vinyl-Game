@@ -375,6 +375,7 @@ import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também 
 import './family29'; // R29 (família): vida familiar de todo artista NPC, filhos da indústria com carreira, estrelas mirins (docs/familia29.md)
 import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
 import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
+import './fossati31'; // R31 onda 3 (Z): família Fossati (papéis por época, violino, efeitos pequenos) e base nova (relíquias reais)
 import './deleg31run'; // R31 onda 2 (Q): delegação única — A&R e produtor executivo delegados, desfazer, pedidos (sim/deleg31.ts)
 import './mercado31'; // R31 onda 3 (D/Y): mercado e paradas por país — fama local, língua, leis no país, dominó, picos (r31/market31.ts)
 import './value31run'; // R31 onda 3 (E · Bolsa): editor do modelo único de valor (sim/r31/value31.ts); sem ganchos

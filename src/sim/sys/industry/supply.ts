@@ -21,6 +21,9 @@ export const MATERIAL_NAMES: Record<Material, L> = {
   paper: l('Papel e encarte', 'Paper and sleeves'),
 };
 
+/** R31 (Z): redução da taxa de defeito por fornecedor (Metalmac, da família Fossati — sim/sys/fossati31.ts). */
+export const pressDefect31: { f: (s: GameState) => number } = { f: () => 0 };
+
 /** Material dominante na prensagem do ano. */
 export function mainMaterial(year: number): Material {
   if (year < 1950) return 'shellac';
@@ -95,7 +98,7 @@ function onLaunch(s: GameState, r: Rng, rel: Release): void {
   const rest = rel.pressed - firstWeek;
   // defeitos: fábrica própria e pesquisa reduzem
   const ownShare = cap.own / Math.max(1, weekly);
-  const defectRate = clamp(0.03 - ownShare * 0.015 - (researchDone(s, 'quality_control') ? 0.012 : 0) + gradeDefect(s, rel.formats) + r.normal(0, 0.01), 0, 0.1);
+  const defectRate = clamp(0.03 - ownShare * 0.015 - (researchDone(s, 'quality_control') ? 0.012 : 0) - pressDefect31.f(s) + gradeDefect(s, rel.formats) + r.normal(0, 0.01), 0, 0.1);
   const defects = Math.round(rel.pressed * defectRate);
   onGradeLaunch(s, rel, defects);
   st.defectsYear += defects;

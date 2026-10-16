@@ -8,6 +8,7 @@ import { FESTIVALS, MEDIA } from '../src/data/catalog';
 import { AWARDS, PLATFORMS } from '../src/data/content';
 import { REAL_ACTS } from '../src/data/realnames';
 import { CITIES } from '../src/data/world';
+import { CUR31 } from '../src/data/cur31';
 
 const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   act: (k) => REAL_ACTS[Number(k)] !== undefined,
@@ -16,6 +17,7 @@ const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   platform: (k) => PLATFORMS.some((p) => p.id === k),
   award: (k) => AWARDS.some((a) => a.id === k),
   city: (k) => CITIES.some((c) => c.id === k),
+  cur: (k) => CUR31.some((c) => c.id === k), // R31 (Z): base nova com curadoria
 };
 
 describe('registro de nomes reais (W0-RN)', () => {
