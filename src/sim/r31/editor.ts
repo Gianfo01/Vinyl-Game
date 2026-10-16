@@ -396,9 +396,21 @@ registerRunnable({
 export const relicName31 = (s: GameState, id: string): L | undefined => { const rl = relics(s).list.find((x) => x.id === id); return rl ? (rl.rr ? relicDef17(rl.rr)?.name ?? rl.n : rl.n) : undefined; };
 
 // ---------------------------------------------------------------- cenas e eventos
+/** Títulos com lacunas ("Esgotamento em {act}") viram "Esgotamento em …" (nada de chave crua na tela). */
+const blank = (x: string): string => x.replace(/\{[^}]+\}/g, '…').replace(/(^|\s)\?(?=\s|$)/g, '$1…');
+const blanks = (x: L): L => ({ pt: blank(x.pt), en: blank(x.en) });
+const PRESSURE_L: Record<string, L> = {
+  money: l('dinheiro', 'money'), heart: l('coração', 'heart'), law: l('lei', 'law'), fame: l('fama', 'fame'), body: l('corpo', 'body'), faith: l('fé', 'faith'), power: l('poder', 'power'),
+};
+function sitLabel(s: GameState, d: (typeof SITS)[number], i: number): L {
+  let t0: L | null = null;
+  try { t0 = blanks(d.title(s, { hero: 'player', cast: {}, data: {} })); } catch { t0 = null; }
+  if (t0 && t0.pt.trim() && !/undefined|NaN/.test(t0.pt)) return fmtL(l('{t} ({p})', '{t} ({p})'), { t: t0, p: PRESSURE_L[d.pressure] ?? l('', '') });
+  return fmtL(l('Situação {n} ({p})', 'Situation {n} ({p})'), { n: i + 1, p: PRESSURE_L[d.pressure] ?? l('', '') });
+}
 registerRunnable({
   id: 'scene.event', area: 'scenes', label: l('Disparar evento', 'Fire event'),
-  arg: { kind: 'select', label: l('Evento', 'Event'), options: () => EVENTS.filter((e) => !e.id.startsWith('sit17:')).map((e) => ({ value: e.id, label: e.title })) },
+  arg: { kind: 'select', label: l('Evento', 'Event'), options: () => EVENTS.filter((e) => !e.id.startsWith('sit17:')).map((e) => ({ value: e.id, label: blanks(e.title) })) },
   run: (s, _t, arg) => {
     const def = eventById[String(arg)];
     if (!def) return { ok: false, text: l('Escolha um evento.', 'Choose an event.') };
@@ -412,7 +424,7 @@ registerRunnable({
 });
 registerRunnable({
   id: 'scene.situation', area: 'scenes', label: l('Disparar situação', 'Fire situation'),
-  arg: { kind: 'select', label: l('Situação', 'Situation'), options: () => SITS.map((d) => ({ value: d.id, label: l(d.id.replace(/_/g, ' '), d.id.replace(/_/g, ' ')) })) },
+  arg: { kind: 'select', label: l('Situação', 'Situation'), options: (s) => SITS.map((d, i) => ({ value: d.id, label: sitLabel(s, d, i) })) },
   run: (s, _t, arg) => {
     const r = forceSituation17(s, String(arg), luck(s, `sit:${arg}`));
     return r ?? { ok: false, text: l('Ninguém se encaixa nesta situação agora.', 'Nobody fits this situation right now.') };
