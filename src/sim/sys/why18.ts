@@ -119,11 +119,15 @@ registerExplain('offer.chance', (s, c) => {
   if (!a) return null;
   const o = (c.offer as Omit<Offer, 'id' | 'week' | 'status'> | undefined) ?? defaultOffer(s, a);
   const ev = evaluateOffer(s, a, o);
-  const parts: WhyPart[] = sortParts((ev.parts ?? []).map((p) => ({ label: p.t, value: Math.round(p.v * 100), fmt: 'signed' as const, tone: p.v >= 0 ? 'good' as const : 'bad' as const })));
+  // r31 F #17: o "por quê" não entrega o placar nem as parcelas exatas (isso revelaria o mínimo secreto da mesa): cada
+  // parcela vira direção e peso em palavras, e a soma nunca aparece
+  const word = (v: number) => (v >= 0.1 ? l('pesa muito a favor', 'weighs strongly for') : v > 0 ? l('a favor', 'for') : v <= -0.1 ? l('pesa muito contra', 'weighs strongly against') : l('contra', 'against'));
+  const parts: WhyPart[] = sortParts((ev.parts ?? []).map((p) => ({ label: p.t, value: Math.round(p.v * 100), fmt: 'signed' as const, tone: p.v >= 0 ? 'good' as const : 'bad' as const })))
+    .map((p) => ({ label: p.label, value: word((p.value as number) / 100) as unknown as string, fmt: 'text' as const, tone: p.tone }));
   const band = ev.band === 'likely' ? l('provável', 'likely') : ev.band === 'uncertain' ? l('incerta', 'uncertain') : l('improvável', 'unlikely');
   return {
     title: fmtL(l('Chance de {a} aceitar', 'Chance {a} accepts'), { a: a.name }), value: band as unknown as string, fmt: 'text', parts,
-    note: fmtL(l('Placar {p} pontos (meio da curva = 58). Leitura por faixa: sem analista na equipe a faixa é mais grosseira. Ambição principal pesa nos termos.', 'Score {p} points (curve midpoint = 58). Shown as a band: without an analyst on staff the read is rougher. Main ambition weights the terms.'), { p: Math.round(ev.score * 100) }),
+    note: l('Leitura por faixa, sem o placar: o mínimo que eles aceitariam é segredo. Sem analista na equipe a faixa é mais grosseira. Ambição principal pesa nos termos.', 'Shown as a band, without the score: the minimum they would accept is secret. Without an analyst on staff the read is rougher. Main ambition weights the terms.'),
   };
 });
 
