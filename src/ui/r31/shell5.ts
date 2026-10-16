@@ -18,6 +18,7 @@ import { portraitCanvas } from '../pixel/avatar';
 import { travel5Canvas } from '../pixel/exp5px';
 import { inbox5Layout, inbox5Look, inbox5Px, paper5Canvas, paper5Layout, paper5Px, type Paper5, type Rect5 } from '../pixel/exp5paper';
 import { TABS_REG27 } from '../ps/tabsreg27';
+import { REDIRECT29 } from '../ps/route29model';
 import { store } from '../store';
 import { setTab } from '../vis';
 import { CAREER_PAGE17 } from '../nav17';
@@ -105,6 +106,8 @@ export function travel5go(r: Region5): void {
 /** Esc: fecha a ajuda, a pausa ou o papel; sem nada aberto, abre a pausa. */
 export function esc5(): void {
   if (SH5.rebind) { SH5.rebind = undefined; redraw(); return; }
+  const pops = typeof document !== 'undefined' ? [...document.querySelectorAll<HTMLElement>('.s5-pop:not([hidden])')] : [];
+  if (pops.length) { for (const x of pops) x.hidden = true; return; } // lista da sala aberta: Esc só fecha a lista
   if (SH5.help) { SH5.help = false; redraw(); return; }
   if (SH5.pause) { SH5.pause = false; redraw(); return; }
   if (SH5.paper) { closePaper5(); return; }
@@ -127,9 +130,11 @@ export function markers5(id: string, cur?: Open5): Open5[] {
   if (cur && !out.some((m) => sameMark(m, cur))) out.unshift(cur);
   // mesma página/aba por dois caminhos (ex.: 'inbox' e cockpit › Caixa de entrada): um marcador só
   const seen = new Set<string>();
-  return out.filter((m) => { const k = `${m.area}|${m.tab?.join('/') ?? ''}`; if (seen.has(k)) return false; seen.add(k); return true; });
+  return out.map(norm5).filter((m) => { const k = `${m.area}|${m.tab?.join('/') ?? ''}`; if (seen.has(k)) return false; seen.add(k); return true; });
 }
-const sameMark = (a: Open5, b: Open5): boolean => a.area === b.area && (!a.tab || !b.tab || (a.tab[0] === b.tab[0] && a.tab[1] === b.tab[1]));
+/** Nome antigo (REDIRECT29: 'inbox', 'desk'…) → a página e a aba de verdade. */
+const norm5 = (m: Open5): Open5 => { const r = REDIRECT29[m.area]; return r?.area ? { area: r.area, tab: r.tab ?? m.tab } : m; };
+const sameMark = (a0: Open5, b0: Open5): boolean => { const a = norm5(a0), b = norm5(b0); return a.area === b.area && (!a.tab || !b.tab || (a.tab[0] === b.tab[0] && a.tab[1] === b.tab[1])); };
 
 /** { e }: marcador anterior/seguinte do papel aberto. */
 export function markerStep5(d: number): boolean {
@@ -289,7 +294,7 @@ function region5(s: GameState, host: Shell5Host, bangs: Record<string, number>):
     try { el = reg({ s, region: r, open: (id, m) => open5(id, m), goto: (x) => goto5(s, x), travel: travel5go, rerender: redraw, bangs, old }); } catch (e) { console.error('[nav5] região', r, e); el = null; }
   }
   return h('div', { class: `reg5 reg5-${r}` }, el ?? h('div', { class: 'reg5-old page21-host' },
-    h('div', { class: 's5-where' }, h('b', null, tl5(REGION_L5[r])), ` · ${t(l('a cena nova chega com a frente do mapa; por enquanto, a página de hoje', 'the new scene arrives with the map front; for now, today\'s page'))}`),
+    h('div', { class: 's5-where' }, h('b', null, tl5(REGION_L5[r])), ` · ${s.year}`),
     old()));
 }
 

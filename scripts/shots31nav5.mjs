@@ -41,6 +41,7 @@ const start = (year, months, hq, pocket) => p.evaluate(async ([year, months, hq,
   return { year: g.year, hq: g.player.hq };
 }, [year, months, hq, pocket]);
 const shot = async (name) => { await p.waitForTimeout(1200); await p.evaluate(() => document.querySelectorAll('.overlay').forEach((e) => e.remove())); await p.screenshot({ path: `${out}/onda5-nav-${name}.png` }); console.log('captura', name); };
+const key = async (k) => { await p.keyboard.press(k); await p.waitForTimeout(900); };
 const want = (n) => !only || only.split(',').includes(n);
 
 if (want('sede')) for (const [y, hq] of [[1905, 1], [1962, 2], [1985, 3], [2025, 4]]) {
@@ -49,25 +50,39 @@ if (want('sede')) for (const [y, hq] of [[1905, 1], [1962, 2], [1985, 3], [2025,
 }
 if (want('papel')) {
   console.log(await start(1962, 3, 2, ['livrocaixa', 'fichario', 'olheiro', 'quadrobranco', 'revista', 'correspondencia']));
-  await p.keyboard.press('z'); await shot('papel-livrocaixa');
-  await p.keyboard.press('Escape'); await p.keyboard.press('e'); await shot('papel-caixa');
-  await p.keyboard.press('Escape'); await p.keyboard.press('Shift+U').catch(() => {});
-  await p.keyboard.press('u'); await shot('bolso-quadro');
-  await p.keyboard.press('Escape');
+  await key('z'); await shot('papel-livrocaixa');
+  await key('Escape'); await key('e'); await shot('papel-caixa');
+  await key('Escape');
+  await key('u'); await shot('bolso-quadro');
+  await key('Escape');
 }
 if (want('pausa')) {
-  await p.keyboard.press('Escape'); await shot('pausa');
-  await p.keyboard.press('Escape');
+  await key('Escape'); await shot('pausa');
+  await key('Escape');
 }
 if (want('teclas')) {
-  await p.keyboard.press('?'); await shot('teclas');
-  await p.keyboard.press('Escape');
+  await key('?'); await shot('teclas');
+  await key('Escape');
 }
 if (want('alt')) {
   await p.keyboard.down('Alt'); await shot('alt-nomes'); await p.keyboard.up('Alt');
 }
 if (want('viagem')) {
-  await p.keyboard.press('Shift+Digit3'); await shot('cidade');
-  await p.keyboard.press('h'); await shot('volta-sede');
+  if (only) console.log(await start(1962, 3, 2, ['livrocaixa']));
+  await key('Shift+Digit3'); await shot('cidade');
+  await key('Shift+Digit2'); await shot('casa');
+  await key('Shift+Digit4'); await shot('mundo');
+  await key('w'); await shot('mundo-papel'); await key('Escape');
+  await key('h'); await shot('volta-sede');
+}
+if (want('clique')) {
+  console.log(await start(1962, 3, 2, ['livrocaixa']));
+  await p.locator('.s5-room[data-room="office"]').click(); await shot('sala-lista'); await key('Escape');
+  await p.locator('.s5-obj[data-obj="mesames"]').click(); await p.waitForTimeout(200); await p.screenshot({ path: `${out}/onda5-nav-zoom-meio.png` });
+  await shot('papel-mesa');
+  await key('}'); await shot('papel-marcador2');
+  await key('Escape');
+  await p.locator('.r5-i').first().click(); await shot('ir-ate-la');
+  await key('Escape'); await shot('flash');
 }
 await b.close();
