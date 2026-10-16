@@ -19,7 +19,7 @@ export function compareActs(s: GameState, initial: string[]): void {
   const range = (id: string, field: 'fame' | 'talent' | 'potential') => {
     const r = estimate(s, id, field);
     if (!r) return h('span', { class: 'muted' }, '?');
-    return h('span', { class: 'range-cell' }, `${r.lo}–${r.hi}`, h('span', { class: 'bar range' }, h('span', { style: `left:${r.lo}%;width:${Math.max(2, r.hi - r.lo)}%` })));
+    return h('span', { class: 'range-cell' }, r.lo === r.hi ? String(r.lo) : `${r.lo}–${r.hi}`, h('span', { class: 'bar range' }, h('span', { style: `left:${r.lo}%;width:${Math.max(2, r.hi - r.lo)}%` })));
   };
   const draw = () => {
     body.replaceChildren(

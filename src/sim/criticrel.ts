@@ -16,7 +16,7 @@ registerExt4('critrel', () => ({ rel: {}, last: {} }));
 export const critRel = (s: GameState): CritRelState => (s as unknown as { x4: { critrel: CritRelState } }).x4.critrel;
 
 /** −50 (inimizade) … +50 (simpatia). */
-export const relWith = (s: GameState, critic: string): number => critRel(s).rel[critic] ?? 0;
+export const relWith = (s: GameState, critic: string): number => critRel(s).rel[critic] ?? 0; // r31: leitura nativa crua (escala própria); para exibir use opinionOf(s, `c:…`)
 
 /** Ajuste nas notas (escala 0–10): no máximo ±0,5. */
 export function criticRelBonus(s: GameState, critic: string): number {

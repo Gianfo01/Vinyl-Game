@@ -1,6 +1,7 @@
 // Rivais respondem à vista (rodada 12): avisos com escolha nas telas certas (mercado, estúdio,
 // lançamentos, shows, catálogo, sede, mesa) e a aba "Disputas e acordos" na ficha de cada selo.
 
+import { opinionOf } from '../../sim/opinion';
 import { l, marketById, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { dealWith, endDeal, heat19, openContests, OPT_TXT, recentContests, respond, rivals12, rivalWho } from '../../sim/rivals19'; // r19: fachada
@@ -84,7 +85,7 @@ registerPageTab('label', {
     const list = rivals12(s).c.filter((c) => c.lb === id).slice(-10).reverse();
     return h('div', null,
       h('p', { class: 'small' }, t(rivalWho(s, id)), ' · ', t(l('rixa com você', 'feud with you')), ` ${Math.round(heat19(s, id))}`,
-        ld ? ` · ${t(l('líder com você', 'leader toward you'))} ${Math.round(ld.rel.player ?? 0)}` : '',
+        ld ? ` · ${t(l('líder com você', 'leader toward you'))} ${opinionOf(s, `l:${ld.id}`)}` : '',
         d ? h('span', null, ' · ', pill(`${t(l('distribui você em', 'distributes you in'))} ${t(marketById[d.m].name)} · ${t(l('tensão', 'tension'))} ${Math.round(d.ten)}`, d.ten > 70 ? 'bad' : 'good')) : null),
       list.length ? h('div', { class: 'riv12-list' }, list.map((c) => contestCard(s, c))) : null,
     );

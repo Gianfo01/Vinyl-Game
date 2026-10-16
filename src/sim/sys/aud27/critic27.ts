@@ -11,6 +11,7 @@
 //  • TEMPO: todo mês a relação volta 3% para o zero (rancores e simpatias esfriam).
 // Cruzar ±25 vira manchete ("passa a defender" / "vira desafeto"). Os porquês ficam no persona13 (opine 'c:').
 
+import { opinionWhy } from '../../opinion';
 import { Rng } from '../../../core/rng';
 import { familyOf, l, type L } from '../../../data/world';
 import { critRel } from '../../criticrel';
@@ -20,7 +21,7 @@ import { activeCritics, criticByName } from '../../media';
 import type { GameState } from '../../types';
 import { fmtL, playerActs } from '../../util';
 import { headline19 } from '../factlink19';
-import { opine, p13 } from '../persona13';
+import { opine } from '../persona13';
 import { OFF_AUD27 } from './off';
 
 const N = (pt: string, en: string): L => l(pt, en);
@@ -121,6 +122,5 @@ onFact('critic_editor', (s, f) => {
 
 /** Por que a relação está como está (últimos motivos do persona13). */
 export function critWhy27(s: GameState, critic: string): L[] {
-  const op = p13(s).op[`c:${critic}`];
-  return (op?.w ?? []).slice(-3).reverse().map((w) => fmtL(N('{d} {t} ({y})', '{d} {t} ({y})'), { d: w[2] > 0 ? `+${w[2]}` : `${w[2]}`, t: w[3], y: w[0] }));
+  return opinionWhy(s, `c:${critic}`).slice(-3).reverse().map((w) => fmtL(N('{d} {t} ({y})', '{d} {t} ({y})'), { d: w[2] > 0 ? `+${w[2]}` : `${w[2]}`, t: w[3], y: w[0] }));
 }

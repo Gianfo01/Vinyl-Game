@@ -1,6 +1,7 @@
 // Interface da rodada 10: perfil dos líderes das gravadoras (ficha do selo, Mundo → Gravadoras) e a
 // tabela de estratégias e líderes de todos os selos ativos.
 
+import { opinionOf } from '../../sim/opinion';
 import { pbText19 } from '../../sim/era19';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -56,7 +57,7 @@ export function leaderBody(s: GameState, L0: Leader, full = true): HTMLElement {
   const ties = Object.entries(L0.rel).filter(([k]) => k !== 'player' && leaders(s).L[k]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 6);
   const protegés = lb ? lb.roster.map((x) => s.acts[x]).filter(Boolean).sort((a, b) => b.fame - a.fame).slice(0, 3) : [];
   const grudge = lb ? lb.roster.map((x) => s.acts[x]).filter((a) => a && a.trust < 35).sort((a, b) => a.trust - b.trust)[0] : undefined;
-  const relP = L0.rel.player ?? 0;
+  const relP = opinionOf(s, `l:${L0.id}`);
   const body = h('div', { class: 'ficha leader10' },
     h('div', { class: 'row' }, full ? face(s, L0, 4) : null, h('div', null,
       h('h3', full ? null : { hidden: true }, L0.name),
@@ -110,8 +111,8 @@ export function playerLeaderBody(s: GameState, full = true): HTMLElement {
     p ? h('ul', { class: 'small' }, describeSoul(s, p).map((x) => h('li', null, t(x)))) : null,
     h('h4', null, t(l('Como os outros líderes o veem', 'How other leaders see you'))),
     h('ul', { class: 'small' }, Object.values(leaders(s).L).filter((x) => x.st === 'active' && x.label && s.labels[x.label])
-      .sort((a, b) => (a.rel.player ?? 0) - (b.rel.player ?? 0)).slice(0, 8)
-      .map((x) => h('li', null, leaderLink(s, x), ` (${s.labels[x.label!].name}) — `, pill(t(relWord(x.rel.player ?? 0)), relCls(x.rel.player ?? 0))))),
+      .sort((a, b) => opinionOf(s, `l:${a.id}`) - opinionOf(s, `l:${b.id}`)).slice(0, 8)
+      .map((x) => h('li', null, leaderLink(s, x), ` (${s.labels[x.label!].name}) — `, pill(t(relWord(opinionOf(s, `l:${x.id}`))), relCls(opinionOf(s, `l:${x.id}`)))))),
     full ? h('h4', null, t(l('Ficha completa', 'Full profile'))) : null, full ? ficha13(s, 'player') : null,
   );
   return body;
@@ -146,7 +147,7 @@ export function leadersTab(s: GameState): HTMLElement {
         ...list.map((lb) => {
           const pb = PLAYBOOKS[playbookOf(lb)];
           const L0 = leaderOf(s, lb.id);
-          const rel = L0?.rel.player ?? 0;
+          const rel = L0 ? opinionOf(s, `l:${L0.id}`) : 0;
           return h('tr', null,
             h('td', null, labelLink(s, lb.id)),
             h('td', { title: ((x) => `${t(x.desc)}\n${x.tells.map((y) => '• ' + t(y)).join('\n')}`)(pbText19(s, playbookOf(lb), pb)) }, pill(t(pb.name), 'gold')),
