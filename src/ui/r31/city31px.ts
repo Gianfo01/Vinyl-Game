@@ -67,20 +67,6 @@ export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityO
     }
     hits.push({ relId: b.relId, box: [x0 - 1, y0 - 1, x0 + bw + 1, y0 + bh + 1] });
   });
-  // festival: cartaz do line-up ao lado do terreno
-  if (ov.fest) {
-    const sp = byId.get(ov.fest.sprite);
-    if (sp) {
-      const [x, y] = [Math.round(sp.top[0] + 6), Math.round(sp.top[1] - 34)];
-      const lines = [up(ov.fest.name), ...ov.fest.acts.map(up)].slice(0, 4);
-      const w = Math.max(...lines.map((s) => textWidth(s))) + 6, hh = lines.length * 7 + 3;
-      ctx.fillStyle = '#6a4a2a'; ctx.fillRect(x + 3, y + hh, 1, 8); ctx.fillRect(x + w - 4, y + hh, 1, 8);
-      ctx.fillStyle = INK; ctx.fillRect(x - 1, y - 1, w + 2, hh + 2);
-      ctx.fillStyle = '#f8f0d8'; ctx.fillRect(x, y, w, hh);
-      ctx.fillStyle = '#d04040'; ctx.fillRect(x, y, w, 8);
-      lines.forEach((s, i) => drawText(ctx, s, x + 3, y + 2 + i * 7, i === 0 ? '#fff8e0' : INK));
-    }
-  }
   // etiquetas: lojas da época (com abriu/fechou) e letreiros dos lugares reais — sem empilhar: a que não cabe sai
   if (ov.labels) {
     const placed: [number, number, number, number][] = [];
@@ -101,6 +87,20 @@ export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityO
       placed.push([x, y, x + w, y + 9]);
       if (g.mark) { const [mx, mw] = tag(ctx, sp.top[0], y - 9, g.markTxt, g.mark === 'open' ? '#2f8a4c' : '#c8302c', '#ffffff'); placed.push([mx, y - 9, mx + mw, y]); }
       if (!g.mark && !g.real) plain++;
+    }
+  }
+  // festival: cartaz do line-up ao lado do terreno
+  if (ov.fest) {
+    const sp = byId.get(ov.fest.sprite);
+    if (sp) {
+      const [x, y] = [Math.round(sp.top[0] + 6), Math.round(sp.top[1] - 34)];
+      const lines = [up(ov.fest.name), ...ov.fest.acts.map(up)].slice(0, 4);
+      const w = Math.max(...lines.map((s) => textWidth(s))) + 6, hh = lines.length * 7 + 3;
+      ctx.fillStyle = '#6a4a2a'; ctx.fillRect(x + 3, y + hh, 1, 8); ctx.fillRect(x + w - 4, y + hh, 1, 8);
+      ctx.fillStyle = INK; ctx.fillRect(x - 1, y - 1, w + 2, hh + 2);
+      ctx.fillStyle = '#f8f0d8'; ctx.fillRect(x, y, w, hh);
+      ctx.fillStyle = '#d04040'; ctx.fillRect(x, y, w, 8);
+      lines.forEach((s, i) => drawText(ctx, s, x + 3, y + 2 + i * 7, i === 0 ? '#fff8e0' : INK));
     }
   }
   return hits;

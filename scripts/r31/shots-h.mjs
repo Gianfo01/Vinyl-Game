@@ -25,12 +25,12 @@ const game = (cfg) => p.evaluate(async ([cfg]) => {
   const g = wg.createGame(c);
   g.tutorial = { step: 99, done: true, seen: [] };
   const off = await import('/src/ui/tutoff19.ts'); off.setTutorials19(st.store.prefs, false);
+  if (cfg.rich) g.player.cash += 5e9;
   for (let i = 0; i < (cfg.months ?? 2); i++) { pb.playMonth(g, 'balanced'); tick.advanceMonth(g); }
   if (cfg.hq !== undefined) g.player.hq = cfg.hq;
-  if (cfg.month !== undefined) g.month = cfg.month;
-  if (cfg.rich) { g.player.cash += 5e9; }
+  for (let i = 0; cfg.month !== undefined && g.month !== cfg.month && i < 12; i++) { pb.playMonth(g, 'balanced'); tick.advanceMonth(g); }
   st.store.game = g; window.__g = g;
-  return { y: g.year, m: g.month, city: g.config.homeCity };
+  return { y: g.year, m: g.month, city: g.config.homeCity, ended: g.gameOver ?? g.ended ?? null };
 }, [cfg]);
 const area = async (a, sub) => { await p.evaluate(async ([a, sub]) => {
   const st = await import('/src/ui/store.ts'); const c = await import('/src/ui/common.ts'); const vis = await import('/src/ui/vis.ts');
@@ -39,6 +39,11 @@ const area = async (a, sub) => { await p.evaluate(async ([a, sub]) => {
 const shot = async (name, sel) => { await p.waitForTimeout(800); const el = sel ? await p.$(sel) : null; if (el) await el.screenshot({ path: `${out}/onda4-h-${name}.png` }); else await p.screenshot({ path: `${out}/onda4-h-${name}.png` }); console.log('captura', name); };
 const noon = async () => { await p.evaluate(() => { for (const b of document.querySelectorAll('button')) if (/^Dia$/.test(b.textContent?.trim() ?? '')) b.click(); }); await p.waitForTimeout(600); };
 
+// festival do mês (Rio: o do calendário mundial)
+const fm = await p.evaluate(async () => { const c = await import('/src/data/catalog.ts'); return c.FESTIVALS.find((f) => f.city === 'rio' && f.month === 1 && f.start <= 1990 && (f.end === undefined || f.end >= 1990))?.month; });
+console.log('mês do festival', fm);
+console.log(await game({ seed: 'h31-fest', year: 1990, city: 'rio', real: true, months: 1, month: fm ?? 0, rich: true }));
+await area('campus18'); await noon(); await shot('rio-festival', '.c27-frame');
 console.log(await game({ seed: 'h31-rio', year: 1975, city: 'rio', real: true, months: 3 }));
 await area('campus18'); await noon(); await shot('rio-1975', '.c27-frame');
 console.log(await game({ seed: 'h31-sp', year: 1905, city: 'sao_paulo', real: true, months: 1 }));
@@ -47,11 +52,6 @@ console.log(await game({ seed: 'h31-ny', year: 2036, city: 'new_york', real: tru
 await area('campus18'); await noon(); await shot('ny-2036-44x32', '.c27-frame');
 console.log(await game({ seed: 'h31-lon', year: 1965, city: 'london', real: false, months: 2 }));
 await area('campus18'); await p.evaluate(() => { for (const b of document.querySelectorAll('button')) if (/^Noite$/.test(b.textContent?.trim() ?? '')) b.click(); }); await p.waitForTimeout(800); await shot('londres-1965-homenagens-noite', '.c27-frame');
-// festival do mês (Rio: o do calendário mundial)
-const fm = await p.evaluate(async () => { const c = await import('/src/data/catalog.ts'); return c.FESTIVALS.find((f) => f.city === 'rio' && f.month !== undefined && f.start <= 1990 && (f.end === undefined || f.end >= 1990))?.month; });
-console.log('mês do festival', fm);
-console.log(await game({ seed: 'h31-fest', year: 1990, city: 'rio', real: true, months: 1, month: fm ?? 0 }));
-await area('campus18'); await noon(); await shot('rio-festival', '.c27-frame');
 // loja e casa
 console.log(await game({ seed: 'h31-shop', year: 1975, city: 'sao_paulo', real: true, months: 2, rich: true }));
 await area('loja31'); await shot('loja-1975', '.sc31');
