@@ -13,7 +13,7 @@ import { GENRES, genreById, l, type L } from '../../data/world';
 import { STAFF_ROLES } from '../../data/rules';
 import { t } from '../../i18n/strings';
 import {
-  DEPT31, MODE31, PRESET31, RESP31, answerAsk31, applyPreset31, asks31, autoLog31, canUndo31, excs31, goalSet31, lockWhy31, qualified31, set31,
+  DEPT31, MODE31, PRESET31, RESP31, answerAsk31, applyPreset31, asks31, autoLog31, canUndo31, excs31, goalSet31, lockWhy31, logWho31, qualified31, set31,
   setDir31, setGoal31, setMode31, stat31, staffFor31, undo31, type Dept31, type Dir31, type Goal31, type Log31, type Mode31, type Preset31, type Resp31, type RespDef31,
 } from '../../sim/deleg31';
 import { agendaCount31, setAgendaMode31 } from '../../sim/sys/deleg31run';
@@ -225,7 +225,7 @@ function careersView(s: GameState): HTMLElement | null {
 function logItem(s: GameState, e: Log31): HTMLElement {
   const undoWhy = e.undo ? canUndo31(s, e) : l('', '');
   return h('li', { class: `dg31-log ${toneCls(e.tone)}${e.undone ? ' undone' : ''}` },
-    h('span', { class: 'muted' }, `${monL(e.m)} · `), h('b', null, e.n), ' · ', h('span', { class: 'dg31-tag' }, t(RESP31.find((x) => x.id === e.r)?.name ?? l(e.r, e.r))), ' — ', t(e.t),
+    h('span', { class: 'muted' }, `${monL(e.m)} · `), h('b', null, t(logWho31(e))), ' · ', h('span', { class: 'dg31-tag' }, t(RESP31.find((x) => x.id === e.r)?.name ?? l(e.r, e.r))), ' — ', t(e.t),
     e.act && s.acts[e.act] ? h('span', null, ' ', actLink(s, e.act)) : null,
     e.amt ? h('span', { class: e.amt < 0 ? 'bad' : 'good' }, ` ${e.amt < 0 ? '−' : '+'}${$(Math.abs(e.amt))}`) : null,
     e.why ? h('div', { class: 'muted why' }, '↳ ', t(l('Por quê: ', 'Why: ')), t(e.why)) : null,

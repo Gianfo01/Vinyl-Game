@@ -17,6 +17,8 @@ import type { SubLabel } from '../xtypes';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ownerBonus } from './people/owner';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { joinDelegated31 } from '../deleg31';
+import { companyValue31, value31On } from '../r31/value31';
 
 export interface Holding { holder: string; share: number; since: number; cost: number }
 export interface StakeTalk {
@@ -87,7 +89,8 @@ export function fairStakePrice(s: GameState, labelId: string, share: number, mod
   // selo listado (fez IPO): metade do preço vem da cotação no pregão (rodada 11)
   const b = (s.x4 as unknown as { bolsa10?: { q: Record<string, { p: number; dead?: unknown }>; lsh: Record<string, number> } }).bolsa10;
   const q = b?.q[`lb:${labelId}`];
-  const v = labelValue(s, lb).value;
+  // r31 (E · Bolsa): participação e aquisição pelo mesmo valor da bolsa (conta por parte em r31/value31)
+  const v = value31On(s) ? companyValue31(s, labelId).total : labelValue(s, lb).value;
   const worth = q && !q.dead && b?.lsh[labelId] ? Math.round(v * 0.5 + q.p * b.lsh[labelId] * 0.5) : v;
   return Math.round(worth * share * prem * (mode === 'hostile' ? 1.25 : 1));
 }
@@ -404,7 +407,7 @@ export function makeSubLabel(s: GameState, labelId: string): L | null {
     c.party = 'player';
     a.owner = 'player';
     a.trust = clamp(a.trust - 4, 0, 100);
-    s.delegated[a.id] = true;
+    s.delegated[a.id] = joinDelegated31(s, a);
     sl.roster.push(a.id);
   }
   const rosterSet = new Set(sl.roster);

@@ -43,7 +43,10 @@ export function obj31(s: GameState): Obj31St {
 
 const MODELS = new Map<string, ItemModel>();
 export function registerItemModel(m: ItemModel): void { MODELS.set(m.id, m); }
-export const itemModel = (id: string): ItemModel | undefined => MODELS.get(id);
+/** Modelos dinâmicos por prefixo (onda 3 · G): 'relic:<id>' é sempre peça única, sem registrar uma a uma. */
+const RESOLVERS: [string, (id: string) => ItemModel | undefined][] = [];
+export function registerModelResolver(prefix: string, fn: (id: string) => ItemModel | undefined): void { RESOLVERS.push([prefix, fn]); }
+export const itemModel = (id: string): ItemModel | undefined => MODELS.get(id) ?? RESOLVERS.find(([p]) => id.startsWith(p))?.[1](id);
 
 export const HIST_CAP31 = 40;
 function log(s: GameState, o: ObjInst, e: Omit<ObjEv, 'w'>): void {
@@ -62,7 +65,7 @@ function fail<T>(s: GameState, why: Extract<ObjRes, { ok: false }>['why']): ObjR
 }
 
 export function createObj(s: GameState, a: { modelId: string; origin: string; owner: Holder; holder?: Holder }): ObjRes<ObjInst> {
-  const m = MODELS.get(a.modelId);
+  const m = itemModel(a.modelId);
   if (!m) return fail(s, 'no_model');
   const st = obj31(s);
   if (m.unique && Object.values(st.objs).some((o) => o.modelId === m.id)) return fail(s, 'unique_exists');
@@ -143,6 +146,17 @@ export function recover(s: GameState, objId: string): ObjRes {
   return { ok: true, v: true };
 }
 
+/** Tira a peça do registro (estoque não vendido que volta ao fornecedor; relíquia arquivada no acervo compacto). Sai da
+ *  oferta antes. Quem chama guarda o resumo quando a peça tem história que importa. */
+export function removeObj(s: GameState, objId: string): ObjRes {
+  const st = obj31(s);
+  const o = st.objs[objId];
+  if (!o) return fail(s, 'no_obj');
+  if (o.offer) withdraw(s, o.offer);
+  delete st.objs[objId];
+  return { ok: true, v: true };
+}
+
 export const objsHeldBy = (s: GameState, h: Holder): ObjInst[] => Object.values(obj31(s).objs).filter((o) => o.holder === h);
 export const objsOwnedBy = (s: GameState, h: Holder): ObjInst[] => Object.values(obj31(s).objs).filter((o) => o.owner === h);
 export const offersAt = (s: GameState, venue: Holder): ObjOffer[] => Object.values(obj31(s).offers).filter((x) => x.venue === venue);
@@ -165,6 +179,6 @@ export function objInvariants(s: GameState): string[] {
     if (o.offer && !st.offers[o.offer]) bad.push(`peça ${o.id} marca oferta inexistente ${o.offer}`);
     perModel.set(o.modelId, (perModel.get(o.modelId) ?? 0) + 1);
   }
-  for (const [m, n] of perModel) if (MODELS.get(m)?.unique && n > 1) bad.push(`modelo único ${m} com ${n} peças`);
+  for (const [m, n] of perModel) if (itemModel(m)?.unique && n > 1) bad.push(`modelo único ${m} com ${n} peças`);
   return bad;
 }

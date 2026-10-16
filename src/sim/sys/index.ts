@@ -377,5 +377,6 @@ import './demo29'; // R29 (DEMO): público por idade e região, gosto por geraç
 import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
 import './deleg31run'; // R31 onda 2 (Q): delegação única — A&R e produtor executivo delegados, desfazer, pedidos (sim/deleg31.ts)
 import './mercado31'; // R31 onda 3 (D/Y): mercado e paradas por país — fama local, língua, leis no país, dominó, picos (r31/market31.ts)
+import './value31run'; // R31 onda 3 (E · Bolsa): editor do modelo único de valor (sim/r31/value31.ts); sem ganchos
 import '../r31/index'; // R31 onda 0 (W0-CON/W0-ROLE): contratos compartilhados — pendência, destino, papéis, objeto, transação atribuída, interruptores
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

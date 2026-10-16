@@ -491,3 +491,9 @@ H('editor31', ['Editor (testes)', 'Editor (testing)'],
   ['Ligue o modo em Opções (ou Ctrl+Shift+E), escolha a aba, o alvo (pessoa, artista, empresa…) e aplique. Ex.: aba Dinheiro › Caixa da empresa › 500000 › Aplicar; o "Registro de edições" mostra tudo o que foi mudado.', 'Turn the mode on in Options (or Ctrl+Shift+E), pick the tab, the target (person, act, company…) and apply. E.g. Money tab › Company cash › 500000 › Apply; the "Edit log" shows everything that was changed.'],
   [['Desligar o modo desliga o editor e as trapaças em qualquer partida.', 'Turning the mode off disables the editor and cheats in every game.']],
   ['cockpit']);
+// r31 onda 2 (Q): delegação estilo Football Manager
+H('deleg31', ['Delegação', 'Delegation'],
+  ['Quem decide cada área do selo (A&R, renovações, produção, marketing, turnês, gastos da equipe…): você, um funcionário com diretrizes, um modo parcial que pede sua aprovação acima de um limite, ou a regra automática. O registro mostra tudo o que foi decidido por delegação, com motivo, custo e opção de desfazer.', 'Who decides each area of the label (A&R, renewals, production, marketing, tours, staff spending…): you, a staff member with guidelines, a partial mode that asks your approval above a limit, or the automatic rule. The log shows everything decided by delegation, with reason, cost and an undo option.'],
+  ['Escolha a área, o responsável e os limites. Ex.: A&R › Delegar › teto de $20.000 por contrato, só rock e pop, "me pergunte acima de $10.000"; o A&R passa a propor sozinho dentro disso.', 'Pick the area, who is in charge and the limits. E.g. A&R › Delegate › $20,000 cap per contract, rock and pop only, "ask me above $10,000"; the A&R then makes offers on their own within that.'],
+  [['Desfazer uma decisão delegada impede que ela se repita por 12 semanas.', 'Undoing a delegated decision stops it from repeating for 12 weeks.']],
+  ['cockpit']);

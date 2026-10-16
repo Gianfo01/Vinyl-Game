@@ -17,7 +17,7 @@ import { ask12, offer12, stagesOf, f12, wantTime } from './fest12';
 import { addHype } from './hype12';
 import { liveOf } from './live/state';
 import { notoTier } from './notoriety14';
-import { UNDO31, addSpent31, autoLog31, logAuto31, modeOf31, spendGate31, type Log31, type Resp31 } from '../deleg31';
+import { UNDO31, addSpent31, autoLog31, blocked31, cents31, logAuto31, modeOf31, spendGate31, type Log31, type Resp31 } from '../deleg31';
 
 export type OrderKind = 'tour' | 'fees' | 'festival' | 'promo' | 'radio' | 'labelnight';
 export interface Order16 { id: string; staffId: string; kind: OrderKind; actId?: string; market: MarketId | ''; tier: number; floor: number; budget: number; per: number; on: boolean; since: number }
@@ -44,7 +44,7 @@ export const KINDS: Record<OrderKind, { role: 'booking_agent' | 'promoter'; name
   labelnight: { role: 'promoter', name: l('Noite do selo', 'Label night'), desc: l('Organiza uma noite do selo com o ato em destaque: custa o orçamento, pode se pagar e dá visibilidade.', 'Throws a label night featuring the act: costs the budget, may pay for itself and builds visibility.') },
 };
 export const kindsOf = (role: string): OrderKind[] => (Object.keys(KINDS) as OrderKind[]).filter((k) => KINDS[k].role === role);
-const usd = (c: number): string => `$${Math.round(c / 100).toLocaleString('en-US')}`;
+const usd = cents31; // centavos pelo formatador do jogo, nas duas línguas
 const cat = (a: L, b: L): L => l(a.pt + b.pt, a.en + b.en);
 const cityN = (id: string): L => cityById[id]?.name ?? l(id, id);
 const activeAct = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split' && a.members.length > 0;
@@ -133,14 +133,19 @@ interface Ctx { s: GameState; r: Rng; st: StaffMember; o: Order16; q: Qual }
 const say = (c: Ctx, t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: string, extra: { amt?: number; undo?: { k: string; id: string } } = {}) => logD(c.s, c.st.id, c.o, c.o.kind, t, tone, actId, extra);
 /** r18 (policy18): políticas de delegação — portões por ordem e por gasto (devolvem o motivo do bloqueio). */
 export const D16_GATES: ((s: GameState, o: Order16, st: StaffMember) => L | null)[] = [];
-export const D16_PAY: ((s: GameState, o: Order16, amt: number) => L | null)[] = [];
+export const D16_PAY: ((s: GameState, o: Order16, amt: number, quiet?: boolean) => L | null)[] = [];
 // r19 (equilíbrio): orçamento das ordens em dólares reais, como a tela mostra. Antes `money(usdN * 100)` cobrava 100× o
 // orçamento digitado (ordem de rádio de "$300/mês" saía ~US$ 30 mil/mês) e a bilheteria da noite do selo entrava 100× maior.
+/** Portões de gasto de uma ordem: política de "Gastos da equipe" (teto/reserva) e diretriz da responsabilidade (orçamento
+ *  do mês, "me pergunte acima de"). `quiet` não registra a exceção (W2-REV: festival e multa passam por aqui também). */
+function gateSpend(c: Ctx, amt: number, quiet = false): L | null {
+  for (const g of D16_PAY) { const why = g(c.s, c.o, amt, quiet); if (why) return why; }
+  return spendGate31(c.s, respOf16(c.o.kind), amt, c.st, c.o.actId, { quiet });
+}
 const pay = (c: Ctx, usdN: number, memo: string): boolean => {
   const amt = money(c.s, usdN);
   if (c.s.player.cash < amt) return false;
-  for (const g of D16_PAY) { const why = g(c.s, c.o, amt); if (why) { say(c, why, 'bad'); return false; } }
-  { const why = spendGate31(c.s, respOf16(c.o.kind), amt, c.st, c.o.actId); if (why) { say(c, why, 'bad'); return false; } }
+  { const why = gateSpend(c, amt); if (why) { say(c, why, 'bad'); return false; } }
   post(c.s, `d16:${c.o.id}:${c.s.year}:${c.s.month}:${memo.length}`, -amt, 'business', memo);
   addSpent31(c.s, respOf16(c.o.kind), amt);
   return true;
@@ -150,6 +155,7 @@ function runTour(c: Ctx): void {
   const { s, r, o, q } = c;
   const act = s.acts[o.actId ?? ''];
   if (!activeAct(act) || !eligibleActs(s).some((a) => a.id === act.id)) return say(c, l('O ato da ordem não está mais disponível.', 'The order\'s act is no longer available.'), 'bad');
+  if (blocked31(s, 'tour', act.id)) return say(c, fmtL(l('Você desfez um show que marquei para {a}: não marco outro sozinho por enquanto.', 'You undid a show I booked for {a}: I will not book another on my own for now.'), { a: act.name }), 'info', act.id); // W2-REV
   const cs = CITIES.filter((x) => !o.market || x.market === o.market);
   if (!cs.length) return;
   const used = new Set<string>();
@@ -190,9 +196,13 @@ function runTour(c: Ctx): void {
           // r19 (equilíbrio): a multa é a quebra de contrato da data desfeita — metade do cachê, entre US$ 500 e 15 mil
           // reais (antes, 15 mil fixos: um show de clube de US$ 800 custava 18× o próprio cachê)
           const fine = clamp(Math.round(st.fee * 0.5), money(s, 500), money(s, 15000));
+          // W2-REV: a segunda data é um compromisso de gasto — sem teto/reserva/orçamento para ela, o agente nem a marca
+          if (!gateSpend(c, fine, true)) {
           post(s, `d16:dbl:${sh.id}`, -fine, 'business', 'Multa: dupla marcação');
+          addSpent31(s, 'tour', fine);
           c12(s).rel[alt.id] = clamp(rel(s, alt.id) - 5, 0, 100);
           say(c, fmtL(l('ERRO: {n} marcou {c} na mesma semana por engano e teve de desmarcar: multa de {f} e relação com a cidade −5.', 'MISTAKE: {n} double-booked {c} the same week and had to cancel: {f} fine and city relation −5.'), { n: c.st.name, c: cityN(alt.id), f: usd(fine) }), 'bad', act.id, { amt: -fine });
+          }
         }
       }
     }
@@ -243,9 +253,14 @@ function runFestival(c: Ctx): void {
     const feeReal = Math.round(money(s, k.fee) / 100);
     if (cap && feeReal > cap) continue;
     const over = r.chance(q.err * 0.6);
-    const res = offer12(s, f.id, a.id, { ...slot, len: 60, excl: false, fee: over ? Math.round(k.fee * 1.18) : k.fee });
+    const fee = over ? Math.round(k.fee * 1.18) : k.fee;
+    // W2-REV: o cachê da atração passa pelos mesmos portões das outras ordens (teto, reserva, orçamento, consulta)
+    const gate = gateSpend(c, money(s, fee));
+    if (gate) { say(c, fmtL(l('{f}: não fechou {a} — {w}', '{f}: did not sign {a} — {w}'), { f: f.name, a: a.name, w: gate }), 'bad', a.id); break; }
+    const res = offer12(s, f.id, a.id, { ...slot, len: 60, excl: false, fee });
     if (res.res === 'yes') {
       signed++;
+      addSpent31(s, 'tour', money(s, fee));
       const paid = usd(money(s, over ? k.fee * 1.18 : k.fee));
       const base = fmtL(l('{f}: fechou {a} (fama {m}) por {p}.', '{f}: signed {a} (fame {m}) for {p}.'), { f: f.name, a: a.name, m: Math.round(a.fame), p: paid });
       say(c, over ? cat(base, l(' ERRO: pagou 18% acima do pedido por pressa.', ' MISTAKE: overpaid 18% over the ask in a rush.')) : base, over ? 'bad' : 'good', a.id);

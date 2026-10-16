@@ -15,6 +15,7 @@ import { histLocked } from './history15';
 import { actsTouched17 } from './actidx17';
 import { cashWhy20, freeCash20 } from './oblig20';
 import { actsNow27 } from './tickcache27';
+import { joinDelegated31 } from './deleg31';
 
 const JOBS: L[] = [
   l('professora', 'teacher'), l('enfermeiro', 'nurse'), l('fotógrafa', 'photographer'), l('advogado', 'lawyer'),
@@ -205,7 +206,7 @@ export function launchHeir(s: GameState, r: Rng, personId: string): L | null {
   };
   s.acts[act.id] = act;
   actsTouched17(s);
-  s.delegated[act.id] = true;
+  s.delegated[act.id] = joinDelegated31(s, act);
   remember(s, 'heir', fmtL(l('{p} estreia carreira pelo selo, herdeiro(a) de {a}.', '{p} debuts on the label, heir to {a}.'), { p: p.name, a: parentAct?.name ?? '' }), { actId: act.id, important: true });
   return null;
 }
@@ -360,7 +361,7 @@ export function negotiateReunion(s: GameState, r: Rng, actId: string): L {
   act.momentum = 85;
   act.fans.casual += Math.round(act.fans.core * 20);
   for (const id of act.members) s.persons[id].resentment = Math.max(0, s.persons[id].resentment - 20);
-  s.delegated[act.id] = true;
+  s.delegated[act.id] = joinDelegated31(s, act);
   remember(s, 'reunion', fmtL(l('{a} anuncia a reunião! Ingressos esgotam em minutos.', '{a} announces a reunion! Tickets sell out in minutes.'), { a: act.name }), { actId, important: true });
   return l('Reunião fechada! O ato volta ao seu elenco.', 'Reunion signed! The act rejoins your roster.');
 }
@@ -379,7 +380,7 @@ export function soloActFrom29(s: GameState, r: Rng, act: Act, p: Person, o: { ow
   s.acts[solo.id] = solo;
   actsTouched17(s);
   s.soloOf[solo.id] = act.id;
-  s.delegated[solo.id] = true;
+  s.delegated[solo.id] = joinDelegated31(s, solo);
   return solo;
 }
 

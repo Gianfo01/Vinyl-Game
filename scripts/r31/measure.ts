@@ -60,8 +60,28 @@ async function runOne(j: Job): Promise<Res30> {
   const t0 = performance.now();
   // mesma configuração do lote balance19 (selo, rock, base padrão do jogo)
   const s = createGame(defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' }));
+  // R31: interruptores para medir ligado/desligado — R31_SW="id=false,outro=3" (aplicado logo depois de criar a partida)
+  if (process.env.R31_SW) {
+    const { setSw, switchDef } = await import('../../src/sim/r31/switches');
+    for (const kv of process.env.R31_SW.split(',')) {
+      const [id, raw] = kv.split('=');
+      const d = switchDef(id);
+      if (!d) throw new Error(`R31_SW: interruptor desconhecido ${id}`);
+      setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);
+    }
+  }
   const createMs = performance.now() - t0;
   if (j.sw) { const { setSw } = await import('../../src/sim/r31/switches'); for (const [k, v] of Object.entries(j.sw)) setSw(s, k, v); } // R31 onda 3: --sw id=v,...
+  // R31 onda 3: interruptores pela variável R31_SW ("id=valor,id2=valor") para medir regra ligada/desligada
+  if (process.env.R31_SW) {
+    const { setSw, switchDef } = await import('../../src/sim/r31/switches');
+    for (const kv of process.env.R31_SW.split(',')) {
+      const [id, raw] = kv.split('=');
+      const d = switchDef(id);
+      if (!d) throw new Error(`R31_SW: interruptor desconhecido ${id}`);
+      setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);
+    }
+  }
   const w0 = ownerOf(s).wealth;
   const per: number[] = [], cpu: number[] = [];
   const years: Year30[] = [];

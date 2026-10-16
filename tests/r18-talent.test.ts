@@ -9,7 +9,7 @@ import { createGame } from '../src/sim/worldgen';
 import { chron } from '../src/sim/sys/chron9';
 import { camps18, holdCamp18, pitchSong18 } from '../src/sim/sys/camps18';
 import { dig18, disc18 } from '../src/sim/sys/discover18';
-import { rel18 } from '../src/sim/sys/relics18';
+import '../src/sim/sys/relics18';
 import { relics } from '../src/sim/sys/relics9';
 import { foundSchool18, school18 } from '../src/sim/sys/school18';
 import { foundHB18, hbBonus18 } from '../src/sim/sys/session18';
@@ -18,7 +18,7 @@ import { playerActs } from '../src/sim/util';
 import type { GameState } from '../src/sim/types';
 import '../src/sim/sys';
 
-const realIds = (s: GameState) => relics(s).list.map((x) => x.rr ?? rel18(s).m[x.id]?.alt).filter(Boolean) as string[];
+const realIds = (s: GameState) => relics(s).list.map((x) => x.rr ?? x.meta?.alt).filter(Boolean) as string[];
 
 describe('r18 talent18', () => {
   it('relíquias reais: exato segue a história; outros modos só o que é anterior ao início; fictício não tem nenhuma', () => {
@@ -31,7 +31,7 @@ describe('r18 talent18', () => {
     expect(relics(strict).list.some((x) => x.rr === 'teen_spirit_mustang')).toBe(true);
     expect(realIds(loose)).toContain('thriller_jacket');
     expect(realIds(loose)).not.toContain('teen_spirit_mustang');
-    expect(relics(loose).list.filter((x) => x.rr).every((x) => rel18(loose).m[x.id]?.alt)).toBe(true); // história alternativa
+    expect(relics(loose).list.filter((x) => x.rr).every((x) => x.meta?.alt)).toBe(true); // história alternativa
     expect(realIds(fic)).toEqual([]);
   }, 240000);
 
@@ -40,7 +40,7 @@ describe('r18 talent18', () => {
     const a = Object.values(s.acts).sort((x, y) => y.fame - x.fame)[0];
     a.fame = Math.max(a.fame, 50);
     chron(s, { k: 'legendary_show', i: 4, a: [a.id], t: l('Show histórico', 'Historic show') });
-    const rl = relics(s).list.find((x) => rel18(s).m[x.id]?.o === 'show');
+    const rl = relics(s).list.find((x) => x.meta?.o === 'show');
     expect(rl).toBeTruthy();
     const v0 = rl!.v;
     a.legend = true; a.fame = 95; a.number1s = 8;

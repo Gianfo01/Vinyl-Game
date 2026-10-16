@@ -17,7 +17,7 @@
 // Módulo leve (só ext4, util, dados): não importa sistemas com ganchos (regra da onda 0 para fontes únicas).
 // Padrões = comportamento de antes: sem diretriz nova, delegar dá o mesmo resultado das regras antigas.
 
-import { toReal } from '../core/money';
+import { formatMoney, toReal } from '../core/money';
 import { clamp } from '../core/rng';
 import { STAFF_ROLES } from '../data/rules';
 import { l, type L } from '../data/world';
@@ -78,7 +78,7 @@ export interface Log31 {
   r: Resp31;
   /** quem decidiu: id do funcionário, 'rule' (regra), 'team' (equipe sem pessoa), 'player' (você mudou a delegação) */
   who: string;
-  /** nome de quem decidiu, no momento */
+  /** nome de quem decidiu, no momento (funcionário); vazio para você/regra/equipe — a tela traduz por `logWho31` */
   n: string;
   t: L;
   why?: L;
@@ -103,6 +103,8 @@ export interface D31 {
   tried: Record<string, number>;
   /** gasto delegado por responsabilidade no mês */
   spent: { m: number; v: Partial<Record<Resp31, number>> };
+  /** W2-REV: decisões desfeitas por você — "não repetir" (responsabilidade:ato → semana até quando vale) */
+  nr?: Record<string, number>;
   log: Log31[];
   asks: Ask31[];
   seq: number;
@@ -203,6 +205,9 @@ export const modeOf31 = (s: GameState, id: Resp31): Mode31 => set31(s, id).m;
 export const dirOf31 = (s: GameState, id: Resp31): Dir31 => set31(s, id).d;
 /** A responsabilidade está nas mãos da equipe ou de uma regra (não "eu decido")? */
 export const on31 = (s: GameState, id: Resp31): boolean => modeOf31(s, id) !== 'me';
+/** W2-REV: agenda de quem ENTRA no elenco (assinatura, compra, retorno) — com "Agenda do elenco: Eu decido", fica com
+ *  você (não delegada), como as que já estavam; a sua própria banda segue delegada como antes. */
+export const joinDelegated31 = (s: GameState, act?: { playerBand?: boolean }): boolean => !!act?.playerBand || modeOf31(s, 'agenda') !== 'me';
 
 const roleName = (role: string): L => STAFF_ROLES.find((x) => x.id === role)?.name ?? l(role, role);
 /** Quem da equipe pode responder por esta responsabilidade. */
@@ -220,7 +225,7 @@ export function lockWhy31(s: GameState, id: Resp31, m: Mode31): L | null {
   const def = respDef31(id);
   if (!def.modes.includes(m)) return def.locked ?? l('Esta responsabilidade não tem esse modo.', 'This responsibility has no such mode.');
   if ((m === 'staff' || m === 'partial') && def.roles.length && !qualified31(s, id).length)
-    return fmtL(l('Falta alguém com o cargo: {r}. Contrate na Equipe.', 'You need someone in the role: {r}. Hire in Staff.'), { r: def.roles.map((r) => roleName(r).pt).join(' / ') });
+    return fmtL(l('Falta alguém com o cargo: {r}. Contrate na Equipe.', 'You need someone in the role: {r}. Hire in Staff.'), { r: def.roles.map((r) => roleName(r)).reduce((a, b) => l(`${a.pt} / ${b.pt}`, `${a.en} / ${b.en}`)) });
   return null;
 }
 
@@ -294,30 +299,36 @@ export function addSpent31(s: GameState, id: Resp31, cents: number): void {
  * Portão de gasto de uma responsabilidade (orçamento do mês e "me pergunte acima de"). Devolve o motivo do bloqueio
  * (e registra a exceção) ou null. Sem diretriz nova, nunca bloqueia — o resultado é o de antes.
  */
-export function spendGate31(s: GameState, id: Resp31, cents: number, who: StaffMember | undefined, act?: string): L | null {
+export function spendGate31(s: GameState, id: Resp31, cents: number, who: StaffMember | undefined, act?: string, o: { quiet?: boolean } = {}): L | null {
   const st = set31(s, id);
   if (onceOk31(s, `${id}:all`)) return null;
   const real = toReal(cents, s.year);
   if (st.m === 'partial' && (st.d.ask ?? 0) > 0 && real > (st.d.ask ?? 0)) {
-    const t = fmtL(l('{r}: gasto de {v} acima do seu limite de consulta ({a}) — precisa da sua autorização.', '{r}: spend of {v} above your ask-me limit ({a}) — needs your approval.'), { r: respDef31(id).name, v: usd(real), a: usd(st.d.ask ?? 0) });
-    exc31(s, id, 'ask', t, act, who);
+    const t = fmtL(l('{r}: gasto de {v} acima do seu limite de consulta ({a}) — precisa da sua autorização.', '{r}: spend of {v} above your ask-me limit ({a}) — needs your approval.'), { r: respDef31(id).name, v: usd31(real), a: usd31(st.d.ask ?? 0) });
+    if (!o.quiet) exc31(s, id, 'ask', t, act, who);
     return l('Diretriz: acima do limite de consulta.', 'Directive: above the ask-me limit.');
   }
   const bud = st.d.budget ?? 0;
   if (bud > 0 && toReal(spent31(s, id), s.year) + real > bud) {
-    const t = fmtL(l('{r}: orçamento do mês ({b}) esgotado; {v} não foram gastos.', '{r}: monthly budget ({b}) used up; {v} not spent.'), { r: respDef31(id).name, b: usd(bud), v: usd(real) });
-    exc31(s, id, 'budget', t, act, who);
+    const t = fmtL(l('{r}: orçamento do mês ({b}) esgotado; {v} não foram gastos.', '{r}: monthly budget ({b}) used up; {v} not spent.'), { r: respDef31(id).name, b: usd31(bud), v: usd31(real) });
+    if (!o.quiet) exc31(s, id, 'budget', t, act, who);
     return l('Diretriz: orçamento do mês esgotado.', 'Directive: monthly budget used up.');
   }
   return null;
 }
-const usd = (v: number): string => `$${Math.round(v).toLocaleString('en-US')}`;
+/** Dólares de hoje (reais) pelo formatador do jogo, em cada língua do texto. */
+export const usd31 = (realDollars: number): L => l(formatMoney(Math.round(realDollars) * 100, 'pt-BR'), formatMoney(Math.round(realDollars) * 100, 'en-US'));
+/** Centavos nominais pelo formatador do jogo, em cada língua do texto. */
+export const cents31 = (c: number): L => l(formatMoney(Math.round(c), 'pt-BR'), formatMoney(Math.round(c), 'en-US'));
 
 // ---------------------------------------------------------------- registro de automação
 
 export interface LogIn31 { r: Resp31; who: string; t: L; why?: L; amt?: number; tone?: Log31['tone']; act?: string; x?: string; c?: [string, string]; undo?: Undo31; n?: string }
-const whoName = (s: GameState, who: string): string =>
-  who === 'player' ? l('Você', 'You').pt : who === 'rule' ? l('Regra', 'Rule').pt : who === 'team' ? l('Equipe', 'Team').pt : s.player.staff.find((x) => x.id === who)?.name ?? who;
+const SYS_WHO31: Record<string, L> = { player: l('Você', 'You'), rule: l('Regra', 'Rule'), team: l('Equipe', 'Team') };
+/** Grava só o nome de funcionário (nome próprio); você/regra/equipe ficam como código e a tela traduz. */
+const whoName = (s: GameState, who: string): string => (who in SYS_WHO31 ? '' : s.player.staff.find((x) => x.id === who)?.name ?? '');
+/** Quem decidiu, no idioma da tela. */
+export const logWho31 = (e: Pick<Log31, 'who' | 'n'>): L => SYS_WHO31[e.who] ?? (e.n ? l(e.n, e.n) : l('Ex-funcionário', 'Former staff'));
 
 /** Grava uma decisão automática (quem, qual regra, quanto, resultado). Mais nova no fim. */
 export function logAuto31(s: GameState, e: LogIn31): Log31 {
@@ -371,8 +382,13 @@ export const excs31 = (s: GameState, sinceWeek = -Infinity): Exc31[] =>
 export interface RelPol31 { ok: boolean; minGap: number; budgetMult: number; maxSpend: number; type?: 'single' | 'lp'; songs?: string[] }
 export const EXEC31: { release?: (s: GameState, act: import('./types').Act, base: RelPol31) => RelPol31; why?: (s: GameState, act: import('./types').Act) => string[] } = {};
 
-/** Desfazedores registrados pelos executores: devolvem null (desfeito) ou o motivo. */
-export const UNDO31: Record<string, (s: GameState, id: string) => L | null> = {};
+/** Desfazedores registrados pelos executores: devolvem null (desfeito) ou o motivo. Recebem a entrada do registro
+ *  (valor gasto, artista) para estornar o gasto do mês. */
+export const UNDO31: Record<string, (s: GameState, id: string, e: Log31) => L | null> = {};
+/** W2-REV: semanas em que a equipe/regra não repete, para o mesmo ato, a decisão que você desfez. */
+export const NO_REPEAT31 = 12;
+/** A decisão desta responsabilidade para este ato foi desfeita por você há pouco? (executores consultam) */
+export const blocked31 = (s: GameState, id: Resp31, act: string | undefined): boolean => !!act && (ro(s)?.nr?.[`${id}:${act}`] ?? -1) >= s.week;
 /** Pode desfazer agora? (null = sim) */
 export function canUndo31(s: GameState, e: Log31): L | null {
   if (!e.undo) return l('Esta decisão não pode ser desfeita.', 'This decision cannot be undone.');
@@ -384,9 +400,10 @@ export function undo31(s: GameState, logId: number): L | null {
   if (!e) return l('Decisão não encontrada.', 'Decision not found.');
   const why = canUndo31(s, e);
   if (why) return why;
-  const r = UNDO31[e.undo!.k](s, e.undo!.id);
+  const r = UNDO31[e.undo!.k](s, e.undo!.id, e);
   if (r) return r;
   e.undone = 1;
+  if (e.act) (d31(s).nr ??= {})[`${e.r}:${e.act}`] = s.week + NO_REPEAT31;
   logAuto31(s, { r: e.r, who: 'player', t: fmtL(l('Você desfez: {t}', 'You undid: {t}'), { t: e.t }), tone: 'info', act: e.act });
   if (s.player.staff.some((x) => x.id === e.who)) OPINE31.f?.(s, `s:${e.who}`, -3, l('Você desfez uma decisão minha', 'You undid one of my decisions'));
   return null;
@@ -424,6 +441,7 @@ export function tidy31(s: GameState): void {
   d.asks = d.asks.filter((x) => x.until >= s.week);
   for (const k of Object.keys(d.once)) if (d.once[k] < s.week) delete d.once[k];
   for (const k of Object.keys(d.tried)) if (!s.contracts[k]) delete d.tried[k];
+  if (d.nr) for (const k of Object.keys(d.nr)) if (d.nr[k] < s.week) delete d.nr[k];
 }
 
 // ---------------------------------------------------------------- visão agregada
