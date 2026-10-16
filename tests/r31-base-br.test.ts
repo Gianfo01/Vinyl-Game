@@ -84,7 +84,7 @@ describe('BASE-BR · interruptor', () => {
     Object.values(s.acts).filter((a) => a.catalogNo !== undefined && a.catalogNo >= REAL_BASE + BASE31BR_FROM && a.catalogNo < REAL_BASE + BASE31BR_TO).length
     + rw(s).upcoming.filter((i) => i >= BASE31BR_FROM && i < BASE31BR_TO).length;
   it('ligado por padrão: atos brasileiros novos no mundo (ativos ou na fila de estreia)', () => {
-    const s = createGame(defaultConfig('r31br-on', { startYear: 1960, realNames: true }));
+    const s = createGame(defaultConfig('r31br-on', { startYear: 1960, realNames: true, dbSize: 'huge' }));
     expect(sw(s, 'base31.br')).toBe(true);
     expect(brInWorld(s)).toBeGreaterThan(BASE31BR_ACTS.length * 0.5);
   });

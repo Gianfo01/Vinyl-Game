@@ -84,7 +84,8 @@ export const BASE31_FROM = REAL_ALL.length;
 for (const a of BASE31_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
 /** R31 (BASE-BR): artistas brasileiros (data/base31br) no FIM, depois do lote Z — interruptor 'base31.br' (desligado: não estreiam). */
 export const BASE31BR_FROM = REAL_ALL.length;
-for (const a of BASE31BR_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+// dono (2026-10-16): só com base de dados Enorme (z 3)
+for (const a of BASE31BR_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); a.z ??= 3; REAL_ALL.push(a); } }
 export const BASE31BR_TO = REAL_ALL.length;
 registerSwitch({
   id: 'base31.br', def: true, scope: 'game',
@@ -98,7 +99,8 @@ registerSwitch({
 export const brOff31 = (s: GameState, i: number): boolean => i >= BASE31BR_FROM && i < BASE31BR_TO && !sw<boolean>(s, 'base31.br');
 /** R31 (BASE-IT): base italiana (data/base31it) no FIM, depois do lote BR (ordem BR, IT, HITS); atrás do interruptor base31.it. */
 export const BASE31IT_FROM = REAL_ALL.length;
-for (const a of BASE31_IT) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+// dono (2026-10-16): só com base de dados Enorme (z 3)
+for (const a of BASE31_IT) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); a.z ??= 3; REAL_ALL.push(a); } }
 export const BASE31IT_TO = REAL_ALL.length;
 registerSwitch({
   id: 'base31.it', def: true, scope: 'game',

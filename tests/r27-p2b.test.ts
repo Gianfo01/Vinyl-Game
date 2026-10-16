@@ -135,10 +135,10 @@ describe('r27 P2B — modo rápido intacto', () => {
     // (caixa, turnês, acts e rng mudam). Com `base31.br` desligado (config.base31br = false) voltam os valores da BASE-IT acima
     // (2343 / 1382068899 / rng 2898923487); acts só difere pelo número de catálogo dos atos IT/HITS, que vêm depois do lote BR
     // (descontado o deslocamento, 3720502148 — conferido).
-    expect(AFTER.player.cash).toBe(452809);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(4058172360);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3810020408);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(2332586623);
+    expect(AFTER.player.cash).toBe(182589);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3575668786);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1693608899);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(3302724126);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
   it('nada de estado P2B criado sem o jogador', () => {
