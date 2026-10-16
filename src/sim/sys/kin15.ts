@@ -5,6 +5,7 @@
 
 import { clamp, Rng, seedState } from '../../core/rng';
 import { exitMember20 } from '../members20';
+import { actsOfPerson17 } from '../actidx17';
 import { KIN15, type KinRow } from '../../data/kin15';
 import { KIN25 } from '../../data/kin25';
 import { KIN27 } from '../../data/kin27';
@@ -266,7 +267,9 @@ function generate(s: GameState, r: Rng): void {
     // R29 (CONNECT): pessoa real (real27) não ganha irmãos nem sobrenome inventados — "Marc Bolan" virava "Marc Watts"
     // numa banda gerada e o índice de identidade (realworld) passava a apontar para outro nome. Depois do sorteio: mesma sequência.
     if (s.config.realNames && a.members.some((id) => s.persons[id]?.real27)) continue;
-    const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p && !(graph(s)[p.id]?.length));
+    // W3-FIX: quem já tem outra formação (carreira solo, banda anterior — supergrupo novo) já tem nome e história públicos:
+    // não vira "irmão" nem ganha sobrenome inventado ("Irene Lowell", ato solo de catálogo, virava "Irene Winslow")
+    const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p && !(graph(s)[p.id]?.length) && !actsOfPerson17(s, p.id).some((b) => b !== a));
     const fam = ms.filter((p) => p.origin === 'family').length;
     if (ms.length < 2 || !(fam >= 2 || roll < (a.members.length === 2 ? 0.18 : 0.08))) continue;
     const head = ms[0], sur = head.name.split(' ').slice(1).join(' ');

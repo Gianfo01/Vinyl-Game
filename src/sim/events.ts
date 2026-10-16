@@ -42,6 +42,8 @@ export interface EventDef {
   cooldown: number; // meses
   weight?: number;
   forcedOnly?: boolean;
+  /** W3-FIX: o evento ainda faz sentido neste contexto? (falso = não acontece; ecos/sequências também passam por aqui) */
+  ok?: (s: GameState, c: Ctx) => boolean;
   find?: (s: GameState, r: Rng) => Ctx | null;
   /** r28 (F3): janela de anos em que o evento faz sentido (vocabulário/tecnologia da época) */
   era?: [number, number];
@@ -195,6 +197,8 @@ export const EVENTS: EventDef[] = [
   // ---------------- Banda ----------------
   {
     id: 'member_leaves', cat: 'band', tone: 'bad', tags: [], cooldown: 0, forcedOnly: true,
+    // W3-FIX: só sai quem está numa formação com mais gente (ato solo não perde o próprio artista: "Ezra Keene sai de Ezra Keene")
+    ok: (s, c) => { const a = s.acts[String(c.act)]; return !!a && a.members.length > 1 && a.members.includes(String(c.person)); },
     title: l('{person} quer sair de {act}', '{person} wants to leave {act}'),
     text: l('Meses de insatisfação: {person} anuncia que vai deixar {act}.', 'After months of unhappiness, {person} announces they are leaving {act}.'),
     options: [
@@ -878,6 +882,7 @@ function filtered(s: GameState, def: EventDef, ctx?: Ctx): boolean {
 /** Cria o evento: com opções vira cartão de decisão; com uma só, aplica e avisa. */
 export function emitEvent(s: GameState, r: Rng, id: string, ctx: Ctx): void {
   const def = eventById[id];
+  if (def?.ok && !def.ok(s, ctx)) return;
   if (!def || filtered(s, def, ctx)) {
     // filtrado: aplica o desfecho mais neutro sem mostrar o conteúdo
     if (def) def.options[def.options.length - 1].apply(s, r, ctx);

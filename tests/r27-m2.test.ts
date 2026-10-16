@@ -258,6 +258,10 @@ describe('r27 M2 — negociação jogável', () => {
     const act = pickAct(s1);
     const n1 = startNego27(s1, act.id, draft(s1, act.id)) as Nego27;
     const low = { ...n1.ours, advance: 0, royalty: 0.05 };
+    // W3-FIX: o mínimo (n.res) é SORTEADO para bater com a chance do modo rápido; com o mundo da onda 3 o sorteio desta
+    // artista caiu em 0,22 (a proposta irrisória marca 0,24 — chance de 6% no modo rápido) e ela assinava. O caso testado é
+    // "prazo ABAIXO do mínimo": fixa o mínimo acima da nota da proposta (folga maior que o empurrão do prazo, 0,05)
+    n1.res = Math.max(n1.res, evaluateOffer(s1, s1.acts[act.id], low).score + 0.1);
     propose27(s1, n1, low, 'deadline');
     expect(n1.status === 'walked' || n1.status === 'sniped').toBe(true);
 
