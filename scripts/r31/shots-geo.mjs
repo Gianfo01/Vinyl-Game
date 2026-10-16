@@ -11,7 +11,7 @@ mkdirSync(out, { recursive: true });
 const exe = `/opt/pw-browsers/${readdirSync('/opt/pw-browsers').find((d) => d.startsWith('chromium-'))}/chrome-linux/chrome`;
 const b = await chromium.launch({ executablePath: exe });
 const p = await b.newPage({ viewport: { width: 1500, height: 1300 }, locale: 'pt-BR' });
-p.on('pageerror', (e) => console.error('PAGEERR', e.message));
+p.on('pageerror', (e) => console.error('PAGEERR', e.message)); p.on('console', (m) => { if (m.type() === 'error') console.error('CONSOLE', m.text().slice(0, 400)); });
 await p.goto(`http://127.0.0.1:${port}/`); await p.waitForTimeout(3500);
 p.setDefaultTimeout(180000);
 const CITIES = ['rio', 'salvador', 'lisbon', 'sydney', 'new_york', 'london', 'paris', 'sao_paulo', 'hong_kong', 'madrid'];
