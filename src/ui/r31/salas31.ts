@@ -153,8 +153,8 @@ export function salaStage31(s: GameState, m: SalaM31, o: { compact?: boolean } =
     const startX = Math.round(W * 0.96);
     const el = h('button', { type: 'button', class: 's31-you', title: t(l('Você — agenda, energia e dinheiro pessoal', 'You — agenda, energy and personal money')), 'aria-label': t(l('Você: abrir o seu painel', 'You: open your panel')), onclick: () => run31(s, { k: 'you' }) });
     const c = youSprite31(yl, m.art.year, 0, false, 'SW');
-    const place = (x: number) => { el.style.left = pct(x - 8, W); };
-    el.style.top = pct(end.y - 33, H); el.style.width = pct(16, W); el.style.height = pct(34, H);
+    const place = (x: number) => { el.style.left = pct(x - 12, W); };
+    el.style.top = pct(end.y - 30, H); el.style.width = pct(24, W); el.style.height = pct(34, H); // quadro do boneco: 24×34, pé na linha 31
     el.append(c);
     layer.append(el, h('span', { class: 's31-you-tag', style: `left:${pct(end.x, W)};top:${pct(end.y - 40, H)}`, 'aria-hidden': 'true' }, t(l('você', 'you'))));
     const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -165,7 +165,7 @@ export function salaStage31(s: GameState, m: SalaM31, o: { compact?: boolean } =
       const dir: 'SE' | 'SW' = end.x < startX ? 'SW' : 'SE';
       const tick = window.setInterval(() => {
         if (!el.isConnected && f > 2) { window.clearInterval(tick); return; }
-        const step = Math.sign(end.x - x) * Math.min(3, Math.abs(end.x - x));
+        const step = Math.sign(end.x - x) * Math.min(Math.max(3, Math.ceil(Math.abs(startX - end.x) / 12)), Math.abs(end.x - x)); // ~1 s até o lugar
         x += step; f++;
         const walking = Math.abs(end.x - x) > 0;
         el.replaceChildren(youSprite31(yl, m.art.year, f, walking, dir));
@@ -221,7 +221,7 @@ function salaPage(s: GameState): HTMLElement {
     h('header', { class: 's31-head' },
       h('div', null, h('h1', { class: 'page21' }, t(m.title)), h('small', { class: 'muted' }, t(m.sub))),
       h('div', { class: 'row wrap' },
-        h('button', { type: 'button', class: 'btn small', onclick: () => goDest31({ area: 'hq' }) }, '← ', t(l('Voltar à sede', 'Back to HQ'))),
+        h('button', { type: 'button', class: 'btn small', onclick: () => goDest31({ area: 'sede25' }) }, '← ', t(l('Voltar à sede', 'Back to HQ'))),
         h('button', { type: 'button', class: 'btn small', onclick: () => run31(s, m.details, m) }, ic('note'), ' ', t(l('Ver detalhes (tabela)', 'See details (table)'))))),
     salaStage31(s, m),
     h('div', { class: 's31-lists' },

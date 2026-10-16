@@ -60,7 +60,7 @@ const sala = async (id, mut) => p.evaluate(async ([id, mut]) => {
 }, [id, mut ?? null]);
 const area = async (a) => p.evaluate(async (a) => { const st = await import('/src/ui/store.ts'); const c = await import('/src/ui/common.ts'); document.querySelectorAll('.overlay').forEach((e) => e.remove()); st.store.area = a; c.rerender(); }, a);
 
-await area('hq'); await shot('sede');
+await area('sede25'); await shot('sede');
 await sala('studio'); await shot('estudio', '.s31-page');
 await p.click('.s31-hot[data-hot^="m:"]').catch(() => console.error('sem músico')); await shot('estudio-painel', '.s31-page');
 await sala('roster'); await shot('elenco', '.s31-page');

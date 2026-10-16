@@ -12,7 +12,7 @@ import { drawText } from '../pixel/font';
 import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { prim27, type Cell27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 import type { Appearance } from '../../sim/types';
-import type { Fig31, Hot31, Prop31, SalaM31 } from './salas31model';
+import { TIER_W31, TIER_X31, type Fig31, type Hot31, type Prop31, type SalaM31 } from './salas31model';
 
 // ---------------------------------------------------------------- geometria (pura)
 
@@ -73,6 +73,7 @@ function hitOf(m: SalaM31, L: Lay31, h: Hot31): Rect31 {
   const fy = L.fy(floor);
   const x = L.X(h.x), w = L.Wd(h.w);
   if (h.id === 'upper' && L.upper) return pad(L.upper, 0);
+  if (h.id === 'top' && m.id === 'catalog' && !m.art.boxes) { const r0 = L.rooms[0]; return pad({ x, y: fy - (r0.h - 22) + 4, w: 10, h: 12 }, 3); } // a fita que mais brilha fica na 1ª prateleira
   if (h.kind === 'person' && h.fig) {
     const cx = h.prop ? x + Math.round(w / 2) : x + Math.round(w / 2);
     const lift = h.fig.lift ?? 0;
@@ -169,7 +170,10 @@ function prop(g: Ctx27, m: SalaM31, L: Lay31, k: Prop31, f: number, fw: number, 
   const era = m.art.year;
   switch (k) {
     case 'console': prim27.consoleDesk(g, x, fy, Math.max(24, w)); break;
-    case 'reel': prim27.reelDeck(g, x, fy, pl.gear !== 'shellac'); if (pl.gear === 'shellac') prim27.lathe(g, x, fy); break;
+    case 'reel': // fita de rolo; antes da fita, o armário dos discos de acetato (a gravação era direto no disco)
+      if (pl.gear === 'shellac') { blk(p, x, fy - 30, 18, 30, pal.woodDark); for (let i = 0; i < 4; i++) { p.hline(x + 1, x + 16, fy - 24 + i * 7, tint(pal.woodDark, 0.25)); for (let xx = x + 2; xx < x + 16; xx += 2) p.rect(xx, fy - 29 + i * 7, 1, 5, i % 2 ? C('#2a2020') : C('#7a5a3a')); } }
+      else prim27.reelDeck(g, x, fy, true);
+      break;
     case 'glass': p.rect(x, y0 + 4, 3, room.h - 8, C('#2a2a30')); for (let yy = y0 + 10; yy < y0 + room.h - 24; yy++) p.put(x + 1, yy, withAlpha(C('#bfe0e8'), 120)); break;
     case 'foam': prim27.foam(g, x, y0 + 10, w, Math.min(40, room.h - 40)); break;
     case 'drums': prim27.drums(g, x, fy); break;
@@ -302,10 +306,10 @@ function prop(g: Ctx27, m: SalaM31, L: Lay31, k: Prop31, f: number, fw: number, 
     case 'pedestal': pedestal(g, x, w, fy, pp); break;
     case 'tiers': {
       for (let i = 0; i < 5; i++) {
-        const tx = L.X(0.04 + i * 0.19) + 2, tw = L.Wd(0.15) - 4;
+        const tx = L.X(TIER_X31(i)) + 2, tw = L.Wd(TIER_W31) - 4;
         blk(p, tx, y0 + 6, tw, 13, C('#f2ece0'));
         for (let s0 = 0; s0 < 5; s0++) { const sx = tx + Math.round((tw - 25) / 2) + s0 * 5; star(p, sx, y0 + 12, s0 <= i ? C('#e8b020') : C('#6a6a72')); }
-        if (i < 4) p.hline(tx + tw + 2, tx + tw + 8, y0 + 12, C('#c09048'));
+        if (i < 4) p.hline(tx + tw + 2, L.X(TIER_X31(i + 1)), y0 + 12, C('#c09048'));
       }
       break;
     }

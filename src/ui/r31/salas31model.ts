@@ -200,10 +200,11 @@ export const AREA_SALA31: Record<string, SalaId31> = { studio: 'studio', artists
 
 // ---------------------------------------------------------------- Estúdio
 
-function moodOf(p: Person): { bubble: Fig31['bubble']; chip: Chip31 } {
-  if (p.stress >= 70) return { bubble: 'bolt', chip: { sym: '⚡', text: fmtL(l('Estresse {n}', 'Stress {n}'), { n: Math.round(p.stress) }), tone: 'soon' } };
-  if (p.morale < 35) return { bubble: 'cloud', chip: { sym: '☁', text: fmtL(l('Moral baixa {n}', 'Low morale {n}'), { n: Math.round(p.morale) }), tone: 'soon' } };
-  return { bubble: 'heart', chip: { sym: '♥', text: fmtL(l('Moral {n}', 'Morale {n}'), { n: Math.round(p.morale) }), tone: 'good' } };
+function moodOf(p: Person): { bubble: Fig31['bubble']; chip: Chip31; say: L } {
+  // selo curto (símbolo + número) em cima da cabeça; a frase inteira vai na dica
+  if (p.stress >= 70) return { bubble: 'bolt', say: fmtL(l('Estresse {n}', 'Stress {n}'), { n: Math.round(p.stress) }), chip: { sym: '⚡', text: L1(String(Math.round(p.stress))), tone: 'soon' } };
+  if (p.morale < 35) return { bubble: 'cloud', say: fmtL(l('Moral baixa {n}', 'Low morale {n}'), { n: Math.round(p.morale) }), chip: { sym: '☁', text: L1(String(Math.round(p.morale))), tone: 'soon' } };
+  return { bubble: 'heart', say: fmtL(l('Moral {n}', 'Morale {n}'), { n: Math.round(p.morale) }), chip: { sym: '♥', text: L1(String(Math.round(p.morale))), tone: 'good' } };
 }
 
 /** Qualidade da gravação até agora: o melhor take de cada faixa já tentada (o que o próprio estúdio mostra). */
@@ -250,9 +251,8 @@ function studioM(s: GameState): SalaM31 {
   // luz de gravação
   const paused = !!act && !!act.hiatusUntil && act.hiatusUntil > s.week;
   const rec = !!cur && !paused && !cur.decision;
-  deco.push({ prop: 'onair', x: 0.5, pp: { on: rec } });
   hots.push({
-    id: 'light', kind: 'object', prop: 'onair', x: 0.47, w: 0.08, pp: { on: rec },
+    id: 'light', kind: 'object', prop: 'onair', x: 0.56, w: 0.07, pp: { on: rec },
     label: l('Luz de gravação', 'Recording light'),
     tip: rec ? l('Gravando agora', 'Recording now') : paused ? l('Sessão pausada: o artista está afastado', 'Session paused: the act is on leave') : cur?.decision ? l('Parado esperando a sua decisão', 'Stopped, waiting for your decision') : l('Ninguém gravando', 'Nobody recording'),
     chip: rec ? { sym: '●', text: l('gravando', 'recording'), tone: 'good' } : { sym: '○', text: paused ? l('pausa', 'paused') : l('apagada', 'off'), tone: 'info' },
@@ -263,9 +263,10 @@ function studioM(s: GameState): SalaM31 {
   const house = (s.player.staff ?? []).find((x) => x.role === 'producer');
   if (pr || house || cur) {
     const bonus = pr ? soundOf(pr).prod : house ? Math.round(staffSkill(s, 'producer') * 0.22) : 0;
+    const who = !!(pr || house);
     hots.push({
-      id: 'producer', kind: 'person', x: 0.36, w: 0.06,
-      fig: { seed: pr ? `prod:${pr.id}` : house ? house.id : 'prod:none', pose: 'stand', dir: 'SE', role: 'producer' },
+      id: 'producer', kind: who ? 'person' : 'empty', x: 0.36, w: 0.06, prop: who ? undefined : 'chair',
+      fig: who ? { seed: pr ? `prod:${pr.id}` : house!.id, pose: 'stand', dir: 'SE', role: 'producer' } : undefined,
       label: pr ? L1(pr.name) : house ? L1(house.name) : l('Sem produtor', 'No producer'),
       tip: pr ? fmtL(l('Produtor: {n} · som "{k}" · produção {b}', 'Producer: {n} · "{k}" sound · production {b}'), { n: pr.name, k: soundOf(pr).name, b: `${bonus >= 0 ? '+' : ''}${bonus}` })
         : house ? fmtL(l('Produtor da casa: {n} · produção +{b}', 'House producer: {n} · production +{b}'), { n: house.name, b: bonus }) : l('A sessão roda sem produtor', 'The session runs without a producer'),
@@ -281,7 +282,7 @@ function studioM(s: GameState): SalaM31 {
     hots.push({
       id: `m:${p.id}`, kind: 'person', x: 0.6 + i * 0.075, w: 0.06, personId: p.id, actId: act!.id,
       fig: { personId: p.id, seed: p.id, pose: 'play', dir: i % 2 ? 'SW' : 'SE', role: p.role, bubble: m.bubble },
-      label: L1(p.name), tip: fmtL(l('{n} ({a}) · {m}', '{n} ({a}) · {m}'), { n: p.name, a: act!.name, m: m.chip.text }), chip: m.chip,
+      label: L1(p.name), tip: fmtL(l('{n} ({a}) · {m}', '{n} ({a}) · {m}'), { n: p.name, a: act!.name, m: m.say }), chip: m.chip,
       do: { k: 'act', id: act!.id },
       acts: [{ id: 'sheet', label: l('Ficha da pessoa', 'Person sheet'), do: { k: 'person', id: p.id } }],
     });
@@ -304,7 +305,7 @@ function studioM(s: GameState): SalaM31 {
     title: art.rented ? fmtL(l('Estúdio alugado · {t}', 'Rented studio · {t}'), { t: STUDIO_TIERS[cur!.tier]?.name ?? '' }) : l('Estúdio', 'Studio'),
     sub: cur ? fmtL(l('{a} gravando · sessão {d} de {n}', '{a} recording · session {d} of {n}'), { a: act?.name ?? '?', d: cur.dayDone, n: cur.days }) : l('Estúdio livre', 'Studio free'),
     intro: l('A fita mostra os dias gravados, a mesa a qualidade, a luz se está gravando; os músicos mostram o humor; a porta é a agenda.', 'The tape shows the days recorded, the desk the quality, the light whether it is recording; the players show their mood; the door is the schedule.'),
-    art, hots, deco, you: youIn(s, 'studio', 0.44), details: { k: 'go', area: 'studio' },
+    art, hots, deco, you: youIn(s, 'studio', 0.47), details: { k: 'go', area: 'studio' },
     alerts: cur?.decision ? [{ sym: '!', text: l('Um take espera a sua decisão', 'A take is waiting for your decision'), tone: 'normal' }] : [],
     list, listTitle: l('Sessões em andamento', 'Sessions in progress'),
   };
@@ -361,7 +362,7 @@ function rosterM(s: GameState): SalaM31 {
   });
   const free = Math.max(0, caps.careers - acts.length);
   hots.push({
-    id: 'vacancy', kind: 'empty', prop: 'ghost', x: 0.06 + (shown.length * 0.8) / slots, w: 0.1,
+    id: 'vacancy', kind: 'empty', prop: free ? 'ghost' : undefined, x: 0.06 + (shown.length * 0.8) / slots, w: 0.1,
     label: free ? l('Vaga livre no elenco', 'Free roster slot') : l('Elenco cheio', 'Roster full'),
     tip: free ? fmtL(pl(free, l('{n} vaga livre: procurar talentos', '{n} free slot: look for talent'), l('{n} vagas livres: procurar talentos', '{n} free slots: look for talent')), { n: free }) : fmtL(l('Todas as {c} vagas ocupadas: amplie a sede para ter mais', 'All {c} slots taken: grow the HQ for more'), { c: caps.careers }),
     chip: free ? { sym: '+', text: fmtL(l('{n} vaga(s)', '{n} slot(s)'), { n: free }), tone: 'good' } : { sym: '■', text: l('cheio', 'full'), tone: 'info' },
@@ -382,7 +383,7 @@ function rosterM(s: GameState): SalaM31 {
     id: 'roster', title: fmtL(l('Elenco {n}/{c}', 'Roster {n}/{c}'), { n: acts.length, c: caps.careers }),
     sub: fmtL(l('{h} na sala · {a} fora', '{h} in the room · {a} away'), { h: here.length, a: away.length }),
     intro: l('Sofá = descansando, violão = ensaiando, mala = vai viajar, nuvem = estressado; o número em cima é o tempo de contrato. O quadro mostra quem está fora; a vaga leva a Talentos.', 'Sofa = resting, guitar = rehearsing, suitcase = about to travel, cloud = stressed; the number above is the contract time. The board shows who is away; the empty slot leads to Talent.'),
-    art, hots, deco: [...deco], you: youIn(s, 'roster', 0.62), details: { k: 'go', area: 'artists' },
+    art, hots, deco: [...deco], you: youIn(s, 'roster', 0.81), details: { k: 'go', area: 'artists' },
     alerts: stressed ? [{ sym: '☁', text: fmtL(pl(stressed, l('{n} artista estressado', '{n} stressed act'), l('{n} artistas estressados', '{n} stressed acts')), { n: stressed }), tone: 'soon' }] : [],
     list: here.map((x) => row(x.a)), listTitle: l('Na sala', 'In the room'),
     away: away.map((x) => row(x.a, x.at)),
@@ -444,7 +445,7 @@ function teamM(s: GameState): SalaM31 {
   });
   // prancheta da diretriz e os andares de cima (visão agregada)
   hots.push({
-    id: 'directive', kind: 'object', prop: 'clipboard', x: 0.47, w: 0.06, pp: { n: 0 },
+    id: 'directive', kind: 'object', prop: 'clipboard', x: 0.3, w: 0.06, pp: { n: 0 },
     label: l('Prancheta: diretriz de delegação', 'Clipboard: delegation directive'),
     tip: l('Escopo e verba que a equipe decide sozinha', 'Scope and budget the team decides on its own'),
     chip: { sym: '✎', text: l('diretriz', 'directive'), tone: 'info' },
@@ -467,7 +468,7 @@ function teamM(s: GameState): SalaM31 {
     id: 'team', title: fmtL(l('Equipe {n}/{c} · {y}', 'Team {n}/{c} · {y}'), { n: staff.length, c: caps.staff, y: s.year }),
     sub: fmtL(l('{f} andar(es) na sede', '{f} floor(s) at HQ'), { f: art.floors }),
     intro: l('Uma mesa por função, com a barra de carga; mesa vazia = contratar. A prancheta é a diretriz; os andares de cima mostram só as exceções.', 'One desk per role, with its load bar; an empty desk = hire. The clipboard is the directive; the upper floors show only the exceptions.'),
-    art, hots, deco: [{ prop: 'filing', x: 0.96 }, { prop: 'plant', x: 0.01 }, { prop: 'shelf', x: 0.55, w: 0.06 }], you: youIn(s, 'team', 0.5), details: { k: 'go', area: 'team' },
+    art, hots, deco: [{ prop: 'filing', x: 0.96 }, { prop: 'plant', x: 0.01 }, { prop: 'shelf', x: 0.86, w: 0.06 }], you: youIn(s, 'team', 0.5), details: { k: 'go', area: 'team' },
     alerts, list, listTitle: l('Toda a equipe', 'Whole team'),
   };
 }
@@ -557,7 +558,7 @@ function talentM(s: GameState): SalaM31 {
   const sc = scouts[0];
   const trip = sc ? trips.find((x) => x.scoutId === sc.id) : trips[0];
   hots.push({
-    id: 'scout', kind: sc ? 'person' : 'empty', prop: sc ? undefined : 'vacancy', x: 0.2, w: 0.08,
+    id: 'scout', kind: sc ? 'person' : 'empty', prop: sc ? undefined : 'chair', x: 0.2, w: 0.08,
     fig: sc ? { seed: sc.id, pose: 'stand', dir: 'SE' } : undefined,
     label: sc ? fmtL(l('Olheiro: {n}', 'Scout: {n}'), { n: sc.name }) : l('Balcão sem olheiro', 'No scout at the bar'),
     tip: trip ? fmtL(l('Missão: {c}, volta em {w}', 'Mission: {c}, back in {w}'), { c: trip.city ? cityById[trip.city]?.name ?? '?' : trip.fam, w: wk(Math.max(0, trip.until - s.week)) }) : sc ? l('Sem missão agora: mande a uma cena', 'No mission now: send to a scene') : l('Contrate um olheiro', 'Hire a scout'),
@@ -590,12 +591,15 @@ function talentM(s: GameState): SalaM31 {
     sub: band ? fmtL(l('No palco: {a}', 'On stage: {a}'), { a: band.name }) : l('Palco vazio hoje', 'Empty stage tonight'),
     intro: l('A banda no palco mostra só o que você sabe ("??" = ainda não sabe). O olheiro no balcão diz a missão; as demos e o caderno levam ao funil.', 'The band on stage shows only what you know ("??" = not yet). The scout at the bar shows the mission; the demos and the notebook lead to the funnel.'),
     art, hots, deco: [{ prop: 'bottles', x: 0.02, w: 0.26 }, { prop: 'counter', x: 0.01, w: 0.3 }, { prop: 'stage', x: 0.55, w: 0.44 }, { prop: 'crowd', x: 0.55, w: 0.42, pp: { n: band ? 10 : 0 } }],
-    you: youIn(s, 'talent', 0.27), details: { k: 'go', area: 'market' }, alerts: [], list: [],
+    you: youIn(s, 'talent', 0.08), details: { k: 'go', area: 'market' }, alerts: [], list: [],
   };
 }
 
 // ---------------------------------------------------------------- Troféus e relíquias (pedestais por nível)
 
+/** Posição dos 5 pedestais (a placa do nível em cima usa a mesma conta). */
+export const TIER_X31 = (i: number): number => 0.19 + i * 0.16;
+export const TIER_W31 = 0.13;
 export const TIER31: L[] = [l('Comum', 'Common'), l('Notável', 'Notable'), l('Rara', 'Rare'), l('Lendária', 'Legendary'), l('Mítica', 'Mythic')];
 /** Nível de exibição da peça (1–5) pela faixa de valor em dólares da época real; peças reais documentadas começam em Rara.
  *  (O sistema de níveis completo da onda de objetos substitui esta faixa; a cena só agrupa.) */
@@ -612,7 +616,7 @@ function trophyM(s: GameState): SalaM31 {
     const at = list.filter((x) => relicTier31(x) === lvl).sort((a, b) => b.v - a.v || (a.id < b.id ? -1 : 1));
     const best = at[0];
     hots.push({
-      id: `tier:${lvl}`, kind: best ? 'object' : 'empty', prop: 'pedestal', x: 0.04 + (lvl - 1) * 0.19, w: 0.15,
+      id: `tier:${lvl}`, kind: best ? 'object' : 'empty', prop: 'pedestal', x: TIER_X31(lvl - 1), w: TIER_W31,
       pp: { lvl, art: best?.k, seed: best?.id, name: best ? best.n.pt : '', year: best?.y },
       label: best ? fmtL(l('{t}: {n}', '{t}: {n}'), { t: TIER31[lvl - 1], n: best.n }) : fmtL(l('Pedestal {t} vazio', 'Empty {t} pedestal'), { t: TIER31[lvl - 1] }),
       tip: best ? fmtL(l('{n} · {k} peça(s) neste nível', '{n} · {k} piece(s) at this level'), { n: best.n, k: at.length }) : l('Nenhuma peça sua neste nível', 'None of your pieces at this level'),
@@ -624,7 +628,7 @@ function trophyM(s: GameState): SalaM31 {
   const won = (s.awards ?? []).filter((a) => a.byPlayer).length;
   const st = s.player.stats;
   hots.push({
-    id: 'trophies', kind: 'object', prop: 'trophies', x: 0.02, w: 0.2, pp: { n: Math.min(6, won) },
+    id: 'trophies', kind: 'object', prop: 'trophies', x: 0.01, w: 0.15, pp: { n: Math.min(6, won) },
     label: l('Estante de troféus', 'Trophy shelf'), tip: fmtL(l('{a} prêmio(s) · {g} ouro · {p} platina', '{a} award(s) · {g} gold · {p} platinum'), { a: won, g: st.gold, p: st.platinum }),
     chip: { sym: '🏆', text: L1(String(won)), tone: won ? 'good' : 'info' },
     do: { k: 'go', area: 'awards' },
@@ -633,7 +637,7 @@ function trophyM(s: GameState): SalaM31 {
     id: 'trophy', title: l('Troféus e relíquias', 'Trophies and relics'),
     sub: fmtL(l('{n} peça(s) no acervo da empresa', '{n} piece(s) in the company collection'), { n: list.length }),
     intro: l('Cada pedestal é um nível (uma a cinco estrelas). Clique na peça para emprestar ao museu, vender ou presentear.', 'Each pedestal is a level (one to five stars). Click a piece to lend it to a museum, sell or gift it.'),
-    art, hots, deco: [{ prop: 'tiers', x: 0.02, w: 0.96 }], you: youIn(s, 'trophy', 0.96), details: { k: 'go', area: 'lendas' }, alerts: [],
+    art, hots, deco: [{ prop: 'tiers', x: 0.02, w: 0.96 }], you: youIn(s, 'trophy', 0.97), details: { k: 'go', area: 'lendas' }, alerts: [],
     list: list.slice(0, 30).map((x) => ({ id: x.id, t: x.n, d: fmtL(l('{t} · {y}', '{t} · {y}'), { t: TIER31[relicTier31(x) - 1], y: x.y }), do: { k: 'relic', id: x.id } })), listTitle: l('Acervo', 'Collection'),
   };
 }
