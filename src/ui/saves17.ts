@@ -42,6 +42,7 @@ export function saveErrText20(e: unknown): string {
   if (isQuota23(e)) return quotaText23(); // r23
   if (c === 'too_big') return t(l('Arquivo grande demais para um save (recusado antes de abrir).', 'File too large for a save (refused before opening).'));
   if (c === 'old') return t(l('Save de uma versão antiga do jogo, incompatível com o modelo histórico novo. Exclua-o e comece uma partida nova.', 'Save from an old game version, incompatible with the new historical model. Delete it and start a new run.'));
+  if (c === 'old31') return t(l('Save de versão antiga não é compatível com a 31. Comece uma partida nova (o arquivo não foi alterado).', 'Saves from older versions are not compatible with version 31. Start a new run (the file was not changed).'));
   if (c === 'future') return t(l('Save de uma versão mais nova do jogo: atualize o jogo. O arquivo não foi alterado.', 'Save from a newer game version: update the game. The file was not changed.'));
   if (c === 'schema') return t(l('Save com estrutura inválida ou incompleta ({d}). Nada foi substituído.', 'Save with invalid or incomplete structure ({d}). Nothing was replaced.'), { d: (e as SaveError20).detail.slice(0, 60) });
   if (c === 'malformed' || c === 'format') return t(l('Texto de save corrompido ou truncado. Nada foi substituído.', 'Corrupted or truncated save text. Nothing was replaced.'));

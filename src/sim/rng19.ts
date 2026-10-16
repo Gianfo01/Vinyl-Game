@@ -13,8 +13,9 @@ import { Rng, seedState, type RngState } from '../core/rng';
 import { registerExt4 } from './ext4';
 import type { GameState } from './types';
 
-/** Versão do esquema de sorteio gravada em s.rngVersion e no envelope do save (19 = um fluxo por sistema). */
-export const RNG_VERSION19 = 19;
+/** Versão do esquema de sorteio gravada em s.rngVersion e no envelope do save (19 = um fluxo por sistema; 31 = sem o
+ *  fluxo único legado e com o mundo no fluxo 'world'). Saves de versão menor são recusados (save20: 'old31'). */
+export const RNG_VERSION19 = 31;
 export interface Rng19State { st: Record<string, RngState> }
 declare module './ext4' { interface Ext4 { rng19: Rng19State } }
 registerExt4('rng19', () => ({ st: {} }));

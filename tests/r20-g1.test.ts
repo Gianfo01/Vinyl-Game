@@ -25,6 +25,10 @@ describe('envelope e versões (B6) + importação (B5)', () => {
     const fut = [env.replace(`"saveVersion":${SAVE_VERSION}`, `"saveVersion":${SAVE_VERSION + 1}`), env.replace(`"formatVersion":${FORMAT20}`, `"formatVersion":${FORMAT20 + 1}`),
       env.replace(/"rngVersion":\d+/, `"rngVersion":${RNG_VERSION19 + 1}`), JSON.stringify({ ...g, version: SAVE_VERSION + 3 })];
     for (const f of fut) { const copy = f.slice(); expect(await code(() => decodeSave20(f, migrate))).toBe('future'); expect(f).toBe(copy); }
+    // r31: sorteio de antes da 31 é recusado com motivo próprio (sem ponte para o formato velho)
+    expect(RNG_VERSION19).toBe(31);
+    const old = env.replace(/"rngVersion":\d+/, '"rngVersion":19').replace(`"rngVersion":${RNG_VERSION19},`, '"rngVersion":19,');
+    expect(await code(() => decodeSave20(old, migrate))).toBe('old31');
   });
   it('estrutura, truncado, profundo e bomba de gzip são recusados', async () => {
     expect(await code(importSaveText('{"a":1}'))).toBe('schema');

@@ -77,7 +77,8 @@ export function rolesOf(s: GameState, personId: string, year?: number): Role[] {
       const k = `${r.kind}|${r.org ?? ''}|${r.from}`;
       if (seen.has(k)) continue;
       seen.add(k);
-      if (ret && open(r) && r.from < ret.from) r.to = ret.from - 1;
+      // um papel aberto no próprio ano da aposentadoria também fecha (to < from: fica no histórico, sem ano ativo)
+      if (ret && open(r) && r.from <= ret.from) r.to = ret.from - 1;
       out.push(r);
     }
   }
@@ -97,14 +98,15 @@ export function addRole(s: GameState, personId: string, kind: RoleKind, opts: { 
   return r;
 }
 
-/** Encerra os papéis abertos daquele tipo (e organização, se dada) no ano `year`. Devolve quantos fechou.
- *  Fecha também os períodos de `x4.r21.sp`; os derivados de outras fontes (integrante de ato ativo, carreira do npc17)
- *  encerram pelo sistema dono. */
+/** Encerra os papéis abertos daquele tipo (e organização, se dada) no ano `year` (último ano no papel). Devolve
+ *  quantos fechou. Fecha também os períodos de `x4.r21.sp`; os derivados de outras fontes (integrante de ato ativo,
+ *  carreira do npc17) encerram pelo sistema dono. Um papel aberto DEPOIS de `year` (ex.: aberto no ano da aposentadoria,
+ *  que fecha em `ano − 1`) fica com `to < from`: continua no histórico, mas não conta como ativo em ano nenhum. */
 export function endRole(s: GameState, personId: string, kind: RoleKind, year = s.year, org?: string): number {
   const pid = normPid(personId);
   let n = 0;
-  for (const r of st(s).list[pid] ?? []) if (r.kind === kind && open(r) && (org === undefined || r.org === org)) { r.to = Math.max(r.from, year); n++; }
-  for (const x of r21(s).sp[pid] ?? []) if (ROLE21_TO31[x.k] === kind && x.to === undefined && !x.ended && (org === undefined || x.org === org)) { x.to = Math.max(x.from, year); n++; }
+  for (const r of st(s).list[pid] ?? []) if (r.kind === kind && open(r) && (org === undefined || r.org === org)) { r.to = year; n++; }
+  for (const x of r21(s).sp[pid] ?? []) if (ROLE21_TO31[x.k] === kind && x.to === undefined && !x.ended && (org === undefined || x.org === org)) { x.to = year; n++; }
   return n;
 }
 

@@ -70,8 +70,9 @@ const NATIVE: Record<string, Native> = {
     set: (s, id, v) => { const L0 = leaders(s).L[id]; if (!L0) return false; L0.rel.player = v; return true; },
   },
   c: {
-    get: (s, id) => critRel(s)?.rel[id] ?? 0,
-    set: (s, id, v) => { const cs = critRel(s); if (!cs?.rel) return false; cs.rel[id] = v; return true; },
+    // o nativo do crítico é −50..50 (criticrel.ts): ×2 na leitura, ÷2 na escrita; sem registro = sem opinião
+    get: (s, id) => { const v = critRel(s)?.rel[id]; return v === undefined ? undefined : v * 2; },
+    set: (s, id, v) => { const cs = critRel(s); if (!cs?.rel) return false; cs.rel[id] = clamp(v / 2, -50, 50); return true; },
     k: 0.6,
   },
   s: {
@@ -102,7 +103,7 @@ export function opinionOf(s: GameState, key: string): number {
 /** Existe opinião formada (algum registro, nativo ou do x4.op)? */
 export function hasOpinion(s: GameState, key: string): boolean {
   const [k, id] = split(key);
-  if (k === 'p') return NATIVE.p.get(s, id) !== undefined || !!opState(s)[key];
+  if (k === 'p' || k === 'c') return NATIVE[k].get(s, id) !== undefined || !!opState(s)[key];
   if (NATIVE[k]) return NATIVE[k].get(s, id) !== undefined;
   return !!opState(s)[key];
 }
@@ -181,14 +182,26 @@ export function setOpinion(s: GameState, key: string, v: number, why?: L): numbe
   return now;
 }
 
+/** Nativos que esfriam aqui (os demais — líder, equipe — têm o decaimento do próprio sistema até a 31.3). */
+const DECAY_NATIVE = new Set(['p', 'c']);
+
 /**
- * Memória que esfria: só o que vive apenas no registro (sem campo nativo) decai aqui; os campos nativos têm
- * o próprio decaimento nos seus sistemas até a onda 31.3.
+ * Memória que esfria (×f por mês). Vale para o que vive só no registro e para os nativos sem decaimento próprio:
+ * a opinião de uma pessoa sobre VOCÊ (`Person.rel[pessoa do jogador]`, só das chaves com gesto registrado — a
+ * relação entre NPCs não é tocada) e a do crítico (`critrel.rel`).
  */
 export function decayOpinions(s: GameState, f: number): void {
   for (const [key, e] of Object.entries(opState(s))) {
     const [k, id] = split(key);
-    if (NATIVE[k] && NATIVE[k].get(s, id) !== undefined) continue;
+    const nat = NATIVE[k];
+    const n = nat?.get(s, id);
+    if (nat && n !== undefined) {
+      if (!DECAY_NATIVE.has(k) || isSelf(s, key)) continue;
+      const v = Math.round(n * f * 10) / 10;
+      if (v !== n) nat.set(s, id, v);
+      e.v = nat.get(s, id) ?? v;
+      continue;
+    }
     e.v = Math.round(e.v * f * 10) / 10;
   }
 }

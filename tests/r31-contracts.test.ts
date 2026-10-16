@@ -135,6 +135,35 @@ describe('pessoa e papéis (W0-ROLE)', () => {
     retire(g, pid, y + 1);
     expect(hasRole(g, pid, 'family', y + 2)).toBe(true);
   });
+
+  it('papel aberto no próprio ano da aposentadoria não fica ativo nesse ano (registrado, roles21 e derivado)', () => {
+    const g = game('r31r2');
+    const act = Object.values(g.acts).find((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length)!;
+    const pid = act.members[0];
+    const y = g.year;
+    addRole(g, pid, 'staff', { org: 'player', from: y });                 // registrado aqui, aberto neste ano
+    (r21(g).sp[pid] ??= []).push({ k: 'producer', from: y });              // período de roles21 aberto neste ano
+    retire(g, pid, y);
+    const now = rolesOf(g, pid, y).map((r) => r.kind);
+    expect(now).toContain('retired');
+    expect(now).not.toContain('staff');
+    expect(now).not.toContain('producer');
+    expect(r21(g).sp[pid].find((x) => x.k === 'producer')!.to).toBe(y - 1);
+    // continuam no histórico
+    expect(rolesOf(g, pid).map((r) => r.kind)).toEqual(expect.arrayContaining(['staff', 'producer', 'retired']));
+    // derivado (integrante de ato ativo) que começou no ano da aposentadoria também sai do ano
+    const g2 = game('r31r3');
+    const a2 = Object.values(g2.acts).find((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length)!;
+    const p2 = a2.members[0];
+    const art = rolesOf(g2, p2, g2.year).find((r) => r.kind === 'artist' && r.src === 'r21')!;
+    expect(art).toBeTruthy();
+    retire(g2, p2, art.from);
+    expect(rolesOf(g2, p2, art.from).map((r) => r.kind)).toEqual(['retired']);
+    // endRole(ano − 1) não deixa ativo no ano atual um papel aberto neste ano
+    addRole(g2, p2, 'writer', { from: g2.year + 3 });
+    expect(endRole(g2, p2, 'writer', g2.year + 2)).toBe(1);
+    expect(hasRole(g2, p2, 'writer', g2.year + 3)).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------- objeto

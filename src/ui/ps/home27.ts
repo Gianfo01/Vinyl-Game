@@ -92,7 +92,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
   const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
   const loadSlot = async (m: SaveMeta) => {
     const g = await loadGame(m.slot);
-    if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
+    if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old', 'old31'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
     play(g);
   };
   // r31 (B): importar por área de arrastar arquivo (com botão), dentro do jogo

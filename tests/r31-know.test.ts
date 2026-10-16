@@ -37,6 +37,33 @@ describe('r31 know — o que se sabe vem de um lugar só', () => {
       expect(b.mid).not.toBe(v);
       expect(b.lo).toBeLessThanOrEqual(b.hi);
     }
+    // perto das bordas e com v ≈ w/2, em várias larguras: nem o centro nem o palpite caem no valor real
+    for (const w of [3, 6, 8, 10, 15, 18, 20, 24, 26, 30]) for (const v of [0, 0.5, 1, 2, w / 2 - 1, w / 2 - 0.5, w / 2, w / 2 + 0.5, w / 2 + 1, 50, 100 - w / 2, 98, 99, 100]) for (const id of ['a', 'b', 'c', 'd']) {
+      const b = band(s, id, `edge2.${v}`, v, w)!;
+      expect(b.mid).not.toBe(Math.round(v));
+      expect(Math.abs((b.lo + b.hi) / 2 - v)).toBeGreaterThanOrEqual(0.5);
+      expect(b.lo).toBeGreaterThanOrEqual(0);
+      expect(b.hi).toBeLessThanOrEqual(100);
+    }
+    // combinar duas leituras de larguras diferentes (extrapolação linear v = (c1·w2 − c2·w1)/(w2 − w1)) não devolve
+    // mais o valor real: com a fração fixa por alvo (W0) o erro era ~0 em 100% dos casos. Limite matemático: com sinal
+    // estável e |desvio| em 20–45% de w, a faixa mais estreita sozinha já prende o valor em 0,45·w — por isso a medida
+    // é feita com larguras ≥ 10 (a faixa estreita de grau alto é de propósito quase exata).
+    let hit3 = 0, hit1 = 0, n = 0, err = 0;
+    const pairs: [number, number][] = [[26, 15], [30, 18], [18, 10], [20, 11], [24, 13]];
+    for (let i = 0; i < 200; i++) for (const [w1, w2] of pairs) {
+      const v = 20 + (i * 37) % 60;
+      const b1 = band(s, `t${i}`, 'talent', v, w1)!, b2 = band(s, `t${i}`, 'talent', v, w2)!;
+      for (const [c1, c2] of [[(b1.lo + b1.hi) / 2, (b2.lo + b2.hi) / 2], [b1.mid, b2.mid]]) {
+        const e = Math.abs((c1 * w2 - c2 * w1) / (w2 - w1) - v);
+        n++; err += e;
+        if (e < 3) hit3++;
+        if (e < 1) hit1++;
+      }
+    }
+    expect(hit1 / n).toBeLessThan(0.35);
+    expect(hit3 / n).toBeLessThan(0.75);
+    expect(err / n).toBeGreaterThanOrEqual(2);
     // oculto e exato
     expect(band(s, 'x', 'f', 40, 99)).toBeNull();
     expect(band(s, 'x', 'f', 40, 0)).toEqual({ lo: 40, hi: 40, mid: 40, exact: true });

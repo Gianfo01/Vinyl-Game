@@ -12,10 +12,11 @@ import { describe, expect, it } from 'vitest';
 import { l } from '../src/data/world';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
-import { OP_WHY_MAX, hasOpinion, opine, opinionOf, opinionWhy, opState, setOpinion } from '../src/sim/opinion';
+import { OP_WHY_MAX, decayOpinions, hasOpinion, opine, opinionOf, opinionWhy, opState, setOpinion } from '../src/sim/opinion';
 import { leaders } from '../src/sim/sys/leaders10';
 import { careerOf } from '../src/sim/sys/people/staff';
 import { staffAdj13 } from '../src/sim/sys/persona13';
+import { critRel } from '../src/sim/criticrel';
 
 const ROOT = join(__dirname, '..');
 const OWNER = 'src/sim/opinion.ts';
@@ -134,5 +135,37 @@ describe('r31 contrato — opinião em fonte única', () => {
     expect(opinionOf(s, 'w:artists')).toBe(100);
     expect(hasOpinion(s, 'w:artists')).toBe(true);
     expect(hasOpinion(s, 'e:ninguem')).toBe(false);
+  });
+
+  it('crítico: nativo −50..50 convertido (×2/÷2), sem dado = sem opinião, e esfria; p: do jogador esfria sem tocar NPC↔NPC', () => {
+    const s = createGame(defaultConfig('r31-op2', { startYear: 1975 }));
+    const ck = 'c:Crítico Teste';
+    expect(hasOpinion(s, ck)).toBe(false);
+    expect(opinionOf(s, ck)).toBe(0);
+    setOpinion(s, ck, 60, l('teste', 'test'));
+    expect(critRel(s).rel['Crítico Teste']).toBe(30);
+    expect(opinionOf(s, ck)).toBe(60);
+    expect(hasOpinion(s, ck)).toBe(true);
+    setOpinion(s, ck, 300);
+    expect(critRel(s).rel['Crítico Teste']).toBe(50);
+    expect(opinionOf(s, ck)).toBe(100);
+    critRel(s).rel['Outro'] = -20; // escrita nativa crua (criticrel.ts)
+    expect(opinionOf(s, 'c:Outro')).toBe(-40);
+    for (let i = 0; i < 24; i++) decayOpinions(s, 0.985);
+    expect(opinionOf(s, ck)).toBeLessThan(100);
+    expect(opinionOf(s, ck)).toBeGreaterThan(60);
+    // pessoa → você: o nativo Person.rel[pessoa do jogador] esfria no mesmo ritmo (×0,985/mês)
+    const me = Object.values(s.persons).find((p) => p.isPlayer);
+    const [a, b] = Object.values(s.persons).filter((p) => !p.isPlayer).slice(0, 2);
+    expect(me).toBeTruthy();
+    if (me) {
+      setOpinion(s, `p:${a.id}`, 50, l('teste', 'test'));
+      expect(a.rel[me.id]).toBe(50);
+      a.rel[b.id] = 40;
+      for (let i = 0; i < 12; i++) decayOpinions(s, 0.985);
+      expect(a.rel[me.id]).toBeCloseTo(50 * 0.985 ** 12, 0);
+      expect(opinionOf(s, `p:${a.id}`)).toBe(Math.round(a.rel[me.id]));
+      expect(a.rel[b.id]).toBe(40); // NPC↔NPC intocado
+    }
   });
 });

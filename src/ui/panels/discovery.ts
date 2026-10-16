@@ -4,7 +4,7 @@
 import { listenDemo28 } from '../audio28'; // r28 (F4): prévia da demo com o som ligado (opt-in)
 import { FAMILIES, MARKETS, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { attendContest, fireScout, hireScout, listenDemo, raiseBid, scoutPool, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
+import { attendContest, availableScouts, fireScout, hireScout, listenDemo, raiseBid, sponsorContest, startAuction, withdrawAuction } from '../../sim/discovery';
 import { MISSION_WEEKS, missionDepth, missionLength, missionProgress, missionTarget, startMission, tripOf23 } from '../../sim/sys/scout23';
 import { ARCHETYPES, archetypeOf, buySecurity, heat19, spyOnRival } from '../../sim/rivals19'; // r19: fachada
 import { defaultOffer } from '../../sim/contracts';
@@ -16,16 +16,9 @@ import { chips, ic, stat, tile } from '../vis';
 import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
-let pool: Scout[] = [];
-let poolMonth = -1;
-
 export function scoutsSection(s: GameState): HTMLElement {
-  const r = rng19(s, 'act');
-  const m = s.year * 12 + s.month;
-  if (poolMonth !== m) {
-    pool = scoutPool(s, r);
-    poolMonth = m;
-  }
+  // r31: a lista do mês é gerada pelo motor (sim/discovery refreshScoutPool); a tela só lê
+  const pool = availableScouts(s);
   const famName = (id: string) => t(FAMILIES.find((f) => f.id === id)?.name) || id;
   const mkName = (id: string) => t(MARKETS.find((x) => x.id === id)?.name) || id;
   return section(t(l('Olheiros', 'Scouts')),
@@ -38,7 +31,7 @@ export function scoutsSection(s: GameState): HTMLElement {
     h('h4', null, t(l('Disponíveis este mês', 'Available this month'))),
     h('div', { class: 'cards' }, pool.map((sc) => tile('fans', sc.name, [
       chips(stat('globe', mkName(sc.region), l('Região', 'Region')), stat('guitar', famName(sc.family), l('Especialidade', 'Specialty')), stat('sparkle', sc.skill, l('Habilidade', 'Skill'))),
-      h('button', { class: 'btn small', onclick: () => { say(hireScout(s, sc), l('Contratado.', 'Hired.')); pool = pool.filter((x) => x !== sc); rerender(); } }, `${t(l('Contratar', 'Hire'))} ${$(sc.salary)}/${t(l('mês', 'mo'))}`),
+      h('button', { class: 'btn small', onclick: () => { say(hireScout(s, sc), l('Contratado.', 'Hired.')); rerender(); } }, `${t(l('Contratar', 'Hire'))} ${$(sc.salary)}/${t(l('mês', 'mo'))}`),
     ]))),
   );
 }
