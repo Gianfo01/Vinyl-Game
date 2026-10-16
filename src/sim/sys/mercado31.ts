@@ -212,7 +212,7 @@ Y31.weights = (s, rel, act, w) => {
 // ---------------------------------------------------------------- mercado reservado (último recurso)
 
 /** Fatia mínima da parada nacional que fica com artistas da casa, pela preferência local (Japão alto, Holanda baixo). */
-export const reserveShare31 = (a3: string): number => clamp((localPref(a3) - 1.3) / 3, 0, 0.6);
+export const reserveShare31 = (a3: string): number => clamp((localPref(a3) - 1.3) / 2.2, 0, 0.7);
 Y31.reserve = (s, rels, U, nC) => {
   if (!on31(s, 'y31.reserve')) return;
   const home = rels.map((r) => countryOfCity(s.acts[r.actId]?.city ?? ''));
@@ -221,7 +221,7 @@ Y31.reserve = (s, rels, U, nC) => {
     let L = 0, T = 0;
     for (let j = 0; j < rels.length; j++) { const u = U[j * nC + i]; T += u; if (home[j] === a3) L += u; }
     if (r <= 0 || T <= 0 || L <= 0 || L >= r * T) continue;
-    const up = Math.min(6, (r * (T - L)) / ((1 - r) * L)), down = (T - L * up) / (T - L);
+    const up = Math.min(6, (r * T) / L), down = (T - L * up) / (T - L); // locais sobem até a fatia r; o resto encolhe (total igual)
     for (let j = 0; j < rels.length; j++) { const q = j * nC + i; if (U[q] > 0) U[q] *= home[j] === a3 ? up : Math.max(0, down); }
   }
 };
