@@ -34,6 +34,7 @@ import { chips, ic, stat } from '../vis';
 import { cityEggs27, cityShake27, type CityEgg27 } from './eggs27';
 import './campus18.css';
 import { places27, type Place27 } from '../../sim/sys/place27';
+import { fosHomeView31, fosSquareView31 } from '../r31/fos31';
 import { PINNED27, PLACE_IC27, insideView27, ownPlace27, placePanel27, type InsideT27 } from './place27ui';
 import { placeTabs27, zoom27 } from '../ps/zoom27';
 import { askConfirm, askText } from '../ask31';
@@ -49,6 +50,8 @@ const mobile = () => !!window.matchMedia?.('(max-width: 860px)').matches;
 /** UI efêmera (por sessão; não vai para o save). */
 const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number; /** r27 (CITY2): lugar aberto por dentro */ inside?: string; /** r27 (LOTS): largura do mapa já enquadrado no celular */ zFor?: number } =
   { mode: 'cycle', q: 1, f: { mine: true, nb: true, lm: true }, z: 1, px: 0, py: 0 };
+/** R31 (FOS): abre o mapa já dentro de um lugar ('fos31:home' = casa da família Fossati, 'fos31:square' = a praça). */
+export function openInside18(id: string): void { ui.inside = id; ui.pop = undefined; store.area = 'campus18' as typeof store.area; rerender(); }
 
 interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[] }
 /** r27: o que a vida na rua (fãs, imprensa) e o estado dos prédios (fila de show) já mostram sai do ambiente antigo. */
@@ -101,7 +104,7 @@ function mapCanvas(v: View): HTMLCanvasElement {
     if (v.live && hqSp) for (const f of cityEggs27) {
       const e = f(v.s, { t: tm, night, city });
       if (!e) continue;
-      const x = Math.round(hqSp.door[0] + 12), y = Math.round(hqSp.door[1] - e.h + 3);
+      const x = Math.round(hqSp.door[0] + 12 + (e.dx ?? 0)), y = Math.round(hqSp.door[1] - e.h + 3 + (e.dy ?? 0));
       e.draw(ctx, x, y, tm);
       eggs.push({ box: [x + dx, y + dy, e.w, e.h], e });
     }
@@ -394,14 +397,19 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   };
   let inBox: HTMLElement | null = null;
   const leaveInside = () => { ui.inside = undefined; inBox?.remove(); inBox = null; (layer.querySelector(`[data-id="${CSS.escape(ui.pop ?? '')}"]`) as HTMLElement | null)?.focus({ preventScroll: true }); };
-  const showInside = (id: string, anim: boolean) => {
-    const x = insideOf(id);
-    if (!x) { ui.inside = undefined; return; }
+  const showInside = (id0: string, anim: boolean) => {
+    // r31 (FOS): a casa da família Fossati (um prédio de moradia da cidade) e a praça ao lado da sede abrem as cenas próprias
+    const famPl = v.places.find((p) => p.fam31);
+    const id = id0 === 'fos31:home' ? famPl?.id ?? id0 : id0;
+    const fos = id0 === 'fos31:square' ? 'square' : famPl && id === famPl.id ? 'home' : null;
+    const x = fos ? null : insideOf(id);
+    if (!x && !fos) { ui.inside = undefined; return; }
     ui.inside = id; inBox?.remove();
     // celular: a folha de ações desce para o interior aparecer; "Ações" a traz de volta
     const mob = mobile();
     if (mob) { sheet.hidden = true; document.body.classList.remove('w19-open'); }
-    inBox = insideView27(s, x, leaveInside, mob ? () => { if (ui.pop) open(ui.pop, lastHs); } : undefined);
+    inBox = fos === 'home' ? fosHomeView31(s, leaveInside, true) : fos === 'square' ? fosSquareView31(s, leaveInside, true)
+      : insideView27(s, x!, leaveInside, mob ? () => { if (ui.pop) open(ui.pop, lastHs); } : undefined);
     if (anim) inBox.classList.add('enter');
     vp.append(inBox);
     if (mob && anim) frame.scrollIntoView({ block: 'start' });

@@ -392,6 +392,7 @@ import './car31prog'; // R31 onda 3 (CAR): degraus, objetivos e desafio de fim d
 import './socio31'; // R31 onda 3 (SOC): sócios e compras — festivais, casas, rádios e estúdios existentes; criar em conjunto; voto e dividendos
 import '../r31/w31'; // R31 onda 4 (W): jabá recusado/denunciado e antitruste nas compras (interruptores w31.*)
 import '../r31/learn31'; // R31 onda 4 (R): amostras duráveis dos lançamentos e biblioteca de aprendizados
+import './extras31'; // R31 onda 4 (N): extras — conquistas novas, ovos do Edison, bandas de ficção no mundo, cultura pop/memes/bolhas, Arara, filme, praça Fossati
 import './gente31'; // R31 onda 4 (I): gente de verdade nos lugares — donos, equipe, músicos fazendo bico (vaga muda de mãos na virada do mês)
 import './under31'; // R31 onda 4 (S): submundo no Nosso mundo — fachadas, sala dos fundos, mural, delegacia, mercado negro, baile
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

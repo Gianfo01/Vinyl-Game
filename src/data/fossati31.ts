@@ -25,8 +25,9 @@ export interface FamMember31 {
 }
 
 export const FAM_ORIGIN31 = 'Cantù';
-/** cidade do jogo onde a família vive (o editor de base troca) */
-export const FAM_CITY31 = { id: 'sao_paulo' };
+/** cidade do jogo onde a família vive: vazio = a cidade de início do jogador (a casa fica no "Nosso mundo" dele;
+ *  pedido do dono, onda 4). O editor de base pode fixar uma cidade. */
+export const FAM_CITY31 = { id: '' };
 
 export const FAMILY31: FamMember31[] = [
   { id: 'efro', name: 'Efro Fossati', age: 74, homage: true, kin: l('patriarca, marido de Lucia', 'patriarch, Lucia\'s husband'),
