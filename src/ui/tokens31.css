@@ -62,8 +62,8 @@
 }
 
 /* reforço sem cor (só com daltonismo ligado): marca nos selos, padrão nas bordas e nas barras */
-:root[data-cb]:not([data-cb='none']) :is(.chip27.t-good, main .pill.good, .pill.good, .kpi27-v.t-good)::before { content: '✓\00a0'; font-weight: 700; }
-:root[data-cb]:not([data-cb='none']) :is(.chip27.t-bad, main .pill.bad, .pill.bad, .kpi27-v.t-bad)::before { content: '✕\00a0'; font-weight: 700; }
+:root[data-cb]:not([data-cb='none']) :is(.chip27.t-good, main .pill.good, .pill.good, .kpi27-v.t-good)::before { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; background: var(--pxi-check) center / contain no-repeat; image-rendering: pixelated; content: ''; margin-right: 0.3em; } /* r31 EMO: ✓ em pixel art */
+:root[data-cb]:not([data-cb='none']) :is(.chip27.t-bad, main .pill.bad, .pill.bad, .kpi27-v.t-bad)::before { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; background: var(--pxi-cross) center / contain no-repeat; image-rendering: pixelated; content: ''; margin-right: 0.3em; } /* r31 EMO: ✕ em pixel art */
 :root[data-cb]:not([data-cb='none']) :is(.chip27.t-warn, main .pill.warn, .pill.warn, .kpi27-v.t-warn)::before { content: '!\00a0'; font-weight: 700; }
 :root[data-cb]:not([data-cb='none']) :is(.c27.t-bad, .task25.urgent, .decision-card.urgent) { border-left-style: double; border-left-width: 6px; }
 :root[data-cb]:not([data-cb='none']) .c27.t-warn { border-left-style: dashed; }

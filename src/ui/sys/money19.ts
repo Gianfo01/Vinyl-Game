@@ -4,6 +4,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { realRate19 } from '../../sim/rates19';
+import { sealedOn31 } from '../../sim/sys/sealed31';
 import { RATING19, bidAuc19, bondTerms19, campaignable19, cov19, fanCampaign19, issueBond19, liveBond19, m19, rates19, repayBond19, setRofr19, sideShare19, topBid19 } from '../../sim/sys/money19';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
@@ -11,6 +12,7 @@ import { $, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { why18 } from '../explain18';
 import { registerTab } from '../registry';
+import { runGo31 } from '../r31/scene31';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null, ok?: L) => { if (r) toast(T(r), 'info'); else if (ok) toast(T(ok), 'good'); rerender(); };
@@ -42,9 +44,10 @@ export function debtTab19(s: GameState): HTMLElement {
     section(t(l('Leilões de masters', 'Master auctions')),
       open.length ? h('div', null, ...open.map((a) => row(h('b', null, a.name), pill(fm(l('{k} gravações', '{k} recordings'), { k: a.rels.length })),
         why18(s, 'm19.auc', { auc: a.id }, pill(fm(l('justo {f}', 'fair {f}'), { f: $(a.fair) }))),
-        pill(fm(l('maior lance {v} ({w})', 'top bid {v} ({w})'), { v: $(topBid19(a)), w: a.bids.length ? a.bids[a.bids.length - 1].name : t(l('mínimo', 'minimum')) })),
+        sealedOn31(s) ? pill(fm(l('mínimo {v} · proposta fechada', 'minimum {v} · sealed bids'), { v: $(a.ask) })) : pill(fm(l('maior lance {v} ({w})', 'top bid {v} ({w})'), { v: $(topBid19(a)), w: a.bids.length ? a.bids[a.bids.length - 1].name : t(l('mínimo', 'minimum')) })),
         pill(fm(l('fecha em {n} sem.', 'closes in {n} wk'), { n: Math.max(0, a.ends - s.week) })),
-        btn(fm(l('Lance {v}', 'Bid {v}'), { v: $(Math.round(topBid19(a) * 1.08)) }), () => say(bidAuc19(s, a.id, Math.round(topBid19(a) * 1.08)), l('Lance registrado.', 'Bid placed.')))))) : muted(l('Nenhum leilão aberto. Quando um selo quebra, o banco executa e as gravações vão a leilão: rivais de catálogo, conglomerados e fundos disputam.', 'No open auction. When a label goes bust, the bank forecloses and the recordings go to auction: catalog rivals, conglomerates and funds compete.')),
+        sealedOn31(s) ? btn(t(l('Sala de abertura (envelope)', 'Opening room (envelope)')), () => runGo31({ area: 'sealed31' })) // R31 T2: lance vira envelope secreto
+          : btn(fm(l('Lance {v}', 'Bid {v}'), { v: $(Math.round(topBid19(a) * 1.08)) }), () => say(bidAuc19(s, a.id, Math.round(topBid19(a) * 1.08)), l('Lance registrado.', 'Bid placed.')))))) : muted(l('Nenhum leilão aberto. Quando um selo quebra, o banco executa e as gravações vão a leilão: rivais de catálogo, conglomerados e fundos disputam.', 'No open auction. When a label goes bust, the bank forecloses and the recordings go to auction: catalog rivals, conglomerates and funds compete.')),
       done.length ? h('ul', { class: 'small' }, ...done.map((a) => h('li', null, a.st === 'sold' ? fm(l('{y} — {n}: {w} por {p}', '{y} — {n}: {w} for {p}'), { y: a.y, n: a.name, w: a.winName ?? '?', p: $(a.price ?? 0) }) : fm(l('{y} — {n}: sem lance', '{y} — {n}: no bid'), { y: a.y, n: a.name })))) : null),
     section(t(l('Título lastreado em catálogo (Bowie Bonds)', 'Catalog-backed bond (Bowie Bonds)')),
       b ? h('div', null, row(why18(s, 'm19.rating', {}, pill(fm(l('rating {r}', 'rated {r}'), { r: RATING19[b.rating] }), b.rating >= 3 ? 'bad' : 'good')),

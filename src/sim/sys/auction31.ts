@@ -31,6 +31,7 @@ import { know, know3, see } from '../know';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { shiftOpinion } from '../opinion';
 import { registerEditable, registerRunnable } from '../r31/editor';
+import { IMPORT31 } from '../r31/hooks31t2';
 import { noteSale31 } from '../r31/relic31';
 import { registerSwitch, sw } from '../r31/switches';
 import type { GameState } from '../types';
@@ -391,7 +392,7 @@ export function hammer31(s: GameState, sess: Sess31, rid: string, o: { top?: num
     const price = lad.price;
     relicBuyFrom9(s, rl, price, 'leilão');
     row = [rid, s.config.companyName, price, 1];
-    if (foreign) {
+    if (foreign && !IMPORT31.f?.(s, { rid, price, from: sess.city })) { // R31 T2: com a alfândega real, vira carga no porto/aeroporto
       const duty = Math.round(price * dutyRate31(s.year));
       post(s, `auc31duty:${rid}:${s.week}`, -duty, 'acquisitions', `Alfândega: ${rl.n.pt}`);
       st.imports.push({ rid, n: rl.n, from: sess.city, w: s.week, arrive: s.week + shipWeeks31(s.year), duty });

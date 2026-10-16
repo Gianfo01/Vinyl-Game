@@ -378,6 +378,6 @@ export function askIntro31(s: GameState, target: string): L | null {
 
 registerEditable({ id: 'soc31.cap', area: 'people', label: l('Grafo social: laços guardados por pessoa', 'Social graph: stored ties per person'), kind: 'number', raw: true, get: () => SOC31.cap, set: (_s, v) => { SOC31.cap = Math.max(5, Math.round(Number(v))); } });
 registerEditable({ id: 'soc31.coolAfter', area: 'people', label: l('Grafo social: meses sem contato até esfriar', 'Social graph: months without contact before cooling'), kind: 'number', raw: true, get: () => SOC31.coolAfter, set: (_s, v) => { SOC31.coolAfter = Math.max(1, Math.round(Number(v))); } });
-registerRunnable({ id: 'soc31.month', label: l('Rodar o mês social agora (apresentações, fofoca, esfriar)', 'Run the social month now (introductions, gossip, cooling)'), run: (s) => { socialMonth31(s); return fmtL(l('Laços guardados: {n}.', 'Stored ties: {n}.'), { n: edgeCount31(s) }); } });
+registerRunnable({ id: 'social31.month', label: l('Rodar o mês social agora (apresentações, fofoca, esfriar)', 'Run the social month now (introductions, gossip, cooling)'), run: (s) => { socialMonth31(s); return fmtL(l('Laços guardados: {n}.', 'Stored ties: {n}.'), { n: edgeCount31(s) }); } });
 
 export { HOW31 };

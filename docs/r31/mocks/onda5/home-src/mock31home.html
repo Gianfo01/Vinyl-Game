@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#06080e}canvas{image-rendering:pixelated}</style></head><body>
+<canvas id="c" style="width:1440px;height:810px"></canvas>
+<script type="module">
+import { Px, C, discV } from '/src/ui/pixel/px.ts';
+import { renderSky27 } from '/src/ui/pixel/skyline27.ts';
+import { drumKit31, amp31, speaker31, crowd31 } from '/src/ui/pixel/stage31px.ts';
+import { avatarSprite, randomLook } from '/src/ui/pixel/avatar.ts';
+import { drawTextOutlined } from '/src/ui/pixel/font.ts';
+const q=new URLSearchParams(location.search);
+if(q.get('av')){const {avatarSprite:A,randomLook:RL}=await import('/src/ui/pixel/avatar.ts');const sp=A(RL(q.get('av')),{year:+(q.get('year')||1962),role:q.get('role')||null,pose:'stand',dir:'SE'});const c=document.getElementById('c');c.width=sp.c.width;c.height=sp.c.height;c.style.width=(sp.c.width*8)+'px';c.style.height=(sp.c.height*8)+'px';c.getContext('2d').drawImage(sp.c,0,0);window.done=1;throw 0;}
+const year=+(q.get('year')||1962), city=q.get('city')||'london', W=+(q.get('w')||320), H=+(q.get('h')||180);
+const cv=document.getElementById('c'); cv.width=W; cv.height=H; cv.style.width=(+(q.get('cw')||1440))+'px'; cv.style.height=(+(q.get('cw')||1440)*H/W)+'px';
+const g=cv.getContext('2d');
+const sky=renderSky27({W,H:Math.round(H*0.72),env:{year,month:10,city,lat:city==='rio'?-23:city==='new_york'?40:51,climate:city==='rio'?'tropical':'mild',season:'autumn',snow:false,rain:false},look:{sea:city==='rio',hillAmp:city==='rio'?1:0,favela:false,wall:['#8a5a44','#6a4a3a','#7a6a5a']},seed:7});
+const P=new Px(W,H); P.blit(sky.p,0,0);
+// noite: escurece o céu
+for(let i=0;i<P.d.length;i++){const c=P.d[i];const r=c&255,gg=(c>>8)&255,b=(c>>16)&255;P.d[i]=(0xff<<24)|((b*0.42+26)<<16)|((gg*0.28+8)<<8)|(r*0.30+12);}
+P.blit(sky.g,0,0);
+for(let i=0;i<90;i++){const x=(i*97)%W,y=(i*53)%Math.round(H*0.35);P.put(x,y,C(i%5?'#9aa8d8':'#ffffff'));}
+// lua de vinil
+const cx=Math.round(W*0.8), cy=Math.round(H*0.2), rr=Math.round(H*0.13);
+discV(P,cx,cy,rr,C('#1c1a24')); for(let r=4;r<rr;r+=3)for(let a=0;a<360;a+=1){const x=cx+Math.round(Math.cos(a*Math.PI/180)*r),y=cy+Math.round(Math.sin(a*Math.PI/180)*r);if(r>rr*0.4)P.put(x,y,C('#2a2834'));}
+discV(P,cx,cy,Math.round(rr*0.35),C(year<1975?'#c0392b':year<2005?'#f0c040':'#2ec8c0')); P.put(cx,cy,C('#0a0a10'));
+// palco
+const fy=Math.round(H*0.74);
+for(let y=fy;y<H;y++)for(let x=0;x<W;x++)P.put(x,y,C('#1c1424'));
+for(let x=Math.round(W*0.12);x<Math.round(W*0.88);x++){P.put(x,fy,C('#a8743c'));for(let y=fy+1;y<fy+7;y++)P.put(x,y,C(y<fy+3?'#7a4e2a':'#4a2e18'));}
+const L=Math.round(W*0.12), R=Math.round(W*0.88);
+amp31(P,L+4,fy,year,true); amp31(P,R-30,fy,year,true); speaker31(P,L-18,fy,16,40); speaker31(P,R+2,fy,16,40);
+drumKit31(P,Math.round(W*0.47),fy,year,C('#c0392b'));
+crowd31(P,0,W,Math.round(W/6),fy+34,year,11); crowd31(P,0,W,Math.round(W/6),fy+46,year,23);
+const sc=C(year<1930?'#e8d8a0':year<2005?'#ff4fa0':'#4ff0ff'), tx=year<1930?'RADIO':year<2005?'AO VIVO':'STREAM';
+const sx=Math.round(W*0.5-30), sy=fy-78; for(let y=sy;y<sy+14;y++)for(let x=sx;x<sx+60;x++)P.put(x,y,(y==sy||y==sy+13||x==sx||x==sx+59)?sc:C('#0a0a14'));
+const tw=drawTextOutlined(new Px(1,1),tx,0,0,sc,C('#000'),1); drawTextOutlined(P,tx,Math.round(W*0.5-tw/2),sy+4,sc,C('#3a0a2a'),1);
+const out=P.canvas(); g.drawImage(out,0,0);
+// fachos
+g.globalAlpha=.14; g.fillStyle='#fff0c0'; for(const lx of [0.3,0.5,0.7]){g.beginPath();g.moveTo(W*lx,0);g.lineTo(W*lx-26,fy);g.lineTo(W*lx+26,fy);g.fill();} g.globalAlpha=1;
+// músicos (sprites do jogo)
+const band=[['v1','vocal',0.40],['g1','guitar',0.30],['b1','bass',0.62],['k1','keys',0.70]];
+for(const [s,role,fx] of band){const sp=avatarSprite(randomLook('home'+s+year),{year,role,pose:'play',dir:fx<0.5?'SE':'SW'});g.drawImage(sp.c,Math.round(W*fx)-sp.ax,fy-sp.ay);}
+window.done=1;
+</script></body></html>

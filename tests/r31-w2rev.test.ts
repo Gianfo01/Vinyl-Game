@@ -229,7 +229,9 @@ describe('W2-REV · contratos', () => {
 
   it('proposta padrão pela cena: recusada sai das ofertas, como no formulário', () => {
     let seen = 0;
-    for (const seed of ['w2rev-n1', 'w2rev-n2', 'w2rev-n3', 'w2rev-n4', 'w2rev-n5', 'w2rev-n6']) { // UNI-4: mundo novo (registros únicos) — mais sementes para achar uma recusa
+    // r31 (W3-FIX): com a base nova da onda 3 (Z) as sementes n1–n3 deixaram de ter recusa (antes só UMA em 75); n4–n6
+    // somam 4 recusas — a regra testada (recusada sai das ofertas) é a mesma
+    for (const seed of ['w2rev-n1', 'w2rev-n2', 'w2rev-n3', 'w2rev-n4', 'w2rev-n5', 'w2rev-n6']) {
       const s0 = game(seed);
       scoutSome(s0, 40);
       for (const t of sceneTargets31(s0, 'nego').slice(0, 25)) {

@@ -9,7 +9,9 @@ import { l, type L, type MarketId } from '../data/world';
 import { actLang, actState, actTalent, songTitle, traitMod } from './people';
 import type { Act, GameState, PendingRelease, Release, Song } from './types';
 import { fmtL, hasTech, money, nextId, notify, post, staffSkill } from './util';
-import { forecastUnits } from './market';
+import { forecastUnits, type ForecastExtra31 } from './market';
+import { on31 } from './r31/market31';
+import { sw } from './r31/switches';
 import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
@@ -171,7 +173,23 @@ export function physicalShare(s: GameState, year = s.year): number {
   return p;
 }
 
-export function suggestedPress(s: GameState, act: Act, type: 'single' | 'ep' | 'lp', q = 50): number {
+/** O que o plano do lançamento já sabe (verba, territórios, hype, tipo) para a tiragem sugerida usar a mesma previsão. */
+export interface PressPlan31 { marketing?: { channel: string; budget: number }[]; territories?: MarketId[]; extra?: ForecastExtra31 }
+
+export function suggestedPress(s: GameState, act: Act, type: 'single' | 'ep' | 'lp', q = 50, plan?: PressPlan31): number {
+  // R31 onda 3 (bal31.press): a previsão com a verba e o hype do plano, vezes a vida do disco (bal31.pressLife)
+  if (on31(s, 'bal31.press')) {
+    const f = forecastUnits(s, act, type, q, plan?.marketing ?? [], plan?.territories ?? s.player.territories, plan?.extra);
+    const life = Math.max(1, sw<number>(s, 'bal31.pressLife'));
+    const want = f.mid * physicalShare(s) * life;
+    // bal31.pressCash: o que passa da sugestão antiga só entra se cabe numa fração do caixa livre — sem isso a tiragem
+    // maior esvaziava o caixa do 1º ano e o robô quebrava (r29rel-bot, 1971; docs/r31/bal.md)
+    const old = forecastUnits(s, act, type, q, [], s.player.territories).mid * physicalShare(s);
+    const fmts = availableFormats(s);
+    const perUnit = Math.max(1e-6, (pressingCost(s, fmts, 1000) - pressingCost(s, fmts, 0)) / 1000);
+    const room = Math.max(0, freeCash20(s) * Math.max(0, sw<number>(s, 'bal31.pressCash'))) / perUnit;
+    return Math.max(300, Math.round(Math.min(want, Math.max(old, old + room)) / 100) * 100);
+  }
   const f = forecastUnits(s, act, type, q, [], s.player.territories);
   return Math.max(300, Math.round((f.mid * physicalShare(s)) / 100) * 100);
 }

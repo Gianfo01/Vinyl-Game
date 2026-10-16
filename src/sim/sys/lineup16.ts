@@ -22,7 +22,7 @@ import { histLocked, histMode } from '../history15';
 import { bandName, langForCity, makeAct } from '../people';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
-import { personFame } from './fame15';
+import { personFameV } from './fame15';
 import { feudOf15 } from './kin15';
 import { replaceMember } from './lifecycle7';
 import { canonKey, REAL_ALL, REAL_BASE, realDataOf, rw } from './realworld';
@@ -134,7 +134,7 @@ export function pressure16(s: GameState, a: Act, p: Person): { w: number; why: W
   const lead = s.persons[a.leaderId ?? ''];
   if (lead && lead.id !== p.id && (rel0(s, p.id, lead.id)) < -25) ws.push(['creative', 1]);
   if (p.resentment > 60) ws.push(['creative', 0.8]);
-  if (front(a, p) && (p.goal === 'solo' || p.ambition === 'fame') && a.fame > 35) ws.push(['solo', 0.6 + (personFame(s, p.id).v - a.fame > 5 ? 1 : 0)]);
+  if (front(a, p) && (p.goal === 'solo' || p.ambition === 'fame') && a.fame > 35) ws.push(['solo', 0.6 + (personFameV(s, p.id) - a.fame > 5 ? 1 : 0)]);
   if (a.members.some((o) => o !== p.id && feudOf15(s, p.id, o) !== undefined)) ws.push(['feud', 1.5]);
   if (p.health === 'addiction') ws.push(['addiction', 1.2]);
   if (!ws.length) return { w: 0, why: 'left' };
@@ -353,7 +353,7 @@ const stayCost = (s: GameState, a: Act, why: Why16) => money(s, (why === 'addict
 function emitDepart(s: GameState, a: Act, p: Person, why: Why16): void {
   const odds = Math.round(stayOdds16(s, a, p, why) * 100);
   const cost = stayCost(s, a, why);
-  const pf = Math.round(personFame(s, p.id).v);
+  const pf = Math.round(personFameV(s, p.id));
   s.decisions.push({
     id: `l16:${a.id}:${p.id}:${s.week}`, eventId: 'l16_depart', cat: 'band', week: s.week, tags: [], defaultOption: 'go',
     title: fmtL(l('{p} quer sair de {a}', '{p} wants to leave {a}'), { p: p.name, a: a.name }),

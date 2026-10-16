@@ -131,7 +131,8 @@ describe('r31 daltonismo: troca de verdade as cores de estado', () => {
       expect(color(v, '--good')).not.toBe(color(v, '--bad'));
     }
     const css = read('../src/ui/tokens31.css');
-    for (const mark of ["content: '✓", "content: '✕", "content: '!", 'border-left-style: double', 'repeating-linear-gradient']) expect(css).toContain(mark);
+    // r31 EMO: ✓ e ✕ viraram ícones em pixel art (var(--pxi-check|cross)); o reforço sem cor continua
+    for (const mark of ['var(--pxi-check)', 'var(--pxi-cross)', "content: '!", 'border-left-style: double', 'repeating-linear-gradient']) expect(css).toContain(mark);
   });
 });
 

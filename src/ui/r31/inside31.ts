@@ -4,6 +4,7 @@
 // (1 clique depois de entrar); "Abrir a tela" fica para o detalhe. Fachadas levam à sala dos fundos; a facção com
 // convite aberto mostra o baile; a delegacia mostra as celas; o beco, o mercado negro.
 
+import { baucOn31 } from '../../sim/sys/bauc31';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
@@ -28,7 +29,7 @@ import { go18 } from '../sys/inbox18';
 import { openFicha13 } from '../sys/persona13';
 import { shop31Tab } from './shop31';
 import { lockBtn31, quickBtn31 } from './lock31';
-import { sceneView31 } from './scene31';
+import { moreBtn31, runGo31, sceneView31 } from './scene31';
 import { INSIDE_W31, infoLines31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
 import { artPanelEl31, paintArt31 } from './art31';
 import './inside31.css';
@@ -131,6 +132,7 @@ function infoPanel(s: GameState, m: InsideM31, x: InsideT31, key: string): HTMLE
       for (const r of rows) add(h('div', { class: 'in31-act' }, h('b', null, t(r.name)), h('span', { class: 'small' }, ` · ${$v(r.price)}`),
         h('p', { class: 'small muted' }, t(r.note), ' ', t(fmtL(l('Risco de apreensão: {p}%.', 'Seizure risk: {p}%.'), { p: Math.round(r.risk * 100) }))),
         btn(l('Comprar', 'Buy'), bmLock31(s, r), () => result(buyBm31(s, r.id)), true)));
+      if (baucOn31(s)) add(h('div', { class: 'row wrap' }, moreBtn31(l('Sala dos fundos: leilão silencioso', 'Back room: silent auction'), () => runGo31({ area: 'bauc31' })))); // R31 T2
       break;
     }
     case 'baile': {

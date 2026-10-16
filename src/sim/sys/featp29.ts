@@ -23,7 +23,7 @@ import { actsNow27 } from '../tickcache27';
 import { actsOfPerson17 } from '../actidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { FEATP29_CORE, featureFee, songX } from './creation/core';
-import { f15, personFame } from './fame15';
+import { f15, personFameV } from './fame15';
 import { admiration, bondsOfPerson } from './bonds9';
 import { MSG_HANDLERS } from './people/inbox';
 import { addMsg, P } from './people/state';
@@ -112,7 +112,7 @@ function shares29(s: GameState, hostId: string, g: FeatGuest29): Share29[] {
   for (const pid of g.persons) {
     const p = s.persons[pid];
     if (!p) continue;
-    const pf = personFame(s, pid).v;
+    const pf = personFameV(s, pid);
     const fee = Math.round(featureFee(s, { fame: pf } as Act) * (0.85 + featSkill29(s, p) / 400));
     out.push({ id: pid, kind: 'person', fair: { fee, split: round2(clamp(0.06 + pf / 320 - hf / 900, 0.04, 0.35)) }, fame: pf, act: homeAct29(s, pid) });
   }
@@ -152,7 +152,7 @@ function personScore29(s: GameState, songId: string, pid: string, priceRel: numb
   const host = song ? s.acts[song.actId] : undefined;
   const p = s.persons[pid];
   if (!song || !host || !p) return -9;
-  const pf = personFame(s, pid).v;
+  const pf = personFameV(s, pid);
   const A = homeAct29(s, pid);
   const hl = leadOf(host);
   const bond = hl ? tieOf(s, hl, pid)?.v ?? rel0(s, p.id, hl) : 0;
@@ -243,7 +243,7 @@ export function proposeFeat29(s: GameState, songId: string, g0: FeatGuest29, t0:
   // recusa pesa um pouco na relação
   const hl = leadOf(host);
   if (hl && r.chance(0.3)) bump(s, hl, g.persons[0], -4, 'feat');
-  const top = Math.max(...g.persons.map((x) => personFame(s, x).v));
+  const top = Math.max(...g.persons.map((x) => personFameV(s, x)));
   const why = top > host.fame + 25 ? l('o seu artista ainda é pequeno para eles', 'your act is still too small for them') : song.q < 50 ? l('a música não convenceu', 'the song did not convince them') : l('os termos não agradaram', 'the terms did not appeal');
   return { result: 'rejected', text: T('{g} recusou: {w}.', '{g} declined: {w}.', { g: names, w: why }) };
 }
@@ -290,7 +290,7 @@ export function closeFeat29(s: GameState, songId: string, g0: FeatGuest29, t0: F
   if (g.act) gain += 4 + s.acts[g.act].fame / 25;
   g.persons.forEach((pid, i) => {
     const p = s.persons[pid];
-    gain += (W29[i] ?? 0.3) * (2 + personFame(s, pid).v / 30 + clamp((featSkill29(s, p) - 50) / 12, -2, 4));
+    gain += (W29[i] ?? 0.3) * (2 + personFameV(s, pid) / 30 + clamp((featSkill29(s, p) - 50) / 12, -2, 4));
   });
   song.performance = clamp(song.performance + Math.min(12, gain), 0, 100);
   settleVocals(s, song); // quem canta dá voz à faixa instrumental (vocals10)
@@ -306,7 +306,7 @@ export function closeFeat29(s: GameState, songId: string, g0: FeatGuest29, t0: F
     if (hl) bump(s, hl, pid, 22, 'feat', 'collab');
     bandReact29(s, pid, host);
   }
-  const top = Math.max(...g.persons.map((x) => personFame(s, x).v), g.act ? s.acts[g.act].fame : 0);
+  const top = Math.max(...g.persons.map((x) => personFameV(s, x)), g.act ? s.acts[g.act].fame : 0);
   remember(s, 'feature', T('{g} grava participação em "{t}", de {h}.', '{g} records a feature on "{t}" by {h}.', { g: names, t: base, h: host.name }), { actId: host.id, pid: g.persons[0], important: top > 50 });
   return deal;
 }
@@ -343,7 +343,7 @@ FEATP29_CORE.appeal = (s: GameState, pids: string[], fam: FamilyId): number => {
   let sum = 0;
   let cross = 0;
   pids.slice(0, FEAT_MAX_P29).forEach((pid, i) => {
-    sum += personFame(s, pid).v * (W29[i] ?? 0.3);
+    sum += personFameV(s, pid) * (W29[i] ?? 0.3);
     const A = homeAct29(s, pid);
     if (A && familyOf(A.genre) !== fam) cross = 0.04;
   });
@@ -352,7 +352,7 @@ FEATP29_CORE.appeal = (s: GameState, pids: string[], fam: FamilyId): number => {
 
 /** Público cruzado de uma pessoa: os fãs da banda DELA (em escala menor que o feat da banda inteira). */
 export function crossPerson29(s: GameState, host: Act, pid: string, w = 1, toGuest = false): void {
-  const pf = personFame(s, pid).v;
+  const pf = personFameV(s, pid);
   const k = clamp(0.25 + pf / 250, 0.25, 0.6) * w;
   const A = homeAct29(s, pid);
   if (A && A.id !== host.id) {
@@ -413,7 +413,7 @@ export function searchFeatPersons29(s: GameState, hostId: string, q: string, lim
     } else if (!p.alive || !acts.some((a) => LIVE(a) && a.fame >= 15 && !mine(a))) continue;
     const block = featPersonBlock29(s, p.id, hostId);
     if (!nq && block) continue;
-    rows.push({ pid: p.id, name: p.name, role: p.role, fame: personFame(s, p.id).v, block, act: homeAct29(s, p.id) ?? acts[acts.length - 1], pre });
+    rows.push({ pid: p.id, name: p.name, role: p.role, fame: personFameV(s, p.id), block, act: homeAct29(s, p.id) ?? acts[acts.length - 1], pre });
   }
   rows.sort((a, b) => (a.block ? 1 : 0) - (b.block ? 1 : 0) || b.pre - a.pre || b.fame - a.fame || (a.pid < b.pid ? -1 : 1));
   const groups: FeatPickGroup29[] = [];
@@ -478,7 +478,7 @@ export function pairScore29(s: GameState, H: Act, pid: string, deep = true): Pai
   if (!p || !p.alive || p.isPlayer || H.members.includes(pid) || s.year - p.born < 16) return null;
   if (p.role === 'producer' && !sings(s, p) && p.skills.instr < 45) return null;
   const A = homeAct29(s, pid);
-  const pf = personFame(s, pid).v;
+  const pf = personFameV(s, pid);
   const hl = leadOf(H);
   const city = !!A && A.city === H.city;
   const fam = !!A && familyOf(A.genre) === familyOf(H.genre);
@@ -533,13 +533,13 @@ export function attachNpcFeat29(s: GameState, H: Act, songId: string, pids: stri
   songX(s, songId).featPersons = [...g.persons];
   song.title = `${base} (feat. ${names})`;
   let gain = 0;
-  g.persons.forEach((pid, i) => { gain += (W29[i] ?? 0.3) * (2 + personFame(s, pid).v / 30 + clamp((featSkill29(s, s.persons[pid]) - 50) / 12, -2, 4)); });
+  g.persons.forEach((pid, i) => { gain += (W29[i] ?? 0.3) * (2 + personFameV(s, pid) / 30 + clamp((featSkill29(s, s.persons[pid]) - 50) / 12, -2, 4)); });
   song.performance = clamp(song.performance + Math.min(12, gain), 0, 100);
   settleVocals(s, song);
   song.q = songQ(song);
   const hl = leadOf(H);
   for (const pid of g.persons) {
-    const fee = featureFee(s, { fame: personFame(s, pid).v } as Act);
+    const fee = featureFee(s, { fame: personFameV(s, pid) } as Act);
     H.cash -= fee;
     const A = homeAct29(s, pid);
     if (A) A.cash += fee;
@@ -557,7 +557,7 @@ export function attachNpcFeat29(s: GameState, H: Act, songId: string, pids: stri
   const fs = feats(s);
   fs.npc.push({ y: s.year, a: H.name, b: names });
   if (fs.npc.length > 30) fs.npc.shift();
-  const top = Math.max(...g.persons.map((x) => personFame(s, x).v));
+  const top = Math.max(...g.persons.map((x) => personFameV(s, x)));
   remember(s, 'feature', T('{g} grava participação em "{t}", de {h}.', '{g} records a feature on "{t}" by {h}.', { g: names, t: base, h: H.name }), { actId: H.id, pid: g.persons[0], important: top > 60 && H.fame > 50 });
   return true;
 }
@@ -615,7 +615,7 @@ export function npcPersonInvite29(s: GameState, r: Rng, pid: string, hostId?: st
   const inbox = P(s).inbox;
   if (inbox.some((m) => m.ref?.sys === 'featp29' && m.ref?.pid === pid && !m.resolved)) return false;
   let H = hostId ? s.acts[hostId] : undefined;
-  const pf = personFame(s, pid).v;
+  const pf = personFameV(s, pid);
   if (!H) {
     const cands = actsNow27(s).filter((a) => (a.status === 'active' || a.status === 'emerging') && !mine(a) && a.members.length && a.fame >= Math.max(10, pf - 20))
       .map((a) => ({ a, v: (pairScore29(s, a, pid)?.v ?? -9) + a.fame / 60 })).sort((x, y) => y.v - x.v || (x.a.id < y.a.id ? -1 : 1)).slice(0, 8);
@@ -652,7 +652,7 @@ export function acceptPersonInvite29(s: GameState, r: Rng, hostId: string, pid: 
   const song = composeSongs(s, r, H, 1)[0];
   if (!song) return null;
   const base = song.title;
-  const pf = personFame(s, pid).v;
+  const pf = personFameV(s, pid);
   song.recorded = true;
   song.performance = clamp(45 + H.fame / 2 + pf / 8 + clamp((featSkill29(s, p) - 50) / 6, -4, 8) + r.normal(0, 6), 5, 100);
   song.production = clamp(55 + r.normal(0, 8), 5, 100);
@@ -694,7 +694,7 @@ MSG_HANDLERS.featp29 = (s, m, action) => {
   if (action === 'band') {
     if (!A || !mine(A)) return l('A banda não está mais no seu elenco.', 'The band is no longer on your roster.');
     // o anfitrião queria a pessoa: topa a banda inteira se ela for maior que a pessoa (ou se forem amigos)
-    const want = clamp(0.35 + (A.fame - personFame(s, pid).v) / 60 + actBond(s, H, A).v / 100, 0.1, 0.85);
+    const want = clamp(0.35 + (A.fame - personFameV(s, pid)) / 60 + actBond(s, H, A).v / 100, 0.1, 0.85);
     if (r.chance(want)) {
       const fee = Math.max(Number(ref.fee), Math.round(fairFeat(s, H.id, A.id).fee * 0.9));
       const d = acceptNpcInvite(s, r, H.id, A.id, fee, Number(ref.split));
@@ -716,7 +716,7 @@ function personInvitesMonth29(s: GameState): void {
     if (!a || a.status === 'retired' || a.status === 'split' || a.members.length < 2) continue;
     if (!r.chance(0.015 + a.fame / 1500 + (s.year >= 1998 ? 0.01 : 0))) continue;
     const ps = a.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer)
-      .sort((x, y) => Number(sings(s, s.persons[y])) - Number(sings(s, s.persons[x])) || personFame(s, y).v - personFame(s, x).v);
+      .sort((x, y) => Number(sings(s, s.persons[y])) - Number(sings(s, s.persons[x])) || personFameV(s, y) - personFameV(s, x));
     if (ps[0]) npcPersonInvite29(s, r, ps[0]);
   }
 }
@@ -749,7 +749,7 @@ export function quickChance29(s: GameState, songId: string, g0: FeatGuest29): nu
   };
   let p = 1;
   if (g.act && s.acts[g.act]) p = Math.min(p, one(s.acts[g.act].fame, s.acts[g.act]));
-  for (const pid of g.persons) p = Math.min(p, one(personFame(s, pid).v, homeAct29(s, pid)));
+  for (const pid of g.persons) p = Math.min(p, one(personFameV(s, pid), homeAct29(s, pid)));
   return clamp(p * (1 - 0.04 * (g.persons.length + (g.act ? 1 : 0) - 1)), 0.05, 0.9);
 }
 

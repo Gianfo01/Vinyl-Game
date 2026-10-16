@@ -167,7 +167,7 @@ export function per13(s: GameState, key: string): P13 | null {
 }
 const staffSig = (s: GameState, key: string): string => {
   if (key === 'player' || s.persons[key.slice(2)]?.isPlayer) return Object.values(ownerOf(s).attrs).join(',') + persona(s).traits.join(',');
-  if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return (p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : '') + (p ? LOOKH31.sig?.(s, p) ?? '' : '') + (p ? `|${Object.values(p.skills).join(',')}` : ''); } // UNI-4: habilidades na chave (treino muda a ficha dentro do ano; sem isso o jogo carregado divergia)
+  if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return (p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : '') + (p ? LOOKH31.sig?.(s, p) ?? '' : '') + (p ? `|${p.born}|${Object.values(p.skills).join(',')}` : ''); } // UNI-4: habilidades na chave (treino muda a ficha dentro do ano; sem isso o jogo carregado divergia)
   if (key.startsWith('e:')) return s.config.realNames ? 'R' : 'F';
   if (!key.startsWith('s:')) return '';
   const st = s.player.staff.find((x) => x.id === key.slice(2));

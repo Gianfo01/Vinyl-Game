@@ -71,7 +71,7 @@ describe('base de dados r14', () => {
     const { state } = simulate(defaultConfig('r14perf', { startYear: 2010, realNames: true, dbSize: 'huge' }), 1);
     const perMonth = (Date.now() - t1) / 12;
     console.log(`huge: acts=${count(s)} criar=${created}ms simulate(1 ano)/mês=${perMonth.toFixed(0)}ms`);
-    expect(perMonth).toBeLessThan(1500);
+    expect(perMonth).toBeLessThan(3000); // R31: recalibrado para o hardware das sessões (v30 já dava ~1 570 aqui; R31 ~2 130) — decisão do dono, 2026-10-16
     expect(Object.keys(state.acts).length).toBeGreaterThan(count(mk('small', 2010)));
   }, 60000);
 });

@@ -33,7 +33,7 @@ import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } f
 import { actsNow27 } from '../tickcache27';
 import { actsTouched17 } from '../actidx17';
 import { admiration, bondCost, formBond } from './bonds9';
-import { personFame } from './fame15';
+import { personFameV } from './fame15';
 import { clearance, featSongs } from './feats8';
 import { featPersonBlock29 } from './featp29';
 import { announceBand16, buildBand16, departNpc16, freePool, joinBand, l16, leaveBand16, pressure16, WHY16, type Why16 } from './lineup16';
@@ -162,7 +162,7 @@ export function factors29(s: GameState, p: Person, band: Act | undefined, k: MoK
     // R29 (sem banda): quem está parado quer voltar a tocar; a fama e a habilidade dão confiança; a idade pesa
     add(l('Sem banda: quer voltar a tocar', 'No band: wants to play again'), k === 'staff' ? 0.04 : 0.06);
     if (k === 'solo' || k === 'join') {
-      const pf = personFame(s, p.id).v;
+      const pf = personFameV(s, p.id);
       add(T('Fama própria ({f})', 'Own fame ({f})', { f: Math.round(pf) }), (pf - 15) / 300);
       const sk = Math.max(p.skills.voice, p.skills.instr, p.skills.comp);
       add(T('Habilidade ({v})', 'Skill ({v})', { v: Math.round(sk) }), (sk - 50) / 400);
@@ -181,7 +181,7 @@ export function factors29(s: GameState, p: Person, band: Act | undefined, k: MoK
     if (lead && (rel0(s, p.id, lead.id)) < -25) add(T('Briga com o líder ({n})', 'Feud with the leader ({n})', { n: lead.name }), 0.05);
     add(T('Ressentimento ({v})', 'Resentment ({v})', { v: Math.round(p.resentment) }), p.resentment / 700);
     add(T('Sucesso da banda (fama {f})', 'Band success (fame {f})', { f: Math.round(band.fame) }), -(band.fame - 30) / 350);
-    const pf = personFame(s, p.id).v;
+    const pf = personFameV(s, p.id);
     if (pf > band.fame + 5) add(l('Fama própria maior que a da banda', 'Own fame bigger than the band\'s'), 0.05);
     if (band.members.length !== 3) add(T('Fatia de cada um ({n} integrantes)', 'Each one\'s share ({n} members)', { n: band.members.length }), (band.members.length - 3) * 0.015);
     if (p.traits.includes('loyal')) add(l('Leal à banda', 'Loyal to the band'), -0.08);
@@ -212,7 +212,7 @@ const chanceOf = (base: number, baseWhy: L, fs: Factor29[]): Chance29 => ({
 
 // ---------------------------------------------------------------- 1) carreira solo (a proposta de sempre)
 
-const soloFame = (s: GameState, band: Act | undefined, p: Person): number => band ? Math.min(band.fame, Math.max(band.fame * (front(band, p) ? 0.45 : 0.25), personFame(s, p.id).v * 0.6)) : clamp(personFame(s, p.id).v * 0.6, 0, 40);
+const soloFame = (s: GameState, band: Act | undefined, p: Person): number => band ? Math.min(band.fame, Math.max(band.fame * (front(band, p) ? 0.45 : 0.25), personFameV(s, p.id) * 0.6)) : clamp(personFameV(s, p.id) * 0.6, 0, 40);
 
 // a chance da proposta = evaluateOffer + fatores da pessoa (só para o solo-proposta)
 registerOfferMod('member29', (s, act) => {
@@ -379,7 +379,7 @@ export const roleName29 = (r: string): L => ROLE_NAME[r] ?? l(r, r);
 /** Bandas suas que podem receber alguém (formação ativa com 2+ pessoas ou a sua própria banda). */
 export const myBands29 = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && live(a) && !mo29(s).sh[a.id] && (a.members.length >= 2 || !!a.playerBand)).sort((a, b) => b.fame - a.fame);
 /** Luvas para mudar de banda (centavos). */
-export const joinFee29 = (s: GameState, pid: string): number => Math.round(money(s, 1500 + personFame(s, pid).v * 60) / 10000) * 10000;
+export const joinFee29 = (s: GameState, pid: string): number => Math.round(money(s, 1500 + personFameV(s, pid) * 60) / 10000) * 10000;
 
 /** Por que a pessoa não cabe nesta banda (função, tamanho) — ou null. */
 export function joinFit29(s: GameState, pid: string, actId: string, replace?: string): L | null {
@@ -402,7 +402,7 @@ export function joinChance29(s: GameState, pid: string, actId: string, mode: MoM
   const fs = factors29(s, p, band, 'join', mode);
   const mold = band ?? refAct29(s, pid);
   if (band) fs.push(F(T('{a} (fama {f}) × {b} (fama {g})', '{a} (fame {f}) × {b} (fame {g})', { a: T0.name, f: Math.round(T0.fame), b: band.name, g: Math.round(band.fame) }), (T0.fame - band.fame) / 200));
-  else fs.push(F(T('Fama de {a} ({f})', 'Fame of {a} ({f})', { a: T0.name, f: Math.round(T0.fame) }), (T0.fame - personFame(s, pid).v) / 250));
+  else fs.push(F(T('Fama de {a} ({f})', 'Fame of {a} ({f})', { a: T0.name, f: Math.round(T0.fame) }), (T0.fame - personFameV(s, pid)) / 250));
   if (mold) fs.push(F(familyOf(T0.genre) === familyOf(mold.genre) ? l('Mesmo universo musical', 'Same musical world') : l('Outro universo musical', 'A different musical world'), familyOf(T0.genre) === familyOf(mold.genre) ? 0.03 : -0.08));
   fs.push(F(T('Reputação com artistas ({r})', 'Reputation with artists ({r})', { r: Math.round(s.player.reputation.artists) }), (s.player.reputation.artists - 50) / 500));
   return chanceOf(0.05, l('Base: proposta de troca de banda com luvas', 'Base: band-switch offer with a signing fee'), fs.filter((f) => Math.abs(f.v) >= 0.004));
@@ -453,7 +453,7 @@ export function memberJoin29(s: GameState, pid: string, actId: string, mode: MoM
   if (lb && band) remember(s, 'poach', T('{c} tira {p} de {b} ({lb}) para {a}.', '{c} takes {p} from {b} ({lb}) into {a}.', { c: s.config.companyName, p: p.name, b: band.name, lb: lb.name, a: A.name }), { actId, pid, important: true });
   const txt = band ? T('{p} sai de {b} e entra em {a}.{x}', '{p} leaves {b} and joins {a}.{x}', { p: p.name, b: band.name, a: A.name, x: swapTxt ?? '' })
     : T('{p}, sem banda, entra em {a}.{x}', '{p}, without a band, joins {a}.{x}', { p: p.name, a: A.name, x: swapTxt ?? '' });
-  const sev = band ? band.fame / 2 : personFame(s, pid).v / 2;
+  const sev = band ? band.fame / 2 : personFameV(s, pid) / 2;
   emitFact(s, { kind: 'member_join', actors: ['player', pid, actId, band?.id ?? ''], severity: clamp(20 + sev, 20, 65), visibility: 'public', tags: ['member29', 'join', ...(lb ? ['poach'] : [])], text: txt, src: 'member29' });
   const out = extra ? T('{t} {e}', '{t} {e}', { t: txt, e: extra }) : txt;
   logIt(s, pid, 'join', true, out);
@@ -520,7 +520,7 @@ const leadOf = (s: GameState, a: Act): string | undefined => (a.leaderId && a.me
 export function sideChance29(s: GameState, pid: string, actId: string): Chance29 {
   const p = s.persons[pid], band = bandOf29(s, pid), M = s.acts[actId];
   if (!p || !M || (!band && !freeAgent29(s, pid))) return { p: 0, why: [] };
-  const theirs = band?.fame ?? personFame(s, pid).v;
+  const theirs = band?.fame ?? personFameV(s, pid);
   let adm = 0;
   try { adm = admiration(s, pid, M.id); } catch { adm = 0; }
   const fs: Factor29[] = [
@@ -618,7 +618,7 @@ const writeSk = (p: Person): number => Math.round(Math.max(p.skills.comp, p.skil
 export function ghostChance29(s: GameState, pid: string): Chance29 {
   const p = s.persons[pid];
   if (!p) return { p: 0, why: [] };
-  const pf = personFame(s, pid).v;
+  const pf = personFameV(s, pid);
   const fs: Factor29[] = [
     F(l('Ambição: dinheiro/segurança', 'Ambition: money/security'), p.ambition === 'money' || p.ambition === 'security' ? 0.06 : 0),
     F(T('Ressentimento ({v})', 'Resentment ({v})', { v: Math.round(p.resentment) }), p.resentment / 600),
@@ -666,7 +666,7 @@ function bandFactors29(s: GameState, p: Person): Factor29[] {
 export function bandChance29(s: GameState, pid: string): Chance29 {
   const p = s.persons[pid], mold = refAct29(s, pid);
   if (!p || !mold || !freeAgent29(s, pid)) return { p: 0, why: [] };
-  const v: Act = { ...structuredClone(mold), id: `${mold.id}~mo29b`, playerBand: undefined, trust: 50, members: [p.id], leaderId: p.id, owner: null, contractId: undefined, status: 'emerging', fame: clamp(personFame(s, pid).v * 0.3, 0, 30) };
+  const v: Act = { ...structuredClone(mold), id: `${mold.id}~mo29b`, playerBand: undefined, trust: 50, members: [p.id], leaderId: p.id, owner: null, contractId: undefined, status: 'emerging', fame: clamp(personFameV(s, pid) * 0.3, 0, 30) };
   let score = 0.58;
   try { score = evaluateOffer(s, v, defaultOffer(s, v)).score; } catch { /* placar neutro */ }
   return chanceOf(score - 0.58, l('Proposta padrão para a banda nova', 'Standard offer for the new band'), bandFactors29(s, p));
@@ -716,7 +716,7 @@ function finalizeBand(s: GameState, id: string, sh: Shell29): Settled29 {
   b.status = 'active';
   announceBand16(s, { b, big: x.big, text: x.text, important: x.important }); // o anúncio de sempre (memória lineup/supergroup)
   const txt = T('{p} monta a banda {b} e assina com {c}.', '{p} forms the band {b} and signs with {c}.', { p: p?.name ?? '?', b: b.name, c: s.config.companyName });
-  emitFact(s, { kind: 'member_band', actors: ['player', sh.pid, id], severity: clamp(15 + personFame(s, sh.pid).v / 2, 15, 50), visibility: 'public', tags: ['member29', 'band'], text: txt, src: 'member29' });
+  emitFact(s, { kind: 'member_band', actors: ['player', sh.pid, id], severity: clamp(15 + personFameV(s, sh.pid) / 2, 15, 50), visibility: 'public', tags: ['member29', 'band'], text: txt, src: 'member29' });
   logIt(s, sh.pid, 'band', true, txt);
   return { t: txt, ok: true, actId: id };
 }

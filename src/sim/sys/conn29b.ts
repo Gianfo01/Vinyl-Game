@@ -33,6 +33,7 @@ import { registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
 import { PRESSURE29, stressOf } from '../stress17';
 import type { Act, GameState, Person } from '../types';
+import { inPlayerAct17 } from '../actidx17';
 import { fmtL, hasTech, money, playerActs, post, staffAdjusters } from '../util';
 import { CONN29 } from './conn29';
 import { a3Of, ODDS17 } from './crime17';
@@ -54,7 +55,7 @@ const dept = (s: GameState, id: string) => x4p(s).hq6?.depts?.[id] ?? 0;
 const isMinor = (s: GameState, pid: string) => !!x4p(s).family29?.min?.[pid] && ageOf(s, s.persons[pid]) < 18;
 const heatOf = (s: GameState, city: string) => { const k = a3Of(s, city); return k ? x4p(s).crime17?.heat?.[k] ?? 0 : 0; };
 const ageOf = (s: GameState, p?: Person) => (p ? s.year - p.born : 99);
-const actOf = (s: GameState, pid: string) => playerActs(s).map((id) => s.acts[id]).find((a) => a?.members.includes(pid));
+const actOf = (s: GameState, pid: string) => (!inPlayerAct17(s, pid) ? undefined : playerActs(s).map((id) => s.acts[id]).find((a) => a?.members.includes(pid)));
 const STREET = new Set(['hiphop', 'caribbean', 'latin', 'brazil']);
 const street = (a: Act) => STREET.has(genreById[a.genre]?.family ?? familyOf(a.genre)) || /punk|grime|drill|funk|trap/.test(a.genre);
 

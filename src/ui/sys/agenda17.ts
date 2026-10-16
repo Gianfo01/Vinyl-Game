@@ -57,7 +57,8 @@ function intercept(e: MouseEvent): void {
   const b = (e.target as Element | null)?.closest?.('button') as HTMLButtonElement | null;
   if (!b || b.disabled || !store.game) return;
   const raw = (b.textContent ?? '').trim();
-  const n = (raw.match(/⏱/g) ?? []).length;
+  // r31 EMO: o ⏱ chega à tela como ícone em pixel art (<img data-emo="clock">) — conta os dois
+  const n = (raw.match(/⏱/g) ?? []).length + b.querySelectorAll('img.pxe[data-emo="clock"]').length;
   const clean = raw.replace(/⏱/g, '').replace(/\s+/g, ' ').trim().slice(0, 70);
   setSpendTag(clean ? l(clean, clean) : null);
   setTimeout(() => setSpendTag(null), 0);
