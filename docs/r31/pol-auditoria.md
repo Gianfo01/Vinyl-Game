@@ -72,6 +72,12 @@ Legenda dos defeitos: **F** flutuando / sem chão · **E** escala · **P** place
 ### M — Estilos por época (`onda4-m-*`)
 - Telas de interface (temas), não cenas pintadas. Sem defeito de pixel art próprio; as cenas dentro delas (mesa do chefe, salas) herdam as correções acima. Observação deixada: o mural vazio da mesa do chefe usa um "+" grande como chamada para começar um disco — é botão, não placeholder.
 
+### Chegaram no merge final (aeroporto `airport31`, leilões `auction31`)
+- Vieram de sessões ainda ativas (VIT/LOTE) depois desta auditoria; não mexi para não conflitar. Pendências vistas no código:
+  **R** textos do telão/catálogo com `fitText` (corta no meio da palavra) → trocar por `abbrText`; **F** pintam e
+  desenham os bonecos no mesmo canvas, sem camada da frente (o leiloeiro usa recorte manual) → separar a pintura pura
+  e registrar em `pol31reg.ts` para a checagem automática valer também para elas.
+
 ## Checagem automática (`tests/r31-pol.test.ts`)
 Passa em todas as cenas registradas (`src/ui/r31/pol31reg.ts`: loja e casa em 5 épocas/cidades, 7 salas de mecânica × 3 épocas, 19 interiores × 3 épocas com objetos ART2, casa Fossati e praça, todas as salas da sede):
 1. toda pessoa com o pé numa linha de chão, num palco, ou escondido atrás de um móvel da camada da frente;
