@@ -12,7 +12,7 @@ import { drawText } from '../pixel/font';
 import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { prim27, type Cell27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 import type { Appearance } from '../../sim/types';
-import { TIER_W31, TIER_X31, type Fig31, type Hot31, type Prop31, type SalaM31 } from './salas31model';
+import { SALA_ART31, TIER_W31, TIER_X31, type Fig31, type Hot31, type Prop31, type SalaM31 } from './salas31model';
 
 // ---------------------------------------------------------------- geometria (pura)
 
@@ -69,6 +69,8 @@ const BOX: Partial<Record<Prop31, [number, number]>> = {
 const WALL: Partial<Record<Prop31, number>> = { onair: 6, cork: 30, clipboard: 30, flyer: 24, whiteboard: 20, clients: 22, routemap: 18, schedule: 22, screen: 14, portraits: 10 };
 
 function hitOf(m: SalaM31, L: Lay31, h: Hot31): Rect31 {
+  const ex = SALA_ART31.hit?.(m, L, h); // r31 ART2: objetos novos (props31)
+  if (ex) return pad(ex, 3);
   const floor = h.pp?.n !== undefined && m.id === 'team' ? h.pp.n : 0;
   const fy = L.fy(floor);
   const x = L.X(h.x), w = L.Wd(h.w);
@@ -133,6 +135,7 @@ export function paintSala31(m: SalaM31, L: Lay31): Px {
   g.p = q;
   for (const d of m.deco) prop(g, m, L, d.prop, d.x, d.w ?? 0.08, 0, d.pp);
   for (const h of m.hots) if (h.prop) prop(g, m, L, h.prop, h.x, h.w, m.id === 'team' ? h.pp?.n ?? 0 : 0, h.pp, h);
+  SALA_ART31.paint?.(g, m, L); // r31 ART2: objetos novos na mesma camada (mesmo contorno)
   q.outline(INK);
   g.p = p;
   p.blit(q, 0, 0);

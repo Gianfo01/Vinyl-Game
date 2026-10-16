@@ -111,7 +111,11 @@ describe('r27 P2B — modo rápido intacto', () => {
     // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
     expect(AFTER.player.cash).toBe(257209);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(4026815485);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(68287867);
+    // R31 onda 4 (I · gente nos lugares, de propósito — docs/r31/DECISOES.md e docs/r31/is.md): donos e equipe dos lugares da
+    // cidade são pessoas da base; sem ninguém adequado nasce gente nova (29 pessoas nesta semente em 8 meses), e os sistemas
+    // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
+    // Com `gente31` desligado volta acts 68287867.
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3963998575);
     expect(hashString(rngSnapshot19(AFTER))).toBe(205718420);
   });
   it('nada de estado P2B criado sem o jogador', () => {
