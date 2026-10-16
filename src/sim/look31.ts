@@ -148,7 +148,7 @@ export function ageDelta31(s: GameState, p: Person, r = rec31(s, p.id)): number 
   const care = Math.min(6, (r?.ag ?? 0) / 12 * 0.6);
   const age = ageOf(s, p) - care;
   if (age <= 35) return 0;
-  const k = agesWell31(s, p.id) ? 0.45 : 1;
+  const k = (agesWell31(s, p.id) ? 0.45 : 1) * (r?.icon ? 0.6 : 1); // ícone grisalho: a idade vira charme
   const d = Math.min(age, 55) - 35;
   const e = Math.max(0, age - 55);
   return -(d * 0.55 + e * 0.35) * k;
