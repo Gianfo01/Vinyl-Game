@@ -8,6 +8,7 @@
 //   hora: conquista (paths18 ach), memória, fato `milestone` (lido pelo epitáfio/linha do tempo) e aviso.
 // Sem sorteio.
 
+import { builtVenue } from './venuestore27';
 import { clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
@@ -181,7 +182,7 @@ export const CLASSICS19: Classic19[] = [
   { id: 'c19:own_outlet', career: 'critic', test: (s) => pr18(s).out?.name ?? null },
   { id: 'c19:first_deal', career: 'platform', test: (s) => (vl(s, 'platform').some((v) => (v.deals?.length ?? 0) > 0) ? '' : null) },
   { id: 'c19:subs_100k', career: 'platform', test: (s) => (vl(s, 'platform').some((v) => (v.subs ?? 0) >= 100_000) ? '' : null) },
-  { id: 'c19:own_venue', career: 'venue', test: (s) => liveOf(s).venue?.name ?? null },
+  { id: 'c19:own_venue', career: 'venue', test: (s) => builtVenue(s)?.name ?? null },
 ];
 export const CLASSIC_TXT19: Record<string, L> = {
   'c19:first_client': l('{y}: primeiro cliente — {x} confia a carreira a você.', '{y}: first client — {x} trusts you with their career.'),

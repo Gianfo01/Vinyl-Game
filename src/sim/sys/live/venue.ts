@@ -1,3 +1,4 @@
+import { builtVenue, setBuiltVenue } from '../venuestore27';
 import { deferEvents } from '../../ext4';
 // Casa de shows própria (agenda, aluguel a terceiros, bar, acústica), residência em cassino para
 // veteranos e megaeventos beneficentes globais (modelo 1985).
@@ -28,8 +29,7 @@ export function upgradeCost(s: GameState, v: OwnVenue, what: 'bar' | 'acoustics'
 }
 
 export function buyVenue(s: GameState, kind: OwnVenue['kind'], cityId: string, name: string): OwnVenue | L {
-  const lv = liveOf(s);
-  if (lv.venue) return l('Você já tem uma casa de shows.', 'You already own a venue.');
+  if (builtVenue(s)) return l('Você já tem uma casa de shows.', 'You already own a venue.');
   if (venueCount27(s) >= MAX_VENUES27) return l('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.');
   const k = venueKind(kind);
   if (s.year < k.minYear) return l('Ainda não existem arenas desse porte.', 'Arenas of that size don\'t exist yet.');
@@ -38,14 +38,14 @@ export function buyVenue(s: GameState, kind: OwnVenue['kind'], cityId: string, n
   if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   const v: OwnVenue = { kind, cityId, name: name.trim() || `${k.name.pt} ${cityById[cityId].name.pt}`, bar: 0, acoustics: 0, rentalNights: 8, ownNights: 0, boughtYear: s.year, price, history: [] };
   post(s, `venuebuy:${kind}:${cityId}`, -price, 'investments', `Compra: ${v.name}`);
-  lv.venue = v;
+  setBuiltVenue(s, v);
   remember(s, 'venue_bought', fmtL(l('O selo compra {v} em {c}.', 'The label buys {v} in {c}.'), { v: v.name, c: cityById[cityId].name }), { important: true });
   bump(s, 'venues');
   return v;
 }
 
 export function upgradeVenue(s: GameState, what: 'bar' | 'acoustics'): L | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   if (!v) return l('Sem casa de shows.', 'No venue.');
   if (v[what] >= 3) return l('Já está no máximo.', 'Already maxed out.');
   const cost = upgradeCost(s, v, what);
@@ -56,7 +56,7 @@ export function upgradeVenue(s: GameState, what: 'bar' | 'acoustics'): L | null 
 }
 
 export function setVenueAgenda(s: GameState, rentalNights: number, ownActId: string | undefined, ownNights: number): void {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   if (!v) return;
   v.ownActId = ownActId && isMine(s, ownActId) ? ownActId : undefined;
   v.ownNights = v.ownActId ? clamp(Math.round(ownNights), 0, 8) : 0;
@@ -64,11 +64,10 @@ export function setVenueAgenda(s: GameState, rentalNights: number, ownActId: str
 }
 
 export function sellVenue(s: GameState): L | null {
-  const lv = liveOf(s);
-  const v = lv.venue;
+  const v = builtVenue(s);
   if (!v) return l('Sem casa de shows.', 'No venue.');
   post(s, `venuesell:${v.kind}:${v.cityId}`, Math.round(v.price * 0.6), 'asset_sales', `Venda: ${v.name}`);
-  lv.venue = null;
+  setBuiltVenue(s, null);
   return null;
 }
 
@@ -100,7 +99,7 @@ export function venueMonthEstimate(s: GameState, v: OwnVenue): { rent: number; b
 /** Mês da BASE da casa construída (aluguel, bar, artista da casa) — r27: sem lançar no caixa; quem lança é o
  * fechamento único das casas (venues27), junto com a programação (venue12). Devolve receita e custo. */
 export function venueBaseMonth27(s: GameState, r: Rng): { rev: number; cost: number } | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   if (!v) return null;
   const e = venueMonthEstimate(s, v);
   const noise = r.float(0.85, 1.1);

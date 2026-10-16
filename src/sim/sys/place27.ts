@@ -8,6 +8,7 @@
 //   • placeActs27 / doPlace27 — ações (com custo, motivo de bloqueio e efeito real).
 // Sem sorteio do jogo: nomes, donos e funcionários vêm de hash estável (não mexe na semente).
 
+import { realVenues } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { FIRST_NAMES, LAST_NAMES } from '../../data/people';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -25,7 +26,7 @@ import { interview, outlets17, releaseNews } from './media17';
 import { FMT18, fmtsNow18, lunchPd18, pitchRadio18, radio18, type Fmt18 } from './radio18';
 import { bookRoutedTour, type DealTerms } from './route8';
 import { ventures } from './ventures9';
-import { VENUES17, buyVenue17, v17, venueOpen, venuePrice } from './venues17';
+import { VENUES17, buyVenue17, venueOpen, venuePrice } from './venues17';
 
 // ---------------------------------------------------------------- tipos
 
@@ -213,7 +214,7 @@ function placeOfNb(s: GameState, nb: Nb19): Place27 {
 
 const FLAVOR27: PlaceK27[] = ['apartments', 'office', 'hotel', 'instruments', 'apartments', 'office'];
 /** Casas de shows REAIS da cidade (venues17) que ainda não são suas. */
-const realVenues = (s: GameState) => VENUES17.filter((d) => d.city === s.config.homeCity && venueOpen(s, d) && !v17(s).own.some((o) => o.id === d.id)).sort((a, b) => Number(a.cap > 3000) - Number(b.cap > 3000) || b.prestige - a.prestige); // casa de bairro antes do estádio
+const cityRealVenues = (s: GameState) => VENUES17.filter((d) => d.city === s.config.homeCity && venueOpen(s, d) && !realVenues(s).some((o) => o.id === d.id)).sort((a, b) => Number(a.cap > 3000) - Number(b.cap > 3000) || b.prestige - a.prestige); // casa de bairro antes do estádio
 /** Veículo de imprensa real do mercado da sede (jornal/revista), se houver. */
 const realOutlet = (s: GameState) => {
   const mk = cityById[s.config.homeCity]?.market;
@@ -227,7 +228,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   const need = required27(s).filter((k) => !have.has(k));
   // lotes de cidade comum: os mais visíveis recebem os lugares básicos que faltam; o resto vira cidade (apartamentos, escritórios…)
   const lots = [...fillers].sort((a, b) => lotVis(b) - lotVis(a) || a - b);
-  const rv = realVenues(s), out0 = realOutlet(s);
+  const rv = cityRealVenues(s), out0 = realOutlet(s);
   const used = new Set(out.map((p) => p.name.pt));
   lots.forEach((lot, i) => {
     let k: PlaceK27 = need.length ? need.shift()! : FLAVOR27[Math.floor(hash(`${s.config.seed}|fl27|${lot}`) * FLAVOR27.length)] ?? 'office';

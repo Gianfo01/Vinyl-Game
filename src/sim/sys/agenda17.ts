@@ -12,6 +12,7 @@
 //   banda de apoio de turnê. Chefe de gabinete (+1 expediente), rede de contatos pessoal e ações do "Você".
 // Aleatoriedade: geradores próprios (semente + mês/trimestre). Publica Fatos 'hire', 'fire', 'agenda'.
 
+import { builtVenue } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { STAFF_ROLES } from '../../data/rules';
 import { REAL_MGRS } from '../../data/managers14';
@@ -475,7 +476,7 @@ function agendaMonth(s: GameState): void {
   const touched = new Set<string>([...careers(s).active, ...Object.keys(a.heads)]);
   for (const v of vs.list) for (const [c, k] of Object.entries(CAREER_KIND)) if (k === v.kind) touched.add(c);
   if (vs.mg.clients.length) touched.add('manager');
-  if (liveOf(s).venue) touched.add('venue');
+  if (builtVenue(s)) touched.add('venue');
   for (const id of touched) {
     if (id === 'label' || id === 'musician') continue;
     const q = careerQ(s, id), d = q.f - 1;

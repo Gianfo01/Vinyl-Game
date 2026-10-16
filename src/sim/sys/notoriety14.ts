@@ -3,6 +3,7 @@
 // decai devagar e tem degraus (desconhecido → conhecido local → nacional → internacional → lenda) com efeitos reais:
 // ofertas melhores, bônus de carreira, artistas que procuram o empresário e imprensa. Sempre explica o motivo.
 
+import { builtVenue } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -10,7 +11,6 @@ import { registerPerkSource, type PerkValues } from '../perks';
 import type { GameState } from '../types';
 import { fmtL, money, notify } from '../util';
 import { careers } from './careers12';
-import { liveOf } from './live';
 import { addClientTrust9, mgCap, ventures } from './ventures9';
 import { actsNow27 } from '../tickcache27';
 
@@ -52,7 +52,7 @@ const METRIC: Record<string, { fn: (s: GameState) => number; why: L }> = {
   manager: { fn: (s) => ventures(s).mg.total / Math.max(1, money(s, 5000)) + ventures(s).mg.clients.length * 1.5, why: l('ganhos e carteira dos seus clientes', 'your clients\' earnings and roster') },
   festival: { fn: (s) => owned(s, 'festival').reduce((t, v) => t + (v.editions ?? []).reduce((u, e) => u + (e.verdict === 'legend' ? 10 : e.verdict === 'ok' ? 3 : e.verdict === 'flop' ? -2 : -7), 0), 0), why: l('edições do festival (lenda, lotada, fracasso ou desastre)', 'festival editions (legend, sold out, flop or disaster)') },
   booking: { fn: (s) => owned(s, 'booking').reduce((t, v) => t + v.total / Math.max(1, money(s, 8000)) + (v.clients?.length ?? 0), 0), why: l('comissões e agenciados da agência', 'agency commissions and roster') },
-  venue: { fn: (s) => { const v = liveOf(s).venue; return v ? v.rentalNights * 0.15 + v.acoustics * 0.02 : 0; }, why: l('noites de casa cheia e acústica', 'full-house nights and acoustics') },
+  venue: { fn: (s) => { const v = builtVenue(s); return v ? v.rentalNights * 0.15 + v.acoustics * 0.02 : 0; }, why: l('noites de casa cheia e acústica', 'full-house nights and acoustics') },
   studio: { fn: (s) => owned(s, 'studio').reduce((t, v) => t + (v.booked ?? []).reduce((u, b) => u + b.n * 0.4, 0) + (v.sound ?? 0) * 0.05, 0), why: l('créditos de sessões e som da casa', 'session credits and house sound') },
   publisher: { fn: (s) => owned(s, 'publisher').reduce((t, v) => t + (v.cat?.length ?? 0) * 1.2, 0), why: l('músicas colocadas no catálogo', 'songs placed in the catalog') },
   media: { fn: (s) => owned(s, 'media').reduce((t, v) => t + v.rep * 0.1, 0), why: l('reputação dos seus veículos', 'your outlets\' reputation') },

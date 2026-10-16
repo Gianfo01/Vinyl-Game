@@ -13,6 +13,7 @@
 //   • vizinhos com nome (gravadoras rivais, rádio, bar com palco): quem são e o que estão fazendo;
 //   • modelo do painel lateral (o que é, custo/mês, receita, quem está lá, 2–3 ações).
 
+import { builtVenue, realVenues } from '../../sim/sys/venuestore27';
 import { CLIMATE19 } from '../../data/hood19';
 import { LANDMARKS19, landmarksAt19, type Landmark19, type LmShape } from '../../data/landmarks19';
 import type { Pop19 } from '../../sim/sys/world19';
@@ -22,12 +23,10 @@ import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import { KIND18, LOTS18, buildings18, campus18, dormPeople, layout18, lotsOpen18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
 import { NB19, live19ev, nb19, type Nb19 } from '../../sim/sys/hood19';
-import { liveOf } from '../../sim/sys/live/state';
 import { rel18 } from '../../sim/sys/relics18';
 import { school18 } from '../../sim/sys/school18';
 import { sess18 } from '../../sim/sys/session18';
 import { ventures } from '../../sim/sys/ventures9';
-import { v17 } from '../../sim/sys/venues17';
 import { bldPop19, lotPop19, upkeep19, type PopAct19 } from '../../sim/sys/world19';
 import { scandal17 } from '../../sim/scandal17';
 import { LMW27B, LMX27B } from './lmdata27';
@@ -173,8 +172,8 @@ export function bldVis27(s: GameState, bs: Bld18[] = buildings18(s)): Map<string
     } else if (open && b.kind === 'studio' && b.now) { v.lit = true; v.queue = 2; v.queueK = 'musicians'; v.why.push(b.now); }
     // casa de shows: noite de show
     if (open && b.kind === 'venue') {
-      const o = b.id.startsWith('ve:') ? v17(s).own.find((x) => `ve:${x.id}` === b.id) : undefined;
-      const lv = b.id === 'lv:venue' ? liveOf(s).venue : undefined;
+      const o = b.id.startsWith('ve:') ? realVenues(s).find((x) => `ve:${x.id}` === b.id) : undefined;
+      const lv = b.id === 'lv:venue' ? builtVenue(s) : undefined;
       const nights = o?.last?.nights ?? (lv?.history.length ? Math.round((lv.history[lv.history.length - 1].occupancy ?? 0) * 10) : 0);
       if (nights > 0) { v.marquee = true; v.lit = true; v.queueK = 'crowd'; v.queue = Math.min(12, 3 + Math.round(nights / 2)); v.why.push(l('Noite de show: marquise acesa e fila na porta.', 'Show night: marquee lit and a queue at the door.')); }
     }
@@ -367,12 +366,12 @@ export function panel27(s: GameState, id: string, bs: Bld18[] = buildings18(s)):
     }
     if (v) who.push(fmtL(l('{n} funcionário(s)', '{n} staff'), { n: v.staff }).pt);
   } else if (b.id.startsWith('ve:')) {
-    const o = v17(s).own.find((x) => `ve:${x.id}` === b.id);
+    const o = realVenues(s).find((x) => `ve:${x.id}` === b.id);
     if (o?.last) income = Math.max(0, o.last.net);
     if (o?.actId && s.acts[o.actId]) who.push(s.acts[o.actId].name);
     if (o?.last?.att) now.push(fmtL(l('{a} pessoas no último mês', '{a} people last month'), { a: o.last.att }));
   } else if (b.id === 'lv:venue') {
-    const h = liveOf(s).venue?.history.slice(-1)[0];
+    const h = builtVenue(s)?.history.slice(-1)[0];
     if (h) income = h.revenue;
   } else if (b.id === 'c:store') income = storeIncome18(s);
   else if (b.kind === 'museum') income = Math.round(rel18(s).inc / 12);

@@ -1,5 +1,6 @@
 // Notas do show, curva do setlist, ingressos/cambistas e o show ao vivo (mini-jogo) — GDD §9.
 
+import { builtVenue } from '../venuestore27';
 import { Rng, clamp } from '../../../core/rng';
 import { hashString } from '../../../core/rng';
 import { cityById, familyOf, l, type L } from '../../../data/world';
@@ -111,7 +112,7 @@ registerMod('cityDemand', 'live-setlist', (s, value, ctx) => {
   let m = 1;
   const b = tourCurveBonus(s, ctx.act.id);
   if (b > 0) m *= 1 + b * 0.6;
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   if (v && ctx.cityId === v.cityId && isMine(s, ctx.act.id)) m *= 1 + v.acoustics * 0.03;
   return m === 1 ? null : { value: value * m, label: l('Boca a boca do show', 'Show word of mouth') };
 });
@@ -143,7 +144,7 @@ export function showNoteFor(s: GameState, input: { actId: string; tier: number; 
   const q = songs.length ? songs.reduce((t, x) => t + x.q, 0) / songs.length : 35;
   const fill = input.cap ? input.sold / input.cap : 0;
   const fatigue = act ? act.members.reduce((t, id) => t + (s.persons[id]?.fatigue ?? 0), 0) / Math.max(1, act.members.length) : 0;
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const acoustic = v && v.cityId === input.cityId ? v.acoustics * 3 : 0;
   const ex = clamp(22 + input.production * 9 + (q - 50) * 0.4 + tal.stage * 0.2 + fill * 18 + input.bonus * 100 + acoustic - fatigue * 0.12, 0, 100);
   const int = clamp(18 + input.tier * 11 + input.production * 8 + (input.minutes - 30) * 0.3 + (fill > 0.9 ? 8 : 0), 0, 100);

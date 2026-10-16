@@ -7,7 +7,8 @@ import { startSession } from '../src/sim/studio';
 import { scandal17 } from '../src/sim/scandal17';
 import { buildings18, campus18, layout18, lotsOpen18, startProj18, freeLots18 } from '../src/sim/sys/campus18';
 import { nb19 } from '../src/sim/sys/hood19';
-import { VENUES17, v17 } from '../src/sim/sys/venues17';
+import { VENUES17 } from '../src/sim/sys/venues17';
+import { addRealVenue } from '../src/sim/sys/venuestore27';
 import {
   GLASS_FROM27, HQ_FLOORS27, ICON27, SALE_MAX27, bldVis27, cityLook27, climate27, env27, era27, fillerLots27, forSale27, hqExt27, life27, lmPop27, mapLms27, nbInfo27, panel27, season27,
 } from '../src/ui/pixel/city27';
@@ -104,7 +105,7 @@ describe('r27 estado dos prédios', () => {
     expect(w.scaffold).toBe(true);
     expect(w.eta).toBeGreaterThan(0);
     const d = VENUES17.find((x) => x.city === 'rio' && x.from <= 1985 && (!x.to || x.to > 1985))!;
-    v17(g).own.push({ id: d.id, y: 1980, cond: 80, rep: 50, policy: 'curated', price: 'mid', maint: true, paid: 0, booked: [], total: 0, last: { nights: 8, att: 3000, net: 1000, why: [] } });
+    addRealVenue(g, { id: d.id, y: 1980, cond: 80, rep: 50, policy: 'curated', price: 'mid', maint: true, paid: 0, booked: [], total: 0, last: { nights: 8, att: 3000, net: 1000, why: [] } });
     const vv = bldVis27(g).get(`ve:${d.id}`)!;
     expect(vv.marquee).toBe(true);
     expect(vv.queue).toBeGreaterThan(0);

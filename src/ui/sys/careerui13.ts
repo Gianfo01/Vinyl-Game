@@ -3,6 +3,7 @@
 // curtos para fundar o negócio/assinar clientes direto da página da carreira (antes eram becos sem
 // botão: "funde em Empreendimentos"). Quando algo bloqueia, a tela diz quanto falta e de onde tirar.
 
+import { builtVenue } from '../../sim/sys/venuestore27';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { careerDef, careers, timeLoad } from '../../sim/sys/careers12';
@@ -88,7 +89,7 @@ function kpis(s: GameState, id: string): Kpi[] {
     case 'manager': { const mg = ventures(s).mg; return [[l('Clientes', 'Clients'), String(mg.clients.length), mg.clients.length ? '' : 'bad'], [l('Reputação', 'Reputation'), String(Math.round(mg.rep))], [l('Comissões (total)', 'Commissions (total)'), $(mg.total)], [l('Crises', 'Crises'), String(mg.clients.filter((c) => c.crisis).length), mg.clients.some((c) => c.crisis) ? 'bad' : '']]; }
     case 'booking': { const c = c12(s), ag = hasAgency(s); return [[l('Agência', 'Agency'), ag ? `${ag.clients?.length ?? 0} ${t(l('clientes', 'clients'))}` : '—', ag ? '' : 'bad'], [l('Datas marcadas', 'Dates booked'), String(c.shows.filter((x) => x.status === 'booked').length)], [l('Promotora', 'Promotion arm'), c.promoter.on ? $(c.promoter.total) : '—', c.promoter.total < 0 ? 'bad' : ''], [l('Ofertas na mesa', 'Offers pending'), String(c.offers.length), c.offers.length ? 'warn' : '']]; }
     case 'festival': { const f = liveOf(s).fests; return [[l('Festivais', 'Festivals'), String(f.length), f.length ? '' : 'bad'], ...ventureKpis(s, 'festival').slice(1)]; }
-    case 'venue': { const v = liveOf(s).venue; return [[l('Casa', 'Venue'), v ? v.name : '—', v ? '' : 'bad']]; }
+    case 'venue': { const v = builtVenue(s); return [[l('Casa', 'Venue'), v ? v.name : '—', v ? '' : 'bad']]; }
     case 'studio': { const p = prod(s); return [[l('Estúdios', 'Studios'), String(studios(s).length), studios(s).length || p.on ? '' : 'bad'], [l('Produtor: reputação', 'Producer reputation'), p.on ? String(Math.round(p.rep)) : '—'], [l('Propostas', 'Offers'), String(p.offers.length)]]; }
     case 'publisher': case 'media': case 'platform': return ventureKpis(s, id);
     case 'musician': { const b = Object.values(s.acts).find((a) => a.playerBand); return b ? [[l('Banda', 'Band'), b.name], [l('Fama', 'Fame'), String(Math.round(b.fame))]] : [[l('Banda', 'Band'), '—', 'bad']]; }
@@ -130,7 +131,7 @@ ADVISOR_EXTRA.push((s) => {
     if (cr) out.push({ icon: 'warning', text: fmtL(l('{n} agenciado(s) em crise: resolva antes que larguem você.', '{n} client(s) in crisis: handle it before they leave you.'), { n: cr }), area: 'management', level: 'bad' });
   }
   if (on('festival') && !liveOf(s).fests.length && s.year >= 1950) out.push({ icon: 'star', text: l('Você é dono de festival sem festival: escolha data, cidade e identidade.', 'A festival owner with no festival: pick a date, city and identity.'), area: PAGE16.festival.area, tab: tab('festival'), level: 'warn' });
-  if (on('venue') && !liveOf(s).venue) out.push({ icon: 'mic', text: l('Sem casa de shows ainda: compre uma em Shows.', 'No venue yet: buy one in Shows.'), area: 'shows', level: 'warn' });
+  if (on('venue') && !builtVenue(s)) out.push({ icon: 'mic', text: l('Sem casa de shows ainda: compre uma em Shows.', 'No venue yet: buy one in Shows.'), area: 'shows', level: 'warn' });
   if (on('studio') && !studios(s).length && !prod(s).on) out.push({ icon: 'cd', text: l('Estúdio/produtor parado: funde um estúdio ou comece a produzir.', 'Studio/producer idle: found a studio or start producing.'), area: 'studio12', level: 'warn' });
   for (const k of ['publisher', 'media', 'platform'] as const) if (on(k) && kindsAvailable(s).includes(k) && !vsum(s, k).n) out.push({ icon: CAREER_NAV[k].icon, text: fmtL(l('Carreira de {c} sem negócio: funde um ({p}).', '{c} career with no business: found one ({p}).'), { c: careerDef(k)!.name, p: $(foundCost(s, k)) }), area: PAGE16[k].area, tab: tab(k), level: 'info' });
   if (timeLoad(s) > 1) out.push({ icon: 'clock', text: fmtL(l('Agenda em {p}%: carreiras demais estressam todo mês.', 'Schedule at {p}%: too many careers add stress every month.'), { p: Math.round(timeLoad(s) * 100) }), area: 'careers', level: 'warn' });

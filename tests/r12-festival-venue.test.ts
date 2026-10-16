@@ -1,5 +1,6 @@
 // Rodada 12 — dono de festival (festival unificado, ciclo de edição, cancelamento) e dono de casa de shows.
 
+import { builtVenue } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
@@ -99,7 +100,7 @@ describe('casa de shows', () => {
     for (let i = 0; i < 6; i++) advanceMonth(s);
     expect(x.regulars).toBeGreaterThan(r0);
     const fri = x.prog.find((n) => n.day === 'fri')!;
-    expect(nightEst(s, liveOf(s).venue!, x, fri).att).toBeGreaterThan(0);
+    expect(nightEst(s, builtVenue(s)!, x, fri).att).toBeGreaterThan(0);
     const reg = x.regulars;
     corp(s, 'take', fri.id, 5000);
     expect(x.regulars).toBeLessThan(reg);

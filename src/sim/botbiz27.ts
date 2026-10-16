@@ -6,6 +6,7 @@
 // 3–4× o preço e pelo menos 3× o fôlego de corte do perfil depois da compra.
 // Só as funções que os botões da interface chamam. Sem aleatoriedade própria (o acaso é o do jogo).
 
+import { builtVenue } from './sys/venuestore27';
 import { cityById } from '../data/world';
 import type { GameState } from './types';
 import { money, playerActs } from './util';
@@ -87,7 +88,6 @@ function publisher(s: GameState, c: Ctx, L: LogBiz27, open: boolean): boolean {
 
 // ---------------------------------------------------------------- casa de shows (lista única venues27)
 function venue(s: GameState, p: Prof, c: Ctx, L: LogBiz27, open: boolean): boolean {
-  const lv = liveOf(s);
   if (!hasVenue27(s) && venueCount27(s) < MAX_VENUES27) {
     if (!open) return false;
     // 1) casa real à venda na região (a mesma conta da tela: retorno anual da curadoria)
@@ -116,7 +116,7 @@ function venue(s: GameState, p: Prof, c: Ctx, L: LogBiz27, open: boolean): boole
     return false;
   }
   // programação da casa construída: uma noite autoral às sextas com divisão de porta (a cena gosta)
-  const x = lv.venue ? v12(s) : null;
+  const x = builtVenue(s) ? v12(s) : null;
   if (x && !x.prog.length && !addNight12(s, { k: 'original', day: 'fri', deal: 'door' })) L.venueNights++;
   return false;
 }

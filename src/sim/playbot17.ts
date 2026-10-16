@@ -3,6 +3,7 @@
 // uma casa de shows se a conta fecha, resposta a boatos sobre os seus artistas, escolhas nas cenas
 // interativas e o envolvimento na carreira (à frente / acompanhando). Sem aleatoriedade própria.
 
+import { realVenues } from './sys/venuestore27';
 import type { GameState } from './types';
 import { playerActs } from './util';
 import { careers } from './sys/careers12';
@@ -11,7 +12,7 @@ import { feed17, respond, respondOdds } from './sys/media17';
 import { canSell, demandOf, m17 as merch, makeBatch, skusNow, unitCost, type Sku } from './sys/merch17';
 import { outletsNow, out17, setPreset, type OutId } from './sys/outlets17';
 import { options17, s17, choose17 } from './sys/scene17';
-import { buyVenue17, marketVenues, monthEst17, v17, venuePrice } from './sys/venues17';
+import { buyVenue17, marketVenues, monthEst17, venuePrice } from './sys/venues17';
 import { cityById } from '../data/world';
 
 export type Prof17 = 'cautious' | 'balanced' | 'aggressive';
@@ -52,7 +53,7 @@ function merchMonth(s: GameState, p: Prof17, cash: number, L: Log17): void {
 }
 
 function venue(s: GameState, p: Prof17, cash: number, burn: number, L: Log17): void {
-  if (p === 'cautious' || v17(s).own.length >= (p === 'aggressive' ? 2 : 1) || s.month % 3 !== 1) return;
+  if (p === 'cautious' || realVenues(s).length >= (p === 'aggressive' ? 2 : 1) || s.month % 3 !== 1) return;
   const home = cityById[s.config.homeCity]?.market;
   let best: { id: string; v: number; price: number } | null = null;
   for (const d of marketVenues(s)) {

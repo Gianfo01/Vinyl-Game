@@ -684,7 +684,7 @@ function sigSpec(s: GameState, c: Career31): Sig31 {
       ], deco: [{ prop: 'desk', x: 0.64, w: 0.26 }, { prop: 'phone', x: 0.7 }] };
     }
     case 'venue': {
-      const lv = x4<{ venue?: unknown }>(s, 'live')?.venue ? 1 : 0;
+      const lv = Object.keys(x4<{ v?: Record<string, unknown> }>(s, 'venues27')?.v ?? {}).length; // UNI-4: registro único das casas
       return { props: [
         { id: 'stage', prop: 'stage', x: 0.42, w: 0.54, label: l('Palco', 'Stage'), tip: l('A agenda da casa', 'The house calendar'), chip: n(lv, l('{n} casa', '{n} venue'), l('{n} casas', '{n} venues')), do: go() },
         { id: 'booth', prop: 'booth', x: 0.04, w: 0.18, label: l('Bilheteria', 'Box office'), tip: l('Ingressos e público', 'Tickets and crowd'), chip: { sym: '◎', text: l('ingressos', 'tickets'), tone: 'info' }, do: go() },

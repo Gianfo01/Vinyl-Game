@@ -4,6 +4,7 @@
 // O negócio inicial de cada carreira é aberto pelo careers19 (def.careers → config.careers.main); aqui só ajustamos
 // o que é próprio do cenário (rádio em vez de fanzine, primeiro cliente etc.) e medimos o estado real da profissão.
 
+import { builtVenue } from './venuestore27';
 import { l } from '../../data/world';
 import { money } from '../util';
 import { registerSimHook } from '../ext4';
@@ -308,7 +309,7 @@ registerSimHook('month', 'scenario23', (s) => {
       c.mgrFame23 = Math.max(c.mgrFame23 ?? 0, Math.round(a.fame));
     }
   } else if (d.id === 'cbgb_1973') {
-    const h = liveOf(s).venue?.history.at(-1);
+    const h = builtVenue(s)?.history.at(-1);
     const key = h ? h.year * 12 + h.month : -1;
     if (h && key !== c.full23k) { c.full23k = key; if (h.occupancy >= 80) c.full23 = (c.full23 ?? 0) + 1; }
   } else if (d.id === 'memphis_studio_1961') {

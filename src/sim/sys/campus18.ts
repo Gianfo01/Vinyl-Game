@@ -11,6 +11,7 @@
 // → danificado (incêndio do crime17/desastre) → fechado/vendido; (5) retrato ANUAL compacto para a linha
 // do tempo (máx. 170 anos).
 
+import { builtVenue, realVenues } from './venuestore27';
 import { clamp, Rng } from '../../core/rng';
 import { HQ_LEVELS, BRANCH_LEVELS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
@@ -31,7 +32,7 @@ import { OWN18, school18 } from './school18';
 import { sess18 } from './session18';
 import { deals18 } from './deals18';
 import { ventures, type VKind } from './ventures9';
-import { v17, vdef } from './venues17';
+import { vdef } from './venues17';
 import { myVenues27 } from './venues27';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
@@ -283,7 +284,7 @@ export function buildings18(s: GameState): Bld18[] {
       now: v.kind === 'studio' && v.booked?.length ? fmtL(l('{n} reservas de clientes', '{n} client bookings'), { n: v.booked.length }) : v.kind === 'festival' && v.month === s.month ? l('Edição deste mês: palco montado!', 'This month\'s edition: stage is up!') : undefined });
   }
   // casas de shows compradas (venues17)
-  for (const o of v17(s).own) {
+  for (const o of realVenues(s)) {
     const d = vdef(o.id);
     if (!d) continue;
     add({ id: `ve:${o.id}`, kind: 'venue', name: d.name, city: d.city, lvl: sizeByCap(d.cap), since: o.y, sy: st.ren[`ve:${o.id}`] ?? Math.min(o.y, Math.max(d.from, 1889)), worn: o.cond < 40, goto: { area: 'cp17-label', tab: ['cp17-label', 'venues'] },
@@ -292,8 +293,8 @@ export function buildings18(s: GameState): Bld18[] {
   }
   // casa de shows da carreira (live) e festivais próprios
   const lv = liveOf(s);
-  if (lv.venue) {
-    const vv = lv.venue;
+  const vv = builtVenue(s);
+  if (vv) {
     const h = vv.history[vv.history.length - 1];
     add({ id: 'lv:venue', kind: 'venue', name: vv.name, city: vv.cityId, lvl: vv.kind === 'club' ? 1 : vv.kind === 'theater' ? 3 : 5, since: vv.boughtYear, goto: { area: 'cp17-venue' },
       kpi: [[l('Tipo', 'Type'), vv.kind === 'club' ? l('clube', 'club') : vv.kind === 'theater' ? l('teatro', 'theatre') : l('arena', 'arena')], [l('Acústica', 'Acoustics'), String(Math.round(vv.acoustics))], [l('Ocupação', 'Occupancy'), h ? `${Math.round(h.occupancy * 100)}%` : '—']],

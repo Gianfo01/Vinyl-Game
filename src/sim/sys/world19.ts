@@ -7,6 +7,7 @@
 // manutenção mensal visível; (5) apelidos e venda; (6) modelos PUROS dos popups (prédio e lote) para a UI
 // desenhar sobre o mapa — sem DOM. Determinístico (sem sorteio); saves antigos ganham o estado vazio.
 
+import { realVenues } from './venuestore27';
 import { clamp } from '../../core/rng';
 import { BRANCH_LEVELS, HQ_LEVELS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
@@ -26,7 +27,7 @@ import { hq6 } from './hq6';
 import { liveOf } from './live/state';
 import { school18 } from './school18';
 import { MAX_LEVEL, VKINDS, foundCost, kindsAvailable, foundVenture, sellVenture, upgradeCost as vUpCost, upgradeVenture, upkeep as vUpkeep, valuation, ventures, type VKind } from './ventures9';
-import { sellValue, sellVenue17, v17, vdef } from './venues17';
+import { sellValue, sellVenue17, vdef } from './venues17';
 
 // ---------------------------------------------------------------- estado
 
@@ -180,7 +181,7 @@ export function synAt19(s: GameState, k: BKind, lot: number, bs = buildings18(s)
 /** Sobe a reputação/prestígio do negócio por trás do prédio. */
 function bump(s: GameState, id: string, d: number): void {
   if (id.startsWith('v:')) { const v = ventures(s).list.find((x) => `v:${x.id}` === id); if (v) v.rep = clamp(v.rep + d, 0, 100); }
-  else if (id.startsWith('ve:')) { const o = v17(s).own.find((x) => `ve:${x.id}` === id); if (o) o.rep = clamp(o.rep + d, 0, 100); }
+  else if (id.startsWith('ve:')) { const o = realVenues(s).find((x) => `ve:${x.id}` === id); if (o) o.rep = clamp(o.rep + d, 0, 100); }
   else if (id.startsWith('fe:')) { const f = liveOf(s).fests.find((x) => `fe:${x.id}` === id); if (f) f.rep = clamp(f.rep + d, 0, 100); }
   else if (id === 'school') { const o = school18(s).own; if (o) o.prest = clamp(o.prest + d, 0, 100); }
 }
@@ -201,7 +202,7 @@ export function upkeep19(s: GameState, b: Bld18): { v: number; parts: [L, number
     const v = ventures(s).list.find((x) => `v:${x.id}` === b.id);
     if (v) parts.push([l('Manutenção + equipe', 'Upkeep + staff'), vUpkeep(s, v)]);
   } else if (b.id.startsWith('ve:')) {
-    const o = v17(s).own.find((x) => `ve:${x.id}` === b.id), d = o && vdef(o.id);
+    const o = realVenues(s).find((x) => `ve:${x.id}` === b.id), d = o && vdef(o.id);
     if (o && d) parts.push([o.maint ? l('Custo fixo (com manutenção)', 'Fixed cost (maintained)') : l('Custo fixo (sem manutenção)', 'Fixed cost (no maintenance)'), Math.round(money(s, d.cap * 12 + 3000) * (o.maint ? 1 : 0.6))]);
   } else if (b.id === 'c:store') parts.push([l('Funcionários da loja', 'Store clerks'), storeUpkeep18(s)]);
   else if (b.id === 'c:sign' || b.id === 'c:park' || b.id === 'c:dorm') {
@@ -385,7 +386,7 @@ export function bldPop19(s: GameState, id: string, q = 1, sty?: Style18): Pop19 
   if (!busy && open) {
     if (isC(id)) acts.push({ id: 'sell', label: l('Vender / demolir', 'Sell / demolish'), cost: -sellValC19(s, id.slice(2) as CK), tone: 'danger', confirm: l('Vender? O lote fica livre.', 'Sell? The lot becomes free.') });
     else if (id.startsWith('v:')) { const v = ventures(s).list.find((x) => `v:${x.id}` === id); if (v) acts.push({ id: 'sell', label: l('Vender o negócio', 'Sell the business'), cost: -Math.round(valuation(s, v) * 0.8), tone: 'danger', confirm: l('Vender o negócio inteiro?', 'Sell the whole business?') }); }
-    else if (id.startsWith('ve:')) { const o = v17(s).own.find((x) => `ve:${x.id}` === id); if (o) acts.push({ id: 'sell', label: l('Vender a casa', 'Sell the venue'), cost: -sellValue(s, o), tone: 'danger', confirm: l('Vender a casa de shows?', 'Sell the venue?') }); }
+    else if (id.startsWith('ve:')) { const o = realVenues(s).find((x) => `ve:${x.id}` === id); if (o) acts.push({ id: 'sell', label: l('Vender a casa', 'Sell the venue'), cost: -sellValue(s, o), tone: 'danger', confirm: l('Vender a casa de shows?', 'Sell the venue?') }); }
   }
   if (b.goto && b.goto.area !== 'campus18') acts.push({ id: 'go', label: l('Abrir página de gestão', 'Open management page'), go: b.goto, tone: 'ghost' });
   const tags: (L | string)[] = [KIND18[b.kind].name, STATE18[b.st], styleName18(w19s(s, b)), b.since === b.sy ? fmtL(l('desde {y}', 'since {y}'), { y: b.since }) : fmtL(l('desde {y} · fachada de {z}', 'since {y} · façade from {z}'), { y: b.since, z: b.sy })];

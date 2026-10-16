@@ -6,6 +6,7 @@
 // (links19a crowd_incident) → a marca sai (`naming_pulled`) e o nome antigo volta. Fim do contrato → renovar (+10%) ou
 // deixar vencer.
 
+import { realVenues } from './venuestore27';
 import { clamp } from '../../core/rng';
 import { BRANDS as CBRANDS, type BrandDef } from '../../data/content';
 import { l, type L } from '../../data/world';
@@ -21,7 +22,7 @@ import { schedule18 } from './decide18';
 import { headline19 } from './factlink19';
 import { liveOf } from './live/state';
 import { cnt19, link19, log19, usd19, xs19, type Log19 , off19 } from './mkb19';
-import { v17, vdef } from './venues17';
+import { vdef } from './venues17';
 
 export const NAMING_FROM19 = { v: 1973, f: 1995 } as const;
 export type NmK19 = 'v' | 'f';
@@ -36,7 +37,7 @@ export interface Tgt19 { k: NmK19; id: string; name: string; rep: number; cap: n
 /** Casas e festivais seus que podem vender o nome nesta época. */
 export function targets19(s: GameState): Tgt19[] {
   const out: Tgt19[] = [];
-  if (s.year >= NAMING_FROM19.v) for (const o of v17(s).own) { const d = vdef(o.id); if (d) out.push({ k: 'v', id: o.id, name: d.name, rep: o.rep, cap: d.cap }); }
+  if (s.year >= NAMING_FROM19.v) for (const o of realVenues(s)) { const d = vdef(o.id); if (d) out.push({ k: 'v', id: o.id, name: d.name, rep: o.rep, cap: d.cap }); }
   if (s.year >= NAMING_FROM19.f) for (const f of liveOf(s).fests) out.push({ k: 'f', id: f.id, name: f.name, rep: f.rep, cap: 5000 + f.rep * 300 });
   return out;
 }
@@ -52,7 +53,7 @@ export function nameFee19(s: GameState, t: Tgt19, b: BrandDef): { v: number; why
 }
 const nameOf = (s: GameState, k: NmK19, id: string): string => (k === 'v' ? vdef(id)?.name : liveOf(s).fests.find((f) => f.id === id)?.name) ?? '?';
 const bumpRep = (s: GameState, k: NmK19, id: string, d: number): void => {
-  if (k === 'v') { const o = v17(s).own.find((x) => x.id === id); if (o) o.rep = clamp(o.rep + d, 0, 100); }
+  if (k === 'v') { const o = realVenues(s).find((x) => x.id === id); if (o) o.rep = clamp(o.rep + d, 0, 100); }
   else { const f = liveOf(s).fests.find((x) => x.id === id); if (f) f.rep = clamp(f.rep + d, 0, 100); }
 };
 
@@ -135,7 +136,7 @@ onFact('scandal', (s, f) => { if (f.actors.includes('player') && f.severity >= 4
 onFact('cancel_wave', (s, f) => {
   const act = f.actors[0];
   for (const x of live(s)) {
-    const tied = x.k === 'v' ? v17(s).own.find((o) => o.id === x.tgt)?.actId === act : liveOf(s).fests.find((y) => y.id === x.tgt)?.lineup.some((u) => u.actId === act);
+    const tied = x.k === 'v' ? realVenues(s).find((o) => o.id === x.tgt)?.actId === act : liveOf(s).fests.find((y) => y.id === x.tgt)?.lineup.some((u) => u.actId === act);
     if (tied) pullName19(s, x, l('cancelamento do artista da casa', 'the house artist\'s cancellation'), f);
   }
 }, 'naming19:cancel');
