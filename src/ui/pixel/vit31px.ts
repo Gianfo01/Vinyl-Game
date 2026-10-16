@@ -15,7 +15,7 @@ export interface VitPx31 { art: VitArt31; rare?: boolean; mine?: boolean }
 
 const blk = prim27.blk;
 /** Altura da prateleira (do teto do salão) e tamanho do item. */
-export const VIT_SHELF_DY31 = 46, VIT_W31 = 14, VIT_H31 = 14;
+export const VIT_SHELF_DY31 = 58, VIT_W31 = 14, VIT_H31 = 14;
 
 /** Caixa do item i de n na prateleira (pixels lógicos). */
 export function vitBox31(i: number, n: number, G: G31): { x: number; y: number; w: number; h: number } {

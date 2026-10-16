@@ -57,11 +57,11 @@ export function vitSpots31(s: GameState, x: Pick<InsideT31, 'k' | 'vit' | 'year'
     const lk = mainLock(v.btns);
     return { id: `vit:${it.id}`, x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 3, label: v.name,
       tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: v.note, w: lk }) : v.note, go: { panel: `vit:${it.id}` }, quiet: true,
-      badge: vitMine31(s, it) ? { text: l('seu', 'yours'), level: 'info', sym: '★' } : it.rare ? { text: l('raro · só este mês', 'rare · this month only'), level: 'soon', sym: '✦' } : undefined };
+      badge: vitMine31(s, it) ? { text: l('seu', 'yours'), level: 'info', sym: '★' } : it.rare ? { text: l('raro', 'rare'), level: 'soon', sym: '✦' } : undefined };
   });
   if (x.k === 'records' && !x.vit) {
     const n = vitItems31(s, 'fair').length;
-    out.push({ id: 'vit:fair', x: G.X(0.9) - 9, y: G.fy - 30, w: 18, h: 30, label: l('Feira dos fundos', 'Fair out back'),
+    out.push({ id: 'vit:fair', x: G.X(0.95) - 9, y: G.fy - 30, w: 18, h: 30, label: l('Feira dos fundos', 'Fair out back'),
       tip: fmtL(l('A {f} do mês nos fundos da loja ({n} banca(s)).', 'This month\'s {f} behind the shop ({n} stall(s)).'), { f: fairName31(x.year), n }), go: { panel: 'room:fair' }, badge: n ? { text: fmtL(l('{n} no mês', '{n} this month'), { n }), level: 'info' } : undefined });
   }
   if (x.vit === 'fair') out.push({ id: 'vit:back', x: G.X(0.04), y: G.fy - 30, w: 18, h: 30, label: l('Voltar à loja', 'Back to the shop'), tip: l('Sair da feira e voltar para a loja de discos.', 'Leave the fair and go back to the record shop.'), go: { panel: 'room:leave' } });

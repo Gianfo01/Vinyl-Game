@@ -24,3 +24,5 @@
 .vit31-card p { margin: 2px 0; }
 .vit31-strip { margin-top: 10px; }
 .vit31-strip > summary { cursor: pointer; font-weight: 600; }
+/* os itens da prateleira ficam por cima das áreas grandes (parede, prateleira antiga), mesmo com elas em foco */
+.sc31-spot[data-spot^="vit:"] { z-index: 4; }

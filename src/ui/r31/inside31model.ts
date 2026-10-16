@@ -187,7 +187,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const lockOf = (id: string): L | undefined => acts.find((a) => a.id === id)?.dis;
   // objetos
   const seen = new Set<string>();
-  for (const o of OBJS31[x.k] ?? []) {
+  for (const o of x.vit ? [] : OBJS31[x.k] ?? []) { // r31 (VIT): na feira só valem as bancas do mês
     if (seen.has(o.id)) continue;
     const pr = o.prop ? room.props.find((p) => p.t === o.prop) : undefined;
     if (o.prop && !pr) continue;
@@ -201,7 +201,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     spots.push({ id: o.id, x: px, y: py, w: pw, h: ph, label: o.label, tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: o.tip, w: lk }) : o.tip, go: { panel: go }, badge, quiet: false });
   }
   // r31 (ART2): objetos novos ligados às mecânicas (jukebox, parada, telefone, vitrine, carro na porta…)
-  spots.push(...artSpots31(s, x, room, W));
+  if (!x.vit) spots.push(...artSpots31(s, x, room, W));
   // r31 (VIT): a prateleira do mês (itens sorteados na virada) e a porta da feira
   spots.push(...vitSpots31(s, x, W));
   // gestão do lugar quando é seu
