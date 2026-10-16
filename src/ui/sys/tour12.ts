@@ -1,5 +1,6 @@
 // Rodada 12 (UI): agente x promotor. Mapa + calendário + previsão por parada; ofertas arena x casa menor.
 
+import { cityRels } from '../../sim/city';
 import { VENUE_TIERS } from '../../data/rules';
 import { CITIES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -56,7 +57,7 @@ function mapView(s: GameState): HTMLElement {
     getYear: () => store.game?.year ?? s.year, getMonth: () => store.game?.month ?? s.month,
     cities: () => mapCities(s), selected: [selCity, ...route].filter(Boolean), route, mode: 'tour' as const,
     onCityClick: (id: string) => { selCity = id; rerender(); },
-    overlays: (): MapOverlay[] => Object.entries(c12(s).rel).filter(([, v]) => v >= 50).map(([city]) => ({ kind: 'icon' as const, city, icon: 'promo' as const })),
+    overlays: (): MapOverlay[] => Object.entries(cityRels(s)).filter(([, v]) => v >= 50).map(([city]) => ({ kind: 'icon' as const, city, icon: 'promo' as const })),
     cityTipExtra: (id: string) => h('div', { class: 'small' }, `${t(act && !isNewMarket(s, act.id, id) ? l('conquistada', 'conquered') : l('mercado novo', 'new market'))} · ${t(l('força local', 'local draw'))} ~${act ? Math.round(localDraw(s, act, id)) : 0} · ${t(l('relação', 'relations'))} ${Math.round(rel(s, id))}`),
   };
   if (!wmap) wmap = new WorldMap(opts); else wmap.update(opts);
@@ -159,7 +160,7 @@ function showsView(s: GameState): HTMLElement {
 }
 
 function relView(s: GameState): HTMLElement {
-  const c = c12(s), rows = Object.entries(c.rel).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const c = c12(s), rows = Object.entries(cityRels(s)).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const ag = hasAgency(s);
   return section(t(l('Relações e clientes', 'Relations & clients')),
     c.promoter.on ? h('p', { class: 'small' }, `${t(l('Reputação de promotor', 'Promoter reputation'))}: ${Math.round(c.promoter.rep)} · ${t(l('resultado acumulado', 'cumulative result'))}: `, h('b', { class: c.promoter.total < 0 ? 'bad' : 'good' }, $(c.promoter.total)), ` (${c.promoter.n} ${t(l('shows', 'shows'))})`) : null,

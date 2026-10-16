@@ -8,6 +8,7 @@ import { Rng, clamp } from '../../core/rng';
 import { VENUE_TIERS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
+import { CITY_REL0, cityRel, cityRelAdd, cityRelEach } from '../city';
 import { TICKET, cityDemand } from '../tours';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
@@ -23,11 +24,11 @@ export interface Result { att: number; cap: number; gross: number; artist: numbe
 export interface Show extends Stop { id: string; actId: string; by: Role; vid?: string; rate: number; status: 'booked' | 'played' | 'cancelled'; deposit: number; res?: Result }
 export interface Offer12 { id: string; actId: string; vid: string; until: number; city: string; a: Stop[]; b: Stop[] }
 export interface Career12 {
-  shows: Show[]; heat: Record<string, { v: number; w: number }>; rel: Record<string, number>; fat: Record<string, { v: number; w: number; city: string }>;
+  shows: Show[]; heat: Record<string, { v: number; w: number }>; fat: Record<string, { v: number; w: number; city: string }>;
   sat: Record<string, number>; offers: Offer12[]; promoter: { on: boolean; rep: number; total: number; n: number }; log: { w: number; t: L }[];
 }
 declare module '../ext4' { interface Ext4 { tour12: Career12 } }
-const fresh = (): Career12 => ({ shows: [], heat: {}, rel: {}, fat: {}, sat: {}, offers: [], promoter: { on: false, rep: 20, total: 0, n: 0 }, log: [] });
+const fresh = (): Career12 => ({ shows: [], heat: {}, fat: {}, sat: {}, offers: [], promoter: { on: false, rep: 20, total: 0, n: 0 }, log: [] });
 registerExt4('tour12', fresh);
 export const c12 = (s: GameState): Career12 => {
   const x = s.x4 as unknown as { tour12?: Career12 };
@@ -42,7 +43,8 @@ export const DEAL_NAME: Record<Deal, L> = { guarantee: l('Cachê fixo', 'Flat gu
 export const TIER_FROM = [0, 0, 1925, 1966, 1972];
 export const tiersOpen = (s: GameState): number[] => VENUE_TIERS.filter((v) => s.year >= TIER_FROM[v.id]).map((v) => v.id);
 export const tierCap = (t: number): number => Math.round((VENUE_TIERS[t].cap[0] + VENUE_TIERS[t].cap[1]) / 2);
-export const rel = (s: GameState, city: string): number => c12(s).rel[city] ?? 30;
+/** Relação com os promotores da cidade — fonte única em city.ts (UNI-4). */
+export const rel = (s: GameState, city: string): number => cityRel(s, city);
 export const PROMOTER_LICENSE = 8000;
 export const WEEKS_AHEAD = 16;
 
@@ -222,7 +224,7 @@ function negotiate(s: GameState, r: Rng, act: Act, st: Stop): { st: Stop; note: 
   if (ask <= 1) { out.fee = Math.round(o * ask); return { st: out, note: l('Aceito sem discussão.', 'Accepted outright.') }; }
   const p = clamp(0.8 - (ask - 1) * 2 + (rl - 30) / 200 + (isNewMarket(s, act.id, st.city) ? -0.1 : 0.05), 0.05, 0.95);
   if (r.chance(p)) { out.fee = Math.round(o * ask); return { st: out, note: l('O promotor topou o cachê pedido.', 'The promoter met your ask.') }; }
-  c12(s).rel[st.city] = clamp(rel(s, st.city) - 2, 0, 100);
+  cityRelAdd(s, st.city, -2);
   out.fee = o; return { st: out, note: l('O promotor recusou o aumento; ficou a oferta original.', 'The promoter refused the raise; the original offer stands.') };
 }
 export const acceptChance = (s: GameState, st: Stop, actId: string): number => {
@@ -256,7 +258,7 @@ export function cancelShow(s: GameState, id: string): L | null {
   if (sh.week - s.week < 2) return l('Tarde demais para cancelar.', 'Too late to cancel.');
   sh.status = 'cancelled';
   if (sh.deposit) post(s, `p12:refund:${sh.id}`, Math.round(sh.deposit * 0.5), 'business', 'Depósito parcial devolvido');
-  c.rel[sh.city] = clamp(rel(s, sh.city) - 3, 0, 100);
+  cityRelAdd(s, sh.city, -3);
   return null;
 }
 
@@ -273,7 +275,7 @@ function resolve(s: GameState, r: Rng, sh: Show): void {
   let res: Result;
   if (cancel) {
     res = { att: 0, cap: tierCap(sh.tier), gross: 0, artist: 0, comm: 0, prom: -sh.deposit, cancelled: true, why: [l('O artista cancelou por exaustão/doença; a casa fica com o depósito.', 'The act cancelled from exhaustion/illness; the venue keeps the deposit.')] };
-    c.rel[sh.city] = clamp(rel(s, sh.city) - 6, 0, 100);
+    cityRelAdd(s, sh.city, -6);
     if (sh.by === 'agent') c.sat[sh.actId] = (c.sat[sh.actId] ?? 60) - 8;
     act.momentum = clamp(act.momentum - 2, 0, 100);
   } else {
@@ -299,12 +301,12 @@ function resolve(s: GameState, r: Rng, sh: Show): void {
     // relação com o promotor local
     const loss = T.prom < -0.15 * houseCost(s, sh);
     if (sh.by === 'agent') {
-      c.rel[sh.city] = clamp(rel(s, sh.city) + (T.prom > 0 ? 2.5 : loss ? -6 : -1), 0, 100);
+      cityRelAdd(s, sh.city, (T.prom > 0 ? 2.5 : loss ? -6 : -1));
       why.push(T.prom > 0 ? l('O promotor local lucrou: a relação com a cidade melhora.', 'The local promoter profited: relations with the city improve.') : l('O promotor local perdeu dinheiro: a relação azedou.', 'The local promoter lost money: relations soured.'));
     } else {
       c.promoter.rep = clamp(c.promoter.rep + (T.prom > 0 ? 1.5 : -1) + (full >= 0.95 ? 1 : 0), 0, 100);
       c.promoter.total += T.prom; c.promoter.n++;
-      c.rel[sh.city] = clamp(rel(s, sh.city) + (T.prom > 0 ? 1.5 : 0), 0, 100);
+      cityRelAdd(s, sh.city, (T.prom > 0 ? 1.5 : 0));
     }
     const sat = sh.by === 'agent' ? c.sat : undefined;
     if (sat) {
@@ -345,7 +347,7 @@ export function acceptOffer(s: GameState, r: Rng, id: string, pick: 'a' | 'b' | 
   const c = c12(s), o = c.offers.find((x) => x.id === id);
   if (!o) return { ok: false, text: [l('Oferta expirada.', 'Offer expired.')] };
   const act = s.acts[o.actId], v = hasAgency(s);
-  if (pick === 'no') { c.offers = c.offers.filter((x) => x !== o); c.rel[o.city] = clamp(rel(s, o.city) - 1, 0, 100); return { ok: true, text: [l('Oferta recusada.', 'Offer declined.')] }; }
+  if (pick === 'no') { c.offers = c.offers.filter((x) => x !== o); cityRelAdd(s, o.city, -1); return { ok: true, text: [l('Oferta recusada.', 'Offer declined.')] }; }
   const stops = (pick === 'a' ? o.a : o.b).map((x) => ({ ...x }));
   const v2 = validate(s, 'agent', o.actId, stops), bad = v2.reasons.flat();
   if (bad.length) return { ok: false, text: bad };
@@ -364,7 +366,7 @@ registerSimHook('month', 'tour12', (s) => {
   for (const sh of due) resolve(s, r, sh);
   c.shows = c.shows.filter((x) => x.status === 'booked' || s.week - x.week < 80);
   c.offers = c.offers.filter((o) => o.until > s.week);
-  for (const k of Object.keys(c.rel)) c.rel[k] += (30 - c.rel[k]) * 0.01;
+  cityRelEach(s, (v) => v + (CITY_REL0 - v) * 0.01);
   const v = hasAgency(s);
   if (v?.clients) {
     for (const cl of [...v.clients]) {

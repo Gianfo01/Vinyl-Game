@@ -7,6 +7,7 @@
 // músicas novas crescem testadas ao vivo; experiência alimenta traj18/ability18 pelo gancho 'show'.
 // Cada show e cada turnê guardam um POST-MORTEM (previsto × real com os fatores), lido pelo long18 e pela interface.
 // Segurança de público: incidentes viram processo/escândalo; no modo "vida real exata" tragédias só como crônica real.
+import { cityRelAdd, cityRelEach } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { VENUE_TIERS } from '../../data/rules';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -23,7 +24,6 @@ import { fmtL, money, notify, playerActs, post, remember, staffSkill } from '../
 import { histMode } from '../history15';
 import { postAR18 } from './econ18';
 import { mIdx18 } from '../ledger18';
-import { c12 } from './tour12';
 import { fan18, pp18, ticketShock18 } from './fans18';
 import { adjRel18 } from './agency18';
 
@@ -400,7 +400,7 @@ export function liveMonth18(s: GameState): void {
       } else if (st.note) ps.n.push(fmtL(l('Cancelado ({w}); sem seguro, o prejuízo ficou com você.', 'Cancelled ({w}); uninsured, the loss is yours.'), { w: st.note }));
       else {
         ps.n.push(l('Cancelado por decisão sua: promotores locais lembram disso.', 'Cancelled by your decision: local promoters remember.'));
-        const rel = c12(s).rel; rel[st.cityId] = clamp((rel[st.cityId] ?? 30) - 3, 0, 100);
+        cityRelAdd(s, st.cityId, -3);
       }
     }
     if ((t.status === 'done' || t.status === 'cancelled') && !pm.fin) closeTour(s, t, pm);
@@ -459,7 +459,7 @@ registerSimHook('year', 'live18', (s) => {
 export function setExcl18(s: GameState, on: boolean): L | null {
   const v = live18(s);
   if (on && s.year < GIANT_FROM18) return l('Ainda não existe promotor nacional dominante.', 'No dominant national promoter exists yet.');
-  if (on && !v.excl) { v.excl = s.year; const rel = c12(s).rel; for (const k of Object.keys(rel)) rel[k] = clamp(rel[k] - 10, 0, 100); logIt(s, fmtL(l('Exclusividade com {g}: garantias +15% e bônus anual; promotores locais esfriam.', 'Exclusive with {g}: guarantees +15% and a yearly bonus; local promoters cool off.'), { g: giant18(s)?.name ?? '' })); }
+  if (on && !v.excl) { v.excl = s.year; cityRelEach(s, (v) => v - 10); logIt(s, fmtL(l('Exclusividade com {g}: garantias +15% e bônus anual; promotores locais esfriam.', 'Exclusive with {g}: guarantees +15% and a yearly bonus; local promoters cool off.'), { g: giant18(s)?.name ?? '' })); }
   if (!on) delete v.excl;
   return null;
 }

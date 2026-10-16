@@ -4,6 +4,7 @@
 // o profissional erra (dupla marcação, casa grande demais, campanha jogada fora) e pode ser roubado por selos rivais.
 // Aleatoriedade: gerador próprio (semente + ano + mês).
 
+import { cityRelAdd } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { CITIES, cityById, l, type L, type MarketId } from '../../data/world';
 import { VENUE_TIERS } from '../../data/rules';
@@ -200,7 +201,7 @@ function runTour(c: Ctx): void {
           if (!gateSpend(c, fine, true)) {
           post(s, `d16:dbl:${sh.id}`, -fine, 'business', 'Multa: dupla marcação');
           addSpent31(s, 'tour', fine);
-          c12(s).rel[alt.id] = clamp(rel(s, alt.id) - 5, 0, 100);
+          cityRelAdd(s, alt.id, -5);
           say(c, fmtL(l('ERRO: {n} marcou {c} na mesma semana por engano e teve de desmarcar: multa de {f} e relação com a cidade −5.', 'MISTAKE: {n} double-booked {c} the same week and had to cancel: {f} fine and city relation −5.'), { n: c.st.name, c: cityN(alt.id), f: usd(fine) }), 'bad', act.id, { amt: -fine });
           }
         }
@@ -226,11 +227,11 @@ function runFees(c: Ctx): void {
     const p = clamp(0.25 + q.q * 0.45 + (rel(s, sh.city) - 30) / 300 - (aim / Math.max(1, sh.fee) - 1.15), 0.05, 0.9);
     if (aim > cap) { say(c, fmtL(l('{a} em {c}: o piso de {p} é irreal para o público ({f} hoje); nem tentou.', '{a} in {c}: the {p} floor is unrealistic for the crowd ({f} now); did not try.'), { a: act.name, c: cityN(sh.city), p: usd(aim), f: usd(sh.fee) }), 'info', act.id); continue; }
     if (r.chance(q.err * 0.4)) {
-      sh.status = 'cancelled'; c12(s).rel[sh.city] = clamp(rel(s, sh.city) - 4, 0, 100);
+      sh.status = 'cancelled'; cityRelAdd(s, sh.city, -4);
       say(c, fmtL(l('ERRO: {n} apertou demais o promotor de {c} pelo show de {a} e ele desistiu. Show cancelado, relação −4.', 'MISTAKE: {n} pushed {c}\'s promoter too hard over {a}\'s show and he walked. Show cancelled, relation −4.'), { n: c.st.name, c: cityN(sh.city), a: act.name }), 'bad', act.id); continue;
     }
     if (r.chance(p)) { const old = sh.fee; sh.fee = aim; say(c, fmtL(l('{a} em {c}: cachê de {o} para {n} (+{p}%).', '{a} in {c}: fee {o} to {n} (+{p}%).'), { a: act.name, c: cityN(sh.city), o: usd(old), n: usd(aim), p: Math.round((aim / Math.max(1, old) - 1) * 100) }), 'good', act.id); }
-    else { c12(s).rel[sh.city] = clamp(rel(s, sh.city) - 2, 0, 100); say(c, fmtL(l('{a} em {c}: o promotor recusou subir de {o}; relação −2 (chance era {p}%).', '{a} in {c}: the promoter refused to move off {o}; relation −2 (odds were {p}%).'), { a: act.name, c: cityN(sh.city), o: usd(sh.fee), p: Math.round(p * 100) }), 'bad', act.id); }
+    else { cityRelAdd(s, sh.city, -2); say(c, fmtL(l('{a} em {c}: o promotor recusou subir de {o}; relação −2 (chance era {p}%).', '{a} in {c}: the promoter refused to move off {o}; relation −2 (odds were {p}%).'), { a: act.name, c: cityN(sh.city), o: usd(sh.fee), p: Math.round(p * 100) }), 'bad', act.id); }
   }
 }
 

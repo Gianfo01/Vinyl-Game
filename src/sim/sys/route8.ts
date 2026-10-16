@@ -8,6 +8,7 @@
 // A turnê em si continua sendo a de tours.ts (datas, viagem, shows, acidentes); este módulo acrescenta o
 // acordo com o promotor, os ajustes por show (gancho 'show') e o relatório final.
 
+import { CITY_REL0, cityRel, cityRelAdd, cityRelKnown } from '../city';
 import { clamp, type Rng } from '../../core/rng';
 import { VENUE_TIERS } from '../../data/rules';
 import { CITIES, cityById, l, type L, type MarketId } from '../../data/world';
@@ -96,12 +97,10 @@ export interface TourReport {
 export interface RouteState {
   deals: Record<string, RouteDeal>;
   reports: TourReport[];
-  /** relação com promotores por cidade (0..100; ausente = 50) */
-  rel: Record<string, number>;
 }
 
 declare module '../ext4' { interface Ext4 { route8: RouteState } }
-registerExt4('route8', () => ({ deals: {}, reports: [], rel: {} }));
+registerExt4('route8', () => ({ deals: {}, reports: [] }));
 export const route = (s: GameState): RouteState => (s as unknown as { x4: { route8: RouteState } }).x4.route8;
 
 export const FORMAT_NAME: Record<TourFormat, L> = {
@@ -120,7 +119,8 @@ const G_BASE = [0, 120, 350];
 const T_SCALE = [0.4, 1, 2.5, 6, 12];
 const SPLIT = [0.5, 0.65, 0.8];
 
-export const relOf = (s: GameState, cityId: string): number => route(s).rel[cityId] ?? 50;
+/** Relação com o promotor da cidade — fonte única em city.ts (UNI-4; neutro 30, antes 50 só aqui). */
+export const relOf = (s: GameState, cityId: string): number => cityRel(s, cityId);
 
 function fansOf(a: Act): number {
   return a.fans.casual + a.fans.active + a.fans.core;
@@ -262,8 +262,8 @@ export function leverageOf(s: GameState, a: Act, cities: string[]): number {
   const homeShare = cities.length ? cities.filter((c) => cityById[c]?.market === home).length / cities.length : 1;
   const played = playedMarkets(s, a);
   const freshShare = cities.length ? cities.filter((c) => !played.has(cityById[c]?.market ?? 'na')).length / cities.length : 0;
-  const avgRel = cities.length ? cities.reduce((t, c) => t + relOf(s, c), 0) / cities.length : 50;
-  let v = a.fame * 0.8 + staffSkill(s, 'booking') / 5 + chemistry(s) / 8 + (avgRel - 50) / 3 + a.momentum / 10;
+  const avgRel = cities.length ? cities.reduce((t, c) => t + relOf(s, c), 0) / cities.length : CITY_REL0;
+  let v = a.fame * 0.8 + staffSkill(s, 'booking') / 5 + chemistry(s) / 8 + (avgRel - CITY_REL0) / 3 + a.momentum / 10;
   const loc = hasSpec(s, 'local');
   const glo = hasSpec(s, 'global');
   if (loc) v += homeShare * (6 + loc / 10) - freshShare * 4;
@@ -401,8 +401,7 @@ registerSimHook('show', 'route8', (s, _r, arg) => {
   const hb = hasSpec(s, 'hardball');
   const md = hasSpec(s, 'mediator');
   const dr = (d.mood - 50) / 25 + (ratio > 0.8 ? 2 : ratio < 0.3 ? -2 : 0) + t.support * 0.5 - (hb ? 1 : 0) + (md ? 0.5 : 0);
-  const rel = route(s).rel;
-  rel[sh.cityId] = clamp((rel[sh.cityId] ?? 50) + dr, 0, 100);
+  cityRelAdd(s, sh.cityId, dr);
   d.rel += dr;
   d.shows += 1;
 });
@@ -418,8 +417,8 @@ registerMod('tourRisk', 'route8', (s, value, ctx) => {
 });
 
 registerMod('cityDemand', 'route8', (s, value, ctx) => {
-  const r = ctx.cityId ? route(s).rel[ctx.cityId] : undefined;
-  return r === undefined ? null : { value: value * (1 + (r - 50) / 400) };
+  if (!ctx.cityId || !cityRelKnown(s, ctx.cityId)) return null;
+  return { value: value * (1 + (cityRel(s, ctx.cityId) - CITY_REL0) / 400) };
 });
 
 registerMod('chartUnits', 'route8', (s, value, ctx) => {
@@ -469,7 +468,7 @@ export function routeWeek(s: GameState, _r: Rng): void {
     const rep = tour ? buildReport(s, d) : null;
     delete st.deals[id];
     if (!rep) continue;
-    for (const x of tour!.stops) if (x.status === 'cancelled') st.rel[x.cityId] = clamp((st.rel[x.cityId] ?? 50) - 3, 0, 100);
+    for (const x of tour!.stops) if (x.status === 'cancelled') cityRelAdd(s, x.cityId, -3);
     s.player.reputation.artistic = clamp(s.player.reputation.artistic + clamp(rep.press / 15, -3, 3), 0, 100);
     st.reports.unshift(rep);
     if (st.reports.length > 8) st.reports.length = 8;
