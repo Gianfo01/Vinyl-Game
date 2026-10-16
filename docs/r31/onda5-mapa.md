@@ -31,7 +31,7 @@ Cidade, Mundo, Você, Listas, Buscar, Opções (`ui/ps/menu31*.ts`). Atalhos de 
 |---|---|---|---|
 | Recepção | Porta da rua | Cidade (`campus18`) | Shift+3 |
 | Recepção | Mapa-múndi na parede | Mundo (`world`, mapa) | W |
-| Recepção | Secretária eletrônica (pisca) | Bandeja `inbox`, Caixa 2.0 | — |
+| Sua sala | Correspondência (objeto muda com a época) | Caixa de entrada `inbox`, Caixa 2.0 | E |
 | Recepção | Calendário de parede | Compromissos `plan`, `agenda17`, `calendar19`, `cal17` | C |
 | Sua sala | Mesa do mês | Mesa `desk` (já é cena) / Cockpit | 1 |
 | Sua sala | Livro-caixa | Finanças `finance` (posição, DRE, empréstimos, bolsa, dívida) | Z |
@@ -60,6 +60,23 @@ Cidade, Mundo, Você, Listas, Buscar, Opções (`ui/ps/menu31*.ts`). Atalhos de 
 | RH | Quadro de funcionários | Equipe `team`, `company`, `firm19` | T / 0 |
 | Pesquisa | Gráficos na parede | Dados `industry`, `market19a` | I |
 | Corredor | Estante de troféus | Prêmios `awards`, Hall da fama `rockhall`, museu do selo | O / R |
+
+## Caixa de entrada — a correspondência
+
+A caixa de entrada continua como é hoje: entrada, adiadas, arquivadas, busca, ordem por data/prioridade, filtros (não
+lidas, pedem resposta, estrela, decisões, contratos, imprensa, finanças, mundo, relatórios), respostas com consequência,
+"consequências pendentes" e as teclas (J/K, Enter, A, S, Esc). Muda só a forma, por época:
+
+| Época | Objeto | Como aparece |
+|---|---|---|
+| 1889–1919 | Escrivaninha com envelopes | Cartas com lacre colorido por categoria; o carteiro passa na recepção |
+| 1920–1969 | Cartas e telegramas | Urgentes chegam como telegrama amarelo |
+| 1970–1989 | Telex e fax | Máquina de fax que cospe papel; secretária eletrônica para recados |
+| 1990–2009 | Computador | E-mail num monitor de tubo, depois tela plana |
+| 2010–2040 | Celular e app | Notificações no telefone; mensagens e áudios curtos |
+
+Abre como papel/tela por cima da cena (mock: `docs/r31/mocks/onda5/onda5-mock-caixa.png`); "Responder" usa a cena da
+mecânica quando existe (negociação, banco, compra…). Tecla E de qualquer lugar; o objeto mostra o número de não lidas.
 
 ## Cidade — prédios (o menu "Cidade" de hoje já tem quase todos como lugares)
 
@@ -110,6 +127,21 @@ Cidade, Mundo, Você, Listas, Buscar, Opções (`ui/ps/menu31*.ts`). Atalhos de 
 | Telex na borda | "Este mês no mundo" `mundo27`/`world17` |
 | Ícone de festival | Festivais do mundo |
 | Livro "Cultura" | Movimentos `movements`, Lendas `lendas`, era |
+
+## Telas que faltavam no mapa
+
+| Tela de hoje | Onde fica |
+|---|---|
+| Painel do Cockpit (mês, caixa, fôlego, fama) | Topo (HUD) ampliável com um clique; detalhes no livro-caixa |
+| Suas casas (várias carreiras ativas) | Chaveiro na recepção (uma chave por casa) e tecla Tab para trocar |
+| Decisões de carreira `car31` | Mesa de reunião |
+| Consequências pendentes | Bloco de notas ao lado da correspondência |
+| Avisos rápidos (toasts) | Alguém entra na sala com o recado (balão), sem parar o jogo |
+| Cenas que abrem sozinhas (prêmios, fim de ano, marcos) | Continuam como cenas automáticas |
+| Comparar artistas e carreiras | Fichário: marcar cartões e "comparar" |
+| Controles de tempo (semana, trimestre, até…) | Topo, junto de "Avançar mês" |
+| Tutorial e conselheiro | Um personagem guia na sede nos primeiros meses |
+| Tela inicial, nova partida, editor de base, fim de jogo | Fora do mundo, como hoje (já em pixel art) |
 
 ## Fora do mundo
 

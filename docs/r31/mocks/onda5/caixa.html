@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Press+Start+2P&family=Special+Elite&display=swap');
+:root{--bg:#0f1a26;--line:#2b4260;--ink:#e9e2d0;--mute:#9aa8b8;--gold:#f0c060;--red:#c0392b;--pink:#e05a8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
+.hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;gap:18px;padding:0 18px;background:#0b141e;border-bottom:3px solid var(--pink);z-index:3}
+.hud .logo{font-family:'Press Start 2P';font-size:12px;color:var(--gold)}
+.hud .chip{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:18px}
+.hud .chip b{color:var(--gold)}
+.hud .sp{flex:1}.hud .k{font-size:15px;color:var(--mute)}
+kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
+.adv{background:var(--gold);color:#1a1214;font-weight:700;font-size:18px;padding:9px 16px;border-radius:6px}
+.bgsede{position:absolute;left:100px;top:58px;width:1240px;height:780px;image-rendering:pixelated;filter:brightness(.3)}
+/* mesa de madeira */
+.desk{position:absolute;left:60px;top:78px;width:1320px;height:688px;border-radius:8px;border:4px solid #3a2414;
+ background:repeating-linear-gradient(0deg,#7a4a26 0 6px,#734524 6px 12px,#7e4d28 12px 20px);box-shadow:0 14px 40px #000c}
+.title{position:absolute;left:22px;top:14px;font-family:'Press Start 2P';font-size:15px;color:#ffe9b0;text-shadow:2px 2px 0 #3a2414}
+.title span{font-size:9px;color:#f3d79a;margin-left:10px}
+.close{position:absolute;right:18px;top:12px;color:#ffe9b0;font-size:15px}
+.drawers{position:absolute;left:22px;top:46px;display:flex;gap:8px}
+.drawer{background:#5a3418;border:2px solid #2a160a;border-radius:4px;padding:6px 12px;color:#f3d79a;font-size:15px;font-weight:600;box-shadow:inset 0 -3px 0 #3a200e}
+.drawer.on{background:#e8c27a;color:#3a2414;box-shadow:inset 0 -3px 0 #b08840}
+.drawer i{font-style:normal;background:#c0392b;color:#fff;border-radius:3px;padding:0 5px;margin-left:6px;font-size:13px}
+.search{position:absolute;left:470px;top:46px;width:420px;background:#f6ecd4;border:2px solid #2a160a;border-radius:4px;padding:6px 10px;color:#8a7458;font-size:15px}
+.sort{position:absolute;left:905px;top:46px;display:flex;gap:6px}
+.seals{position:absolute;left:22px;top:88px;display:flex;gap:8px;align-items:center}
+.seal{display:flex;align-items:center;gap:6px;background:#f6ecd4;border:2px solid #2a160a;border-radius:14px;padding:3px 10px 3px 4px;font-size:14px;color:#3a2414}
+.seal b{width:16px;height:16px;border-radius:50%;display:inline-block;border:2px solid #0006}
+/* pilha de envelopes */
+.pile{position:absolute;left:22px;top:128px;width:520px;height:552px;display:flex;flex-direction:column;gap:9px}
+.env{position:relative;height:76px;background:#f2e3c0;border:2px solid #5a3a1e;border-radius:3px;padding:8px 12px 8px 64px;color:#2a2018;box-shadow:3px 3px 0 #4a2a14}
+.env:after{content:'';position:absolute;left:0;right:0;top:0;height:30px;background:linear-gradient(170deg,transparent 48%,#d9c69c 49%,#d9c69c 51%,transparent 52%),linear-gradient(190deg,transparent 48%,#d9c69c 49%,#d9c69c 51%,transparent 52%);pointer-events:none;opacity:.6}
+.env.read{background:#e2d4b2;opacity:.85}
+.env.sel{outline:3px solid #ffd76a;transform:translateX(10px)}
+.env .wax{position:absolute;left:14px;top:18px;width:36px;height:36px;border-radius:50%;border:3px solid #0005;box-shadow:inset -3px -3px 0 #0003}
+.env .from{font-weight:700;font-size:16px}
+.env .subj{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:390px}
+.env .date{position:absolute;right:12px;top:8px;font-size:13px;color:#6d5a44}
+.env .stamp{position:absolute;right:10px;bottom:7px;font-family:'Press Start 2P';font-size:7px;padding:3px 4px;border:2px solid;transform:rotate(-4deg)}
+.env .star{position:absolute;right:12px;top:28px;color:#b08a30;font-size:16px}
+.more{color:#f3d79a;font-size:14px;text-align:center}
+/* carta aberta */
+.letter{position:absolute;left:575px;top:120px;width:500px;height:560px;background:#fbf4e2;border:2px solid #8a6a44;box-shadow:6px 8px 0 #0004;padding:26px 30px;color:#2a2018;font-family:'Special Elite',monospace;transform:rotate(.6deg)}
+.letter .head{display:flex;justify-content:space-between;font-size:14px;color:#6d5a44;border-bottom:1px dashed #b9a07a;padding-bottom:8px;margin-bottom:12px}
+.letter h3{font-size:18px;margin:0 0 10px;font-family:'Special Elite',monospace}
+.letter p{font-size:15px;line-height:1.45;margin:0 0 10px}
+.letter .sig{text-align:right;font-style:italic;margin-top:4px}
+.choices{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+.choice{display:flex;align-items:center;gap:10px;font-family:'Barlow Semi Condensed';font-size:16px;border:2px solid #5a3a1e;background:#fff7e4;border-radius:4px;padding:7px 10px}
+.choice .rs{font-family:'Press Start 2P';font-size:8px;color:#fff;padding:5px 6px;border-radius:3px;white-space:nowrap}
+.choice small{color:#6d5a44;display:block;font-size:13px}
+/* bloco de pendências */
+.notepad{position:absolute;left:1100px;top:130px;width:200px;height:300px;background:#fff9c8;border:2px solid #8a7a30;box-shadow:4px 5px 0 #0004;padding:10px;color:#3a3010;font-size:13.5px;transform:rotate(-1.5deg);
+ background-image:repeating-linear-gradient(#fff9c8 0 21px,#e3d98a 21px 22px)}
+.notepad h4{font-family:'Press Start 2P';font-size:8px;margin:0 0 8px;color:#8a3a10}
+.notepad div{margin-bottom:8px;line-height:1.25}
+.keys{position:absolute;left:1100px;top:450px;width:200px;background:#2a160acc;border:2px solid #1a0c04;border-radius:4px;padding:10px;font-size:13.5px;color:#f3d79a;line-height:1.9}
+/* faixa das épocas */
+.eras{position:absolute;left:60px;top:790px;width:1320px;display:flex;gap:8px}
+.era{flex:1;background:#16263a;border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;color:var(--mute);line-height:1.25}
+.era b{display:block;color:var(--ink);font-size:14px}
+.era.on{border:2px solid var(--gold);background:#2a2412}
+.era.on b{color:var(--gold)}
+.lbl{position:absolute;left:60px;top:775px;font-family:'Press Start 2P';font-size:8px;color:var(--mute)}
+</style></head><body>
+<div class="hud">
+  <span class="logo">SELO AGULHA</span><span class="chip">Set 1962</span><span class="chip">Caixa <b>$3.447</b></span><span class="chip">★ 38</span>
+  <span class="sp"></span>
+  <span class="k"><kbd>Ctrl K</kbd> buscar</span><span class="k"><kbd>?</kbd> teclas</span><span class="k"><kbd>H</kbd> sede</span><span class="k"><kbd>Esc</kbd> pausa</span>
+  <span class="adv">▶ AVANÇAR MÊS</span>
+</div>
+<img class="bgsede" src="sede.png">
+<div class="desk">
+  <div class="title">CORRESPONDÊNCIA <span>1962 · cartas e telegramas · tecla E</span></div>
+  <div class="close"><kbd>Esc</kbd> fechar</div>
+  <div class="drawers">
+    <span class="drawer on">Bandeja de entrada <i>29</i></span>
+    <span class="drawer">Gaveta: adiadas 4</span>
+    <span class="drawer">Arquivo: lidas 212</span>
+  </div>
+  <div class="search">procurar remetente, assunto ou texto…</div>
+  <div class="sort"><span class="drawer on">Por data</span><span class="drawer">Por prioridade</span><span class="drawer">Arquivar lidas</span></div>
+  <div class="seals">
+    <span class="seal"><b style="background:#fff"></b>Não lidas 32</span>
+    <span class="seal"><b style="background:#c0392b"></b>Pedem resposta 3</span>
+    <span class="seal"><b style="background:#d4a017"></b>Com estrela</span>
+    <span class="seal"><b style="background:#8e44ad"></b>Decisões</span>
+    <span class="seal"><b style="background:#2c7a3c"></b>Contratos</span>
+    <span class="seal"><b style="background:#2c5aa0"></b>Imprensa</span>
+    <span class="seal"><b style="background:#7a5a2a"></b>Finanças</span>
+    <span class="seal"><b style="background:#1f8a8a"></b>Mundo</span>
+    <span class="seal"><b style="background:#777"></b>Relatórios</span>
+  </div>
+  <div class="pile">
+    <div class="env sel"><span class="wax" style="background:#8e44ad"></span><div class="from">Guilda dos Músicos de Sessão</div><div class="subj">A Guilda apresenta pauta: +8% no piso por faixa gravada</div><span class="date">29 ago</span><span class="stamp" style="color:#c0392b;border-color:#c0392b">PEDE RESPOSTA</span></div>
+    <div class="env"><span class="wax" style="background:#8e44ad"></span><div class="from">Wes Mercer</div><div class="subj">Mercer Recordings está cortejando Silver Avenue</div><span class="date">28 ago</span><span class="stamp" style="color:#c0392b;border-color:#c0392b">PEDE RESPOSTA</span></div>
+    <div class="env"><span class="wax" style="background:#2c7a3c"></span><div class="from">Festival da Canção da Riviera</div><div class="subj">Inscrições abertas: canções inéditas, orquestra e júri</div><span class="date">27 ago</span><span class="stamp" style="color:#c0392b;border-color:#c0392b">PEDE RESPOSTA</span></div>
+    <div class="env"><span class="wax" style="background:#2c5aa0"></span><div class="from">Melody Maker</div><div class="subj">Pedido de entrevista com Maria Bastos</div><span class="date">25 ago</span><span class="star">★</span></div>
+    <div class="env read"><span class="wax" style="background:#777"></span><div class="from">Seu analista</div><div class="subj">Boletim da semana: o que olhar a seguir</div><span class="date">24 ago</span></div>
+    <div class="env read"><span class="wax" style="background:#7a5a2a"></span><div class="from">Banco Barclays</div><div class="subj">Extrato de agosto e taxa do empréstimo</div><span class="date">22 ago</span></div>
+    <div class="more">▾ mais 23 na pilha · <kbd>J</kbd>/<kbd>K</kbd> folhear</div>
+  </div>
+  <div class="letter">
+    <div class="head"><span>De: Guilda dos Músicos de Sessão, Londres</span><span>29 de agosto de 1962</span></div>
+    <h3>Pauta da Guilda: piso por faixa gravada</h3>
+    <p>Prezado senhor,</p>
+    <p>A Guilda propõe aumento de 8% no piso pago por faixa gravada (ou uma fatia da bilheteria nos shows em que nossos músicos tocam). Sem acordo até o fim do mês, nossos membros não entram em estúdio com o seu selo.</p>
+    <p class="sig">— T. Hargreaves, secretário</p>
+    <div class="choices">
+      <div class="choice"><span class="rs" style="background:#2c7a3c">ACEITAR</span><span>Pagar os 8%<small>custo de gravação +8% · moral da guilda sobe</small></span></div>
+      <div class="choice"><span class="rs" style="background:#2c5aa0">NEGOCIAR</span><span>Oferecer fatia da bilheteria<small>abre a reunião de negociação (cena)</small></span></div>
+      <div class="choice"><span class="rs" style="background:#c0392b">RECUSAR</span><span>Manter o piso<small>risco de boicote no estúdio · provável em 1–2 meses</small></span></div>
+      <div class="choice"><span class="rs" style="background:#777">ADIAR</span><span>Guardar na gaveta<small>se ignorar, vale a opção padrão ao avançar</small></span></div>
+    </div>
+  </div>
+  <div class="notepad"><h4>PENDÊNCIAS</h4>
+    <div>▼ "Mulher não vende Glam": imagem mais "vendável" · jul–jan</div>
+    <div>▼ Convite TV Sábado ao Vivo: recusado · pode voltar out–abr</div>
+    <div>◆ Nova era: clipes só para singles fortes · out–ago</div>
+  </div>
+  <div class="keys"><kbd>J</kbd> <kbd>K</kbd> próxima / anterior<br><kbd>Enter</kbd> abrir<br><kbd>A</kbd> arquivar · <kbd>S</kbd> estrela<br><kbd>1</kbd>–<kbd>4</kbd> responder<br><kbd>Esc</kbd> voltar à sede</div>
+</div>
+<div class="lbl">COMO A CORRESPONDÊNCIA MUDA COM A ÉPOCA (mesmo conteúdo, mesmos filtros e teclas)</div>
+<div class="eras">
+  <div class="era"><b>1889–1919 · Cartas</b>escrivaninha com envelopes e lacre; o carteiro passa na recepção</div>
+  <div class="era on"><b>1920–1969 · Cartas e telegramas</b>urgentes chegam como telegrama amarelo</div>
+  <div class="era"><b>1970–1989 · Telex e fax</b>máquina de fax que cospe papel; secretária eletrônica</div>
+  <div class="era"><b>1990–2009 · Computador</b>e-mail num monitor de tubo; depois tela plana</div>
+  <div class="era"><b>2010–2040 · Celular e app</b>notificações no telefone; mensagens e áudios curtos</div>
+</div>
+</body></html>
