@@ -187,6 +187,14 @@ onOpinion((s, key, d, gesture) => {
   shiftTie31(s, me, n, d > 0 ? { i: Math.min(3, d / 4) } : { tBack: Math.max(-4, d / 4) });
 });
 
+// Rescindir o contrato de um ato (rescind31): a banda perde confiança em você e esfria — e quem soube do vazamento também.
+onFact('contract_rescind', (s, f) => {
+  const act = f.actors.find((x) => s.acts[x]);
+  if (!act) return;
+  const me = meNode31(s);
+  for (const m of nodesOf(s, act)) shiftTie31(s, me, m, { i: -5, tBack: f.tags.includes('leak') ? -20 : -12 }, 'hire');
+}, 'social31:rescind');
+
 // ---------------------------------------------------------------- o mês social
 
 const gone = (s: GameState) => (id: string): boolean => {

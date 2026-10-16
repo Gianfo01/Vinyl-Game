@@ -123,7 +123,7 @@ registerExplain('offer.chance', (s, c) => {
   // parcela vira direção e peso em palavras, e a soma nunca aparece
   const word = (v: number) => (v >= 0.1 ? l('pesa muito a favor', 'weighs strongly for') : v > 0 ? l('a favor', 'for') : v <= -0.1 ? l('pesa muito contra', 'weighs strongly against') : l('contra', 'against'));
   const parts: WhyPart[] = sortParts((ev.parts ?? []).map((p) => ({ label: p.t, value: Math.round(p.v * 100), fmt: 'signed' as const, tone: p.v >= 0 ? 'good' as const : 'bad' as const })))
-    .map((p) => ({ label: p.label, value: word((p.value as number) / 100) as unknown as string, fmt: 'text' as const, tone: p.tone }));
+    .map((p) => ({ label: fmtL(l('{p} — {w}', '{p} — {w}'), { p: p.label as L, w: word((p.value as number) / 100) }), tone: p.tone }));
   const band = ev.band === 'likely' ? l('provável', 'likely') : ev.band === 'uncertain' ? l('incerta', 'uncertain') : l('improvável', 'unlikely');
   return {
     title: fmtL(l('Chance de {a} aceitar', 'Chance {a} accepts'), { a: a.name }), value: band as unknown as string, fmt: 'text', parts,
