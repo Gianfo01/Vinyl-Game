@@ -170,7 +170,8 @@ const RH = 92, STREET = 16, FOUND = 4, OW = 6;
 /** Oclusão nos cantos: o tom mais fundo da rampa, puxado para o roxo (igual à sede). */
 const OCC = C('#2a1634');
 export interface IDrawn27 { W: number; H: number; hits: { x: number; y: number; w: number; h: number; who: Person27 }[] }
-export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined }
+export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined;
+  /** r31 (ART2): adereços extras pintados na mesma camada (mesmo contorno), antes das pessoas */ extra?: (g: Ctx27, seed: number) => void }
 
 const hs = (str: string): number => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619) >>> 0; return x; };
 const FLOORK: Record<Interior27['floor'], 'studio' | 'lounge' | 'lobby' | 'office'> = { studio: 'studio', lounge: 'lounge', lobby: 'lobby', office: 'office' };
@@ -308,6 +309,7 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       case 'door': { blk(p, x, y0 + 30, Math.max(10, w), fy - y0 - 30, pal.woodDark); p.rect(x + Math.max(10, w) - 3, y0 + 30 + ((fy - y0 - 30) >> 1), 2, 2, C('#d8b040')); break; }
     }
   }
+  o.extra?.(g, seed);
   layer.outline(INK);
   p = back; g.p = back;
   p.blit(layer, 0, 0);

@@ -62,7 +62,8 @@ function intercept(e: MouseEvent): void {
   setSpendTag(clean ? l(clean, clean) : null);
   setTimeout(() => setSpendTag(null), 0);
   if (b === bypass) { bypass = null; return; }
-  if (!n || noAsk || b.closest('.overlay')) return;
+  // r31 (ART2): ponto de cena não gasta tempo — o ⏱ dele é o selo "prazo próximo", não bolinha
+  if (!n || noAsk || b.closest('.overlay') || b.closest('.sc31-spot')) return;
   const s = store.game;
   e.preventDefault(); e.stopImmediatePropagation();
   const left = energyLeft(s);
