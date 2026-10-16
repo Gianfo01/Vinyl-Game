@@ -25,6 +25,10 @@ Catulo da Paixão Cearense, Zequinha de Abreu (o "Tico-tico" foi gravado pela Or
 também ficou de fora: o LP de estreia dele é cantado por outros intérpretes. Plutão Já Foi Planeta e Mestre Lucindo ficaram
 fora por falta de dado confirmável.
 
+**Pedidos do dono:** Rádio Táxi já entrou neste lote (estreia em 1982, com fonte). Milton Guedes já existia (lote Z,
+`base31acts.ts`). LS Jack é o primeiro da fila, em `docs/r31/base-br/b15.jsonl`, junto com Dalto, Hanói-Hanói,
+Yahoo, Byafra, Marjorie Estiano, Hori, Afrodite se Quiser e Inimigos da HP. Todos ficam para o próximo turno de buscas.
+
 ## Como o dado entra (regras de confiabilidade)
 
 - **Uma ficha por ato** em `docs/r31/base-br/*.jsonl`. Cada ficha tem fontes (URLs), apelidos, campos a confirmar e a

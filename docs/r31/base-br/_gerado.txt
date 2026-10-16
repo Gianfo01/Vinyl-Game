@@ -584,5 +584,15 @@ Laurindo Almeida — não pesquisado: limite de buscas web do turno (200) esgota
 Bola Sete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
 Toninho Ferragutti — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
 Trio Mossoró — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+LS Jack — pedido do dono — pesquisar no próximo turno (cota de buscas esgotada)
+Dalto — pedido do dono ("e mais") — pesquisar no próximo turno
+Hanói-Hanói — pedido do dono ("e mais") — pesquisar no próximo turno
+Yahoo — pedido do dono ("e mais") — pesquisar no próximo turno
+Byafra — pedido do dono ("e mais") — pesquisar no próximo turno
+Marjorie Estiano — pedido do dono ("e mais") — pesquisar no próximo turno
+Hori — pedido do dono ("e mais") — pesquisar no próximo turno
+Afrodite se Quiser — pedido do dono ("e mais") — pesquisar no próximo turno
+Inimigos da HP — pedido do dono ("e mais") — pesquisar no próximo turno
 
 # correções automáticas
+Saulo Fernandes: nascimento 1977 ≠ base (Banda Eva: 1973) — omitido

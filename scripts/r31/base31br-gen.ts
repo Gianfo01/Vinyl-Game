@@ -19,6 +19,10 @@ const num = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v : 
 
 const taken = new Set([...REAL_ALL.slice(0, BASE31BR_FROM).map((a) => dedupKey27(a.n)), ...Object.values(REAL_ACTS).map((a) => dedupKey27(a.name)), ...FICTION31.map((f) => dedupKey27(f.n))]);
 const ok: { a: J; note: J }[] = [], out: string[] = [], fixes: string[] = [];
+// pessoas que já existem na base (solo ou integrante): nascimento/morte para preencher lacunas e achar conflitos
+const known = new Map<string, { b?: number; x?: number; where: string }>();
+const know = (nm: string, b: number | undefined, x: number | undefined, where: string) => { const k = dedupKey27(nm); const c = known.get(k) ?? { where }; if (c.b === undefined && b !== undefined) c.b = b; if (c.x === undefined && x !== undefined) c.x = x; known.set(k, c); };
+for (const a of REAL_ALL.slice(0, BASE31BR_FROM)) { if (!a.m?.length) know(a.n, a.b, a.x, a.n); for (const m of a.m ?? []) know(m[0], m[2], m[3], a.n); }
 for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
   for (const line of readFileSync(`${DIR}/${f}`, 'utf8').split('\n')) {
     if (!line.trim()) continue;
@@ -40,6 +44,9 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
     if (e !== undefined && e < d!) { fixes.push(`${n}: fim ${e} < estreia — removido`); e = undefined; }
     if (b !== undefined && b >= d!) { fixes.push(`${n}: nascimento ${b} ≥ estreia — removido`); b = undefined; }
     if (x !== undefined && (x < d! - 1 || (b !== undefined && x <= b))) { fixes.push(`${n}: morte ${x} incoerente — removida`); x = undefined; }
+    const extra: string[] = [];
+    const kn = !(Array.isArray(j.m) && j.m.length) ? known.get(dedupKey27(n)) : undefined;
+    if (kn && b !== undefined && kn.b !== undefined && kn.b !== b) { extra.push(`nascimento: a pesquisa diz ${b}, a base anterior (${kn.where}) diz ${kn.b} — omitido até conferir`); fixes.push(`${n}: nascimento ${b} ≠ base (${kn.where}: ${kn.b}) — omitido`); b = undefined; }
     if (x !== undefined && (e === undefined || e > x)) e = x; // solo: carreira termina na morte
     const a: J = { n, g: j.g, c: j.c, d };
     const f0 = num(j.f); if (f0 !== undefined && f0 < d! - 1) a.f = f0;
@@ -52,6 +59,9 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
       a.m = (j.m as unknown[][]).filter((m) => typeof m[0] === 'string' && m[0].trim()).map((m) => {
         const mn = String(m[0]).trim(); let mb = num(m[2]), mx = num(m[3]); const inn = num(m[4]); let outY = num(m[5]);
         const join = inn ?? d!;
+        const kp = known.get(dedupKey27(mn)); // mesma pessoa já na base: as datas dela (Pixinguinha nos Oito Batutas)
+        if (kp && mb === undefined && kp.b !== undefined && kp.b < join) { mb = kp.b; extra.push(`datas de ${mn}: da ficha que já existe na base (${kp.where})`); }
+        if (kp && mx === undefined && kp.x !== undefined && kp.x >= join) { mx = kp.x; if (!extra.some((t) => t.startsWith(`datas de ${mn}`))) extra.push(`datas de ${mn}: da ficha que já existe na base (${kp.where})`); }
         if (mb !== undefined && mb >= join) { fixes.push(`${n}/${mn}: nascimento ${mb} ≥ entrada ${join} — removido`); mb = undefined; }
         if (mx !== undefined && (mx < join || (mb !== undefined && mx <= mb))) { fixes.push(`${n}/${mn}: morte ${mx} antes da entrada — removida`); mx = undefined; }
         if (outY !== undefined && outY < join) outY = undefined;
@@ -70,7 +80,7 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
     const ap = (Array.isArray(j.ap) ? j.ap : []).filter((v: string) => ['f', 'd', 'b', 'x', 'm'].includes(v));
     if (ap.length) a.ap = [...new Set(ap)];
     if (j.exact === false) a.exact = false;
-    ok.push({ a, note: { id: slug(n), f: j.fontes, ap: j.apelidos ?? [], c: j.confirmar ?? [], lugar: j.cityNote } });
+    ok.push({ a, note: { id: slug(n), f: j.fontes, ap: j.apelidos ?? [], c: [...(j.confirmar ?? []), ...extra], lugar: j.cityNote } });
   }
 }
 

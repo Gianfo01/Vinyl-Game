@@ -116,18 +116,23 @@ applySongs27(SONGS22);
  *  Só nomes de 2+ palavras (os de uma palavra são ambíguos) e fora dos homônimos conhecidos. */
 export const HARMONIZED27: string[] = [];
 function harmonize27(): void {
-  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string };
+  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string; recv?: boolean };
   const refs = new Map<string, Ref[]>();
-  const put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
+  let put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
   const scan = (a: { n: string; d?: number; m?: RealMember[]; b?: number; x?: number; e?: number }) => {
     if (!a.m?.length) put(a.n, { b: a.b, x: a.x, d: a.d, setB: (v) => { a.b = v; }, setX: (v) => { a.x = v; if (a.e === undefined || a.e > v) a.e = v; }, where: a.n });
     for (const m of a.m ?? []) put(m[0], { b: m[2], x: m[3], d: m[4] ?? a.d, setB: (v) => { m[2] = v; }, setX: (v) => { m[3] = v; }, where: a.n });
   };
-  REAL_ALL.forEach((a, i) => { if (i < BASE31BR_FROM || i >= BASE31BR_TO) scan(a); }); // R31 (BASE-BR): o lote BR não mexe nos dados de quem já existia
+  // R31 (BASE-BR): o lote BR só RECEBE (Pixinguinha nos Oito Batutas ganha a morte de 1973); nunca muda os dados de quem já existia
+  let recv = false;
+  const put0 = put;
+  put = (n, r) => put0(n, recv ? { ...r, recv: true } : r);
+  REAL_ALL.forEach((a, i) => { recv = i >= BASE31BR_FROM && i < BASE31BR_TO; scan(a); });
+  recv = false;
   for (const [no, ex] of Object.entries(REAL_CLASSIC)) { const n = REAL_ACTS[+no]?.name; if (n) scan({ get n() { return n; }, get d() { return ex.d; }, get m() { return ex.m; }, get b() { return ex.b; }, set b(v) { ex.b = v; }, get x() { return ex.x; }, set x(v) { ex.x = v; }, get e() { return ex.e; }, set e(v) { ex.e = v; } }); }
   for (const [k, xs] of refs) {
     if (xs.length < 2) continue;
-    const b = xs.find((r) => r.b !== undefined)?.b, x = xs.find((r) => r.x !== undefined)?.x;
+    const b = xs.find((r) => r.b !== undefined && !r.recv)?.b, x = xs.find((r) => r.x !== undefined && !r.recv)?.x;
     for (const r of xs) {
       if (r.b === undefined && b !== undefined && (r.d === undefined || r.d >= b + 8)) { r.setB(b); HARMONIZED27.push(`${k} @ ${r.where}: nasc. ${b}`); }
       if (r.x === undefined && x !== undefined && (r.d === undefined || r.d <= x + 1)) { r.setX(x); HARMONIZED27.push(`${k} @ ${r.where}: morte ${x}`); }
