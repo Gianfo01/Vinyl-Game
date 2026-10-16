@@ -7,6 +7,8 @@ import { t } from '../../i18n/strings';
 import {
   COND31, buyErr31, buyOffer31, giftEffect31, itemsOf31, knownPeople31, shopCities31, shopRows31, weeksToRestock31, type BuyHow31, type ShopRow31,
 } from '../../sim/r31/items31';
+import { vitItems31, vitView31 } from '../../sim/r31/vitrine31';
+import { offerRow31 } from '../../sim/r31/items31';
 import { CO31, ME31, TIER_NAME31, relicMeasure31, tierStars31 } from '../../sim/r31/relic31';
 import type { GameState } from '../../sim/types';
 import { $, pill, rerender, section, toast } from '../common';
@@ -45,6 +47,14 @@ function card(s: GameState, r: ShopRow31, ppl: string[]): HTMLElement {
       ef ? pill(t(l('opinião +{d}', 'opinion +{d}'), { d: ef.delta }), 'good') : null) : h('p', { class: 'small muted' }, t(l('Presente: só para quem você conhece.', 'Gifts: only for people you know.'))));
 }
 
+/** r31 (VIT): o que a vitrine do mês pôs à venda na loja (instrumento "era de fulano", consignado, novidade, massa
+ *  falida) — as mesmas ofertas e a mesma compra; aqui também se dá de presente. */
+function vitSec(s: GameState, ppl: string[]): HTMLElement | null {
+  const xs = vitItems31(s, 'instruments').filter((it) => it.mk && it.ref.offer).map((it) => ({ it, row: offerRow31(s, it.ref.offer!) })).filter((x) => !!x.row);
+  if (!xs.length) return null;
+  return section(t(l('Vitrine do mês', 'Showcase of the month')), h('div', { class: 'cards' }, xs.map(({ it, row }) => h('div', null, h('p', { class: 'small' }, '✦ ', h('b', null, t(vitView31(s, it).name))), card(s, row!, ppl)))));
+}
+
 /** Aba "Loja da cidade". */
 export function shop31Tab(s: GameState): HTMLElement {
   const cities = shopCities31(s);
@@ -59,6 +69,7 @@ export function shop31Tab(s: GameState): HTMLElement {
       pill(t(l('Novidades: o estoque inteiro troca em {n} semana(s)', 'New stock: everything changes in {n} week(s)'), { n: weeksToRestock31(s) }), 'gold')),
     section(t(l('Vitrine', 'Showcase')), show.length ? h('div', { class: 'cards' }, show.map((r) => card(s, r, ppl)))
       : h('p', { class: 'muted small' }, t(l('Vitrine vazia este mês. Relíquias raras aparecem de vez em quando — sempre peças que já existem.', 'Empty showcase this month. Rare relics turn up now and then — always pieces that already exist.')))),
+    vitSec(s, ppl),
     section(t(l('À venda', 'For sale')), items.length ? h('div', { class: 'cards' }, items.map((r) => card(s, r, ppl))) : h('p', { class: 'muted small' }, t(l('Tudo vendido. Volte no mês que vem.', 'Sold out. Come back next month.')))),
     mine.length ? section(t(l('Seus itens com história', 'Your items with history')), h('ul', { class: 'attr-list' }, mine.map(({ o, x, def }) =>
       h('li', null, h('b', null, t(def.name)), ` · ${x.made} · `, t(o.owner === ME31 ? l('seu', 'yours') : l('da empresa', 'the company\'s')), x.prev.length ? h('small', { class: 'muted' }, ` · ${t(l('{n} dono(s) antes', '{n} owner(s) before'), { n: x.prev.length })}`) : null)))) : null,

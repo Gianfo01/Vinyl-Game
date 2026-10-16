@@ -29,6 +29,8 @@ import { lockBtn31, quickBtn31 } from './lock31';
 import { sceneView31 } from './scene31';
 import { INSIDE_W31, infoLines31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
 import { artPanelEl31, paintArt31 } from './art31';
+import { paintVit31, vitListEl31, vitPanelEl31 } from './vit31';
+import { fairName31 } from '../../sim/r31/vitrine31';
 import './inside31.css';
 
 /** Painel aberto e sala dos fundos (só na sessão: explorar não muda o mundo). */
@@ -182,12 +184,14 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
       x = { ...x0, k: 'baile', v, people: [...(a ? a.members.slice(0, 3).map((pid) => ({ name: s.persons[pid]?.name ?? a.name, role: l('Seu artista no palco', 'Your act on stage'), pid, actId: a.id, mine: true })) : []), ...(r ? [{ name: r.boss.name, role: l('No camarote', 'In the VIP box'), key: r.boss.key }] : [])] };
     } else x = { ...x0, v };
   }
+  // r31 (VIT): a feira/sebo/brechó da época, nos fundos da loja de discos
+  if (x0.k === 'records' && ui31.room === `${x0.id}:fair`) x = { ...x0, vit: 'fair', place: undefined, people: [], name: t(fmtL(l('{n} — {f}', '{n} — {f}'), { n: l(x0.name, x0.name), f: fairName31(x0.year) })) };
   const m = insideModel31(s, x);
   const pane = h('div', { class: 'in31-pane', 'aria-live': 'polite' });
   const show = (panel?: string) => {
     ui31.panel = panel;
     if (!panel) { pane.replaceChildren(h('p', { class: 'small muted' }, t(l('Clique numa pessoa ou num objeto.', 'Click a person or an object.')))); return; }
-    const [k, arg = ''] = panel.split(':');
+    const ci = panel.indexOf(':'); const k = ci < 0 ? panel : panel.slice(0, ci), arg = ci < 0 ? '' : panel.slice(ci + 1);
     let el: HTMLElement | null = null;
     if (k === 'who') { const p = m.people[+arg]; if (p) el = whoPanel(s, m, p); }
     else if (k === 'you') el = h('div', { class: 'in31-pn' }, h('p', null, t(m.you.where)), ...m.trail.map((y) => h('p', { class: 'small' }, '★ ', t(y))));
@@ -195,17 +199,19 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     else if (k === 'info') el = infoPanel(s, m, x, arg);
     else if (k === 'go') el = goPanel(s, x, arg, back);
     else if (k === 'art') el = artPanelEl31(s, x, arg, show, back);
-    else if (k === 'room') { ui31.room = arg === 'enter' ? x0.id : undefined; ui31.panel = undefined; rerender(); return; }
-    const head = k === 'who' ? m.people[+arg]?.name ?? '' : t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''));
+    else if (k === 'vit') el = vitPanelEl31(s, arg, show, back);
+    else if (k === 'vitlist') el = vitListEl31(s, x, show, back);
+    else if (k === 'room') { ui31.room = arg === 'enter' ? x0.id : arg === 'fair' ? `${x0.id}:fair` : undefined; ui31.panel = undefined; rerender(); return; }
+    const head = k === 'who' ? m.people[+arg]?.name ?? '' : k === 'vitlist' ? t(l('Vitrine do mês', 'Showcase of the month')) : t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''));
     if (el) pane.replaceChildren(h('div', { class: 'row in31-ph' }, h('b', { class: 'small' }, head),
       h('button', { type: 'button', class: 'icon', 'aria-label': t(l('Fechar', 'Close')), onclick: () => show() }, '✕')), el);
   };
   const panels: Record<string, (arg?: string) => void> = {};
-  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
+  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art', 'vit', 'vitlist']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
   const scene = sceneView31(s, {
     id: `in31-${x.k}`, title: m.title, W: m.W, H: m.H, spots: m.spots, panels,
     paint: (cv) => { drawInterior27(cv, m.room, m.people, { minW: INSIDE_W31, city: x.city, name: x.name, seed: x.seed,
-      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null, extra: paintArt31(m) }); },
+      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null, extra: (g, sd) => { paintArt31(m)(g, sd); paintVit31(m)(g); } }); },
     list: () => h('ul', { class: 'in31-list' }, m.spots.map((sp) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => show(sp.go.panel) }, t(sp.label)), ' ', h('small', { class: 'muted' }, t(sp.tip))))),
     intro: l('Pessoas e objetos são clicáveis: o painel embaixo resolve a ação aqui mesmo.', 'People and objects are clickable: the panel below resolves the action right here.'),
     note: m.note,

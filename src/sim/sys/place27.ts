@@ -43,6 +43,7 @@ export interface Person27 {
   /** r31 (I): da equipe do lugar (índice da função: 0 = dono) e se faz bico; ausente = motivo (turnê, prisão) */ staff?: boolean; job?: number; bico?: boolean; away?: L;
   /** r31 (I): o seu personagem (presente onde você está) */ you?: boolean;
   /** r31 (S): preso(a) numa cela da delegacia */ cell?: boolean;
+  /** r31 (VIT): encontro da vitrine do mês (id do item: o clique abre o painel do item) */ vit?: string;
 }
 /** r31 (I): equipe real do lugar (sys/gente31 preenche; sem ele, nomes inventados como antes). */
 export const CREW27: { fn?: (s: GameState, k: PlaceK27, copy: number) => Person27[] | null } = {};
