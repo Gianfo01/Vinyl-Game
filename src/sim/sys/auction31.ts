@@ -20,6 +20,7 @@
 // Alfândega: o que você arremata fora do seu país paga imposto de importação e chega depois (calendário).
 // Interruptor 'auction31' (desligado = leilões do relics9 como antes). Estado: x4.auction31.
 
+import { formatMoney } from '../../core/money';
 import { clamp, hashString, Rng } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
@@ -102,6 +103,8 @@ export function auction31(s: GameState): Auction31State {
 const peek = (s: GameState): Auction31State | undefined => (s.x4 as unknown as { auction31?: Auction31State }).auction31;
 const commission = (s: GameState): number => peek(s)?.fee ?? COMMISSION31;
 
+/** Dinheiro do jogo (centavos) como texto bilíngue. */
+const usd = (c: number): L => l(formatMoney(c, 'pt-BR'), formatMoney(c, 'en-US'));
 const homeA3 = (s: GameState): string => countryOfCity(s.config.homeCity) ?? '';
 /** Maior praça do seu mercado (grande leilão): a primeira cidade do mesmo país com cena maior; senão a própria sede. */
 function bigCity(s: GameState): string {
@@ -395,7 +398,7 @@ export function hammer31(s: GameState, sess: Sess31, rid: string): [string, stri
       emitFact(s, { kind: 'relic', actors: ['player', ...(rival.pid ? [`p:${rival.pid}`] : [])], severity: 25, visibility: 'public', tags: ['relic', 'auction31', 'feud'], src: 'auction31',
         text: fmtL(l('{p} perde {n} para {c} no leilão e não esconde a irritação.', '{p} loses {n} to {c} at auction and does not hide the annoyance.'), { p: rival.name, n: rl.n, c: s.config.companyName }) });
     }
-    notify(s, fmtL(l('Martelo batido: {n} é seu por {v}.', 'Hammer down: {n} is yours for {v}.'), { n: rl.n, v: `$${price.toLocaleString('en-US')}` }), 'good');
+    notify(s, fmtL(l('Martelo batido: {n} é seu por {v}.', 'Hammer down: {n} is yours for {v}.'), { n: rl.n, v: usd(price) }), 'good');
   } else {
     const b = bs.find((x) => x.key === lad.lead)!;
     const name = b.kind === 'phone' && !b.name ? 'colecionador anônimo (telefone)' : b.name;
@@ -408,7 +411,7 @@ export function hammer31(s: GameState, sess: Sess31, rid: string): [string, stri
       const net = Math.round(lad.price * (1 - commission(s)));
       post(s, `auc31sale:${rid}:${s.week}`, net, 'asset_sales', `Leilão (consignação): ${rl.n.pt}`);
       delete st.cons[rid];
-      notify(s, fmtL(l('{n} vendido em leilão: você recebe {v} (já sem a comissão da casa).', '{n} sold at auction: you get {v} (after the house commission).'), { n: rl.n, v: `$${net.toLocaleString('en-US')}` }), 'good');
+      notify(s, fmtL(l('{n} vendido em leilão: você recebe {v} (já sem a comissão da casa).', '{n} sold at auction: you get {v} (after the house commission).'), { n: rl.n, v: usd(net) }), 'good');
     } else if (mine) notify(s, fmtL(l('Seu limite por {n} foi superado.', 'Your limit for {n} was beaten.'), { n: rl.n }), 'info');
     if (noteSale31(s, rl, rl.v, false)) {
       emitFact(s, { kind: 'relic', actors: [...(rl.a ? [rl.a] : []), ...(b.pid ? [`p:${b.pid}`] : [])], severity: 40, visibility: 'public', tags: ['relic', 'auction31', 'record'], src: 'auction31',
