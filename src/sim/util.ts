@@ -2,7 +2,7 @@ import { Rng } from '../core/rng';
 import { nominal } from '../core/money';
 import type { L } from '../data/world';
 import type { GameState, MemoryEntry, Notification } from './types';
-import { book18, postHooks18, sect18, type Sect18 } from './ledger18';
+import { book18, postHooks18, postObs18, sect18, type Sect18 } from './ledger18';
 import { noteSect23 } from './close23';
 import { playerActIds27 } from './tickcache27';
 
@@ -75,6 +75,7 @@ export function post(s: GameState, key: string, amount: number, cat: string, mem
   if (sec === 'rev' || sec === 'cost') s.player.profitByYear[s.year] = (s.player.profitByYear[s.year] ?? 0) + amount;
   book18(s, sec, cat, key, amount, cash);
   noteSect23(s, sec, amount); // r23: seção do mês (resultado operacional × investimento × financiamento)
+  for (const fn of postObs18()) fn(s, key, amount, cat, sec, cash); // r31 (txn): totais duráveis atribuídos (só leitura)
   if (sec === 'cost') for (const fn of postHooks18()) fn(s, key, amount, cat);
   return true;
 }
