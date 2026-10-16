@@ -3,7 +3,7 @@
 .ab18-st.big { font-size: 1.5em; }
 .ab18-st > span { display: inline-block; }
 .ab18-st > span:not(.ab18-base) { position: absolute; left: 0; top: 0; overflow: hidden; }
-.ab18-base { color: var(--line, #8886); }
+.ab18-base { color: color-mix(in srgb, var(--muted) 70%, var(--panel)); } /* r31 C: estrelas vazias ≥ 3:1 (antes 1,5:1) */
 .ab18-hi { color: color-mix(in srgb, var(--accent, #c9a227) 28%, transparent); }
 .ab18-lo { color: color-mix(in srgb, var(--accent, #c9a227) 50%, transparent); }
 .ab18-ca { color: var(--accent, #c9a227); }

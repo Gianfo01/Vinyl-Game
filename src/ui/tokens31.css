@@ -1,0 +1,80 @@
+/* R31 (C) — base dos estilos: índice dos tokens de design, contraste e daltonismo. Só apresentação.
+   Carregado por último (main.ts), depois do theme25/ui27, para que estes blocos ganhem dos antigos.
+
+   Onde mora cada grupo de tokens (uma fonte por grupo; os estilos por era da onda 4 só redefinem estes nomes):
+   - cores de superfície e texto por tema ........ ps/theme25.css  (:root[data-theme='dark'|'light'])
+       --bg --panel --panel-2 --ink --muted --line --accent --accent-ink --accent-2 --good --bad --warn --gold
+       --nav-bg --nav-ink --nav-muted --nav-hover --nav-line --nav-on --nav-on-ink --input-bg --h1-ink --shadow-ink
+   - tons de chip (texto/fundo) e --on-tone ....... ps/ui27.css    (--t-<tom>-fg / --t-<tom>-bg)
+   - espaço e tamanhos de texto ................... ps/ui27.css    (--sp-1..7, --fs-xs..2xl, --lh)
+   - famílias de fonte ............................ heritage21.css (--sans --serif) e theme25.css (--mono --pixel)
+   - tipografia por papel, bordas e marca ......... aqui (abaixo)
+   Pares texto/fundo conferidos (WCAG AA ≥ 4,5:1) em tests/r31-contrast.test.ts (lista em ui/skin31model.ts). */
+
+/* ================= 1. tipografia por papel, bordas e cores da marca ================= */
+:root {
+  --font-ui: var(--sans);
+  --font-head: var(--sans);
+  --font-brand: var(--pixel);
+  --font-num: var(--mono);
+  --font-text: var(--serif);
+  --bw: 1px; --bw-strong: 2px; --bw-mark: 4px;
+  --radius-sm: 2px; --radius-pill: 999px;
+  --border: var(--bw) solid var(--line);
+  /* tela inicial: sempre noturna, independe do tema */
+  --brand-night: #0b1723; --brand-night-2: #0c1724; --brand-btn: #13263a; --brand-line: #344e65;
+  --brand-gold: #edbc65; --brand-gold-2: #f5d38e; --brand-shadow: #6e4c2e;
+  --brand-cream: #f3e8cc; --brand-mist: #a8bbca; --brand-silver: #c5d0d5; --brand-ink: #15212e;
+}
+
+/* ================= 2. contraste ================= */
+/* claro com alto contraste: o tom mais escuro do claro (antes o ux19 só valia sem alto contraste, e o alto
+   contraste acabava com destaque 3,9:1 sobre painel-2); cinza de apoio = tinta, divisórias = tinta. */
+:root[data-theme='light'].contrast {
+  --muted: var(--ink); --line: var(--ink);
+  --accent: #8f4214; --accent-2: #6e3210; --good: #1f5c39; --bad: #8f2a20; --warn: #6e4708; --gold: #6e520b;
+}
+:root[data-theme='dark'].contrast {
+  --muted: var(--ink); --line: var(--ink);
+  --good: #a9e6c3; --bad: #ffb3a9; --warn: #f6d48a;
+}
+/* claro em qualquer modo de daltonismo: mesmo cinza/destaque do claro normal (o ux19 só vale sem daltonismo) */
+:root[data-theme='light']:not(.contrast):not([data-cb='none'])[data-cb] { --muted: #6b5f55; --accent: #a4501a; }
+
+/* ================= 3. daltonismo: cores de estado por tema (antes o theme25 apagava a troca) ================= */
+/* deuteranopia/protanopia: bom = azul, ruim = laranja-vermelhão, alerta = amarelo (paleta Okabe-Ito, AA) */
+:root[data-theme='dark'][data-cb='deutan'], :root[data-theme='dark'][data-cb='protan'] {
+  --good: #6cb6ff; --bad: #ff9f5a; --warn: #f0e442;
+  --t-good-fg: #a8d4ff; --t-good-bg: #17324f; --t-bad-fg: #ffc49a; --t-bad-bg: #3d2a1c; --t-warn-fg: #f3ea8a; --t-warn-bg: #35341c;
+}
+:root[data-theme='light'][data-cb='deutan'], :root[data-theme='light'][data-cb='protan'] {
+  --good: #0b5d99; --bad: #a8430a; --warn: #6e5d00;
+  --t-good-fg: #0b4f80; --t-good-bg: #deebf7; --t-bad-fg: #8a3505; --t-bad-bg: #f8e3d3; --t-warn-fg: #5c4d00; --t-warn-bg: #f3edc8;
+}
+/* tritanopia: bom = verde-azulado, ruim = vermelho, alerta = magenta */
+:root[data-theme='dark'][data-cb='tritan'] {
+  --good: #3fc9a5; --bad: #ff8a7a; --warn: #f09ad8;
+  --t-good-fg: #8fe3cc; --t-good-bg: #143a36; --t-bad-fg: #ffb3a9; --t-bad-bg: #3d2430; --t-warn-fg: #f5b3e2; --t-warn-bg: #3a2238;
+}
+:root[data-theme='light'][data-cb='tritan'] {
+  --good: #0b6e57; --bad: #b0331f; --warn: #9c2a72;
+  --t-good-fg: #0b5c48; --t-good-bg: #dcefe9; --t-bad-fg: #8f2a20; --t-bad-bg: #f7e1dc; --t-warn-fg: #85215f; --t-warn-bg: #f6e0ee;
+}
+
+/* reforço sem cor (só com daltonismo ligado): marca nos selos, padrão nas bordas e nas barras */
+:root[data-cb]:not([data-cb='none']) :is(.chip27.t-good, main .pill.good, .pill.good, .kpi27-v.t-good)::before { content: '✓\00a0'; font-weight: 700; }
+:root[data-cb]:not([data-cb='none']) :is(.chip27.t-bad, main .pill.bad, .pill.bad, .kpi27-v.t-bad)::before { content: '✕\00a0'; font-weight: 700; }
+:root[data-cb]:not([data-cb='none']) :is(.chip27.t-warn, main .pill.warn, .pill.warn, .kpi27-v.t-warn)::before { content: '!\00a0'; font-weight: 700; }
+:root[data-cb]:not([data-cb='none']) :is(.c27.t-bad, .task25.urgent, .decision-card.urgent) { border-left-style: double; border-left-width: 6px; }
+:root[data-cb]:not([data-cb='none']) .c27.t-warn { border-left-style: dashed; }
+:root[data-cb]:not([data-cb='none']) :is(.hz27-st.bad .hz27-bar i, .a27-bar.bad .a27-bar-track i, .a27-meter-bar i.neg, .map13-country .bar i.bad, .p2b-threat i.t-lost, .hz27-cells.bad i.on, .n27-mark.bad, .hqr27-dot.bad) {
+  background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgb(0 0 0 / 0.38) 3px 5px);
+}
+:root[data-cb]:not([data-cb='none']) :is(.hz27-st.warn .hz27-bar i, .p2b-threat i:not(.t-won):not(.t-lost), .n27-mark.warn, .hqr27-dot:not(.bad)) {
+  background-image: radial-gradient(rgb(0 0 0 / 0.38) 1px, transparent 1.5px); background-size: 4px 4px;
+}
+
+/* ================= 4. estilo da interface por era (mecânica; os 9 estilos chegam na onda 4) ================= */
+/* :root[data-era-skin='<id>'] é sempre o estilo efetivo (ui/skin31.ts). 'estudio' = o visual de hoje: nada muda. */
+.skin31-row { display: flex; flex-direction: column; gap: var(--sp-1); }
+.skin31-row small { color: var(--muted); }

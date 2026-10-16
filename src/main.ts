@@ -11,6 +11,7 @@ import './ui/heritage21.css'; // r21: tema Heritage Studio Pixel por último (s�
 import './ui/mobile23.css'; // r23: celular — topo em uma linha, 4 destinos + Mais, tabelas em cartões
 import './ui/ps/theme25.css'; // r25: Pixel Studio — azul-noite + dourado (escuro padrão), claro Heritage; 6 seções
 import './ui/ps/ui27.css'; // r27 (J): sistema visual compartilhado (docs/ui27.md) — depois do tema
+import './ui/tokens31.css'; // r31 (C): índice de tokens, contraste e daltonismo por tema — por último
 import './ui/ps/hq25'; // r25: Sede viva (Pixel Studio) — registra a tela da Sede no slot25
 
 import { gearReady } from './ui/pixel/gear21';
