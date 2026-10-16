@@ -34,6 +34,7 @@ import { freeCash20 } from '../oblig20';
 import { lastScandal, REACT29 } from '../scandal17';
 import { PRESSURE29, stressOf, type Px29 } from '../stress17';
 import type { Act, GameState, Person } from '../types';
+import { inPlayerAct17 } from '../actidx17';
 import { fmtL, money, playerActs, post, rememberListeners, staffAdjusters, staffSkill } from '../util';
 import { monthlyCosts } from '../economy';
 import { a3Of, crime17, ODDS17 } from './crime17';
@@ -51,7 +52,7 @@ registerExt4('conn29', () => ({ aw: -1 }));
 const st29 = (s: GameState): C29 => { const x = (s as unknown as { x4: { conn29?: C29 } }).x4; return (x.conn29 ??= { aw: -1 }); };
 
 const mine = (a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
-const actOfP = (s: GameState, pid: string): Act | undefined => { for (const id of playerActs(s)) { const a = s.acts[id]; if (a?.members.includes(pid)) return a; } return undefined; };
+const actOfP = (s: GameState, pid: string): Act | undefined => { if (!inPlayerAct17(s, pid)) return undefined; for (const id of playerActs(s)) { const a = s.acts[id]; if (a?.members.includes(pid)) return a; } return undefined; };
 /** R29b (desempenho): o mesmo, guardado no rascunho da leitura de shortOf (as quatro pressões leem o mesmo ato). */
 const actOfC = (s: GameState, p: Person, cx: Px29): Act | undefined => (cx.a !== undefined ? cx.a ?? undefined : (cx.a = actOfP(s, p.id) ?? null) ?? undefined);
 const heatHome = (s: GameState) => crime17(s).heat[a3Of(s, s.config.homeCity)] ?? 0;

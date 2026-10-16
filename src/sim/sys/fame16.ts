@@ -125,24 +125,36 @@ function tastes16(year: number, fam: string): Float64Array {
 }
 /** R31 Y: base16 e fameIn de todos os países com ficha de uma vez (mesma ordem de COUNTRY_INFO). `out` = sem desvio;
  *  `withDev` = com o desvio local (o país, ou o balde da região). Mesmos números de base16/fameIn, sem arredondar. */
+/** W3-FIX (desempenho): por país, na ordem de COUNTRY_INFO — chave do balde da região e "fala a língua?" por língua. */
+let VEC16: { rk: string[]; ln: Map<string, Uint8Array> } | null = null;
+function vec16() {
+  return (VEC16 ??= { rk: COUNTRY_INFO.map((c) => `r:${c.market}`), ln: new Map() });
+}
+function speaks16(lang: string): Uint8Array {
+  const v = vec16();
+  let x = v.ln.get(lang);
+  if (!x) { x = Uint8Array.from(COUNTRY_INFO.map((c) => +langsOf(c.a3).includes(lang))); v.ln.set(lang, x); }
+  return x;
+}
 export function baseVec16(s: GameState, a: Act, out: Float64Array, withDev: Float64Array): void {
   const home = homeA3(a), hc = cityById[a.city];
   const tas = tastes16(s.year, familyOf(a.genre));
   const d = f16(s).d[a.id];
-  const wcache: Record<string, number> = {};
+  const rk = vec16().rk, sp = hc ? speaks16(hc.lang) : null;
+  const wcache: (number | undefined)[] = [undefined, undefined, undefined, undefined];
   for (let i = 0; i < COUNTRY_INFO.length; i++) {
     const c = COUNTRY_INFO[i];
     let v: number;
     if (c.a3 === home) v = homeFame16(a);
     else {
       const sameM = !!hc && c.market === hc.market;
-      const sameL = !!hc && langsOf(c.a3).includes(hc.lang);
-      const k = `${+sameM}${+sameL}`;
+      const sameL = !!sp && sp[i] === 1;
+      const k = (sameM ? 2 : 0) + (sameL ? 1 : 0);
       const w = (wcache[k] ??= wAbroad16(s, a, sameM, sameL));
       v = clamp(a.fame * w * (0.75 + 0.25 * tas[i]), 0, 100);
     }
     out[i] = v;
-    const dv = d ? d[c.a3] ?? d[`r:${c.market}`] ?? 0 : 0;
+    const dv = d ? d[c.a3] ?? d[rk[i]] ?? 0 : 0;
     withDev[i] = clamp(v + dv, 0, 100);
   }
 }
