@@ -120,7 +120,7 @@ const GONE = (): Lock31 => lock31(N('Não está mais disponível.', 'No longer a
 
 /** Gesto pelo valor de opinião (−100..100). */
 export function toneOf31(op: number): Exclude<Tone31, 'unknown'> {
-  return op >= 35 ? 'warm' : op >= 5 ? 'ok' : op >= -25 ? 'cool' : 'cold';
+  return op >= 30 ? 'warm' : op >= -10 ? 'ok' : op >= -40 ? 'cool' : 'cold';
 }
 const GESTURE: Record<Tone31, [string, L]> = {
   warm: ['😊', N('Sorri', 'Smiles')],
@@ -456,24 +456,26 @@ reg({
   build: (s, t) => {
     const a = s.acts[t.id];
     const members = a.members.map((m) => personCast(s, m, s.persons[m] ? roleName29(s.persons[m].role) : N('Integrante', 'Member'))).filter((c): c is Cast31 => !!c);
-    const cands = lineupCandidates31(s, a.id);
-    const choices: Choice31[] = [];
+    const cands = lineupCandidates31(s, a.id, 12);
+    let choices: Choice31[] = [];
     for (const p of cands) {
       for (const o of memberOptions29(s, p.id).filter((x) => x.k === 'join' && x.id.startsWith(`mo.join:${a.id}`)).slice(0, 1)) {
         const ch = chemistry31(s, a.id, p.id);
-        choices.push({ id: `${p.id}|${o.id}`, label: o.label, lock: lockOf31(o.block), cost: o.cost,
+        choices.push({ id: `${p.id}|${o.id}`, label: fmtL(N('{n}: {o}', '{n}: {o}'), { n: p.name, o: o.label }), lock: lockOf31(o.block), cost: o.cost,
           effect: fmtL(N('{n} · {r} · nível {k}{c}{q}', '{n} · {r} · level {k}{c}{q}'), { n: p.name, r: roleName29(p.role), k: skillOf(p),
             c: o.chance !== undefined ? fmtL(N(' · chance {p}%', ' · odds {p}%'), { p: Math.round(o.chance * 100) }) : '',
             q: ch >= 10 ? N(' · entrosamento com a banda', ' · gets on with the band') : ch <= -10 ? N(' · olhares tortos na banda', ' · side-eye from the band') : '' }) });
       }
     }
+    // quem pode entrar de fato vem primeiro (os travados continuam visíveis, com o motivo)
+    choices = [...choices.filter((c) => !c.lock), ...choices.filter((c) => c.lock)].slice(0, 5);
     return {
       title: fmtL(N('Sala de ensaio · {a}', 'Rehearsal room · {a}'), { a: a.name }),
       cast: [you(s), ...members],
       nums: [
         { label: N('Integrantes', 'Members'), value: String(a.members.filter((m) => s.persons[m]?.alive).length), basis: 'fact' },
         { label: N('Química entre integrantes', 'Chemistry between members'), value: String(bandChem31(s, a.id)), hint: N('Média das relações entre eles (−100 a 100).', 'Average of their relationships (−100 to 100).'), basis: 'fact' },
-        { label: N('Candidatos na porta', 'Candidates at the door'), value: String(cands.length), hint: N('Músicos livres do mesmo universo e integrantes de outras bandas.', 'Free musicians from the same world and members of other bands.'), basis: 'fact' },
+        { label: N('Candidatos na porta', 'Candidates at the door'), value: String(choices.length), hint: N('Músicos livres do mesmo universo e integrantes de outras bandas.', 'Free musicians from the same world and members of other bands.'), basis: 'fact' },
       ],
       note: cands.length ? N('Escolha quem entra (ou quem substitui alguém). A chance e as luvas são as da oferta a integrante.', 'Pick who joins (or who replaces someone). Odds and fee are those of the member offer.') : N('Nenhum músico disponível do mesmo universo agora.', 'No musician from the same world is available right now.'),
       choices,

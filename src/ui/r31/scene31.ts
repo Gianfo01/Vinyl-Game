@@ -21,7 +21,7 @@ import { savePrefs, store } from '../store';
 import { basisTag31, lockBtn31 } from './lock31';
 import { goDest31 } from './quick31';
 import {
-  decideScene31, sceneLabel31, sceneMode31, sceneModel31,
+  decideScene31, sceneMode31, sceneModel31,
   type Cast31, type Choice31, type Mood31, type SceneKind31, type SceneModel31, type SceneOut31,
 } from './scene31core';
 import { sceneHook31 } from './scene31reg';
@@ -137,7 +137,7 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
   };
   document.addEventListener('keydown', onKey);
   draw();
-  close = modal(`${t(sceneLabel31(kind))} · ${t(m0.title)}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); if (out) rerender(); } });
+  close = modal(t(m0.title), root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); if (out) rerender(); } });
 }
 
 /** Botão de ação de sempre que passa pela cena quando a preferência pede; senão faz o caminho direto (`direct`) ou o painel de 2 cliques. */

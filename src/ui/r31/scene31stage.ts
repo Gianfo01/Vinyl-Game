@@ -42,16 +42,18 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
   }));
   try { drawScene27(cv, paintRoom31(m.room, s.year, watchers), s.year, who); } catch { /* canvas indisponível (testes) */ }
   const showLabels = labels31(s);
+  let k = 0;
   const pts = m.cast.map((c, i) => {
     const md = o.react?.[c.id] ?? c.mood;
     const sp = spots[i];
+    const lift = c.side === 'them' ? (k++ % 2) * 11 : 0; // balões vizinhos em alturas alternadas (não se cobrem)
     const reacted = !!o.react?.[c.id];
     return h('button', {
       type: 'button', class: `sc31-pt tone-${md.tone} side-${c.side}${reacted ? ' sc31-react' : ''}`,
-      style: `left:${(sp.x / W) * 100}%;top:${Math.max(0, ((sp.y - (sp.pose === 'sit' ? 34 : 40)) / H) * 100)}%`,
+      style: `left:${(sp.x / W) * 100}%;top:${Math.max(8, ((sp.y - (sp.pose === 'sit' ? 34 : 40)) / H) * 100 - lift)}%`,
       title: bubbleText(c, md), 'aria-label': bubbleText(c, md), 'data-sc31': c.id,
       onclick: () => o.onPick?.(c),
-    }, h('span', { class: 'sc31-ico', 'aria-hidden': 'true' }, md.icon), showLabels || reacted ? h('span', { class: 'sc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
+    }, h('span', { class: 'sc31-ico', 'aria-hidden': 'true' }, md.icon), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: 'sc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
   });
   return h('div', { class: `sc31-stage${hot31() ? ' sc31-hot' : ''}` }, cv, ...pts);
 }
