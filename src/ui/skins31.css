@@ -1,0 +1,431 @@
+/* R31 onda 4 (M) — os 9 estilos da interface por época. Só apresentação: nada do jogo muda e as cenas em pixel ficam
+   iguais (só a moldura da interface). Carregado depois do tokens31.css (main.ts).
+
+   Como funciona (uma fonte por coisa):
+   1. paleta: cada estilo redefine SÓ os tokens de superfície/texto/marca do tema (claro e escuro) em
+      :root[data-era-skin='<id>'][data-theme='<tema>'][data-cb] — as cores de estado (bom/ruim/alerta, chips) seguem
+      o tema, o daltonismo e o alto contraste (tokens31.css), que valem por cima de qualquer estilo;
+   2. forma: fontes, cantos, bordas, sombras e caixa de texto em tokens --sk-* por estilo;
+   3. componentes: uma camada única para todos os estilos (barra do topo, menu, cabeçalho de página, KPIs, abas,
+      botões, cartões, tabelas, campos, diálogos, estados hover/foco/desabilitado/bloqueado) que só lê os tokens;
+   4. assinatura: poucos detalhes próprios de cada época (régua dupla da gazeta, xadrez da jukebox, alumínio do hi-fi,
+      cursor do fósforo, chanfro e barra de título das janelas, gradiente do portal, elevação do plano, vidro).
+   Pares texto/fundo conferidos (AA) em tests/r31-contrast.test.ts para estilo × tema × daltonismo × alto contraste. */
+
+/* ================= 0. padrões dos tokens novos (o Estúdio não usa; os estilos redefinem) ================= */
+:root {
+  --top-bg: var(--nav-bg); --top-ink: var(--nav-ink); --top-muted: var(--nav-muted); --top-line: var(--nav-line);
+  --nav-sel-bg: var(--nav-on); --nav-sel-ink: var(--nav-on-ink);
+  --sk-pri-bg: var(--accent); --sk-pri-ink: var(--accent-ink);
+  --focus: var(--accent);
+  --font-head: var(--sans); --font-brand: var(--pixel); --font-num: var(--mono);
+  --sk-radius: var(--radius); --sk-radius-btn: var(--radius); --sk-radius-card: var(--radius);
+  --sk-bw: 1px; --sk-card-shadow: var(--card-shadow); --sk-btn-shadow: var(--press);
+  --sk-tt: none; --sk-ls: 0; --sk-head-tt: none; --sk-head-ls: 0; --sk-head-w: 800;
+}
+:root[data-theme='light'] { --top-bg: var(--panel); --top-ink: var(--ink); --top-muted: var(--muted); --top-line: var(--line); }
+
+/* ================= 1. paletas (claro e escuro de cada estilo) ================= */
+/* --- Gazeta 1889–1919: papel de jornal, tinta preta, sangue-de-boi; à noite, a edição noturna em sépia --- */
+:root[data-era-skin='gazeta'][data-theme='light'][data-cb] {
+  --bg: #ece3cf; --panel: #faf6ec; --panel-2: #efe7d4; --ink: #1e1912; --muted: #574b3c; --line: #a8987c;
+  --accent: #7d2214; --accent-ink: #fbf6ea; --accent-2: #5e180d; --gold: #6b4f0a; --input-bg: #fffaf0; --h1-ink: #120e09;
+  --nav-bg: #e6dcc5; --nav-ink: #1e1912; --nav-muted: #574b3c; --nav-hover: #d9ccb0; --nav-line: #a8987c; --nav-on: #7d2214; --nav-on-ink: #fbf6ea;
+  --nav-sel-bg: #ddd0b4; --nav-sel-ink: #6e1d10; --top-bg: #f3ecdb; --top-ink: #1e1912; --top-muted: #574b3c; --top-line: #1e1912;
+  --sk-pri-bg: #1e1912; --sk-pri-ink: #fbf6ea; --focus: #7d2214; --shadow-ink: #c9bb9c; --card-shadow: none;
+}
+:root[data-era-skin='gazeta'][data-theme='dark'][data-cb] {
+  --bg: #16120d; --panel: #1f1912; --panel-2: #2a2219; --ink: #f0e5cd; --muted: #bcae93; --line: #5a4c38;
+  --accent: #f0a493; --accent-ink: #1a110c; --accent-2: #f7c2b5; --gold: #e2c27a; --input-bg: #1a150f; --h1-ink: #f7eedb;
+  --nav-bg: #120f0a; --nav-ink: #ece0c6; --nav-muted: #b1a286; --nav-hover: #241d15; --nav-line: #3f3528; --nav-on: #f0a493; --nav-on-ink: #1a110c;
+  --nav-sel-bg: #2b2218; --nav-sel-ink: #f0a493; --top-bg: #1b160f; --top-ink: #f0e5cd; --top-muted: #bcae93; --top-line: #8c7b60;
+  --sk-pri-bg: #f0e5cd; --sk-pri-ink: #16120d; --focus: #f0a493; --shadow-ink: #0c0a07; --card-shadow: none;
+}
+/* --- Déco Rádio 1920–45: preto, ouro e marfim; de dia, marfim com menu de laca preta --- */
+:root[data-era-skin='deco'][data-theme='dark'][data-cb] {
+  --bg: #0e0c08; --panel: #17140d; --panel-2: #221d13; --ink: #f2e8cf; --muted: #bdae8c; --line: #6e5b30;
+  --accent: #dcb664; --accent-ink: #15120b; --accent-2: #f0d28f; --gold: #e6c57c; --input-bg: #120f0a; --h1-ink: #f6eccf;
+  --nav-bg: #0a0906; --nav-ink: #efe3c4; --nav-muted: #b4a47f; --nav-hover: #1c1810; --nav-line: #3d3320; --nav-on: #dcb664; --nav-on-ink: #15120b;
+  --nav-sel-bg: #17140d; --nav-sel-ink: #e8c77e; --top-bg: #0e0c08; --top-ink: #f2e8cf; --top-muted: #bdae8c; --top-line: #6e5b30;
+  --focus: #dcb664; --shadow-ink: #000000; --card-shadow: none;
+}
+:root[data-era-skin='deco'][data-theme='light'][data-cb] {
+  --bg: #f2ebda; --panel: #fbf7ec; --panel-2: #ece3cd; --ink: #1b170f; --muted: #5c5240; --line: #b49f6c;
+  --accent: #6f5210; --accent-ink: #fdf8ea; --accent-2: #4f3a0a; --gold: #6b4f0a; --input-bg: #fffdf6; --h1-ink: #15120b;
+  --nav-bg: #15120b; --nav-ink: #efe3c4; --nav-muted: #b4a47f; --nav-hover: #241f15; --nav-line: #3d3320; --nav-on: #dcb664; --nav-on-ink: #15120b;
+  --nav-sel-bg: #241f15; --nav-sel-ink: #e8c77e; --top-bg: #15120b; --top-ink: #f2e8cf; --top-muted: #c2b38f; --top-line: #6e5b30;
+  --focus: #6f5210; --shadow-ink: #d6c9a6; --card-shadow: none;
+}
+/* --- Jukebox 1946–64: creme, verde-água, vermelho-cereja e amarelo; à noite, a lanchonete de luz baixa --- */
+:root[data-era-skin='jukebox'][data-theme='light'][data-cb] {
+  --bg: #fbf2e2; --panel: #ffffff; --panel-2: #fcefe2; --ink: #2a1712; --muted: #6a4c43; --line: #e3c3b6;
+  --accent: #0d6b63; --accent-ink: #ffffff; --accent-2: #0a5852; --gold: #7d5200; --input-bg: #ffffff; --h1-ink: #24120d;
+  --nav-bg: #0f6f68; --nav-ink: #ffffff; --nav-muted: #d3efeb; --nav-hover: #0c5d57; --nav-line: #2b8a82; --nav-on: #ffd84a; --nav-on-ink: #2a1712;
+  --nav-sel-bg: #ffd84a; --nav-sel-ink: #2a1712; --top-bg: #b80f2a; --top-ink: #ffffff; --top-muted: #ffe0e4; --top-line: #8c0b20;
+  --sk-pri-bg: #b80f2a; --sk-pri-ink: #ffffff; --focus: #b80f2a; --shadow-ink: #e3c3b6; --card-shadow: 0 3px 0 #e3c3b6;
+}
+:root[data-era-skin='jukebox'][data-theme='dark'][data-cb] {
+  --bg: #1b1012; --panel: #26171a; --panel-2: #311f23; --ink: #fbeee2; --muted: #d4b3aa; --line: #5e3d41;
+  --accent: #6ad8cc; --accent-ink: #0b211e; --accent-2: #9be6dd; --gold: #f2c75a; --input-bg: #201316; --h1-ink: #fff4e8;
+  --nav-bg: #0b3a36; --nav-ink: #f2fffd; --nav-muted: #b9e2dd; --nav-hover: #0f4a45; --nav-line: #1f5c56; --nav-on: #ffd84a; --nav-on-ink: #2a1712;
+  --nav-sel-bg: #ffd84a; --nav-sel-ink: #2a1712; --top-bg: #7d0a1d; --top-ink: #ffffff; --top-muted: #ffd3da; --top-line: #5a0714;
+  --sk-pri-bg: #ff5a6e; --sk-pri-ink: #1f0408; --focus: #ffd84a; --shadow-ink: #0d0708; --card-shadow: 0 3px 0 #0d0708;
+}
+/* --- Hi-Fi 1965–79: madeira, laranja e alumínio escovado; de dia, o creme setentista --- */
+:root[data-era-skin='hifi'][data-theme='dark'][data-cb] {
+  --bg: #2b1a0c; --panel: #33200f; --panel-2: #3f2914; --ink: #f7e7cc; --muted: #d0b38c; --line: #6e4b27;
+  --accent: #f2a33c; --accent-ink: #2a1708; --accent-2: #f7bd6b; --gold: #f2b04c; --input-bg: #24160a; --h1-ink: #fff0d6;
+  --nav-bg: #23150a; --nav-ink: #f4e2c4; --nav-muted: #c9ab84; --nav-hover: #36220f; --nav-line: #4d331a; --nav-on: #f2a33c; --nav-on-ink: #2a1708;
+  --nav-sel-bg: #3d2611; --nav-sel-ink: #f5b55c; --top-bg: #cfcac0; --top-ink: #1c140c; --top-muted: #4a3d2f; --top-line: #8f897d;
+  --focus: #f2a33c; --shadow-ink: #170d05; --card-shadow: 0 2px 0 #170d05;
+}
+:root[data-era-skin='hifi'][data-theme='light'][data-cb] {
+  --bg: #f4e7cf; --panel: #fff7e8; --panel-2: #f1e0c2; --ink: #2d1c0e; --muted: #67503a; --line: #d1ae80;
+  --accent: #9c4a0b; --accent-ink: #fff8ec; --accent-2: #7a3907; --gold: #7a5208; --input-bg: #fffbf2; --h1-ink: #24160a;
+  --nav-bg: #3a2412; --nav-ink: #f6e6cc; --nav-muted: #d6bb96; --nav-hover: #4a3018; --nav-line: #5c3d1f; --nav-on: #f2a33c; --nav-on-ink: #2a1708;
+  --nav-sel-bg: #4f3219; --nav-sel-ink: #f5b55c; --top-bg: #d8d3c9; --top-ink: #1c140c; --top-muted: #4a3d2f; --top-line: #8f897d;
+  --focus: #9c4a0b; --shadow-ink: #d1ae80; --card-shadow: 0 2px 0 #e3cba6;
+}
+/* --- Fósforo 1980–89: monitor verde; de dia, a impressão em papel contínuo (o menu segue de terminal) --- */
+:root[data-era-skin='fosforo'][data-theme='dark'][data-cb] {
+  --bg: #020b04; --panel: #04140a; --panel-2: #082012; --ink: #b8f7b0; --muted: #79c977; --line: #1d6b2b;
+  --accent: #5cff76; --accent-ink: #021005; --accent-2: #a6ffb2; --gold: #f0e05a; --input-bg: #031008; --h1-ink: #d6ffd0;
+  --nav-bg: #010803; --nav-ink: #b8f7b0; --nav-muted: #74c272; --nav-hover: #062010; --nav-line: #145020; --nav-on: #5cff76; --nav-on-ink: #021005;
+  --nav-sel-bg: #5cff76; --nav-sel-ink: #021005; --top-bg: #020b04; --top-ink: #b8f7b0; --top-muted: #79c977; --top-line: #1d6b2b;
+  --focus: #5cff76; --shadow-ink: #000000; --card-shadow: none;
+}
+:root[data-era-skin='fosforo'][data-theme='light'][data-cb] {
+  --bg: #eef3e6; --panel: #f9fcf3; --panel-2: #e3ecd8; --ink: #0b2410; --muted: #3a5a3e; --line: #8fae8c;
+  --accent: #0f6620; --accent-ink: #f2fff0; --accent-2: #0a4d17; --gold: #5e5a00; --input-bg: #ffffff; --h1-ink: #071a0b;
+  --nav-bg: #031208; --nav-ink: #b8f7b0; --nav-muted: #74c272; --nav-hover: #08200f; --nav-line: #145020; --nav-on: #5cff76; --nav-on-ink: #021005;
+  --nav-sel-bg: #5cff76; --nav-sel-ink: #021005; --top-bg: #031208; --top-ink: #b8f7b0; --top-muted: #79c977; --top-line: #1d6b2b;
+  --focus: #0f6620; --shadow-ink: #c6d6bf; --card-shadow: none;
+}
+/* --- Janelas 95 1990–99: cinza de janela, azul-marinho e área de trabalho verde-azulada; à noite, ardósia --- */
+:root[data-era-skin='janelas'][data-theme='light'][data-cb] {
+  --bg: #c0c0c0; --panel: #f6f5f2; --panel-2: #e8e6e0; --ink: #000000; --muted: #3c3c3c; --line: #808080;
+  --accent: #000080; --accent-ink: #ffffff; --accent-2: #1048a0; --gold: #5c4500; --input-bg: #ffffff; --h1-ink: #000000;
+  --nav-bg: #c0c0c0; --nav-ink: #000000; --nav-muted: #353535; --nav-hover: #d4d0c8; --nav-line: #808080; --nav-on: #000080; --nav-on-ink: #ffffff;
+  --nav-sel-bg: #000080; --nav-sel-ink: #ffffff; --top-bg: #c0c0c0; --top-ink: #000000; --top-muted: #353535; --top-line: #808080;
+  --sk-pri-bg: #d4d0c8; --sk-pri-ink: #000000; --focus: #000000; --shadow-ink: #404040; --card-shadow: none;
+  --sk-desk: #008080; --sk-hi: #ffffff; --sk-lo: #404040; --sk-title-a: #000080; --sk-title-b: #1084d0; --sk-title-ink: #ffffff;
+  /* a página é cinza de janela (#c0c0c0): estados mais escuros, com as variantes de daltonismo logo abaixo */
+  --good: #155724; --bad: #8b0000; --warn: #5a3d00;
+}
+:root[data-era-skin='janelas'][data-theme='light']:is([data-cb='deutan'], [data-cb='protan']) { --good: #0a4a80; --bad: #8f1f12; --warn: #4f4200; }
+:root[data-era-skin='janelas'][data-theme='light'][data-cb='tritan'] { --good: #075242; --bad: #8b0000; --warn: #7a1f5a; }
+:root[data-era-skin='janelas'][data-theme='dark'][data-cb] {
+  --bg: #1e2230; --panel: #2a2f42; --panel-2: #343a50; --ink: #ffffff; --muted: #c8cde0; --line: #6b7290;
+  --accent: #9fc0ff; --accent-ink: #0a1030; --accent-2: #c4d8ff; --gold: #f0d070; --input-bg: #161a26; --h1-ink: #ffffff;
+  --nav-bg: #262b3c; --nav-ink: #ffffff; --nav-muted: #c0c6da; --nav-hover: #333a52; --nav-line: #4a5170; --nav-on: #9fc0ff; --nav-on-ink: #0a1030;
+  --nav-sel-bg: #1c3fa8; --nav-sel-ink: #ffffff; --top-bg: #262b3c; --top-ink: #ffffff; --top-muted: #c0c6da; --top-line: #4a5170;
+  --sk-pri-bg: #343a50; --sk-pri-ink: #ffffff; --focus: #ffffff; --shadow-ink: #0c0e16; --card-shadow: none;
+  --sk-desk: #0d4d4d; --sk-hi: #6b7290; --sk-lo: #0c0e16; --sk-title-a: #0a1f6e; --sk-title-b: #1c5fa8; --sk-title-ink: #ffffff;
+}
+/* --- Portal 2000 2000–07: branco, azul de link e laranja "beta" --- */
+:root[data-era-skin='portal'][data-theme='light'][data-cb] {
+  --bg: #e9eef6; --panel: #ffffff; --panel-2: #eef3fa; --ink: #101828; --muted: #4a5568; --line: #b7c6dc;
+  --accent: #1a4fb5; --accent-ink: #ffffff; --accent-2: #123b8a; --gold: #6e5200; --input-bg: #ffffff; --h1-ink: #0b1220;
+  --nav-bg: #f4f7fb; --nav-ink: #101828; --nav-muted: #4a5568; --nav-hover: #e3ebf6; --nav-line: #c5d2e4; --nav-on: #1a4fb5; --nav-on-ink: #ffffff;
+  --nav-sel-bg: #ffffff; --nav-sel-ink: #123b8a; --top-bg: #1f56b8; --top-ink: #ffffff; --top-muted: #dbe7ff; --top-line: #123b8a;
+  --sk-pri-bg: #b84a00; --sk-pri-ink: #ffffff; --focus: #1a4fb5; --shadow-ink: #c5d2e4; --card-shadow: none;
+}
+:root[data-era-skin='portal'][data-theme='dark'][data-cb] {
+  --bg: #0b1628; --panel: #12223b; --panel-2: #19304f; --ink: #eef3fb; --muted: #a8bcd8; --line: #2d4a73;
+  --accent: #8cb6ff; --accent-ink: #07142b; --accent-2: #b5d0ff; --gold: #f2c76a; --input-bg: #0e1c32; --h1-ink: #ffffff;
+  --nav-bg: #0a1424; --nav-ink: #e6eefb; --nav-muted: #9fb3cf; --nav-hover: #142744; --nav-line: #22395c; --nav-on: #8cb6ff; --nav-on-ink: #07142b;
+  --nav-sel-bg: #142744; --nav-sel-ink: #cfe0ff; --top-bg: #123a80; --top-ink: #ffffff; --top-muted: #cddcff; --top-line: #0a2250;
+  --sk-pri-bg: #ff9a3c; --sk-pri-ink: #1a0c00; --focus: #8cb6ff; --shadow-ink: #050b16; --card-shadow: none;
+}
+/* --- Plano 2008–19: branco, verde-petróleo e laranja; cartões por elevação --- */
+:root[data-era-skin='plano'][data-theme='light'][data-cb] {
+  --bg: #f5f5f5; --panel: #ffffff; --panel-2: #f1f3f2; --ink: #202124; --muted: #5f6368; --line: #dadce0;
+  --accent: #00796b; --accent-ink: #ffffff; --accent-2: #00695c; --gold: #7a5800; --input-bg: #ffffff; --h1-ink: #202124;
+  --nav-bg: #ffffff; --nav-ink: #202124; --nav-muted: #5f6368; --nav-hover: #eef4f3; --nav-line: #e0e0e0; --nav-on: #00695c; --nav-on-ink: #ffffff;
+  --nav-sel-bg: #dff1ee; --nav-sel-ink: #00574c; --top-bg: #00796b; --top-ink: #ffffff; --top-muted: #d7f2ee; --top-line: #00695c;
+  --sk-pri-bg: #c63c10; --sk-pri-ink: #ffffff; --focus: #00796b; --shadow-ink: #dadce0;
+  --card-shadow: 0 1px 2px rgb(60 64 67 / 0.25), 0 1px 3px 1px rgb(60 64 67 / 0.12);
+}
+:root[data-era-skin='plano'][data-theme='dark'][data-cb] {
+  --bg: #121212; --panel: #1e1e1e; --panel-2: #2a2a2a; --ink: #e8eaed; --muted: #b0b4b8; --line: #3c4043;
+  --accent: #4db6ac; --accent-ink: #00201c; --accent-2: #80cbc4; --gold: #e6c060; --input-bg: #181818; --h1-ink: #f1f3f4;
+  --nav-bg: #1a1a1a; --nav-ink: #e8eaed; --nav-muted: #a8adb2; --nav-hover: #262626; --nav-line: #333333; --nav-on: #4db6ac; --nav-on-ink: #00201c;
+  --nav-sel-bg: #123f3a; --nav-sel-ink: #a7e3dc; --top-bg: #00473f; --top-ink: #ffffff; --top-muted: #c5ebe6; --top-line: #00332d;
+  --sk-pri-bg: #ff8a65; --sk-pri-ink: #2a0e04; --focus: #4db6ac; --shadow-ink: #000000;
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 2px 6px 2px rgb(0 0 0 / 0.25);
+}
+/* --- Vidro 2020–40: vidro fosco sobre noite violeta e ciano; de dia, vidro claro --- */
+:root[data-era-skin='vidro'][data-theme='dark'][data-cb] {
+  --bg: #0c0a18; --panel: #1a1630; --panel-2: #241f3f; --ink: #f3f1ff; --muted: #bcb5dc; --line: #3e3866;
+  --accent: #c0b0ff; --accent-ink: #170f36; --accent-2: #dcd2ff; --gold: #f3cf6b; --input-bg: #14112a; --h1-ink: #ffffff;
+  --nav-bg: #0f0c20; --nav-ink: #ece9ff; --nav-muted: #aca5cf; --nav-hover: #1c1838; --nav-line: #2c2650; --nav-on: #c0b0ff; --nav-on-ink: #170f36;
+  --nav-sel-bg: #2a2450; --nav-sel-ink: #ffffff; --top-bg: #120f26; --top-ink: #f3f1ff; --top-muted: #bcb5dc; --top-line: #2c2650;
+  --sk-pri-bg: #c0b0ff; --sk-pri-ink: #170f36; --focus: #8ef0ff; --shadow-ink: #05040c;
+  --card-shadow: 0 8px 30px rgb(0 0 0 / 0.35); --sk-glow-a: rgb(124 92 255 / 0.28); --sk-glow-b: rgb(40 200 220 / 0.18);
+}
+:root[data-era-skin='vidro'][data-theme='light'][data-cb] {
+  --bg: #eceefa; --panel: #ffffff; --panel-2: #f1effb; --ink: #17142b; --muted: #57527a; --line: #d6d2ee;
+  --accent: #5a3dd4; --accent-ink: #ffffff; --accent-2: #452bb0; --gold: #6e5200; --input-bg: #ffffff; --h1-ink: #110e22;
+  --nav-bg: #f6f5fd; --nav-ink: #17142b; --nav-muted: #57527a; --nav-hover: #ebe8fa; --nav-line: #dcd8f0; --nav-on: #5a3dd4; --nav-on-ink: #ffffff;
+  --nav-sel-bg: #e6e0ff; --nav-sel-ink: #3a22a8; --top-bg: #ffffff; --top-ink: #17142b; --top-muted: #57527a; --top-line: #dcd8f0;
+  --sk-pri-bg: #5a3dd4; --sk-pri-ink: #ffffff; --focus: #5a3dd4; --shadow-ink: #d6d2ee;
+  --card-shadow: 0 8px 30px rgb(60 40 140 / 0.10); --sk-glow-a: rgb(124 92 255 / 0.16); --sk-glow-b: rgb(40 200 220 / 0.14);
+}
+
+/* alto contraste vale por cima de qualquer estilo: cinza de apoio = tinta, divisórias = tinta */
+:root[data-era-skin]:not([data-era-skin='estudio']).contrast { --muted: var(--ink); --line: var(--ink); --nav-muted: var(--nav-ink); --top-muted: var(--top-ink); }
+
+/* ================= 2. forma: fontes, cantos, bordas e caixa (os dois temas) ================= */
+:root[data-era-skin='gazeta'] {
+  --sans: 'Source Serif 4', Georgia, 'Times New Roman', serif; --font-head: 'Source Serif 4', Georgia, serif; --font-brand: 'UnifrakturMaguntia', 'Source Serif 4', serif;
+  --font-num: 'Source Serif 4', Georgia, serif;
+  --radius: 0; --sk-radius: 0; --sk-radius-btn: 0; --sk-radius-card: 0; --sk-btn-shadow: none;
+  --sk-tt: none; --sk-head-tt: uppercase; --sk-head-ls: 0.12em; --sk-head-w: 700;
+}
+:root[data-era-skin='deco'] {
+  --sans: 'Josefin Sans', 'Century Gothic', 'Futura', sans-serif; --font-head: 'Josefin Sans', 'Futura', sans-serif; --font-brand: 'Josefin Sans', sans-serif;
+  --font-num: 'Josefin Sans', sans-serif;
+  --radius: 0; --sk-radius: 0; --sk-radius-btn: 0; --sk-radius-card: 0; --sk-btn-shadow: none;
+  --sk-tt: uppercase; --sk-ls: 0.14em; --sk-head-tt: none; --sk-head-ls: 0.04em; --sk-head-w: 700;
+}
+:root[data-era-skin='jukebox'] {
+  --sans: 'Nunito', 'Trebuchet MS', 'Segoe UI', sans-serif; --font-head: 'Nunito', 'Trebuchet MS', sans-serif; --font-brand: 'Pacifico', 'Brush Script MT', cursive;
+  --font-num: 'Nunito', sans-serif;
+  --radius: 14px; --sk-radius: 14px; --sk-radius-btn: 999px; --sk-radius-card: 16px; --sk-bw: 2px; --sk-btn-shadow: 0 3px 0 rgb(0 0 0 / 0.22);
+  --sk-head-w: 900;
+}
+:root[data-era-skin='hifi'] {
+  --sans: 'Barlow Semi Condensed', 'Helvetica Neue', Arial, sans-serif; --font-head: 'Fraunces', 'Cooper Black', Georgia, serif; --font-brand: 'Fraunces', Georgia, serif;
+  --font-num: 'Fraunces', Georgia, serif;
+  --radius: 8px; --sk-radius: 8px; --sk-radius-btn: 6px; --sk-radius-card: 10px; --sk-bw: 2px; --sk-btn-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.28);
+  --sk-head-w: 900;
+}
+:root[data-era-skin='fosforo'] {
+  --sans: 'VT323', 'Cascadia Mono', 'DejaVu Sans Mono', monospace; --font-head: 'Silkscreen', 'VT323', monospace; --font-brand: 'Silkscreen', monospace;
+  --font-num: 'VT323', monospace; --mono: 'VT323', 'DejaVu Sans Mono', monospace;
+  --radius: 0; --sk-radius: 0; --sk-radius-btn: 0; --sk-radius-card: 0; --sk-btn-shadow: none;
+  --sk-tt: uppercase; --sk-ls: 0.04em; --sk-head-w: 700;
+}
+:root[data-era-skin='janelas'] {
+  --sans: Arial, 'Liberation Sans', 'Helvetica Neue', Helvetica, sans-serif; --font-head: Arial, 'Liberation Sans', sans-serif; --font-brand: 'Silkscreen', monospace;
+  --font-num: 'Silkscreen', monospace;
+  --radius: 0; --sk-radius: 0; --sk-radius-btn: 0; --sk-radius-card: 0; --sk-bw: 2px; --sk-btn-shadow: none;
+  --sk-head-w: 700;
+}
+:root[data-era-skin='portal'] {
+  --sans: Verdana, 'DejaVu Sans', Tahoma, Geneva, sans-serif; --font-head: Verdana, 'DejaVu Sans', Tahoma, sans-serif; --font-brand: Verdana, 'DejaVu Sans', sans-serif;
+  --font-num: Verdana, 'DejaVu Sans', sans-serif;
+  --radius: 3px; --sk-radius: 3px; --sk-radius-btn: 3px; --sk-radius-card: 0; --sk-btn-shadow: none;
+  --sk-head-w: 700;
+}
+:root[data-era-skin='plano'] {
+  --sans: 'Roboto', 'Helvetica Neue', Arial, sans-serif; --font-head: 'Roboto', Arial, sans-serif; --font-brand: 'Roboto', sans-serif; --font-num: 'Roboto', sans-serif;
+  --radius: 4px; --sk-radius: 4px; --sk-radius-btn: 4px; --sk-radius-card: 4px; --sk-bw: 0px; --sk-btn-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  --sk-tt: uppercase; --sk-ls: 0.06em; --sk-head-w: 400;
+}
+:root[data-era-skin='vidro'] {
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; --font-head: 'Inter', system-ui, sans-serif; --font-brand: 'Inter', sans-serif; --font-num: 'Inter', sans-serif;
+  --radius: 14px; --sk-radius: 14px; --sk-radius-btn: 999px; --sk-radius-card: 20px; --sk-btn-shadow: none;
+  --sk-head-w: 800;
+}
+
+/* ================= 3. componentes (uma camada para os 9 estilos; só lê os tokens) ================= */
+/* a condição fica em :where() (peso de só um :root): ganha das regras antigas iguais e perde para as assinaturas da seção 4 */
+/* base */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) body { background: var(--bg); color: var(--ink); font-family: var(--sans); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(main h1, main h2, main h3, main h4, main .ph27-title, .modal h2, .modal h3, .modal header h2) { font-family: var(--font-head); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) main .ph27-title { font-weight: var(--sk-head-w); color: var(--h1-ink); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.card > h3:first-child, .card > header h3, section > h3:first-child, .c27 > .c27-h h3, .places31-h) { font-family: var(--font-head); text-transform: var(--sk-head-tt); letter-spacing: var(--sk-head-ls); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.kpi27-v, .app > .topbar .money b, .app > .topbar .rep, .num.big, .stat b) { font-family: var(--font-num); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) main .ph27-text::after { background: var(--accent); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) a { color: var(--accent); }
+
+/* barra do topo */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar { background: var(--top-bg); color: var(--top-ink); border-bottom: 2px solid var(--top-line); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar :is(.muted, small) { color: var(--top-muted); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar > :is(* + .date, .money, .rep) { border-left-color: var(--top-line); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar .btn:not(.primary) { background: transparent; color: var(--top-ink); border-color: var(--top-line); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar .btn:not(.primary):hover:not(:disabled) { background: transparent; color: var(--top-ink); border-color: var(--top-ink); box-shadow: inset 0 -3px 0 var(--top-ink); } /* sem clarear o fundo: o contraste do texto não cai */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar .money b:not(.bad) { color: inherit; }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar .icon { color: var(--top-ink); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar .m23-tmenu > summary { background: transparent; color: var(--top-ink); border-color: var(--top-line); border-radius: var(--sk-radius-btn); }
+
+/* menu lateral */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav, :root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav.nav25 { background: var(--nav-bg); color: var(--nav-ink); border-right-color: var(--nav-line); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav.nav25 .nav-head { color: var(--nav-ink); border-radius: var(--sk-radius); text-transform: var(--sk-tt); letter-spacing: var(--sk-ls); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav.nav25 .nav-head:hover { background: var(--nav-hover); color: var(--nav-ink); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav.nav25 :is(.nav-group.open > .nav-head, .nav-head.on) { background: var(--nav-sel-bg); color: var(--nav-sel-ink); border-color: var(--nav-sel-bg); border-left-color: var(--nav-on); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .nav-brand21 b { font-family: var(--font-brand); color: var(--nav-ink); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav :is(.nav-util25, .nav31-util) { color: var(--nav-muted); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav :is(.nav-util25, .nav31-util):hover { color: var(--nav-ink); background: var(--nav-hover); }
+
+/* conteúdo: cabeçalho, KPIs, cartões, tabelas */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) main { background: var(--bg); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.card, section.card, .modal) { background: var(--panel); border-color: var(--line); border-radius: var(--sk-radius-card); box-shadow: var(--card-shadow); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .kpi27 { background: var(--panel); border: var(--sk-bw) solid var(--line); border-radius: var(--sk-radius); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .kpi27-l { letter-spacing: max(var(--sk-ls), 0.06em); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.tbl, table) th { color: var(--muted); border-bottom-color: var(--line); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.tbl, table) td { border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(input, select, textarea) { background: var(--input-bg); color: var(--ink); border-color: var(--line); border-radius: var(--sk-radius); font-family: var(--sans); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .modal header { background: var(--panel-2); border-radius: var(--sk-radius-card) var(--sk-radius-card) 0 0; }
+
+/* abas */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .tabs button { background: var(--panel); color: var(--ink); border-color: var(--line); border-radius: var(--sk-radius-btn); text-transform: var(--sk-tt); letter-spacing: var(--sk-ls); font-family: var(--sans); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .tabs button:hover:not(:disabled) { background: var(--panel-2); color: var(--ink); border-color: var(--accent); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.tabs button.on, main .tabs-wrap > .tabs > button.on, main .hub .tabs > button.on, .ck21 .tabs button.on) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: var(--sk-btn-shadow); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .tabs button.on .badge { background: var(--accent-ink); color: var(--accent); }
+
+/* botões e estados: hover, foco, desabilitado e bloqueado com motivo */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .btn { background: var(--panel-2); color: var(--ink); border: var(--sk-bw) solid var(--line); border-radius: var(--sk-radius-btn); font-family: var(--sans); text-transform: var(--sk-tt); letter-spacing: var(--sk-ls); }
+:root[data-era-skin='plano'] .btn:not(.primary) { border: 1px solid var(--line); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .btn:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--panel-2) 80%, var(--accent)); color: var(--ink); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.btn.primary, .btn-split > .btn.primary + .btn) { background: var(--sk-pri-bg); color: var(--sk-pri-ink); border-color: var(--sk-pri-bg); box-shadow: var(--sk-btn-shadow); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .btn.primary:hover:not(:disabled) { background: var(--sk-pri-bg); color: var(--sk-pri-ink); box-shadow: var(--sk-btn-shadow), inset 0 0 0 2px var(--sk-pri-ink); } /* anel em vez de clarear: o contraste do texto não cai */
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .btn.ghost { background: transparent; }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.btn[aria-pressed='true'], .sc31-seg .btn[aria-pressed='true']) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .btn.ghost:hover:not(:disabled) { background: var(--panel-2); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.btn, button, summary, a, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .topbar :is(.btn, button):focus-visible { outline-color: var(--top-ink); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .app > .nav :is(button, a):focus-visible { outline-color: var(--nav-ink); outline-offset: -3px; }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) :is(.btn, .tabs button):disabled { cursor: not-allowed; opacity: 1; color: var(--muted); background: var(--panel-2); border-style: dashed; box-shadow: none; }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .lk31-off { opacity: 1; }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .lk31-why { color: var(--warn); }
+:root:where([data-era-skin]:not([data-era-skin='estudio'])) .lk31-cond { color: var(--muted); }
+
+/* ================= 4. assinaturas de cada época ================= */
+/* --- Gazeta: réguas duplas de jornal, títulos em versalete, botões de linha --- */
+:root[data-era-skin='gazeta'] .topbar { border-bottom: 3px double var(--top-line); }
+:root[data-era-skin='gazeta'] .topbar .brand b, :root[data-era-skin='gazeta'] .nav-brand21 b { text-transform: none; letter-spacing: 0; font-size: 1.25rem; font-weight: 400; }
+:root[data-era-skin='gazeta'] .app > .nav.nav25 .nav-head .lbl { font-variant: small-caps; letter-spacing: 0.06em; }
+:root[data-era-skin='gazeta'] main .ph27-title { text-transform: uppercase; letter-spacing: 0.06em; }
+:root[data-era-skin='gazeta'] main .ph27-sub { font-style: italic; }
+:root[data-era-skin='gazeta'] main .ph27-eyebrow { color: var(--accent); letter-spacing: 0.3em; }
+:root[data-era-skin='gazeta'] :is(.card, section.card) { border: 1px solid var(--ink); box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px var(--line); }
+:root[data-era-skin='gazeta'] .kpi27 { border: 0; border-left: 1px solid var(--ink); background: transparent; }
+:root[data-era-skin='gazeta'] .kpi27-l { font-style: italic; text-transform: none; letter-spacing: 0.02em; }
+:root[data-era-skin='gazeta'] .tabs { border-bottom: 3px double var(--ink); }
+:root[data-era-skin='gazeta'] .tabs button, :root[data-era-skin='gazeta'] .ck21 .tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; font-variant: small-caps; letter-spacing: 0.08em; box-shadow: none; }
+:root[data-era-skin='gazeta'] :is(.tabs button.on, main .tabs-wrap > .tabs > button.on, .ck21 .tabs button.on) { background: transparent; color: var(--accent); border-color: transparent; border-bottom-color: var(--accent); box-shadow: none; }
+:root[data-era-skin='gazeta'] .btn { font-variant: small-caps; letter-spacing: 0.06em; background: transparent; border-color: var(--ink); }
+:root[data-era-skin='gazeta'] :is(table, .tbl) th { font-variant: small-caps; letter-spacing: 0.06em; border-bottom: 3px double var(--ink); }
+
+/* --- Déco: molduras douradas duplas, raios de sol no cabeçalho, tudo em caixa-alta espaçada --- */
+:root[data-era-skin='deco'] .topbar { border-bottom: 1px solid var(--accent); box-shadow: 0 3px 0 var(--bg), 0 4px 0 var(--accent); }
+:root[data-era-skin='deco'] .nav-brand21 b { letter-spacing: 0.18em; }
+:root[data-era-skin='deco'] main .ph27 { text-align: center; }
+:root[data-era-skin='deco'] main .ph27-text::after { margin-inline: auto; }
+:root[data-era-skin='deco'] main .ph27-title::before, :root[data-era-skin='deco'] main .ph27-title::after { content: '◆'; font-size: 0.45em; vertical-align: middle; margin: 0 0.4em; color: var(--accent); }
+:root[data-era-skin='deco'] :is(.card, section.card) { border: 1px solid var(--accent); box-shadow: inset 0 0 0 4px var(--panel), inset 0 0 0 5px color-mix(in srgb, var(--accent) 55%, var(--panel)); }
+:root[data-era-skin='deco'] .ck27-page > .ph27, :root[data-era-skin='deco'] main > .ph27 { background: repeating-conic-gradient(from 0deg at 50% 0%, color-mix(in srgb, var(--accent) 7%, transparent) 0deg 4deg, transparent 4deg 8deg); padding: var(--sp-4); border: 1px solid var(--accent); }
+:root[data-era-skin='deco'] .kpi27 { text-align: center; align-items: center; border-color: var(--accent); }
+:root[data-era-skin='deco'] .tabs button { background: transparent; border-color: var(--accent); }
+:root[data-era-skin='deco'] .btn { background: transparent; border-color: var(--accent); }
+:root[data-era-skin='deco'] .btn.primary { clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); padding-inline: 1.3rem; }
+
+/* --- Jukebox: faixa xadrez sob o topo, cartões com tampa colorida, pílulas, título com sombra amarela --- */
+:root[data-era-skin='jukebox'] .topbar { border-bottom: 0; box-shadow: 0 10px 0 -2px transparent; }
+:root[data-era-skin='jukebox'] .topbar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px; pointer-events: none; background: repeating-conic-gradient(var(--ink) 0 25%, var(--panel) 0 50%) 0 0 / 10px 10px; }
+:root[data-era-skin='jukebox'] .topbar { position: relative; z-index: 3; }
+:root[data-era-skin='jukebox'] main { padding-top: 14px; }
+:root[data-era-skin='jukebox'] .topbar .brand b, :root[data-era-skin='jukebox'] .nav-brand21 b { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 1.3rem; }
+:root[data-era-skin='jukebox'] main .ph27-title { text-shadow: 3px 3px 0 var(--nav-on); }
+:root[data-era-skin='jukebox'] .kpi27 { border-top: 6px solid var(--accent); }
+:root[data-era-skin='jukebox'] .kpi27:nth-child(even) { border-top-color: var(--top-bg); }
+:root[data-era-skin='jukebox'] :is(.card, section.card) { border-width: 2px; }
+:root[data-era-skin='jukebox'] .app > .nav.nav25 .nav-head { border-radius: 999px; }
+:root[data-era-skin='jukebox'] .tabs { border-bottom: 0; }
+
+/* --- Hi-Fi: alumínio escovado no topo, frisos de madeira no menu, faixa de três cores, títulos gordos --- */
+:root[data-era-skin='hifi'] .topbar { background: linear-gradient(180deg, color-mix(in srgb, var(--top-bg) 70%, #fff) 0%, var(--top-bg) 45%, color-mix(in srgb, var(--top-bg) 88%, #000) 100%); border-bottom: 2px solid #1c140c; }
+:root[data-era-skin='hifi'] .topbar .btn:not(.primary) { background: #1c140c; color: #f7e7cc; border-color: #000; box-shadow: inset 0 -2px 0 #000; }
+:root[data-era-skin='hifi'] .topbar .btn:not(.primary):hover:not(:disabled) { background: #3a2a1a; color: #fff3df; }
+:root[data-era-skin='hifi'] .app > .nav.nav25 { background: repeating-linear-gradient(90deg, var(--nav-bg) 0 7px, color-mix(in srgb, var(--nav-bg) 88%, #000) 7px 9px); }
+:root[data-era-skin='hifi'] .ck27-page > .ph27, :root[data-era-skin='hifi'] main > .ph27 { padding-bottom: var(--sp-3); border-bottom: 9px solid transparent; border-image: linear-gradient(180deg, var(--accent) 0 33%, transparent 33% 44%, #e0601a 44% 77%, transparent 77% 88%, #b33a1a 88%) 1; }
+:root[data-era-skin='hifi'] main .ph27-title { letter-spacing: -0.01em; }
+:root[data-era-skin='hifi'] .btn.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--sk-pri-bg) 80%, #fff), var(--sk-pri-bg)); }
+
+/* --- Fósforo: varredura de tubo, brilho, prompt C:\SELO> com cursor, colchetes nos botões --- */
+:root[data-era-skin='fosforo'] body { font-size: 18px; }
+:root[data-era-skin='fosforo'][data-theme='dark'] main { background-image: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px); }
+:root[data-era-skin='fosforo'][data-theme='dark'] :is(main, .topbar, .app > .nav) { text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 45%, transparent); }
+:root[data-era-skin='fosforo'] main .ph27-title::before { content: 'C:\\SELO> '; font-size: 0.6em; opacity: 0.85; }
+:root[data-era-skin='fosforo'] main .ph27-title::after { content: '█'; margin-left: 0.15em; animation: sk31-blink 1.1s steps(1) infinite; }
+:root[data-era-skin='fosforo'].reduced-motion main .ph27-title::after { animation: none; }
+@keyframes sk31-blink { 50% { opacity: 0; } }
+:root[data-era-skin='fosforo'] .btn:not(.icon)::before { content: '[ '; }
+:root[data-era-skin='fosforo'] .btn:not(.icon)::after { content: ' ]'; }
+:root[data-era-skin='fosforo'] :is(.topbar, .tabs, .app > .nav) .btn:not(.icon)::before, :root[data-era-skin='fosforo'] :is(.topbar, .tabs, .app > .nav) .btn:not(.icon)::after { content: none; }
+:root[data-era-skin='fosforo'] .kpi27-v { font-size: 1.6rem; }
+:root[data-era-skin='fosforo'] .app > .nav.nav25 .nav-head .lbl { font-family: var(--font-head); font-size: 0.8rem; }
+:root[data-era-skin='fosforo'] .tabs button { font-family: var(--font-head); font-size: 0.75rem; }
+
+/* --- Janelas 95: chanfro em relevo, barra de título azul, área de trabalho verde-azulada em volta --- */
+:root[data-era-skin='janelas'] main { box-shadow: inset 0 0 0 6px var(--sk-desk); }
+:root[data-era-skin='janelas'] :is(.btn, .tabs button, .kpi27) { border-style: solid; border-color: var(--sk-hi) var(--sk-lo) var(--sk-lo) var(--sk-hi); }
+:root[data-era-skin='janelas'] :is(.btn:active:not(:disabled), .tabs button.on) { border-color: var(--sk-lo) var(--sk-hi) var(--sk-hi) var(--sk-lo); }
+:root[data-era-skin='janelas'] .kpi27 { border-color: var(--sk-lo) var(--sk-hi) var(--sk-hi) var(--sk-lo); background: var(--input-bg); }
+:root[data-era-skin='janelas'] :is(.card, section.card, .modal) { border: 2px solid; border-color: var(--sk-hi) var(--sk-lo) var(--sk-lo) var(--sk-hi); }
+:root[data-era-skin='janelas'] :is(.tabs button.on, main .tabs-wrap > .tabs > button.on, .ck21 .tabs button.on) { background: var(--panel); color: var(--ink); font-weight: 700; box-shadow: none; }
+:root[data-era-skin='janelas'] .ck27-page > .ph27 .ph27-title, :root[data-era-skin='janelas'] main > .ph27 .ph27-title, :root[data-era-skin='janelas'] .modal > header { background: linear-gradient(90deg, var(--sk-title-a), var(--sk-title-b)); color: var(--sk-title-ink); }
+:root[data-era-skin='janelas'] main .ph27-title { font-size: 1.15rem; padding: 3px 8px; }
+:root[data-era-skin='janelas'] .modal > header :is(h2, h3, .icon, button) { color: var(--sk-title-ink); }
+:root[data-era-skin='janelas'] .c27 > .c27-h h3 { background: linear-gradient(90deg, var(--sk-title-a), var(--sk-title-b)); color: var(--sk-title-ink); padding: 2px 8px; }
+:root[data-era-skin='janelas'] .topbar { border-bottom: 2px solid var(--sk-lo); box-shadow: inset 0 -1px 0 var(--sk-hi); }
+:root[data-era-skin='janelas'] .app > .nav.nav25 { border-right: 2px solid var(--sk-lo); }
+
+/* --- Portal 2000: topo em degradê azul, links sublinhados, caixas com faixa azul, botão laranja "beta" --- */
+:root[data-era-skin='portal'] .topbar { background: linear-gradient(180deg, color-mix(in srgb, var(--top-bg) 80%, #fff), var(--top-bg) 60%); border-bottom: 3px solid #e86a00; }
+:root[data-era-skin='portal'] .app > .nav.nav25 .nav-head .lbl { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-era-skin='portal'] .app > .nav.nav25 :is(.nav-group.open > .nav-head, .nav-head.on) { border-left: 4px solid #e86a00; }
+:root[data-era-skin='portal'] .app > .nav.nav25 :is(.nav-group.open > .nav-head, .nav-head.on) .lbl { text-decoration: none; font-weight: 700; }
+:root[data-era-skin='portal'] .btn.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--sk-pri-bg) 82%, #fff), var(--sk-pri-bg)); }
+:root[data-era-skin='portal'] .tabs { border-bottom: 3px solid var(--accent); }
+:root[data-era-skin='portal'] .tabs button { border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--panel), var(--panel-2)); }
+:root[data-era-skin='portal'] .tabs button:not(.on) { color: var(--accent); text-decoration: underline; }
+:root[data-era-skin='portal'] .c27 > .c27-h h3 { background: var(--accent); color: var(--accent-ink); padding: 3px 10px; }
+:root[data-era-skin='portal'] .kpi27-l { background: var(--panel-2); margin: calc(-1 * var(--sp-2)) calc(-1 * var(--sp-3)) 2px; padding: 2px var(--sp-3); text-transform: none; color: var(--ink); }
+
+/* --- Plano: elevação no lugar de borda, abas sublinhadas em caixa-alta, topo verde-petróleo --- */
+:root[data-era-skin='plano'] :is(.card, section.card, .kpi27) { border: 0; box-shadow: var(--card-shadow); }
+:root[data-era-skin='plano'] .topbar { border-bottom: 0; box-shadow: 0 2px 4px rgb(0 0 0 / 0.2); }
+:root[data-era-skin='plano'] .app > .nav.nav25 .nav-head { text-transform: none; letter-spacing: 0; border-radius: 0 999px 999px 0; border-left-color: transparent; }
+:root[data-era-skin='plano'] main .ph27-title { font-weight: 400; }
+:root[data-era-skin='plano'] .tabs, :root[data-era-skin='plano'] .ck21 .tabs { gap: 0; border-bottom: 1px solid var(--line); }
+:root[data-era-skin='plano'] .tabs button, :root[data-era-skin='plano'] .ck21 .tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--muted); font-weight: 500; box-shadow: none; }
+:root[data-era-skin='plano'] :is(.tabs button.on, main .tabs-wrap > .tabs > button.on, .ck21 .tabs button.on) { background: transparent; color: var(--accent); border-bottom-color: var(--accent); box-shadow: none; }
+:root[data-era-skin='plano'] .tabs button:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: transparent; border-bottom-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* --- Vidro: fundo com brilhos, painéis translúcidos com desfoque, pílulas e degradê no botão principal --- */
+:root[data-era-skin='vidro'] body, :root[data-era-skin='vidro'] main { background: radial-gradient(60% 50% at 85% 10%, var(--sk-glow-b), transparent 70%), radial-gradient(55% 45% at 20% 95%, var(--sk-glow-a), transparent 70%), var(--bg); background-attachment: fixed; }
+:root[data-era-skin='vidro'] :is(.card, section.card, .kpi27, .ck27-page > .ph27) { background: color-mix(in srgb, var(--panel) 82%, transparent); backdrop-filter: blur(14px); border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); }
+:root[data-era-skin='vidro'] .ck27-page > .ph27, :root[data-era-skin='vidro'] main > .ph27 { padding: var(--sp-4); border-radius: var(--sk-radius-card); }
+:root[data-era-skin='vidro'] .tabs { border-bottom: 0; background: color-mix(in srgb, var(--panel) 70%, transparent); border-radius: 999px; padding: 4px; display: inline-flex; border: 1px solid var(--line); }
+:root[data-era-skin='vidro'] .tabs button { background: transparent; border-color: transparent; }
+:root[data-era-skin='vidro'] :is(.tabs button.on, main .tabs-wrap > .tabs > button.on, .ck21 .tabs button.on) { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+:root[data-era-skin='vidro'] .btn.primary { background: linear-gradient(90deg, var(--sk-pri-bg), color-mix(in srgb, var(--sk-pri-bg) 70%, #8ef0ff)); }
+:root[data-era-skin='vidro'] .topbar { border-bottom: 1px solid var(--top-line); backdrop-filter: blur(10px); }
+
+/* ================= 5. Opções: grade de estilos com amostra, aviso de troca na virada ================= */
+.skin31 { border: 2px solid var(--accent); border-radius: var(--radius); padding: var(--sp-3); margin: var(--sp-2) 0; display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.skin31 > legend { font-weight: 700; padding: 0 var(--sp-1); }
+.skin31-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.skin31-card { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 6px; min-height: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); cursor: pointer; font: inherit; }
+.skin31-card:hover { border-color: var(--accent); }
+.skin31-card[aria-checked='true'] { border: 2px solid var(--accent); padding: 5px; box-shadow: inset 0 0 0 1px var(--accent); }
+.skin31-card b { font-size: 0.95rem; }
+.skin31-card small { color: var(--muted); font-size: 0.75rem; }
+.skin31-sw { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 14px 18px; height: 32px; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.skin31-sw i { display: block; }
+.skin31-sw i:first-child { grid-column: 1 / 3; }
+.skin31-sw.auto { display: block; background: linear-gradient(90deg, #7d2214, #dcb664, #0d6b63, #f2a33c, #5cff76, #000080, #1f56b8, #00796b, #c0b0ff); }
+.skin31-aa { font-weight: 700; font-size: 1.05rem; margin-right: 4px; }
+.skin31-note { color: var(--muted); font-size: 0.85rem; margin: 0; }
+/* aviso na virada da época: faixa com ações (voltar ao anterior / fixar este / Opções) */
+.skin31-notice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); max-width: min(720px, calc(100vw - 24px)); padding: var(--sp-2) var(--sp-3); background: var(--panel); color: var(--ink); border: 2px solid var(--accent); border-radius: var(--radius); box-shadow: var(--card-shadow); pointer-events: auto; }
+.skin31-notice p { margin: 0; flex: 1 1 220px; min-width: 0; }
+.skin31-notice .row { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.skin31-notice.out { opacity: 0; transition: opacity 0.4s; }
+/* troca animada (opcional, respeita movimento reduzido) */
+:root.skin31-fade body { animation: sk31-fade 0.45s ease-out; }
+:root.skin31-fade.reduced-motion body { animation: none; }
+@keyframes sk31-fade { from { opacity: 0.35; } to { opacity: 1; } }
