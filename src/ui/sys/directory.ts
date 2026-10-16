@@ -200,9 +200,11 @@ function goneRows(s: GameState): HTMLElement {
       pager(pages));
   }
   const want = (a: Act) => F.gone === 'all' ? a.status === 'retired' || a.status === 'split' || a.status === 'hiatus' : F.gone === 'split' ? a.status === 'split' : F.gone === 'retired' ? a.status === 'retired' : a.status === 'hiatus';
-  const list = Object.values(s.acts).filter((a) => want(a) && (F.family === 'any' || familyOf(a.genre) === F.family) && (F.market === 'any' || cityById[a.city]?.market === F.market) && (!q || a.name.toLowerCase().includes(q) || a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q))));
+  // r31 F #1/#5: encerrados também só os que você conhece ou que são públicos; ordem pela fama mostrada
+  const knG = knownActIds31(s);
+  const list = Object.values(s.acts).filter((a) => want(a) && (knG.has(a.id) || shownFame31(s, a.id) >= 0) && (F.family === 'any' || familyOf(a.genre) === F.family) && (F.market === 'any' || cityById[a.city]?.market === F.market) && (!q || a.name.toLowerCase().includes(q) || (seen(s, a.id, 'members') && a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q)))));
   const catalog = (a: Act) => a.releases.reduce((t0, id) => t0 + (s.releases[id]?.totalUnits ?? 0), 0);
-  list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.careerEnd - a.careerEnd : b.fame - a.fame);
+  list.sort((a, b) => F.sort === 'name' ? a.name.localeCompare(b.name) : F.sort === 'debut' ? b.careerEnd - a.careerEnd : shownFame31(s, b.id) - shownFame31(s, a.id) || a.name.localeCompare(b.name));
   const SG = sortSpec27<Act>('dir-gone', { name: (a) => a.name, genre: (a) => genreName(a.genre), career: (a) => a.debutYear, status: (a) => (a.deceased ? 0 : a.status === 'split' ? 1 : a.status === 'retired' ? 2 : 3),
     recs: (a) => a.releases.length, sales: catalog, back: (a) => (a.deceased ? null : a.members.filter((m) => s.persons[m]?.alive).length || null) });
   const sorted = SG.apply(list);
