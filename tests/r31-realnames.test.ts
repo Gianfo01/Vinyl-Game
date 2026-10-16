@@ -2,6 +2,7 @@
 // Todo id registrado precisa existir nos dados (pelo espaço do id); ids não se repetem no arquivo; cada nome real tem
 // sempre a mesma homenagem; homenagem diferente do nome real.
 import { readFileSync } from 'node:fs';
+import '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas (cenários)
 import { describe, expect, it } from 'vitest';
 import { REALNAMES31, REALNAME_SPACES31, realName31, type RealSpace31 } from '../src/data/realnames31';
 import { FESTIVALS, MEDIA } from '../src/data/catalog';
@@ -9,6 +10,9 @@ import { AWARDS, PLATFORMS } from '../src/data/content';
 import { REAL_ACTS } from '../src/data/realnames';
 import { CITIES } from '../src/data/world';
 import { CUR31 } from '../src/data/cur31';
+import { SCENARIOS17 } from '../src/sim/sys/scenarios17';
+import { SCENARIOS23 } from '../src/sim/sys/scenarios23';
+import { SCENARIOS } from '../src/sim/sys/live/scenarios';
 
 const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   act: (k) => REAL_ACTS[Number(k)] !== undefined,
@@ -18,6 +22,7 @@ const EXISTS: Record<RealSpace31, (key: string) => boolean> = {
   award: (k) => AWARDS.some((a) => a.id === k),
   city: (k) => CITIES.some((c) => c.id === k),
   cur: (k) => CUR31.some((c) => c.id === k), // R31 (Z): base nova com curadoria
+  mode: (k) => [...SCENARIOS17, ...SCENARIOS23, ...SCENARIOS].some((c) => c.id === k), // R31 (X): modos e cenários
 };
 
 describe('registro de nomes reais (W0-RN)', () => {
