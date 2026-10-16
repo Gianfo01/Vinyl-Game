@@ -9,7 +9,8 @@ estendidos aos lugares que já existem.
 
 - **Quando sorteia.** O conteúdo do mês de cada lugar é sorteado no motor, nunca ao abrir a tela:
   - na virada do mês (gancho `month`), para o mês que começa;
-  - na nova partida (gancho `newgame`).
+  - na primeira semana da partida, para o primeiro mês (gancho `week`). Na nova partida os índices de pessoas e papéis
+    ainda estão sendo montados, e ler gente cedo demais deixava caches velhos (o r27-consistency pegou isso).
   O sorteio usa o fluxo rng19 próprio `vit31`, registrado em `STREAMS19`. Explorar, abrir painéis e listar não sorteiam
   nem mudam o estado (há teste para isso).
 - **Estado.** Fica em `x4.vit31` e guarda só referências ao mundo: lançamento, ato, pessoa, chave de ficha, selo,

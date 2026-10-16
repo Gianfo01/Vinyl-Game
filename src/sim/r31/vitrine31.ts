@@ -3,7 +3,7 @@
 //
 //  • Cada lugar (loja de discos, instrumentos, casa de shows, bar, estúdio, rádio, hotel, gravadora rival, beco, leilão,
 //    feira/sebo da época, aeroporto) tem um CONTEÚDO DO MÊS sorteado NA VIRADA DO MÊS, no motor (gancho 'month', fluxo
-//    rng19 'vit31'); a tela só lê. Nova partida também sorteia (gancho 'newgame'), para o primeiro mês não ficar vazio.
+//    rng19 'vit31'); a tela só lê. O primeiro mês da partida é sorteado na primeira semana (gancho 'week').
 //  • Catálogo por época × país × porte do lugar × estado do mundo (`VIT_DEFS31`). Cada item tem: o que é (texto lido
 //    do estado na hora, bilíngue), desenho (`art`), ações — SEMPRE funções que já existem no jogo (comprar pela loja,
 //    comprar no beco, ouvir, pôr no radar, conhecer, ação do lugar, lance no leilão, grampo do submundo, denúncia, ficha,
@@ -481,8 +481,10 @@ export function pirateLoss31(s: GameState): number {
 registerSimHook('newgame', 'vit31', (s) => {
   restockAuction31(s);
   restockShops31(s, false);
-  if (vitOn31(s)) rollVit31(s, ymIdx31(s));
 });
+// o primeiro mês da partida é sorteado na primeira semana (no motor): na nova partida os índices de pessoas e papéis
+// ainda estão sendo montados por outros ganchos, e ler gente cedo demais deixaria esses caches velhos
+registerSimHook('week', 'vit31', (s) => { if (vitOn31(s) && (peekVit31(s)?.ym ?? -1) < ymIdx31(s)) rollVit31(s, ymIdx31(s)); });
 registerSimHook('month', 'vit31', (s) => {
   // as fontes migradas giram sempre (com o interruptor desligado o jogo fica como era)
   restockAuction31(s);

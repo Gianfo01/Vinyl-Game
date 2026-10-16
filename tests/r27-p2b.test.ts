@@ -118,7 +118,7 @@ describe('r27 P2B — modo rápido intacto', () => {
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(3963998575);
     // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/DECISOES.md e docs/r31/vit.md): o conteúdo do mês dos lugares
     // é sorteado na virada no fluxo rng19 próprio 'vit31' (só rng muda: caixa, turnês e acts iguais). Com `vit31` desligado volta 205718420.
-    expect(hashString(rngSnapshot19(AFTER))).toBe(260191872);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(2894103788);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
