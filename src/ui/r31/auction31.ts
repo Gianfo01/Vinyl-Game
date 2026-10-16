@@ -28,6 +28,7 @@ import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
+import { vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
 import { blitPx31, moreBtn31, runGo31, sceneView31 } from './scene31';
 import { auction31Model, cityName31, ROOM_NAME31, type Auc31 } from './auction31model';
 
@@ -292,7 +293,7 @@ const fmtIntro = (m: Auc31): L => l(`A sala muda com a época (${ROOM_NAME31[m.r
 
 registerArea({ id: 'auction31', label: l('Casa de leilões', 'Auction house'), icon: 'vault', key: '',
   badge: (s) => { const se = auction31Model(s); return se.today ? 1 : undefined; },
-  render: (s) => h('div', null, h('h2', null, T(l('Casa de leilões', 'Auction house'))), auction31View(s)) });
+  render: (s) => h('div', null, h('h2', null, T(l('Casa de leilões', 'Auction house'))), auction31View(s), vitStrip31(s, 'auction')) });
 
 registerQuick31({
   id: 'q.auction31', verb: 'open', icon: 'vault', kinds: ['city'], passive: true, label: l('Casa de leilões (catálogo e lances)', 'Auction house (catalogue and bids)'),

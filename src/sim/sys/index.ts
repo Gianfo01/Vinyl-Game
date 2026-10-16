@@ -399,4 +399,5 @@ import '../r31/learn31'; // R31 onda 4 (R): amostras duráveis dos lançamentos 
 import './extras31'; // R31 onda 4 (N): extras — conquistas novas, ovos do Edison, bandas de ficção no mundo, cultura pop/memes/bolhas, Arara, filme, praça Fossati
 import './gente31'; // R31 onda 4 (I): gente de verdade nos lugares — donos, equipe, músicos fazendo bico (vaga muda de mãos na virada do mês)
 import './under31'; // R31 onda 4 (S): submundo no Nosso mundo — fachadas, sala dos fundos, mural, delegacia, mercado negro, baile
+import '../r31/vitrine31'; // R31 onda 4 (VIT): vitrine do mês — motor único do conteúdo mensal dos lugares (gera o estoque da loja, do beco e dos leilões)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

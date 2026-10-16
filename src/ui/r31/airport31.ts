@@ -22,6 +22,7 @@ import { furniture } from '../pixel/sprites';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
+import { vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
 import { blitPx31, moreBtn31, runGo31, sceneView31 } from './scene31';
 import { airport31Model, type Air31 } from './airport31model';
 
@@ -293,7 +294,7 @@ export function airport31View(s: GameState): HTMLElement {
 }
 
 registerArea({ id: 'airport31', label: l('Aeroporto e porto', 'Airport and port'), icon: 'globe', key: '',
-  render: (s) => h('div', null, h('h2', null, T(airport31Model(s).name)), airport31View(s)) });
+  render: (s) => h('div', null, h('h2', null, T(airport31Model(s).name)), airport31View(s), vitStrip31(s, 'airport')) });
 
 registerQuick31({
   id: 'q.airport31', verb: 'open', icon: 'globe', kinds: ['city'], passive: true, label: l('Aeroporto (partidas, alfândega, cais)', 'Airport (departures, customs, pier)'),

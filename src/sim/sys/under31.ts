@@ -472,9 +472,11 @@ export function bmMonth31(s: GameState): { sold: number; seized: number } {
     }
     if (Object.keys(st.vis).length > 60) for (const [k, w] of Object.entries(st.vis)) if (s.week - w > 8) delete st.vis[k];
   }
-  if (sw<boolean>(s, 'under31')) restockBm31(s);
   return res;
 }
+/** r31 (VIT): revenda/apreensão continuam no gancho do submundo; o estoque novo do beco é uma das fontes da vitrine do mês
+ *  (r31/vitrine31), que chama isto na virada do mês. */
+export function restockUnder31(s: GameState): void { if (sw<boolean>(s, 'under31')) restockBm31(s); }
 registerSimHook('month', 'under31', (s) => { bmMonth31(s); });
 
 // ---------------------------------------------------------------- baile da facção
