@@ -19,7 +19,7 @@ import { countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
 import { registerDeadline } from '../calendar19';
 import { registerExt4, registerSimHook } from '../ext4';
-import { emitFact } from '../facts17';
+import { emitFact, onFact } from '../facts17';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { removeObj } from '../r31/object';
 import { registerEditable, registerRunnable } from '../r31/editor';
@@ -173,7 +173,6 @@ function caught(s: GameState, c: Cargo31, bribe: boolean): L {
     : stolen ? fmtL(l('Alfândega apreende {n} {p}: peça roubada numa carga de {c}.', 'Customs seizes {n} {p}: a stolen piece in a cargo from {c}.'), { n: c.n, p: port, c: s.config.companyName })
       : fmtL(l('{c} é multada {p} por tentar passar {n} sem pagar o imposto.', '{c} is fined {p} for trying to bring in {n} without paying duty.'), { c: s.config.companyName, p: port, n: c.n });
   emitFact(s, { kind: 'customs_seizure', actors: ['player'], place: s.config.homeCity, severity: stolen || bribe ? 45 : 30, visibility: 'public', tags: ['customs31', stolen ? 'crime' : 'tax', ...(bribe ? ['bribe'] : [])], text, src: 'customs31', data: { c: c.id } });
-  headline19(s, text, stolen || bribe ? 2 : 1);
   if (stolen) { revert(s, c, l('Receita (apreensão)', 'Customs (seizure)')); finish(s, c, 'seized', fmtL(l('apreendida; multa de {f}.', 'seized; {f} fine.'), { f: usd(fine) })); }
   else finish(s, c, 'cleared', fmtL(l('liberada depois da multa de {f} (imposto incluído).', 'cleared after a {f} fine (duty included).'), { f: usd(fine) }));
   notify(s, fmtL(l('Alfândega: {n} — {r}', 'Customs: {n} — {r}'), { n: c.n, r: c.res! }), 'bad');
@@ -253,6 +252,9 @@ export function customsMonth31(s: GameState): void {
   st.q = st.q.filter((c) => !c.done || s.week - c.done < 26).slice(-30);
 }
 registerSimHook('month', 'customs31', (s) => { customsMonth31(s); });
+
+/** A apreensão vira manchete do jornal (o fato é a fonte; o jornal é ouvinte). */
+onFact('customs_seizure', (s, f) => { headline19(s, f.text, f.severity >= 45 ? 2 : 1); }, 'customs31:news');
 
 IMPORT31.f = (s, o) => {
   if (!customsOn31(s)) return false;
