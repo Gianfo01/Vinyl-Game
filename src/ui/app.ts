@@ -116,6 +116,8 @@ import { PURPOSE27, kpis27 } from './ps/ui27model';
 import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em nomes abre o menu de ações
 // R31 (onda 1, A): menu "mundo primeiro" (entradas ≤ 10 + Lugares + Listas), Hoje, cabeçalho único e topo enxuto
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
+import { NAV5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
+import { chordLabel5 } from './r31/keys5';
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
 import { settingsTrn31, transition31, trnBack31, trnGate31 } from './r31/trn31'; // R31 onda 5 (TRN): transições entre telas
@@ -183,6 +185,10 @@ export function boot(el: HTMLElement): void {
     view: () => ({ menuView: view27(), textScale: store.prefs.textScale, density: (store.prefs as { dens20?: string }).dens20, reducedMotion: store.prefs.reducedMotion, audio: !!(store.prefs as { audio28?: boolean }).audio28 }) });
   initRouter15((r) => { if (store.game && r.area === LISTS31) { goLists31(r.tab?.[0] === LKEY31 ? r.tab[1] : undefined); return true; } if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (store.game && (REDIRECT29[r.area] || !areaExists(r.area))) { const x = resolve29(r.area); if (x && (x.util || (x.area && areaExists(x.area)))) { open29(x); return true; } } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
+  // R31 onda 5 (TEC): ganchos da navegação nova (só usados com exp5.nav ligado)
+  NAV5.go = (x) => open29({ area: x.area, tab: x.tab }); NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings();
+  NAV5.paper = () => (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined); // caixa de entrada aberta: as teclas dela ganham
+  NAV5.help = (rows) => shortcutsHelp15(rows.map((r) => ({ key: chordLabel5(r.key), label: t(r.label) })));
   document.addEventListener('vtn31-go', (e) => { if (!store.game) return; e.preventDefault(); go((e as CustomEvent<string>).detail); }); // R31 (O): destino do painel rápido/favoritos
   titleScreen(root, startGame);
 }
@@ -206,6 +212,7 @@ function onKey(e: KeyboardEvent): void {
   const ck = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
   if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')) return;
   if (document.querySelector('.overlay')) return;
+  if (keyNav5(store.game, e)) { e.preventDefault(); return; } // R31 onda 5 (TEC): só com exp5.nav ligado
   if (ck) {
     e.preventDefault();
     palette();

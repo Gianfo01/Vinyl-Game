@@ -788,7 +788,29 @@ function beamBridge(k: K, truss: boolean): Foot {
 // ---------------------------------------------------------------- catálogo
 
 interface Spec { base: Base; draw: (k: K) => Foot }
+/** R31 (GEO): Elevador Lacerda (Salvador) — escarpa da Cidade Alta com casario no alto, torre do elevador na Cidade
+ *  Baixa e passarela até o topo. Art déco creme desde a reforma de 1930; antes, torre de ferro treliçada. */
+function lacerda(k: K): Foot {
+  const deco = k.year >= 1930, rock = C('#8a7660'), green = C('#4e8a44');
+  // escarpa (fundo à esquerda) com mata na encosta e casario colonial no alto
+  ibox(k, -1.5, -0.2, 0.8, 1.1, 0, 30, rock, { top: green, tex: (_sd, s, z) => (noise(Math.floor(s / 2), Math.floor(z / 3), k.seed + 5) < 0.35 ? tn(green, 2) : (Math.floor(s) + Math.floor(z / 4)) % 5 === 0 ? tn(rock, 2) : 0) });
+  const roofs = [C('#c8603c'), C('#e8c070'), C('#d88a6a')], walls = [C('#f0e4cc'), C('#e8c8a0'), C('#a8d0c8'), C('#f4ecdc')];
+  [[-1.9, -0.9], [-1.2, -0.9], [-1.9, 0.3], [-1.2, 0.2]].forEach(([u, v], i) => ibox(k, u, v, 0.3, 0.3, 30, 6 + (i % 2) * 2, walls[i % walls.length], { top: roofs[i % roofs.length], tex: winTex(C('#4a3a30'), 4, 3, { from: 2 }) }));
+  // passarela do topo da torre até a escarpa
+  const tw = deco ? C('#ece2cc') : C('#7a7e86');
+  ibox(k, -0.4, 0.15, 0.75, 0.2, 27, 4, tw, { tex: winTex(C('#3a4a5a'), 4, 2, { from: 1 }) });
+  // torre do elevador
+  const tex: Tex = deco
+    ? (_sd, s, z, len) => (s > 0.5 && s < len - 0.5 && Math.floor(s) % 3 === 1 && z > 4 && z < 36 ? C('#c8bca0') : Math.floor(z) % 12 === 0 ? C('#f8f2e2') : 0)
+    : (_sd, s, z) => ((Math.floor(s) + Math.floor(z)) % 4 === 0 || (Math.floor(s) - Math.floor(z) + 40) % 4 === 0 ? C('#4a4e56') : C('#9aa0a8'));
+  ibox(k, 0.55, 0.15, 0.38, 0.38, 0, 36, tw, { tex });
+  ibox(k, 0.55, 0.15, 0.48, 0.48, 36, 7, tw, { top: deco ? C('#d8cfb8') : C('#5a5e66'), tex: winTex(C('#3a4a5a'), 7, 2, { from: 2, to: 5 }) });
+  if (deco) { const [x, y] = ip(k, 0.55, 0.15, 44); k.p.rect(x - 1, y - 3, 2, 3, tw); lamp(k, x, y - 4, REDL); }
+  for (const z of [38, 40]) { const [x, y] = ip(k, 0.35, 0.6, z); lamp(k, x, y, WARM); lamp(k, x + 3, y - 1, WARM); }
+  return { r1: 1.6, r2: 1.2, h: 46 };
+}
 const BESPOKE: Record<string, Spec> = {
+  ssa_lacerda: { base: 'plaza', draw: lacerda },
   lon_bigben: { base: 'plaza', draw: (k) => bigBen(k) },
   lon_tbridge: { base: 'none', draw: towerBridge },
   lon_eye: { base: 'plaza', draw: wheel },

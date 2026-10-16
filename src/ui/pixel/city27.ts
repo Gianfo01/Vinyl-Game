@@ -32,6 +32,7 @@ import { bldPop19, lotPop19, upkeep19, type PopAct19 } from '../../sim/sys/world
 import { scandal17 } from '../../sim/scandal17';
 import { LMW27B, LMX27B } from './lmdata27';
 import { ownsLot31 } from '../../sim/sys/lots31';
+import { mapGeo31, waterSides31, type Geo31 } from '../../data/geo31';
 
 // ---------------------------------------------------------------- utilidades determinísticas
 
@@ -97,24 +98,30 @@ export function era27(year: number): Era27 {
 }
 
 export type CityK27 = 'bay' | 'towers' | 'brick' | 'stone' | 'plain';
-const BAY27 = new Set(['rio', 'salvador', 'florianopolis', 'cape_town', 'honolulu', 'sydney', 'havana', 'san_juan', 'naples', 'lisbon', 'recife', 'fortaleza', 'kingston', 'cartagena', 'zanzibar', 'wellington', 'vancouver', 'hong_kong', 'santo_domingo', 'port_of_spain', 'barcelona', 'marseille', 'istanbul', 'athens', 'beirut', 'dakar', 'durban', 'miami', 'sao_luis', 'belem', 'auckland', 'suva']);
-const TOWERS27 = new Set(['new_york', 'chicago', 'hong_kong', 'shanghai', 'tokyo', 'sao_paulo', 'toronto', 'dubai', 'singapore', 'seoul', 'osaka', 'kuala_lumpur', 'houston', 'atlanta', 'philadelphia', 'san_francisco', 'bangkok', 'jakarta', 'mumbai']);
+export const BAY27 = new Set(['rio', 'salvador', 'florianopolis', 'cape_town', 'honolulu', 'sydney', 'havana', 'san_juan', 'naples', 'lisbon', 'recife', 'fortaleza', 'kingston', 'cartagena', 'zanzibar', 'wellington', 'vancouver', 'hong_kong', 'santo_domingo', 'port_of_spain', 'barcelona', 'marseille', 'istanbul', 'athens', 'beirut', 'dakar', 'durban', 'miami', 'sao_luis', 'belem', 'auckland', 'suva']);
+export const TOWERS27 = new Set(['new_york', 'chicago', 'hong_kong', 'shanghai', 'tokyo', 'sao_paulo', 'toronto', 'dubai', 'singapore', 'seoul', 'osaka', 'kuala_lumpur', 'houston', 'atlanta', 'philadelphia', 'san_francisco', 'bangkok', 'jakarta', 'mumbai']);
 /** r27 (I2): cidades de pedra clara e mansarda (Paris e afins). */
-const STONE27 = new Set(['paris', 'madrid', 'vienna', 'budapest', 'prague', 'rome', 'milan', 'buenos_aires', 'brussels', 'bordeaux', 'lyon', 'turin', 'montevideo', 'santiago']);
+export const STONE27 = new Set(['paris', 'madrid', 'vienna', 'budapest', 'prague', 'rome', 'milan', 'buenos_aires', 'brussels', 'bordeaux', 'lyon', 'turin', 'montevideo', 'santiago']);
 /** r27 (I2): morro com favela só onde existe (Rio, Salvador); o resto da baía tem encosta verde. */
 const FAVELA27 = new Set(['rio', 'salvador']);
-/** r27 (I2): altura dos morros da baía (Rio = 1; porto baixo como Sydney ~0,35). */
-const HILLS27: Record<string, number> = { rio: 1, salvador: 0.55, cape_town: 1, hong_kong: 0.9, wellington: 0.7, naples: 0.8, sydney: 0.32, miami: 0, recife: 0.15, fortaleza: 0.15, havana: 0.25, barcelona: 0.55, lisbon: 0.5, istanbul: 0.45, vancouver: 0.9, honolulu: 0.7, kingston: 0.75 };
-const BRICK27 = new Set(['london', 'manchester', 'liverpool', 'dublin', 'glasgow', 'bristol', 'birmingham', 'sheffield', 'boston', 'amsterdam', 'rotterdam', 'hamburg', 'copenhagen', 'brussels', 'cleveland', 'detroit']);
+export const BRICK27 = new Set(['london', 'manchester', 'liverpool', 'dublin', 'glasgow', 'bristol', 'birmingham', 'sheffield', 'boston', 'amsterdam', 'rotterdam', 'hamburg', 'copenhagen', 'brussels', 'cleveland', 'detroit']);
 export interface CityLook27 { k: CityK27; hill: boolean; sea: boolean; tall: boolean; brick: boolean; palms: boolean; wall: string[];
-  /** r27 (I2): favela nas encostas (só Rio/Salvador, a partir de 1940) e altura relativa dos morros */ favela: boolean; hillAmp: number }
+  /** r27 (I2): favela nas encostas (só Rio/Salvador, a partir de 1940) e altura relativa dos morros */ favela: boolean; hillAmp: number;
+  /** R31 (GEO): geografia real (de que lado fica a água, a praia, o rio e os morros) — src/data/geo31.ts */ geo: Geo31;
+  /** R31 (GEO): horizonte por metade (esquerda = oeste, direita = norte): água e altura dos morros */ hz: { wl: boolean; wr: boolean; hl: number; hr: number } }
 /** Cara da cidade: morro + mar (Rio), torres (Nova York), tijolo e chaminés (Londres) ou genérica. */
 export function cityLook27(city: string, lat: number, year: number): CityLook27 {
   const k: CityK27 = BAY27.has(city) ? 'bay' : TOWERS27.has(city) ? 'towers' : BRICK27.has(city) ? 'brick' : STONE27.has(city) ? 'stone' : 'plain';
   const trop = Math.abs(lat) < 30;
   const wall = k === 'brick' ? ['#8a4430', '#7a3a2a', '#9a5a40', '#6a4a40'] : k === 'bay' ? ['#f0d8a8', '#e8a888', '#a8d0c8', '#f4ecdc', '#e8c868'] : k === 'towers' ? (year < 1950 ? ['#a87a5a', '#8a6a5a', '#c8b8a0'] : ['#8a9aa8', '#5a6a80', '#c8ccd0', '#a87a5a']) : k === 'stone' ? ['#e4d6b8', '#d8c8a6', '#ece2cc', '#cdbb98'] : ['#d0c0a0', '#b8a888', '#a0a8b0', '#c89878'];
-  const hillAmp = k === 'bay' ? HILLS27[city] ?? 0.6 : 0;
-  return { k, hill: hillAmp > 0.2, sea: k === 'bay', tall: k === 'towers' && year >= 1915, brick: k === 'brick', palms: k === 'bay' && trop || (trop && Math.abs(lat) < 26), wall, favela: FAVELA27.has(city) && year >= 1940, hillAmp };
+  // R31 (GEO): água e morros vêm da tabela de geografia (o mapa não é mais cercado de mar por todos os lados)
+  const geo = mapGeo31(city), ws = waterSides31(geo); // R31 (GEO): orientada (porto na água, boemia na orla)
+  const hAmp = (sd: 'n' | 'w') => geo.hills.find((x) => x.side === sd)?.amp ?? 0;
+  const hillAmp = Math.max(0, ...geo.hills.map((x) => x.amp));
+  const sea = geo.water.some((w) => (w.k === 'sea' || w.k === 'bay') && w.o < 5);
+  const hz = { wl: ws.has('w'), wr: ws.has('n'), hl: hAmp('w'), hr: hAmp('n') };
+  const favela = (FAVELA27.has(city) || geo.hills.some((x) => x.favela)) && year >= 1940;
+  return { k, hill: hillAmp > 0.2, sea, tall: k === 'towers' && year >= 1915, brick: k === 'brick', palms: (k === 'bay' || sea) && trop || (trop && Math.abs(lat) < 26), wall, favela, hillAmp, geo, hz };
 }
 
 // ---------------------------------------------------------------- ícone por tipo

@@ -21,7 +21,12 @@ const tn = (c: Col, n: number): Col => ramp20(c)[n];
 /** O que o horizonte precisa do ambiente (é um recorte de Env27, de city27.ts). */
 export interface SkyEnv27 { year: number; month: number; city: string; lat: number; climate: 'tropical' | 'arid' | 'mild' | 'cold'; season: 'winter' | 'spring' | 'summer' | 'autumn'; snow: boolean; rain: boolean }
 /** O que o horizonte precisa da cara da cidade (recorte de CityLook27). */
-export interface SkyLook27 { sea: boolean; hillAmp: number; favela: boolean; wall: string[] }
+export interface SkyLook27 { sea: boolean; hillAmp: number; favela: boolean; wall: string[];
+  /** R31 (GEO): horizonte por metade — esquerda (oeste do mapa) e direita (norte): água e altura dos morros; `sx` = x da
+   *  divisa (o canto norte do mapa). Sem isso, o horizonte antigo (água e morros em toda a largura). */
+  hz?: { wl: boolean; wr: boolean; hl: number; hr: number; sx?: number } }
+/** R31 (GEO): a coluna x do horizonte fica sobre o lado com água? */
+const wetX27 = (look: SkyLook27 | undefined, x: number, W: number): boolean => !look?.hz ? true : x < (look.hz.sx ?? W / 2) ? look.hz.wl : look.hz.wr;
 
 // ---------------------------------------------------------------- regiões, alturas e relevo (dados)
 
@@ -229,12 +234,13 @@ export function skyPlan27(city: string, year: number, W: number, seed: number, l
   const cx = cc * W, cwp = Math.max(46, cw * W);
   const env = (x: number) => { const t = (x - cx) / cwp; return Math.exp(-t * t * 1.4); };
   const low = Math.max(6, Math.min(14, hmax * 0.5));
-  const water = look?.sea ? 6 : WATER27[city] ?? 0;
+  const water = look?.hz ? (look.hz.wl || look.hz.wr ? (look.sea ? 6 : WATER27[city] ?? 4) : 0) : look?.sea ? 6 : WATER27[city] ?? 0;
+  const wetBoth = !look?.hz || (look.hz.wl && look.hz.wr);
   const sigs = sigs27(city, year);
   const blds: SkyB27[] = [];
   const isTall = (h: number) => h > low * 1.25;
   for (const L of [0, 1, 2] as const) {
-    if (L === 2 && water) break; // cidade do outro lado da água: sem casario perto
+    if (L === 2 && water && wetBoth) break; // cidade do outro lado da água: sem casario perto (R31: só onde há água)
     let x = -3 - Math.floor(noise(L, 1, s) * 6);
     while (x < W + 3) {
       const r1 = noise(x, 11 + L, s), r2 = noise(x, 13 + L, s), r3 = noise(x, 17 + L, s), r4 = noise(x, 19 + L, s);
@@ -243,7 +249,8 @@ export function skyPlan27(city: string, year: number, W: number, seed: number, l
       if (L === 0) { w = 4 + Math.floor(r1 * 6); h = Math.round(4 + (hmax * 0.8 - 4) * e * (0.35 + 0.65 * r2) + low * 0.5 * r4); }
       else if (L === 1) { w = 5 + Math.floor(r1 * 7); h = Math.round(3 + (hmax - 3) * e * (0.2 + 0.8 * r2 * r2) + low * 0.6 * r4); }
       else { w = 7 + Math.floor(r1 * 8); h = Math.round(low * (0.55 + 0.55 * r2)); }
-      if (look?.sea && L > 0 && Math.abs(x - W / 2) > W * 0.26) { x += w + 2; continue; } // baía: só o centro tem prédios
+      if (look?.sea && wetBoth && L > 0 && Math.abs(x - W / 2) > W * 0.26) { x += w + 2; continue; } // baía: só o centro tem prédios
+      if (L === 2 && water && wetX27(look, x + w / 2, W)) { x += w; continue; } // R31 (GEO): casario perto só na metade de terra
       const tall = L < 2 && isTall(h);
       let mat = mat27(reg, year, tall, r3);
       if (year < GLASS_YEAR27 && GLASS_MATS27.has(mat)) mat = 'modern';
@@ -276,7 +283,7 @@ export function skyPlan27(city: string, year: number, W: number, seed: number, l
   const climate = lat !== undefined && Math.abs(lat) < 30;
   const palms = TROPIC_PALMS.has(city) || (climate && (reg === 'carib' || reg === 'africa' || reg === 'br'));
   const terr = TER27[city] ?? defaultTerr27(reg, s);
-  return { reg, blds, acc, sigs, terr, water, trees: !water, palms, hmax };
+  return { reg, blds, acc, sigs, terr, water, trees: !water || !wetBoth, palms, hmax };
 }
 /** Relevo genérico por região: colinas suaves ao longe, nunca nada colado no topo. */
 function defaultTerr27(reg: Reg27, s: number): Ter27[] {
@@ -564,7 +571,7 @@ export function renderSky27(o: SkyOpts27): { p: Px; g: Px } {
   // relevo genérico de baía (morros do Rio, encostas verdes) atrás da água
   const wH = plan.water;
   P.base = H - 1 - wH;
-  if (look.sea && look.hillAmp > 0) bayHills(P, look, e, s);
+  if (look.hz ? look.hz.hl > 0 || look.hz.hr > 0 : look.sea && look.hillAmp > 0) bayHills(P, look, e, s);
   // horizonte distante
   P.k = 0.5 + rainK; P.layer = 0;
   for (const b of plan.blds) if (b.layer === 0) building(P, b, wallPal);
@@ -580,13 +587,15 @@ export function renderSky27(o: SkyOpts27): { p: Px; g: Px } {
   P.k = 0.22 + rainK;
   for (const g1 of plan.sigs) if (g1.layer === 1) g1.d(P, sigX27(g1.x, W, av));
   // água (na frente da outra margem)
-  if (wH) water(P, e, wH, cols);
+  if (wH) water(P, e, wH, cols, look);
   P.base = H - 1;
+  // R31 (GEO): na metade de terra (água só do outro lado) o chão do horizonte continua até a borda (nada flutua)
+  if (wH && look.hz && !(look.hz.wl && look.hz.wr)) landStrip27(P, e, wH, look);
   // casario perto + linha de árvores/palmeiras
   P.k = 0.14 + rainK * 0.6; P.layer = 2;
   for (const b of plan.blds) if (b.layer === 2) building(P, b, wallPal);
   for (const g2 of plan.sigs) if (g2.layer === 2) g2.d(P, sigX27(g2.x, W, av));
-  if (plan.trees) treeline(P, e, s, plan.palms);
+  if (plan.trees) treeline(P, e, s, plan.palms, wH ? (x) => !wetX27(look, x, W) : undefined);
   else if (plan.palms) { P.base = H - 1 - Math.max(0, wH - 2); for (let i = 0; i < W / 40; i++) palm(P, Math.round((i + noise(i, 71, s)) * 40), 7 + Math.round(noise(i, 72, s) * 4)); P.base = H - 1; }
   // estrelas e lua (só luz: aparecem à noite, nunca atrás de prédio ou nuvem)
   if (!cols.overcast) {
@@ -600,8 +609,12 @@ export function renderSky27(o: SkyOpts27): { p: Px; g: Px } {
 /** Morros da baía (Rio: sinos com costão de pedra e favela nas encostas; outras: encosta verde). */
 function bayHills(P: Paint, look: SkyLook27, e: SkyEnv27, s: number): void {
   const W = P.W, amp = look.hillAmp;
-  const HILLS: [number, number, number][] = [[0.07, 48, 30], [0.24, 30, 24], [0.81, 40, 26], [0.97, 54, 24]];
-  const hAt = (x: number) => Math.max(0, ...HILLS.map(([c, hh, w]) => hh * amp * Math.exp(-(((x - c * W) / w) ** 2) * 1.6))) + (amp > 0 ? (noise(x >> 2, 1, s) - 0.5) * 1.6 : 0);
+  // R31 (GEO): morros só na metade do lado certo (esquerda = oeste do mapa, direita = norte), com a altura de cada lado
+  const sx = look.hz?.sx ?? W / 2, al = look.hz ? look.hz.hl : amp, ar = look.hz ? look.hz.hr : amp;
+  const HILLS: [number, number, number, number][] = look.hz
+    ? [[sx * 0.1, 48, 30, al], [sx * 0.42, 30, 24, al], [sx * 0.75, 40, 26, al * 0.8], [sx + (W - sx) * 0.3, 40, 26, ar * 0.8], [sx + (W - sx) * 0.62, 30, 24, ar], [sx + (W - sx) * 0.94, 54, 24, ar]]
+    : [[0.07 * W, 48, 30, amp], [0.24 * W, 30, 24, amp], [0.81 * W, 40, 26, amp], [0.97 * W, 54, 24, amp]];
+  const hAt = (x: number) => Math.max(0, ...HILLS.map(([c, hh, w, a]) => hh * a * Math.exp(-(((x - c) / w) ** 2) * 1.6))) + (amp > 0 ? (noise(x >> 2, 1, s) - 0.5) * 1.6 : 0);
   const roofs = [C('#c8603c'), C('#e8c070'), C('#f0ece0'), C('#d88a6a'), C('#b8b0a0')];
   P.k = 0.2 + (e.rain ? 0.1 : 0); P.layer = 1;
   const g0 = e.climate === 'tropical' ? C('#3e8c46') : C('#4e8a44');
@@ -628,13 +641,15 @@ function bayHills(P: Paint, look: SkyLook27, e: SkyEnv27, s: number): void {
 }
 
 /** Água: mais clara ao longe (reflete o céu), traços de brilho de 2 px; à noite, reflexos quentes. */
-function water(P: Paint, e: SkyEnv27, wH: number, c: SkyCols27): void {
+function water(P: Paint, e: SkyEnv27, wH: number, c: SkyCols27, look?: SkyLook27): void {
   const W = P.W, H = P.H;
+  const wet = (x: number) => wetX27(look, x, W);
   const deep = e.rain ? C('#3a6a8e') : e.climate === 'tropical' ? C('#2a86c4') : C('#2e78b4');
   const k0 = P.k; P.k = 0; P.layer = 2;
   for (let j = 0; j < wH; j++) {
     const y = H - wH + j, t = j / Math.max(1, wH - 1);
     for (let x = 0; x < W; x++) {
+      if (!wet(x)) continue;
       let col = mix(mix(deep, c.bot, 0.42), deep, t);
       if (j === 0) col = mix(c.bot, deep, 0.25);
       else if ((Math.floor(x / 2) * 7 + j * 13 + (x >> 4)) % 29 === 0) col = shade(col, 0.3);
@@ -646,11 +661,12 @@ function water(P: Paint, e: SkyEnv27, wH: number, c: SkyCols27): void {
 }
 
 /** Linha de árvores no pé do horizonte (copas em 3 tons; palmeiras no trópico; galhos nus no inverno frio). */
-function treeline(P: Paint, e: SkyEnv27, s: number, palms: boolean): void {
+function treeline(P: Paint, e: SkyEnv27, s: number, palms: boolean, only?: (x: number) => boolean): void {
   const W = P.W;
   const bare = e.season === 'winter' && (e.climate === 'cold' || e.climate === 'mild');
   const base = e.snow ? C('#5a6a5a') : e.climate === 'arid' ? C('#7a8a48') : e.climate === 'tropical' ? C('#2a7a36') : e.season === 'autumn' ? C('#b0782a') : bare ? C('#6a5a4a') : C('#3a7a3a');
   for (let x = 0; x < W; x++) {
+    if (only && !only(x)) continue;
     const cl = Math.floor(x / 6), r = noise(cl, 81, s);
     if (e.climate === 'arid' && r < 0.55) continue;
     if (r < 0.15) continue;
@@ -662,7 +678,21 @@ function treeline(P: Paint, e: SkyEnv27, s: number, palms: boolean): void {
       put(P, x, P.base - j, c);
     }
   }
-  if (palms) for (let i = 0; i < W / 34; i++) palm(P, Math.round((i + noise(i, 73, s)) * 34), 8 + Math.round(noise(i, 74, s) * 6));
+  if (palms) for (let i = 0; i < W / 34; i++) { const px = Math.round((i + noise(i, 73, s)) * 34); if (!only || only(px)) palm(P, px, 8 + Math.round(noise(i, 74, s) * 6)); }
+}
+/** R31 (GEO): faixa de chão distante na metade de terra quando só a outra metade tem água (telhados e copas no azulado da distância). */
+function landStrip27(P: Paint, e: SkyEnv27, wH: number, look: SkyLook27): void {
+  const W = P.W, H = P.H;
+  const g0 = e.snow ? C('#c8d4e0') : e.climate === 'arid' ? C('#a89a70') : C('#5a8458');
+  const roof = C('#9a8a7a');
+  for (let j = 0; j < wH; j++) for (let x = 0; x < W; x++) {
+    if (wetX27(look, x, W)) continue;
+    const y = H - wH + j, i = y * W + x;
+    if (P.occ[i]) continue;
+    const blk = Math.floor(x / 5), r = noise(blk, j >> 1, P.seed + 61);
+    const col = mix(r < 0.45 ? shade(roof, (x % 5 === 0 ? -0.15 : 0)) : g0, P.haze, 0.35 - j * 0.03);
+    P.p.d[i] = col | 0xff000000; P.occ[i] = 2;
+  }
 }
 
 // ---------------------------------------------------------------- cache e entrada (campus18px)
@@ -671,7 +701,7 @@ const CACHE27 = new Map<string, { p: Px; g: Px }>();
 /** Pinta céu e horizonte nas linhas [0, H) de `p` e `gl` (mesma largura). Cacheado por cidade/ano/tamanho/tempo. */
 export function paintSky27(p: Px, gl: Px, H: number, env: SkyEnv27, look: SkyLook27, seed: number, avoid: number[] = []): void {
   const W = p.w;
-  const key = `${env.city}|${env.year}|${env.climate}|${env.season}|${env.snow ? 1 : 0}${env.rain ? 1 : 0}|${W}x${H}|${seed}|${look.sea ? 1 : 0}${look.favela ? 1 : 0}${look.hillAmp}|${avoid.map(Math.round).join(',')}`;
+  const key = `${env.city}|${env.year}|${env.climate}|${env.season}|${env.snow ? 1 : 0}${env.rain ? 1 : 0}|${W}x${H}|${seed}|${look.sea ? 1 : 0}${look.favela ? 1 : 0}${look.hillAmp}|${look.hz ? `${+look.hz.wl}${+look.hz.wr}${look.hz.hl}${look.hz.hr}${Math.round(look.hz.sx ?? 0)}` : '-'}|${avoid.map(Math.round).join(',')}`;
   let hit = CACHE27.get(key);
   if (!hit) {
     hit = renderSky27({ W, H, env, look, seed, avoid });

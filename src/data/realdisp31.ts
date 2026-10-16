@@ -12,7 +12,9 @@
 
 export type DispPair31 = [from: string, to: string];
 
-const FAMILY_GUARD31 = /\b(Efro|Lucia|Sonia|Antonella|Gianluca|Fossati)\b/;
+// R31 (BASE-IT): protege o sobrenome e os prenomes sozinhos — não nomes reais de terceiros que só dividem o prenome
+// (Lucia Mannucci, Antonella Ruggiero, Gianluca Grignani vazavam com a exibição desligada)
+const FAMILY_GUARD31 = /\bFossati\b|^(Efro|Lucia|Sonia|Antonella|Gianluca)$/;
 const WORD = /[\p{L}\p{N}]+/gu;
 const firstWord = (s: string): string | undefined => { WORD.lastIndex = 0; const m = WORD.exec(s); return m ? m[0] : undefined; };
 const isWordChar = (c: string | undefined) => !!c && /[\p{L}\p{N}]/u.test(c);
