@@ -17,6 +17,7 @@ import { STAFF_ROLES } from '../../data/rules';
 import { cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { compatOf, deriveViews, viewsOf, playerViews, shiftPlayerViews, type Views } from '../beliefs';
 import { critRel } from '../criticrel';
+import { registerOpinionWeight, decayOpinions, hasOpinion, opine, opinionOf, opinionWhy, type OpEntry } from '../opinion';
 import { emitEvent, type EventDef } from '../events';
 import { deferEvents, registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import type { Act, Appearance, GameState, Person, StaffMember } from '../types';
@@ -24,13 +25,11 @@ import { fmtL, money, notify, playerActs, post, rememberListeners, staffAdjuster
 import { leaderFacets, leaderOf, leaders, type Leader } from './leaders10';
 import { backgroundById, life, playerPerson } from './life';
 import { ownerOf } from './people/owner';
-import { careerOf } from './people/staff';
 import { persona, playerTraitById } from './persona';
 import type { BackgroundId } from './life/data';
 import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
 import { actsOfPerson17 } from '../actidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
-import { actsNow27 } from '../tickcache27';
 
 // ---------------------------------------------------------------- esquema
 
@@ -77,9 +76,9 @@ export interface P13 {
 
 // ---------------------------------------------------------------- estado
 
-export interface Op13 { v: number; w: [number, number, number, L][] }
+/** r31 (W0-OP): a opinião saiu daqui para src/sim/opinion.ts (registro único 'op' do x4). */
+export type Op13 = OpEntry;
 export interface P13State {
-  op: Record<string, Op13>;
   /** barreiras enfrentadas / contornadas / aceitas por ato: [ano, modo] */
   bar: Record<string, [number, 'fight' | 'niche' | 'comply']>;
   /** cooldowns (semana) */
@@ -88,12 +87,12 @@ export interface P13State {
   ex: Record<string, string>;
 }
 declare module '../ext4' { interface Ext4 { persona13: P13State } }
-const fresh = (): P13State => ({ op: {}, bar: {}, cd: {}, ex: {} });
+const fresh = (): P13State => ({ bar: {}, cd: {}, ex: {} });
 registerExt4('persona13', fresh);
 export function p13(s: GameState): P13State {
   const x = s.x4 as unknown as { persona13?: P13State };
   const st = (x.persona13 ??= fresh());
-  st.op ??= {}; st.bar ??= {}; st.cd ??= {}; st.ex ??= {};
+  st.bar ??= {}; st.cd ??= {}; st.ex ??= {};
   return st;
 }
 
@@ -324,7 +323,7 @@ export function staffAdj13(s: GameState, st: StaffMember): { v: number; why: L[]
   const R = st.role;
   const at: Attr13 | null = R === 'anr' ? 'ear' : ['legal', 'manager', 'agent', 'sync'].includes(R) ? 'neg' : ['publicist', 'booking'].includes(R) ? 'cha' : ['admin', 'analyst', 'rights', 'tour_manager'].includes(R) ? 'mgmt' : null;
   if (at) { const d = (P.attrs[at] - 50) / 10; v += d; if (Math.abs(d) >= 1) why.push(fmtL(l('{n} {v}', '{n} {v}'), { n: ATTR13[at][0], v: P.attrs[at] })); }
-  const o = p13(s).op[`s:${st.id}`]?.v ?? 0;
+  const o = opinionOf(s, `s:${st.id}`); // r31: a mesma fonte da ficha (lealdade = 50 + op/2)
   if (o <= -25) { v -= 3; why.push(l('desmotivado(a) com você', 'demotivated with you')); }
   return { v: Math.round(clamp(v, -8, 8)), why };
 }
@@ -359,13 +358,14 @@ registerOfferMod('persona13', (s, act) => {
   return { delta: d, reason: fmtL(d > 0 ? l('Negociação: você ({m}) leva vantagem sobre {n} ({o}).', 'Negotiation: you ({m}) outplay {n} ({o}).') : l('Negociação: {n} ({o}) é mais duro(a) na mesa que você ({m}).', 'Negotiation: {n} ({o}) is tougher at the table than you ({m}).'), { m: me, n: ng.p.name, o: ng.neg }) };
 });
 registerOfferMod('persona13op', (s, act) => {
-  const ops = act.members.map((id) => p13(s).op[`p:${id}`]).filter(Boolean) as Op13[];
-  const world = p13(s).op['w:artists']?.v ?? 0;
-  const v = (ops.length ? ops.reduce((t, x) => t + x.v, 0) / ops.length : 0) + world;
+  // r31 (W0-OP): lê a mesma opinião que a ficha mostra (opinionOf), não um espelho paralelo
+  const ks = act.members.map((id) => `p:${id}`).filter((k) => hasOpinion(s, k));
+  const world = opinionOf(s, 'w:artists');
+  const v = (ks.length ? ks.reduce((t, k) => t + opinionOf(s, k), 0) / ks.length : 0) + world;
   const d = clamp(v / 400, -0.08, 0.06);
   if (Math.abs(d) < 0.01) return null;
-  const last = ops.flatMap((x) => x.w).sort((a, b) => b[0] * 12 + b[1] - a[0] * 12 - a[1])[0];
-  const why = last ? last[3] : p13(s).op['w:artists']?.w.slice(-1)[0]?.[3];
+  const last = ks.flatMap((k) => opinionWhy(s, k)).filter((w) => Math.sign(w[2]) === Math.sign(d)).sort((a, b) => b[0] * 12 + b[1] - a[0] * 12 - a[1])[0];
+  const why = last ? last[3] : opinionWhy(s, 'w:artists').slice(-1)[0]?.[3];
   return { delta: d, reason: fmtL(d > 0 ? l('Boa fama com quem negocia: {w}', 'Good name with them: {w}') : l('Lembram do que você fez: {w}', 'They remember what you did: {w}'), { w: why ?? l('o que se fala no meio', 'what the trade says') }) };
 });
 registerOfferMod('persona13pol', (s, act) => {
@@ -490,52 +490,17 @@ registerOfferMod('persona13owner', (s, act) => {
 
 // ---------------------------------------------------------------- opinião (ações → relações, com motivo)
 
-const pid0 = (s: GameState): string | undefined => playerPerson(s)?.id;
 
-/** Opinião atual sobre você: relação nativa do tipo (quando existe) ou o registro desta rodada. */
-export function opinionOf(s: GameState, key: string): number {
-  const [k, ...r] = key.split(':');
-  const id = r.join(':');
-  if (k === 'l') return leaders(s).L[id]?.rel.player ?? 0;
-  if (k === 'c') return critRel(s).rel[id] ?? 0;
-  if (k === 's') { const st = s.player.staff.find((x) => x.id === id); return st ? Math.round((careerOf(s, st).loyalty - 50) * 2) : 0; }
-  if (k === 'p') { const me = pid0(s); const p = s.persons[id]; if (p && me && p.rel[me] !== undefined) return Math.round(p.rel[me]); }
-  return Math.round(p13(s).op[key]?.v ?? 0);
-}
-
-/** Muda a opinião de alguém sobre você, ponderada pela personalidade, e guarda o motivo. */
-export function opine(s: GameState, key: string, d: number, why: L, o: { pol?: boolean } = {}): number {
-  if (key === 'player' || (key.startsWith('p:') && s.persons[key.slice(2)]?.isPlayer)) return 0; // ninguém tem opinião sobre si mesmo
+// r31 (W0-OP): opinionOf/opine/setOpinion vivem em src/sim/opinion.ts (fonte única); aqui só o peso da personalidade.
+export { opinionOf, opine, setOpinion } from '../opinion';
+registerOpinionWeight((s, key, d, o) => {
   const P = key.startsWith('w:') ? null : per13(s, key);
-  let k = 1;
-  if (P) {
-    const f = P.facets;
-    k = d < 0 ? 0.7 + f.teimosia / 250 + (100 - f.empatia) / 400 + (100 - f.paciencia) / 500 : 0.7 + f.empatia / 300 + f.generosidade / 500;
-    if (o.pol) k *= 0.4 + P.views.eng / 80;
-  }
-  const v = Math.round(d * k * 10) / 10;
-  if (!v) return 0;
-  const st = p13(s);
-  const e = (st.op[key] ??= { v: 0, w: [] });
-  e.v = clamp(e.v + v, -100, 100);
-  e.w.push([s.year, s.month, v, why]);
-  if (e.w.length > 6) e.w.shift();
-  const [kk, ...r] = key.split(':');
-  const id = r.join(':');
-  if (kk === 'l') { const L0 = leaders(s).L[id]; if (L0) L0.rel.player = clamp((L0.rel.player ?? 0) + v, -100, 100); }
-  else if (kk === 'c') critRel(s).rel[id] = clamp((critRel(s).rel[id] ?? 0) + v * 0.6, -100, 100);
-  else if (kk === 's') { const sm = s.player.staff.find((x) => x.id === id); if (sm) { const c = careerOf(s, sm); c.loyalty = clamp(c.loyalty + v * 0.5, 0, 100); } }
-  else if (kk === 'p') {
-    const p = s.persons[id];
-    const me = pid0(s);
-    if (p && me && me !== id) p.rel[me] = clamp((p.rel[me] ?? 0) + v, -100, 100);
-    const a = p && actsNow27(s).find((x) => x.members.includes(id) && x.owner === 'player');
-    if (a) a.trust = clamp(a.trust + v * 0.25, 0, 100);
-  }
-  const keys = Object.keys(st.op);
-  if (keys.length > 800) for (const x of keys.slice(0, keys.length - 800)) delete st.op[x];
-  return v;
-}
+  if (!P) return 1;
+  const f = P.facets;
+  let k = d < 0 ? 0.7 + f.teimosia / 250 + (100 - f.empatia) / 400 + (100 - f.paciencia) / 500 : 0.7 + f.empatia / 300 + f.generosidade / 500;
+  if (o.pol) k *= 0.4 + P.views.eng / 80;
+  return k;
+});
 const actOpine = (s: GameState, a: Act, d: number, why: L): void => { for (const id of a.members) if (s.persons[id]?.alive) opine(s, `p:${id}`, d, why); };
 const leaderKeyOfLabel = (s: GameState, lb: string): string | null => { const L0 = leaderOf(s, lb); return L0 ? `l:${L0.id}` : null; };
 const activeLeaders = (s: GameState): Leader[] => Object.values(leaders(s).L).filter((x) => x.st === 'active' && x.label && s.labels[x.label]);
@@ -795,7 +760,7 @@ registerSimHook('month', 'persona13', (s) => {
   const exk = Object.keys(st.ex);
   if (exk.length > 3000) for (const k of exk.slice(0, exk.length - 3000)) delete st.ex[k];
   // memória que esfria devagar
-  for (const e of Object.values(st.op)) e.v = Math.round(e.v * 0.985 * 10) / 10;
+  decayOpinions(s, 0.985);
   // salários atrasando quando o caixa está no vermelho
   if (s.player.cash < 0) for (const sm of s.player.staff) opine(s, `s:${sm.id}`, -2, l('salário atrasado: caixa no vermelho.', 'late salary: cash in the red.'));
   const r = rngFor(s, 'm');
@@ -813,11 +778,11 @@ registerSimHook('month', 'persona13', (s) => {
     break;
   }
   // rancor: líder muito contrariado fala mal de você
-  const g = activeLeaders(s).filter((L0) => (L0.rel.player ?? 0) <= -40 && cdOk(s, `grudge|${L0.id}`));
+  const g = activeLeaders(s).filter((L0) => opinionOf(s, `l:${L0.id}`) <= -40 && cdOk(s, `grudge|${L0.id}`));
   if (g.length && r.chance(0.1)) {
     const L0 = r.pick(g);
     st.cd[`grudge|${L0.id}`] = s.week + 104;
-    const w = st.op[`l:${L0.id}`]?.w.slice(-1)[0]?.[3] ?? l('velhas rusgas do mercado.', 'old market grudges.');
+    const w = opinionWhy(s, `l:${L0.id}`).slice(-1)[0]?.[3] ?? l('velhas rusgas do mercado.', 'old market grudges.');
     emitEvent(s, r, 'p13_grudge', { lk: `l:${L0.id}`, label: L0.label!, leaderName: L0.name, why: w.pt, whyEn: w.en });
   }
 });

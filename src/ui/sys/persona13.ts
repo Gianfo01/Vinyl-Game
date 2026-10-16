@@ -2,12 +2,14 @@
 // líderes rivais, equipe, críticos e mídia — com opinião sobre você (e por quê), barreiras históricas da
 // época e ações (presente, favor, elogio, crítica pública, declaração política).
 
+import { attrWidth, band, bandText } from '../../sim/know';
+import { opinionWhy } from '../../sim/opinion';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { viewsLabel } from '../../sim/beliefs';
 import {
   ATTR13, ATTR13_IDS, GIFT_COST, JOBS13, SEX13, SKIN13, askFavor, barriers13, facetName, favorBlock, giftBlock, imageWeight, labelNeg, negotiatorOf,
-  opinionOf, ownerBarrier, p13, per13, politicalStatement, publicStatement, sendGift, staffAdj13, type Barrier13,
+  opinionOf, ownerBarrier, per13, politicalStatement, publicStatement, sendGift, staffAdj13, type Barrier13,
 } from '../../sim/sys/persona13';
 import type { Act, GameState } from '../../sim/types';
 import { money } from '../../sim/util';
@@ -37,7 +39,7 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
   if (!P) return h('p', { class: 'muted small' }, '—');
   const self = P.kind === 'player';
   const op = self ? null : opinionOf(s, key === 'player' ? key : P.key);
-  const led = p13(s).op[P.key];
+  const led = { w: opinionWhy(s, P.key) };
   const say = (msg: L) => { toast(t(msg), 'info'); redraw?.(); rerender(); };
   const jobs = JOBS13.map((j) => ({ ...j, v: P.prof[j.id] ?? 0 })).sort((a, b) => b.v - a.v);
   const staff = P.kind === 'staff' ? s.player.staff.find((x) => `s:${x.id}` === P.key) : undefined;
@@ -48,15 +50,16 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
   // rodada 15: atributos e personalidade são privados — olheiros/relação (pessoas) ou convivência (indústria)
   const pid = P.kind === 'person' ? P.key.slice(2) : '';
   const kl = pid ? knownLevel(s, pid) : null;
-  const w13 = self || P.kind === 'staff' || kl?.mine ? 0 : kl ? [99, 30, 18, 10, 4, 0][Math.min(5, kl.priv)] : Math.abs(op ?? 0) >= 15 || (led?.w.length ?? 0) > 0 ? 6 : 24;
-  const sh = (v: number): string => (w13 >= 99 ? '?' : w13 ? `${Math.max(0, Math.round(v - w13 / 2))}–${Math.min(100, Math.round(v + w13 / 2))}` : String(v));
+  // r31 (W0-KN): largura e faixa vêm do sim (know.ts); a faixa nunca é centrada no valor real
+  const w13 = kl?.mine ? 0 : attrWidth(s, P.key, P.kind);
+  const sh = (v: number, f: string): string => bandText(band(s, P.key, `attrs.${f}`, v, w13));
   const seeTraits = !pid || !!kl?.mine || canSee(s, pid, 'traits') || (!kl && w13 <= 6);
   const seeViews = !pid || canSee(s, pid, 'life');
   return h('div', { class: 'p13' },
     h('div', { class: 'grid2' },
       h('div', null,
         h('h4', null, t(l('Atributos', 'Attributes'))),
-        h('ul', { class: 'attr-list' }, ATTR13_IDS.map((k) => h('li', { title: t(ATTR13[k][1]) }, h('span', null, t(ATTR13[k][0])), w13 ? null : bar(P.attrs[k], 100, tone(P.attrs[k])), h('b', null, sh(P.attrs[k]))))),
+        h('ul', { class: 'attr-list' }, ATTR13_IDS.map((k) => h('li', { title: t(ATTR13[k][1]) }, h('span', null, t(ATTR13[k][0])), w13 ? null : bar(P.attrs[k], 100, tone(P.attrs[k])), h('b', null, sh(P.attrs[k], k))))),
         w13 ? h('p', { class: 'small muted' }, t(w13 >= 99 ? HINT15 : l('Faixas = o que você estima; olheiros, reuniões e relação próxima estreitam.', 'Ranges = your estimate; scouts, meetings and a close relationship narrow them.'))) : null,
         self ? h('p', { class: 'small muted' }, t(l('Negociação efetiva do selo (com jurídico/empresário): {v}.', 'Label\'s effective negotiation (with legal/manager): {v}.'), { v: labelNeg(s) })) : null,
         h('h4', null, t(l('Personalidade', 'Personality'))),
@@ -66,9 +69,9 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
       ),
       h('div', null,
         h('h4', null, t(l('Aptidão para cargos', 'Role proficiency'))),
-        h('ul', { class: 'attr-list' }, jobs.slice(0, 5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), w13 ? null : bar(j.v, 100, tone(j.v)), h('b', null, sh(j.v))))),
+        h('ul', { class: 'attr-list' }, jobs.slice(0, 5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), w13 ? null : bar(j.v, 100, tone(j.v)), h('b', null, sh(j.v, `job.${j.id}`))))),
         h('details', null, h('summary', { class: 'small muted' }, t(l('Todos os cargos', 'All roles'))),
-          h('ul', { class: 'attr-list small' }, jobs.slice(5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), w13 ? null : bar(j.v, 100), h('b', null, sh(j.v)))))),
+          h('ul', { class: 'attr-list small' }, jobs.slice(5).map((j) => h('li', null, h('span', null, t(j.name), j.id === P.job ? ' ★' : ''), w13 ? null : bar(j.v, 100), h('b', null, sh(j.v, `job.${j.id}`)))))),
         adj ? h('p', { class: 'small' }, t(l('Desempenho efetivo no cargo: {b} {d} = {v}', 'Effective performance in role: {b} {d} = {v}'), { b: staff!.skill, d: signed(adj.v), v: staff!.skill + adj.v }),
           adj.why.length ? h('span', { class: 'muted' }, ` (${adj.why.map((x) => t(x)).join('; ')})`) : null) : null,
         h('h4', null, t(l('Aparência e época', 'Looks and era'))),

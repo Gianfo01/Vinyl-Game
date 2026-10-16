@@ -7,6 +7,7 @@
 // Regras de história: assassinato nunca envolve pessoa real (viva ou não); no modo "Vida real exata" pessoas e
 // selos reais não cometem crimes inventados (só a crônica documentada em DOC17).
 
+import { opinionOf } from '../opinion';
 import { clamp, Rng, seedState } from '../../core/rng';
 import { formatMoney } from '../../core/money';
 import { countryName, countryOfCity } from '../../data/geo';
@@ -684,7 +685,7 @@ export function partnerOdds(s: GameState, lbId: string, c: Ctx17): { p: number; 
   if (!lb) return { p: 0, betray: 1, why };
   const L0 = leaderOf(s, lbId);
   const key = L0 ? `l:${L0.id}` : '';
-  const rel = c.actor === 'player' ? L0?.rel.player ?? -(s.rivalries[lbId] ?? 0) / 2 : 0;
+  const rel = c.actor === 'player' ? (L0 ? opinionOf(s, `l:${L0.id}`) : -(s.rivalries[lbId] ?? 0) / 2) : 0;
   const tOwner = ownerOfTarget(s, c.target);
   const hate = tOwner === 'player' ? s.rivalries[lbId] ?? 0 : tOwner && s.labels[tOwner] && L0 ? -((leaderOf(s, tOwner) && L0.rel[leaderOf(s, tOwner)!.id]) ?? 0) : 0;
   let p = 0.15 + rel / 200 + hate / 150;

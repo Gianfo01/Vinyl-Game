@@ -1,10 +1,11 @@
 // Rodada 13 — ficha unificada: mesmos atributos para todos, usados no jogo; barreiras históricas; opinião com motivo.
 
+import { opinionWhy } from '../src/sim/opinion';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { defaultOffer, endContract, evaluateOffer } from '../src/sim/contracts';
 import { createGame } from '../src/sim/worldgen';
-import { ATTR13_IDS, JOBS13, barriers13, imageWeight, opinionOf, p13, per13, sendGift, staffAdj13 } from '../src/sim/sys/persona13';
+import { ATTR13_IDS, JOBS13, barriers13, imageWeight, opinionOf, per13, sendGift, staffAdj13 } from '../src/sim/sys/persona13';
 import { leaders } from '../src/sim/sys/leaders10';
 import { FACETS } from '../src/sim/sys/soul9';
 import { money, staffSkill } from '../src/sim/util';
@@ -63,8 +64,8 @@ describe('r13 persona unificada', () => {
     a.owner = 'player';
     endContract(s, a, 'terminated');
     const k = `p:${a.members[0]}`;
-    expect(p13(s).op[k].v).toBeLessThan(-10);
-    expect(p13(s).op[k].w.slice(-1)[0][3].en).toMatch(/dropped/);
+    expect(opinionOf(s, k)).toBeLessThan(-10); // r31: opinião lida da fonte única (opinion.ts)
+    expect(opinionWhy(s, k).slice(-1)[0][3].en).toMatch(/dropped/);
     const ev = evaluateOffer(s, a, defaultOffer(s, a));
     expect(ev.reasons.some((r) => r.en.includes('dropped'))).toBe(true);
     const lid = Object.keys(leaders(s).L)[0];

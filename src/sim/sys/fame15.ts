@@ -18,6 +18,7 @@ import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
+import { band, bandText, know } from '../know';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -101,43 +102,14 @@ export interface Known15 { mine: boolean; deg: number; rel: number; exp: number;
 /** Exposição pública (0–5) pela fama: quanto mais famoso, mais da vida e da carreira está nas revistas. */
 export const exposure = (fame: number): number => fameTier(fame);
 
-/** Laço do jogador com a pessoa (opinião/relação) convertido em grau de conhecimento 0–4. */
-const ME = new WeakMap<GameState, { w: number; p?: Person }>();
-function relDeg(s: GameState, pid: string): number {
-  let c = ME.get(s);
-  if (!c || c.w !== s.week) { c = { w: s.week, p: Object.values(s.persons).find((x) => x.isPlayer && x.alive) }; ME.set(s, c); }
-  const me = c.p;
-  const p = s.persons[pid];
-  const v = Math.max(Math.abs(me && p ? p.rel[me.id] ?? 0 : 0), Math.abs(me ? me.rel[pid] ?? 0 : 0));
-  return v >= 60 ? 4 : v >= 35 ? 3 : v >= 15 ? 2 : 0;
-}
-
 /**
- * Quanto o jogador sabe de um ato ou pessoa. Combina o grau de scouting (s.knowledge), o relacionamento e a
- * exposição pública da fama. `priv` = dados privados (só olheiros/relação); `pub` = dados públicos (fama ajuda).
- * Seu elenco: tudo (5). Paradas, discos lançados, prêmios e selo são sempre públicos.
+ * Quanto o jogador sabe de um ato ou pessoa. r31 (W0-KN): a conta vive em src/sim/know.ts (fonte única); aqui
+ * só o formato antigo. `priv` = dados privados (olheiros/relação); `pub` = dados públicos (fama vista do país do
+ * jogador ajuda). Seu elenco: tudo (5).
  */
 export function knownLevel(s: GameState, id: string): Known15 {
-  const full = (tier: number): Known15 => ({ mine: true, deg: 5, rel: 5, exp: 5, priv: 5, pub: 5, tier });
-  const a = s.acts[id];
-  if (a) {
-    const tier = fameTier(a.fame);
-    if (mineAct(a)) return full(tier);
-    const deg = s.knowledge[id]?.degree ?? 0;
-    const rel = a.members.reduce((m, pid) => Math.max(m, relDeg(s, pid)), 0);
-    const exp = exposure(fameAt(s, a, '@me')); // r16: exposição vista do país do jogador
-    return { mine: false, deg, rel, exp, priv: Math.max(deg, rel), pub: Math.max(deg, rel, exp), tier };
-  }
-  const p = s.persons[id];
-  if (!p) return { mine: false, deg: 0, rel: 0, exp: 0, priv: 0, pub: 0, tier: 0 };
-  const acts = actsOfP(s, id);
-  const tier = fameTier(pf(s, id));
-  if (p.isPlayer || acts.some(mineAct)) return full(tier);
-  const deg = acts.reduce((m, x) => Math.max(m, s.knowledge[x.id]?.degree ?? 0), 0);
-  const rel = relDeg(s, id);
-  const ma = acts.slice().sort((x, y) => y.fame - x.fame)[0];
-  const exp = exposure(ma && ma.fame > 0 ? pf(s, id) * Math.min(1.25, fameAt(s, ma, '@me') / ma.fame) : pf(s, id));
-  return { mine: false, deg, rel, exp, priv: Math.max(deg, rel), pub: Math.max(deg, rel, exp), tier };
+  const k = know(s, id);
+  return { mine: k.mine, deg: k.deg, rel: k.rel, exp: k.exp, priv: k.priv, pub: k.pub, tier: k.tier };
 }
 
 const NEED: Record<Field15, [number, 'pub' | 'priv']> = {
@@ -160,13 +132,9 @@ export function whyHidden(f: Field15): L {
     : fmtL(l('Dado público: aparece com fama (degrau {t}) ou conhecimento grau {n}.', 'Public data: shows with fame (tier {t}) or knowledge degree {n}.'), { n, t: FTIERS[Math.min(5, n)].name });
 }
 
-/** Fama mostrada: exata quando pública, faixa quando estimada, degrau quando só se ouve falar. */
+/** Fama mostrada pela regra única de know.ts: exata quando pública no seu país, faixa (nunca centrada) quando só se ouve falar, "?" quando desconhecida. */
 export function fameText(s: GameState, id: string): string {
-  const k = knownLevel(s, id);
-  const v = fameOf(s, id);
-  if (k.mine || k.pub >= 2) return String(Math.round(v));
-  if (k.pub >= 1) { const w = k.deg >= 3 ? 6 : 12; return `${Math.max(0, Math.round(v - w))}–${Math.min(100, Math.round(v + w))}`; }
-  return '?';
+  return bandText(band(s, id, 'fame', fameOf(s, id), know(s, id).width('fame')));
 }
 
 // ---------------------------------------------------------------- histórico

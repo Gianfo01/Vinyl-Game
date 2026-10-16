@@ -9,8 +9,9 @@ import { actTalent } from './people';
 import type { Act, GameState, Knowledge } from './types';
 import { addSignal, talentScore } from './worldgen';
 import { perk } from './perks';
-import { hasTech, money, rngOf, staffCount, staffSkill } from './util';
+import { hasTech, money, rngOf, staffCount } from './util';
 import { actsNow27 } from './tickcache27';
+import { KNOW_WIDTHS, band, know } from './know';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -32,37 +33,19 @@ export function scoutActionsPerMonth(s: GameState): number {
   return 3 + staffCount(s, 'anr') + s.scouts.length + (s.player.hq >= 2 ? 1 : 0) + (s.flags.scoutBonus ?? 0) + Math.round(perk(s, 'scoutActions'));
 }
 
-function widthFor(s: GameState, degree: number, base: number[]): number {
-  let w = base[clamp(degree, 1, 5) - 1];
-  w *= 1 - staffSkill(s, 'anr') / 300;
-  w *= clamp(1 - perk(s, 'scoutAccuracy'), 0.4, 1.6);
-  return w;
-}
-
 export interface Range { lo: number; hi: number; mid: number }
 
-/** Intervalo estimado; null = campo ainda oculto neste grau. */
+/**
+ * Intervalo estimado; null = campo ainda oculto. r31 (W0-KN): grau, eixo (público/privado) e largura vêm de
+ * know.ts (tabela única); a faixa nunca é centrada no valor real (desvio determinístico + viés do olheiro).
+ */
 export function estimate(s: GameState, actId: string, field: 'potential' | 'talent' | 'fame' | 'skill', skill?: keyof Act['fans'] | string): Range | null {
-  const k = s.knowledge[actId];
   const act = s.acts[actId];
   if (!act) return null;
-  const deg = k?.degree ?? 0;
-  if (act.owner === 'player') {
-    // atos próprios: convivência
-    const v = trueValue(s, act, field, skill);
-    return { lo: v - 2, hi: v + 2, mid: v };
-  }
-  // rodada 15: fama é pública — Nacional (30+) mostra o alcance exato; Local (10+) dá uma faixa mesmo sem olheiro
-  if (field === 'fame' && act.fame >= 30) { const v = Math.round(act.fame); return { lo: v, hi: v, mid: v }; }
-  if (deg === 0 && !(field === 'fame' && act.fame >= 10)) return null;
-  if (field === 'potential' && deg < 3) return null;
-  if ((field === 'talent' || field === 'skill') && deg < 2) return null;
+  const k = know(s, actId);
   const v = trueValue(s, act, field, skill);
-  const widths = field === 'fame' ? [16, 10, 6, 4, 2] : field === 'potential' ? [40, 30, 20, 11, 5] : [40, 26, 15, 8, 3];
-  const w = widthFor(s, Math.max(1, deg), widths);
-  const bias = (k?.bias ?? 0) * (w / 30);
-  const mid = clamp(v + bias, 0, 100);
-  return { lo: Math.round(clamp(mid - w / 2, 0, 100)), hi: Math.round(clamp(mid + w / 2, 0, 100)), mid: Math.round(mid) };
+  const b = band(s, actId, field === 'skill' ? `skill.${skill ?? ''}` : field, v, k.width(field), { bias: k.mine || !KNOW_WIDTHS[field].scouted ? 0 : s.knowledge[actId]?.bias ?? 0 });
+  return b ? { lo: b.lo, hi: b.hi, mid: b.mid } : null;
 }
 
 function trueValue(s: GameState, act: Act, field: string, skill?: string): number {

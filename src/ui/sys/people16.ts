@@ -6,6 +6,7 @@
 // Também: empresário e produtor no topo da página do artista, produção nos lançamentos (com pop-up de cada obra) e
 // histórico de sucessão na página do selo.
 
+import { opinionWhy } from '../../sim/opinion';
 import { ventures } from '../../sim/sys/ventures9';
 import { REAL_MGRS, mgrById } from '../../data/managers14';
 import { REAL_PRODS, prodById } from '../../data/producers15';
@@ -22,7 +23,7 @@ import {
   HOW16, KIN16_REL, ROLE16, ST16, born16, canon16, clientsOf16, genMgrs16, life16, p16, producersOfRelease16, realKin16, roles16, status16, successions16, works16,
   type How16, type Work16,
 } from '../../sim/sys/people16';
-import { lookOf13, opinionOf, p13, per13, staffAdj13 } from '../../sim/sys/persona13';
+import { lookOf13, opinionOf, per13, staffAdj13 } from '../../sim/sys/persona13';
 import { prodKey, prodName } from '../../sim/sys/producers15';
 import { PLAYBOOKS } from '../../sim/sys/rivals8';
 import type { Act, GameState, Person } from '../../sim/types';
@@ -134,7 +135,7 @@ function fameBlock16(s: GameState, key: string): HTMLElement {
 
 function relBlock16(s: GameState, key: string): HTMLElement {
   const op = opinionOf(s, key);
-  const led = p13(s).op[key];
+  const led = { w: opinionWhy(s, key) };
   const L0 = key.startsWith('l:') ? leaders(s).L[idOf(key)] : undefined;
   const ties = Object.entries(lz14(s).r[key]?.t ?? {}).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 8);
   const lt = L0 ? Object.entries(L0.rel).filter(([k]) => k !== 'player' && leaders(s).L[k]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 6) : [];
