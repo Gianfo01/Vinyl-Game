@@ -5,7 +5,7 @@
 
 import { drawText, textWidth } from '../pixel/font';
 import { iconPx } from '../pixel/icons';
-import { icon17Px } from '../pixel/icons17';
+import { travel5Px } from '../pixel/exp5px';
 import { C, INK, Px, type Col } from '../pixel/px';
 import type { Cal31, Curtain31, TrnPlace31, Vehicle31 } from './trn31model';
 
@@ -101,10 +101,9 @@ export const cardIconBox31 = (b: Box31): Box31 => ({ x: b.x + 10, y: b.y + Math.
 const SHADOW = C('#000000', 128);
 const PANEL = C('#101a2a'), PANEL_LED = C('#06101c'), ICONBG = C('#1c3048');
 
-/** Ícone de cada lugar (o kit do jogo: icons.ts / icons17.ts). */
+/** Ícone de cada lugar: os ícones de viagem da onda 5 (exp5px.travel5Px, os mesmos dos botões Sede/Casa/Cidade/Mundo). */
 export function placeIcon31(pl: TrnPlace31): Px {
-  if (pl === 'cidade') return icon17Px('skyline') ?? iconPx('building');
-  return iconPx(pl === 'sede' ? 'building' : pl === 'casa' ? 'house' : 'globe');
+  return travel5Px(pl, 'lit');
 }
 export function vehicleIcon31(v: Vehicle31): Px { return iconPx(v === 'bus' ? 'tour-bus' : v); }
 
