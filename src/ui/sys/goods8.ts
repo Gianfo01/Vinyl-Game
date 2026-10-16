@@ -2,6 +2,8 @@
 // (valor de mercado, manutenção, venda), investimentos, equipe pessoal e fundação; e a agenda pessoal com
 // cursos, rotina de saúde, aparições públicas, noites em clubes, palestras e as ações liberadas por bens.
 
+import { lockBtn31 } from '../r31/lock31';
+import { lock31 } from '../../sim/r31/lock';
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
@@ -14,7 +16,7 @@ import { energyLeft, maxEnergy } from '../../sim/sys/life';
 import { ATTR_NAME, ownerOf } from '../../sim/sys/people/owner';
 import type { PerkKey } from '../../sim/perks';
 import type { GameState } from '../../sim/types';
-import { money } from '../../sim/util';
+import { fmtL, money } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
@@ -107,7 +109,7 @@ function shopTab(s: GameState): HTMLElement {
         h('div', null, h('b', null, $(price)), h('small', { class: 'muted' }, ` · ${t(l('manutenção', 'upkeep'))} ${$(goodUpkeep(s, d))}/${t(l('mês', 'mo'))}`)),
         effects(d),
         have ? pill(t(l('você tem {n}', 'you own {n}'), { n: have }), 'good') : null,
-        h('button', { class: 'btn small primary', disabled: o.wealth < price, onclick: () => run(buyGood(s, d.id), l('Comprado!', 'Bought!')) }, t(l('Comprar', 'Buy'))),
+        lockBtn31(t(l('Comprar', 'Buy')), o.wealth < price ? lock31(fmtL(l('Patrimônio pessoal {w}; custa {p}.', 'Personal wealth {w}; costs {p}.'), { w: $(o.wealth), p: $(price) }), l('Junte patrimônio: salário, royalties pessoais ou venda de um bem.', 'Build wealth: salary, personal royalties or selling a belonging.')) : null, () => run(buyGood(s, d.id), l('Comprado!', 'Bought!')), { cls: 'btn small primary' }), // R31 (RN-04)
       ]);
     })),
   );
@@ -157,8 +159,7 @@ function staffTab(s: GameState): HTMLElement {
           h('small', { class: 'muted' }, `${$(money(s, d.salary))}/${t(l('mês', 'mo'))}`),
           h('div', { class: 'chips' }, perkPills(d.perks), d.relief ? pill(t(l('Estresse −{n}/mês', 'Stress −{n}/mo'), { n: d.relief }), 'good') : null, d.health ? pill(t(l('Saúde {n}/mês', 'Health {n}/mo'), { n: num(d.health) }), 'good') : null),
           hired ? h('button', { class: 'btn small ghost', onclick: () => run(firePStaff(s, id), l('Dispensado.', 'Let go.')) }, t(l('Dispensar', 'Let go')))
-            : h('button', { class: 'btn small primary', disabled: !!err, title: err ? t(err) : '', onclick: () => run(hirePStaff(s, id), l('Contratado!', 'Hired!')) }, t(l('Contratar', 'Hire'))),
-          !hired && err ? h('small', { class: 'muted' }, t(err)) : null,
+            : lockBtn31(t(l('Contratar', 'Hire')), err, () => run(hirePStaff(s, id), l('Contratado!', 'Hired!')), { cls: 'btn small primary' }), // R31 (RN-04)
         ]);
       })),
     ),

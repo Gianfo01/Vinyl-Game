@@ -2,6 +2,7 @@
 // empréstimos; vender, pagar cláusula de rival), cláusulas de saída com valor de mercado, empresários totais, brigas de gestão e masters
 // presos, casos reais documentados e o histórico.
 
+import { basisTag31 } from '../r31/lock31';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CLAUSE19, auditCost19, auditMgr19, chron19, deliverJunk19, fireCost19, fireMgr19, mb19, myClauseActs19, npcClause19, payClause19, rivalStars19, setClause19, value19, type Clause19 } from '../../sim/sys/moneyb19';
@@ -22,7 +23,7 @@ const btn = (label: L | string, fn: () => void, dis = false) => h('button', { cl
 const row = (...k: (Node | string | null)[]) => h('div', { class: 'row wrap', style: 'gap:6px;align-items:center;margin:4px 0' }, ...k);
 const muted = (x: L | string) => h('p', { class: 'muted small' }, T(x));
 const fm = (x: L, p: Record<string, string | number>) => t(x).replace(/\{(\w+)\}/g, (_, k) => String(p[k] ?? ''));
-const val = (s: GameState, id: string) => why18(s, 'mb19.value', { act: id }, $(value19(s, s.acts[id]).v));
+const val = (s: GameState, id: string) => h('span', null, why18(s, 'mb19.value', { act: id }, $(value19(s, s.acts[id]).v)), ' ', basisTag31('calc')); // R31 (RN-27): valor é cálculo
 
 /** r22: mercado aberto o ano todo (sem janelas) e sem empréstimos de artista. */
 function windowTab(s: GameState): HTMLElement {

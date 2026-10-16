@@ -2,6 +2,7 @@
 // por hqpx27.ts conforme nível da sede, ano e cidade — sem imagens), com as salas clicáveis, selos de estado, bonecos do elenco e da equipe reais, "Precisa de você", "Sua agenda" e o
 // "Elenco". Toda a lógica está em hq25model.ts (pura); aqui só se desenha. Encaixa pelo slot25.
 
+import { lockBtn31 } from '../r31/lock31';
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { buyBlocker27, buyRoom27, cityMul27, hqRooms27, type Unit27 } from '../../sim/sys/hqrooms27';
@@ -94,9 +95,8 @@ export function buyDlg27(s: GameState, id: string): void {
       ...row(l('Efeito', 'Effect'), h('b', null, t(u.effect))),
       ...row(l('Onde', 'Where'), floorName27(u.floor))),
     h('p', { class: 'muted small' }, t(l('Preço da época e da cidade-sede{c} (×{m}). A manutenção começa quando a obra termina.', 'Priced for the era and the home city{c} (×{m}). Upkeep starts when construction ends.'), { c: city ? ` (${t(city.name)})` : '', m: cityMul27(s).toFixed(2) })),
-    why ? h('p', { class: 'hqr27-why', role: 'alert' }, ic('lock'), ' ', t(why)) : null,
     h('div', { class: 'row wrap hqr27-act' },
-      h('button', { type: 'button', class: 'btn primary', disabled: !!why, onclick: buy }, u.kind === 'floor' ? t(l('Montar o andar', 'Fit out the floor')) : u.kind === 'upgrade' ? t(l('Fazer a reforma', 'Do the makeover')) : t(l('Comprar e começar a obra', 'Buy and start building'))),
+      lockBtn31(u.kind === 'floor' ? t(l('Montar o andar', 'Fit out the floor')) : u.kind === 'upgrade' ? t(l('Fazer a reforma', 'Do the makeover')) : t(l('Comprar e começar a obra', 'Buy and start building')), why, buy, { cls: 'btn primary' }), // R31 (RN-04): motivo e condição antes do clique
       h('button', { type: 'button', class: 'btn ghost', onclick: () => close() }, t(l('Cancelar', 'Cancel')))));
   close = modal(t(u.kind === 'floor' ? l('Montar andar: {n}', 'Fit out floor: {n}') : l('Comprar sala: {n}', 'Buy room: {n}'), { n: t(u.name) }), body);
 }

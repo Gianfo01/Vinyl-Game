@@ -100,7 +100,7 @@ let openMenu: (() => void) | null = null;
 let menuSeq = 0;
 
 /** r20b: item genérico do menu (ações do registro, itens extras da sede, ações de sala). */
-export interface MenuItem20 { id: string; label: string; icon?: string; suffix?: string; cost?: number; block?: string | null; note?: string | null; run: () => void }
+export interface MenuItem20 { id: string; label: string; icon?: string; suffix?: string; cost?: number; block?: string | null; /** R31 (RN-04): condição para liberar */ unlock?: string | null; note?: string | null; run: () => void }
 export interface MenuGroup20 { label: string; items: MenuItem20[] }
 
 /** Menu de comandos (W3C menu button) ancorado em `anchor` ou num ponto (clique direito, clique no canvas da sede).
@@ -112,7 +112,7 @@ function menu20(anchor: HTMLElement, at: { x: number; y: number } | undefined, t
   const mobile = typeof window !== 'undefined' && window.innerWidth <= 600;
   const popup = anchor.hasAttribute('aria-haspopup');
   const pick = (it: MenuItem20) => {
-    if (it.block) { status.textContent = it.block; return; }
+    if (it.block) { status.textContent = it.unlock ? `${it.block} → ${it.unlock}` : it.block; return; }
     close(false);
     it.run();
   };
@@ -121,7 +121,7 @@ function menu20(anchor: HTMLElement, at: { x: number; y: number } | undefined, t
       onclick: (e: Event) => { e.stopPropagation(); pick(it); } },
       h('span', { class: 'am20-l' }, it.icon ? ic(it.icon) : null, ' ', it.label, it.suffix ?? ''),
       it.cost ? h('span', { class: 'am20-c num' }, $(it.cost)) : null,
-      it.block ? h('small', { class: 'am20-why' }, it.block) : it.note ? h('small', { class: 'muted' }, it.note) : null);
+      it.block ? h('small', { class: 'am20-why' }, it.block, it.unlock ? h('span', { class: 'lk31-cond' }, ` → ${it.unlock}`) : null) : it.note ? h('small', { class: 'muted' }, it.note) : null);
     items.push(el);
     return el;
   };
@@ -182,7 +182,7 @@ function menu20(anchor: HTMLElement, at: { x: number; y: number } | undefined, t
 
 const rowItem20 = (s: GameState, r: Row20, actId: string, anchor: HTMLElement, label?: string): MenuItem20 => ({
   id: r.def.id, label: label ?? t(r.def.label), icon: r.def.icon, suffix: r.def.form === 'confirm' ? ' …' : r.def.form === 'panel' ? ' ›' : '',
-  cost: r.cost, block: r.block ? t(r.block) : null, note: r.time ? t(r.time) : null, run: () => chooseAction20(s, r.def.id, actId, anchor),
+  cost: r.cost, block: r.block ? t(r.block) : null, unlock: r.unlock ? t(r.unlock) : null, note: r.time ? t(r.time) : null, run: () => chooseAction20(s, r.def.id, actId, anchor),
 });
 
 /** Abre o menu de ações do artista ancorado em `anchor` (ou no ponto do clique direito / do clique na sede).
@@ -247,7 +247,7 @@ export function quickPins20(s: GameState, actId: string): HTMLElement {
   return h('span', { class: 'am20-pins' }, pins20().map((id) => {
     const r = actionRow20(s, id, { act: actId });
     if (!r) return null;
-    return h('button', { class: 'btn small ghost', 'aria-disabled': r.block ? 'true' : null, title: r.block ? t(r.block) : t(r.def.label),
+    return h('button', { class: `btn small ghost${r.block ? ' lk31-off' : ''}`, 'aria-disabled': r.block ? 'true' : null, title: r.block ? `🔒 ${t(r.block)}${r.unlock ? ` → ${t(r.unlock)}` : ''}` : t(r.def.label),
       onclick: (e: Event) => chooseAction20(s, id, actId, e.currentTarget as HTMLElement) }, r.def.icon ? ic(r.def.icon) : null, ' ', t(r.def.label));
   }));
 }
@@ -382,7 +382,7 @@ export function paletteCmds20(s: GameState, others = false): { label: string; ki
   if (!sel) return [];
   const acts = others ? mine.filter((x) => x !== sel) : [sel];
   const kind = t(l('Ação', 'Action'));
-  return paletteEntries20(s, acts).map((x) => ({ label: t(x.label), kind, icon: action20(x.id)?.icon ?? 'handshake', hint: x.block ? `✗ ${t(x.block)}` : undefined, weight: others ? 1 : 3, run: () => chooseAction20(s, x.id, x.act) }));
+  return paletteEntries20(s, acts).map((x) => ({ label: t(x.label), kind, icon: action20(x.id)?.icon ?? 'handshake', hint: x.block ? `🔒 ${t(x.block)}${x.unlock ? ` → ${t(x.unlock)}` : ''}` : undefined, weight: others ? 1 : 3, run: () => chooseAction20(s, x.id, x.act) }));
 }
 
 // sede espacial: o cartão do artista ganha o mesmo botão (G5 reaproveita o registro para as salas)

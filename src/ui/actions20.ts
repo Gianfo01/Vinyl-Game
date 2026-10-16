@@ -34,6 +34,7 @@ import { canVisitRadio, startRadioVisit } from '../sim/sys/scenes/radio';
 import type { Act, AgendaSlot, GameState } from '../sim/types';
 import { fmtL, money, playerActs, staffSkill } from '../sim/util';
 import { rng19 } from '../sim/rng19';
+import { cashLock31, lockOf31 } from '../sim/r31/lock';
 
 // ---------------------------------------------------------------- tipos
 
@@ -85,6 +86,8 @@ export interface Action20 {
   visible?: (s: GameState, c: Ctx20) => boolean;
   /** elegibilidade: null = pode; L = por que não */
   block?: (s: GameState, c: Ctx20) => L | null;
+  /** R31 (RN-04): condição para liberar quando bloqueada (sem ela, deduzida do motivo: sim/r31/lock) */
+  unlock?: (s: GameState, c: Ctx20) => L | null;
   /** custo estimado em centavos da época */
   cost?: (s: GameState, c: Ctx20) => number;
   /** tempo/capacidade consumidos */
@@ -97,7 +100,7 @@ export interface Action20 {
   run?: (s: GameState, c: Ctx20) => Out20;
 }
 
-export interface Row20 { def: Action20; block: L | null; cost: number; time: L | null; effect: L | null }
+export interface Row20 { def: Action20; block: L | null; cost: number; time: L | null; effect: L | null; /** R31 (RN-04): condição para liberar (só quando block) */ unlock: L | null }
 
 const REG: Action20[] = [];
 export function registerAction20(a: Action20): void {
@@ -125,8 +128,9 @@ function baseBlock(s: GameState, c: Ctx20): L | null {
 function rowOf(s: GameState, def: Action20, c: Ctx20): Row20 {
   const block = baseBlock(s, c) ?? def.block?.(s, c) ?? null;
   const cost = def.cost?.(s, c) ?? 0;
-  const cashBlock = !block && def.mutates && cost > 0 && freeCash20(s) < cost ? cashWhy20(s, cost, N('Caixa insuficiente.', 'Not enough cash.')) : null;
-  return { def, block: block ?? cashBlock, cost, time: def.time?.(s, c) ?? null, effect: def.effect?.(s, c) ?? null };
+  const cashLk = !block && def.mutates && cost > 0 ? cashLock31(s, cost, N('Caixa insuficiente.', 'Not enough cash.')) : null;
+  const lk = block ? lockOf31(block, def.unlock?.(s, c)) : cashLk;
+  return { def, block: lk?.why ?? null, unlock: lk?.unlock ?? null, cost, time: def.time?.(s, c) ?? null, effect: def.effect?.(s, c) ?? null };
 }
 
 /** Linhas visíveis do menu para o alvo, na ordem das categorias e do registro. Ação com erro some (não derruba o menu). */
@@ -190,14 +194,14 @@ export function togglePin20(pins: string[], id: string, max = 5): string[] {
 }
 
 /** Entradas do Ctrl+K: "Ação › artista" para cada artista e ação visível (mesmo custo/bloqueio do menu). */
-export function paletteEntries20(s: GameState, acts: string[]): { id: string; act: string; label: L; hint: L | null; block: L | null }[] {
-  const out: { id: string; act: string; label: L; hint: L | null; block: L | null }[] = [];
+export function paletteEntries20(s: GameState, acts: string[]): { id: string; act: string; label: L; hint: L | null; block: L | null; unlock: L | null }[] {
+  const out: { id: string; act: string; label: L; hint: L | null; block: L | null; unlock: L | null }[] = [];
   for (const act of acts) {
     const a = s.acts[act];
     if (!a) continue;
     for (const r of actionRows20(s, { act })) {
       if (r.def.id === 'batch.open' || r.def.id === 'pins.manage') continue;
-      out.push({ id: r.def.id, act, label: fmtL(N('{x} — {a}', '{x} — {a}'), { x: r.def.label, a: a.name }), hint: r.block, block: r.block });
+      out.push({ id: r.def.id, act, label: fmtL(N('{x} — {a}', '{x} — {a}'), { x: r.def.label, a: a.name }), hint: r.block, block: r.block, unlock: r.unlock });
     }
   }
   return out;
@@ -448,6 +452,7 @@ registerAction20({ id: 'contract.renew', label: N('Renovar contrato (36 meses)',
 registerAction20({ id: 'contract.royalty', label: N('Subir royalties (+2 p.p.)', 'Raise royalties (+2 pp)'), cat: 'career', icon: 'coin', target: 'act', form: 'confirm', mutates: true,
   visible: (s, c) => !!playerContract(s, s.acts[c.act]),
   block: (s, c) => (playerContract(s, s.acts[c.act])!.royalty >= 0.6 ? N('Royalty já no teto (60%).', 'Royalty already at the cap (60%).') : null),
+  unlock: () => N('Não sobe mais: 60% é o teto. Negocie outros termos na renovação.', 'It goes no higher: 60% is the cap. Negotiate other terms at renewal.'),
   effect: (s, c) => fmtL(N('Royalty {a}% → {b}% em todas as vendas futuras; confiança sobe.', 'Royalty {a}% → {b}% on all future sales; trust rises.'), { a: Math.round(playerContract(s, s.acts[c.act])!.royalty * 100), b: Math.round(Math.min(0.6, playerContract(s, s.acts[c.act])!.royalty + 0.02) * 100) }),
   run: (s, c) => (raiseRoyalty(s, c.act, 0.02) ? { ok: true, text: fmtL(N('Royalties de {a} renegociados.', '{a} royalties renegotiated.'), { a: s.acts[c.act].name }), nav: { sub: 'career', act: c.act } } : { ok: false, text: N('Sem contrato com você.', 'No contract with you.') }) });
 registerAction20({ id: 'contract.market', label: N('Mercado de contratos (opções, adiantamentos, licenças)', 'Contract market (options, advances, licences)'), cat: 'career', icon: 'handshake', target: 'act', form: 'nav', mutates: false,

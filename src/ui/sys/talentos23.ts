@@ -3,6 +3,8 @@
 // FUNIL (Rumor → Observado → Acompanhado → Audição → Pronto para propor; um próximo passo por card) e
 // DECIDIR (até três lado a lado → proposta). Lista/relatórios, leilões, equipe e abas extras continuam aqui.
 
+import { lockBtn31 } from '../r31/lock31';
+import { signLock31 } from '../r31/quick31core';
 import { CITIES, FAMILIES, MARKETS, cityById, familyOf, l, type L, type MarketId } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { attendContest } from '../../sim/discovery';
@@ -127,8 +129,9 @@ function attrs(s: GameState, id: string): HTMLElement {
 function stepBtn(s: GameState, id: string): HTMLElement {
   const st = nextStep23(s, id);
   const a = s.acts[id];
-  if (!st) return h('button', { class: 'btn small primary', disabled: !!a.owner, onclick: () => openOffer(id) }, t(l('Fazer proposta', 'Make an offer')));
+  if (!st) return lockBtn31(t(l('Fazer proposta', 'Make an offer')), signLock31(s, a), () => openOffer(id), { cls: 'btn small primary' }); // R31 (RN-04): motivo antes do clique
   if (st.until) return h('button', { class: 'btn small', disabled: true }, t(l('Relatório na sem. {w}', 'Report on wk {w}'), { w: st.until }));
+  if (!st.ok && st.why) return lockBtn31(`${t(st.label)}: ${$(st.cost)}, ${t(fmtW(st.weeks))}`, st.why, () => {}); // R31 (RN-04)
   return h('button', { class: 'btn small', disabled: !st.ok, title: st.why ? t(st.why) : '', onclick: () => { say(startStep23(s, id), l('Pedido feito: o relatório chega em breve.', 'Done: the report arrives soon.')); rerender(); } },
     `${t(st.label)}: ${$(st.cost)}, ${t(fmtW(st.weeks))}${st.balls ? ` + ${balls(st.balls)}` : ''}`);
 }

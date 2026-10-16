@@ -1,5 +1,7 @@
 // Ficha unificada com cadeia de inspeção por IDs estáveis (GDD §24) + modal de oferta.
 
+import { basisTag31 } from './r31/lock31';
+import { autopsyBasis31, ONE_RESULT31 } from '../sim/r31/tags';
 import { freeCash20, reservedAdvances20 } from '../sim/oblig20';
 import { cap14 } from '../sim/sys/gate14';
 import { CHANNELS, CONTRACT_MODELS, type ContractModel } from '../data/rules';
@@ -115,7 +117,9 @@ export function openRelease(id: string): void {
         h('td', null, t(f.label)),
         h('td', { class: f.value >= 1.1 ? 'good' : f.value <= 0.9 ? 'bad' : '' }, `×${f.value.toFixed(2)}`),
         h('td', null, pill(f.confidence === 'high' ? t(l('confiança alta', 'high confidence')) : f.confidence === 'medium' ? t(l('média', 'medium')) : t(l('baixa', 'low')))),
+        h('td', null, basisTag31(autopsyBasis31(f.confidence))), // R31 (RN-27): efeito calculado × hipótese
       )))),
+      h('p', { class: 'muted small' }, basisTag31('fact'), ' ', t(l('Vendas, paradas e críticas acima são fatos observados; os fatores são a conta do jogo sobre eles.', 'Sales, charts and reviews above are observed facts; the factors are the game\'s math on them.')), ' ', t(ONE_RESULT31)),
       r.shortage > 0 ? h('p', { class: 'bad' }, t(l('Falta de estoque custou vendas: aumente a tiragem ou reprense.', 'Stock-outs cost sales: press more or repress.'))) : null,
     ) : null,
   );
@@ -174,7 +178,7 @@ export function openOffer(actId: string, classic27 = false, model0?: ContractMod
     const el = offerEligible29(s, a, o.model); // r20 (B9): mesma regra do radar, da proposta e do aceite (R29: a regra do modelo)
     evalBox.replaceChildren(
       el.why ? h('p', { class: el.ok ? 'small' : 'small bad', role: el.ok ? undefined : 'alert' }, pill(t(el.ok ? l('Volta do hiato', 'Comeback') : l('Não contratável', 'Not signable')), el.ok ? 'warn' : 'bad'), ' ', t(el.why)) : '',
-      h('div', null, t(S.chance), ': ', why18(s, 'offer.chance', { act: a.id, offer: o }, pill(t(S[ev.band]), ev.band)), ' ', h('small', { class: 'muted' }, t(l('(passe o mouse para ver cada termo)', '(hover to see each term)')))),
+      h('div', null, t(S.chance), ': ', why18(s, 'offer.chance', { act: a.id, offer: o }, pill(t(S[ev.band]), ev.band)), ' ', basisTag31((s.knowledge[actId]?.degree ?? 0) < 3 ? 'guess' : 'calc', true), ' ', h('small', { class: 'muted' }, t(l('(passe o mouse para ver cada termo)', '(hover to see each term)')))), // R31 (RN-27/28)
       h('ul', { class: 'small' }, ev.reasons.map((x) => h('li', null, t(x)))),
       h('p', { class: 'muted small' }, (s.knowledge[actId]?.degree ?? 0) < 3 ? t(l('Você ainda não conhece as ambições do ato: a leitura é grosseira.', 'You do not yet know the act\'s ambitions: this read is rough.')) : ''),
       offerAside12(s, a, o),

@@ -7,3 +7,6 @@ import './pendsrc';
 import './role';
 import './object';
 import './txn';
+import './lock';
+import './tags';
+import './mine'; // R31 · O: favoritos e metas pessoais (my31)

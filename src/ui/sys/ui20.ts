@@ -2,6 +2,7 @@
 // gráficos acessíveis (nome + resumo + tabela), densidade confortável/compacta, números tabulares, vocabulário de estado,
 // estados vazios úteis e foco preservado depois de cada ação. Lógica sem DOM em ui/ux20.ts.
 
+import { moneyTag31 } from '../r31/lock31';
 import { toastOrder29 } from '../ps/alerts29model'; // r29 (M44)
 import { loadAlerts29 } from '../ps/alerts29'; // r29 (M44)
 import { l, type L } from '../../data/world';
@@ -99,7 +100,7 @@ function nowRow(s: GameState): HTMLElement {
   return h('div', { class: 'fp20-now', role: 'group', 'aria-label': t(l('Agora', 'Now')) },
     h('span', null, ic('calendar'), ' ', h('b', null, dateLabel(s)), h('small', { class: 'muted' }, ` · ${t(l('semana', 'week'))} ${s.week}`)),
     h('span', null, t(l('Caixa', 'Cash')), ' ', h('b', { class: `num20 ${s.player.cash < 0 ? 'bad' : ''}` }, $(s.player.cash))),
-    rv.reserved ? h('span', { title: t(l('Adiantamentos de ofertas em aberto', 'Advances in open offers')) }, t(l('Reservado', 'Reserved')), ' ', h('b', { class: 'num20' }, $(rv.reserved))) : null,
+    rv.reserved ? h('span', { title: t(l('Adiantamentos de ofertas em aberto', 'Advances in open offers')) }, t(l('Reservado', 'Reserved')), ' ', h('b', { class: 'num20' }, $(rv.reserved)), ' ', moneyTag31('reserved')) : null,
     h('span', null, t(l('Livre', 'Free')), ' ', h('b', { class: `num20 ${rv.free < 0 ? 'bad' : 'good'}` }, $(rv.free))));
 }
 function decCard(s: GameState): HTMLElement {
