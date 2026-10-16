@@ -20,6 +20,7 @@ import { energyLeft, life, playerPerson, spendEnergy } from './life';
 import { gainXp, ownerOf } from './people/owner';
 import { gainTrait } from './vices';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export interface MapX8State {
   /** onde o dono está (viagem pelo mapa) */
@@ -99,13 +100,13 @@ export function travelTo(s: GameState, r: Rng, cityId: string): { text: L } | L 
   const o = ownerOf(s);
   if (q.visa && r.chance(q.deny * 0.5)) {
     // visto negado: perde metade da passagem
-    o.wealth -= Math.round(q.cost * 0.5);
+    purse(s, -Math.round(q.cost * 0.5), 'leisure', 'travel:visa', { who: o });
     const text = fmtL(l('Visto negado para {c}. Metade da viagem perdida.', 'Visa denied for {c}. Half the trip lost.'), { c: cityById[cityId].name });
     mlog(s, text);
     return text;
   }
   if (q.energy) spendEnergy(s, q.energy);
-  o.wealth -= q.cost;
+  purse(s, -q.cost, 'leisure', 'travel', { who: o });
   if (cityId === s.config.homeCity) {
     m.here = undefined;
     const text = l('De volta para casa.', 'Back home.');

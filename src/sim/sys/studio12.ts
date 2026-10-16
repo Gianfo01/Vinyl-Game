@@ -12,6 +12,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, remember } from '../util';
 import { ownerOf } from './people/owner';
 import { maxGear, vpay, ventures, type Venture } from './ventures9';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type Style = 'raw' | 'warm' | 'polished' | 'experimental';
 export type Spec = 'analog' | 'digital' | 'vintage';
@@ -294,9 +295,9 @@ export function deliver(s: GameState, r: Rng): void {
   if (P.fresh < 35) why.push(l('Sua assinatura soa datada: pesa na nota e no cachê.', 'Your signature sounds dated: it weighs on the grade and on your fee.'));
   const w0 = ownerOf(s);
   let pay = 0;
-  if (pr.terms === 'flat') { pay = Math.round(j.fee * (0.9 + q / 500)); if (j.own) pay = prodOwn19.f(s, a, pay, why); else w0.wealth += pay; why.push(l('Cachê fixo recebido agora.', 'Flat fee received now.')); }
+  if (pr.terms === 'flat') { pay = Math.round(j.fee * (0.9 + q / 500)); if (j.own) pay = prodOwn19.f(s, a, pay, why); else purse(s, pay, 'income', 'prod:flat', { who: w0 }); why.push(l('Cachê fixo recebido agora.', 'Flat fee received now.')); }
   else { const amt = pointsEV(s, a, j.pts, q); P.pending.push({ due: mIdx(s) + 12, amt, memo: a.name, own: j.own ? a.id : undefined }); pay = amt; why.push(l('Pontos: o dinheiro só chega em 12 meses, conforme as vendas.', 'Points: money only arrives in 12 months, following sales.')); }
-  w0.wealth -= pr.cost; P.total += pay - pr.cost;
+  purse(s, -pr.cost, 'income', 'prod:cost', { who: w0 }); P.total += pay - pr.cost;
   P.credits.push({ y: s.year, act: a.name, q, style: pr.style ?? P.sig });
   if (P.credits.length > 40) P.credits.shift();
   P.rep = clamp(P.rep + (q - 55) / 8, 0, 100);
@@ -310,7 +311,7 @@ export function deliver(s: GameState, r: Rng): void {
 export function closeProject(s: GameState): void { prod(s).proj = null; }
 /** r19 (intra19): produzir o disco do próprio selo é transferência interna (o selo paga o produtor, que é você);
  *  devolve o que o produtor recebeu. Padrão antigo: dinheiro do nada no patrimônio. Injetado: sem ciclo. */
-export const prodOwn19: { f: (s: GameState, a: Act, amt: number, why: L[]) => number } = { f: (s, _a, amt) => { ownerOf(s).wealth += amt; return amt; } };
+export const prodOwn19: { f: (s: GameState, a: Act, amt: number, why: L[]) => number } = { f: (s, _a, amt) => { purse(s, amt, 'income', 'prod:own'); return amt; } };
 
 registerSimHook('year', 'studio12', (s) => {
   const P = prod(s); if (!P.on) return;
@@ -320,7 +321,7 @@ registerSimHook('month', 'studio12', (s) => {
   const r = Rng.fromSeed(`${s.config.seed}:studio12:${s.year}:${s.month}`);
   for (const v of studios(s)) studioMonth(s, r, v);
   const P = prod(s), now = mIdx(s);
-  for (const p of P.pending.filter((z) => z.due <= now)) { if (p.own && s.acts[p.own]) p.amt = prodOwn19.f(s, s.acts[p.own], p.amt, []); else ownerOf(s).wealth += p.amt; P.total += 0; notify(s, fmtL(l('Pontos do disco de {a} renderam {m}.', 'Points on {a}\'s record paid {m}.'), { a: p.memo, m: Math.round(p.amt / 100).toLocaleString() }), 'good'); }
+  for (const p of P.pending.filter((z) => z.due <= now)) { if (p.own && s.acts[p.own]) p.amt = prodOwn19.f(s, s.acts[p.own], p.amt, []); else purse(s, p.amt, 'income', 'prod:points'); P.total += 0; notify(s, fmtL(l('Pontos do disco de {a} renderam {m}.', 'Points on {a}\'s record paid {m}.'), { a: p.memo, m: Math.round(p.amt / 100).toLocaleString() }), 'good'); }
   P.pending = P.pending.filter((z) => z.due > now);
   if (!P.on) return;
   P.offers = P.offers.filter(() => r.chance(0.8));

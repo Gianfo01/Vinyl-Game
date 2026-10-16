@@ -17,6 +17,7 @@ import { ownerOf } from './people/owner';
 import { healthOf } from './people/state';
 import { registerSituation } from './situations17';
 import { actsOfPerson17 } from '../actidx17';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export interface Extras17State { th: Record<string, number>; conv: Record<string, number>; estate: { pid: string; act: string; w: number; esc?: number; until?: number; done?: 1 }[] }
 declare module '../ext4' { interface Ext4 { extras17: Extras17State } }
@@ -74,7 +75,7 @@ export function faithRetreat(s: GameState, rel?: RelId): L | null {
   const o = ownerOf(s);
   const c = money(s, 500);
   if (o.wealth < c) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  o.wealth -= c;
+  purse(s, -c, 'leisure', 'faith', { who: o });
   const pp = playerPerson(s);
   if (pp) { addStress(s, pp.id, -12, l('Retiro espiritual', 'Spiritual retreat')); relieveLong(s, pp.id, 18); }
   o.stress = clamp(o.stress - 10, 0, 100);

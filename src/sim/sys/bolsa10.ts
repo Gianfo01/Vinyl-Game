@@ -24,6 +24,7 @@ import { ventures } from './ventures9';
 import { withCatalogSums } from '../business';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // ---------------------------------------------------------------- catálogo
 
@@ -514,7 +515,7 @@ function settle(s: GameState, id: string, q: Quote, kind: Fate, text: L, factor:
     if (!pos || pos.sh <= 0) continue;
     const pay = Math.round(pos.sh * q.p);
     if (acct === 'c') coPost(s, `settle:${id}`, pay, `Ações de ${stockName(s, id)} liquidadas`);
-    else { ownerOf(s).wealth += pay; st.realized += pay - pos.cost; }
+    else { purse(s, pay, 'invest', 'bolsa:settle'); st.realized += pay - pos.cost; }
     delete posOf(s, acct)[id];
     notify(s, fmtL(acct === 'c' ? l('{t} As ações do selo valiam {v}.', '{t} The label\'s shares paid out {v}.') : l('{t} Suas ações valiam {v}.', '{t} Your shares paid out {v}.'), { t: text, v: priceTxt(pay) }), kind === 'acquired' ? 'good' : 'bad');
   }
@@ -659,7 +660,7 @@ function pushDivs(s: GameState, id: string, yieldYear: number, q: Quote): void {
     const d = Math.round(pos.sh * q.p * (yieldYear / 12));
     if (d <= 0) continue;
     if (acct === 'c') post(s, `div10:${id}:${s.month}`, d, 'dividends', `Dividendos de ${stockName(s, id)}`);
-    else ownerOf(s).wealth += d;
+    else purse(s, d, 'invest', 'bolsa:div');
     pos.divs += d;
   }
 }
@@ -970,7 +971,7 @@ export function buyShares(s: GameState, id: string, sh: number, acct: Acct = 'p'
   const cost = Math.round(sh * unit(s, id, 'buy', sh));
   if (walletOf(s, acct) < cost) return acct === 'c' ? l('Caixa do selo insuficiente.', 'Not enough label cash.') : l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
   if (acct === 'c') coPost(s, `buy:${id}`, -cost, `Compra de ações: ${stockName(s, id)}`);
-  else ownerOf(s).wealth -= cost;
+  else purse(s, -cost, 'invest', 'bolsa:buy', { ben: 'me' });
   const pos = (posOf(s, acct)[id] ??= { sh: 0, cost: 0, since: s.year, divs: 0 });
   pos.sh += sh;
   pos.cost += cost;
@@ -997,7 +998,7 @@ export function sellShares(s: GameState, id: string, frac = 1, acct: Acct = 'p')
   const basis = Math.round(pos.cost * (sh / pos.sh));
   const before = playerFrac(s, id);
   if (acct === 'c') coPost(s, `sell:${id}`, gross, `Venda de ações: ${stockName(s, id)}`);
-  else { ownerOf(s).wealth += gross; st.realized += gross - basis; }
+  else { purse(s, gross, 'invest', 'bolsa:sell'); st.realized += gross - basis; }
   pos.sh -= sh;
   pos.cost -= basis;
   if (pos.sh <= 0) delete posOf(s, acct)[id];

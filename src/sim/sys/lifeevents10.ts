@@ -20,6 +20,7 @@ import { persona } from './persona';
 import { EVENTS } from './lifeevents10/data';
 import { EVENTS11 } from './lifeevents10/data11';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { purse, purseSet } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // rodada 11: mais eventos no mesmo sorteio
 for (const d of EVENTS11) if (!EVENTS.some((x) => x.id === d.id)) EVENTS.push(d);
@@ -131,7 +132,7 @@ function apply(s: GameState, fx: Fx, c: LeCtx, key: string, soft = false): void 
   const act = s.acts[c.act ?? ''];
   if (fx.h) o.health = clamp(o.health + fx.h, 0, 100);
   if (fx.st) o.stress = clamp(o.stress + fx.st, 0, 100);
-  if (fx.w) o.wealth = soft ? Math.max(Math.min(0, o.wealth), o.wealth + money(s, fx.w)) : o.wealth + money(s, fx.w);
+  if (fx.w) purseSet(s, soft ? Math.max(Math.min(0, o.wealth), o.wealth + money(s, fx.w)) : o.wealth + money(s, fx.w), 'event', 'lifeevents10', { who: o });
   if (fx.cash) post(s, `le10:${key}`, money(s, fx.cash), 'misc', 'Vida pessoal');
   if (fx.art) rep.artistic = clamp(rep.artistic + fx.art, 0, 100);
   if (fx.ins) rep.institutional = clamp(rep.institutional + fx.ins, 0, 100);
@@ -152,7 +153,7 @@ function apply(s: GameState, fx: Fx, c: LeCtx, key: string, soft = false): void 
   if (fx.gain) gainTrait(s, fx.gain);
   if (fx.lose) loseTrait(s, fx.lose);
   if (fx.breakup && L0.partner) {
-    if (L0.partner.stage === 'married') o.wealth -= Math.round(Math.max(0, o.wealth) * 0.3);
+    if (L0.partner.stage === 'married') purse(s, -(Math.round(Math.max(0, o.wealth) * 0.3)), 'family', 'lifeevents:divorce', { who: o, ben: 'ext' });
     o.spouse = undefined; L0.exes.push(L0.partner.name); L0.partner = null;
   }
   if (fx.engage && L0.partner && L0.partner.stage === 'dating') L0.partner.stage = 'engaged';

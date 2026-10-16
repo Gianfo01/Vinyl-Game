@@ -7,6 +7,7 @@ import { langForCity, songTitle } from '../people';
 import type { GameState, Release } from '../types';
 import { ownerOf } from './people/owner';
 import { seedRelease } from './realworld';
+import { purseSet } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export const LEVELS = {
   garage: { fame: 1, releases: 0, years: 0, skill: 0, tier: 3 },
@@ -47,5 +48,5 @@ function playerLevel(s: GameState, r: Rng): void {
 registerSimHook('newgame', 'custom7', (s, r) => {
   playerLevel(s, r);
   const pc = s.config.custom?.personalCash;
-  if (pc !== undefined) ownerOf(s, r).wealth = Math.round(Math.max(0, pc) * 100);
+  if (pc !== undefined) purseSet(s, Math.round(Math.max(0, pc) * 100), 'start', 'custom7', { who: ownerOf(s, r) });
 });

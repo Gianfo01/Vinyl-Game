@@ -12,8 +12,8 @@ import { songQ } from '../production';
 import { songProfile, songStatus } from '../repertoire';
 import type { GameState, Song } from '../types';
 import { fmtL, money, nextId, playerActs, post, remember } from '../util';
-import { ownerOf } from './people/owner';
 import { registerAgendaWeek } from '../agenda';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export interface SongSale { id: string; songId: string; title: string; fromActId: string; toActId: string; relId: string; writers: string[]; fee: number; royalty: number; labelShare: number; paid: number; lastRev: number; week: number }
 export interface SaleTerms { fee: number; royalty: number; labelShare: number }
@@ -113,7 +113,7 @@ function payWriters(s: GameState, writers: string[], amount: number): void {
   const per = Math.round(amount / writers.length);
   for (const w of writers) {
     const p = s.persons[w];
-    if (p?.isPlayer) ownerOf(s).wealth += per;
+    if (p?.isPlayer) purse(s, per, 'income', 'songsale');
     else s.personalCash[w] = (s.personalCash[w] ?? 0) + per;
     if (p) p.morale = clamp(p.morale + 1, 0, 100);
   }

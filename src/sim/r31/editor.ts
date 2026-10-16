@@ -35,6 +35,7 @@ import { SITS, forceSituation17 } from '../sys/situations17';
 import type { GameState, Person } from '../types';
 import { fmtL, playerActs, post } from '../util';
 import { KNOW_REVEAL31 } from '../know';
+import { purseSet } from './purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // ---------------------------------------------------------------- tipos do registro
 
@@ -246,7 +247,7 @@ registerEditable({
 registerEditable({
   id: 'money.personal', area: 'money', kind: 'money', label: l('Dinheiro pessoal', 'Personal money'), raw: true,
   get: (s) => ownerOf(s).wealth,
-  set: (s, v) => { ownerOf(s).wealth = Math.max(0, Number(v)); },
+  set: (s, v) => { purseSet(s, Math.max(0, Number(v)), 'edit', 'editor31'); },
 });
 registerRunnable({
   id: 'money.clearDebts', area: 'money', label: l('Quitar todas as dívidas', 'Clear all debts'), raw: true,

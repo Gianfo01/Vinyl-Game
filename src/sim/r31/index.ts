@@ -7,6 +7,7 @@ import './pendsrc';
 import './role';
 import './object';
 import './txn';
+import './purse31'; // R31 onda 3 (P/B.17): dinheiro pessoal com registro
 import './editor'; // R31 onda 1 (EDT): editor dentro da partida — registro de editáveis/executáveis
 import './base31'; // R31 onda 1 (EDT): editor de base — diferenças da base original, validação, código
 import './pendattn';

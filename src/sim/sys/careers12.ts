@@ -17,6 +17,7 @@ import { standingOf } from './standing9';
 import { ventures } from './ventures9';
 import { liveOf } from './live';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type CareerId = 'label' | 'manager' | 'festival' | 'booking' | 'venue' | 'studio' | 'publisher' | 'media' | 'platform' | 'musician';
 export interface CareerDef { id: string; name: L; desc: L; from: number; icon: string; area: string; load: number; status?: (s: GameState) => L | null }
@@ -140,7 +141,7 @@ function applyOrigin(s: GameState, st: CareersState): void {
   const o = ownerOf(s);
   const fx = ORIGIN_FX[st.origin] ?? {};
   for (const [k, d] of Object.entries(fx.attrs ?? {})) { const key = k as keyof typeof o.attrs; o.attrs[key] = clamp(o.attrs[key] + (d ?? 0), 10, 95); }
-  if (fx.wealth) o.wealth = Math.max(0, o.wealth + money(s, fx.wealth));
+  if (fx.wealth) purse(s, money(s, fx.wealth), 'start', 'origin', { who: o, floor: 0 });
   if (fx.cash) post(s, 'car12:origin', money(s, fx.cash), fx.cash > 0 ? 'investment' : 'misc', fx.cash > 0 ? 'Aporte da origem' : 'Custo da origem');
   const R = s.player.reputation;
   if (fx.rep) R.institutional = clamp(R.institutional + fx.rep, 0, 100);

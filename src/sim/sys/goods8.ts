@@ -20,6 +20,7 @@ import { P } from './people/state';
 import { gainXp, ownerOf, type OwnerAttr } from './people/owner';
 import { grow } from './talent';
 import { gainTrait } from './vices';
+import { purse, type PCat } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // ---------------------------------------------------------------- catálogo de bens
 
@@ -276,10 +277,10 @@ function glog(s: GameState, text: L, tone: 'good' | 'bad' | 'info' = 'info', imp
 
 const noWealth = l('Patrimônio pessoal insuficiente (sai do seu bolso, não da empresa).', 'Not enough personal wealth (it comes out of your pocket, not the company).');
 
-function pay(s: GameState, cents: number): L | null {
+function pay(s: GameState, cents: number, cat: PCat = 'goods'): L | null {
   const o = ownerOf(s);
   if (o.wealth < cents) return noWealth;
-  o.wealth -= cents;
+  purse(s, -cents, cat, cat === 'goods' ? 'goods:buy' : 'goods:invest', { who: o, ben: 'me' });
   return null;
 }
 
@@ -288,7 +289,7 @@ function spendBoth(s: GameState, energy: number, cents: number): L | null {
   if (energy && energyLeft(s) < energy) return l('Sem tempo livre este mês. Volte no mês que vem.', 'No free time left this month. Come back next month.');
   if (ownerOf(s).wealth < cents) return noWealth;
   if (energy) spendEnergy(s, energy);
-  ownerOf(s).wealth -= cents;
+  purse(s, -cents, 'leisure', 'goods:spend');
   return null;
 }
 
@@ -329,7 +330,7 @@ export function sellGood(s: GameState, uid: string): L | null {
   const o = st.owned.find((x) => x.uid === uid);
   if (!o) return l('Item não encontrado.', 'Item not found.');
   const v = saleValue(o);
-  ownerOf(s).wealth += v;
+  purse(s, v, 'goods', 'goods:sell');
   st.owned = st.owned.filter((x) => x !== o);
   bumpPerks();
   const d = goodById[o.id];
@@ -370,7 +371,7 @@ export function staffBlocker(s: GameState, id: PStaffId): L | null {
 export function hirePStaff(s: GameState, id: PStaffId): L | null {
   const e = staffBlocker(s, id);
   if (e) return e;
-  ownerOf(s).wealth -= money(s, PSTAFF[id].salary);
+  purse(s, -money(s, PSTAFF[id].salary), 'staff', 'pstaff:hire');
   goods(s).staff[id] = s.week;
   bumpPerks();
   glog(s, fmtL(l('Contratou: {n}.', 'Hired: {n}.'), { n: PSTAFF[id].name }), 'good');
@@ -390,7 +391,7 @@ export function invest(s: GameState, id: InvId, cents: number): L | null {
   const d = INVEST[id];
   if (!d || s.year < d.from) return l('Investimento indisponível nesta época.', 'Investment not available in this era.');
   if (cents <= 0) return l('Valor inválido.', 'Invalid amount.');
-  const e = pay(s, cents);
+  const e = pay(s, cents, 'invest');
   if (e) return e;
   const pos = (goods(s).inv[id] ??= { principal: 0, value: 0 });
   pos.principal += cents;
@@ -404,7 +405,7 @@ export function redeem(s: GameState, id: InvId, frac = 1): L | null {
   if (!pos || pos.value <= 0) return l('Nada investido aqui.', 'Nothing invested here.');
   const f = clamp(frac, 0, 1);
   const out = Math.round(pos.value * f);
-  ownerOf(s).wealth += Math.round(out * 0.99);
+  purse(s, Math.round(out * 0.99), 'invest', 'goods:redeem');
   pos.value -= out;
   pos.principal = Math.round(pos.principal * (1 - f));
   if (pos.value <= 0 || f >= 1) delete goods(s).inv[id];
@@ -468,7 +469,7 @@ export function appear(s: GameState, r: Rng, id: AppearId): { text: L; ok: boole
   const o = ownerOf(s);
   const ch = (o.attrs.charisma - 50) / 50;
   const gaffe = r.chance(clamp(0.2 - ch * 0.15 - (st.staff.stylist !== undefined ? 0.04 : 0), 0.03, 0.4));
-  if (d.fee > 0) o.wealth += money(s, d.fee);
+  if (d.fee > 0) purse(s, money(s, d.fee), 'income', 'appear', { who: o });
   if (gaffe) {
     L0.fame = clamp(L0.fame + d.fame * 0.5, 0, 100);
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - 2, 0, 100);
@@ -531,7 +532,7 @@ export function lecture(s: GameState): { text: L } | L {
   if (e) return e;
   st.cd.lecture = s.week;
   const fee = money(s, 600 + life(s).fame * 50 + s.player.reputation.institutional * 15);
-  o.wealth += fee;
+  purse(s, fee, 'income', 'lecture', { who: o });
   gainXp(s, 'management', 3);
   gainXp(s, 'charisma', 1);
   s.player.reputation.artists = clamp(s.player.reputation.artists + 0.5, 0, 100);
@@ -689,14 +690,14 @@ export function goodsMonth(s: GameState, r: Rng): void {
     const d = goodById[it.id];
     if (!d) { st.owned = st.owned.filter((x) => x !== it); continue; }
     const up = goodUpkeep(s, d);
-    if (o.wealth >= up) { o.wealth -= up; it.unpaid = 0; }
+    if (o.wealth >= up) { purse(s, -up, 'upkeep', 'goods:upkeep', { who: o }); it.unpaid = 0; }
     else {
       it.unpaid = (it.unpaid ?? 0) + 1;
       o.stress = clamp(o.stress + 2, 0, 100);
       it.value = Math.round(it.value * 0.97);
       if (it.unpaid >= 3) {
         const v = Math.round(it.value * 0.6);
-        o.wealth += v;
+        purse(s, v, 'goods', 'goods:repossess', { who: o });
         st.owned = st.owned.filter((x) => x !== it);
         const text = fmtL(l('Sem pagar a manutenção, {n} foi tomado e leiloado.', 'With upkeep unpaid, {n} was repossessed and auctioned.'), { n: d.name });
         notify(s, text, 'bad');
@@ -717,7 +718,7 @@ export function goodsMonth(s: GameState, r: Rng): void {
   for (const k of Object.keys(st.staff) as PStaffId[]) {
     const d = PSTAFF[k];
     const sal = money(s, d.salary);
-    if (o.wealth >= sal) o.wealth -= sal;
+    if (o.wealth >= sal) purse(s, -sal, 'staff', 'pstaff', { who: o });
     else {
       delete st.staff[k];
       bumpPerks();
@@ -736,14 +737,14 @@ export function goodsMonth(s: GameState, r: Rng): void {
   const rt = ROUTINES[st.routine] ?? ROUTINES.none;
   if (rt.cost) {
     const c = money(s, rt.cost);
-    if (o.wealth >= c) { o.wealth -= c; relief += rt.relief; health += rt.health; } else st.routine = 'none';
+    if (o.wealth >= c) { purse(s, -c, 'health', 'routine', { who: o }); relief += rt.relief; health += rt.health; } else st.routine = 'none';
   } else { relief += rt.relief; health += rt.health; }
   if (rt.trait && s.month === 11 && r.chance(0.2)) gainTrait(s, rt.trait);
   // fundação
   if (st.foundation) {
     const c = money(s, 1500);
     if (o.wealth >= c) {
-      o.wealth -= c;
+      purse(s, -c, 'gift', 'foundation', { who: o, ben: 'ext' });
       st.foundation.given += c;
       fame += 0.1;
       if (st.foundation.focus === 'schools') {
@@ -779,7 +780,7 @@ export function goodsMonth(s: GameState, r: Rng): void {
     if (!pos || !d) continue;
     const m = (d.drift + shock(id, s.year)) / 12 + r.normal(0, d.vol / Math.sqrt(12));
     pos.value = Math.max(0, Math.round(pos.value * (1 + clamp(m, -0.6, 0.8))));
-    if (d.rent) o.wealth += Math.round(pos.value * d.rent);
+    if (d.rent) purse(s, Math.round(pos.value * d.rent), 'invest', 'inv:rent', { who: o });
   }
   // acasos
   events(s, r);
@@ -819,7 +820,7 @@ function events(s: GameState, r: Rng): void {
   }
   if (st.owned.some((x) => x.id === 'racehorse') && r.chance(0.06)) {
     const prize = money(s, 25000);
-    o.wealth += prize;
+    purse(s, prize, 'gift', 'racehorse', { who: o });
     life(s).fame = clamp(life(s).fame + 1, 0, 100);
     glog(s, l('Seu cavalo venceu um grande prêmio!', 'Your horse won a major race!'), 'good', true);
   }
@@ -878,11 +879,11 @@ function rentMonth(s: GameState): void {
     if (r.chance(0.05)) { it.vac = r.int(1, 4); glog(s, fmtL(l('O inquilino de {n} saiu: o imóvel fica vago por algum tempo.', 'The tenant of {n} left: the property sits empty for a while.'), { n: d.name }), 'info'); continue; }
     if (r.chance(0.03)) { glog(s, fmtL(l('O inquilino de {n} atrasou o aluguel deste mês.', 'The tenant of {n} was late with this month\'s rent.'), { n: d.name }), 'bad'); continue; }
     const net = Math.round(full * (1 - AGENCY));
-    o.wealth += net;
+    purse(s, net, 'invest', 'rent', { who: o });
     it.rented = (it.rented ?? 0) + net;
     if (r.chance(0.04)) {
       const fix = Math.min(o.wealth, Math.round(full * 1.5));
-      o.wealth -= fix;
+      purse(s, -fix, 'upkeep', 'rent:fix', { who: o });
       glog(s, fmtL(l('Reforma urgente em {n}: o aluguel de um mês e meio foi para o conserto.', 'Urgent repairs at {n}: a month and a half of rent went to the fix.'), { n: d.name }), 'bad');
     }
   }

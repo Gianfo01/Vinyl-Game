@@ -24,6 +24,7 @@ import { nudge16 } from './fame16';
 import { life, playerAct, playerPerson } from './life';
 import { queueScene, type PlaceKind } from './scenes/state';
 import { ownerOf } from './people/owner';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 /** Centavos → texto nos dois idiomas. */
 export const usd17 = (c: number): L => l(`$${formatMoney(Math.round(c), 'pt-BR')}`, `$${formatMoney(Math.round(c), 'en-US')}`);
@@ -217,7 +218,7 @@ export class Fx17 {
   pocket(real: number): this {
     const v = money(this.s, real);
     const o = ownerOf(this.s);
-    o.wealth = Math.max(0, o.wealth + v);
+    purse(this.s, v, 'event', 'scene17', { who: o, floor: 0 });
     this.say(l('Bolso pessoal: {s}{v}', 'Personal wealth: {s}{v}'), { s: v > 0 ? '+' : '−', v: usd17(Math.abs(v)) });
     return this;
   }

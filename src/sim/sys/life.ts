@@ -22,6 +22,7 @@ import { ensureBandVocalist } from './vocals10';
 import { applyRoles29 } from './char29'; // r29: funções extras do personagem e a banda que o completa
 import { actsTouched17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
+import { purse, purseSet } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export * from './life/data';
 
@@ -129,7 +130,7 @@ function payPersonal(s: GameState, real: number): L | null {
   const o = ownerOf(s);
   const c = money(s, real);
   if (o.wealth < c) return l('Patrimônio pessoal insuficiente (sai do seu bolso, não da empresa).', 'Not enough personal wealth (it comes out of your pocket, not the company).');
-  o.wealth -= c;
+  purse(s, -c, 'family', 'life:pay', { who: o });
   return null;
 }
 
@@ -192,7 +193,7 @@ function applyCharacter(s: GameState, r: Rng): void {
   } else L0.background = r.pick(BACKGROUNDS).id;
   const bg = backgroundById[L0.background];
   for (const [k, v] of Object.entries(bg.owner)) o.attrs[k as OwnerAttr] = clamp(o.attrs[k as OwnerAttr] + (v ?? 0), 10, 95);
-  o.wealth = money(s, bg.wealth);
+  purseSet(s, money(s, bg.wealth), 'start', 'background', { who: o });
   const p = ensurePlayerPerson(s, r);
   // artista/híbrido: o personagem é o líder da própria banda
   const band = s.player.bandActId ? s.acts[s.player.bandActId] : undefined;
@@ -342,7 +343,7 @@ export function breakUp(s: GameState): L | null {
   if (pt.stage === 'married') {
     // divórcio: partilha de bens
     const share = Math.round(Math.max(0, o.wealth) * 0.35);
-    o.wealth -= share;
+    purse(s, -share, 'family', 'divorce', { who: o, ben: 'ext' });
     o.spouse = undefined;
     for (const k of Object.values(L0.kidsX)) k.bond = clamp(k.bond - 15, 0, 100);
     logLife(s, fmtL(l('Divórcio de {p}. Partilha de bens: {v}.', 'Divorce from {p}. Asset split: {v}.'), { p: pt.name, v: String(Math.round(share / 100)) }), 'bad', true);
@@ -512,7 +513,7 @@ export function playBar(s: GameState, r: Rng): L | null {
   const o = ownerOf(s);
   const quality = (overall(s, p) + p.skills.stage) / 2 + r.int(-10, 10);
   const pay = money(s, (60 + quality * 5) * (L0.background === 'musician' || L0.background === 'roadie' ? 1.5 : 1));
-  o.wealth += pay;
+  purse(s, pay, 'income', 'gig', { who: o });
   L0.fame = clamp(L0.fame + clamp((quality - 35) / 25, 0, 2), 0, 100);
   grow(s, p, 'presence', 0.4);
   grow(s, p, 'crowd', 0.4);
@@ -800,7 +801,7 @@ export function writeMemoir(s: GameState, r: Rng): L | null {
   if (e) return e;
   L0.memoir = true;
   const gain = money(s, 15000 + L0.fame * 1200 + s.player.stats.signed * 500);
-  ownerOf(s).wealth += gain;
+  purse(s, gain, 'income', 'memoir');
   L0.fame = clamp(L0.fame + 5, 0, 100);
   if (P(s).secrets.some((x) => x.owner === 'owner' && !x.known) && r.chance(0.3)) {
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100);
@@ -843,7 +844,7 @@ registerSimHook('month', 'life', (s, r) => {
       const ed = KID_EDU[kx.edu];
       if (ed.monthly) {
         const c = money(s, ed.monthly);
-        if (o.wealth >= c) { o.wealth -= c; k.aptitude = clamp(k.aptitude + ed.apt, 0, 99); } else kx.edu = 'public';
+        if (o.wealth >= c) { purse(s, -c, 'family', 'kid:edu', { who: o }); k.aptitude = clamp(k.aptitude + ed.apt, 0, 99); } else kx.edu = 'public';
       } else k.aptitude = clamp(k.aptitude + ed.apt, 0, 99);
     }
     kx.bond = clamp(kx.bond - 0.6, 0, 100);

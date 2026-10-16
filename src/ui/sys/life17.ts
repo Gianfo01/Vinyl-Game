@@ -28,6 +28,7 @@ import { store } from '../store';
 import { meter } from '../vis';
 import { rng19 } from '../../sim/rng19';
 import { askConfirm } from '../ask31';
+import { purse } from '../../sim/r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -75,7 +76,7 @@ function identityBox(s: GameState): HTMLElement {
       h('p', { class: 'small warn' }, t(fmtL(l('No armário: +1,5 de estresse por mês e risco de exposição de {r}/mês (sobe com sua fama, com casos do mesmo sexo e com quem sabe; casamento de fachada corta 65%).', 'In the closet: +1.5 stress per month and an outing risk of {r}/month (rises with fame, same-sex affairs and people who know; a lavender marriage cuts it by 65%).'), { r: pct(risk) }))),
       h('div', { class: 'row wrap' },
         btn(l('Sair do armário', 'Come out'), async () => { if (await askConfirm(t(acc < 0.55 ? l('Clima hostil: espere reação negativa (reputação e boatos). Continuar?', 'Hostile climate: expect backlash (reputation and rumors). Continue?') : l('Assumir publicamente?', 'Come out publicly?')))) run(comeOut(s, 'player', 'chose'), l('ok', 'ok')); }, { primary: true }),
-        !me.lav && !life(s).partner ? btn(l('Casamento de fachada ($8.000)', 'Lavender marriage ($8,000)'), () => { const o = ownerOf(s); const c = money(s, 8000); if (o.wealth < c) return run(l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.')); o.wealth -= c; run(lavender(s, 'player', rng19(s, 'act')), l('ok', 'ok')); }) : null,
+        !me.lav && !life(s).partner ? btn(l('Casamento de fachada ($8.000)', 'Lavender marriage ($8,000)'), () => { const o = ownerOf(s); const c = money(s, 8000); if (o.wealth < c) return run(l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.')); purse(s, -c, 'family', 'lavender', { who: o }); run(lavender(s, 'player', rng19(s, 'act')), l('ok', 'ok')); }) : null,
       )) : null,
     h('div', { class: 'row wrap' }, btn(l('Declarar apoio à causa LGBT', 'Publicly back LGBT rights'), () => run(declareAlly(s), l('ok', 'ok')), { disabled: (rec?.ally ?? 0) >= s.year - 1, title: l('Artistas LGBT do seu selo ganham moral e propostas a artistas LGBT melhoram por 6 anos; religiosos estritos se ressentem; em país hostil, a reputação institucional cai.', 'LGBT acts on your label gain morale and offers to LGBT acts improve for 6 years; strict religious acts resent it; in a hostile country, institutional reputation drops.') })),
     h('p', { class: 'small muted' }, t(l('A orientação vem da ficha de criação. Ela pesa em: reação a sair do armário (religião, censura e imprensa do país na época), casamento igualitário (antes da lei, a união é simbólica: sem partilha nem herança garantida), propostas de artistas LGBT ou religiosos e boatos.', 'Orientation comes from character creation. It weighs on: reaction to coming out (country religion, censorship and press at the time), marriage equality (before the law, a union is symbolic: no split nor guaranteed inheritance), offers from LGBT or religious acts, and rumors.'))),

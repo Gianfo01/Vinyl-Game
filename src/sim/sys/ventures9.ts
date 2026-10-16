@@ -14,6 +14,7 @@ import { scandal } from '../scandal17';
 import { commW19, crisisP19, favorCost19, studioComp19 } from '../ctx19';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type VKind = 'festival' | 'publisher' | 'studio' | 'booking' | 'media' | 'platform';
 export type MediaKind = 'magazine' | 'radio' | 'tv' | 'blog' | 'playlist';
@@ -111,7 +112,7 @@ export function vpay(s: GameState, h: Holder, amount: number, key: string, memo:
   amount = Math.round(amount);
   if (!amount) return;
   if (h === 'label') post(s, `v9:${key}`, amount, 'business', memo);
-  else ownerOf(s).wealth += amount;
+  else purse(s, amount, 'business', 'v9');
   if (!v) return;
   let e = v.pl.at(-1);
   if (!e || e.y !== s.year || e.m !== s.month) { e = { y: s.year, m: s.month, rev: 0, cost: 0 }; v.pl.push(e); if (v.pl.length > 12) v.pl.shift(); }
