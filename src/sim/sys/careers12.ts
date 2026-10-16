@@ -4,6 +4,7 @@
 // meio da partida começa ou larga carreiras (tempo é finito: carreiras demais estressam); um herdeiro pode
 // querer outras. Cada carreira tem cartão próprio na mesa (registro na interface). Gerador próprio.
 
+import { builtVenue } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -14,8 +15,7 @@ import type { SkillId } from '../../data/people';
 import { playerPerson } from './life';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
-import { ventures } from './ventures9';
-import { liveOf } from './live';
+import { addClientTrust9, ventures } from './ventures9';
 import { actsNow27, releasesNow27 } from '../tickcache27';
 import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
@@ -36,7 +36,7 @@ const DEFS: CareerDef[] = [
   { id: 'festival', name: l('Dono de festival', 'Festival owner'), desc: l('Data, line-up, ingresso: lenda ou desastre.', 'Date, line-up, tickets: legend or disaster.'), from: 1950, icon: 'star', area: 'festivals', load: 0.25, status: owns('festival', 'festival(is)', 'festival(s)') },
   { id: 'booking', name: l('Agente/promotor de shows', 'Booking agent/promoter'), desc: l('Roteiros de turnê e comissão sobre cachês.', 'Tour routing and a cut of fees.'), from: 1930, icon: 'tour-bus', area: 'tour12', load: 0.25, status: owns('booking', 'agência(s)', 'agency(ies)') },
   { id: 'venue', name: l('Dono de casa de shows', 'Venue owner'), desc: l('Um palco próprio: agenda, bar, cena local.', 'A stage of your own: calendar, bar, local scene.'), from: 1900, icon: 'mic', area: 'shows', load: 0.25,
-    status: (s) => { const v = liveOf(s).venue; return v ? fmtL(l('{n} · {c}', '{n} · {c}'), { n: v.name, c: cityById[v.cityId]?.name ?? v.cityId }) : l('Sem casa ainda: compre uma em Música → Shows.', 'No venue yet: buy one in Music → Shows.'); } },
+    status: (s) => { const v = builtVenue(s); return v ? fmtL(l('{n} · {c}', '{n} · {c}'), { n: v.name, c: cityById[v.cityId]?.name ?? v.cityId }) : l('Sem casa ainda: compre uma em Música → Shows.', 'No venue yet: buy one in Music → Shows.'); } },
   { id: 'studio', name: l('Dono de estúdio/produtor', 'Studio owner/producer'), desc: l('Equipamento, som da casa, sessões para todos.', 'Gear, a house sound, sessions for everyone.'), from: 1920, icon: 'cd', area: 'studio12', load: 0.25, status: owns('studio', 'estúdio(s)', 'studio(s)') },
   { id: 'publisher', name: l('Editor musical', 'Music publisher'), desc: l('Compositores, catálogo, sincronização.', 'Songwriters, catalog, sync.'), from: 1900, icon: 'note', area: 'publishing16', load: 0.2, status: owns('publisher', 'editora(s)', 'publisher(s)') },
   { id: 'media', name: l('Dono de mídia', 'Media owner'), desc: l('Revista, rádio, TV: poder de execução e cenas.', 'Magazine, radio, TV: airplay power and scenes.'), from: 1900, icon: 'bulb', area: 'outlets16', load: 0.25, status: owns('media', 'veículo(s)', 'outlet(s)') },
@@ -207,7 +207,7 @@ export function dropCareer(s: GameState, id: string): { ok: boolean; text: L } {
   st.active = st.active.filter((x) => x !== id);
   const d = careerDef(id)!;
   // largar o ofício não fecha os negócios, mas quem dependia de você nota
-  if (id === 'manager') for (const c of ventures(s).mg.clients) c.sat = clamp(c.sat - 10, 0, 100);
+  if (id === 'manager') for (const c of ventures(s).mg.clients) addClientTrust9(s, c.actId, -10);
   const t = fmtL(l('Você deixa a carreira de {c} em segundo plano.', 'You put your {c} career on the back burner.'), { c: d.name });
   log(s, t);
   return { ok: true, text: id === 'manager' ? fmtL(l('{t} Seus agenciados se sentem abandonados (−10 de satisfação).', '{t} Your clients feel abandoned (−10 satisfaction).'), { t }) : t };

@@ -10,6 +10,7 @@
 //   rivais da cidade, reconhecimento em turnê, imprensa local e o que o jogador sabe de atos estrangeiros
 //   (exposição vista do país do jogador — knownLevel/canSee em fame15).
 
+import { tourList } from '../tours';
 import { Rng, clamp } from '../../core/rng';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryTaste } from '../../data/countries';
 import { allCountryCodes, countryName, countryOfCity, marketOfCountry } from '../../data/geo';
@@ -189,7 +190,7 @@ export function personFameIn(s: GameState, pid: string, a3: string): number {
 
 /** Cidade onde o ato está agora: turnê em andamento (última parada feita ou a próxima) ou a cidade natal. */
 export function whereCity(s: GameState, a: Act): string {
-  const t = s.tours.find((x) => x.actId === a.id && x.status === 'running');
+  const t = tourList(s).find((x) => x.actId === a.id && x.status === 'running');
   if (t) { const st = [...t.stops].reverse().find((x) => x.status === 'played') ?? t.stops.find((x) => x.status === 'scheduled'); if (st) return st.cityId; }
   return a.city;
 }
@@ -360,7 +361,7 @@ function localEvents(s: GameState): void {
       lt[x.a3] = ti;
     }
     // reconhecimento em turnê: paradas feitas no último mês
-    const t = s.tours.find((z) => z.actId === a.id && (z.status === 'running' || z.status === 'done') && z.stops.some((y) => y.status === 'played' && s.day - y.day <= 31 && s.day >= y.day));
+    const t = tourList(s).find((z) => z.actId === a.id && (z.status === 'running' || z.status === 'done') && z.stops.some((y) => y.status === 'played' && s.day - y.day <= 31 && s.day >= y.day));
     if (t) {
       const seen = new Set<string>();
       for (const sp of t.stops) {

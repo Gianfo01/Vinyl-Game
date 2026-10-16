@@ -18,7 +18,8 @@ import { ASK31, allowOnce31, usd31, askFor31, d31, dirOf31, exc31, excs31, goalO
 import { fmtL, money, playerActs } from '../util';
 import { D16_GATES, D16_PAY, KINDS, respOf16, type Order16, type OrderKind } from './deleg16';
 import { renewChance, renewWithReading } from './explain12';
-import { c12 } from './tour12';
+import { shows12 } from './tour12';
+import { tourList } from '../tours';
 
 // r31 (Q): o estado das políticas (`x4.policy18`) foi fundido na delegação única (sim/deleg31.ts): teto e reserva são
 // diretrizes de "Gastos da equipe", descanso e shows de "Descanso do elenco", renovação é a responsabilidade
@@ -48,8 +49,8 @@ const onceOk = onceOk31;
 
 /** Shows (tocados ou marcados) do ato nas últimas/próximas 13 semanas. */
 export function showsNear18(s: GameState, actId: string): number {
-  const a = c12(s).shows.filter((x) => x.actId === actId && x.status !== 'cancelled' && Math.abs(x.week - s.week) <= 13).length;
-  const b = s.tours.filter((t) => t.actId === actId).reduce((n, t) => n + t.stops.filter((x) => x.status !== 'cancelled' && Math.abs(x.day - s.day) <= 91).length, 0);
+  const a = shows12(s).filter((x) => x.actId === actId && x.status !== 'cancelled' && Math.abs(x.week - s.week) <= 13).length;
+  const b = tourList(s).filter((t) => t.actId === actId).reduce((n, t) => n + t.stops.filter((x) => x.status !== 'cancelled' && Math.abs(x.day - s.day) <= 91).length, 0);
   return a + b;
 }
 /** O ato precisa de descanso? (maior estresse curto dos integrantes e cansaço) */

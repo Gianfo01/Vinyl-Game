@@ -16,7 +16,7 @@ import {
 import { actHype } from '../../sim/sys/hype12';
 import { leaderOf, leaders } from '../../sim/sys/leaders10';
 import { RELIC_KIND, RELIC_ST, ownerName as relicOwner } from '../../sim/sys/relics9';
-import { moveText, rivals8, sceneName } from '../../sim/sys/rivals8';
+import { moveText, rivals8, sceneName, movesOf8 } from '../../sim/sys/rivals8';
 import { dealWith, rivals12 } from '../../sim/sys/rivals12';
 import { STAND_KEYS, STAND_NAME, standingOf, standingRanking } from '../../sim/sys/standing9';
 import type { Act, GameState, Person } from '../../sim/types';
@@ -197,7 +197,7 @@ function relationTab(s: GameState, id: string): HTMLElement {
   const d = dealWith(s, id);
   const feud = Math.round(s.rivalries?.[id] ?? 0);
   const fights = rivals12(s).c.filter((c) => c.lb === id);
-  const moves = (rivals8(s)?.log?.[id] ?? []).slice(-12).reverse();
+  const moves = movesOf8(s, id).slice(-12).reverse();
   const poach = Object.values(s.acts).filter((a) => a.owner === 'player' && rivals8(s)?.interest?.[a.id]?.lb === id);
   return h('div', null,
     chips(stat('fire', feud, l('rixa com você (0–100)', 'feud with you (0–100)')),

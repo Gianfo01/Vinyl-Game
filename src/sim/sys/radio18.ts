@@ -10,6 +10,9 @@
 // Versão editada para rádio: abre portas no Top 40/AC/urbana; artista que preza a arte reclama.
 // No streaming a rádio pesa menos (ainda conta para o público adulto e para o carro).
 
+import { uni4On } from '../r31/uni4';
+import { ventures } from './ventures9';
+import { v12 } from './ventures12';
 import { Rng, clamp, seedState } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { CITIES, familyOf, l, type FamilyId, type L } from '../../data/world';
@@ -50,7 +53,8 @@ export const CONS18: ConsDef18[] = [
 ];
 export const consNow18 = (s: GameState, f: Fmt18): ConsDef18 | undefined => CONS18.find((c) => c.fmt === f && s.year >= c.from && s.year <= c.to);
 
-export interface Station18 { id: string; call: string; fmt: Fmt18; pd: string; adv: number; rel: number; cons?: string; reach: number; lunch?: number; /** R31 CAR (car31.cities): cidade da estação; audiência disputada cidade a cidade */ city?: string }
+/** `own`: id do seu veículo de mídia (ventures9 kind 'media', media 'radio') — UNI-4/B.21: sua rádio é uma estação do mercado. */
+export interface Station18 { id: string; call: string; fmt: Fmt18; pd: string; adv: number; rel: number; cons?: string; reach: number; lunch?: number; own?: string; /** R31 CAR (car31.cities): cidade da estação; audiência disputada cidade a cidade */ city?: string }
 export interface Rot18 { st: string; lvl: number; w: number }
 export interface Paid18 { w: number; rel: string; act: string; who: string; amt: number; out?: boolean }
 export interface Radio18State { st: Station18[]; rot: Record<string, Rot18[]>; tried: Record<string, number>; paid: Paid18[]; n: { pitch: number; adds: number; heavy: number; exposed: number }; seq: number }
@@ -72,7 +76,7 @@ export function ensureStations18(s: GameState): Station18[] {
   const st = radio18(s);
   const usa = countryOfCity(s.config.homeCity) === 'USA';
   for (const f of fmtsNow18(s)) {
-    if (st.st.some((x) => x.fmt === f)) continue;
+    if (st.st.some((x) => x.fmt === f && !x.own)) continue;
     const r = new Rng(seedState(`radio18|${s.config.seed}|${f}`));
     for (let i = 0; i < 3; i++) {
       const freq = f === 'network' ? `${r.int(55, 160) * 10} AM` : `${r.int(88, 107)}.${r.int(1, 9)} FM`;
@@ -85,10 +89,48 @@ export function ensureStations18(s: GameState): Station18[] {
   for (const x of st.st) x.city ??= stationCity18(s, x);
   // consultores mudam com as décadas
   for (const x of st.st) { const c = consNow18(s, x.fmt); if (x.cons && (!c || c.id !== x.cons)) x.cons = c?.id; }
-  st.st = st.st.filter((x) => fmtsNow18(s).includes(x.fmt));
+  st.st = st.st.filter((x) => x.own || fmtsNow18(s).includes(x.fmt));
   return st.st;
 }
 
+/** Formato da sua rádio pela linha editorial (media12), o primeiro que existe na época. */
+const OWN_FMT18: Record<string, Fmt18[]> = {
+  mainstream: ['top40', 'network', 'adult'], underground: ['college', 'aor', 'top40', 'network'],
+  prestige: ['adult', 'aor', 'network', 'top40'], tabloid: ['top40', 'network', 'adult'],
+};
+/** Suas rádios (ventures9 'media'/'radio') como estações com dono: criadas, atualizadas e removidas aqui. */
+function syncOwnStations18(s: GameState): void {
+  const st = radio18(s), on = uni4On(s) && hasTech(s, 'radio');
+  const mine = on ? ventures(s).list.filter((v) => v.kind === 'media' && v.media === 'radio') : [];
+  st.st = st.st.filter((x) => !x.own || mine.some((v) => v.id === x.own));
+  const now = fmtsNow18(s);
+  for (const v of mine) {
+    const line = v12(s).med[v.id]?.line ?? 'mainstream';
+    const fmt = (OWN_FMT18[line] ?? OWN_FMT18.mainstream).find((f) => now.includes(f)) ?? now[0];
+    if (!fmt) continue;
+    let x = st.st.find((k) => k.own === v.id);
+    if (!x) { x = { id: `rs${++st.seq}`, call: v.name, fmt, pd: '', adv: 0.8, rel: 100, reach: 1, own: v.id }; st.st.push(x); }
+    x.call = v.name; x.fmt = fmt; x.rel = 100;
+    x.pd = v12(s).med[v.id]?.staff.find((z) => z.role === 'host')?.name ?? s.config.companyName;
+    x.reach = Math.round((0.3 + (v.reach ?? 10) / 60) * 100) / 100;
+  }
+}
+/** A programação da sua rádio põe no ar o último disco dos seus artistas escalados (rotação nível 2, estreia 3). */
+function playOwn18(s: GameState): void {
+  const st = radio18(s);
+  const own = st.st.filter((x) => x.own);
+  for (const rid of Object.keys(st.rot)) { st.rot[rid] = st.rot[rid].filter((ro) => !own.some((x) => x.id === ro.st)); if (!st.rot[rid].length) delete st.rot[rid]; }
+  for (const x of own) {
+    const prog = v12(s).med[x.own!]?.prog ?? [];
+    for (const sl of prog) {
+      const a = sl.actId ? s.acts[sl.actId] : undefined;
+      if (!a || (a.owner !== 'player' && !a.playerBand)) continue;
+      const rid = a.releases.slice().reverse().find((id) => { const r0 = s.releases[id]; return r0 && r0.owner === 'player' && s.week - r0.week <= 30; });
+      if (!rid || (st.rot[rid] ?? []).some((ro) => ro.st === x.id)) continue;
+      (st.rot[rid] ??= []).push({ st: x.id, lvl: sl.kind === 'premiere' ? 3 : sl.kind === 'rotation' ? 2 : 1, w: s.week });
+    }
+  }
+}
 /** Cidade de uma estação NPC: a sede do jogador e as outras cidades do país dela, em rodízio pelo número da estação. */
 export function stationCity18(s: GameState, x: Station18): string {
   const home = s.config.homeCity, a3 = countryOfCity(home);
@@ -157,7 +199,7 @@ export function pitchRadio18(s: GameState, relId: string, f: Fmt18, how: How18, 
   const r = new Rng(seedState(`radio18|${s.config.seed}|${key}`));
   const consRoll: Record<string, boolean> = {};
   const added: string[] = [];
-  for (const x of ensureStations18(s).filter((k) => k.fmt === f)) {
+  for (const x of ensureStations18(s).filter((k) => k.fmt === f && !k.own)) {
     const o = addOdds18(s, rel, x, how, edit);
     const ok = x.cons ? (consRoll[x.cons] ??= r.chance(o.p)) : r.chance(o.p);
     if (!ok) continue;
@@ -183,6 +225,7 @@ export function pitchRadio18(s: GameState, relId: string, f: Fmt18, how: How18, 
 export function lunchPd18(s: GameState, stId: string): L {
   const x = radio18(s).st.find((k) => k.id === stId);
   if (!x) return l('Estação inválida.', 'Invalid station.');
+  if (x.own) return l('É a sua rádio: a relação já é total.', 'It is your station: the relationship is already total.');
   if ((x.lunch ?? -99) > s.week - 8) return l('Vocês jantaram há pouco.', 'You dined recently.');
   const cost = money(s, 200);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
@@ -209,7 +252,9 @@ registerMod('chartUnits', 'radio18', (s, v, c) => {
 registerSimHook('month', 'radio18', (s) => {
   if (!hasTech(s, 'radio')) return;
   ensureStations18(s);
+  syncOwnStations18(s);
   const st = radio18(s);
+  playOwn18(s);
   const r = new Rng(seedState(`radio18m|${s.config.seed}|${s.year * 12 + s.month}`));
   for (const [rid, rots] of Object.entries(st.rot)) {
     const rel = s.releases[rid];
@@ -220,6 +265,7 @@ registerSimHook('month', 'radio18', (s) => {
     for (const ro of rots) {
       const x = st.st.find((k) => k.id === ro.st);
       if (!x) { ro.lvl = 0; continue; }
+      if (x.own) continue; // a programação da sua rádio é você quem faz (playOwn18)
       const age = s.week - ro.w;
       if ((up || charting) && ro.lvl < 3 && r.chance(charting ? 0.7 : 0.45)) {
         ro.lvl++;

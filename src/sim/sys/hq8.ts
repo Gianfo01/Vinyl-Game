@@ -3,6 +3,7 @@
 // perto de terminar e qual é a próxima decisão importante. Também guarda a linha do tempo de
 // crescimento da empresa (sede, filiais, equipe, elenco, departamentos, equipamentos, mobília).
 
+import { tourList } from '../tours';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { slotWeek } from '../agenda';
@@ -40,7 +41,7 @@ export function weekActions(s: GameState, actId: string): string[] {
 export function hqKind(s: GameState, act: Act): HqKind {
   if (act.status === 'hiatus' || (act.hiatusUntil !== undefined && act.hiatusUntil > s.week)) return 'hiatus';
   const acts = weekActions(s, act.id);
-  if (s.tours?.some((t) => t.actId === act.id && t.status === 'running') || has(acts, 'gigs', 'tour')) return 'tour';
+  if (tourList(s).some((t) => t.actId === act.id && t.status === 'running') || has(acts, 'gigs', 'tour')) return 'tour';
   if (s.sessions.some((x) => x.actId === act.id && !x.done) || has(acts, 'record')) return 'record';
   if (has(acts, 'compose', 'workshop', 'residency_art')) return 'write';
   if (has(acts, 'rest')) return 'rest';

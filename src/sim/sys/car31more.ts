@@ -31,7 +31,7 @@ import { boost31, car31On, careerSw31, exec31, registerExec31, touch31 } from '.
 import { fameIn } from './fame16';
 import { SCREEN31 } from './screen18';
 import { NPCREL31 } from '../r31/npcrel31';
-import { ROUTE31, vpay, type Venture } from './ventures9';
+import { ROUTE31, clientTrust9, vpay, type Venture } from './ventures9';
 
 export interface Pledge31 { act: string; vid: string; t: string; u: number; k: number }
 export interface More31State {
@@ -265,10 +265,10 @@ export const ASK31: Record<Ask31k, { name: L; desc: L }> = {
   agency: { name: l('Pedir turnê a uma agência', 'Ask an agency for a tour'), desc: l('Uma agência marca datas em duas cidades do país (fama no país por três meses).', 'An agency books dates in two cities of the country (fame there for three months).') },
 };
 export const ASK_COOL31 = 13;
-const mgSat = (s: GameState, id: string): number => ((s as unknown as { x4?: { ventures9?: { mg?: { clients?: { actId: string; sat: number }[] } } } }).x4?.ventures9?.mg?.clients ?? []).find((x) => x.actId === id)?.sat ?? 50;
 const hasVid = (s: GameState, relId?: string): boolean => !!relId && !!(s as unknown as { x4?: { media18?: { vids?: Record<string, { banned?: number }> } } }).x4?.media18?.vids?.[relId] && !(s as unknown as { x4: { media18: { vids: Record<string, { banned?: number }> } } }).x4.media18.vids[relId].banned;
 export function askOdds31(s: GameState, a: Act, k: Ask31k): number {
-  const sat = mgSat(s, a.id);
+  const c = ((s as unknown as { x4?: { ventures9?: { mg?: { clients?: { actId: string }[] } } } }).x4?.ventures9?.mg?.clients ?? []).find((x) => x.actId === a.id);
+  const sat = c ? clientTrust9(s, a.id) : 50; // UNI-4: satisfação do cliente = confiança da ficha do empresário
   const lb = s.labels[a.owner ?? ''];
   const rel = lb?.leaderId ? opinionOf(s, `l:${lb.leaderId}`) : 0;
   const r = latestLive(s, a.id), q = r?.q ?? 50;

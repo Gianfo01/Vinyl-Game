@@ -6,6 +6,7 @@
 // (a tensão central da carreira vira conflito de verdade) e uma meta medida em 12 meses; cumprir dá prestígio,
 // falhar custa. Sorte só por semente; desafio com data entra no calendário.
 
+import { addClientTrust9, clientTrust9 } from './ventures9';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerDeadline, type Deadline19 } from '../calendar19';
@@ -28,12 +29,13 @@ const x4 = (s: GameState): AnyRec => ((s as unknown as { x4?: AnyRec }).x4 ?? {}
 interface V9 { id: string; kind: string; level: number; rep: number; sound?: number; subs?: number; deals?: string[]; clients?: { actId: string }[]; cat?: unknown[]; editions?: { crowd: number; verdict: string; y: number }[] }
 const vl = (s: GameState): V9[] => ((x4(s).ventures9 as { list?: V9[] } | undefined)?.list ?? []);
 const vk = (s: GameState, k: string): V9[] => vl(s).filter((v) => v.kind === k);
-const mg = (s: GameState): { clients: { actId: string; sat: number }[] } => ((x4(s).ventures9 as { mg?: { clients: { actId: string; sat: number }[] } } | undefined)?.mg ?? { clients: [] });
+const mg = (s: GameState): { clients: { actId: string }[] } => ((x4(s).ventures9 as { mg?: { clients: { actId: string }[] } } | undefined)?.mg ?? { clients: [] });
 const band = (s: GameState) => (s.player.bandActId ? s.acts[s.player.bandActId] : undefined);
 const press = (s: GameState) => x4(s).press18 as { stage: number; cred: number } | undefined;
 const screen = (s: GameState) => x4(s).screen18 as { rep: number; list: { st: string }[] } | undefined;
-const venue = (s: GameState) => (x4(s).live as { venue?: { kind: string } | null } | undefined)?.venue ?? null;
-const v12 = (s: GameState) => (x4(s).venue12 as { v?: { neigh: number; branches: unknown[] } | null } | undefined)?.v ?? null;
+const house = (s: GameState) => (x4(s).venues27 as { v?: Record<string, { built?: { kind: string }; prog?: { neigh: number; branches: unknown[] } }> } | undefined)?.v?.['lv:venue']; // UNI-4: registro único das casas
+const venue = (s: GameState) => house(s)?.built ?? null;
+const v12 = (s: GameState) => house(s)?.prog ?? null;
 const avgShare = (s: GameState): number => { const vs = mediaVentures31(s); return vs.length ? vs.reduce((t, v) => t + stRo31(s, v).share, 0) / vs.length : 0; };
 
 // ---------------------------------------------------------------- definições
@@ -77,7 +79,7 @@ export const DEF31: Record<Car31, Def31> = {
     tension: l('O interesse do cliente × o seu: comissão, agenda e lealdade.', 'Client\'s interest × yours: commission, schedule and loyalty.'),
     end: { name: l('Clientes disputando a mesma vaga', 'Clients fighting for the same slot'), desc: l('O cliente menos satisfeito recebe proposta de um empresário rival. Não perca ninguém em 12 meses.', 'Your least satisfied client gets an offer from a rival manager. Lose no one in 12 months.'),
       metric: (s) => mg(s).clients.length,
-      shock: (s) => { const c = [...mg(s).clients].sort((a, b) => a.sat - b.sat || (a.actId < b.actId ? -1 : 1))[0]; if (c) c.sat = clamp(c.sat - 25, 0, 100); },
+      shock: (s) => { const c = [...mg(s).clients].sort((a, b) => clientTrust9(s, a.actId) - clientTrust9(s, b.actId) || (a.actId < b.actId ? -1 : 1))[0]; if (c) addClientTrust9(s, c.actId, -25); }, // UNI-4: satisfação = confiança
       ok: (s, b) => mg(s).clients.length >= b, target: (b) => fmtL(l('{n} cliente(s)', '{n} client(s)'), { n: b }) },
   },
   booking: {

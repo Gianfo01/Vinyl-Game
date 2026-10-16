@@ -6,6 +6,7 @@
 // ou acordo de imagem com escopo merch (image17). Licenciar para rede de lojas: royalty sem risco, imagem
 // barateia. Gerador próprio por mês.
 
+import { tourList } from '../tours';
 import { Rng, clamp } from '../../core/rng';
 import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: imagem no merch
 import { cityById, l, type L } from '../../data/world';
@@ -45,7 +46,7 @@ export function canSell(s: GameState, a: Act): L | null {
   if (hasRight(s, a.id, 'merch')) return null;
   return l('Precisa de contrato 360 ou de um acordo de imagem com escopo merch.', 'Needs a 360 deal or an image-rights deal with merch scope.');
 }
-const touring = (s: GameState, a: Act) => (s.tours ?? []).some((t) => t.actId === a.id && (t.status === 'running' || t.status === 'planned') && t.stops.some((x) => x.status === 'scheduled' && Math.abs(x.day - s.day) < 35));
+const touring = (s: GameState, a: Act) => tourList(s).some((t) => t.actId === a.id && (t.status === 'running' || t.status === 'planned') && t.stops.some((x) => x.status === 'scheduled' && Math.abs(x.day - s.day) < 35));
 const southern = (a: Act) => (cityById[a.city]?.lat ?? 10) < 0;
 
 /** Demanda mensal estimada de uma linha, com o porquê. */

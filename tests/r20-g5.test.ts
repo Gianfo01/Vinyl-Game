@@ -6,6 +6,7 @@ import { CITIES } from '../src/data/world';
 import { cal17, clashOf, playerShows, weekOfDay } from '../src/sim/sys/clash17';
 import { draftConflicts20, hardConflictCount20, showConflict20 } from '../src/sim/sys/shows20';
 import type { Tour } from '../src/sim/xtypes';
+import { addShow12 } from '../src/sim/sys/tour12';
 
 describe('r20 G5 shows20', () => {
   const s = createGame(defaultConfig('r20g5', { startYear: 1975 }));
@@ -24,7 +25,7 @@ describe('r20 G5 shows20', () => {
   });
 
   it('mesma semana em outra cidade = conflito duro (dos dois lados e no rascunho)', () => {
-    (s.x4 as unknown as { tour12?: unknown }).tour12 = { shows: [{ actId: mine.id, city: c2, week: w, status: 'booked' }] };
+    addShow12(s, { id: 'sh20', actId: mine.id, by: 'agent', city: c2, week: w, tier: 1, deal: 'guarantee', fee: 0, pct: 0.85, pmult: 1, promo: 1, rate: 0, deposit: 0 }); // UNI-4: show avulso = turnê de 1 data
     expect(playerShows(s).filter((x) => x.w === w)).toHaveLength(2);
     expect(hardConflictCount20(s)).toBe(2);
     const d = draftConflicts20(s, mine.id, [{ cityId: c1, day: day + 1 }]);

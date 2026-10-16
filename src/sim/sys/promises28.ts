@@ -7,6 +7,7 @@
 // Sem caixa para a verba quando a promessa se cumpre = promessa quebrada (paga a multa se der).
 // O gancho semanal só lê contratos do jogador com promessa aberta; puro e sem sorte (determinístico).
 
+import { tourList } from '../tours';
 import { toReal } from '../../core/money';
 import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
@@ -86,7 +87,7 @@ export function promiseMet28(s: GameState, c: Contract, act: Act, p: ContractPro
   // "cumpria" a turnê na semana seguinte à assinatura (a sonda "promete e não cumpre" nunca quebrava nada).
   if (p.kind === 'tour') {
     if (s.memory.some((m) => m.actId === act.id && m.kind === 'tour_done' && m.week >= c.startWeek)) return true;
-    if (s.memory.some((m) => m.actId === act.id && m.kind === 'tour_planned' && m.week >= c.startWeek) && s.tours.some((t) => t.actId === act.id && t.status === 'running' && t.stops.some((x) => x.status === 'played'))) return true;
+    if (s.memory.some((m) => m.actId === act.id && m.kind === 'tour_planned' && m.week >= c.startWeek) && tourList(s).some((t) => t.actId === act.id && t.status === 'running' && t.stops.some((x) => x.status === 'played'))) return true;
     return act.history.length > 0 && s.memory.filter((m) => m.actId === act.id && m.kind === 'gigs' && m.week >= c.startWeek).length >= TOUR_GIG_WEEKS28;
   }
   return c.creativeControl;

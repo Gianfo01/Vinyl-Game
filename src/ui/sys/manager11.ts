@@ -5,9 +5,9 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import {
-  CAMPAIGN_NAME, GOAL_NAME, acceptDeal, answerPoach, bookTour, campaignCost, canShop, conflictsOf, cxOf, imageCampaign, mgr11, poachBonus, poachChance, poachClient, prReady,
+  CAMPAIGN_NAME, GOAL_NAME, acceptDeal, answerPoach, bookTour, campaignCost, canShop, conflictsOf, cxOf, imageCampaign, mgr12, poachBonus, poachChance, poachClient, prReady,
   rateChance, renegotiateRate, shopDeal, tourCost, tourReady, type Campaign, type PoachMove,
-} from '../../sim/sys/manager11';
+} from '../../sim/sys/manager12';
 import { mgCandidates, mgGross, ventures, type Client } from '../../sim/sys/ventures9';
 import { $, actLink, pill, rerender, toast } from '../common';
 import { RATE19 } from './neg19';
@@ -25,7 +25,7 @@ export function clientExtras(s: GameState, c: Client): HTMLElement {
   const r = rng19(s, 'act');
   const a = s.acts[c.actId];
   const x = cxOf(s, c.actId);
-  const pitch = mgr11(s).pitches.find((p) => p.actId === c.actId);
+  const pitch = mgr12(s).pitches.find((p) => p.actId === c.actId);
   const cf = conflictsOf(s, c.actId);
   let rate = c.rate;
   let camp: Campaign = 'press';
@@ -53,7 +53,7 @@ export function clientExtras(s: GameState, c: Client): HTMLElement {
 
 
 export function reportsTab(s: GameState): HTMLElement {
-  const st = mgr11(s);
+  const st = mgr12(s);
   const reps = st.reports.slice().reverse();
   return h('div', null,
     h('p', { class: 'muted small' }, t(l('Fechamento de cada mês do escritório: comissões, satisfação e o que aconteceu. Conflitos expostos até hoje: {n}.', 'Each month\'s office close: commissions, satisfaction and what happened. Conflicts exposed so far: {n}.'), { n: st.exposed })),

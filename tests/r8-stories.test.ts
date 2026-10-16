@@ -13,7 +13,7 @@ import { cityDemand } from '../src/sim/tours';
 import { createGame, grantPlayerContract } from '../src/sim/worldgen';
 import { audience, bondOf, collectorsOf, readAudience, startRevival } from '../src/sim/sys/audience8';
 import { bondNote, careerPhase, identity, memOf, prefsOf, reactToResult } from '../src/sim/sys/identity8';
-import { moveText, playbookOf, rivals8 } from '../src/sim/sys/rivals8';
+import { moveText, playbookOf, rivals8, movesOf8 } from '../src/sim/sys/rivals8';
 import { maybeStartCult, stories } from '../src/sim/sys/stories8';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { courtOf18 } from '../src/sim/sys/world18';
@@ -183,11 +183,11 @@ describe('rivais com estratégia reconhecível', () => {
       s.pendingReleases.push({ id: `prt${i}`, actId: mine.id, type: 'single', songs: [], title: `Teste ${i}`, formats: [], press: 0, marketing: [], territories: ['na'], week: s.week + 2 });
       rivals8(s).lastClash = -999;
       runSimHooks('week', s, r);
-      moved = (rivals8(s).log[lb.id] ?? []).some((m) => m.k === 'date_move');
+      moved = movesOf8(s, lb.id).some((m) => m.k === 'date_move');
       s.pendingReleases = s.pendingReleases.filter((x) => x.id !== `prt${i}`);
     }
     expect(moved).toBe(true);
-    const mv = rivals8(s).log[lb.id].find((m) => m.k === 'date_move')!;
+    const mv = movesOf8(s, lb.id).find((m) => m.k === 'date_move')!;
     expect(moveText(mv).pt).toMatch(/antecipou o lançamento/);
     expect(notes(s).some((n) => /antecipou/.test(n.text.pt))).toBe(true);
   });

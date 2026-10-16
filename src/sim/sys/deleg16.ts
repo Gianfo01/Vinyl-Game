@@ -4,6 +4,8 @@
 // o profissional erra (dupla marcação, casa grande demais, campanha jogada fora) e pode ser roubado por selos rivais.
 // Aleatoriedade: gerador próprio (semente + ano + mês).
 
+import { ownFests } from './feststore';
+import { cityRelAdd } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { CITIES, cityById, l, type L, type MarketId } from '../../data/world';
 import { VENUE_TIERS } from '../../data/rules';
@@ -12,10 +14,9 @@ import type { Act, GameState, StaffMember } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
 import { genStaff } from '../worldgen';
 import { per13, staffAdj13 } from './persona13';
-import { c12, cancelShow, clientsOf, defaultStop, hasAgency, localDraw, npcOffer, rel, suggestTier, tierCap, tiersOpen, validate, type Show } from './tour12';
+import { addShow12, cancelShow, closeShow12, shows12, clientsOf, defaultStop, hasAgency, localDraw, npcOffer, rel, suggestTier, tierCap, tiersOpen, validate, type Show } from './tour12';
 import { ask12, offer12, stagesOf, f12, wantTime } from './fest12';
 import { addHype } from './hype12';
-import { liveOf } from './live/state';
 import { notoTier } from './notoriety14';
 import { UNDO31, addSpent31, autoLog31, blocked31, cents31, logAuto31, modeOf31, spendGate31, type Log31, type Resp31 } from '../deleg31';
 
@@ -83,7 +84,7 @@ export function addOrder(s: GameState, staffId: string, kind: OrderKind, o: Part
   const needAct = kind !== 'fees' && kind !== 'festival' && kind !== 'promo';
   if (needAct && !o.actId) return l('Escolha o ato.', 'Pick the act.');
   if (kind === 'tour' && o.actId && !eligibleActs(s).some((a) => a.id === o.actId)) return l('Ato fora do seu elenco/agência.', 'Act is not on your roster/agency.');
-  if (kind === 'festival' && !liveOf(s).fests.length) return l('Você não tem festival próprio para preencher.', 'You have no festival of your own to fill.');
+  if (kind === 'festival' && !ownFests(s).length) return l('Você não tem festival próprio para preencher.', 'You have no festival of your own to fill.');
   if (ordersOf(s, staffId).length >= ORDER_CAP + 2) return l('Ordens demais para uma pessoa: remova alguma.', 'Too many orders for one person: remove one.');
   const d = d16(s);
   d.orders.push({ id: nextId(s, 'od'), staffId, kind, actId: o.actId, market: o.market ?? '', tier: o.tier ?? -1, floor: Math.max(0, o.floor ?? 0), budget: Math.max(0, o.budget ?? 0), per: clamp(o.per ?? 1, 1, 3), on: true, since: s.week });
@@ -175,7 +176,7 @@ function runTour(c: Ctx): void {
     const floorN = money(s, o.floor);
     let done = false;
     for (let w = s.week + 3; w <= s.week + 12 && !done; w++) {
-      if (q.q >= 0.5 && c12(s).shows.some((x) => x.actId === act.id && x.status === 'booked' && Math.abs(x.week - w) < 2)) continue;
+      if (q.q >= 0.5 && shows12(s).some((x) => x.actId === act.id && x.status === 'planned' && Math.abs(x.week - w) < 2)) continue;
       const st0 = defaultStop(s, act, city, w);
       const st = { ...st0, tier };
       st.fee = Math.round(npcOffer(s, act, st) * (0.85 + q.q * 0.3));
@@ -183,8 +184,7 @@ function runTour(c: Ctx): void {
       if (v.reasons[0].length) continue;
       if (st.fee < floorN) { say(c, fmtL(l('{c}: recusei a data — a oferta de {f} fica abaixo do piso de {p}.', '{c}: passed — the {f} offer is under the {p} floor.'), { c: cityN(city), f: usd(st.fee), p: usd(floorN) }), 'info', act.id); done = true; break; }
       const p = v.preds[0];
-      const sh: Show = { ...st, id: nextId(s, 'sh'), actId: act.id, by: 'agent', vid: hasAgency(s)?.id, rate: 0.1, status: 'booked', deposit: 0 };
-      c12(s).shows.push(sh);
+      const sh: Show = addShow12(s, { ...st, id: nextId(s, 'sh'), actId: act.id, by: 'agent', vid: hasAgency(s)?.id, rate: 0.1, deposit: 0 });
       d16(s).tracked.push({ show: sh.id, order: o.id, staff: c.st.id });
       booked++; done = true;
       const nt: L = notes.reduce<L>((acc, n) => cat(acc, l(` ${n.pt}.`, ` ${n.en}.`)), l('', ''));
@@ -200,7 +200,7 @@ function runTour(c: Ctx): void {
           if (!gateSpend(c, fine, true)) {
           post(s, `d16:dbl:${sh.id}`, -fine, 'business', 'Multa: dupla marcação');
           addSpent31(s, 'tour', fine);
-          c12(s).rel[alt.id] = clamp(rel(s, alt.id) - 5, 0, 100);
+          cityRelAdd(s, alt.id, -5);
           say(c, fmtL(l('ERRO: {n} marcou {c} na mesma semana por engano e teve de desmarcar: multa de {f} e relação com a cidade −5.', 'MISTAKE: {n} double-booked {c} the same week and had to cancel: {f} fine and city relation −5.'), { n: c.st.name, c: cityN(alt.id), f: usd(fine) }), 'bad', act.id, { amt: -fine });
           }
         }
@@ -215,7 +215,7 @@ function runFees(c: Ctx): void {
   const { s, r, o, q } = c;
   const d = d16(s), floorN = money(s, o.floor);
   const mineAct = (id: string) => s.acts[id]?.owner === 'player' || clientsOf(s).some((a) => a.id === id);
-  const list = c12(s).shows.filter((x) => x.status === 'booked' && x.by === 'agent' && x.deal === 'guarantee' && x.week - s.week >= 3 && !d.seen[x.id] && (!o.actId || x.actId === o.actId) && mineAct(x.actId))
+  const list = shows12(s).filter((x) => x.status === 'planned' && x.by === 'agent' && x.deal === 'guarantee' && x.week - s.week >= 3 && !d.seen[x.id] && (!o.actId || x.actId === o.actId) && mineAct(x.actId))
     .sort((a, b) => a.fee - b.fee).slice(0, o.per);
   if (!list.length) return say(c, l('Nenhum show marcado e ainda negociável (precisa de 3+ semanas).', 'No booked show left to negotiate (needs 3+ weeks).'));
   for (const sh of list) {
@@ -226,17 +226,17 @@ function runFees(c: Ctx): void {
     const p = clamp(0.25 + q.q * 0.45 + (rel(s, sh.city) - 30) / 300 - (aim / Math.max(1, sh.fee) - 1.15), 0.05, 0.9);
     if (aim > cap) { say(c, fmtL(l('{a} em {c}: o piso de {p} é irreal para o público ({f} hoje); nem tentou.', '{a} in {c}: the {p} floor is unrealistic for the crowd ({f} now); did not try.'), { a: act.name, c: cityN(sh.city), p: usd(aim), f: usd(sh.fee) }), 'info', act.id); continue; }
     if (r.chance(q.err * 0.4)) {
-      sh.status = 'cancelled'; c12(s).rel[sh.city] = clamp(rel(s, sh.city) - 4, 0, 100);
+      closeShow12(sh, 'cancelled'); cityRelAdd(s, sh.city, -4);
       say(c, fmtL(l('ERRO: {n} apertou demais o promotor de {c} pelo show de {a} e ele desistiu. Show cancelado, relação −4.', 'MISTAKE: {n} pushed {c}\'s promoter too hard over {a}\'s show and he walked. Show cancelled, relation −4.'), { n: c.st.name, c: cityN(sh.city), a: act.name }), 'bad', act.id); continue;
     }
     if (r.chance(p)) { const old = sh.fee; sh.fee = aim; say(c, fmtL(l('{a} em {c}: cachê de {o} para {n} (+{p}%).', '{a} in {c}: fee {o} to {n} (+{p}%).'), { a: act.name, c: cityN(sh.city), o: usd(old), n: usd(aim), p: Math.round((aim / Math.max(1, old) - 1) * 100) }), 'good', act.id); }
-    else { c12(s).rel[sh.city] = clamp(rel(s, sh.city) - 2, 0, 100); say(c, fmtL(l('{a} em {c}: o promotor recusou subir de {o}; relação −2 (chance era {p}%).', '{a} in {c}: the promoter refused to move off {o}; relation −2 (odds were {p}%).'), { a: act.name, c: cityN(sh.city), o: usd(sh.fee), p: Math.round(p * 100) }), 'bad', act.id); }
+    else { cityRelAdd(s, sh.city, -2); say(c, fmtL(l('{a} em {c}: o promotor recusou subir de {o}; relação −2 (chance era {p}%).', '{a} in {c}: the promoter refused to move off {o}; relation −2 (odds were {p}%).'), { a: act.name, c: cityN(sh.city), o: usd(sh.fee), p: Math.round(p * 100) }), 'bad', act.id); }
   }
 }
 
 function runFestival(c: Ctx): void {
   const { s, r, o, q } = c;
-  const fests = liveOf(s).fests.filter((f) => (f.nextYear * 12 + f.month) - (s.year * 12 + s.month) <= 12);
+  const fests = ownFests(s).filter((f) => (f.nextYear * 12 + f.month) - (s.year * 12 + s.month) <= 12);
   if (!fests.length) return say(c, l('Sem festival próprio com edição nos próximos 12 meses.', 'No own festival with an edition in the next 12 months.'));
   const f = fests.sort((a, b) => (a.nextYear * 12 + a.month) - (b.nextYear * 12 + b.month))[0];
   const x = f12(s, f), cap = o.budget;
@@ -271,7 +271,7 @@ function runFestival(c: Ctx): void {
 
 function runPromo(c: Ctx): void {
   const { s, r, o, q } = c;
-  const shows = c12(s).shows.filter((x) => x.status === 'booked' && x.week - s.week >= 2 && x.promo < 3 && (!o.actId || x.actId === o.actId) && (!o.market || cityById[x.city]?.market === o.market) && eligibleActs(s).some((a) => a.id === x.actId)).sort((a, b) => a.week - b.week);
+  const shows = shows12(s).filter((x) => x.status === 'planned' && x.week - s.week >= 2 && x.promo < 3 && (!o.actId || x.actId === o.actId) && (!o.market || cityById[x.city]?.market === o.market) && eligibleActs(s).some((a) => a.id === x.actId)).sort((a, b) => a.week - b.week);
   if (!shows.length) return say(c, l('Nenhum show a promover na região: nada gasto.', 'No show to promote in the region: nothing spent.'));
   let spent = 0;
   for (const sh of shows.slice(0, o.per + 1)) {
@@ -335,14 +335,14 @@ export function runStaff(s: GameState, r: Rng, st: StaffMember): void {
 
 /** Relata o que aconteceu com os shows marcados pelos agentes (público, cachê, por quê). */
 function reportPlayed(s: GameState): void {
-  const d = d16(s), c = c12(s);
+  const d = d16(s);
   d.tracked = d.tracked.filter((t) => {
-    const sh = c.shows.find((x) => x.id === t.show);
+    const sh = shows12(s).find((x) => x.id === t.show);
     if (!sh) return false;
     const o = d.orders.find((x) => x.id === t.order);
     const act = s.acts[sh.actId];
     if (sh.status === 'cancelled') { logD(s, t.staff, o, 'tour', fmtL(l('O show de {a} em {c} foi cancelado.', 'The {a} show in {c} was cancelled.'), { a: act?.name ?? '', c: cityN(sh.city) }), 'bad', sh.actId); return false; }
-    if (sh.status !== 'played' || !sh.res) return true;
+    if (sh.status !== 'done' || !sh.res) return true;
     const res = sh.res, full = res.cap ? Math.round((res.att / res.cap) * 100) : 0;
     logD(s, t.staff, o, 'tour', fmtL(l('Resultado — {a} em {c}: {x} de {k} ({p}% da casa), cachê pago {f}, sua comissão {m}. {w}', 'Result — {a} in {c}: {x} of {k} ({p}% full), fee paid {f}, your cut {m}. {w}'), { a: act?.name ?? '', c: cityN(sh.city), x: res.att, k: res.cap, p: full, f: usd(res.artist), m: usd(res.comm), w: res.why[0] ?? l('', '') }), res.cancelled || full < 35 ? 'bad' : 'good', sh.actId);
     return false;

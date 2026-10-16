@@ -6,6 +6,7 @@
 //   addStress(s, pid, +12, l('Turnê sem folga', 'Tour with no days off'))   // registra o porquê
 //   stressOf(s, pid) → { short, long, vuln, level, risk, why[] }
 
+import { tourList } from './tours';
 import { clamp } from '../core/rng';
 import { l, type L } from '../data/world';
 import { registerExt4 } from './ext4';
@@ -139,7 +140,7 @@ function careerPressure(s: GameState, p: Person): { v: number; why: L } {
     if (a.status !== 'active' && a.status !== 'emerging') continue;
     if (a.momentum < 20 && a.fame >= 15) { v += 8; why = l('carreira em baixa', 'career slump'); }
     if (a.fame >= 75) { v += 6; why = l('holofote de estrela', 'star spotlight'); }
-    if (s.tours.some((t) => t.actId === a.id && t.status === 'running')) { v += 6; why = l('na estrada', 'on the road'); }
+    if (tourList(s).some((t) => t.actId === a.id && t.status === 'running')) { v += 6; why = l('na estrada', 'on the road'); }
     break;
   }
   return { v, why };

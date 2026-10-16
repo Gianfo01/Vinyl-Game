@@ -23,8 +23,8 @@ import { EXCL31, FEST31, exclDeal12, festOf, f12, muOf, type Deal } from './fest
 import { scoutRace18 } from './discover18';
 import { exclPrem19, npcMonth19 } from '../ctx19';
 import { cityDistanceKm } from '../travel';
-import { c12 } from './tour12';
-import { liveOf } from './live/state';
+import { shows12 } from './tour12';
+import { builtVenue } from './venuestore27';
 import { ventures } from './ventures9';
 import { registerDeadline, type Deadline19 } from '../calendar19';
 
@@ -51,10 +51,10 @@ function st31(s: GameState): Stage31State {
 }
 const note = (st: Stage31State, w: number, t: L) => { st.log.unshift({ w, t }); if (st.log.length > 12) st.log.length = 12; };
 const mine = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
-const v12ro = (s: GameState): V12 | null => (s as unknown as { x4?: { venue12?: { v: V12 | null } } }).x4?.venue12?.v ?? null;
+const v12ro = (s: GameState): V12 | null => (s as unknown as { x4?: { venues27?: { v?: Record<string, { prog?: V12 }> } } }).x4?.venues27?.v?.['lv:venue']?.prog ?? null; // UNI-4: programação na própria casa
 /** a casa e a programação (só leitura) */
 export function venueNow31(s: GameState): { cityId: string; a3: string; cap: number; kind: string; name: string; x: V12 } | null {
-  const v = (s as unknown as { x4?: { live?: { venue?: { cityId: string; kind: 'club' | 'theater' | 'arena'; name: string } | null } } }).x4?.live?.venue;
+  const v = (s as unknown as { x4?: { venues27?: { v?: Record<string, { built?: { cityId: string; kind: 'club' | 'theater' | 'arena'; name: string } }> } } }).x4?.venues27?.v?.['lv:venue']?.built; // UNI-4: registro único das casas
   const x = v12ro(s);
   if (!v || !x) return null;
   return { cityId: v.cityId, a3: countryOfCity(v.cityId) ?? 'USA', cap: venueKind(v.kind).cap, kind: v.kind, name: v.name, x };
@@ -307,8 +307,8 @@ function exclMonth(s: GameState): void {
     if (c.broke || Math.abs(W - s.week) > c.wk) continue;
     // 1) o próprio jogador furou: show marcado pela sua agência/promotora, ou noite na sua casa, dentro do raio
     let mineCity: string | undefined;
-    for (const sh of c12(s).shows) if (sh.actId === a.id && sh.week > c.w0 && Math.abs(sh.week - W) <= c.wk && sh.status !== 'cancelled' && sh.city !== f.cityId && cityDistanceKm(sh.city, f.cityId) <= c.km) { mineCity = sh.city; break; }
-    const vn = liveOf(s).venue;
+    for (const sh of shows12(s)) if (sh.actId === a.id && sh.week > c.w0 && Math.abs(sh.week - W) <= c.wk && sh.status !== 'cancelled' && sh.city !== f.cityId && cityDistanceKm(sh.city, f.cityId) <= c.km) { mineCity = sh.city; break; }
+    const vn = builtVenue(s); // UNI-4: casa construída no registro único
     if (!mineCity && vn && vn.cityId !== f.cityId && cityDistanceKm(vn.cityId, f.cityId) <= c.km && (venueNow31(s)?.x.prog.some((n) => n.actId === a.id) || Object.values(st.open).includes(a.id))) mineCity = vn.cityId;
     // 2) um festival rival dentro do raio oferece mais e o artista fura
     let rival: string | undefined;

@@ -1,6 +1,7 @@
 // Rodada 17 (F) — negócios: venda do selo (e o jogo continua), canais de lançamento por época, casas de show,
 // licenças entre regiões, agenda com concorrência, direitos de imagem (chance inversa à fama + proteções),
 // merch por época e determinismo.
+import { realVenues } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { recentFacts } from '../src/sim/facts17';
@@ -10,7 +11,7 @@ import { careers } from '../src/sim/sys/careers12';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { hasLabel, makeBids, refound, sellLabel, valuation17, eraMultiple } from '../src/sim/sys/sale17';
 import { outletsNow, toggleOutlet, out17 } from '../src/sim/sys/outlets17';
-import { buyVenue17, v17 } from '../src/sim/sys/venues17';
+import { buyVenue17 } from '../src/sim/sys/venues17';
 import { cal17, clashOf } from '../src/sim/sys/clash17';
 import { imgChance, askImage } from '../src/sim/sys/image17';
 import { skusNow } from '../src/sim/sys/merch17';
@@ -75,7 +76,7 @@ describe('r17 negócios', () => {
     s.player.cash += 50_000_000;
     expect(buyVenue17(s, 'troubadour')).toBeNull();
     advanceMonth(s);
-    expect(v17(s).own[0].last).toBeTruthy();
+    expect(realVenues(s)[0].last).toBeTruthy();
     expect(skusNow(s)).toContain('tee');
     expect(skusNow(s)).not.toContain('nft');
   }, 120000);

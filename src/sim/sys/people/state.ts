@@ -51,18 +51,6 @@ export interface PromiseRec {
   base?: number;
 }
 
-export interface Secret {
-  id: string;
-  /** pessoa (id) ou selo rival (`label:<id>`, segredo do CEO) ou 'owner' */
-  owner: string;
-  kind: 'affair' | 'debt' | 'plagiarism' | 'child' | 'tax' | 'fake_bio' | 'payola' | 'addiction';
-  severity: number; // 1..3
-  known: boolean; // o jogador sabe
-  /** quem mais sabe: 'press', labelIds */
-  knownBy: string[];
-  leaked: boolean;
-  used: number;
-}
 
 export interface Owner {
   name: string;
@@ -173,8 +161,6 @@ export interface PeopleState {
   promises: PromiseRec[];
   lastTalk: Record<string, number>; // pessoa -> semana
   talkCount: Record<string, number>; // pessoa:tipo -> vezes (retorno decrescente)
-  secrets: Secret[];
-  secretsSeeded: Record<string, 1>;
   owner: Owner | null;
   career: Record<string, StaffCareer>;
   romances: Romance[];
@@ -202,7 +188,7 @@ declare module '../../ext4' {
 }
 
 registerExt4('people', () => ({
-  thoughts: {}, health: {}, promises: [], lastTalk: {}, talkCount: {}, secrets: [], secretsSeeded: {}, owner: null, career: {},
+  thoughts: {}, health: {}, promises: [], lastTalk: {}, talkCount: {}, owner: null, career: {},
   romances: [], wealth: {}, lastRoyalty: {}, inbox: [], feed: [], breakdowns: [], bonds: {}, roster: [], medics: [], neg: null,
   negCooldown: {}, seenCrises: {},
 }));
@@ -212,7 +198,7 @@ export function P(s: GameState): PeopleState {
   st.x4 ??= {} as never;
   if (!st.x4.people) {
     st.x4.people = {
-      thoughts: {}, health: {}, promises: [], lastTalk: {}, talkCount: {}, secrets: [], secretsSeeded: {}, owner: null, career: {},
+      thoughts: {}, health: {}, promises: [], lastTalk: {}, talkCount: {}, owner: null, career: {},
       romances: [], wealth: {}, lastRoyalty: {}, inbox: [], feed: [], breakdowns: [], bonds: {}, roster: [], medics: [], neg: null,
       negCooldown: {}, seenCrises: {},
     };

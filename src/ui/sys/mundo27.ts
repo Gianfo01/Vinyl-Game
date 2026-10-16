@@ -7,6 +7,7 @@
 //  - "O que sabemos" (área `known27`): segredos e vínculos (secrets23) + fatos públicos e boatos (facts17), separados.
 // Modelos puros em ./mundo27model.ts (testes: tests/r27-mundo.test.ts).
 
+import { tourList } from '../../sim/tours';
 import { ageBubbles29, ageLayer29, ageLayerColor29, ageLegend29 } from './demo29'; // R29 demo29: camada Fãs por idade
 import { CITIES, l, type L } from '../../data/world';
 import { countryOfCity } from '../../data/geo';
@@ -167,7 +168,7 @@ function overlays27(s: GameState): MapOverlay[] {
   if (layers.has('mine')) for (const c of sitesByCity27(s).keys()) icon(c, 'branch');
   if (layers.has('tour')) {
     const mine = new Set(playerActs(s));
-    for (const tr of s.tours) {
+    for (const tr of tourList(s)) {
       if (!mine.has(tr.actId)) continue;
       const stops = tr.stops.filter((x) => x.status !== 'cancelled');
       for (let i = 1; i < stops.length; i++) o.push({ kind: 'arc', from: stops[i - 1].cityId, to: stops[i].cityId, color: stops[i].status === 'played' ? 'var(--muted)' : 'var(--accent)', width: 1.8 });

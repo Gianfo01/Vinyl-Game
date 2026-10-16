@@ -6,7 +6,7 @@ import { FESTIVALS } from '../../data/catalog';
 import { BRANCH_LEVELS } from '../../data/rules';
 import { countryName, countryOfCity, marketOfCountry, unitOfCity, unitOfCountry } from '../../data/geo';
 import { climateAt } from '../../sim/travel';
-import { cityDemand } from '../../sim/tours';
+import { cityDemand, tourList } from '../../sim/tours';
 import { canOpenBranch, openBranch } from '../../sim/branches';
 import { t } from '../../i18n/strings';
 import { activeGeo, buyClub, geoEffects, liveBlocked } from '../../sim/culture';
@@ -134,7 +134,7 @@ function overlays(s: GameState): MapOverlay[] {
   if (layers.has('festivals')) for (const f of festivalsNow(s)) icon(f.city, 'festival');
   if (layers.has('movements')) for (const m of s.movements) if (s.year - m.born < 10) icon(m.city, 'movement');
   if (layers.has('tours')) {
-    for (const tr of s.tours) {
+    for (const tr of tourList(s)) {
       const next = tr.stops.filter((x) => x.status !== 'cancelled');
       for (let i = 1; i < next.length; i++) o.push({ kind: 'arc', from: next[i - 1].cityId, to: next[i].cityId, color: next[i].status === 'played' ? 'var(--muted)' : 'var(--accent)', width: 1.8 });
       const cur = next.find((x) => x.status === 'scheduled');

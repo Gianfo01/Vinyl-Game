@@ -14,6 +14,7 @@
 // Modo "Vida real exata": casos reais só como crônica documentada (datas reais); empresários e administradores do jogo são
 // fictícios e nenhum ato real de selo NPC é emprestado.
 
+import { mindOf18 } from './rivalmind18';
 import { clamp, Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { countryOfCity } from '../../data/geo';
@@ -25,7 +26,7 @@ import { grantHold } from '../holds17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { langForCity, personName } from '../people';
 import { rng19 } from '../rng19';
-import { addHeat19, coolHeat19, rm18 } from '../rivals19';
+import { addHeat19, coolHeat19 } from '../rivals19';
 import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
 import { endContract } from '../contracts';
@@ -112,7 +113,7 @@ function moveAct19(s: GameState, a: Act, to: string): void {
 /** Comprador: selo ativo com caixa, preferindo quem tem o ato na mira (rivalmind18). */
 function buyer19(s: GameState, a: Act, price: number, r: Rng): Label | undefined {
   const ok = Object.values(s.labels).filter((x) => x.active && x.cash >= price);
-  const tgt = ok.find((x) => (rm18(s).m[x.id]?.target?.k === 'act' && rm18(s).m[x.id]?.target?.id === a.id));
+  const tgt = ok.find((x) => (mindOf18(s, x.id)?.target?.k === 'act' && mindOf18(s, x.id)?.target?.id === a.id));
   if (tgt) return tgt;
   return ok.sort((x, y) => y.cash * (1 + y.aggression / 100) - x.cash * (1 + x.aggression / 100)).slice(0, 3)[r.int(0, Math.min(2, ok.length - 1))];
 }

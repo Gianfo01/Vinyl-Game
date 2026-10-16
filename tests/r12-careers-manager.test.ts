@@ -35,7 +35,7 @@ describe('serviços e empresário r12', () => {
     const s = mk('r12-m', { main: ['manager'], origin: 'musician', ambition: 'legacy' });
     const r = rng19(s, 'act');
     const a = Object.values(s.acts).find((x) => x.status !== 'retired' && !x.playerBand && x.fame >= 20)!;
-    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0 });
     // mercado: lota a capacidade do mês
     const p = providers(s, 'studio')[0];
     expect(p).toBeTruthy();

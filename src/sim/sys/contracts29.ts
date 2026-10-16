@@ -38,7 +38,7 @@ import { careers, startCareer } from './careers12';
 import { m14 } from './managers14';
 import { armPromises28 } from './promises28';
 import { activeAct } from './ventures12';
-import { dropClient, mgAdj9, mgCap, ventures, type Client } from './ventures9';
+import { addClientTrust9, dropClient, mgAdj9, mgCap, ventures, type Client } from './ventures9';
 import { studios } from './studio12';
 
 const MGR = (s: GameState) => ventures(s).mg;
@@ -107,7 +107,7 @@ special29().accept = (s, act, o) => {
   const rate = commissionOf29(o);
   if (!careers(s).active.includes('manager')) startCareer(s, 'manager'); // a carreira de empresário começa com o primeiro cliente
   const mg = MGR(s);
-  if (!clientOf(s, act.id)) mg.clients.push({ actId: act.id, rate, since: s.week, sat: Math.round(clamp(55 + (act.trust - 50) / 5, 35, 80)), earned: 0 });
+  if (!clientOf(s, act.id)) { mg.clients.push({ actId: act.id, rate, since: s.week, earned: 0 }); addClientTrust9(s, act.id, (Math.round(clamp(55 + (act.trust - 50) / 5, 35, 80)) - 60) / 2); } // UNI-4: satisfação inicial vira confiança
   delete m14(s).rep[act.id]; // o empresário NPC perde o cliente
   const termWeeks = Math.round(o.termMonths * 4.35);
   const id = nextId(s, 'k');
@@ -200,7 +200,7 @@ function monthMgmt(s: GameState, c: Contract, act: Act | undefined): void {
   // conflito de interesse: o ato veio para o seu selo
   if (act.owner === 'player' && !act.playerBand) {
     act.trust = clamp(act.trust - 2, 0, 100);
-    cl.sat = clamp(cl.sat - 3, 0, 100);
+    addClientTrust9(s, cl.actId, -3);
     if (!x.conflict) {
       x.conflict = true;
       notify(s, fmtL(l('Conflito de interesse: você é empresário E selo de {a}. A confiança cai todo mês até um dos dois acabar.', 'Conflict of interest: you are both manager AND label of {a}. Trust drops every month until one of them ends.'), { a: act.name }), 'bad');

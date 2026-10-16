@@ -40,14 +40,15 @@ export interface Hold {
   ref?: string;
   data?: Record<string, number | string>;
 }
-export interface Holds17State { h: Hold[]; seq: number; /** chaves já convertidas (promessas etc.) */ cv: Record<string, 1> }
+/** `su`: USO de cada segredo (id do secrets23 → nº de usos e última semana) — UNI-4/B.5: o segredo mora no secrets23, aqui fica só o uso. */
+export interface Holds17State { h: Hold[]; seq: number; /** chaves já convertidas (promessas etc.) */ cv: Record<string, 1>; su: Record<string, { n: number; w: number }> }
 declare module './ext4' { interface Ext4 { holds17: Holds17State } }
-const fresh = (): Holds17State => ({ h: [], seq: 0, cv: {} });
+const fresh = (): Holds17State => ({ h: [], seq: 0, cv: {}, su: {} });
 registerExt4('holds17', fresh);
 export function holds17(s: GameState): Holds17State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.holds17 ??= fresh()) as Holds17State;
-  st.h ??= []; st.seq ??= 0; st.cv ??= {};
+  st.h ??= []; st.seq ??= 0; st.cv ??= {}; st.su ??= {};
   return st;
 }
 
@@ -125,10 +126,23 @@ export function leverage(s: GameState, holder: string, target: string): { v: num
 // ---------------------------------------------------------------- escrita
 
 export interface HoldIn { holder: string; target: string; kind: HoldKind; strength: number; text: L; months?: number; proof?: 0 | 1 | 2; factId?: string; src?: string; ref?: string; data?: Hold['data']; quiet?: boolean }
+/** Ponte para o secrets23 (registrada por ele; este módulo não importa sistemas): cria ou acha o segredo e devolve o id. */
+type SecretSink = (s: GameState, holder: string, target: string, x: HoldIn) => string | undefined;
+let secretSink: SecretSink | null = null;
+export function setSecretSink(fn: SecretSink): void { secretSink = fn; }
+/** Uso de um segredo (chantagem/gancho) — único lugar onde o uso fica gravado. */
+export const secretUse = (s: GameState, secId: string): { n: number; w: number } | undefined => holds17(s).su[secId];
+export function markSecretUse(s: GameState, secId: string): void {
+  const u = (holds17(s).su[secId] ??= { n: 0, w: s.week });
+  u.n++; u.w = s.week;
+}
+
 /** Cria (ou reforça, se já existe igual entre os dois) uma obrigação. */
 export function grantHold(s: GameState, x: HoldIn): Hold {
   const st = holds17(s);
   const holder = norm(x.holder), target = norm(x.target);
+  // UNI-4 (B.5): um segredo guardado como trunfo nasce no secrets23 (depósito único); o hold aponta para ele (ref)
+  if (x.kind === 'secret' && !x.ref && secretSink) { const ref = secretSink(s, holder, target, x); if (ref) x = { ...x, ref }; }
   const prev = st.h.find((h) => live(s, h) && h.holder === holder && h.target === target && h.kind === x.kind && (h.ref ?? '') === (x.ref ?? ''));
   if (prev) {
     prev.strength = clamp(Math.max(prev.strength, x.strength) + 5, 1, 100);

@@ -8,6 +8,7 @@
 //   janela            = a cidade (Nosso mundo); você = o seu painel (ou "você está em turnê em …").
 // Nada aqui grava estado nem consome sorteio.
 
+import { tourList } from '../../sim/tours';
 import { cityById, l, type L } from '../../data/world';
 import { calendar19 } from '../../sim/calendar19';
 import { acceptCounter, counterWhy, withdrawOffer } from '../../sim/contracts';
@@ -149,7 +150,7 @@ export function desk31(s: GameState): Desk31 {
     const p = playerPerson(s);
     if (p) me.personId = p.id;
     const a = playerAct(s);
-    const tr = a ? s.tours.find((x) => x.actId === a.id && x.status === 'running') : undefined;
+    const tr = a ? tourList(s).find((x) => x.actId === a.id && x.status === 'running') : undefined;
     if (tr) {
       const st = tr.stops.find((x) => x.status === 'scheduled' && x.day >= s.day) ?? tr.stops[tr.stops.length - 1];
       me.away = fmtL(l('Você está em turnê ({t}){c}.', 'You are on tour ({t}){c}.'), { t: tr.name, c: st ? fmtL(l(', a caminho de {c}', ', heading to {c}'), { c: cityById[st.cityId]?.name ?? l('outra cidade', 'another city') }) : l('', '') });

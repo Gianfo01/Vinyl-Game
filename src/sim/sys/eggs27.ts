@@ -9,6 +9,8 @@
 //   RULES27: { id, phase: 'month'|'show', test(s, show?) → contexto|null, p (chance), run(s, ctx, r) }
 //   eggTest27(s, id) · eggRun27(s, id) (força, para testes) · eggFire27(s, id, {...}) · eggFeat27(s, featId)
 
+import { editions8 } from './feststore';
+import { fests31, ownFests } from './feststore';
 import { Rng, clamp } from '../../core/rng';
 import { EGGS27, FEATS27, eggMeta27 } from '../../data/eggs27';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -27,12 +29,9 @@ import { spawnProceduralAct } from '../worldgen';
 import { addLead18, disc18 } from './discover18';
 import { headline19 } from './factlink19';
 import { nudge16 } from './fame16';
-import { fest12 } from './fest12';
 import { FESTIVALS } from '../../data/catalog';
-import { fest8 } from './fests8';
 import { expose19, fk19, lipOf19 } from './fakes19';
 import { ACHIEVEMENTS, achById, checkAchievements } from './live/achievements';
-import { liveOf } from './live/state';
 import { repOf, mgrName } from './managers14';
 import { soc18 } from './society18';
 import { ventures } from './ventures9';
@@ -228,7 +227,7 @@ R({ id: 'rooftop_1969', phase: 'month', p: 1, test: (s) => { const a = at(s, 196
 // ---------------------------------------------------------------- 4. amanhecer
 R({ id: 'dawn_set', phase: 'month', p: 1, test: (s) => {
   const mineIds = new Set(mine27(s).map((a) => a.id));
-  for (const e of fest8(s)?.editions ?? []) {
+  for (const e of editions8(s)) {
     if (!e.done || e.year !== s.year) continue;
     const head = e.lineup.find((x) => x.tier === 'headline' && mineIds.has(x.actId));
     if (!head) continue;
@@ -236,8 +235,8 @@ R({ id: 'dawn_set', phase: 'month', p: 1, test: (s) => {
     const hist = !!f && f.start === 1969 && s.year === 1969;
     return { act: s.acts[head.actId], p: hist ? 1 : 0.12, data: { fest: f?.name ?? '', k: `f8:${e.fi}:${e.year}` } };
   }
-  for (const f of liveOf(s).fests) {
-    const ed = f.editions.at(-1), h = fest12(s).f[f.id]?.hist.at(-1);
+  for (const f of ownFests(s)) {
+    const ed = f.editions.at(-1), h = fests31(s).f[f.id]?.biz?.hist.at(-1);
     if (!ed || ed.year !== s.year || ed.weather === 'sun' || !h) continue;
     const a = mine27(s).find((x) => x.name === h.head);
     if (a) return { act: a, p: 1, data: { fest: f.name, k: `f12:${f.id}:${ed.year}` } };
@@ -433,7 +432,7 @@ R({ id: 'newport_1965', phase: 'month', p: 1, test: (s) => { const a = at(s, 196
   run: (s, c) => { const a = c.act!; eg27(s).seen.newport_1965 = s.week; msg(s, 'newport_1965', a.name, T('Elétrico no festival de folk?', 'Electric at the folk festival?'), fmtL(T('{a} quer subir no palco do festival de folk com uma banda elétrica, guitarra plugada e volume alto. Os organizadores estão nervosos.', '{a} wants to take the folk festival stage with an electric band, guitar plugged in and loud. The organisers are nervous.'), { a: a.name }), [{ id: 'electric', label: T('Plugar', 'Plug in') }, { id: 'acoustic', label: T('Ficar no violão', 'Stay acoustic') }], { act: a.id }, 3); } });
 R({ id: 'chacrinha', phase: 'month', p: 0.02, test: (s) => { const a = M(1967, 1988, s) ? firstAct(s, (x) => inBR(x.city) && x.fame >= 15 && x.fame <= 50) : undefined; return a ? { act: a } : null; },
   run: (s, c) => { const a = c.act!; eg27(s).seen.chacrinha = s.week; msg(s, 'chacrinha', T('Programa de auditório', 'Variety show').pt, T('"Vocês querem bacalhau?"', '"Who wants codfish?"'), fmtL(T('O apresentador mais anárquico da TV, de buzina e fantasia, quer {a} no programa de sábado. Ele joga bacalhau na plateia e dá abacaxi a quem desafina.', 'TV\'s most anarchic host, with his horn and costumes, wants {a} on the Saturday show. He throws codfish at the audience and hands a pineapple to whoever sings flat.'), { a: a.name }), [{ id: 'go', label: T('Ir ao programa', 'Go on the show') }, { id: 'no', label: T('Não é a nossa praia', 'Not our scene') }], { act: a.id }); } });
-R({ id: 'glastonbury_milk', phase: 'month', p: 1, test: (s) => { if (s.year < 1970) return null; const f = liveOf(s).fests.find((x) => UK.has(x.cityId) && x.editions.length >= 1); return f ? { data: { f: f.name } } : null; },
+R({ id: 'glastonbury_milk', phase: 'month', p: 1, test: (s) => { if (s.year < 1970) return null; const f = ownFests(s).find((x) => UK.has(x.cityId) && x.editions.length >= 1); return f ? { data: { f: f.name } } : null; },
   run: (s, c) => { rep(s, 'institutional', 1); rep(s, 'artistic', 1); eggFire27(s, 'glastonbury_milk', { sev: 20, text: fmtL(T('{f}: o fazendeiro vizinho manda leite fresco e o ingresso passa a "incluir leite da fazenda". Ninguém esquece um festival que dá leite.', '{f}: the neighbouring farmer sends fresh milk and the ticket now "includes milk from the farm". Nobody forgets a festival that hands out milk.'), { f: String(c.data!.f) }) }); } });
 simple({ id: 'clube_esquina', y0: 1970, y1: 1974, p: 0.3, pick: (_s, a) => a.city === 'bh' && has(a, 'mpb', 'bossa', 'rock_br'), fx: (s, a) => { boost(s, a, { insp: 20 }); s.scenes['bh:mpb'] = Math.min(100, (s.scenes['bh:mpb'] ?? 20) + 5); },
   text: T('Belo Horizonte: {a} passa as noites numa esquina de Santa Tereza, violões e amigos sentados no meio-fio. Dali sai um disco que ninguém sabe classificar.', 'Belo Horizonte: {a} spends its nights on a Santa Tereza street corner, guitars and friends on the kerb. Out of it comes a record nobody knows how to classify.') });

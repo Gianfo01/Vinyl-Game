@@ -20,7 +20,7 @@ import { fameIn, homeA3, myA3 } from './fame16';
 import { SECRETS, exposeSecret, intrigue, knownSecrets, targetName, useHook } from './intrigue';
 import { worldDramaOk } from './pace9';
 import { triggerBreakdown } from './people/breakdowns';
-import { SECRET_NAME, leakSecret, ownerLabel, pressureCeo } from './people/secrets';
+import { SECRET_NAME, dossierById, dossiers, leakSecret, ownerLabel, pressureCeo, secKind, secKnown, secKnownBy, secLeaked, secOwner, secSev, secUsed, useSecret } from './people/secrets';
 import { P, actOf, healthOf } from './people/state';
 import { opine } from './persona13';
 import { press } from './press9';
@@ -46,7 +46,7 @@ const BADK = new Set(['death', 'split', 'scandal', 'breakdown', 'addiction', 'se
 const tagsOf = (k: string): string[] => [GOODK.has(k) ? 'good' : BADK.has(k) ? 'bad' : 'neutral'];
 
 const LOWK = new Set(['rise', 'move', 'dream', 'relic', 'rival_contest', 'retired', 'lineup']);
-chronListeners().push((s: GameState, e: ChronEv) => {
+chronListeners().unshift((s: GameState, e: ChronEv) => { // UNI-4: a ponte crônica → fato vai primeiro (independe da ordem de carga dos módulos)
   if ((e.i < 2 || (e.i < 3 && LOWK.has(e.k))) && !e.a?.some((id) => s.acts[id]?.owner === 'player')) return; // miudezas do mundo ficam só na crônica
   const kind = KMAP[e.k] ?? e.k;
   emitFact(s, { kind, actors: e.a ?? [], place: e.c, severity: e.i * 20, visibility: 'public', tags: [...tagsOf(kind), `chron:${e.k}`], text: e.t, src: 'chron', data: { bridged: 1, i: e.i } });
@@ -106,24 +106,25 @@ registerHoldSource('intrigue', {
 registerHoldSource('people', {
   list: (s) => {
     const out: Hold[] = [];
-    for (const sec of P(s).secrets) {
-      if (sec.leaked) continue;
-      const tgt = sec.owner === 'owner' ? 'player' : sec.owner.startsWith('label:') ? sec.owner.slice(6) : sec.owner;
-      const text = fmtL(l('{w}: {k}', '{w}: {k}'), { w: ownerLabel(s, sec), k: SECRET_NAME[sec.kind] });
-      const base = { kind: 'secret' as const, strength: 25 + sec.severity * 20, proof: 1 as const, text, w: 0, uses: sec.used, status: 'open' as const, ref: sec.id, data: { sk: sec.kind, sev: sec.severity } };
-      if (sec.known && sec.owner !== 'owner') out.push({ ...base, id: `x:people:${sec.id}`, holder: 'player', target: tgt });
-      for (const k of sec.knownBy) if (k !== 'press' && s.labels[k]) out.push({ ...base, id: `x:people:${sec.id}:${k}`, holder: k, target: tgt });
+    for (const sec of dossiers(s)) {
+      if (secLeaked(s, sec)) continue;
+      const ow = secOwner(sec);
+      const tgt = ow === 'owner' ? 'player' : ow.startsWith('label:') ? ow.slice(6) : ow;
+      const text = fmtL(l('{w}: {k}', '{w}: {k}'), { w: ownerLabel(s, sec), k: SECRET_NAME[secKind(sec)] });
+      const base = { kind: 'secret' as const, strength: 25 + secSev(sec) * 20, proof: 1 as const, text, w: 0, uses: secUsed(s, sec), status: 'open' as const, ref: sec.id, data: { sk: secKind(sec), sev: secSev(sec) } };
+      if (secKnown(s, sec) && ow !== 'owner') out.push({ ...base, id: `x:people:${sec.id}`, holder: 'player', target: tgt });
+      for (const k of secKnownBy(s, sec)) if (k !== 'press' && s.labels[k]) out.push({ ...base, id: `x:people:${sec.id}:${k}`, holder: k, target: tgt });
     }
     return out;
   },
   use: (s, h, verb) => {
-    const sec = P(s).secrets.find((x) => x.id === h.ref);
+    const sec = dossierById(s, String(h.ref));
     if (!sec || h.holder !== 'player') return l('Segredo indisponível.', 'Secret unavailable.');
     if (verb === 'expose') { leakSecret(s, sec, l('Uma fonte anônima', 'An anonymous source')); return fmtL(l('Vazou: {t}.', 'Leaked: {t}.'), { t: h.text }); }
     if (verb !== 'blackmail') return l('Segredo: só chantagem ou exposição.', 'Secret: blackmail or exposure only.');
-    if (sec.owner.startsWith('label:')) return pressureCeo(s, Rng.fromSeed(`${s.config.seed}:hold17p:${sec.id}:${s.week}`), sec.id, 'cash');
-    if (sec.used >= 2) return l('Esse segredo já foi usado demais.', 'That secret is used up.');
-    sec.used++;
+    if (secOwner(sec).startsWith('label:')) return pressureCeo(s, Rng.fromSeed(`${s.config.seed}:hold17p:${sec.id}:${s.week}`), sec.id, 'cash');
+    if (secUsed(s, sec) >= 2) return l('Esse segredo já foi usado demais.', 'That secret is used up.');
+    useSecret(s, sec);
     return null; // efeito padrão (lealdade/pressão em oferta) + risco de vazar
   },
 });

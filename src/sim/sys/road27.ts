@@ -15,10 +15,10 @@ import { Rng, clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { VENUE_TIERS } from '../../data/rules';
 import { countryName, countryOfCity } from '../../data/geo';
-import { cityById, l, type L } from '../../data/world';
+import { CITIES, cityById, l, type L } from '../../data/world';
 import { activeMembers } from '../capacity';
 import { emitFact } from '../facts17';
-import { STOP27, TICKET, cityDemand, estimateTour, planTour, type StopMods27, type TourEstimate, type TourPlan } from '../tours';
+import { STOP27, TICKET, cityDemand, estimateTour, planTour, type StopMods27, type TourEstimate, type TourPlan, tourList } from '../tours';
 import { climateInfo, legInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
 import type { Tour, TourStop } from '../xtypes';
@@ -39,12 +39,9 @@ const cityL = (id: string): L => cityById[id]?.name ?? l(id, id);
 export type RoadKind27 = 'van' | 'border' | 'promoter' | 'party' | 'press' | 'ill' | 'weather';
 export interface RoadDone27 { k: RoadKind27; c: number; ok: boolean; auto?: 1; t: L; mods?: StopMods27; skip?: 1; who?: string }
 export interface RoadTour27 { ev: Record<string, RoadDone27>; log: { d: number; t: L; tone: 'good' | 'bad' | 'info' }[] }
-export interface Road27 { tours: Record<string, RoadTour27> }
-export const road27 = (s: GameState): Road27 => {
-  const x = s.x4 as unknown as { road27?: Road27 };
-  return (x.road27 ??= { tours: {} });
-};
-export const isRoad27 = (s: GameState, tourId: string): boolean => !!(s.x4 as unknown as { road27?: Road27 }).road27?.tours[tourId];
+/** UNI-4 (B.13): os eventos de estrada moram na própria turnê (`tour.road`) — saiu o estado x4.road27. */
+export const roadOf27 = (s: GameState, tourId: string): RoadTour27 | undefined => s.tours.find((t) => t.id === tourId)?.road;
+export const isRoad27 = (s: GameState, tourId: string): boolean => !!roadOf27(s, tourId);
 
 // ---------------------------------------------------------------- 1. planejar no mapa
 
@@ -101,7 +98,7 @@ export function routeView27(s: GameState, plan: TourPlan): Route27 | null {
 /** Marca a turnê pelo caminho de sempre (planTour) e liga os eventos de estrada nela. */
 export function bookRoute27(s: GameState, plan: TourPlan): Tour | L {
   const r = planTour(s, plan);
-  if ('id' in r) road27(s).tours[r.id] = { ev: {}, log: [] };
+  if ('id' in r) r.road = { ev: {}, log: [] };
   return r;
 }
 
@@ -217,9 +214,9 @@ function build27(s: GameState, t: Tour, st: TourStop, k: RoadKind27, who?: strin
 export function pendingRoad27(s: GameState, days = 35): { t: Tour; st: TourStop; ev: RoadEv27 }[] {
   const out: { t: Tour; st: TourStop; ev: RoadEv27 }[] = [];
   const d0 = today(s);
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if ((t.status !== 'planned' && t.status !== 'running') || !isRoad27(s, t.id)) continue;
-    const R = road27(s).tours[t.id];
+    const R = roadOf27(s, t.id)!;
     for (const st of t.stops) {
       if (st.status !== 'scheduled' || st.day < d0 || st.day >= d0 + days || R.ev[st.day]) continue;
       const ev = roadEvent27(s, t, st);
@@ -263,11 +260,11 @@ export const ev27 = (o: Opt27b): number => { const [g, b] = EV27[o.id] ?? [1, 1]
 
 /** Resolve o evento de uma data com a opção `i`. Efeito imediato + ajustes da noite guardados para o playStop. */
 export function resolveRoad27(s: GameState, tourId: string, day: number, i: number, auto = false): RoadDone27 | L {
-  const t = s.tours.find((x) => x.id === tourId);
+  const t = tourList(s).find((x) => x.id === tourId);
   const st = t?.stops.find((x) => x.day === day);
   if (!t || !st || !isRoad27(s, t.id)) return l('Data não encontrada.', 'Date not found.');
   if (st.status !== 'scheduled') return l('Esta data já passou.', 'This date has passed.');
-  const R = road27(s).tours[t.id];
+  const R = roadOf27(s, t.id)!;
   if (R.ev[day]) return l('Já decidido.', 'Already decided.');
   const ev = roadEvent27(s, t, st);
   if (!ev) return l('Nada aconteceu nesta data.', 'Nothing happened on this date.');
@@ -369,7 +366,7 @@ export function resolveRoad27(s: GameState, tourId: string, day: number, i: numb
 // gancho: antes de cada data de uma turnê de estrada, a equipe decide o que o jogador não decidiu
 STOP27.pre = (s, t, st) => {
   if (!isRoad27(s, t.id)) return undefined;
-  const R = road27(s).tours[t.id];
+  const R = roadOf27(s, t.id)!;
   let d = R.ev[st.day];
   if (!d) {
     const ev = roadEvent27(s, t, st);
@@ -385,7 +382,7 @@ STOP27.pre = (s, t, st) => {
 
 /** Resumo de uma turnê de estrada (interface): datas com evento, decididas por você × pela equipe. */
 export function roadSummary27(s: GameState, tourId: string): { events: number; mine: number; auto: number; skipped: number } {
-  const R = road27(s).tours[tourId];
+  const R = roadOf27(s, tourId)!;
   if (!R) return { events: 0, mine: 0, auto: 0, skipped: 0 };
   const v = Object.values(R.ev);
   return { events: v.length, mine: v.filter((x) => !x.auto).length, auto: v.filter((x) => x.auto).length, skipped: v.filter((x) => x.skip).length };
@@ -393,7 +390,7 @@ export function roadSummary27(s: GameState, tourId: string): { events: number; m
 
 // r31 (UNI-1): calendário único — datas da estrada com evento ainda sem decisão (puro: o sorteio é o da própria data).
 registerDeadline('road27', (s, from, to) => {
-  if (!(s.x4 as unknown as { road27?: Road27 }).road27) return [];
+  if (!s.tours.some((t) => t.road)) return [];
   const days = Math.max(7, Math.min(26 * 7, (to - s.week + 1) * 7));
   const out: Deadline19[] = [];
   for (const { t, st, ev } of pendingRoad27(s, days)) {
@@ -403,3 +400,41 @@ registerDeadline('road27', (s, from, to) => {
   }
   return out;
 });
+
+// ================================================================ UNI-4 (B.13): a rota sugerida do planejador (era sim/route16.ts)
+// Rodada 16 — rota sugerida para o planejador de turnê: as cidades de maior procura do ato no mercado de origem e nos
+// territórios do selo (o mesmo cálculo de público que a previsão usa). Uma sugestão de rota só, junto da rota no mapa.
+
+export interface RouteHint { ids: string[]; why: L }
+
+export function suggestRoute16(s: GameState, actId: string, n = 6): RouteHint {
+  const act = s.acts[actId];
+  if (!act) return { ids: [], why: l('Ato desconhecido.', 'Unknown act.') };
+  const home = cityById[act.city]?.market;
+  const pool = CITIES.filter((c) => c.id !== s.config.homeCity && (c.market === home || s.player.territories.includes(c.market)))
+    .map((c) => ({ id: c.id, d: cityDemand(s, act, c.id) })).filter((x) => x.d > 0).sort((a, b) => b.d - a.d);
+  // só cidades que valem a viagem: pelo menos 40% da melhor (e um piso), senão a rota vira prejuízo
+  const ids = pool.filter((x, i) => i < 3 || x.d >= Math.max(40, pool[0].d * 0.4)).slice(0, n).map((x) => x.id);
+  if (!ids.length) return { ids, why: l('Ainda sem público fora da sede: lance discos e faça shows locais (agenda) antes de cair na estrada.', 'No audience outside the home city yet: release records and play local gigs (agenda) before touring.') };
+  return { ids, why: fmtL(l('{n} cidades com mais procura por {a} (mercado de origem e territórios do selo); a 1ª tem ~{d} interessados.', '{n} cities with the most demand for {a} (home market and label territories); the top one has ~{d} interested fans.'), { n: ids.length, a: act.name, d: pool[0].d }) };
+}
+
+/** Produção e equipe proporcionais ao tamanho do ato (o rascunho padrão era caro demais para estreantes). */
+export function sizedDraft16(s: GameState, actId: string): Pick<TourPlan, 'production' | 'crew' | 'minutes'> {
+  const f = s.acts[actId]?.fame ?? 0;
+  return { production: f >= 45 ? 2 : f >= 25 ? 1 : 0, crew: f >= 45 ? 6 : f >= 20 ? 4 : 2, minutes: f >= 20 ? 60 : 45 };
+}
+
+/** O que a turnê deixa no caixa do SELO (não do artista): no contrato clássico a bilheteria é do artista. */
+export function labelTourNet16(s: GameState, actId: string, est: { logistics: number; expectedRevenue: number; expectedMerch: number }): { net: number; why: L } {
+  const act = s.acts[actId];
+  const c = act?.contractId ? s.contracts[act.contractId] : undefined;
+  const share = act?.playerBand ? 1 : c?.model === '360' ? c.share360 : 0;
+  const back = Math.round((est.expectedRevenue * 0.65 + est.expectedMerch) * share);
+  const net = back - est.logistics;
+  const usd = (v: number) => `${v < 0 ? '−' : ''}$${Math.round(Math.abs(v) / 100).toLocaleString('en-US')}`;
+  const why = share === 0
+    ? fmtL(l('Para o selo: {n}. Contrato clássico: bilheteria e merch ficam com o artista; você paga a logística em troca de fãs, fama e vendas de disco.', 'For the label: {n}. Classic deal: box office and merch go to the act; you pay logistics in exchange for fans, fame and record sales.'), { n: usd(net) })
+    : fmtL(l('Para o selo: {n} (sua parte de {p}% da bilheteria líquida e do merch, menos a logística).', 'For the label: {n} (your {p}% of net box office and merch, minus logistics).'), { n: usd(net), p: Math.round(share * 100) });
+  return { net, why };
+}

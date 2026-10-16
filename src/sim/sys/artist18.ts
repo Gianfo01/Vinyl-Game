@@ -10,6 +10,7 @@
 // distribuição (P&D), contrato de desenvolvimento, editora para suas músicas, empresário e agente de shows.
 // Seu extrato de artista mostra adiantamento, recuperável, royalties e prestações de contas (econ18).
 
+import { tourList } from '../tours';
 import { clamp, hashString, Rng, seedState } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { familyOf, l, type L, type MarketId } from '../../data/world';
@@ -110,7 +111,7 @@ export function hon18(s: GameState, id: string): number {
   if (tr !== undefined) v += (tr - 50) / 500;
   return clamp(v, 0.1, 0.97);
 }
-const dropsOf = (s: GameState, id: string): number => Object.keys((s.x4 as unknown as { rivalmind18?: { m: Record<string, { drop?: Record<string, number> }> } }).rivalmind18?.m?.[id]?.drop ?? {}).length;
+const dropsOf = (s: GameState, id: string): number => Object.keys((s.x4 as unknown as { rivals?: { lb: Record<string, { mind?: { drop?: Record<string, number>; target?: { k: string; id: string } } }> } }).rivals?.lb?.[id]?.mind?.drop ?? {}).length; // UNI-4: estado único dos rivais
 
 /** o que se ouve do selo: artistas do elenco, dispensas, histórico com você */
 export function testi18(s: GameState, id: string): L[] {
@@ -157,7 +158,7 @@ export function interest18(s: GameState, lb: Label, a: Act, c = ctx18(s, a)): { 
   if (lb.strategy === 'stars') v += 0.12 * c.fameN - 0.05;
   if (lb.family === 'A' && c.fameN < 0.3) v -= 0.12;
   if (lb.cash < money(s, 60000)) v -= 0.08;
-  const tgt = (s.x4 as unknown as { rivalmind18?: { m: Record<string, { target?: { k: string; id: string } }> } }).rivalmind18?.m?.[lb.id]?.target;
+  const tgt = (s.x4 as unknown as { rivals?: { lb: Record<string, { mind?: { drop?: Record<string, number>; target?: { k: string; id: string } } }> } }).rivals?.lb?.[lb.id]?.mind?.target; // UNI-4: estado único dos rivais
   if (tgt && ((tgt.k === 'fam' && tgt.id === fam) || tgt.id === a.id)) { v += 0.08; why.push(l('estão caçando esse som', 'they are hunting this sound')); }
   const b = st.boost[lb.id];
   if (b && b[0] >= s.week) { v += b[1]; why.push(b[1] > 0 ? l('gostaram do showcase', 'they liked the showcase') : l('o showcase foi mal', 'the showcase went badly')); }
@@ -835,7 +836,7 @@ postHooks18().push((s, key, amount, cat) => {
     const frac = c.clauses18?.rec ?? 0.5;
     c.recoupBalance = Math.max(0, c.recoupBalance + Math.round(v * frac) - (key.startsWith('rec:') ? Math.round(-amount * 0.5) : 0));
     led(s, 'rec', v, fmtL(l('Fundo de gravação de {b} ({p}% recuperável)', 'Recording fund from {b} ({p}% recoupable)'), { b: nameOf(s, d.lb), p: Math.round(frac * 100) }));
-  } else if (cat === 'live_costs' && key.startsWith('tour:') && s.tours.find((t) => key === `tour:${t.id}` && t.actId === a.id)) {
+  } else if (cat === 'live_costs' && key.startsWith('tour:') && tourList(s).find((t) => key === `tour:${t.id}` && t.actId === a.id)) {
     const cap = r100(s, 1500 + labelClout(s, d.lb) * 6000);
     const v = Math.min(Math.round(-amount * (d.tour ? 0.5 : 0.25)), cap);
     if (v <= 0 || !post(s, `a18tour:${key}`, v, 'advances', `Apoio de turnê ${nameOf(s, d.lb)}`)) return;

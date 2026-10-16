@@ -7,6 +7,7 @@
 //                               "comprar casa em Salvador" → abrem o painel com a ação em foco; favoritos e "Metas".
 //  openMine31(s)                favoritos (abrir/desafixar, fixar a tela atual) e metas (criar, acompanhar, apagar).
 //  favStar31(s, tipo, destino)  estrela ☆/★ para fixar pessoas, artistas, cidades e telas em qualquer lugar.
+import { tourList } from '../../sim/tours';
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { Dest } from '../../sim/r31/dest';
@@ -52,7 +53,7 @@ export function runQuick31(s: GameState, r: QRow31, tg: QTarget31): void {
     case 'q.record': if (a) chooseAction20(s, 'record.prepare', a.id); return;
     case 'q.release': if (a) goToProjects(a.id, tg.kind === 'project' ? tg.id : undefined); return;
     case 'q.tour':
-      if (tg.kind === 'city') { const id = playerActs(s).find((x) => !s.tours.some((tr) => tr.actId === x && (tr.status === 'planned' || tr.status === 'running'))); if (id) setTourAct31(id); setTourStops20(s, [tg.id]); }
+      if (tg.kind === 'city') { const id = playerActs(s).find((x) => !tourList(s).some((tr) => tr.actId === x && (tr.status === 'planned' || tr.status === 'running'))); if (id) setTourAct31(id); setTourStops20(s, [tg.id]); }
       else if (a) setTourAct31(a.id);
       goDest31(r.dest);
       return;

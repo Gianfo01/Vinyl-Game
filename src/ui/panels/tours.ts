@@ -7,7 +7,7 @@ import { cashLock31 } from '../../sim/r31/lock';
 import { VENUE_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { cancelTour, estimateTour, legOptions31, planTour, type TourEstimate, type TourPlan } from '../../sim/tours';
+import { cancelTour, estimateTour, legOptions31, planTour, type TourEstimate, type TourPlan, tourList } from '../../sim/tours';
 import { on31 } from '../../sim/r31/market31';
 import { activeMembers } from '../../sim/capacity';
 import type { TransportMode } from '../../sim/travel';
@@ -23,7 +23,7 @@ import { visibleAct } from '../../sim/future';
 import { forecastTour } from '../../sim/sys/explain12';
 import { forecastBox } from '../sys/explain12';
 import { fameText } from '../../sim/sys/fame15';
-import { labelTourNet16, sizedDraft16, suggestRoute16 } from '../../sim/route16';
+import { labelTourNet16, sizedDraft16, suggestRoute16 } from '../../sim/sys/road27';
 import { kitDraft18, kitForm18 } from '../sys/live18';
 import { changeTour20, futureStops20, tourChangeQuote20, type TourChange20 } from '../../sim/sys/showops20';
 import { FLY_FROM18, KIT_TXT18 } from '../../sim/sys/live18';
@@ -171,7 +171,7 @@ function stopIcon(st: Tour['stops'][number]): string {
 }
 
 export function activeToursSection(s: GameState): HTMLElement | null {
-  const tours = s.tours.filter((x) => x.status === 'planned' || x.status === 'running' || (x.status === 'done' && s.day - (x.stops.at(-1)?.day ?? 0) < 120));
+  const tours = tourList(s).filter((x) => x.status === 'planned' || x.status === 'running' || (x.status === 'done' && s.day - (x.stops.at(-1)?.day ?? 0) < 120));
   if (!tours.length) return null;
   return section(t(l('Turnês', 'Tours')), tours.map((tr) => h('div', { class: 'tour' },
     h('header', null, a29(vehicleImg29(({ ...KIT0, ...(tr.kit18 ?? {}) } as Kit18).move, s.year, tr.id, 64)), h('b', null, tr.name), /* r29: veículo da época */ ' ', actLink(s, tr.actId), ' ', pill(t({ planned: l('marcada', 'booked'), running: l('na estrada', 'on the road'), done: l('encerrada', 'finished'), cancelled: l('cancelada', 'cancelled') }[tr.status]), tr.status === 'running' ? 'good' : ''),

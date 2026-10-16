@@ -2,6 +2,7 @@
 // (estresse, obrigações, fatos recentes, imprensa, fama em casa x no mundo, ficha criminal, direitos de
 // imagem/voz, casas de show e empresário) — cada cartão diz onde aprofundar (a aba certa do popup).
 
+import { realVenues } from '../../sim/sys/venuestore27';
 import { countryName } from '../../data/geo';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -12,7 +13,7 @@ import { crime17 } from '../../sim/sys/crime17';
 import { fameIn, homeA3 } from '../../sim/sys/fame16';
 import { img17 } from '../../sim/sys/image17';
 import { actOfPerson } from '../../sim/sys/social8';
-import { v17, vdef } from '../../sim/sys/venues17';
+import { vdef } from '../../sim/sys/venues17';
 import type { Act, GameState, Person } from '../../sim/types';
 import { h } from '../dom';
 import { ACT_TABS, PERSON_TABS } from '../pages';
@@ -54,7 +55,7 @@ function actCards(s: GameState, a: Act): Card[] {
   out.push(holdCard(s, a.id), ...factCards(s, a.id), crimeCard(s, [a.id, ...a.members]));
   const img = img17(s).deals.filter((d) => d.act === a.id && d.status !== 'ended');
   if (img.length) out.push([l('Imagem e voz', 'Image and voice'), img.map((d) => `${d.scopes.join('/')} ${Math.round(d.share * 100)}%${d.status === 'demand' ? ` (${t(l('cobrando', 'demanding'))})` : ''}`).join(' · '), img.some((d) => d.status === 'demand') ? 'bad' : '', l('Gravadora › Imagem & voz', 'Label › Image & voice')]);
-  const vs = v17(s).own.filter((o) => o.booked.includes(a.id) || o.actId === a.id);
+  const vs = realVenues(s).filter((o) => o.booked.includes(a.id) || o.actId === a.id);
   if (vs.length) out.push([l('Casas de show', 'Venues'), vs.map((o) => { const n = vdef(o.id)?.name; return n ? (typeof n === 'string' ? n : t(n)) : o.id; }).join(', '), '', l('agendado nas suas casas', 'booked at your venues')]);
   return out.filter((x): x is Card => !!x);
 }

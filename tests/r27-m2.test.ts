@@ -34,9 +34,12 @@ beforeAll(() => {
   // existem — antes dependia da ordem dos imports) e os perks religados, r16pb-7 quebra antes do show; r16pb-4 volta a ter
   // show no 9º mês, mas o ato mais famoso livre fecha com um rival na mesa; r16pb-8 tem show no 9º mês e vira o fixture.
   // R29 (CONECTAR TUDO + DEMO juntos): r16pb-8 (e -7) quebram antes do show; r16pb-3 tem show no 8º mês e vira o fixture.
-  // R31 onda 4 (N: bandas de ficção no mundo): r16pb-3 quebra antes do show; varredura pb-1..12: show no 8º–10º mês em
-  // pb-2, 5, 7, 8, 9, 10, 11, 12; r16pb-11 (o mesmo do r16-playbot) vira o fixture.
-  const s = createGame(defaultConfig('r16pb-11', { startYear: 1975, realNames: true }));
+  // R31 UNI-4 (motores únicos de turnê/casa/festival/rival + segredos num depósito): em r16pb-3 o show mal jogado passa a
+  // render mais fãs que o bem jogado (38 vs 35, show sorteado diferente); varredura -2..-10: -2/-5/-7/-8/-10 passam tudo,
+  // -4/-9 quebram antes do show, -6 repete a falha do -3. r16pb-2 vira o fixture.
+  // Junção final da onda 4 (UNI-4 + N + I + T/H/CAR2): r16pb-2 quebra antes do show; varredura -3..-14: -3/-4/-6/-8/-12/-14
+  // passam os 12; r16pb-3 volta a ser o fixture.
+  const s = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
     const hit = m >= 7 && playableShows27(s, 40).length > 0;

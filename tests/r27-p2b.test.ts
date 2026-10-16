@@ -12,7 +12,7 @@ import type { GameState } from '../src/sim/types';
 import { money, playerActs } from '../src/sim/util';
 import { emitFact } from '../src/sim/facts17';
 import {
-  ODDS27, autoPick27, basePlan27, bookRoute27, isRoad27, pendingRoad27, resolveRoad27, road27, roadEvent27, routeView27,
+  ODDS27, autoPick27, basePlan27, bookRoute27, isRoad27, pendingRoad27, resolveRoad27, roadOf27, roadEvent27, routeView27,
 } from '../src/sim/sys/road27';
 import {
   ACTS27, CFG27, actCrisis27, crisisActs27, crisisById27, crisisCands27, crisisWeek27, delegatePick27, finish27, openCrisis27, type Crisis27,
@@ -111,18 +111,28 @@ describe('r27 P2B — modo rápido intacto', () => {
     // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
     // R31 onda 4 (N · bandas de ficção no mundo, de propósito — docs/r31/DECISOES.md e docs/r31/nx.md): ~4 bandas de filmes e séries
     // (Stillwater, Electric Mayhem…) estreiam nesses 8 meses e mudam a trajetória; com `fic31` desligado voltam 257209 / 4026815485 / 68287867 / 205718420.
-    expect(AFTER.player.cash).toBe(1132370);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4020965551);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(4261222074); // r31 LOTE: fluxo rng19 'lots31' entra no retrato (3274579681 sem ele; DECISOES)
     // R31 onda 4 (I · gente nos lugares, de propósito — docs/r31/DECISOES.md e docs/r31/is.md): donos e equipe dos lugares da
     // cidade são pessoas da base; sem ninguém adequado nasce gente nova (29 pessoas nesta semente em 8 meses), e os sistemas
     // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
     // Com `gente31` desligado volta acts 68287867.
     // Junção N + I (integração da onda 4): as duas mudanças juntas dão caixa 1132370 e acts 4020965551 (turnês e rng iguais ao N).
+    // R31 onda 4 (UNI-4 · fusões grandes, de propósito — docs/r31/DECISOES.md e docs/r31/uni4.md): relação com a praça numa
+    // fonte só (neutro 30), segredos da Intriga e trunfos do livro na camada única (podem vazar), satisfação do cliente = confiança
+    // do empresário, shows avulsos/acordos/estrada como papéis em s.tours e registros únicos de festivais, casas e rivais (a
+    // ordem de carga dos módulos mudou a ordem dos ganchos): caixa, turnês, acts e rng mudam; o caixa do bot nesta semente
+    // oscila centenas de milhares de mês a mês (o 8º mês caiu num vale). Com `uni4.links` desligado só acts muda (289804343).
+    // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
+    // UNI-4 + I juntos: re-medido — só acts muda em relação ao UNI-4 sozinho (4266817177 → 3500990849).
+    // UNI-4 (cache da ficha com chave completa — o jogo carregado de um save divergia): caixa 10093 → 10092 e
+    // acts 3500990849 → 1560130818 (o r27-p2a, sem os módulos P2B, não muda).
+    // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
+    expect(AFTER.player.cash).toBe(182589);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3575668786);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1693608899);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(828266377); // r31 LOTE: fluxo rng19 'lots31' entra no retrato (103954728 sem ele; DECISOES)
   });
   it('nada de estado P2B criado sem o jogador', () => {
-    expect(x4(AFTER).road27).toBeUndefined();
+    expect(AFTER.tours.some((t) => t.road)).toBe(false); // UNI-4: estrada na própria turnê
     expect(x4(AFTER).crisis27).toBeUndefined();
     expect(x4(AFTER).board27).toBeUndefined();
     expect(AFTER.tours.some((t) => isRoad27(AFTER, t.id))).toBe(false);
@@ -238,7 +248,7 @@ describe('r27 P2B — turnê no mapa', () => {
   it('sem decisão do jogador, a equipe decide no dia (dentro da política) e o mês corre igual nos dois clones', () => {
     const a = roadFix(), b = roadFix();
     advanceMonth(a.s); advanceMonth(b.s);
-    const R = road27(a.s).tours[a.tid];
+    const R = roadOf27(a.s, a.tid)!; // UNI-4: estrada na própria turnê
     expect(Object.values(R.ev).length).toBeGreaterThan(0);
     expect(Object.values(R.ev).every((x) => x.auto)).toBe(true);
     expect(hashString(JSON.stringify(a.s.tours))).toBe(hashString(JSON.stringify(b.s.tours)));

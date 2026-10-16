@@ -1,3 +1,4 @@
+import { tourList } from '../../../sim/tours';
 import { actMode27 } from '../../act27/prefs27'; // r27: uma opção só (Atividades) também para os mini-jogos antigos
 // Interface de palco: notas dos shows por turnê, ingressos/cambistas, mini-jogo da curva do setlist
 // e o show ao vivo (cena com público em pixel art, medidor de energia e cartas de resposta).
@@ -22,7 +23,7 @@ void $;
 
 function notesSection(s: GameState): HTMLElement | null {
   const lv = liveOf(s);
-  const tours = s.tours.filter((x) => (lv.notes[x.id]?.length ?? 0) > 0 || x.status === 'planned' || x.status === 'running').slice(-6).reverse();
+  const tours = tourList(s).filter((x) => (lv.notes[x.id]?.length ?? 0) > 0 || x.status === 'planned' || x.status === 'running').slice(-6).reverse();
   const mine = tours.filter((x) => s.acts[x.actId]?.owner === 'player' || s.acts[x.actId]?.playerBand);
   if (!mine.length) return null;
   return section(t(l('Notas dos shows', 'Show ratings')),
@@ -90,7 +91,7 @@ ${energies.map((e, i) => `<circle cx="${x(i)}" cy="${y(e)}" r="3.5" fill="var(--
 }
 
 export function openSetlistGame(s: GameState, tourId: string): void {
-  const tr = s.tours.find((x) => x.id === tourId);
+  const tr = tourList(s).find((x) => x.id === tourId);
   if (!tr) return;
   let order = [...tr.setlist].filter((id) => s.songs[id]);
   openScene(l('Curva do setlist', 'Setlist curve'), (close) => {

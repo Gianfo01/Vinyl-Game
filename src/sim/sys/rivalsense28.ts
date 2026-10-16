@@ -9,6 +9,7 @@
 //     agressividade) até a reserva. Esgotada a reserva, recua.
 // Sorte: Rng.fromSeed(semente|rs28|…); a única tirada do RNG do jogo é a de "interesse" (já existia).
 
+import { rivals31 } from './rivalstore';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { defaultOffer, evaluateOffer, expectedAdvance, signWithRival } from '../contracts';
@@ -22,11 +23,9 @@ export const RS28 = 'rs28v1';
 const q28 = (s: GameState) => Math.floor(s.week / 13);
 const rng28 = (s: GameState, ...parts: (string | number)[]) => Rng.fromSeed(`${s.config.seed}|${RS28}|${parts.join('|')}`);
 
-interface Rs28State { live: number; contests: number; wins: number; counters: number; backoffs: number }
-export function rs28(s: GameState): Rs28State {
-  const x = s.x4 as unknown as Record<string, unknown>;
-  return (x.rs28 ??= { live: 0, contests: 0, wins: 0, counters: 0, backoffs: 0 }) as Rs28State;
-}
+export interface Rs28State { live: number; contests: number; wins: number; counters: number; backoffs: number }
+/** UNI-4 (B.19): parte do estado único dos rivais (rivalstore). */
+export const rs28 = (s: GameState): Rs28State => rivals31(s).r28;
 
 // ---------------------------------------------------------------- leitura pública (com ruído)
 

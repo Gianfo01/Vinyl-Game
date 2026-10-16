@@ -11,6 +11,8 @@
 //    (`season19`) aplicada nas vendas (chartUnits) e na procura de shows (cityDemand), marcada no calendar19; o
 //    "guardar para o Natal" do npc17 vira decisão do jogador (campanha de fim de ano, diluída pelos astros que seguraram discos).
 
+import { tourList } from '../tours';
+import { cityRelAdd, cityRelEach } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
@@ -32,7 +34,6 @@ import { headline19 } from './factlink19';
 import { GIANT19, giant18 } from './live18';
 import { tragedyOdds19 } from './links19a';
 import { bestPlant18, queueOf18, sup18 } from './supply18';
-import { c12 } from './tour12';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27, releasesNow27 } from '../tickcache27';
 
@@ -308,7 +309,7 @@ export function liveMonth19(s: GameState): void {
   for (const b of activeBoy19(s)) {
     const a = s.acts[b.act];
     if (!a) { b.end = s.week; continue; }
-    if (s.tours.some((t) => t.actId === a.id && t.status === 'running') && mine(s, a)) {
+    if (tourList(s).some((t) => t.actId === a.id && t.status === 'running') && mine(s, a)) {
       const c = boyCost19(s, a); b.cost += c;
       post(s, `lv19boy:${b.id}:${s.year}-${s.month}`, -c, 'live', `Boicote: casas alternativas (${a.name})`);
       const f = fan18(s, a.id, false); if (f) f.loy = clamp(f.loy + 0.5, 0, 100);
@@ -336,14 +337,14 @@ onFact('boycott', (s, f) => {
   if (!f.tags.includes('tickets')) return;
   headline19(s, f.text, 2);
   const a = s.acts[f.actors[0]];
-  if (mine(s, a)) { const rel = c12(s).rel; const k = a.city; rel[k] = clamp((rel[k] ?? 30) - 4, 0, 100); }
+  if (mine(s, a)) cityRelAdd(s, a.city, -4);
 }, 'live19:boycott');
 // decisão antitruste: vitória → lealdade de todos os seus atos e reputação institucional; derrota → promotores esfriam
 onFact('antitrust_ruling', (s, f) => {
   headline19(s, f.text, 3);
   const win = f.tags.includes('win');
   if (win) { s.player.reputation.institutional = clamp(s.player.reputation.institutional + 3, 0, 100); for (const id of playerActs(s)) { const x = fan18(s, id, false); if (x) x.loy = clamp(x.loy + 3, 0, 100); } }
-  else { const rel = c12(s).rel; for (const k of Object.keys(rel)) rel[k] = clamp(rel[k] - 2, 0, 100); }
+  else cityRelEach(s, (v) => v - 2);
 }, 'live19:ruling');
 // festival gratuito: fãs (mobilização), embalo, descoberta de um ato local no palco aberto, manchete
 onFact('free_fest', (s, f) => {

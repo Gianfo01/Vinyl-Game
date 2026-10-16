@@ -2,6 +2,7 @@
 // ganchos 'show' e 'day' com baixa frequência; cada uma tem uma pequena escolha.
 // O efeito básico acontece na hora (ex.: a multa do quarto destruído); a escolha só ajusta.
 
+import { tourList } from '../../tours';
 import type { Rng } from '../../../core/rng';
 import { cityById, l, type L } from '../../../data/world';
 import type { HookArgs } from '../../ext4';
@@ -92,7 +93,7 @@ export function vignetteOnShow(s: GameState, r: Rng, show: HookArgs['show']): vo
 
 /** Gancho 'day': visto negado vira cena no aeroporto. */
 export function airportDay(s: GameState): void {
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.status !== 'running' && t.status !== 'done') continue;
     const act = s.acts[t.actId];
     if (!isMine(act)) continue;

@@ -61,10 +61,10 @@ export const TRACKS18: Track18[] = [
   ] },
   { id: 'booking', name: l('Agente e promotor', 'Agent & promoter'), intro: l('Rotas, propostas e a parte de cada noite.', 'Routes, offers and a cut of every night.'), objs: [
     o('page', 'Abrir rotas e propostas', 'Open routes and offers', 'cp17-booking'),
-    o('show', 'Fechar o primeiro show', 'Book the first show', 'cp17-booking', (s) => (x4(s).tour12?.shows ?? []).length >= 1 || (x4(s).tour12?.promoter?.n ?? 0) >= 1),
+    o('show', 'Fechar o primeiro show', 'Book the first show', 'cp17-booking', (s) => ((s.tours ?? []) as { by?: string }[]).some((x) => !!x.by) || (x4(s).tour12?.promoter?.n ?? 0) >= 1),
     o('cal', 'Ver a agenda de shows (concorrência)', 'Check the show calendar (competition)', 'cal17'),
     o('fest', 'Olhar o circuito de festivais', 'Look at the festival circuit', 'festivals'),
-    o('ten', 'Somar 10 shows agenciados', 'Book 10 shows in total', 'cp17-booking', (s) => (x4(s).tour12?.shows ?? []).length + (x4(s).tour12?.promoter?.n ?? 0) >= 10),
+    o('ten', 'Somar 10 shows agenciados', 'Book 10 shows in total', 'cp17-booking', (s) => ((s.tours ?? []) as { by?: string }[]).filter((x) => !!x.by).length + (x4(s).tour12?.promoter?.n ?? 0) >= 10),
   ] },
   { id: 'festival', name: l('Dono de festival', 'Festival owner'), intro: l('Line-up, local, preço e a primeira edição.', 'Line-up, site, price and the first edition.'), objs: [
     o('page', 'Abrir seus festivais', 'Open your festivals', 'cp17-festival'),
@@ -75,9 +75,9 @@ export const TRACKS18: Track18[] = [
   ] },
   { id: 'venue', name: l('Casa de shows', 'Venue owner'), intro: l('Programação, bar e público fiel.', 'Programming, bar and regulars.'), objs: [
     o('page', 'Abrir sua casa e programação', 'Open your venue and programming', 'cp17-venue'),
-    o('own', 'Ter uma casa de shows', 'Own a venue', 'cp17-venue', (s) => !!x4(s).venue12?.v || (x4(s).venues17?.own ?? []).length > 0),
-    o('nights', 'Fechar 3 meses de programação', 'Run 3 months of programming', 'cp17-venue', (s) => (x4(s).venue12?.v?.hist ?? []).length >= 3),
-    o('black', 'Ter um mês no azul', 'Have a month in the black', 'cp17-venue', (s) => (x4(s).venue12?.v?.hist ?? []).some((h: X4) => h.net > 0)),
+    o('own', 'Ter uma casa de shows', 'Own a venue', 'cp17-venue', (s) => Object.keys(x4(s).venues27?.v ?? {}).length > 0),
+    o('nights', 'Fechar 3 meses de programação', 'Run 3 months of programming', 'cp17-venue', (s) => (x4(s).venues27?.v?.['lv:venue']?.prog?.hist ?? []).length >= 3),
+    o('black', 'Ter um mês no azul', 'Have a month in the black', 'cp17-venue', (s) => (x4(s).venues27?.v?.['lv:venue']?.prog?.hist ?? []).some((h: X4) => h.net > 0)),
   ] },
   { id: 'studio', name: l('Estúdio e produtor', 'Studio & producer'), intro: l('Horas vendidas, discos produzidos e assinatura sonora.', 'Hours sold, records produced and a sonic signature.'), objs: [
     o('page', 'Abrir estúdio e produção', 'Open studio and production', 'cp17-studio'),

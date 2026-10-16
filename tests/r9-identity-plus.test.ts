@@ -10,7 +10,7 @@ import { bumpPerks, perk } from '../src/sim/perks';
 import { GENRES, cityById } from '../src/data/world';
 import { PROFILES, PROFILE_ACTIONS, actionBlock, ident, identityMonth, pressReaction, profileOfferEffect, runProfileAction, type ProfileId } from '../src/sim/sys/identity';
 import { XPROFILES } from '../src/sim/sys/identity/extra';
-import { PLAYBOOKS, playbookOf, rivalProfile, rivals8 } from '../src/sim/sys/rivals8';
+import { PLAYBOOKS, playbookOf, rivalProfile, allMoves8 } from '../src/sim/sys/rivals8';
 import {
   AXES, MOMENTS, actTrademarks, clearSoundCache, composerPull, fit9, labelSignature, lifeMoments, snd, soundOf, soundPhrases, subs, timbresOf,
 } from '../src/sim/sys/sound';
@@ -164,7 +164,7 @@ describe('13 manuais de rival', () => {
       runSimHooks('month', s, rng19(s, 'act'));
       for (const lb of labels) lb.cash = Math.max(lb.cash, money(s, 5e7));
     }
-    for (const list of Object.values(rivals8(s).log)) for (const m of list) seen.add(m.k);
+    for (const [, list] of allMoves8(s)) for (const m of list) seen.add(m.k);
     const fresh = ['idol_debut', 'gospel_circuit', 'prestige_award', 'sync_deal', 'regional_tour', 'asset_strip', 'visionary_bet', 'purist_refuse'];
     expect(fresh.filter((k) => seen.has(k)).length).toBeGreaterThanOrEqual(2);
   });

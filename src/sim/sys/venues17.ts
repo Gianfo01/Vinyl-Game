@@ -6,15 +6,14 @@
 // confia em você); comercial dá caixa e desgasta a reputação; atrasar a manutenção dá fiscalização (multa).
 // Se a casa real fechou na história e é sua, ela sobrevive — e isso vira legado. Gerador próprio por mês.
 
+import { addRealVenue, dropRealVenue, houseCount27, houses27, realVenue, realVenues } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { FAMILIES, cityById, familyOf, l, type L } from '../../data/world';
-import { registerExt4 } from '../ext4';
 import { emitFact } from '../facts17';
 import { VENUES19 } from '../../data/more19';
 import type { Act, GameState } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
-import { liveOf } from './live/state';
 
 export interface VDef { id: string; name: string; city: string; cap: number; from: number; to?: number; prestige: number; price: number; fam: string; buyable?: false; note?: L }
 export const VENUES17: VDef[] = [
@@ -62,13 +61,10 @@ export const POLICY: Record<Policy, { name: L; desc: L; nights: number; rep: num
 export const PRICE: Record<PriceK, { name: L; mult: number; occ: number }> = { low: { name: l('Barato', 'Cheap'), mult: 0.7, occ: 1.15 }, mid: { name: l('Normal', 'Normal'), mult: 1, occ: 1 }, high: { name: l('Caro', 'Pricey'), mult: 1.45, occ: 0.78 } };
 
 export interface Own17 { id: string; rep: number; policy: Policy; price: PriceK; actId?: string; cond: number; maint: boolean; y: number; paid: number; booked: string[]; last?: { att: number; net: number; nights: number; why: L[] }; total: number; saved?: 1 }
-export interface V17 { own: Own17[]; log: { y: number; m: number; t: L }[] }
-declare module '../ext4' { interface Ext4 { venues17: V17 } }
-registerExt4('venues17', () => ({ own: [], log: [] }));
-export const v17 = (s: GameState): V17 => { const x = s.x4 as unknown as { venues17?: V17 }; return (x.venues17 ??= { own: [], log: [] }); };
-const log = (s: GameState, t: L) => { const st = v17(s); st.log.unshift({ y: s.year, m: s.month, t }); if (st.log.length > 30) st.log.pop(); };
+// UNI-4 (B.12): as casas compradas (Own17) e o histórico moram no registro único das casas (venuestore27).
+const log = (s: GameState, t: L) => { const st = houses27(s); st.log.unshift({ y: s.year, m: s.month, t }); if (st.log.length > 30) st.log.pop(); };
 
-export const venueOpen = (s: GameState, d: VDef) => s.year >= d.from && (!d.to || s.year <= d.to || v17(s).own.some((o) => o.id === d.id));
+export const venueOpen = (s: GameState, d: VDef) => s.year >= d.from && (!d.to || s.year <= d.to || realVenues(s).some((o) => o.id === d.id));
 /** Força da cena da 'alma' da casa na cidade (maior gênero da família). */
 export function sceneFam(s: GameState, city: string, fam: string): number {
   let m = 0;
@@ -86,13 +82,12 @@ export function buyVenue17(s: GameState, id: string): L | null {
   const d = vdef(id);
   if (!d || !venueOpen(s, d)) return l('Casa indisponível.', 'Venue unavailable.');
   if (d.buyable === false) return fmtL(l('Não está à venda: {w}.', 'Not for sale: {w}.'), { w: d.note ?? '' });
-  const st = v17(s);
-  if (st.own.some((o) => o.id === id)) return l('Já é sua.', 'Already yours.');
+  if (realVenue(s, id)) return l('Já é sua.', 'Already yours.');
   if (venueCount27(s) >= MAX_VENUES27) return l('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.');
   const p = venuePrice(s, d);
   if (freeCash20(s) < p) return cashWhy20(s, p, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `v17buy:${id}`, -p, 'investments', `Compra: ${d.name}`);
-  st.own.push({ id, rep: d.prestige * 0.7, policy: 'curated', price: 'mid', cond: 80, maint: true, y: s.year, paid: p, booked: [], total: 0 });
+  addRealVenue(s, { id, rep: d.prestige * 0.7, policy: 'curated', price: 'mid', cond: 80, maint: true, y: s.year, paid: p, booked: [], total: 0 });
   const t = fmtL(l('{c} compra {v} ({city}).', '{c} buys {v} ({city}).'), { c: s.config.companyName, v: d.name, city: cityById[d.city]?.name ?? d.city });
   log(s, t);
   remember(s, 'venue17', t, { important: true });
@@ -101,16 +96,16 @@ export function buyVenue17(s: GameState, id: string): L | null {
 }
 export const sellValue = (s: GameState, o: Own17): number => { const d = vdef(o.id)!; return Math.round(venuePrice(s, d) * (0.6 + o.rep / 200) * (o.cond / 100 * 0.4 + 0.6)); };
 export function sellVenue17(s: GameState, id: string): L | null {
-  const st = v17(s), o = st.own.find((x) => x.id === id);
+  const o = realVenue(s, id);
   if (!o) return l('Inválido.', 'Invalid.');
   const v = sellValue(s, o);
   post(s, `v17sell:${id}`, v, 'asset_sales', `Venda: ${vdef(id)!.name}`);
-  st.own = st.own.filter((x) => x !== o);
+  dropRealVenue(s, id);
   log(s, fmtL(l('{v} vendida por {p}.', '{v} sold for {p}.'), { v: vdef(id)!.name, p: `$${Math.round(v / 100).toLocaleString('en-US')}` }));
   return null;
 }
 export function setVenue17(s: GameState, id: string, p: Partial<Pick<Own17, 'policy' | 'price' | 'actId' | 'maint'>>): void {
-  const o = v17(s).own.find((x) => x.id === id);
+  const o = realVenues(s).find((x) => x.id === id);
   if (!o) return;
   Object.assign(o, p);
   if (o.policy !== 'residency') o.actId = undefined;
@@ -147,12 +142,11 @@ export function monthEst17(s: GameState, o: Own17): { att: number; net: number; 
 
 /** r27: teto único de casas (as reais compradas + a construída na carreira de casa de shows). */
 export const MAX_VENUES27 = 4;
-export const venueCount27 = (s: GameState): number => v17(s).own.length + (liveOf(s).venue ? 1 : 0);
+export const venueCount27 = (s: GameState): number => houseCount27(s);
 
 /** Mês das casas reais compradas. r27: chamado pelo fechamento único das casas (venues27). */
 export function realVenuesMonth17(s: GameState): void {
-  const st = v17(s);
-  for (const o of st.own) {
+  for (const o of realVenues(s)) {
     const d = vdef(o.id);
     if (!d) continue;
     const r = Rng.fromSeed(`${s.config.seed}:v17:${o.id}:${s.year}:${s.month}`);
@@ -201,4 +195,4 @@ export function realVenuesMonth17(s: GameState): void {
 }
 
 /** Shows de atos seus numa casa sua (para a agenda de shows). */
-export const venueNights = (s: GameState) => v17(s).own.map((o) => ({ o, d: vdef(o.id)! })).filter((x) => x.d);
+export const venueNights = (s: GameState) => realVenues(s).map((o) => ({ o, d: vdef(o.id)! })).filter((x) => x.d);
