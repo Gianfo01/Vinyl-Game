@@ -40,7 +40,7 @@ const mine = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBan
 const v12ro = (s: GameState): V12 | null => (s as unknown as { x4?: { venues27?: { v?: Record<string, { prog?: V12 }> } } }).x4?.venues27?.v?.['lv:venue']?.prog ?? null; // UNI-4: programação na própria casa
 /** a casa e a programação (só leitura) */
 export function venueNow31(s: GameState): { cityId: string; a3: string; cap: number; kind: string; name: string; x: V12 } | null {
-  const v = (s as unknown as { x4?: { live?: { venue?: { cityId: string; kind: 'club' | 'theater' | 'arena'; name: string } | null } } }).x4?.live?.venue;
+  const v = (s as unknown as { x4?: { venues27?: { v?: Record<string, { built?: { cityId: string; kind: 'club' | 'theater' | 'arena'; name: string } }> } } }).x4?.venues27?.v?.['lv:venue']?.built; // UNI-4: registro único das casas
   const x = v12ro(s);
   if (!v || !x) return null;
   return { cityId: v.cityId, a3: countryOfCity(v.cityId) ?? 'USA', cap: venueKind(v.kind).cap, kind: v.kind, name: v.name, x };
