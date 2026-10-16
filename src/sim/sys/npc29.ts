@@ -33,6 +33,7 @@ import { bumpDeliveries29, npcProdPaid29 } from './contracts29';
 import { m14, mgrName } from './managers14';
 import { activeProds, prodKey, prodName } from './producers15';
 import { activeAct } from './ventures12';
+import { histLocked } from '../history15';
 import { mgGross, ventures } from './ventures9';
 
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
@@ -138,7 +139,7 @@ function npcProdSign29(s: GameState): void {
   if (!cos.length) return;
   const pending = new Set(s.offers.filter((o) => o.status === 'pending' || o.status === 'counter').map((o) => o.actId));
   const cands = Object.values(s.acts).filter((a) => !a.owner && !a.playerBand && activeAct(a) && a.status !== 'hiatus' && a.fame >= 2 && a.fame <= 30
-    && !pending.has(a.id) && scoutEligible20(s, a).ok).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1)).slice(0, 12);
+    && !pending.has(a.id) && !histLocked(s, a) && scoutEligible20(s, a).ok).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1)).slice(0, 12);
   if (!cands.length) return;
   const co = cos[r.int(0, cos.length - 1)];
   const act = cands[r.int(0, cands.length - 1)];
@@ -219,6 +220,7 @@ function npcProdMonth29(s: GameState): void {
     const act = s.acts[c.actId];
     if (!activeAct(act)) { endNpc(s, c, 'gone'); continue; }
     if (act.owner) { endNpc(s, c, 'sold'); continue; }
+    if (histLocked(s, act)) continue; // r31: vida real exata — produtora não grava nem entrega disco inventado
     if (c.endWeek <= s.week) { endNpc(s, c, 'expired'); continue; }
     const last = Math.max(c.startWeek, ...(c.x29?.deliveries ?? []).map((d) => d.week));
     const r = rng(s, 'pmonth', c.id, s.week);
