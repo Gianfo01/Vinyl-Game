@@ -10,7 +10,8 @@
 //    texto inteiro é o título, ou quando ele aparece entre aspas.
 // Palavra da interface ("Elenco", "Telefone", "Status"…) que coincide com um título NÃO é trocada: t() avisa que o texto
 // veio de um rótulo da interface (ui = true) e devolve a palavra com a marca invisível UI31, para o h() também não trocar.
-// A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing).
+// A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing). Texto curto (uma letra, só números ou
+// símbolos: teclas "N", "5", "+") nunca é trocado; cidades, países e teclas ficam de fora já na tabela (realshow31.ts).
 
 export type DispPair31 = [from: string, to: string];
 
@@ -20,6 +21,8 @@ const FAMILY_GUARD31 = /\bFossati\b|^(Efro|Lucia|Sonia|Antonella|Gianluca)$/;
 const WORD = /[\p{L}\p{N}]+/gu;
 const firstWord = (s: string): string | undefined => { WORD.lastIndex = 0; const m = WORD.exec(s); return m ? m[0] : undefined; };
 const isWordChar = (c: string | undefined) => !!c && /[\p{L}\p{N}]/u.test(c);
+/** nome curto demais para ser trocado: menos de 2 caracteres ou sem letra ("N", "5", "13", "+", "#3") */
+export const tooShort31 = (s: string): boolean => s.trim().length < 2 || !/\p{L}/u.test(s);
 
 let byFirst = new Map<string, DispPair31[]>();
 let whole = new Map<string, string>();
@@ -30,7 +33,7 @@ export function setDisplay31(names: DispPair31[], titles: DispPair31[]): void {
   const idx = new Map<string, DispPair31[]>();
   const w = new Map<string, string>();
   for (const [from, to] of names) {
-    if (!from || from === to || FAMILY_GUARD31.test(from)) continue;
+    if (!from || from === to || FAMILY_GUARD31.test(from) || tooShort31(from)) continue;
     const k = firstWord(from);
     if (!k) continue;
     let arr = idx.get(k);
@@ -39,7 +42,7 @@ export function setDisplay31(names: DispPair31[], titles: DispPair31[]): void {
     if (!w.has(from)) w.set(from, to);
   }
   for (const arr of idx.values()) arr.sort((a, b) => b[0].length - a[0].length);
-  for (const [from, to] of titles) if (from && from !== to && !FAMILY_GUARD31.test(from) && !w.has(from)) w.set(from, to);
+  for (const [from, to] of titles) if (from && from !== to && !FAMILY_GUARD31.test(from) && !tooShort31(from) && !w.has(from)) w.set(from, to);
   byFirst = idx;
   whole = w;
   active = idx.size > 0 || w.size > 0;
