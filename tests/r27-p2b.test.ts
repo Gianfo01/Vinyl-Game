@@ -120,9 +120,11 @@ describe('r27 P2B — modo rápido intacto', () => {
     // oscila centenas de milhares de mês a mês (o 8º mês caiu num vale). Com `uni4.links` desligado só acts muda (289804343).
     // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
     // UNI-4 + I juntos: re-medido — só acts muda em relação ao UNI-4 sozinho (4266817177 → 3500990849).
-    expect(AFTER.player.cash).toBe(10093);
+    // UNI-4 (cache da ficha com chave completa — o jogo carregado de um save divergia): caixa 10093 → 10092 e
+    // acts 3500990849 → 1560130818 (o r27-p2a, sem os módulos P2B, não muda).
+    expect(AFTER.player.cash).toBe(10092);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(2845419151);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3500990849);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1560130818);
     expect(hashString(rngSnapshot19(AFTER))).toBe(4017770377);
   });
   it('nada de estado P2B criado sem o jogador', () => {
