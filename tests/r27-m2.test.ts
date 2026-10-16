@@ -37,7 +37,9 @@ beforeAll(() => {
   // R31 UNI-4 (motores únicos de turnê/casa/festival/rival + segredos num depósito): em r16pb-3 o show mal jogado passa a
   // render mais fãs que o bem jogado (38 vs 35, show sorteado diferente); varredura -2..-10: -2/-5/-7/-8/-10 passam tudo,
   // -4/-9 quebram antes do show, -6 repete a falha do -3. r16pb-2 vira o fixture.
-  const s = createGame(defaultConfig('r16pb-2', { startYear: 1975, realNames: true }));
+  // Junção final da onda 4 (UNI-4 + N + I + T/H/CAR2): r16pb-2 quebra antes do show; varredura -3..-14: -3/-4/-6/-8/-12/-14
+  // passam os 12; r16pb-3 volta a ser o fixture.
+  const s = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
     const hit = m >= 7 && playableShows27(s, 40).length > 0;
@@ -61,7 +63,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     // Aqui fica o que não pode quebrar: a mesma seed dá exatamente o mesmo mundo, e o bot toca shows pelo playStop.
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBeGreaterThan(0);
-    const again = createGame(defaultConfig('r16pb-2', { startYear: 1975, realNames: true }));
+    const again = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
     for (let m = 0; m < MONTHS && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));
