@@ -23,6 +23,7 @@ import { freeCash20 } from '../oblig20';
 import { cap14 } from './gate14';
 import { respondDemand, rst, settleDemand } from '../rights';
 import { rivalCounter28, rivalReserve28, rivalScore28, rivalSign28, rivalTerms28 } from './rivalsense28';
+import { know, see, seen } from '../know';
 
 export type Draft27 = Omit<Offer, 'id' | 'week' | 'status'>;
 export const NEGO27_RNG = 'nego27v1';
@@ -71,7 +72,8 @@ export function negoGate27(s: GameState, actId: string, model: ContractModel = '
 
 /** Qualidade da leitura do outro lado: 0 (às cegas) … 1 (lê tudo). */
 export function insight27(s: GameState, act: Act): number {
-  const deg = s.knowledge[act.id]?.degree ?? 0;
+  // r31 F #18: a leitura usa o conhecimento privado (olheiro OU intimidade com a banda), não só o grau do olheiro
+  const deg = know(s, act.id).priv;
   return clamp(deg / 7 + (staffCount(s, 'analyst') ? 0.12 : 0) + staffSkill(s, 'legal') / 400 + staffSkill(s, 'manager') / 400 + staffSkill(s, 'scout') / 600, 0, 1);
 }
 
@@ -102,7 +104,7 @@ export function startNego27(s: GameState, actId: string, draft: Draft27): Nego27
   n.hi = n.res + w * (1 - pos);
   n.patience = Math.round(clamp(55 + act.trust * 0.35 - (actHasTrait(s, act, 'big_ego') || actHasTrait(s, act, 'quarrelsome') ? 15 : 0) + (actHasTrait(s, act, 'diplomatic') || actHasTrait(s, act, 'loyal') ? 10 : 0), 25, 95));
   n.maxRounds = 4 + (staffSkill(s, 'manager') > 40 ? 1 : 0);
-  n.log.push({ who: 'note', t: fmtL(l('{a} senta à mesa. Paciência {p}/100. Rodadas: até {r}.', '{a} sits down at the table. Patience {p}/100. Rounds: up to {r}.'), { a: act.name, p: n.patience, r: n.maxRounds }) });
+  n.log.push({ who: 'note', t: fmtL(l('{a} senta à mesa. Paciência: {p}. Rodadas: até {r}.', '{a} sits down at the table. Patience: {p}. Rounds: up to {r}.'), { a: act.name, p: patienceTxt27(s, n.actId, n.patience), r: n.maxRounds }) });
   // C14: abrir a mesa é uma reunião — a mesma cota de makeOffer (cobrada no fechamento pelo caminho normal)
   void cap14;
   return n;
@@ -112,10 +114,10 @@ export interface Read27 { ambition: string | null; traits: string[]; insight: nu
 /** O que você sabe do outro lado e onde a proposta atual cai na faixa revelada. */
 export function read27(s: GameState, n: Nego27, o: Draft27 = n.ours): Read27 {
   const act = s.acts[n.actId];
-  const deg = s.knowledge[n.actId]?.degree ?? 0;
-  const traits = deg >= 2 ? [...new Set(act.members.flatMap((id) => s.persons[id]?.traits ?? []))].filter((t) => GREEDY.includes(t) || EASY.includes(t) || t === 'impulsive' || t === 'anxious' || t === 'insecure' || t === 'quarrelsome') : [];
+  // r31 F #12: traços e ambição pela tabela única (traços: grau 4 ou convivência; ambição: grau 3)
+  const traits = see(s, n.actId, 'traits') === 'exact' ? [...new Set(act.members.flatMap((id) => s.persons[id]?.traits ?? []))].filter((t) => GREEDY.includes(t) || EASY.includes(t) || t === 'impulsive' || t === 'anxious' || t === 'insecure' || t === 'quarrelsome') : [];
   const score = scoreOf(s, act, o);
-  return { ambition: deg >= 3 ? mainAmbition(s, act) : null, traits, insight: insight27(s, act), lo: n.lo, hi: n.hi, score, band: score < n.lo ? 'below' : score > n.hi ? 'above' : 'inside' };
+  return { ambition: seen(s, n.actId, 'ambition') ? mainAmbition(s, act) : null, traits, insight: insight27(s, act), lo: n.lo, hi: n.hi, score, band: score < n.lo ? 'below' : score > n.hi ? 'above' : 'inside' };
 }
 
 // ---------------------------------------------------------------- contraproposta do artista
@@ -214,7 +216,7 @@ export function propose27(s: GameState, n: Nego27, o: Draft27, tactic: Tactic27 
   }
   concede(n);
   n.theirs = counter27(s, n);
-  n.log.push(isSpecial29(n.theirs.model) ? { who: 'them', tone: 'warn', t: fmtL(l('{x} Paciência {p}/100.', '{x} Patience {p}/100.'), { x: line29(l('Contraproposta', 'Counter'), n.theirs), p: Math.max(0, n.patience) }) } : { who: 'them', tone: 'warn', t: fmtL(l('Contraproposta: {a} de adiantamento, {r}% de royalty, {m} meses, {d} disco(s){c}. Paciência {p}/100.', 'Counter: {a} advance, {r}% royalty, {m} months, {d} record(s){c}. Patience {p}/100.'), { a: usd(n.theirs.advance), r: Math.round((n.theirs.model === 'distribution' ? 1 - (n.theirs.distributionFee ?? 0.2) : n.theirs.royalty) * 100), m: n.theirs.termMonths, d: n.theirs.releasesOwed, c: n.theirs.creativeControl ? l(', controle criativo', ', creative control').pt : '', p: Math.max(0, n.patience) }) });
+  n.log.push(isSpecial29(n.theirs.model) ? { who: 'them', tone: 'warn', t: fmtL(l('{x} Paciência: {p}.', '{x} Patience: {p}.'), { x: line29(l('Contraproposta', 'Counter'), n.theirs), p: patienceTxt27(s, n.actId, n.patience) }) } : { who: 'them', tone: 'warn', t: fmtL(l('Contraproposta: {a} de adiantamento, {r}% de royalty, {m} meses, {d} disco(s){c}. Paciência: {p}.', 'Counter: {a} advance, {r}% royalty, {m} months, {d} record(s){c}. Patience: {p}.'), { a: usd(n.theirs.advance), r: Math.round((n.theirs.model === 'distribution' ? 1 - (n.theirs.distributionFee ?? 0.2) : n.theirs.royalty) * 100), m: n.theirs.termMonths, d: n.theirs.releasesOwed, c: n.theirs.creativeControl ? l(', controle criativo', ', creative control').pt : '', p: patienceTxt27(s, n.actId, n.patience) }) });
   return n;
 }
 
@@ -473,4 +475,12 @@ function renegFail(s: GameState, n: Reneg27): Reneg27 {
   }
   n.status = 'walked';
   return n;
+}
+
+/** r31 F #18: a paciência do outro lado — número só com conhecimento privado (grau 3+ ou convivência); senão, o que se vê na mesa. */
+export function patienceKnown27(s: GameState, actId: string): boolean { return know(s, actId).mine || know(s, actId).priv >= 3; }
+export function patienceTxt27(s: GameState, actId: string, p: number): L {
+  const v = Math.max(0, Math.round(p));
+  if (patienceKnown27(s, actId)) return l(`${v}/100`, `${v}/100`);
+  return v >= 65 ? l('tranquilos', 'relaxed') : v >= 35 ? l('inquietos', 'restless') : l('no limite', 'at the limit');
 }

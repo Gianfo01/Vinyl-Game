@@ -9,10 +9,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { defaultOffer } from '../../sim/contracts';
 import { defaultRights, rst } from '../../sim/rights';
-import {
-  acceptRenegTheirs27, acceptTheirs27, bringRival27, copyDraft27, insight27, proposeReneg27, propose27, read27, renegValue27, startNego27, startReneg27, walk27, walkReneg27,
-  type Draft27, type Line27, type Nego27, type Reneg27, type RenegTerms27, type Tactic27,
-} from '../../sim/sys/nego27';
+import { acceptRenegTheirs27, acceptTheirs27, bringRival27, copyDraft27, insight27, patienceKnown27, patienceTxt27, propose27, proposeReneg27, read27, renegValue27, startNego27, startReneg27, type Draft27, type Line27, type Nego27, type Reneg27, type RenegTerms27, type Tactic27, walk27, walkReneg27 } from '../../sim/sys/nego27';
 import { $, modal, pill, rerender, toast } from '../common';
 import { h } from '../dom';
 import { pending29 } from '../../sim/contracts';
@@ -119,7 +116,7 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
       h('p', null, t(l('Ambição: ', 'Ambition: ')), h('b', null, rd.ambition ? t(ambitionName[rd.ambition as keyof typeof ambitionName] ?? l(rd.ambition, rd.ambition)) : '?'),
         rd.traits.length ? [' · ', t(l('Traços: ', 'Traits: ')), rd.traits.map((x) => pill(t(traitById[x]?.name ?? l(x, x)))) ] : null),
       h('p', { class: 'small muted' }, t(l('Leitura do outro lado: {p}% (olheiro e pesquisa no ato, analista, jurídico, empresário).', 'Read on the other side: {p}% (scouting and research on the act, analyst, legal, manager).'), { p: Math.round(insight27(s, act) * 100) })),
-      meter('heart', l('Paciência deles', 'Their patience'), Math.max(0, n.patience)),
+      patienceKnown27(s, n.actId) ? meter('heart', l('Paciência deles', 'Their patience'), Math.max(0, n.patience)) : h('p', null, t(l('Paciência deles: ', 'Their patience: ')), pill(t(patienceTxt27(s, n.actId, n.patience)))),
       h('p', { class: 'small' }, t(l('Rodada {r} de {m}', 'Round {r} of {m}'), { r: Math.min(n.round + 1, n.maxRounds), m: n.maxRounds })),
       n.rival ? h('p', { class: 'n27-rival' }, pill(t(n.rival.out ? l('rival no limite', 'rival maxed out') : l('disputa', 'bidding war')), n.rival.out ? 'good' : 'warn'), ' ', t(l('{l} oferece {a} de adiantamento.', '{l} offers a {a} advance.'), { l: n.rival.name, a: $(n.rival.terms.advance) }),
         n.rival.counters ? h('small', { class: 'muted' }, ' ', t(l('(subiu o lance {n}×; o limite dele é segredo)', '(raised {n}×; their limit is secret)'), { n: n.rival.counters })) : null) : null,
