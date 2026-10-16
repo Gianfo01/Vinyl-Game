@@ -16,7 +16,7 @@ import { registerExt4 } from '../ext4';
 import { ownerOf } from '../sys/people/owner';
 import type { Owner } from '../sys/people/state';
 import type { GameState } from '../types';
-import { post } from '../util';
+import { money, post } from '../util';
 import { registerSwitch, sw } from './switches';
 import { withTxn } from './txn';
 
@@ -79,6 +79,9 @@ registerSwitch({
 
 export interface PurseOpts { payer?: string; owner?: string; ben?: string; memo?: L; floor?: number; who?: Owner }
 
+/** Gasto cujo beneficiário padrão é outra pessoa (família, presente, advogado, imposto, credor) ou a empresa (aporte). */
+const BEN_EXT = new Set<PCat>(['family', 'gift', 'legal', 'tax', 'loan', 'capital']);
+
 function log(s: GameState, amt: number, cat: PCat, src: string, o: PurseOpts): void {
   if (!amt) return;
   const st = purse31(s);
@@ -91,7 +94,7 @@ function log(s: GameState, amt: number, cat: PCat, src: string, o: PurseOpts): v
     w: s.week, y: s.year, amt, cat, src,
     payer: o.payer ?? (amt > 0 ? 'ext' : 'me'),
     owner: o.owner ?? 'me',
-    ben: o.ben ?? (amt > 0 ? 'me' : 'ext'),
+    ben: o.ben ?? (amt > 0 || !BEN_EXT.has(cat) ? 'me' : cat === 'capital' ? 'label' : 'ext'),
     ...(o.memo ? { memo: o.memo } : {}),
   });
   if (st.last.length > PURSE_LAST31) st.last.splice(0, st.last.length - PURSE_LAST31);
@@ -124,9 +127,11 @@ export function drawFor(s: GameState, key: string, cost: number, cat: PCat, oldC
   if (cost <= 0) return;
   if (!sw<boolean>(s, 'purse31.draws')) { post(s, key, -cost, oldCat, memo); return; }
   withTxn({ payer: 'label', owner: 'me', beneficiary: 'me' }, () => post(s, key, -cost, 'owner_draw', `Retirada do dono: ${memo}`));
+  // mesma conta da retirada comum (owner.withdraw): tirar dinheiro da empresa pesa na confiança dos artistas
+  s.player.reputation.artists = Math.max(0, Math.min(100, s.player.reputation.artists - Math.min(3, cost / Math.max(1, money(s, 50000)))));
   const st = purse31(s);
   st.drawn += cost;
-  purse(s, cost, 'draw', key, { payer: 'label', ben: 'me', memo: why });
+  purse(s, cost, 'draw', key, { payer: 'label', ben: 'me' });
   purse(s, -cost, cat, key, { payer: 'label', ben: 'me', memo: why });
 }
 

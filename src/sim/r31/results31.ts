@@ -193,6 +193,7 @@ export function recordRes31(s: GameState, t: Txn, sect: Sect18): void {
   if (p) {
     let P = st.P[p];
     if (!P) { const o = projOf(s, p); P = st.P[p] = { v: [0, 0, 0], n: o.n, k: o.k, y: s.year, ...(o.a ?? a ? { a: o.a ?? a } : {}) }; }
+    if (!P.n) { const o = projOf(s, p); if (o.n) { P.n = o.n; if (o.k !== 'x') P.k = o.k; P.a ??= o.a; } }
     add3(P.v, amt, rev ? 0 : 1);
     const m = (st.cur.p[p] ??= [0, 0]);
     if (rev) m[0] += amt; else m[1] += amt;
@@ -208,6 +209,7 @@ projAlias31().push((s, from, to) => {
   if (!P) return;
   const Q = (st.P[to] ??= { v: [0, 0, 0], n: P.n, k: 'rel', y: P.y, ...(P.a ? { a: P.a } : {}) });
   Q.k = 'rel';
+  Q.n = s.releases[to]?.title || Q.n || P.n;
   for (const i of [0, 1, 2] as const) Q.v[i] += P.v[i];
   delete st.P[from];
   const m = st.cur.p[from];
@@ -254,7 +256,7 @@ export function resultsReport31(s: GameState, dim: 'artist' | 'project', period:
     total = st.tot; u = st.unP;
     for (const id in st.P) {
       const P = st.P[id];
-      rows.push({ id, name: P.n, kind: P.k, actId: P.a, year: P.y, rev: P.v[0], cost: P.v[1], shared: P.v[2], margin: sum3(P.v) });
+      rows.push({ id, name: P.n || projOf(s, id).n, kind: P.k, actId: P.a, year: P.y, rev: P.v[0], cost: P.v[1], shared: P.v[2], margin: sum3(P.v) });
       direct += P.v[0] + P.v[1]; shared += P.v[2];
     }
   }

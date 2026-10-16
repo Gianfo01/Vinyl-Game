@@ -39,7 +39,20 @@ function table(s: GameState, rep: Report31): HTMLElement {
   const T = rep.totals;
   const f = RES31.focus;
   const hit = (r: Row31) => !!f && (r.id === f || r.actId === f);
-  const rows = f ? [...rep.rows.filter(hit), ...rep.rows.filter((r) => !hit(r))] : rep.rows;
+  // elenco primeiro, pelo tamanho do movimento; artistas de fora (olheiros, propostas, feats) numa linha só
+  const act = (r: Row31) => (Math.abs(r.rev) + Math.abs(r.cost) + Math.abs(r.shared));
+  const mineA = (id?: string) => !!id && (s.acts[id]?.owner === 'player' || !!s.acts[id]?.playerBand);
+  let base = [...rep.rows].sort((x, y) => act(y) - act(x));
+  let others: Row31 | undefined;
+  if (RES31.dim === 'artist') {
+    const out = base.filter((r) => !mineA(r.id) && !hit(r));
+    if (out.length > 1) {
+      others = { id: '_out', name: '', rev: 0, cost: 0, shared: 0, margin: 0 };
+      for (const r of out) { others.rev += r.rev; others.cost += r.cost; others.shared += r.shared; others.margin += r.margin; }
+      base = base.filter((r) => !out.includes(r));
+    }
+  }
+  const rows = f ? [...base.filter(hit), ...base.filter((r) => !hit(r))] : base;
   const shown = rows.slice(0, 40);
   return h('table', { class: 'tbl compact res31' },
     h('thead', null, h('tr', null,
@@ -50,6 +63,8 @@ function table(s: GameState, rep: Report31): HTMLElement {
       shown.map((r) => h('tr', { class: hit(r) ? 'on31' : '' },
         h('td', null, rowName(s, r)), h('td', null, money31(r.rev)), h('td', null, money31(r.cost)), h('td', null, money31(r.shared)),
         h('td', null, h('b', null, money31(r.margin)), r.rev > 0 ? h('small', { class: 'muted' }, ` ${Math.round((100 * r.margin) / r.rev)}%`) : null))),
+      others ? h('tr', null, h('td', null, h('i', null, t(l('Artistas fora do elenco (olheiros, propostas, participações)', 'Acts outside the roster (scouting, offers, features)')))),
+        h('td', null, money31(others.rev)), h('td', null, money31(others.cost)), h('td', null, money31(others.shared)), h('td', null, h('b', null, money31(others.margin)))) : null,
       rows.length > shown.length ? h('tr', null, h('td', { colspan: '5', class: 'muted small' }, t(l('… e mais {n} (somados no total).', '… and {n} more (included in the total).'), { n: rows.length - shown.length }))) : null,
       h('tr', { class: 'un31' },
         h('td', null, h('b', null, t(l('Não alocado', 'Unallocated'))), h('div', { class: 'muted small' },
