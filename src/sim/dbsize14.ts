@@ -2,6 +2,7 @@
 // Médio = o padrão histórico do jogo (todos os reais originais + 1º lote novo). Menor = mais leve; maior = mundo cheio.
 import type { RealArtist } from '../data/realtypes';
 import type { RunConfig } from './types';
+import { countryOfCity } from '../data/geo';
 
 export type DbSize = NonNullable<RunConfig['dbSize']>;
 export interface DbInfo { id: DbSize; lvl: 0 | 1 | 2 | 3; /** fator dos atos gerados no início */ gen: number; /** fator dos que surgem a cada ano */ yearly: number; pt: string; en: string }
@@ -13,8 +14,12 @@ export const DB_SIZES: DbInfo[] = [
 ];
 export const dbSizeInfo = (c: Pick<RunConfig, 'dbSize'>): DbInfo => DB_SIZES.find((d) => d.id === c.dbSize) ?? DB_SIZES[1];
 /** O artista real entra nesta partida? Lista original: sempre (menos nomes regionais no tamanho pequeno); lote novo: pelo nível `z`. */
-export const realAllowed = (c: Pick<RunConfig, 'dbSize'> & Partial<Pick<RunConfig, 'history'>>, a: RealArtist): boolean => {
+export const realAllowed = (c: Pick<RunConfig, 'dbSize'> & Partial<Pick<RunConfig, 'history' | 'realOff31'>>, a: RealArtist): boolean => {
   if (a.exact === false && c.history === 'strict') return false; // r19 (T8): não conferido some do modo exato
+  if (c.realOff31?.length && c.realOff31.includes(realCountry31(a))) return false; // R31 onda 5: país desligado na Nova run
   const lvl = dbSizeInfo(c).lvl;
   return a.z ? a.z <= lvl : lvl > 0 || a.t < 3;
 };
+
+/** País (ISO-3) de um artista real, pela cidade de origem ('' = desconhecido). */
+export const realCountry31 = (a: Pick<RealArtist, 'c'>): string => countryOfCity(a.c) ?? '';

@@ -1,6 +1,7 @@
 // R31 · onda 4 (H) — modelo da camada "cidade de cada época" do mapa (PURO: só lê o estado; sem DOM, sem sorteio).
 // Junta o que sim/r31/city31 calcula (lugares reais nos terrenos reservados, lojas da época, festival do mês,
 // outdoors das paradas, neon) com o que a cena do mapa já tem (lotes de cidade comum, lugares do bairro).
+import { RART31 } from '../pixel/pred31';
 import { l, type L } from '../../data/world';
 import { LANDMARKS19 } from '../../data/landmarks19';
 import {
@@ -29,7 +30,7 @@ export interface CityX31 {
 /** O que a cena precisa acrescentar (PURO). `filler` = lotes de cidade comum já calculados pela página. */
 export function cityX31(s: GameState, filler: number[], year = s.year): CityX31 {
   const real = realLots31(s, year);
-  const extra: Extra31[] = real.map((x) => ({ id: x.p.id, lot: x.lot, kind: RDRAW31[x.p.kind], lvl: x.p.kind === 'arena' ? 4 : x.p.kind === 'tv' || x.p.u ? 3 : x.p.kind === 'theatre' ? 3 : 2, sign: true }));
+  const extra: Extra31[] = real.map((x) => ({ id: x.p.id, lot: x.lot, kind: RDRAW31[x.p.kind], art: RART31[x.p.kind], lvl: x.p.kind === 'arena' ? 4 : x.p.kind === 'tv' || x.p.u ? 3 : x.p.kind === 'theatre' ? 3 : 2, sign: true }));
   const places = real.map((x) => realPlace27(s, x));
   const lmOut = new Set(real.map((x) => x.p.lm).filter((x): x is string => !!x && LANDMARKS19.some((m) => m.id === x)));
   const f = year === s.year ? fest31(s) : null;
@@ -37,7 +38,7 @@ export function cityX31(s: GameState, filler: number[], year = s.year): CityX31 
   const amb: { k: string; at: string }[] = [];
   if (f) {
     festName = f.name;
-    if (f.at) { const e = extra.find((x) => x.id === f.at); if (e) { e.kind = 'fest'; e.lvl = 4; amb.push({ k: 'crowd', at: `fl:${e.id}` }); } }
+    if (f.at) { const e = extra.find((x) => x.id === f.at); if (e) { e.kind = 'fest'; e.art = 'fest'; e.lvl = 4; amb.push({ k: 'crowd', at: `fl:${e.id}` }); } }
     else {
       const lot = festLot31(filler);
       if (lot !== undefined) { fill = filler.filter((x) => x !== lot); extra.push({ id: FEST_ID31, lot: LOTS18[lot], kind: 'fest', lvl: 3 }); amb.push({ k: 'crowd', at: `fl:${FEST_ID31}` }); }
@@ -55,9 +56,9 @@ export interface CityOv31 {
   neon: { k: 'none' | 'neon' | 'led'; f: number };
   neons: { sprite: string; k: number }[];
   boardStyle: Board31Style;
-  boards: (Billboard31 & { sprite: string; rank: number; cover?: HTMLCanvasElement })[];
+  boards: (Billboard31 & { sprite: string; rank: number; /** POL2: marca curta no painel (N1, NOVO, TURNÊ, HOT) */ tagTxt: string; cover?: HTMLCanvasElement })[];
   fest?: { sprite: string; name: string; acts: string[] };
-  tags: { sprite: string; text: string; real?: boolean; mark?: 'open' | 'closed'; markTxt: string }[];
+  tags: { sprite: string; text: string; real?: boolean; /** POL2: rádio/TV real — letreiro sempre visível, em qualquer zoom */ media?: boolean; mark?: 'open' | 'closed'; markTxt: string }[];
 }
 const NEON_K: Partial<Record<BKind, true>> = { venue: true, store: true, media: true, fest: true };
 const tx = (x: L, pt: boolean) => (pt ? x.pt : x.en);
@@ -73,7 +74,7 @@ export function cityOv31(s: GameState, x: CityX31, places: Place27[], sprites: {
     const rl = x.extra.find((e) => e.id === key && key !== FEST_ID31);
     const plc = fillPl.get(key);
     if (NEON_K[sp.kind] && (rl || plc)) neons.push({ sprite: sp.id, k: key.length + (rl ? 3 : 0) });
-    if (rl) { const p = x.places.find((q) => q.id === `pl:${key}`); if (p) tags.push({ sprite: sp.id, text: tx(p.name, pt), real: true, markTxt: '' }); continue; }
+    if (rl) { const p = x.places.find((q) => q.id === `pl:${key}`); if (p) tags.push({ sprite: sp.id, text: tx(p.name, pt), real: true, ...(sp.kind === 'media' ? { media: true } : {}), markTxt: '' }); continue; }
     const lot = Number(key);
     if (!plc || !Number.isFinite(lot) || plc.name.pt !== plc.what.pt) continue; // só os prédios que são loja da época
     const now = bizAt31(s.config.seed, s.config.homeCity, lot, year), was = bizAt31(s.config.seed, s.config.homeCity, lot, year - 1);
@@ -85,7 +86,8 @@ export function cityOv31(s: GameState, x: CityX31, places: Place27[], sprites: {
   // outdoors: nos prédios mais altos de cidade comum (nunca nos seus)
   const tall = sprites.filter((sp) => sp.id.startsWith('fl:') && sp.kind !== 'fest' && sp.kind !== 'park').sort((a, b) => a.top - b.top || (a.id < b.id ? -1 : 1));
   const bb = billboards31(s);
-  const boards = bb.slice(0, Math.min(bb.length, tall.length)).map((b, i) => ({ ...b, sprite: tall[i].id, rank: 1 }));
+  const TAG: Record<string, [string, string]> = { chart: ['N1', 'N1'], hot: ['HOT', 'HOT'], release: ['NOVO', 'NEW'], paid: ['NOVO', 'NEW'], tour: ['TOUR', 'TOUR'] };
+  const boards = bb.slice(0, Math.min(bb.length, tall.length)).map((b, i) => ({ ...b, sprite: tall[i].id, rank: 1, tagTxt: TAG[b.kind ?? 'chart'][pt ? 0 : 1] }));
   const fs = x.extra.find((e) => e.kind === 'fest');
   return { labels, neon: nn, neons: nn.f > 0 ? neons : [], boardStyle: boardStyle31(year), boards, tags,
     fest: fs && x.festName ? { sprite: `fl:${fs.id}`, name: x.festName, acts: fest31(s)?.acts ?? [] } : undefined };

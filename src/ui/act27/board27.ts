@@ -15,17 +15,24 @@ import { card27, emptyState27, kpiRow27, statusChip27 } from '../ps/ui27';
 import { store } from '../store';
 import { occMark27 } from './flow27';
 import { cutscene27 } from './mode27';
-import { paintBoard27, seatX27, put27 } from './px27b';
+import { put27 } from './px27b';
+import { DIR_SEATS31, MFY31, MH31, MW31, dirSeatX31, paintDirectors31 } from '../r31/scene31px';
 import { drawScene27, type Who27 } from './scene27';
 import './act27.css';
 import './p2b27.css';
 import { staffLoyalty } from '../../sim/opinion';
 import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
+// R31 (POL2): a sala no corte da sede (scene31px.paintDirectors31) — janelão com a cidade e a época, mesa na frente
+// de quem senta, e as cadeiras sem ninguém vazias atrás da mesa (sala vazia = cadeiras à espera, não mesa solta).
 function room(s: GameState, ds: Dir27[], speaker?: string): HTMLCanvasElement {
-  const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Sala da diretoria', 'Boardroom')) }) as HTMLCanvasElement;
-  const who: Who27[] = ds.map((d, i) => ({ p: { id: d.id, role: 'producer', born: s.year - 40 }, x: seatX27(i, ds.length), y: d.id === speaker ? 62 : 66, pose: d.id === speaker ? 'stand' : 'sit', dir: i < ds.length / 2 ? 'SE' : 'SW' }));
-  drawScene27(cv, paintBoard27(s.year, ds.length), s.year, who);
+  const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(ds.length ? l('Sala da diretoria', 'Boardroom') : l('Sala da diretoria: cadeiras vazias', 'Boardroom: empty chairs')), style: `aspect-ratio:${MW31} / ${MH31}` }) as HTMLCanvasElement;
+  const si = ds.findIndex((d) => d.id === speaker);
+  const who: Who27[] = ds.slice(0, DIR_SEATS31).map((d, i) => ({ p: { id: d.id, role: 'producer', born: s.year - 40 }, x: dirSeatX31(i), y: MFY31, pose: i === si ? 'stand' : 'sit', dir: i < ds.length / 2 ? 'SE' : 'SW' }));
+  try {
+    const r = paintDirectors31(s.year, Math.min(ds.length, DIR_SEATS31), { city: s.config.homeCity, month: s.month, stand: si >= 0 ? si : undefined });
+    drawScene27(cv, r.back, s.year, who, r.front);
+  } catch { /* canvas indisponível (testes) */ }
   return cv;
 }
 const nameOf = (ds: Dir27[], id: string) => ds.find((d) => d.id === id)?.name ?? id;

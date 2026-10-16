@@ -5,6 +5,7 @@
 // homenagem). Apresentadores (Chacrinha, Silvio Santos, Gugu) são pessoas da TV e só têm discografia onde gravaram.
 // Todo nome real de terceiros daqui tem registro em realnames31 (espaço 'cur', chave = id da ficha).
 import { BASE31_ACTS } from './base31acts';
+import { IT31, itSources31 } from './base31it';
 import { FICTION31 } from './fiction31';
 import { FAMILY31, FAM_CITY31, FAM_ORIGIN31 } from './fossati31';
 import { RELICS31 } from './relics31';
@@ -181,6 +182,14 @@ const RELIC_LANG: Record<string, string> = { jobim_piano: 'pt', raul_violao: 'pt
 
 export const CUR31: Cur31[] = [
   ...BASE31_ACTS.map(fromAct),
+  // R31 (BASE-IT): base italiana — fontes por ato, cidade real quando o jogo não tem, apelidos e o que falta conferir
+  ...IT31.map((x): Cur31 => {
+    const a = x.a;
+    const confirmar = [...(a.exact === false ? ['dados gerais (não conferidos: some do modo "Vida real exata")'] : []), ...(a.ap ?? []).map((k) => AP_TXT[k]), ...(x.cf ?? []),
+      ...(x.rc ? [`cidade do jogo aproximada (real: ${x.rc})`] : [])];
+    return { id: slug31(a.n), nome: a.n, apelidos: x.nick ?? [], tipo: a.r ? 'pessoa' : 'banda', area: 'artista', anos: [a.r && a.b ? a.b : a.d, a.e], cidade: a.c, lingua: 'it',
+      fontes: itSources31(x), confirmar: [...new Set(confirmar)], ref: `base31it:${a.n}` };
+  }),
   // Gugu: pessoa da TV sem discografia (criou o Dominó); não entra como ato
   { id: 'gugu', nome: 'Gugu Liberato', apelidos: NOTE31.gugu.ap!, tipo: 'pessoa', area: 'tv', anos: [1959, 2019], cidade: 'sao_paulo', lingua: 'pt', fontes: NOTE31.gugu.f!, confirmar: [], ref: 'cur31:gugu', sub: NOTE31.gugu.sub },
   ...RELICS31.map((r): Cur31 => {

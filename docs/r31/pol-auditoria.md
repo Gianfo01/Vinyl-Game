@@ -104,3 +104,46 @@ Passa em todas as cenas registradas (`src/ui/r31/pol31reg.ts`: loja e casa em 5 
 Com `POL_DUMP=<pasta>` o teste grava cada cena (.rgba/.json) para pré-visualização sem navegador.
 
 Números do jogo: nada mudou (só interface e pintura).
+
+## POL2 — sobras do acabamento (estados vazios) → `onda4-pol2-*-antes-depois.png`
+Roteiro: `scripts/r31/shots-pol2.mjs` (antes = integração `claude/friendly-brown-vpsmfl`, depois = este ramo).
+- **S/V/F** Reunião de diretoria (r27) — a sala de "Ninguém à mesa" (e a com gente) era o desenho antigo chapado (janela de
+  prédios, piso xadrez, mesa oval solta, cadeiras atrás dos bonecos) → `scene31px.paintDirectors31`: corte da sede, janelão
+  com a cidade e a época, discos de ouro, estante, arquivo e planta; mesa comprida na FRENTE; seis lugares — quem está
+  senta atrás da mesa, quem fala fica de pé; os lugares sem ninguém ficam com a cadeira VAZIA encostada (assento à vista)
+  e o papel da pauta à espera (`diretoria-vazia`). `paintBoard27`/`seatX27` saíram.
+- **V** Cenas de negociação sem a outra parte (lançamento sem A&R/assessoria/produtor, sala do dono sem dono, etc.) → os
+  lugares da sala que ficaram sem ninguém mostram a cadeira vazia atrás da mesa (`emptySeats31`; mesa 2, quadro 4, banco 1,
+  dono 1) (`lancamento-sem-equipe`). Banco, compra e jabá sempre têm a outra parte (gerente/dono/diretor) e a rádio não tem
+  cadeira: conferidos sem mudança.
+- **P** Sala de troféus vazia — a estante eram duas tábuas soltas com dois tracinhos → estante de verdade (laterais, fundo,
+  tampo, rodapé, portas de vidro), seis peanhas com suporte dourado à espera e plaquinha sem nome; pedestais de relíquia
+  vazios ganham almofada de veludo, suporte em U e plaquinha (como a vitrine vazia da loja) (`trofeus-vazia`).
+- **P** Elenco com vaga livre — silhueta tracejada flutuando → banqueta vazia sob a luz, microfone no pedestal e fita de
+  marcação no chão (`elenco-vaga`).
+- **R** Mapa afastado — os letreiros das rádios e TVs reais sumiam (limite de 5 nomes no zoom afastado e colisão com as
+  placas) → `planTags31` (puro): rádio/TV real (`media`) entra primeiro e sem limite pelo zoom; se o lugar estiver ocupado
+  tenta em cima, embaixo e dos lados, depois abreviado na palavra, e nunca some (`mapa-rio-1975`, `-sao_paulo-1990`,
+  `-new_york-1965`). Os demais rótulos seguem a densidade da POL.
+- **Outdoors de artistas e hits** (acréscimo do dono) — o mapa só tinha os nº 1 das paradas e o seu anúncio pago →
+  `billboards31` mistura até 4 painéis: até 2 nº 1 das paradas (capa do disco), o artista EM ALTA (maior momento entre os
+  ativos com fama; retrato do sprite do jogo, `city31face.portrait31`), um lançamento recente (o seu em campanha ou o do
+  rival mais famoso das últimas 8 semanas) e a TURNÊ com show marcado na sua cidade nos próximos 30 dias (retrato). Tudo
+  sai do estado (paradas, lançamentos, `s.tours`), sem sorteio; um artista/disco aparece uma vez. Marca curta no painel
+  (N1 / HOT / NOVO / TOUR) no estilo da época (pintado, neon, luminoso, LED); o painel desvia das placas, dos pinos e de
+  outro outdoor subindo no poste. Clique: disco → ficha da obra; em alta/turnê → ficha do artista
+  (`outdoor-london-1935`, `outdoor-rio-1975`, `outdoor-new_york-2015`). Teste em `tests/r31-cidade.test.ts`.
+- **C/S** AMOR (acréscimo do dono) — "A descoberta" e os encontros (restaurante, cinema, discoteca, bar, casa, viagem)
+  são interiores (`paintInterior27`) e a peça `window` ainda era `prim27.backWindow` (silhuetas genéricas) → na raiz, a
+  janela dos interiores usa `window31` (cidade e época reais), valendo para todos os interiores com janela
+  (`onda4-pol2-amor-*-antes-depois.png`; o roteiro `shots-amor.mjs` começa uma NOVA RUN com semente nova, por isso as
+  pessoas mudam entre antes e depois). Painel Coração: plural certo ("1 pessoa sabe" / "2 pessoas sabem"; idem
+  fofoqueiro/fofoqueiros).
+- GEO (geografia real das cidades) ainda não está na integração; estas mudanças ficam só na camada da cidade
+  (`city31model`/`city31px`/`campus18`: letreiros e outdoors), não nas telas do mundo.
+- Varredura: as outras cenas antigas do r27 (mesa de composição, estúdio, sala de guerra, crise, coletiva) não têm estado
+  vazio/placeholder — continuam no desenho do r27, fora desta frente.
+- Checagem: `tests/r31-pol.test.ts` registra também `mech31empty` (só você na sala, 7 salas × 2 épocas) e `board27`
+  (0/3/6 diretores × 3 épocas) e testa cadeiras vazias e letreiros de rádio/TV no mapa cheio.
+
+Números do jogo: nada mudou (só pintura).

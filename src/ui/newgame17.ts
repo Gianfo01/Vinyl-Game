@@ -150,6 +150,13 @@ const EXPLAIN20: Record<string, [L, L][]> = {
 
 const nn20 = (...xs: (HTMLElement | null)[]): HTMLElement[] => xs.filter((x): x is HTMLElement => !!x);
 
+/** R31 (X): "Nomes e obras reais" — com que nomes o mundo nasce (na Fidelidade histórica só a exibição muda).
+ *  Mesmo setter do cartão Mundo e da ficha rápida da onda 5. */
+export function setRealNames31(cfg: RunConfig, on: boolean): void {
+  cfg.showReal31 = on;
+  if (resolveWorld20(cfg).id !== 'exact') cfg.realNames = on;
+}
+
 export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () => void): HTMLElement {
   if (!cfg.world17) cfg.world17 = worldOf17(cfg);
   const info = h('div', { class: 'ng17-world-info', 'aria-live': 'polite' });
@@ -173,7 +180,7 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
     const exact = rs.id === 'exact';
     adv.replaceChildren(...nn20(
       // R31 (X): interruptor "Nomes e obras reais" — com que nomes o mundo nasce (em Opções dá para trocar só a exibição)
-      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: cfg.showReal31 ?? !!cfg.realNames, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.showReal31 = on; if (!exact) cfg.realNames = on; draw(); onChange(); } }),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: cfg.showReal31 ?? !!cfg.realNames, onchange: (e: Event) => { setRealNames31(cfg, (e.target as HTMLInputElement).checked); draw(); onChange(); } }),
         ' ', t(l('Nomes e obras reais (desligado: tudo vira homenagem parecida; a história documentada continua valendo)', 'Real names and works (off: everything becomes a similar tribute; documented history still applies)')), ' ', helpTip('realNames')),
       h('label', null, t(l('Linha do tempo da tecnologia', 'Technology timeline')), ' ', helpTip('mode'), select(cfg.mode, [
         { value: 'historic', label: t(l('Datas reais fixas', 'Fixed real dates')) }, { value: 'free', label: t(l('Perto das datas reais (janela de anos)', 'Near the real dates (year window)')) }, { value: 'chaos', label: t(l('Sorteada (caos)', 'Rolled (chaos)')) },

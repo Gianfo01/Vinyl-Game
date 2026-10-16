@@ -130,4 +130,11 @@ describe('base de sucessos: interruptor base31.hits', () => {
     for (let i = 0; i < 3; i++) advanceMonth(off);
     expect(hits(off)).toBeGreaterThan(preOff);
   }, 240_000);
+  it('desligado na criação (config.base31hits = false): nenhum ato da base nasce, nem depois', () => {
+    const s = createGame(defaultConfig('r31hits-b', { startYear: 2005, realNames: true, base31hits: false }));
+    expect(sw(s, SW_HITS31)).toBe(false);
+    expect(hits(s)).toBe(0);
+    for (let i = 0; i < 6; i++) advanceMonth(s);
+    expect(hits(s)).toBe(0);
+  }, 240_000);
 });

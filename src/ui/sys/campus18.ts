@@ -1,3 +1,4 @@
+import { artOfPlace31 } from '../pixel/pred31place';
 import { hqFloors27 } from '../../sim/sys/hqrooms27';
 // Rodada 18 (campus18) + Rodada 19 (world19) + Rodada 27 (D2): página "Nosso mundo" — o BAIRRO da sede em pixel
 // art isométrica. R27: painel lateral FIXO (no celular, folha no rodapé): clicar num prédio mostra o que é, custo
@@ -44,7 +45,8 @@ import { FEST_ID31, cityOv31, cityX31, festLine31, type CityOv31 } from '../r31/
 import { drawCity31 } from '../r31/city31px';
 import { shortNames31 } from '../r31/scene31model';
 import { coverPx } from '../art';
-import { openRelease } from '../ficha';
+import { openAct, openRelease } from '../ficha';
+import { portrait31 } from '../r31/city31face';
 
 /** r27 INT: sprite de ovo desenhado no quadro e sua caixa (coordenadas do mapa). */
 interface Egg27Box { box: [number, number, number, number]; e: CityEgg27 }
@@ -60,7 +62,7 @@ const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: '
 /** R31 (FOS): abre o mapa já dentro de um lugar ('fos31:home' = casa da família Fossati, 'fos31:square' = a praça). */
 export function openInside18(id: string): void { ui.inside = id; ui.pop = undefined; store.area = 'campus18' as typeof store.area; rerender(); }
 
-interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[]; /** R31 (H): camada da cidade da época */ ov?: CityOv31; festName?: string; bbHits?: { relId: string; box: [number, number, number, number] }[] ; /** r31 (LOTE) */ lots?: CityLots31 }
+interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[]; /** R31 (H): camada da cidade da época */ ov?: CityOv31; festName?: string; bbHits?: { relId: string; actId?: string; box: [number, number, number, number] }[] ; /** r31 (LOTE) */ lots?: CityLots31 }
 /** r27: o que a vida na rua (fãs, imprensa) e o estado dos prédios (fila de show) já mostram sai do ambiente antigo. */
 const AMB_DONE27 = new Set(['fans', 'press', 'show']);
 function makeView(s: GameState, year?: number): View {
@@ -85,12 +87,16 @@ function makeView(s: GameState, year?: number): View {
   const places = lots ? lots.places : [...places27(s, cx.filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1), ...cx.places];
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n })), ...cx.amb];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms.filter((m) => !cx.lmOut.has(m.id)),
-    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: lots ? lots.filler : cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), extra31: cx.extra, minGw: cx.minGw });
+    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: lots ? lots.filler : cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), fillArt: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, artOfPlace31(s, p)])), extra31: cx.extra, minGw: cx.minGw });
   const ov = cityOv31(s, cx, places, scene.sprites.map((x) => ({ id: x.id, kind: x.kind, top: x.box[1] })), t(l('a', 'b')) === 'a');
   // R31 (POL): onde a página vai pôr os ícones (seus prédios, vizinhos, lugares com pino) — as etiquetas do mapa desviam
   const pinned = new Set(places.filter((p) => PINNED27.has(p.k)).map((p) => `fl:${p.id.slice(3)}`));
   ov.avoid = scene.sprites.filter((sp) => !sp.filler || pinned.has(sp.id)).map((sp) => { const cx = (sp.box[0] + sp.box[2]) / 2; return [cx - 7, sp.box[1] - 12, cx + 7, sp.box[1] + 1] as [number, number, number, number]; });
-  for (const b of ov.boards) { const r = s.releases[b.relId], a = r ? s.acts[r.actId] : undefined; if (r) b.cover = coverPx(r.coverSeed, r.title, a?.name ?? '', a?.genre ?? 'pop', r.year, 0.5, r.coverChoice).canvas(); }
+  for (const b of ov.boards) { // R31 (POL2): artista em alta / turnê = retrato do artista (sprite do jogo); disco = capa
+    const r = s.releases[b.relId], a = r ? s.acts[r.actId] : undefined;
+    const face = (b.kind === 'hot' || b.kind === 'tour') && b.actId ? portrait31(s, b.actId) : null;
+    if (face) b.cover = face; else if (r) b.cover = coverPx(r.coverSeed, r.title, a?.name ?? '', a?.genre ?? 'pop', r.year, 0.5, r.coverChoice).canvas();
+  }
   return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene, ov, festName: cx.festName, lots };
 }
 /** R31 (POL): placas "À venda" pintadas no mapa — no máximo 4 que cabem no caixa e 1 fora dele, para não amontoar
@@ -479,7 +485,11 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
     hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label, [pin], b?.kind === 'hq' && v.live ? enter : undefined);
   }
   // R31 (H): outdoors das paradas — clicar abre a ficha da obra
-  for (const b of v.bbHits ?? []) { const r = s.releases[b.relId]; if (r) hot(`bb:${b.relId}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: "${r.title}" — ${s.acts[r.actId]?.name ?? ''}`, [], () => openRelease(b.relId)); }
+  for (const b of v.bbHits ?? []) {
+    const r = s.releases[b.relId], bd = v.ov?.boards.find((x) => x.relId === b.relId);
+    if (b.actId && s.acts[b.actId]) hot(`bb:${b.actId}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: ${bd ? t(bd.label) : ''} — ${s.acts[b.actId].name}`, [], () => openAct(b.actId!));
+    else if (r) hot(`bb:${b.relId}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: ${bd ? `${t(bd.label)} · ` : ''}"${r.title}" — ${s.acts[r.actId]?.name ?? ''}`, [], () => openRelease(b.relId));
+  }
   // marcos da cidade
   if (ui.f.lm) for (const m of sc.marks) { const lm = mapLms27(s.config.homeCity, v.year).find((x) => x.id === m.id); if (lm) hot(`lm:${m.id}`, 'lm', m.box, `${t(lm.n)} · ${lm.from > 0 ? lm.from : ''}`); }
   if (v.live && ui.f.mine) {

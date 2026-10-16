@@ -1,6 +1,6 @@
 # R31 · onda 4 · BASE-HITS — sucessos de 1992 até hoje
 
-**Resultado: 1 044 atos novos** (meta mínima 1 000), em `src/data/base31hits.ts`, no fim de `REAL_ALL` (depois das frentes BR e IT),
+**Resultado: 1 043 atos novos** (meta mínima 1 000), em `src/data/base31hits.ts`, no fim de `REAL_ALL` (depois das frentes BR e IT),
 atrás do interruptor `base31.hits` (ligado por padrão). Todos têm o hit documentado: música, ano, parada oficial e posição
 máxima (1–10). Nenhum duplica a base anterior (`dedupKey27`, também contra o catálogo clássico). Nenhum é do Brasil nem da Itália.
 O exemplo do dono, McFly, entrou. Busted, Vengaboys e Daniel Powter também entraram. Los del Río já estava na base.
@@ -17,7 +17,7 @@ O exemplo do dono, McFly, entrou. Busted, Vengaboys e Daniel Powter também entr
   Integrantes e nascimentos só onde havia certeza.
 - **Revisão manual** de todos os 1 052 candidatos (lista compacta ato/hit/ano/parada/posição). Saíram Wir sind Helden (hit datado
   de 2026 numa busca, não confiável), Israel Kamakawiwoʻole (o hit é póstumo, depois do fim da carreira) e Captain Tom Moore
-  (beneficente, não é ato musical). Correções pela validação de consistência: Swae Lee nasceu em 1993. Brave Girls ficou sem
+  (beneficente, não é ato musical). Na junção com a BASE-IT saiu Savage (rapper da Nova Zelândia): homônimo do Savage italiano, que já entrou. Correções pela validação de consistência: Swae Lee nasceu em 1993. Brave Girls ficou sem
   formação, porque a de estreia (2011) não foi conferida e a de "Rollin'" entrou em 2016.
 - **Fontes de cada ato** (`hitSources31`): o verbete da Wikipedia em inglês (`w` quando o título difere do nome) e o arquivo
   oficial da parada de cada hit (tabela abaixo).
@@ -41,7 +41,7 @@ O exemplo do dono, McFly, entrou. Busted, Vengaboys e Daniel Powter também entr
 | 2002 | 40 |
 | 2003 | 44 |
 | 2004 | 53 |
-| 2005 | 34 |
+| 2005 | 33 |
 | 2006 | 41 |
 | 2007 | 41 |
 | 2008 | 35 |
@@ -64,15 +64,15 @@ O exemplo do dono, McFly, entrou. Busted, Vengaboys e Daniel Powter também entr
 
 ### Por ano de estreia (quinquênio)
 
-1970–1974 1 · 1975–1979 1 · 1980–1984 5 · 1985–1989 16 · 1990–1994 131 · 1995–1999 218 · 2000–2004 212 · 2005–2009 163 · 2010–2014 144 · 2015–2019 86 · 2020–2024 67
+1970–1974 1 · 1975–1979 1 · 1980–1984 5 · 1985–1989 16 · 1990–1994 131 · 1995–1999 218 · 2000–2004 212 · 2005–2009 162 · 2010–2014 144 · 2015–2019 86 · 2020–2024 67
 
 ### Por país (ISO)
 
-GBR 332 · USA 285 · DEU 69 · JPN 53 · AUS 42 · KOR 36 · SWE 35 · CAN 25 · FRA 23 · NLD 21 · ARG 16 · DNK 14 · PRI 13 · IRL 12 · FIN 12 · NOR 11 · BEL 8 · JAM 7 · AUT 5 · NZL 5 · CHE 3 · ESP 3 · CUB 2 · CHL 2 · BRB 2 · CMR 1 · VEN 1 · ROU 1 · MEX 1 · HTI 1 · DOM 1 · ISR 1 · ZAF 1
+GBR 332 · USA 285 · DEU 69 · JPN 53 · AUS 42 · KOR 36 · SWE 35 · CAN 25 · FRA 23 · NLD 21 · ARG 16 · DNK 14 · PRI 13 · IRL 12 · FIN 12 · NOR 11 · BEL 8 · JAM 7 · AUT 5 · NZL 4 · CHE 3 · ESP 3 · CUB 2 · CHL 2 · BRB 2 · CMR 1 · VEN 1 · ROU 1 · MEX 1 · HTI 1 · DOM 1 · ISR 1 · ZAF 1
 
 ### Por gênero do jogo
 
-Pop e R&B 129 · Hip hop 111 · Pop rock 104 · Dance-pop 79 · House 56 · Indie 37 · Eurodance 35 · Rock alternativo 34 · Boy band 33 · Teen pop 29 · K-pop 29 · J-pop 24 · UK garage 18 · Folk 18 · Trance 17 · New jack swing 16 · Trap 14 · Reggaeton e trap latino 14 · Pop tradicional (crooner) 13 · Soul 13 · Britpop 13 · Country pop 13 · EDM e dubstep 12 · Grime 11 · Synth-pop 11 · Pop latino 9 · Soft rock 8 · Drum and bass 8 · Girl group soul 7 · Pop nórdico 7 · Trap latino 7 · Dancehall 6 · Techno 6 · Drill britânico 5 · Nu metal 5 · Reggae fusion 5 · Chanson pop 5 · Cumbia 5 · Neo-soul 4 · Hard rock 4 · Drill 4 · Reggae 3 · Trip-hop 3 · Afroswing 3 · Country 3 · Boom bap 3 · G-funk 3 · Rap francês 3 · Dubstep 2 · R&B alternativo 2 · World fusion 2 · Rock celta 2 · Blues rock 2 · Emo 2 · Punk 2 · R&B 2 · Visual kei 2 · Ópera 1 · Bhangra 1 · Funk 1 · Psicodelia 1 · Tropical house 1 · Fanfarra balcânica 1 · Grunge 1 · Gospel 1 · Jazz rap 1 · New wave 1 · Memphis rap 1 · Neue Deutsche Welle 1 · Hyperpop 1 · Glam 1 · Garage rock 1 · Pop persa 1 · French house 1 · Kuduro 1 · Rumba catalã 1 · Merengue 1 · Cumbia villera 1 · Reggae do Pacífico 1 · Afro house 1 · K-indie 1 · Hip hop coreano 1 · Enka 1 · Anison 1
+Pop e R&B 129 · Hip hop 110 · Pop rock 104 · Dance-pop 79 · House 56 · Indie 37 · Eurodance 35 · Rock alternativo 34 · Boy band 33 · Teen pop 29 · K-pop 29 · J-pop 24 · UK garage 18 · Folk 18 · Trance 17 · New jack swing 16 · Trap 14 · Reggaeton e trap latino 14 · Pop tradicional (crooner) 13 · Soul 13 · Britpop 13 · Country pop 13 · EDM e dubstep 12 · Grime 11 · Synth-pop 11 · Pop latino 9 · Soft rock 8 · Drum and bass 8 · Girl group soul 7 · Pop nórdico 7 · Trap latino 7 · Dancehall 6 · Techno 6 · Drill britânico 5 · Nu metal 5 · Reggae fusion 5 · Chanson pop 5 · Cumbia 5 · Neo-soul 4 · Hard rock 4 · Drill 4 · Reggae 3 · Trip-hop 3 · Afroswing 3 · Country 3 · Boom bap 3 · G-funk 3 · Rap francês 3 · Dubstep 2 · R&B alternativo 2 · World fusion 2 · Rock celta 2 · Blues rock 2 · Emo 2 · Punk 2 · R&B 2 · Visual kei 2 · Ópera 1 · Bhangra 1 · Funk 1 · Psicodelia 1 · Tropical house 1 · Fanfarra balcânica 1 · Grunge 1 · Gospel 1 · Jazz rap 1 · New wave 1 · Memphis rap 1 · Neue Deutsche Welle 1 · Hyperpop 1 · Glam 1 · Garage rock 1 · Pop persa 1 · French house 1 · Kuduro 1 · Rumba catalã 1 · Merengue 1 · Cumbia villera 1 · Reggae do Pacífico 1 · Afro house 1 · K-indie 1 · Hip hop coreano 1 · Enka 1 · Anison 1
 
 ### Por parada do hit principal
 
@@ -94,14 +94,14 @@ Pop e R&B 129 · Hip hop 111 · Pop rock 104 · Dance-pop 79 · House 56 · Indi
 | DK | 7 | Tracklisten (hitlisten.nu / danishcharts.dk) |
 | CA | 7 | RPM / Canadian Hot 100 (Library and Archives Canada / billboard.com) |
 | BE | 6 | Ultratop (ultratop.be) |
-| NZ | 4 | Official NZ Music Chart (nztop40.co.nz / charts.nz) |
 | CH | 3 | Schweizer Hitparade (hitparade.ch) |
 | AT | 3 | Ö3 Austria Top 40 (austriancharts.at) |
+| NZ | 3 | Official NZ Music Chart (nztop40.co.nz / charts.nz) |
 | IE | 2 | Irish Singles Chart (irishcharts.ie) |
 | WW | 2 | IFPI / certificações multi-platina em vários países (Wikipedia: tabela de paradas do single) |
 | MX | 1 | Billboard México / AMPROFON (billboard.com) |
 
-Posição máxima do hit principal: nº 1 em 450, nº 2–5 em 396, nº 6–10 em 198. One-hit wonders: 412. Bandas/duplas com integrantes: 393; solo: 651. Hit conferido por busca na web (v): 191. Estreia aproximada (ap d): 383. Cidade do jogo aproximada (ca): 450. Com ano de nascimento (solo): 345.
+Posição máxima do hit principal: nº 1 em 449, nº 2–5 em 396, nº 6–10 em 198. One-hit wonders: 412. Bandas/duplas com integrantes: 393; solo: 650. Hit conferido por busca na web (v): 191. Estreia aproximada (ap d): 382. Cidade do jogo aproximada (ca): 450. Com ano de nascimento (solo): 345.
 
 ## Fontes
 
@@ -114,7 +114,7 @@ Posição máxima do hit principal: nº 1 em 450, nº 2–5 em 396, nº 6–10 e
 
 ## O que ficou de fora e por quê
 
-"O máximo que dá com dados confiáveis" nesta sessão foi 1 044. Com acesso à Wikipedia/Wikidata ou mais cota de busca, cada
+"O máximo que dá com dados confiáveis" nesta sessão foi 1 043. Com acesso à Wikipedia/Wikidata ou mais cota de busca, cada
 região tem fila conhecida:
 
 - **Posição ou ano do hit não confirmado (busca contradisse ou não fechou):** Fun Factory, U96, Intermission, 2 Fabiola, Caught in
@@ -139,8 +139,8 @@ região tem fila conhecida:
 ## Medição (interruptor ligado × desligado desde a criação)
 
 `scripts/r31/measure.ts`, 2 sementes × eras 1990/2012/2030, 24 meses, 2 processos (`docs/r31/base-hits-on.*` e
-`docs/r31/base-hits-off.*`). "Desligado" mede com o padrão do interruptor trocado só durante a medição: desligar depois de
-criar só segura quem ainda vai surgir.
+`docs/r31/base-hits-off.*`). "Desligado" = a base de sucessos fora desde a criação (hoje `config.base31hits = false`; na medição, o padrão trocado só durante
+o teste). Desligar no meio da partida segura só quem ainda vai surgir.
 
 | Era | ms/mês desligado | ms/mês ligado | Save desligado | Save ligado | gzip desligado → ligado |
 |---|---:|---:|---:|---:|---|
@@ -156,10 +156,11 @@ base "grande" (`z: 2`), assim só entram com a base de dados grande/enorme. Não
 
 ## Arquivos
 
-- `src/data/base31hits.ts`: os 1 044 atos (formato compacto `HitSrc31` → `RealArtist`).
+- `src/data/base31hits.ts`: os 1 043 atos (formato compacto `HitSrc31` → `RealArtist`).
 - `src/data/hits31types.ts`: formato, paradas aceitas e arquivo oficial de cada uma, conversão e fontes.
-- `src/sim/sys/realworld.ts`: uma linha de carga no fim de `REAL_ALL` (`BASE31H_FROM`/`BASE31H_TO`) e o interruptor
-  `base31.hits`, lido no início e a cada mês para quem ainda vai surgir. Religar devolve quem esperava.
+- `src/sim/sys/realworld.ts`: uma linha de carga no fim de `REAL_ALL`, depois da BASE-IT (`BASE31H_FROM`/`BASE31H_TO`), e o
+  interruptor `base31.hits`, que mora em `config.base31hits` (como o `base31.it`, vale na criação). É lido no início e a cada mês
+  para quem ainda vai surgir; religar devolve quem esperava. `src/sim/types.ts`: o campo `base31hits?`.
 - `src/data/cur31.ts`: `CUR31_HITS` (ficha com fontes e "a confirmar").
-- `src/data/realnames31.ts`: espaço novo `hit:` com 1 044 registros (homenagem do `homage31`; "Train" reaproveita a que já existia).
+- `src/data/realnames31.ts`: espaço novo `hit:` com 1 043 registros (homenagem do `homage31`; "Train" reaproveita a que já existia).
 - `tests/r31-base-hits.test.ts`: fonte, gênero, cidade, país, anos, hit no top 10, duplicatas, nomes, contagem mínima e interruptor.

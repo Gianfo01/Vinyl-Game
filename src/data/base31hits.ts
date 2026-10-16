@@ -894,7 +894,7 @@ export const HITS31_SRC: HitSrc31[] = [
   { n: 'Karina La Princesita', g: 'cumbia', c: 'buenos_aires', d: 2024, cn: 'ARG', r: 'vocal', h: ['Sinvergüenza', 2024, 'AR', 5], v: 1, ca: 1, nk: ['Karina'], ap: ['d'] },
   { n: 'J Mena', g: 'cumbia', c: 'buenos_aires', d: 2024, cn: 'ARG', r: 'producer', h: ['Sinvergüenza', 2024, 'AR', 5], v: 1, ca: 1, ap: ['d'] },
   { n: 'Ángela Torres', g: 'pop_latino', c: 'buenos_aires', d: 2024, cn: 'ARG', r: 'vocal', h: ['Sinvergüenza', 2024, 'AR', 5], v: 1, ca: 1, ap: ['d'] },
-  // ---------------------------------------------------------------- Canadá, Oceania, Ásia, África e Caribe anglófono (170)
+  // ---------------------------------------------------------------- Canadá, Oceania, Ásia, África e Caribe anglófono (169)
   { n: 'Daniel Powter', g: 'pop_rock', c: 'vancouver', d: 2000, cn: 'CAN', b: 1971, r: 'vocal', h: ['Bad Day', 2006, 'US', 1], o: 1, ca: 1 },
   { n: 'Barenaked Ladies', g: 'alt_rock', c: 'toronto', d: 1991, cn: 'CAN', h: ['One Week', 1998, 'US', 1], m: [['Steven Page', 'vocal', undefined, undefined, undefined, 2009], ['Ed Robertson', 'guitar'], ['Jim Creeggan', 'bass'], ['Tyler Stewart', 'drums'], ['Andy Creeggan', 'keys', undefined, undefined, undefined, 1995], ['Kevin Hearn', 'keys', undefined, undefined, 1995]] },
   { n: 'Tal Bachman', g: 'pop_rock', c: 'vancouver', d: 1999, cn: 'CAN', b: 1968, r: 'vocal', h: ['She\'s So High', 1999, 'CA', 3], o: 1, v: 1 },
@@ -956,7 +956,6 @@ export const HITS31_SRC: HitSrc31[] = [
   { n: 'Darren Hayes', g: 'dance_pop', c: 'brisbane', d: 2002, cn: 'AUS', b: 1972, r: 'vocal', h: ['Insatiable', 2002, 'UK', 8], o: 1 },
   { n: 'Dannii Minogue', g: 'dance_pop', c: 'melbourne', d: 1990, cn: 'AUS', b: 1971, r: 'vocal', h: ['I Begin to Wonder', 2003, 'UK', 2], h2: [['Put the Needle on It', 2002, 'UK', 7]] },
   { n: 'Stan Walker', g: 'pop_rnb', c: 'auckland', d: 2009, cn: 'NZL', b: 1990, r: 'vocal', h: ['Black Box', 2009, 'NZ', 1], h2: [['Black Box', 2009, 'AU', 2]], v: 1, ca: 1 },
-  { n: 'Savage', g: 'hiphop', c: 'auckland', d: 2005, cn: 'NZL', r: 'mc', h: ['Moonshine', 2005, 'NZ', 1], w: 'Savage (rapper)', ap: ['d'] },
   { n: 'Scribe', g: 'hiphop', c: 'wellington', d: 2003, cn: 'NZL', r: 'mc', h: ['Stand Up', 2003, 'NZ', 1], ca: 1, w: 'Scribe (rapper)', ap: ['d'] },
   { n: 'Brooke Fraser', g: 'pop_rock', c: 'wellington', d: 2003, cn: 'NZL', b: 1983, r: 'vocal', h: ['Something in the Water', 2010, 'NZ', 1] },
   { n: 'Jawsh 685', g: 'pacific_reggae', c: 'auckland', d: 2019, cn: 'NZL', r: 'producer', h: ['Savage Love', 2020, 'US', 1], h2: [['Savage Love', 2020, 'UK', 1]], o: 1 },
