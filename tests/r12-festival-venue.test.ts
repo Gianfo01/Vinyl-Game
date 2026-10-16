@@ -4,17 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { buyVenue, createFestival, liveOf, placeTile } from '../src/sim/sys/live';
 import { foundVenture, ventures } from '../src/sim/sys/ventures9';
 import { announce12, ask12, cancelChoice, clashes12, f12, festOf, found12, offer12, openEarly12, proj12, sync12, ventureOf } from '../src/sim/sys/fest12';
 import { addNight12, corp, dropNight12, nightEst, v12 } from '../src/sim/sys/venue12';
 import type { GameState } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, fame = 30) {
   const s = createGame(defaultConfig(seed, { startYear: 1985 }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   act.fans = { casual: 400000, active: 60000, core: 12000 };

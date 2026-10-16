@@ -52,7 +52,7 @@ export function r21(s: GameState): R21 {
   return st;
 }
 const mIdx = (s: GameState) => s.year * 12 + s.month;
-const rng = (s: GameState) => rng19(s, 'r21', () => Rng.fromSeed(`${s.config.seed}|r21|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'r21');
 const live = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
 const $k = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const cool = (s: GameState, k: string, months: number): boolean => { const st = r21(s); if ((st.cd[k] ?? -1) > mIdx(s)) return false; st.cd[k] = mIdx(s) + months; return true; };

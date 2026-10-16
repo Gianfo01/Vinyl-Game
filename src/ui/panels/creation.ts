@@ -10,7 +10,7 @@ import { S, t } from '../../i18n/strings';
 import { availableChannels, coverage, forecastUnits, marketingE } from '../../sim/market';
 import { availableFormats, cancelRelease, labelFunded, physicalShare, pressingCost, scheduleRelease, suggestedPress, unrecorded, unreleasedRecorded, type ReleasePlan } from '../../sim/production';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, kv, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { emptyState27 } from '../ps/ui27';
@@ -18,6 +18,7 @@ import { store } from '../store';
 import { hasSinger, hireSessionSinger, sessionSingerCost, voiceLabel } from '../../sim/sys/vocals10';
 import { afterSchedule27, campRow27 } from '../act27/flow27p2'; // r27 FLOW2: o quadro da campanha É o marketing do lançamento
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 export function creationPanel(s: GameState): HTMLElement {
   const ids = playerActs(s);
@@ -134,7 +135,7 @@ export function creationPanel(s: GameState): HTMLElement {
           h('label', null, t(S.weeksAhead), h('input', { type: 'number', min: 1, max: 26, value: plan.weeksAhead, oninput: (e: Event) => (plan.weeksAhead = Number((e.target as HTMLInputElement).value)) })),
           costBox,
           h('button', { class: 'btn primary', onclick: () => {
-            const res = scheduleRelease(s, rngOf(s), plan);
+            const res = scheduleRelease(s, rng19(s, 'act'), plan);
             if ('pt' in res) toast(t(res), 'bad');
             else { toast(t(l('Lançamento programado.', 'Release scheduled.')), 'good'); rerender(); afterSchedule27(s, res.id); }
           } }, t(S.schedule)),

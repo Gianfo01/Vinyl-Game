@@ -10,12 +10,11 @@ import { fs28, stance28 } from '../src/sim/sys/fanscandal28';
 import { fan18 } from '../src/sim/sys/fans18';
 import { labelClout } from '../src/sim/sys/offers12';
 import type { Act, GameState } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { advanceMonth } from '../src/sim/tick';
 
 const game = (seed = 'r28sys', y = 1995): GameState => { const c = defaultConfig(seed, { startYear: y } as Parameters<typeof defaultConfig>[1]); (c as { dbSize?: string }).dbSize = 'small'; return createGame(c); };
-const myAct = (s: GameState, genre?: string): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 40 }); a.owner = 'player'; if (genre) a.genre = genre; a.fans.core = 5000; a.fans.active = 20000; a.fans.casual = 60000; return a; };
+const myAct = (s: GameState, genre?: string): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 40 }); a.owner = 'player'; if (genre) a.genre = genre; a.fans.core = 5000; a.fans.active = 20000; a.fans.casual = 60000; return a; };
 const sc = (s: GameState, a: Act, kind: string, sev = 70) => emitFact(s, { kind: 'scandal', actors: [a.id], severity: sev, visibility: 'public', tags: [kind, 'bad'], text: l(`Escândalo ${kind} de ${a.name}`, `${a.name} ${kind} scandal`), src: 'test', data: { kind, sev } });
 
 describe('r28 F8 — facções × escândalo', () => {
@@ -84,6 +83,7 @@ describe('r28 F8 — fundador e reputação de selo nas ofertas', () => {
 import { CRAFT28, craftAwards28, dimScore28 } from '../src/sim/sys/awards28';
 import { gramoScore } from '../src/sim/sys/ceremonies8';
 import { dims18 } from '../src/sim/sys/quality18';
+import { rng19 } from '../src/sim/rng19';
 
 describe('r28 F8 — prêmios pelas dimensões de qualidade (I18)', () => {
   it('Gramófonos: duas gravações iguais em q e vendas, a de dimensões melhores pontua mais', () => {

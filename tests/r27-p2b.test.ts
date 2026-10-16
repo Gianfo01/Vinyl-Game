@@ -22,6 +22,7 @@ import { pol18 } from '../src/sim/sys/policy18';
 import { buyIns19 } from '../src/sim/sys/links19b';
 import { ins19 } from '../src/sim/sys/insure19';
 import { careerOf } from '../src/sim/sys/people/staff';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 let FIX: GameState; // 7º mês da semente r16pb-5 (mesmo fixture do r27-m2)
 let AFTER: GameState; // 8º mês (modo rápido)
@@ -96,7 +97,7 @@ describe('r27 P2B — modo rápido intacto', () => {
     expect(AFTER.player.cash).toBe(1034775);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(2631883956);
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(829002627);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1362224447);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(1362224447);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
@@ -116,7 +117,7 @@ describe('r27 P2B — modo rápido intacto', () => {
       const pre = STOP27.pre;
       if (!hook) STOP27.pre = undefined;
       try { advanceMonth(s); advanceMonth(s); } finally { STOP27.pre = pre; }
-      return { t: hashString(JSON.stringify(s.tours)), a: hashString(JSON.stringify(s.acts)), r: hashString(JSON.stringify(s.rng)), c: s.player.cash, played: s.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length };
+      return { t: hashString(JSON.stringify(s.tours)), a: hashString(JSON.stringify(s.acts)), r: hashString(rngSnapshot19(s)), c: s.player.cash, played: s.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length };
     };
     const a = run(true), b = run(false);
     expect(a).toEqual(b);

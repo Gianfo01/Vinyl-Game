@@ -58,7 +58,7 @@ const fresh = (): Money19 => ({ auc: [], bonds: [], lien: [], q: [], rofr: {}, v
 registerExt4('money19', fresh);
 export const m19 = (s: GameState): Money19 => { const x = s.x4 as unknown as { money19?: Money19 }; return (x.money19 ??= fresh()); };
 const logIt = (s: GameState, t: L) => { const st = m19(s); st.log.unshift({ y: s.year, m: s.month, t }); if (st.log.length > 30) st.log.length = 30; };
-const rng = (s: GameState) => rng19(s, 'money19', () => Rng.fromSeed(`${s.config.seed}|money19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'money19');
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const isLabel = (s: GameState) => s.config.role !== 'artist';
 const FUNDS19 = ['Meridian Capital', 'Harbor Songs Fund', 'Atlas Catalog Trust', 'Cobalt Rights', 'Evergreen Royalty Partners', 'Northgate Music Income'];

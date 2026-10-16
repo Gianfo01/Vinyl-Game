@@ -8,7 +8,7 @@
 
 import { cityById } from '../data/world';
 import type { GameState } from './types';
-import { money, playerActs, rngOf } from './util';
+import { money, playerActs } from './util';
 import { buyBlocker27, buyRoom27, hqRooms27, hqr27 } from './sys/hqrooms27';
 import { foundCost, foundVenture, placeSong, signWriter, upgradeGear, ventures, writerAdvance, writerCandidates, maxGear } from './sys/ventures9';
 import { acceptJob, studioOf } from './sys/studio12';
@@ -19,6 +19,7 @@ import { buyVenue17, marketVenues, monthEst17, venuePrice } from './sys/venues17
 import { hasVenue27, venueCount27, MAX_VENUES27 } from './sys/venues27';
 import { f12, found12, offer12, wantTime } from './sys/fest12';
 import { actsNow27 } from './tickcache27';
+import { rng19 } from './rng19';
 
 export interface LogBiz27 { rooms: number; studio: number; studioJobs: number; publisher: number; writers: number; placements: number; venue: number; venueNights: number; festival: number; festBookings: number }
 export const freshLogBiz27 = (): LogBiz27 => ({ rooms: 0, studio: 0, studioJobs: 0, publisher: 0, writers: 0, placements: 0, venue: 0, venueNights: 0, festival: 0, festBookings: 0 });
@@ -71,7 +72,7 @@ function publisher(s: GameState, c: Ctx, L: LogBiz27, open: boolean): boolean {
     if (affords(c, cost, 3) && !foundVenture(s, 'publisher', 'label')) { L.publisher++; return true; }
     return false;
   }
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   if ((v.writers?.length ?? 0) < 2 + v.level * 2 && s.month % 3 === 0) {
     const w = writerCandidates(s, v.id).find((x) => writerAdvance(s, x.skill) < c.cash * 0.02);
     if (w && signWriter(s, r, v.id, w.pid).ok) L.writers++;

@@ -48,7 +48,7 @@ const off = (): boolean => !!(globalThis as { __mka19Off?: boolean }).__mka19Off
 const mineRel = (s: GameState, r?: Release): boolean => !!r && (r.owner === 'player' || !!s.acts[r.actId]?.playerBand);
 const mineAct = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
 const isLabel = (s: GameState): boolean => s.config.role !== 'artist' && careers(s).active.includes('label');
-const rng = (s: GameState): Rng => rng19(s, 'mka19', () => Rng.fromSeed(`${s.config.seed}|mka19|${s.week}`));
+const rng = (s: GameState): Rng => rng19(s, 'mka19');
 const log = (s: GameState, id: string, t: L): void => { const st = lk18(s); st.log.unshift([s.week, id, t]); if (st.log.length > 40) st.log.length = 40; };
 
 // ================================================================ estado

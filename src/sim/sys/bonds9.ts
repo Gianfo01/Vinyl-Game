@@ -12,7 +12,7 @@ import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { compat } from '../beliefs';
 import { makeAct } from '../people';
 import type { Act, GameState } from '../types';
-import { fmtL, nextId, notify, playerActs, post, remember, rngOf } from '../util';
+import { fmtL, nextId, notify, playerActs, post, remember } from '../util';
 import { scandal } from '../scandal17';
 import { fashionOf, registerMovementGenres } from '../culture';
 import { MSG_HANDLERS } from './people/inbox';
@@ -22,6 +22,7 @@ import { actOfPerson, bump, tieOf, tiesOf, type TieKind } from './social8';
 import { soul } from './soul9';
 import { actsTouched17 } from '../actidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { rng19 } from '../rng19';
 
 export type BondKind = 'duo' | 'couple' | 'super' | 'ally' | 'cross' | 'patron';
 export type BondEnd = 'fight' | 'wear' | 'death' | 'prison' | 'divergence' | 'money' | 'done';
@@ -342,7 +343,7 @@ function makeSuper(s: GameState, b: Bond, r?: Rng): void {
   const srcs = b.a.map((id) => s.acts[id]).filter((x): x is Act => !!x);
   const base = srcs[0];
   if (!base) return;
-  const sg = makeAct(s, r ?? rngOf(s), { genre: base.genre, city: base.city, members: 2, potential: Math.max(...b.p.map((p) => s.persons[p].potential)), formed: s.year, debutYear: s.year, fame: srcs.reduce((x, a) => x + a.fame, 0) / srcs.length * 0.6 });
+  const sg = makeAct(s, r ?? rng19(s, 'bonds9'), { genre: base.genre, city: base.city, members: 2, potential: Math.max(...b.p.map((p) => s.persons[p].potential)), formed: s.year, debutYear: s.year, fame: srcs.reduce((x, a) => x + a.fame, 0) / srcs.length * 0.6 });
   for (const id of sg.members) delete s.persons[id];
   sg.members = b.p.slice(); actsTouched17(s); // r17: índice pessoa→atos
   sg.leaderId = b.p[0];

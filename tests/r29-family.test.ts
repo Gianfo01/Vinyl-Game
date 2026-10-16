@@ -19,6 +19,7 @@ import {
 import { genMgrs16 } from '../src/sim/sys/people16';
 import { Rng } from '../src/core/rng';
 import type { Act, GameState, Person } from '../src/sim/types';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (seed: string, over: Parameters<typeof defaultConfig>[1] = {}) => createGame(defaultConfig(seed, { startYear: 1975, dbSize: 'small', ...over }));
 const live = (a: Act) => a.status === 'active' || a.status === 'emerging';
@@ -208,8 +209,8 @@ describe('R29 família — determinismo e fluxo próprio', () => {
     const a = run(), b = run();
     expect(JSON.stringify(fam29(a))).toBe(JSON.stringify(fam29(b)));
     const s = game('fam29-det2');
-    const rng0 = JSON.stringify(s.rng);
+    const rng0 = rngSnapshot19(s);
     familyMonth29(s);
-    expect(JSON.stringify(s.rng)).toBe(rng0);
+    expect(rngSnapshot19(s)).toBe(rng0);
   });
 });

@@ -18,7 +18,7 @@ import { per13 } from '../../sim/sys/persona13';
 import { acceptance, climate17, comeOut, declareAlly, isQueer, isRealP, lavender, marriageLegal, orientName, outingRisk, sexOf, sx17, visibleSex, CLOSET17 } from '../../sim/sys/sex17';
 import { stressOf } from '../../sim/stress17';
 import type { GameState, Person } from '../../sim/types';
-import { fmtL, money, playerActs, rngOf } from '../../sim/util';
+import { fmtL, money, playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { PERSON_HEAD_EXTRAS } from '../pages';
@@ -26,6 +26,7 @@ import { setAgeResolver } from '../pixel/age17';
 import { portraitCanvas } from '../pixel/avatar';
 import { store } from '../store';
 import { meter } from '../vis';
+import { rng19 } from '../../sim/rng19';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -73,7 +74,7 @@ function identityBox(s: GameState): HTMLElement {
       h('p', { class: 'small warn' }, t(fmtL(l('No armário: +1,5 de estresse por mês e risco de exposição de {r}/mês (sobe com sua fama, com casos do mesmo sexo e com quem sabe; casamento de fachada corta 65%).', 'In the closet: +1.5 stress per month and an outing risk of {r}/month (rises with fame, same-sex affairs and people who know; a lavender marriage cuts it by 65%).'), { r: pct(risk) }))),
       h('div', { class: 'row wrap' },
         btn(l('Sair do armário', 'Come out'), () => { if (confirm(t(acc < 0.55 ? l('Clima hostil: espere reação negativa (reputação e boatos). Continuar?', 'Hostile climate: expect backlash (reputation and rumors). Continue?') : l('Assumir publicamente?', 'Come out publicly?')))) run(comeOut(s, 'player', 'chose'), l('ok', 'ok')); }, { primary: true }),
-        !me.lav && !life(s).partner ? btn(l('Casamento de fachada ($8.000)', 'Lavender marriage ($8,000)'), () => { const o = ownerOf(s); const c = money(s, 8000); if (o.wealth < c) return run(l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.')); o.wealth -= c; run(lavender(s, 'player', rngOf(s)), l('ok', 'ok')); }) : null,
+        !me.lav && !life(s).partner ? btn(l('Casamento de fachada ($8.000)', 'Lavender marriage ($8,000)'), () => { const o = ownerOf(s); const c = money(s, 8000); if (o.wealth < c) return run(l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.')); o.wealth -= c; run(lavender(s, 'player', rng19(s, 'act')), l('ok', 'ok')); }) : null,
       )) : null,
     h('div', { class: 'row wrap' }, btn(l('Declarar apoio à causa LGBT', 'Publicly back LGBT rights'), () => run(declareAlly(s), l('ok', 'ok')), { disabled: (rec?.ally ?? 0) >= s.year - 1, title: l('Artistas LGBT do seu selo ganham moral e propostas a artistas LGBT melhoram por 6 anos; religiosos estritos se ressentem; em país hostil, a reputação institucional cai.', 'LGBT acts on your label gain morale and offers to LGBT acts improve for 6 years; strict religious acts resent it; in a hostile country, institutional reputation drops.') })),
     h('p', { class: 'small muted' }, t(l('A orientação vem da ficha de criação. Ela pesa em: reação a sair do armário (religião, censura e imprensa do país na época), casamento igualitário (antes da lei, a união é simbólica: sem partilha nem herança garantida), propostas de artistas LGBT ou religiosos e boatos.', 'Orientation comes from character creation. It weighs on: reaction to coming out (country religion, censorship and press at the time), marriage equality (before the law, a union is symbolic: no split nor guaranteed inheritance), offers from LGBT or religious acts, and rumors.'))),
@@ -100,8 +101,8 @@ function partnerBox(s: GameState): HTMLElement | null {
       h('p', { class: 'small' }, h('b', null, t(l('Litigioso: ', 'Contested: '))), terms(ct)),
       am.why.length ? h('ul', { class: 'small muted' }, am.why.map((w) => h('li', null, t(w)))) : null,
       h('div', { class: 'row wrap' },
-        btn(l('Divórcio amigável', 'Amicable divorce'), () => { if (confirm(t(l('Confirmar divórcio amigável?', 'Confirm amicable divorce?')))) run(divorce17(s, 'amicable', rngOf(s)), l('Divórcio feito.', 'Divorce done.')); }, { disabled: pt.affinity < 15, title: l('Exige afinidade ≥ 15.', 'Needs affinity ≥ 15.') }),
-        btn(l('Divórcio litigioso', 'Contested divorce'), () => { if (confirm(t(l('Confirmar divórcio na justiça?', 'Confirm a court divorce?')))) run(divorce17(s, 'court', rngOf(s)), l('Divórcio feito.', 'Divorce done.')); }, { danger: true }),
+        btn(l('Divórcio amigável', 'Amicable divorce'), () => { if (confirm(t(l('Confirmar divórcio amigável?', 'Confirm amicable divorce?')))) run(divorce17(s, 'amicable', rng19(s, 'act')), l('Divórcio feito.', 'Divorce done.')); }, { disabled: pt.affinity < 15, title: l('Exige afinidade ≥ 15.', 'Needs affinity ≥ 15.') }),
+        btn(l('Divórcio litigioso', 'Contested divorce'), () => { if (confirm(t(l('Confirmar divórcio na justiça?', 'Confirm a court divorce?')))) run(divorce17(s, 'court', rng19(s, 'act')), l('Divórcio feito.', 'Divorce done.')); }, { danger: true }),
       )) : null,
   );
 }
@@ -116,7 +117,7 @@ function affairBox(s: GameState): HTMLElement | null {
     return section(t(l('Caso secreto', 'Secret affair')),
       h('p', null, h('b', null, a.name), ' ', pill(a.sx === 'f' ? '♀' : '♂'), a.married ? pill(t(l('casado(a)', 'married')), 'warn') : null, a.pid ? pill(t(l('artista conhecido(a)', 'known artist')), 'warn') : null),
       h('p', { class: 'small' }, t(fmtL(l('Discrição {d}/100 · risco de descoberta {r}/mês (cresce com o tempo, sua fama e o ciúme). {c} guarda o segredo (obrigação contra você). Gravidez possível.', 'Discretion {d}/100 · discovery risk {r}/month (grows with time, your fame and jealousy). {c} holds the secret (an obligation against you). Pregnancy possible.'), { d: Math.round(a.disc), r: pct(risk), c: a.name }))),
-      h('div', { class: 'row wrap' }, btn(l('Terminar o caso', 'End the affair'), () => run(endAffair(s, rngOf(s)), l('ok', 'ok'))), btn(l('Confessar ao par', 'Confess to your partner'), () => run(confess(s), l('ok', 'ok')), { danger: true })));
+      h('div', { class: 'row wrap' }, btn(l('Terminar o caso', 'End the affair'), () => run(endAffair(s, rng19(s, 'act')), l('ok', 'ok'))), btn(l('Confessar ao par', 'Confess to your partner'), () => run(confess(s), l('ok', 'ok')), { danger: true })));
   }
   if (!L0.partner || s.config.contentFilters.includes('romance')) return null;
   const cands = L0.candidates;
@@ -139,7 +140,7 @@ function exesBox(s: GameState): HTMLElement | null {
     L7.exes.length ? h('table', { class: 'tbl compact' }, h('tbody', null, L7.exes.map((e, i) => h('tr', null,
       h('td', null, e.name, e.married ? pill(t(l('ex-cônjuge', 'ex-spouse'))) : null, e.bitter ? pill(t(l('ressentido(a)', 'bitter')), 'bad') : null),
       h('td', null, meter('heart', l('Afeto', 'Affection'), e.aff)),
-      h('td', null, btn(l('Tentar reatar', 'Try to reconcile'), () => run(reconcile(s, i, rngOf(s))), { disabled: !!life(s).partner, title: l('Chance = afeto, menos se ressentido(a). Ex muito magoado(a) e você famoso(a): risco de livro-bomba.', 'Chance = affection, less if bitter. A very hurt ex and you famous: risk of a tell-all book.') })))))) : null,
+      h('td', null, btn(l('Tentar reatar', 'Try to reconcile'), () => run(reconcile(s, i, rng19(s, 'act'))), { disabled: !!life(s).partner, title: l('Chance = afeto, menos se ressentido(a). Ex muito magoado(a) e você famoso(a): risco de livro-bomba.', 'Chance = affection, less if bitter. A very hurt ex and you famous: risk of a tell-all book.') })))))) : null,
     pays.length ? h('div', null, h('p', { class: 'small' }, h('b', null, t(l('Pensões: ', 'Support: '))), `${$(tot)}/${t(l('mês', 'mo'))} ${t(l('do seu patrimônio pessoal', 'from your personal wealth'))}`),
       h('ul', { class: 'small' }, pays.map((p) => h('li', null, `${t(p.kind === 'alimony' ? l('ex-cônjuge', 'ex-spouse') : l('filho(a)', 'child'))} ${p.kid ?? ''} → ${p.to}: ${$(p.amt)}/${t(l('mês', 'mo'))} ${t(l('até', 'until'))} ${p.until}`))),
       why(l('Atrasar pensão gera mágoa, processo e manchete.', 'Late support causes grudges, lawsuits and headlines.'))) : null,

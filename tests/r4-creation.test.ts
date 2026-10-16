@@ -6,14 +6,14 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import { releaseSingle } from '../src/sim/repertoire';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { acceptCommission, effectsOf, openDivision, setRecipe, songTheme, themeTrend } from '../src/sim/sys/creation/core';
 import type { GameState } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, over = {}) {
   const s = createGame(defaultConfig(seed, over));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 900_000_000_00;

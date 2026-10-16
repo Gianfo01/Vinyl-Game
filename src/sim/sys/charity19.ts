@@ -10,7 +10,7 @@
 //  • DINHEIRO QUE SOME (`charity_scandal`): escândalo de dinheiro (scandal17) + investigação (crime17 feedCase) + manchete.
 // Cadeia 4 do plano19: crise → beneficente → rivais no palco → pacto ou briga → dinheiro some → investigação.
 
-import { Rng, clamp } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { l, type L } from '../../data/world';
 import { registerDeadline } from '../calendar19';
@@ -47,7 +47,7 @@ export function ch19(s: GameState): Ch19 {
 }
 const cnt = (s: GameState, k: string) => { const n = ch19(s).n; n[k] = (n[k] ?? 0) + 1; };
 const logC = (s: GameState, t: L) => { const st = ch19(s); st.log.unshift([s.year, s.month, t]); if (st.log.length > 40) st.log.length = 40; };
-const rng = (s: GameState) => rng19(s, 'charity19', () => Rng.fromSeed(`${s.config.seed}|ch19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'charity19');
 const mine = (s: GameState, a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
 const npc = (a: Act): boolean => a.owner !== 'player' && !a.playerBand;
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;

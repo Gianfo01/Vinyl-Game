@@ -16,7 +16,7 @@ import { availableChannels } from '../../sim/market';
 import { pendingFeatures, unlockCost, unlockFeature } from '../../sim/era';
 import { availableFormats, scheduleRelease, suggestedPress } from '../../sim/production';
 import type { GameState } from '../../sim/types';
-import { hasTech, money, playerActs, rngOf } from '../../sim/util';
+import { hasTech, money, playerActs } from '../../sim/util';
 import { careerSlotsUsed } from '../../sim/contracts';
 import { $, N, memoText, actLink, branchName, cityName, cover, kv, labelLink, monthName, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
@@ -46,6 +46,7 @@ import { chartRow27 } from '../sys/mundo27model';
 import { placeArt29 } from '../art29ui'; // r29 (arte)
 import { chartHeaderImg29 } from '../pixel/badge29';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -123,7 +124,7 @@ export function catalogPanel(s: GameState): HTMLElement {
     const r = s.releases[id];
     const act = s.acts[r.actId];
     if (!act) return;
-    const res = scheduleRelease(s, rngOf(s), {
+    const res = scheduleRelease(s, rng19(s, 'act'), {
       actId: r.actId, type: r.type, songs: r.songs, title: `${r.title} (Remaster)`, formats: availableFormats(s),
       press: Math.round(suggestedPress(s, act, r.type) * 0.5), marketing: [], territories: s.player.territories, weeksAhead: 3, reissueOf: r.id,
     });

@@ -4,9 +4,9 @@ import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { foundVenture, signBooking, ventures } from '../src/sim/sys/ventures9';
-import { Rng } from '../src/core/rng';
 import { bookRoute, c12, defaultStop, openPromoter, predict, validate } from '../src/sim/sys/tour12';
 import { deliver, prod, startProducer, stepBand, stepConflict, stepIntent, stepTake, studioOf, studios, takeJob } from '../src/sim/sys/studio12';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string) => { const s = createGame(defaultConfig(seed, { startYear: 1990 })); s.player.cash = 5_000_000_00; return s; };
 
@@ -22,7 +22,7 @@ describe('agente x promotor', () => {
     expect(v.preds[0].att[0]).toBeLessThanOrEqual(v.preds[0].att[2]);
     expect(predict(s, 'promoter', act, st, 0).cap).toBeGreaterThan(0);
     st.ask = 1.2; st.fee = v.preds[0].ask * 1.2;
-    const r = bookRoute(s, new Rng(s.rng), 'promoter', act.id, [st]);
+    const r = bookRoute(s, rng19(s, 'act'), 'promoter', act.id, [st]);
     if (!r.ok) return; // data/casa ocupada: o validador explicou
     for (let i = 0; i < 3; i++) advanceMonth(s);
     const sh = c12(s).shows.find((x) => x.actId === act.id);
@@ -32,7 +32,7 @@ describe('agente x promotor', () => {
   it('agente exige agência e cliente', () => {
     const s = mk('r12-agent');
     const act = Object.values(s.acts)[0];
-    expect(bookRoute(s, new Rng(s.rng), 'agent', act.id, [defaultStop(s, act, act.city, s.week + 3)]).ok).toBe(false);
+    expect(bookRoute(s, rng19(s, 'act'), 'agent', act.id, [defaultStop(s, act, act.city, s.week + 3)]).ok).toBe(false);
     expect(foundVenture(s, 'booking', 'label')).toBeNull();
     void signBooking; void ventures;
   });
@@ -51,7 +51,7 @@ describe('estúdio e produtor', () => {
     P.offers.push({ id: 'pj1', actId: a.id, own: false, fee: 100000, pts: 0.03, months: 3, exp: 99999 });
     expect(takeJob(s, 'pj1', 'flat')).toBeNull();
     stepIntent(s, 'faithful', P.sig); stepBand(s, 'band', 'hybrid', 'rent'); stepConflict(s, 'both');
-    const r = new Rng(s.rng); stepTake(s, r, 'keep'); deliver(s, r);
+    const r = rng19(s, 'act'); stepTake(s, r, 'keep'); deliver(s, r);
     expect(P.proj?.done?.q).toBeGreaterThan(0);
     expect(P.credits.length).toBe(1);
   });

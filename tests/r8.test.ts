@@ -18,8 +18,9 @@ import { criticAction, relWith } from '../src/sim/criticrel';
 import { reachMult } from '../src/sim/sys/relevance8';
 import { localPref, softPower } from '../src/data/relevance';
 import { instrumentsOf } from '../src/sim/sys/instruments';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import type { GameState, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
@@ -71,7 +72,7 @@ describe('capas', () => {
     const ready = unreleasedRecorded(s, band);
     if (!ready.length) return;
     const cash0 = s.player.cash;
-    const pr = scheduleRelease(s, rngOf(s), { actId: band.id, type: 'single', songs: [ready[0].id], formats: ['streaming', 'download', 'cd'].filter(() => true) as never, press: 0, marketing: [], territories: [...s.player.territories], weeksAhead: 1, cover: { ...opts[1] } });
+    const pr = scheduleRelease(s, rng19(s, 'act'), { actId: band.id, type: 'single', songs: [ready[0].id], formats: ['streaming', 'download', 'cd'].filter(() => true) as never, press: 0, marketing: [], territories: [...s.player.territories], weeksAhead: 1, cover: { ...opts[1] } });
     expect('id' in pr).toBe(true);
     expect(s.player.cash).toBeLessThan(cash0);
     advanceMonth(s);
@@ -98,9 +99,9 @@ describe('festivais', () => {
     if (target) {
       const f = FESTIVALS[target.fi];
       const tier = festTierFor(s, f, target.fi, act)!;
-      const res = pitchAct(s, rngOf(s), target.fi, act.id, 'headline', festFee(s, f, act, 'headline') * 3);
+      const res = pitchAct(s, rng19(s, 'act'), target.fi, act.id, 'headline', festFee(s, f, act, 'headline') * 3);
       expect(['accepted', 'counter', 'rejected']).toContain(res.result);
-      const ok = pitchAct(s, rngOf(s), target.fi, act.id, tier, festFee(s, f, act, tier));
+      const ok = pitchAct(s, rng19(s, 'act'), target.fi, act.id, tier, festFee(s, f, act, tier));
       if (ok.result === 'accepted') expect(editionOf(s, target.fi)!.lineup.some((x) => x.actId === act.id)).toBe(true);
       // convite manual
       st.invites.push({ id: 'fi-test', fi: target.fi, actId: playerActs(s)[1] ?? act.id, tier: 'opening', fee: 100, expires: s.week + 4 });
@@ -124,7 +125,7 @@ describe('premiações', () => {
     const mine = Object.values(s.releases).find((r) => r.owner === 'player' && r.year === s.year && r.totalUnits > 0 && !r.hist);
     if (mine) {
       const cash0 = s.player.cash;
-      const err = runCampaign(s, rngOf(s), mine.id, 'performance', 1);
+      const err = runCampaign(s, rng19(s, 'act'), mine.id, 'performance', 1);
       if (!err) expect(s.player.cash).toBeLessThan(cash0);
     }
     const year = s.year;
@@ -144,13 +145,13 @@ describe('críticos regionais', () => {
     const act = Object.values(s.acts).find((a) => a.city === 'rio' && a.status === 'active' && Object.values(s.releases).some((r) => r.actId === a.id))!;
     const rel = Object.values(s.releases).find((r) => r.actId === act?.id) ?? Object.values(s.releases)[0];
     let br = 0;
-    for (let i = 0; i < 10; i++) { delete s.reviews[rel.id]; br += reviewRelease(s, rngOf(s), rel).filter((x) => activeCritics(s).find((c) => c.name === x.critic)?.region === 'br').length; }
+    for (let i = 0; i < 10; i++) { delete s.reviews[rel.id]; br += reviewRelease(s, rng19(s, 'act'), rel).filter((x) => activeCritics(s).find((c) => c.name === x.critic)?.region === 'br').length; }
     expect(act).toBeTruthy();
     expect(br).toBeGreaterThan(0);
     const name = activeCritics(s)[0].name;
-    expect(criticAction(s, rngOf(s), name, 'advance')).toBeNull();
+    expect(criticAction(s, rng19(s, 'act'), name, 'advance')).toBeNull();
     expect(relWith(s, name)).toBeGreaterThan(0);
-    expect(criticAction(s, rngOf(s), name, 'advance')).not.toBeNull(); // cedo demais
+    expect(criticAction(s, rng19(s, 'act'), name, 'advance')).not.toBeNull(); // cedo demais
     invariant(s);
   });
 });

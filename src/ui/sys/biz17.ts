@@ -10,7 +10,6 @@ import type { GameState } from '../../sim/types';
 import { careers } from '../../sim/sys/careers12';
 import { ownerOf } from '../../sim/sys/people/owner';
 import { beginSuccession } from '../../sim/sys/heirs8';
-import { rngOf } from '../../sim/util';
 import { CAP_GAINS, bidNet, buyLabel17, buyPrice, buyableLabels, cutList, hasLabel, makeBids, minRefound, refound, refoundBlock, relIncome, sale17, sellLabel, sellMaster17, valuation17, MARKET_NAME } from '../../sim/sys/sale17';
 import { OUTLETS, editable, estimate, feeOf, out17, outletsNow, reachOf, setPreset, toggleOutlet, upfrontOf, type OutId } from '../../sim/sys/outlets17';
 import { POLICY, PRICE, VENUES17, buyVenue17, marketVenues, monthEst17, sellValue, sellVenue17, setVenue17, v17, vdef, venuePrice, type Policy, type PriceK } from '../../sim/sys/venues17';
@@ -26,6 +25,7 @@ import { registerArea } from '../registry';
 import { tabs } from '../vis';
 import { a29 } from '../art29ui'; // r29 (arte)
 import { merchImg29 } from '../pixel/things29';
+import { rng19 } from '../../sim/rng19';
 
 const famName = (f: string) => t(FAMILIES.find((x) => x.id === f)?.name ?? l(f, f));
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -84,7 +84,7 @@ function afterSale(s: GameState): HTMLElement {
     section(t(l('3. Outra carreira', '3. Another career')), h('p', { class: 'small' }, t(l('Empresário, festival, casa de shows, estúdio, editora, mídia… Abra em Empreendimentos → Carreiras. Carreiras ativas: {c}.', 'Manager, festival, venue, studio, publisher, media… Open them in Ventures → Careers. Active careers: {c}.'), { c: careers(s).active.join(', ') || '—' }))),
     section(t(l('4. Aposentar-se', '4. Retire')),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn small', onclick: () => { if (confirm(t(l('Passar tudo a um herdeiro?', 'Hand everything to an heir?')))) { beginSuccession(s, rngOf(s), 'retire'); rerender(); } } }, t(l('Passar a um herdeiro', 'Hand over to an heir'))),
+        h('button', { class: 'btn small', onclick: () => { if (confirm(t(l('Passar tudo a um herdeiro?', 'Hand everything to an heir?')))) { beginSuccession(s, rng19(s, 'act'), 'retire'); rerender(); } } }, t(l('Passar a um herdeiro', 'Hand over to an heir'))),
         h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Encerrar a história aqui?', 'End the story here?')))) { s.ended = { ending: 'quiet_retirement', year: s.year, reason: 'arc' }; rerender(); } } }, t(l('Encerrar a história', 'End the story'))))),
     section(t(l('Histórico', 'History')), logList(st.log)));
 }

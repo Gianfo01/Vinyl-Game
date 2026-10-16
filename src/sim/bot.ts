@@ -8,7 +8,7 @@ import { estimateMonthlyBurn } from './events';
 import { estimate } from './scouting';
 import { nextStep23, startStep23 } from './sys/scout23';
 import type { GameState } from './types';
-import { money, playerActs, rngOf } from './util';
+import { money, playerActs } from './util';
 import { createGame } from './worldgen';
 import type { RunConfig } from './types';
 import { advanceMonth } from './tick';
@@ -16,6 +16,7 @@ import { hqCaps } from './branches';
 import { resolveDecision } from './events';
 import { acceptCommission } from './sys/creation/core';
 import { respondDemand, rst } from './rights';
+import { rng19 } from './rng19';
 
 export function botMonth(s: GameState): void {
   const salaries = s.player.staff.reduce((t, x) => t + x.salary, 0);
@@ -65,7 +66,7 @@ export function botMonth(s: GameState): void {
     }
     for (const o of s.offers) if (o.status === 'counter' && s.player.cash > o.advance * 4) acceptCounter(s, o.id);
     // artista que cresceu pede renegociação: aceita se cabe no caixa, senão tenta o meio-termo
-    for (const d of [...rst(s).demands]) respondDemand(s, rngOf(s), d.id, s.player.cash > d.bonus * 4 ? 'accept' : 'counter');
+    for (const d of [...rst(s).demands]) respondDemand(s, rng19(s, 'act'), d.id, s.player.cash > d.bonus * 4 ? 'accept' : 'counter');
     // crescimento prudente
     const up = upgradeCost(s);
     if (up !== null && careerSlotsUsed(s) >= cap && s.player.cash > up * 3) upgradeHq(s);

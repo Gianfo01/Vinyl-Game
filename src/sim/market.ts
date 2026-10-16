@@ -133,7 +133,7 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
   const era = eraTypeFit(s.year, rel.type);
   const design = rel.owner === 'player' && staffCount(s, 'designer') ? 1.05 : 1;
   const mom = 0.8 + act.momentum / 250;
-  const luck = Math.exp(rng19(s, 'launch', r).normal(0, 0.33));
+  const luck = Math.exp(rng19(s, 'launch').normal(0, 0.33));
   const nostalgia = rel.reissueOf ? (hasMutator(s, 'strong_nostalgia') ? 0.6 : 0.35) : rel.kind === 'compilation' ? 0.45 + act.fame / 250 : rel.kind === 'demo' ? 0.35 : rel.kind === 'live' ? 0.55 + act.fame / 300 : 1;
   // gancho: singles vivem do refrão (perfil comercial da faixa principal)
   const lead = s.songs[rel.songs[0]];
@@ -296,7 +296,7 @@ function digitalFormats(s: GameState): FormatId[] {
 
 /** Processa uma semana: unidades, receita, estoque, paradas e fama. */
 export function marketWeek(s: GameState, r: Rng): void {
-  r = rng19(s, 'market', r); // r19: ruído das paradas no fluxo próprio
+  r = rng19(s, 'market'); // r19: ruído das paradas no fluxo próprio
   const pool = weeklyPool(s);
   s.stats.weeklyPool = pool;
   const live = allReleases17(s).filter((x) => x.live);

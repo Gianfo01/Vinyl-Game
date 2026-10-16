@@ -47,7 +47,7 @@ declare module '../ext4' { interface Ext4 { score19: Score19 } }
 const fresh = (): Score19 => ({ th: [], nd: [], seen: {}, seq: 0, last: -99, log: [], n: {} });
 registerExt4('score19', fresh);
 export const scr19 = (s: GameState): Score19 => xs19(s, 'score19', fresh);
-const rng = (s: GameState) => rng19(s, 'score19', () => Rng.fromSeed(`${s.config.seed}|sc19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'score19');
 export const medsNow19 = (s: GameState): ThMed19[] => (Object.keys(THMED19) as ThMed19[]).filter((m) => s.year >= THMED19[m].from && (m !== 'novela' || ['br', 'latam'].includes(homeMarket(s))));
 const studios = (s: GameState, m: ThMed19): BrandDef[] => CBRANDS.filter((b) => s.year >= b.start && (!b.end || s.year <= b.end) && b.sync.includes(THMED19[m].sync as never));
 const bestRel = (s: GameState, a: Act): Release | undefined => a.releases.map((id) => s.releases[id]).filter((x): x is Release => !!x && x.type === 'single').sort((p, q) => q.q - p.q)[0];

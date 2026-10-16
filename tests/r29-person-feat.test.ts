@@ -8,7 +8,6 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs } from '../src/sim/production';
 import type { Act, GameState } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
-import { rngOf } from '../src/sim/util';
 import { personFeats29 } from '../src/sim/sys/connect29';
 import { FEATP29_CORE, featureFee, songX } from '../src/sim/sys/creation/core';
 import { personFame } from '../src/sim/sys/fame15';
@@ -18,6 +17,7 @@ import {
 } from '../src/sim/sys/featp29';
 import { memberFeatPreset29, memberOptions29 } from '../src/sim/sys/member29';
 import { ctxMenu27, menuSections27 } from '../src/ui/ps/ctx27model';
+import { rng19, rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (seed = 'r29pf', year = 1975): GameState => { const s = createGame(defaultConfig(seed, { startYear: year })); s.player.cash += 50_000_000_00; return s; };
 const live = (a: Act) => a.status === 'active' || a.status === 'emerging';
@@ -28,7 +28,7 @@ const rivalBand = (s: GameState): Act => Object.values(s.acts).filter((a) => a.o
 function host(s: GameState): Act {
   const a = freeBands(s)[3];
   acceptOffer(s, a, { ...defaultOffer(s, a), id: `o-${a.id}`, week: s.week, status: 'pending', advance: 0 });
-  composeSongs(s, rngOf(s), a, 4);
+  composeSongs(s, rng19(s, 'act'), a, 4);
   expect(featSongs(s, a.id).length).toBeGreaterThan(1);
   return a;
 }
@@ -139,12 +139,12 @@ describe('R29 — feat de pessoa específica', () => {
       const band = freeBands(s)[0];
       const so = featSongs(s, H.id)[0];
       const fair = fairFeat(s, H.id, band.id);
-      const res = proposeFeat(s, rngOf(s), so.id, band.id, { fee: fair.fee * 3, split: fair.split * 2 });
+      const res = proposeFeat(s, rng19(s, 'act'), so.id, band.id, { fee: fair.fee * 3, split: fair.split * 2 });
       return { s, H, band, so, res };
     };
     const a = run(), b = run();
     expect(a.res.result).toBe(b.res.result);
-    expect(JSON.stringify(a.s.rng)).toBe(JSON.stringify(b.s.rng));
+    expect(rngSnapshot19(a.s)).toBe(rngSnapshot19(b.s));
     // fechado pelo caminho do ato: crédito com o nome da banda, nada de pessoas
     const s = a.s;
     const so = featSongs(s, a.H.id)[0];
@@ -240,7 +240,7 @@ describe('R29 — feat de pessoa específica', () => {
       const s = game('r29pf-h');
       const H = host(s);
       const out: string[] = [];
-      const rng0 = JSON.stringify(s.rng);
+      const rng0 = rngSnapshot19(s);
       const bands = freeBands(s);
       for (let i = 0; i < 4; i++) {
         const so = featSongs(s, H.id)[0];
@@ -250,7 +250,7 @@ describe('R29 — feat de pessoa específica', () => {
         const r = proposeFeat29(s, so.id, { persons: [pid] }, { fee: Math.round(f.fee * (0.6 + i * 0.4)), split: f.split });
         out.push(`${r.result}:${r.deal?.status ?? ''}:${s.songs[so.id].title}`);
       }
-      expect(JSON.stringify(s.rng)).toBe(rng0);
+      expect(rngSnapshot19(s)).toBe(rng0);
       return { out, n: feats(s).n29, deals: feats(s).deals.map((d) => `${d.status}|${(d.guestPersons ?? []).join(',')}`) };
     };
     const a = run(), b = run();

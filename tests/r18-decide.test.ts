@@ -9,7 +9,7 @@ import { advanceMonth, advanceWeek } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { dec18, fire18, pending18 } from '../src/sim/sys/decide18';
 import { P } from '../src/sim/sys/people/state';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import type { GameState } from '../src/sim/types';
 import { explain18 } from '../src/sim/explain18';
 import { LINKS18, feudBoost18, heartBoost18, tensionPen18 } from '../src/sim/sys/links18';
@@ -17,6 +17,7 @@ import { feud18, startFeud18 } from '../src/sim/sys/feud18';
 import { emitFact } from '../src/sim/facts17';
 import { applyMods } from '../src/sim/ext4';
 import '../src/sim/sys';
+import { rng19 } from '../src/sim/rng19';
 
 const myAct = (s: GameState) => {
   const id = playerActs(s).find((x) => s.acts[x].members.length >= 2);
@@ -25,7 +26,7 @@ const myAct = (s: GameState) => {
   a.owner = 'player';
   return a;
 };
-const ask = (s: GameState, id: string, ctx: Record<string, string | number>) => { emitEvent(s, rngOf(s), id, ctx); return s.decisions.find((d) => d.eventId === id)!; };
+const ask = (s: GameState, id: string, ctx: Record<string, string | number>) => { emitEvent(s, rng19(s, 'act'), id, ctx); return s.decisions.find((d) => d.eventId === id)!; };
 
 describe('r18 decide', () => {
   it('40+ decisões existentes têm ecos atrasados com dica sem spoiler', () => {

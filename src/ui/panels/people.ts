@@ -13,7 +13,6 @@ import { overall } from '../../sim/sys/talent/attrs';
 import { sings } from '../../sim/sys/vocals10';
 import { roleLine27 } from '../../sim/sys/roles27';
 import { openPersonPage } from '../pages';
-import { rngOf } from '../../sim/util';
 import { $, N, inspect, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, ic, meter, portrait, stat, tile } from '../vis';
@@ -21,6 +20,7 @@ import { a29 } from '../art29ui'; // r29 (arte)
 import { fanBannerImg29 } from '../pixel/badge29';
 import { ent27 } from '../ps/ent27';
 import { personKey27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 
@@ -49,7 +49,7 @@ function mainTraits(s: GameState, a: Act, p: Person, known: boolean): HTMLElemen
 }
 
 export function membersSection(s: GameState, a: Act): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const fac = s.factions[a.id];
   return section(t(l('Integrantes', 'Members')), h('div', { class: 'cards members' }, a.members.map((pid) => {
     const p = s.persons[pid];
@@ -84,7 +84,7 @@ export function membersSection(s: GameState, a: Act): HTMLElement {
 }
 
 export function fandomSection(s: GameState, a: Act): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const f = fandomOf(s, a.id);
   return section(t(l('Público e fandom', 'Audience and fandom')),
     chips(stat('fans', N(a.fans.casual), l('Casuais', 'Casual')), stat('heart', N(a.fans.active), l('Ativos', 'Active')), stat('fire', N(a.fans.core), l('Núcleo', 'Core')), stat('sparkle', N(f.superfans), l('Superfãs', 'Superfans')), stat('broken-heart', N(f.haters), l('Haters', 'Haters'), f.haters > f.superfans ? 'bad' : '')),
@@ -124,7 +124,7 @@ export function contractExtra(s: GameState, a: Act): HTMLElement | null {
 }
 
 export function reunionSection(s: GameState): HTMLElement | null {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const cands = Object.values(s.acts).filter((a) => (a.status === 'split' || a.status === 'retired' || a.status === 'hiatus') && (a.number1s > 0 || a.hits > 1 || a.legend) && a.members.some((id) => s.persons[id]?.alive)).slice(0, 8);
   if (!cands.length) return null;
   // r27 INT: só os cartões (quem chama põe o título — o resumo do <details> no Elenco); sem caixa dentro de caixa

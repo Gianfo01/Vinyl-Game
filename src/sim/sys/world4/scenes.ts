@@ -5,11 +5,12 @@ import { clamp, type Rng } from '../../../core/rng';
 import { cityById, genreById, l, type L } from '../../../data/world';
 import { registerMod } from '../../ext4';
 import type { Act, GameState } from '../../types';
-import { fmtL, money, notify, post, remember, rngOf } from '../../util';
+import { fmtL, money, notify, post, remember } from '../../util';
 import { spawnProceduralAct } from '../../worldgen';
 import { liveMine, mineAct, mineRel, rep } from './common';
 import { w4, type SceneLook } from './state';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { rng19 } from '../../rng19';
 
 export interface HistScene {
   id: string;
@@ -114,7 +115,7 @@ export function signScene(s: GameState, sceneId: string): L | null {
   // um talento local aparece para o selo que bancou a cena
   const genre = sc.genres.find((g) => genreById[g] && genreById[g].born <= s.year);
   if (genre && cityById[sc.city]) {
-    const r = rngOf(s);
+    const r = rng19(s, 'scenes4');
     const a = spawnProceduralAct(s, r, { city: sc.city, genre });
     a.momentum = clamp(a.momentum + 20, 0, 100);
     remember(s, 'scene_sign', fmtL(l('O selo banca a cena {n}; {a} desponta por lá.', 'The label backs the {n} scene; {a} emerges there.'), { n: sc.name, a: a.name }), { important: true });

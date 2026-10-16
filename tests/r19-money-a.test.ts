@@ -17,11 +17,11 @@ import { P } from '../src/sim/sys/people/state';
 import { r18 } from '../src/sim/sys/rights18';
 import { SALE19, eraMultiple } from '../src/sim/sys/sale17';
 import type { GameState, Release, Song } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (y = 1990, over = {}) => createGame(defaultConfig('m19a', { startYear: y, ...over }));
-const myAct = (s: GameState, fame = 40) => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame }); a.owner = 'player'; a.fame = fame; return a; };
+const myAct = (s: GameState, fame = 40) => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame }); a.owner = 'player'; a.fame = fame; return a; };
 let n = 0;
 const rel = (s: GameState, actId: string, o: Partial<Release> = {}): Release => {
   const r = { id: `rm${++n}`, actId, owner: 'player', type: 'lp', title: `Disco ${n}`, songs: [], week: s.week - 400, year: s.year - 6, q: 0.6, appeal: 0.5, formats: [], stock: 0, pressed: 0, marketing: [], marketingE: 0, territories: [], weekly: [], totalUnits: 50000, revenue: 40_000_000, peak: 3, weeksOnChart: 10, lastPos: 0, coverSeed: 1, shortage: 0, live: false, ...o } as Release;
@@ -116,11 +116,11 @@ describe('N1 falência de selo e leilão de masters', () => {
   it('rival quebra → fato → leilão com carta; lance do jogador vence e os masters mudam de dono', () => {
     const s = game(1985);
     const lb = Object.values(s.labels).find((x) => x.active && x.family !== 'A')!;
-    const act = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 20 });
+    const act = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 20 });
     act.owner = lb.id;
     const rs = [rel(s, act.id, { owner: lb.id }), rel(s, act.id, { owner: lb.id })];
     for (const x of Object.values(s.labels)) x.cash = Math.min(x.cash, 0); // ninguém mais tem caixa
-    closeLabel(s, rngOf(s), lb);
+    closeLabel(s, rng19(s, 'act'), lb);
     expect(recentFacts(s, { kind: 'label_bankrupt' }).length).toBe(1);
     const au = m19(s).auc.find((x) => x.from === lb.id)!;
     expect(au.st).toBe('open');

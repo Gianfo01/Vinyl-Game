@@ -9,7 +9,6 @@ import { releaseSingle } from '../src/sim/repertoire';
 import { advanceMonth, advanceWeek } from '../src/sim/tick';
 import { runSimHooks } from '../src/sim/ext4';
 import { monthIndex, personLoad } from '../src/sim/capacity';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import type { GameState } from '../src/sim/types';
 import { P, healthOf, mediumFor } from '../src/sim/sys/people/state';
@@ -26,10 +25,11 @@ import { hireDetective, pressureCeo } from '../src/sim/sys/people/secrets';
 import { breakUp } from '../src/sim/sys/people/life';
 import { feedFor, postAbout } from '../src/sim/sys/people/feed';
 import '../src/sim/sys/people';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, over = {}) {
   const s = createGame(defaultConfig(seed, over));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 50_000_000_00;

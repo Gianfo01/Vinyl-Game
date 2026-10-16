@@ -7,9 +7,10 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { emitEvent, EVENTS } from '../src/sim/events';
 import { cancelRelease, composeSongs, recordSongs, scheduleRelease } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
-import { post, rngOf } from '../src/sim/util';
+import { post } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { endingScores } from '../src/sim/legacy';
+import { rng19 } from '../src/sim/rng19';
 
 describe('determinismo', () => {
   it('mesma seed + mesmas decisões = mesma história', () => {
@@ -45,7 +46,7 @@ describe('finanças', () => {
 
   it('cancelar um lançamento devolve tudo', () => {
     const s = createGame(defaultConfig('cancel-1'));
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
     acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
     const songs = composeSongs(s, r, act, 2);
@@ -62,7 +63,7 @@ describe('finanças', () => {
 describe('contratos', () => {
   it('recoupment abate o saldo e não é receita extra do selo (exemplo do v6)', () => {
     const s = createGame(defaultConfig('recoup-1'));
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
     acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o2', week: 0, status: 'pending', royalty: 0.2, advance: 500_00 });
     const c = s.contracts[act.contractId!];
@@ -79,7 +80,7 @@ describe('contratos', () => {
 describe('conteúdo', () => {
   it('eventos com tags filtradas nunca viram cartão de decisão', () => {
     const s = createGame(defaultConfig('filter-1', { contentFilters: ['drugs', 'death'] }));
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
     emitEvent(s, r, 'addiction', { act: act.id, person: act.members[0] });
     expect(s.decisions.find((d) => d.eventId === 'addiction')).toBeUndefined();
@@ -87,7 +88,7 @@ describe('conteúdo', () => {
 
   it('atos com regra de separação reforçada não recebem eventos sensíveis', () => {
     const s = createGame(defaultConfig('rs-1'));
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
     act.rs = true;
     emitEvent(s, r, 'controversial_remark', { act: act.id });

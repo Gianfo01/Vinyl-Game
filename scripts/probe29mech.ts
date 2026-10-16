@@ -16,7 +16,8 @@ import { addStress } from '../src/sim/stress17';
 import { advanceWeek } from '../src/sim/tick';
 import { cityDemand } from '../src/sim/tours';
 import type { Act, GameState, Release } from '../src/sim/types';
-import { money, rngOf } from '../src/sim/util';
+import { money } from '../src/sim/util';
+import { rng19 } from '../src/sim/rng19';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { renewChance } from '../src/sim/sys/explain12';
 import { hq6 } from '../src/sim/sys/hq6';
@@ -30,7 +31,7 @@ const seed = arg('seed', 'r29m'), year = +arg('year', '1985');
 
 // ---- base: um ato seu com um single lançado; um ato de NPC para ofertas
 const s0 = createGame(defaultConfig(seed, { startYear: year, realNames: true }));
-const r = rngOf(s0);
+const r = rng19(s0, 'act');
 const act = spawnProceduralAct(s0, r, { city: s0.config.homeCity });
 acceptOffer(s0, act, { ...defaultOffer(s0, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
 s0.player.cash += 50_000_000_00; s0.player.initialCash += 50_000_000_00;

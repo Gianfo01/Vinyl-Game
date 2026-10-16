@@ -11,13 +11,13 @@ import { GOALS, STAGE_NAMES, needSongs, planRecording, planWriting, projectCosts
 import { planOf12, weeksNeeded } from '../../sim/sys/project12';
 import { AUDIENCES } from '../../sim/sys/recipe12';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import { $, N, rerender, toast } from '../common';
 import { h } from '../dom';
 import { review20 } from '../ux20';
 import { goToProjects } from './project8';
 import { bookedAction23, bookedText23 } from '../../sim/sys/journey23';
 import { status20 } from '../st20';
+import { rng19 } from '../../sim/rng19';
 
 interface Opt20 { name: L; cost: number; weeks: number | null; aud?: L; risk: L; run: () => L | null; ok: L; primary?: boolean; blocked?: L | null; booked?: L | null }
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -39,7 +39,7 @@ export function phaseOptions20(s: GameState, p: MusicProject, st: ProjStage): Op
   }
   if (st === 'finishing') {
     const pre = c.marketing + c.pressing + c.cover;
-    out.push({ name: l('Programar lançamento', 'Schedule release'), cost: pre, weeks: Math.max(1, p.weeksAhead), aud: audL, risk: l('Vendas dependem do mercado e da concorrência na semana.', 'Sales depend on the market and competition that week.'), run: () => scheduleProject(s, rngOf(s), p), ok: l('Lançamento programado.', 'Release scheduled.'), primary: true });
+    out.push({ name: l('Programar lançamento', 'Schedule release'), cost: pre, weeks: Math.max(1, p.weeksAhead), aud: audL, risk: l('Vendas dependem do mercado e da concorrência na semana.', 'Sales depend on the market and competition that week.'), run: () => scheduleProject(s, rng19(s, 'act'), p), ok: l('Lançamento programado.', 'Release scheduled.'), primary: true });
     if (p.type === 'lp') out.push({ name: l('Lançar com rollout', 'Release with a rollout'), cost: pre, weeks: null, aud: audL, risk: l('Singles antes do álbum: mais tempo de exposição, mais custo de campanha.', 'Singles before the album: more exposure time, more campaign cost.'), run: () => rolloutProject(s, p), ok: l('Rollout planejado.', 'Rollout planned.') });
   }
   return out;

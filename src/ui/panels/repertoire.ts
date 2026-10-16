@@ -10,7 +10,6 @@ import {
   type ReviseFocus, type SongStatus,
 } from '../../sim/repertoire';
 import type { GameState, Song } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { store } from '../store';
@@ -20,6 +19,7 @@ import { songAttrs } from '../songAttrs';
 import { closeSale, fairTerms, offerSong, saleChance, saleTargets, type SaleTerms } from '../../sim/sys/songsale';
 import { fameText } from '../../sim/sys/fame15';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 /** Botões extras no cabeçalho de cada música (ouvir a música). */
 export const REP_SONG_EXTRAS: ((s: GameState, so: Song) => HTMLElement | null)[] = [];
@@ -56,12 +56,12 @@ function saleBox(s: GameState, so: Song): HTMLElement {
     ),
     h('small', { class: 'muted' }, t(l('Referência do mercado: {f} e {r}% de royalties. O selo fica com {ls}% do que entrar (edição); o resto vai para os compositores. Chance: ', 'Market reference: {f} and {r}% royalties. The label keeps {ls}% of the income (publishing); the rest goes to the writers. Chance: '), { f: $(fair.fee), r: (fair.royalty * 100).toFixed(1), ls: sale.labelShare }), pill(t(S[band]), band)),
     h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => {
-      const res = offerSong(s, rngOf(s), so.id, sale.target, terms());
+      const res = offerSong(s, rng19(s, 'act'), so.id, sale.target, terms());
       if (res.result === 'accepted') { toast(t(res.text), 'good'); sale.songId = ''; rerender(); return; }
       sale.reply = { text: res.text, counter: res.counter };
       rerender();
     } }, ic('handshake'), ' ', t(l('Propor agora', 'Propose now')))),
-    sale.reply ? h('div', { class: 'small' }, t(sale.reply.text), sale.reply.counter ? h('button', { class: 'btn small primary', onclick: () => { const c = sale.reply!.counter!; closeSale(s, rngOf(s), so.id, sale.target, c); toast(t(l('Venda fechada.', 'Sale closed.')), 'good'); sale.songId = ''; rerender(); } }, t(l('Aceitar contraproposta', 'Accept counter'))) : null) : null,
+    sale.reply ? h('div', { class: 'small' }, t(sale.reply.text), sale.reply.counter ? h('button', { class: 'btn small primary', onclick: () => { const c = sale.reply!.counter!; closeSale(s, rng19(s, 'act'), so.id, sale.target, c); toast(t(l('Venda fechada.', 'Sale closed.')), 'good'); sale.songId = ''; rerender(); } }, t(l('Aceitar contraproposta', 'Accept counter'))) : null) : null,
   );
 }
 
@@ -116,7 +116,7 @@ function usedIn(s: GameState, so: Song): HTMLElement {
 }
 
 function actions(s: GameState, so: Song, st: SongStatus): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const btn = (icon: string, label: L, fn: () => void, attrs: Record<string, unknown> = {}) => h('button', { class: 'btn small', onclick: () => { fn(); rerender(); }, ...attrs }, ic(icon), ' ', t(label));
   const list: (HTMLElement | null)[] = [];
   if (st === 'written') {
@@ -199,8 +199,8 @@ export function repertoireTab(s: GameState): HTMLElement {
     ),
     compIds.length ? section(t(l('Coletânea', 'Compilation')),
       h('p', { class: 'small' }, `${compIds.length} ${t(l('músicas marcadas (mínimo 6, já lançadas).', 'songs marked (minimum 6, already released).'))}`),
-      h('button', { class: 'btn primary', disabled: compIds.length < 6, onclick: () => { const e = releaseCompilation(s, rngOf(s), a.id, compIds); say(e, l('Coletânea programada!', 'Compilation scheduled!')); if (!e) view.comp.clear(); rerender(); } }, ic('cd'), ' ', t(l('Programar coletânea', 'Schedule compilation')))) : null,
-    live.length ? section(t(l('Disco ao vivo', 'Live album')), h('div', { class: 'row wrap' }, live.map((tr) => h('button', { class: 'btn', onclick: () => { say(releaseLive(s, rngOf(s), tr.id), l('Disco ao vivo programado!', 'Live album scheduled!')); rerender(); } }, ic('mic'), ` ${tr.name} (${tr.stops.filter((x) => x.status === 'played').length} ${t(l('shows', 'shows'))})`)))) : null,
+      h('button', { class: 'btn primary', disabled: compIds.length < 6, onclick: () => { const e = releaseCompilation(s, rng19(s, 'act'), a.id, compIds); say(e, l('Coletânea programada!', 'Compilation scheduled!')); if (!e) view.comp.clear(); rerender(); } }, ic('cd'), ' ', t(l('Programar coletânea', 'Schedule compilation')))) : null,
+    live.length ? section(t(l('Disco ao vivo', 'Live album')), h('div', { class: 'row wrap' }, live.map((tr) => h('button', { class: 'btn', onclick: () => { say(releaseLive(s, rng19(s, 'act'), tr.id), l('Disco ao vivo programado!', 'Live album scheduled!')); rerender(); } }, ic('mic'), ` ${tr.name} (${tr.stops.filter((x) => x.status === 'played').length} ${t(l('shows', 'shows'))})`)))) : null,
     section(t(l('Caderno de ideias', 'Idea notebook')),
       h('p', { class: 'muted small' }, t(l('Estrada, família, perdas, cenas e política viram temas. A ideia mais forte entra na próxima composição (melodia, letra e originalidade sobem).', 'The road, family, loss, scenes and politics become themes. The strongest idea goes into the next song (melody, lyrics and originality rise).'))),
       ideas.length ? h('div', { class: 'idea-list' }, ideas.map((i) => h('span', { class: 'idea', title: `${i.source} · ${i.strength}/10` }, ic('bulb'), ` ${t(i.theme)} `, h('small', { class: 'muted' }, `${i.strength}/10`), ' ', h('button', { class: 'btn small ghost', 'aria-label': t(l('Descartar ideia', 'Discard idea')), onclick: () => { discardIdea(s, a.id, i.id); rerender(); } }, '×'))))

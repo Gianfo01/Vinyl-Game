@@ -14,9 +14,10 @@ import { PATHS18, pathScore18 } from '../src/sim/sys/paths18';
 import { classics19, mgRel19 } from '../src/sim/sys/wins19';
 import { ventures } from '../src/sim/sys/ventures9';
 import { CTXFX19 } from '../src/sim/ext4';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import type { Act, GameState } from '../src/sim/types';
 import '../src/sim/sys';
+import { rng19 } from '../src/sim/rng19';
 
 const myAct = (s: GameState): Act => {
   const id = playerActs(s)[0];
@@ -117,7 +118,7 @@ describe('r19 fix C — ctxFx nas decisões (§8)', () => {
     const lead = a.members.map((id) => s.persons[id]).find((p) => p?.alive)!;
     if (hist === 'grudge') grantHold(s, { holder: lead.id, target: 'player', kind: 'grievance', strength: 70, months: 24, text: { pt: 'Mágoa', en: 'Grudge' } });
     if (hist === 'favor') grantHold(s, { holder: 'player', target: lead.id, kind: 'favor', strength: 80, months: 24, text: { pt: 'Favor', en: 'Favor' } });
-    emitEvent(s, rngOf(s), 'controversial_remark', { act: a.id });
+    emitEvent(s, rng19(s, 'act'), 'controversial_remark', { act: a.id });
     const d = s.decisions.find((x) => x.eventId === 'controversial_remark');
     expect(d).toBeTruthy();
     const fx = ctxFx19(s, { act: a.id });

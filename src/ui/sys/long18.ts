@@ -15,13 +15,13 @@ import {
 } from '../../sim/sys/paths18';
 import { decisionBlocker, takeDecision } from '../../sim/sys/intrigue';
 import { MANDATES18, adaptRead18, bio18, cockpit18, setAdapt18, sg18, yearCard18, type Q18, type Year18 } from '../../sim/sys/saga18';
-import { rngOf } from '../../sim/util';
 import { rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerArea, registerCutscene, registerSection } from '../registry';
 import { ic, tabs } from '../vis';
 import { go18 } from './inbox18';
 import './long18.css';
+import { rng19 } from '../../sim/rng19';
 
 const usd = (s: GameState, c: number) => `$${Math.round(toReal(c, s.year)).toLocaleString('en-US')}`;
 const fmtK = (v: number, f: string) => (f === 'usd' ? `$${Math.round(v).toLocaleString('en-US')}` : f === 'pct' ? `${Math.round(v)}%` : f === 'mo' ? `${v.toFixed(1)} m` : `${Math.round(v * 10) / 10}`);
@@ -79,7 +79,7 @@ function lawsTab(s: GameState): HTMLElement {
         }))))),
     section(t(l('Decisões do selo', 'Label decisions')),
       h('div', { class: 'lg18-grid' }, LABEL_DECS18.map((d) => { const b = labelDecBlock18(s, d); return h('div', { class: `lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), h('p', { class: 'small' }, t(d.desc)), h('p', { class: 'small muted' }, t(l('Custo: ', 'Cost: ')), usd(s, d.cost(s))), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small primary', onclick: () => { toast(t(takeLabelDec18(s, d.id)), 'good'); rerender(); } }, t(l('Decidir', 'Decide')))); }),
-        bigDecisions18().map((d) => { const b = decisionBlocker(s, d); return h('div', { class: `lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), bigTaken18(s, d.id) ? h('small', { class: 'good' }, ' ✓') : null, h('p', { class: 'small' }, t(d.desc)), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small', onclick: () => msg(takeDecision(s, rngOf(s), d.id), l('Feito.', 'Done.')) }, t(l('Decidir', 'Decide'))) ); }))));
+        bigDecisions18().map((d) => { const b = decisionBlocker(s, d); return h('div', { class: `lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), bigTaken18(s, d.id) ? h('small', { class: 'good' }, ' ✓') : null, h('p', { class: 'small' }, t(d.desc)), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small', onclick: () => msg(takeDecision(s, rng19(s, 'act'), d.id), l('Feito.', 'Done.')) }, t(l('Decidir', 'Decide'))) ); }))));
 }
 
 function num(v: number, set: (x: number) => void, step = 1, min = 0, max = 1e9): HTMLElement {

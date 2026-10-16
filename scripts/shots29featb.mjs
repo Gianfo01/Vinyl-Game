@@ -31,7 +31,7 @@ const info = await p.evaluate(async () => {
   if (off) off.setTutorials19(st.store.prefs, false);
   const C = await import('/src/sim/contracts.ts');
   const Pr = await import('/src/sim/production.ts');
-  const U = await import('/src/sim/util.ts');
+  const U = await import('/src/sim/util.ts'); const R19 = await import('/src/sim/rng19.ts');
   const R = await import('/src/core/rng.ts');
   const X = await import('/src/sim/sys/featp29.ts');
   const g = st.store.game;
@@ -40,7 +40,7 @@ const info = await p.evaluate(async () => {
   const free = Object.values(g.acts).filter((a) => live(a) && !a.owner && !a.playerBand).sort((a, b) => b.fame - a.fame);
   let mine = U.playerActs(g).map((id) => g.acts[id]).find((a) => a && a.members.length >= 2);
   if (!mine) { mine = free[2]; C.acceptOffer(g, mine, { ...C.defaultOffer(g, mine), id: 'shot-o', week: g.week, status: 'pending', advance: 0 }); }
-  Pr.composeSongs(g, U.rngOf(g), mine, 4);
+  Pr.composeSongs(g, R19.rng19(g, 'act'), mine, 4);
   const voice = mine.members.find((m) => g.persons[m].role === 'vocal') ?? mine.members[0];
   X.npcPersonInvite29(g, R.Rng.fromSeed('shot-inv'), voice);
   // o mundo: um ato NPC credita alguém de outra banda

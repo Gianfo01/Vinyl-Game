@@ -6,13 +6,14 @@ import { t } from '../../i18n/strings';
 import { CO_LENDERS, LENDERS, TRIPS, VICE_INFO, companyLoanBlocker, drugName, goToRehab, indulge, personalLoanBlocker, rehabCost, repayPersonalLoan, takeCompanyLoan, takePersonalLoan, takeTrip, toggleSmoking, tripBlocker, vices, type CoLenderId, type LenderId, type ViceId } from '../../sim/sys/vices';
 import { ownerOf } from '../../sim/sys/people/owner';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerTab } from '../registry';
 import { sharkNote27 } from '../../sim/sys/aud27/shark27'; // r27 AUD2
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
+import { rng19 } from '../../sim/rng19';
 const form = { lender: 'bank' as LenderId, amount: 5000 };
 
 export function vicesTab(s: GameState): HTMLElement {
@@ -31,8 +32,8 @@ export function vicesTab(s: GameState): HTMLElement {
         h('ul', { class: 'attr-list' }, (['smoke', 'drink', 'drugs'] as ViceId[]).map(depRow)),
         inRehab ? h('p', null, pill(t(l('na reabilitação', 'in rehab')), 'good'), ' ', t(l('até a semana {w}', 'until week {w}'), { w: v.rehab!.until })) : h('div', { class: 'row wrap' },
           h('button', { class: `btn small ${v.smoking ? 'primary' : ''}`, title: t(VICE_INFO.smoke.desc), onclick: () => say(toggleSmoking(s)) }, v.smoking ? t(l('Parar de fumar', 'Quit smoking')) : t(l('Fumar (hábito mensal)', 'Smoke (monthly habit)'))),
-          h('button', { class: 'btn small', title: t(VICE_INFO.drink.desc), onclick: () => say(indulge(s, rngOf(s), 'drink')) }, `${t(l('Sair para beber', 'Go drinking'))} (${$(money(s, VICE_INFO.drink.cost))})`),
-          s.config.contentFilters.includes('drugs') ? null : h('button', { class: 'btn small ghost', title: t(VICE_INFO.drugs.desc), onclick: () => { if (confirm(t(l('Usar {d}? Vicia rápido, pode dar polícia e manchete.', 'Use {d}? Highly addictive; police and headlines possible.'), { d: drugName(s.year) }))) say(indulge(s, rngOf(s), 'drugs')); } }, `${t(l('Usar', 'Use'))} ${t(drugName(s.year))} (${$(money(s, VICE_INFO.drugs.cost))})`),
+          h('button', { class: 'btn small', title: t(VICE_INFO.drink.desc), onclick: () => say(indulge(s, rng19(s, 'act'), 'drink')) }, `${t(l('Sair para beber', 'Go drinking'))} (${$(money(s, VICE_INFO.drink.cost))})`),
+          s.config.contentFilters.includes('drugs') ? null : h('button', { class: 'btn small ghost', title: t(VICE_INFO.drugs.desc), onclick: () => { if (confirm(t(l('Usar {d}? Vicia rápido, pode dar polícia e manchete.', 'Use {d}? Highly addictive; police and headlines possible.'), { d: drugName(s.year) }))) say(indulge(s, rng19(s, 'act'), 'drugs')); } }, `${t(l('Usar', 'Use'))} ${t(drugName(s.year))} (${$(money(s, VICE_INFO.drugs.cost))})`),
           h('button', { class: 'btn small', onclick: () => say(goToRehab(s), l('Reabilitação marcada.', 'Rehab booked.')) }, `${t(l('Reabilitação', 'Rehab'))} (${$(rehabCost(s))})`),
         ),
       ),
@@ -42,7 +43,7 @@ export function vicesTab(s: GameState): HTMLElement {
           const err = tripBlocker(s, tp.id);
           return h('div', { class: 'mg-dept' }, h('b', null, t(tp.name)), h('small', { class: 'muted' }, t(tp.desc)),
             h('small', null, `−${tp.stress} ${t(l('estresse', 'stress'))} · ${tp.health >= 0 ? '+' : ''}${tp.health} ${t(l('saúde', 'health'))}`),
-            h('button', { class: 'btn small', disabled: !!err, title: err ? t(err) : '', onclick: () => say(takeTrip(s, rngOf(s), tp.id), l('Boa viagem!', 'Have a good trip!')) }, `${t(l('Viajar', 'Travel'))} ${$(money(s, tp.cost))}`));
+            h('button', { class: 'btn small', disabled: !!err, title: err ? t(err) : '', onclick: () => say(takeTrip(s, rng19(s, 'act'), tp.id), l('Boa viagem!', 'Have a good trip!')) }, `${t(l('Viajar', 'Travel'))} ${$(money(s, tp.cost))}`));
         })),
         v.trips.length ? h('small', { class: 'muted' }, t(l('Já foi para: ', 'Been to: ')), [...new Set(v.trips.map((x) => t(TRIPS.find((tp) => tp.id === x.dest)?.name)))].join(', ')) : null,
       ),

@@ -5,7 +5,6 @@ import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs, recordSongs, scheduleRelease, availableFormats } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { buildPlant, pressCapacity } from '../src/sim/sys/industry/supply';
 import { hireDistributor, openStore, setCell } from '../src/sim/sys/industry/retail';
@@ -13,10 +12,11 @@ import { startResearch } from '../src/sim/sys/industry/research';
 import { joinBoard } from '../src/sim/sys/industry/corp';
 import { activeCombos, buyItem, swapRooms } from '../src/sim/sys/industry/hqedit';
 import type { GameState } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, over = {}) {
   const s = createGame(defaultConfig(seed, over));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 900_000_000_00;

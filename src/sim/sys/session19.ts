@@ -335,7 +335,7 @@ function becomeStar(s: GameState, a: Ace19, r: Rng): void {
 registerSimHook('month', 'session19', (s) => {
   if (s.year < 1925) return;
   ensureAces(s);
-  const r = rng19(s, 'ses19', () => Rng.fromSeed(`${s.config.seed}|ses19m|${s.week}`));
+  const r = rng19(s, 'ses19');
   playMonth(s);
   npcHits(s, r);
   documentaries(s, r);

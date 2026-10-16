@@ -21,11 +21,11 @@ import { choosePath18 } from '../src/sim/sys/paths18';
 import { P } from '../src/sim/sys/people/state';
 import { makeReport18 } from '../src/sim/sys/report18';
 import type { GameState, Release } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (y = 1990, over = {}) => createGame(defaultConfig('l19b', { startYear: y, ...over }));
-const myAct = (s: GameState) => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 30 }); a.owner = 'player'; return a; };
+const myAct = (s: GameState) => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 30 }); a.owner = 'player'; return a; };
 const rival = (s: GameState) => Object.values(s.labels).find((x) => x.active)!;
 const msgs = (s: GameState, k: string) => P(s).inbox.filter((m) => m.ref?.k18 === k);
 const fakeRel = (s: GameState, actId: string, o: Partial<Release> = {}) => ({ id: 'rx', actId, owner: 'player', week: s.week, year: s.year, title: 'X', songs: [], type: 'lp', ...o }) as unknown as Release;
@@ -85,7 +85,7 @@ describe('3. inteligência de rivais, pactos e traições', () => {
     emitFact(s, { kind: 'rival_intel', actors: [lb.id, a.id], severity: 20, tags: [], text: l('x', 'x') });
     const msg = msgs(s, 'l19b_intel')[0];
     expect(msg).toBeTruthy();
-    inboxKind18('l19b_intel')!.handle!(s, msg, 'pact', rngOf(s));
+    inboxKind18('l19b_intel')!.handle!(s, msg, 'pact', rng19(s, 'act'));
     expect(m.pact).toBeTruthy();
     expect(m.target).toBeUndefined();
     expect(conseq18('ib:l19b_intel:pact')?.later?.length).toBe(1);
@@ -103,7 +103,7 @@ describe('4/6. campus: moral, qualidade, atração; obra atrasada e seguro como 
     const c = campus18(s);
     c.built.dorm = { lot: 0, y: s.year, q: 1 }; c.built.store = { lot: 1, y: s.year, q: 1 };
     expect(campusScore19(s).v).toBeGreaterThanOrEqual(3);
-    const free = spawnProceduralAct(s, rngOf(s), {});
+    const free = spawnProceduralAct(s, rng19(s, 'act'), {});
     const mod = offerMods().find((x) => x.id === 'links19b:campus')!;
     expect(mod.fn(s, free, {} as never)!.delta).toBeGreaterThan(0);
     emitFact(s, { kind: 'campus_invest', actors: ['player'], severity: 20, tags: ['good', 'studio'], text: l('x', 'x') });

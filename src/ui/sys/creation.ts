@@ -11,7 +11,7 @@ import {
 } from '../../sim/sys/creation/core';
 import { songStatus } from '../../sim/repertoire';
 import type { GameState, Song } from '../../sim/types';
-import { hasTech, money, playerActs, rngOf } from '../../sim/util';
+import { hasTech, money, playerActs } from '../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { portraitDataUrl } from '../pixel/avatar';
@@ -25,6 +25,7 @@ import { quickChance29, quickPrice29 } from '../../sim/sys/featp29';
 import { featChips29, featPicker29 } from './featp29';
 import { fameText } from '../../sim/sys/fame15';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { recipeSong: '', featSong: '', featGuest: '', clipSong: '', commAct: '', featPersons: [] as string[], featQ: { v: '' } };
@@ -150,7 +151,7 @@ function partnersTab(s: GameState): HTMLElement {
         select(ui.featGuest, cands.map((a) => ({ value: a.id, label: `${a.name} (${fameText(s, a.id)}) · ${$(featureFee(s, a))}` })), (v) => { ui.featGuest = v; rerender(); }, { 'aria-label': t(l('Convidado', 'Guest')) }),
         h('button', { class: 'btn primary', disabled: !ui.featGuest, onclick: () => openFeatModal(s, { host: song.actId, song: ui.featSong, guest: ui.featGuest }) }, t(l('Negociar', 'Negotiate'))),
         h('button', { class: 'btn ghost', title: t(l('Convidar só um integrante, artista solo ou músico — sem a banda inteira.', 'Invite just a member, soloist or musician — not the whole band.')), onclick: () => openFeatModal(s, { host: song.actId, song: ui.featSong, mode: 'person' }) }, t(l('Pessoa específica…', 'Specific person…'))),
-        h('button', { class: 'btn ghost', disabled: !ui.featGuest, title: t(l('Convite rápido com o cachê de tabela, sem negociar.', 'Quick invite at the list fee, no negotiation.')), onclick: () => { toast(t(inviteFeature(s, rngOf(s), ui.featSong, ui.featGuest)), 'info'); rerender(); } }, t(l('Convite rápido', 'Quick invite')))) : h('p', { class: 'muted small' }, t(l('Precisa de uma música inédita.', 'You need an unreleased song.'))),
+        h('button', { class: 'btn ghost', disabled: !ui.featGuest, title: t(l('Convite rápido com o cachê de tabela, sem negociar.', 'Quick invite at the list fee, no negotiation.')), onclick: () => { toast(t(inviteFeature(s, rng19(s, 'act'), ui.featSong, ui.featGuest)), 'info'); rerender(); } }, t(l('Convite rápido', 'Quick invite')))) : h('p', { class: 'muted small' }, t(l('Precisa de uma música inédita.', 'You need an unreleased song.'))),
       song ? personQuick29(s, song) : null,
       h('p', { class: 'muted small' }, t(l('Convidados famosos e de outros gêneros trazem público novo. Selos rivais podem barrar.', 'Famous guests and other genres bring new audiences. Rival labels may block it.'))),
       st.features.length ? h('ul', { class: 'small' }, st.features.slice(-8).reverse().map((f) => h('li', null, `${s.songs[f.songId]?.title ?? '?'} + ${[s.acts[f.guestActId]?.name, ...(f.guestPersons ?? []).map((x) => s.persons[x]?.name)].filter(Boolean).join(' & ') || '?'} — `, pill(f.status === 'done' ? t(l('gravada', 'recorded')) : t(l('recusada', 'refused')), f.status === 'done' ? 'good' : 'bad')))) : null,
@@ -191,7 +192,7 @@ function catalogTab(s: GameState): HTMLElement {
   return h('div', null,
     section(t(l('Remasterização', 'Remastering')),
       opts.length ? h('p', { class: 'small' }, t(l('Tecnologias disponíveis: ', 'Available technologies: ')), opts.map((o) => t(o.name)).join(', ')) : h('p', { class: 'muted small' }, t(l('Remasterizar faz sentido quando chega uma tecnologia nova de som ou de formato.', 'Remastering makes sense when a new sound or format technology arrives.'))),
-      opts.length && mine.length ? h('ul', { class: 'small' }, mine.map((r) => h('li', null, `${r.title} (${r.year}) · ${N(r.totalUnits)} `, h('button', { class: 'btn small', onclick: () => say(remaster(s, rngOf(s), r.id), l('Remaster programado.', 'Remaster scheduled.')) }, t(l('Remasterizar e relançar', 'Remaster and reissue')))))) : null,
+      opts.length && mine.length ? h('ul', { class: 'small' }, mine.map((r) => h('li', null, `${r.title} (${r.year}) · ${N(r.totalUnits)} `, h('button', { class: 'btn small', onclick: () => say(remaster(s, rng19(s, 'act'), r.id), l('Remaster programado.', 'Remaster scheduled.')) }, t(l('Remasterizar e relançar', 'Remaster and reissue')))))) : null,
     ),
     section(t(l('Standards e domínio público', 'Standards and public domain')),
       h('p', { class: 'muted small' }, t(l('Clássicos regravados por gerações. Em domínio público, regravar não paga autor e o público reconhece.', 'Classics recorded by generation after generation. In the public domain, covers pay no songwriter and audiences recognize them.'))),
@@ -313,7 +314,7 @@ function openClipEditor(s: GameState, songId: string): void {
       cost.textContent = `${t(l('Custo', 'Cost'))}: ${$(money(s, budget * 1500))} · ${t(l('variedade', 'variety'))} ${new Set(picked).size}/6`;
     };
     setTimeout(paint, 0);
-    const done = (shots: string[]) => { const e = shootClip(s, rngOf(s), songId, shots); toast(t(e ?? l('Clipe gravado! Ele vai ajudar o lançamento.', 'Video shot! It will help the release.')), e ? 'warn' : 'good'); close(); rerender(); };
+    const done = (shots: string[]) => { const e = shootClip(s, rng19(s, 'act'), songId, shots); toast(t(e ?? l('Clipe gravado! Ele vai ajudar o lançamento.', 'Video shot! It will help the release.')), e ? 'warn' : 'good'); close(); rerender(); };
     return h('div', null,
       h('p', { class: 'muted small' }, t(l('Escolha 6 planos. Variedade e planos ousados podem virar lenda — ou fiasco.', 'Pick 6 shots. Variety and bold shots may become legend — or a flop.'))),
       board, cost,
@@ -333,7 +334,7 @@ function openViral(s: GameState, songId: string): void {
     const bar = h('div', { class: 'cr-wave', role: 'img', 'aria-label': t(l('Forma de onda da música', 'Song waveform')) });
     const paint = () => bar.replaceChildren(...Array.from({ length: 60 }, (_, i) => h('i', { class: i >= start * 0.6 && i < start * 0.6 + 9 ? 'on' : '', style: `height:${20 + Math.round(40 * Math.abs(Math.sin(i * 0.7 + songId.length)))}%` })));
     setTimeout(paint, 0);
-    const run = () => { toast(t(viralPush(s, rngOf(s), songId, start, challenge)), 'info'); close(); rerender(); };
+    const run = () => { toast(t(viralPush(s, rng19(s, 'act'), songId, start, challenge)), 'info'); close(); rerender(); };
     return h('div', null,
       h('p', { class: 'muted small' }, t(l('Escolha os 15 segundos e o tipo de desafio. O refrão costuma estar entre 35% e 55% da música.', 'Pick the 15 seconds and the challenge type. The chorus usually sits between 35% and 55% of the song.'))),
       bar,

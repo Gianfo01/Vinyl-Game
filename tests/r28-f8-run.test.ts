@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { facts17 } from '../src/sim/facts17';
 import type { Act, GameState } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { advanceMonth } from '../src/sim/tick';
 import { ASSIST_EV28 } from '../src/sim/events';
@@ -20,9 +19,10 @@ import { festFee28, festMonth28, stakeValue28 } from '../src/sim/sys/shared28';
 import { sh18, type Ven18 } from '../src/sim/sys/shared18';
 import { buildings18 } from '../src/sim/sys/campus18';
 import { valuation17 } from '../src/sim/sys/sale17';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (seed: string, y = 1985, sc = 'established'): GameState => { const c = defaultConfig(seed, { startYear: y, scenario: sc } as Parameters<typeof defaultConfig>[1]); (c as { dbSize?: string }).dbSize = 'small'; return createGame(c); };
-const myAct = (s: GameState): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 50 }); a.owner = 'player'; a.fame = 50; return a; };
+const myAct = (s: GameState): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 50 }); a.owner = 'player'; a.fame = 50; return a; };
 
 describe('r28 F8 — Mestre das cadeias', () => {
   it('cadeia parada além do limite recebe ajuda pelo sistema dono; sem ajuda antes do limite; estado no save', () => {

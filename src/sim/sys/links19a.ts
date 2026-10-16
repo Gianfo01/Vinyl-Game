@@ -13,7 +13,7 @@
 //  region   fandom19 (fãs por região) → demanda de ingressos (cityDemand) e renda dos circuitos18; base nova numa
 //           região vira fato fan_region (I12/I23).
 
-import { clamp, Rng } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { CIRCS18, subById18 } from '../../data/regions18';
 import { countryOfCity } from '../../data/geo';
 import { cityById, MARKETS, l, type L } from '../../data/world';
@@ -278,7 +278,7 @@ function festMonth(s: GameState): void {
     if (!ed.disaster) continue;
     const F18 = ff18(s, f);
     const o = tragedyOdds19(s, ed.attendance, ed.capacity, F18.permit, ed.safety);
-    const r = rng19(s, 'links19a', () => Rng.fromSeed(`${s.config.seed}|l19a|${f.id}|${ed.year}`));
+    const r = rng19(s, 'links19a');
     const sev = r.chance(o.p) ? 3 : 2;
     const city = cityById[f.cityId]?.name ?? l(f.cityId, f.cityId);
     const text = sev === 3

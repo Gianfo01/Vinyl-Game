@@ -8,13 +8,13 @@ import { t } from '../../../i18n/strings';
 import { P } from '../../../sim/sys/people/state';
 import { CARD_INFO, autoNegotiate, cardAvailable, closeNegotiation, negBlocked, playCard, propose, startNegotiation, type CardId } from '../../../sim/sys/people/negotiation';
 import type { GameState } from '../../../sim/types';
-import { rngOf } from '../../../sim/util';
 import { $, rerender, toast } from '../../common';
 import { h } from '../../dom';
 import { openScene } from '../../registry';
 import { meter } from '../../vis';
 import { promTermsText28 } from '../promises28';
 import { PROM28_GOAL } from '../../../sim/sys/promises28';
+import { rng19 } from '../../../sim/rng19';
 
 export function negotiateButton(s: GameState, actId: string, mode: 'sign' | 'renew', label?: string): HTMLElement {
   const blocked = negBlocked(s, actId, mode);
@@ -83,7 +83,7 @@ export function openNegotiation(s: GameState, actId: string, mode: 'sign' | 'ren
                 h('button', { class: 'btn ghost', onclick: () => { P(s).neg = null; const res = autoNegotiate(s, actId, mode); toast(t(res)); close(); rerender(); } }, t(l('Resolver automático', 'Auto-resolve'))),
               ),
               h('h4', null, t(l('Cartas de argumento', 'Argument cards'))),
-              h('div', { class: 'ppl-cards' }, (Object.keys(CARD_INFO) as CardId[]).map((c) => h('button', { disabled: !cardAvailable(s, cur, c), onclick: () => { playCard(s, rngOf(s), c); draw(); } }, h('b', null, t(CARD_INFO[c].name)), h('small', null, t(CARD_INFO[c].desc)),
+              h('div', { class: 'ppl-cards' }, (Object.keys(CARD_INFO) as CardId[]).map((c) => h('button', { disabled: !cardAvailable(s, cur, c), onclick: () => { playCard(s, rng19(s, 'act'), c); draw(); } }, h('b', null, t(CARD_INFO[c].name)), h('small', null, t(CARD_INFO[c].desc)),
                 // r28 (fase 5): a carta de promessa mostra os termos que ela cria (verba · prazo · multa), como na mesa r27
                 c === 'promise' && act ? h('small', { class: 'prom28-terms' }, promTermsText28(s, act, 'tour', cur.ask.months)) : null))),
               cur.usedCards.includes('promise') && act ? promNote(cur.ask.months) : null,

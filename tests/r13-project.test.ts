@@ -9,14 +9,15 @@ import { costFactor, gradeDefect, matAvailable, matTarget, setGrade, sup13 } fro
 import { createProject, type MusicProject } from '../src/sim/sys/project8';
 import { commitProject, planOf12 } from '../src/sim/sys/project12';
 import { DEFAULT13, blendOf, block13, commit13, factors13, planOf13, preview13 } from '../src/sim/sys/project13';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import type { FormatId } from '../src/data/rules';
+import { rng19 } from '../src/sim/rng19';
 
 function setup(seed: string) {
   const s = createGame(defaultConfig(seed, { scenario: 'emerging' }));
   const act = s.acts[playerActs(s)[0]];
-  composeSongs(s, rngOf(s), act, 3);
+  composeSongs(s, rng19(s, 'act'), act, 3);
   return { s, act };
 }
 
@@ -73,6 +74,6 @@ describe('projeto musical (rodada 13)', () => {
     const dl2 = planOf12(s, p)!.deadline;
     commit13(s, p, pl);
     expect(planOf12(s, p)!.deadline).toBe(dl2);
-    runSimHooks('week', s, rngOf(s));
+    runSimHooks('week', s, rng19(s, 'act'));
   });
 });

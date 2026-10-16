@@ -7,15 +7,16 @@ import { composeSongs } from '../src/sim/production';
 import { createProject, type MusicProject } from '../src/sim/sys/project8';
 import { chooseNext, commitProject, planOf12, problemOptions, resolveProblem } from '../src/sim/sys/project12';
 import { focusIdeal, studioContext } from '../src/sim/sys/recipe12';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import type { Release } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 function setup(seed: string) {
   const s = createGame(defaultConfig(seed, { scenario: 'emerging' }));
   const act = s.acts[playerActs(s)[0]];
   for (const id of act.songs) if (!s.songs[id].releaseId) s.songs[id].vault = true;
-  composeSongs(s, rngOf(s), act, 3);
+  composeSongs(s, rng19(s, 'act'), act, 3);
   return { s, act };
 }
 
@@ -30,7 +31,7 @@ describe('projeto musical (rodada 12)', () => {
     expect(p.budget).toBeGreaterThan(0);
     // prazo vencido → problema de atraso com três saídas
     pl.deadline = s.week;
-    runSimHooks('week', s, rngOf(s));
+    runSimHooks('week', s, rng19(s, 'act'));
     expect(pl.problem?.kind).toBe('late');
     expect(problemOptions(s, p).map((o) => o.id)).toEqual(['cut', 'outside', 'delay']);
     const mom = act.momentum;

@@ -8,7 +8,6 @@ import { composeSongs, recordSongs } from '../src/sim/production';
 import { releaseSingle } from '../src/sim/repertoire';
 import { advanceMonth } from '../src/sim/tick';
 import { applyMods } from '../src/sim/ext4';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { sc, findScene } from '../src/sim/sys/scenes';
 import { awardSpeech, awardsYear } from '../src/sim/sys/scenes/awards';
@@ -21,10 +20,11 @@ import { resolveVignette, vignetteOnShow } from '../src/sim/sys/scenes/tour';
 import { factoryOvertime, fairChoice, fairMonth, shortageWeek } from '../src/sim/sys/scenes/life';
 import type { GameState } from '../src/sim/types';
 import type { Cutscene } from '../src/sim/ext4';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, year = 1965) {
   const s = createGame(defaultConfig(seed, { startYear: year }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame: 30 });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 50_000_000_00;
@@ -54,7 +54,7 @@ describe('cenas: estado e determinismo', () => {
 describe('premiação', () => {
   it('monta indicados, revela o vencedor e aplica o discurso uma vez', () => {
     const { s, act } = withAct('scn-aw');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const rel = relOf(s, act.id);
     s.awards.push({ year: s.year, category: 'record', releaseId: rel?.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
     cer8(s).noms = { year: s.year, cats: { record: [rel.id] } }; // r19: a cerimônia usa os indicados oficiais
@@ -73,7 +73,7 @@ describe('premiação', () => {
 
   it('discurso político deixa o ato na mira e provocação esquenta a rivalidade', () => {
     const { s, act } = withAct('scn-aw2');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     // r19: só há cerimônia com indicado oficial; o discurso vem de uma categoria dos Gramófonos que você ganhou
     const rel = relOf(s, act.id);
     s.awards.push({ year: s.year, category: 'album', releaseId: rel.id, actId: act.id, name: `${act.name} — x`, byPlayer: true });
@@ -90,7 +90,7 @@ describe('entrevista', () => {
     const q = { topic: 'release' as const, text: { pt: '', en: '' }, ideal: 'sincere' as const, risky: 'evasive' as const };
     expect(toneEffect(q, 'sincere').img).toBeGreaterThan(toneEffect(q, 'evasive').img);
     const { s, act } = withAct('scn-iv');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const cs = startInterview(s, r, act.id) as Cutscene;
     expect(cs.kind).toBe('interview');
     expect(typeof startInterview(s, r, act.id)).toBe('object'); // cooldown devolve L
@@ -112,7 +112,7 @@ describe('entrevista', () => {
 describe('rádio', () => {
   it('disco certo dá impulso de apelo que aparece nos modificadores', () => {
     const { s, act } = withAct('scn-radio');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const songs = composeSongs(s, r, act, 1);
     recordSongs(s, r, act, [songs[0].id], 1, 'balanced');
     expect(releaseSingle(s, r, songs[0].id)).toBeNull();
@@ -139,7 +139,7 @@ describe('rádio', () => {
 describe('tribunal e conselho', () => {
   it('audiência com perito melhora as chances; recurso cobra taxa', () => {
     const { s, act } = withAct('scn-court');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const suit = fileLawsuit(s, { kind: 'plagiarism', plaintiff: 'X', defendant: 'player', actId: act.id, claim: 1_000_00, odds: 0.4, text: { pt: 'p', en: 'p' } });
     suit.stage = 'trial';
     courtWeek(s);
@@ -159,7 +159,7 @@ describe('tribunal e conselho', () => {
 
   it('assembleia anual vota propostas', () => {
     const { s } = withAct('scn-agm', 1975);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     s.player.hq = 3;
     s.player.revenueByYear[s.year] = 5_000_000_00;
     expect(goPublic(s)).toBeNull();
@@ -177,13 +177,13 @@ describe('turnê, feira e fábrica', () => {
     let tries = 0;
     while (!last(s, 'vignette') && tries < 400) {
       s.week += 7;
-      vignetteOnShow(s, rngOf(s), { actId: act.id, cityId: s.config.homeCity, sold: 100, capacity: 200, revenue: 0, tourId: `t${tries}` });
+      vignetteOnShow(s, rng19(s, 'act'), { actId: act.id, cityId: s.config.homeCity, sold: 100, capacity: 200, revenue: 0, tourId: `t${tries}` });
       tries += 1;
     }
     const cs = last(s, 'vignette')!;
     expect(cs).toBeTruthy();
     const opt = cs.data.vkind === 'hotel' ? 'charge' : cs.data.vkind === 'bus' ? 'rest' : 'grant';
-    resolveVignette(s, rngOf(s), cs.id, opt);
+    resolveVignette(s, rng19(s, 'act'), cs.id, opt);
     expect(findScene(s, cs.id)!.data.done).toBe(true);
     invariant(s);
   });
@@ -193,9 +193,9 @@ describe('turnê, feira e fábrica', () => {
     s.month = 1;
     fairMonth(s);
     const f = last(s, 'fair')!;
-    fairChoice(s, rngOf(s), f.id, 'medium');
+    fairChoice(s, rng19(s, 'act'), f.id, 'medium');
     expect(sc(s).stats.fairs).toBe(1);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const songs = composeSongs(s, r, act, 1);
     recordSongs(s, r, act, [songs[0].id], 1, 'balanced');
     releaseSingle(s, r, songs[0].id);

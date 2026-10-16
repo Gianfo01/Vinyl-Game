@@ -13,12 +13,12 @@ import { applyWorld17 } from '../src/sim/start17';
 import { addStress } from '../src/sim/stress17';
 import { advanceMonth, advanceWeek } from '../src/sim/tick';
 import type { GameState } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { careerActs29, exMembers29 } from '../src/sim/sys/connect29';
 import { renewChance } from '../src/sim/sys/explain12';
 import { hq6 } from '../src/sim/sys/hq6';
 import { canonKey, rw } from '../src/sim/sys/realworld';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (seed: string, year: number, world: string): GameState => { const c = defaultConfig(seed, { startYear: year }); applyWorld17(c, world); return createGame(c); };
 const BAD = ['R1', 'R2c', 'R2a', 'R2t', 'R3', 'R6', 'R7', 'R8', 'R9'];
@@ -61,7 +61,7 @@ describe('R29 — pessoa ↔ ato ↔ biografia ↔ formação', () => {
 describe('R29 — arestas de mecanismo (A × B)', () => {
   const base = () => {
     const s = createGame(defaultConfig('r29m', { startYear: 1985, realNames: true }));
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
     acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
     s.player.cash += 50_000_000_00;

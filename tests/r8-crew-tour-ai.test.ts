@@ -8,20 +8,20 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { applyMods } from '../src/sim/ext4';
 import { advanceMonth } from '../src/sim/tick';
 import type { GameState, Release, RunConfig, Song } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, genStaff, spawnProceduralAct } from '../src/sim/worldgen';
 import { chemistry, crew, crewMonth, crewSongDelta, influence, matchPoach, profileOf } from '../src/sim/sys/crew8';
 import { bookRoutedTour, negotiateTour, route, routeLegs, suggestRoute, type DealTerms } from '../src/sim/sys/route8';
 import {
   acceptAiOffer, ai, aiAppealMult, aiMonth, applyCert, askConsent, certBlocker, checkBlocks, consentChance, lawLevel, lobby, makeOffer, scaleIncome, setUse,
 } from '../src/sim/sys/consent8';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const rich = (s: GameState) => { s.player.cash += 500_000_000; s.player.initialCash += 500_000_000; };
 
 function setup(seed: string, over: Partial<RunConfig> = {}, fame = 40) {
   const s = createGame(defaultConfig(seed, over));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   act.fans = { casual: 300000, active: 50000, core: 10000 };

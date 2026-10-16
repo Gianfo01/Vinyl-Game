@@ -11,13 +11,14 @@ import { COMBOS, ROOM_ITEMS, activeCombos, buyItem, effectiveRooms, swapRooms } 
 import { ROOM_NAMES } from '../pixel/scene';
 import type { PriceTier, StoreCell } from '../../sim/sys/industry/state';
 import type { GameState } from '../../sim/types';
-import { hasTech, money, playerActs, rngOf } from '../../sim/util';
+import { hasTech, money, playerActs } from '../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerArea, registerSection } from '../registry';
 import { chips, ic, meter, stat, tabs, tile } from '../vis';
 import './industry.css';
 import { materialsSection } from './industry13';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { plantCity: '', storeCity: '', distMarket: 'na' as MarketId, outletKind: 'radio' as 'radio' | 'tv' | 'magazine', outletMarket: 'na' as MarketId, storeSel: '', cellPick: 'shelf' as StoreCell, swapA: '', swapB: '' };
@@ -94,7 +95,7 @@ function distributionTab(s: GameState): HTMLElement {
       h('div', { class: 'tile-ic' }, ic('money', 2)), h('div', { class: 'tile-body' }, h('b', null, t(PRICE_TIERS[p].name)), h('small', null, t(PRICE_TIERS[p].desc)), h('small', { class: 'muted' }, `${t(l('cópias', 'copies'))} ×${PRICE_TIERS[p].units} · ${t(l('receita por cópia', 'revenue per copy'))} ${PRICE_TIERS[p].revenue >= 0 ? '+' : ''}${Math.round(PRICE_TIERS[p].revenue * 100)}%`)))))),
     section(t(l('Distribuidores independentes', 'Independent distributors')),
       st.distributors.length ? h('ul', { class: 'small' }, st.distributors.map((d) => h('li', null, `${d.name} · ${t(MARKETS.find((m) => m.id === d.market)!.name)} · ${N(d.stores)} ${t(l('lojas', 'stores'))} · ${Math.round(d.commission * 100)}% `, h('button', { class: 'btn small ghost', onclick: () => { fireDistributor(s, d.id); rerender(); } }, t(l('Encerrar', 'End')))))) : null,
-      h('div', { class: 'row wrap' }, marketSelect(ui.distMarket, (v) => { ui.distMarket = v; }), h('button', { class: 'btn', onclick: () => say(hireDistributor(s, rngOf(s), ui.distMarket), l('Distribuidor contratado.', 'Distributor hired.')) }, t(l('Contratar distribuidor', 'Hire distributor')))),
+      h('div', { class: 'row wrap' }, marketSelect(ui.distMarket, (v) => { ui.distMarket = v; }), h('button', { class: 'btn', onclick: () => say(hireDistributor(s, rng19(s, 'act'), ui.distMarket), l('Distribuidor contratado.', 'Distributor hired.')) }, t(l('Contratar distribuidor', 'Hire distributor')))),
       h('p', { class: 'muted small' }, t(l('Cada distribuidor cobra comissão sobre as vendas, mas coloca seus discos em mais lojas do mercado e abre o território.', 'Each distributor takes a commission on sales but puts your records in more stores and opens the territory.'))),
     ),
     section(t(l('Equipe de rua', 'Street team')), h('table', { class: 'tbl compact' }, h('tbody', null, MARKETS.map((m) => h('tr', null, h('td', null, t(m.name)),
@@ -158,7 +159,7 @@ function boardTab(s: GameState): HTMLElement {
   const b = s.x4.industry.board;
   if (!b.active) return section(t(l('Conselho e investidores', 'Board and investors')),
     h('p', null, t(l('Venda uma participação a investidores: entra um aporte agora, e um conselho passa a cobrar metas anuais (lucro, lançamentos, hits ou prêmios). Três anos ruins e você é demitido.', 'Sell a stake to investors: you get cash now, and a board starts setting annual goals (profit, releases, hits or awards). Three bad years and you are fired.'))),
-    h('button', { class: 'btn primary', onclick: () => say(joinBoard(s, rngOf(s)), l('Investidores a bordo.', 'Investors on board.')) }, `${t(l('Aceitar investidores', 'Accept investors'))} (+${$(money(s, 400000))})`));
+    h('button', { class: 'btn primary', onclick: () => say(joinBoard(s, rng19(s, 'act')), l('Investidores a bordo.', 'Investors on board.')) }, `${t(l('Aceitar investidores', 'Accept investors'))} (+${$(money(s, 400000))})`));
   return section(t(l('Conselho', 'Board')),
     chips(meter('heart', l('Satisfação', 'Satisfaction'), b.satisfaction), stat('warning', `${b.warnings}/3`, l('Avisos', 'Warnings')), stat('money', $(b.bonusPaid), l('Bônus recebidos', 'Bonuses received'))),
     h('h4', null, `${t(l('Metas de', 'Goals for'))} ${b.year || s.year}`),

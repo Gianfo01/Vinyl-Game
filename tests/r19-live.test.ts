@@ -6,7 +6,6 @@ import { emitFact, factListeners19, recentFacts } from '../src/sim/facts17';
 import { fandomRec19 } from '../src/sim/fandom19';
 import { calendar19 } from '../src/sim/calendar19';
 import { explain18 } from '../src/sim/explain18';
-import { rngOf } from '../src/sim/util';
 import { P } from '../src/sim/sys/people/state';
 import { GIANT19, giant18 } from '../src/sim/sys/live18';
 import { crime17 } from '../src/sim/sys/crime17';
@@ -17,6 +16,7 @@ import { activeBoy19, freeFest19, hearing19, liveMonth19, lv19, rsdPick19, seaso
 import { answerCrisis19, ch19, crisis19, npcShow19, stage19 } from '../src/sim/sys/charity19';
 import { ctPick19, ctNow19, final19 } from '../src/sim/sys/contests19';
 import type { Act, GameState, Release } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const facts = (s: GameState, k: string) => recentFacts(s, { kind: k, months: 600 });
 function game(y: number, seed: string, mode: 'loose' | 'strict' = 'loose'): GameState {
@@ -25,8 +25,8 @@ function game(y: number, seed: string, mode: 'loose' | 'strict' = 'loose'): Game
   s.player.cash += 5e8;
   return s;
 }
-const myAct = (s: GameState, fame = 60): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame }); a.owner = 'player'; a.status = 'active'; a.fans.core = 2000; a.fans.active = 5000; a.fans.casual = 20000; return a; };
-const npcAct = (s: GameState, lb: string): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 55 }); a.owner = lb; a.status = 'active'; return a; };
+const myAct = (s: GameState, fame = 60): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame }); a.owner = 'player'; a.status = 'active'; a.fans.core = 2000; a.fans.active = 5000; a.fans.casual = 20000; return a; };
+const npcAct = (s: GameState, lb: string): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 55 }); a.owner = lb; a.status = 'active'; return a; };
 function rel(s: GameState, a: Act, year: number): Release {
   const r: Release = { id: `rl-${a.id}-${year}`, actId: a.id, owner: 'player', type: 'lp', title: `Disco de ${year}`, songs: a.songs.slice(0, 1), week: 0, year, q: 70, appeal: 30,
     formats: [], stock: 0, pressed: 0, marketing: [], marketingE: 0, territories: ['na'], weekly: [], totalUnits: 200000, revenue: 0, peak: 3, weeksOnChart: 0, lastPos: 0, coverSeed: 1, shortage: 0, live: false };

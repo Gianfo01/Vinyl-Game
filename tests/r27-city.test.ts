@@ -14,6 +14,7 @@ import {
 import { plan27, shellOf27 } from '../src/ui/ps/hqpx27';
 import { hasBespoke27 } from '../src/ui/pixel/lmiso27';
 import { liftSign27, type SaleSign27 } from '../src/ui/pixel/campus18px';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (city: string, year: number, seed = 'r27') => {
   const cfg = defaultConfig(`${seed}-${city}-${year}`, { scenario: 'established', startYear: year, homeCity: city });
@@ -180,9 +181,9 @@ describe('r27 vizinhos e painel', () => {
   it('não mexe no estado nem no sorteio', () => {
     const g = game('new_york', 2005);
     g.player.cash += 1e9;
-    const rng = JSON.stringify(g.rng), cash = g.player.cash;
+    const rng = rngSnapshot19(g), cash = g.player.cash;
     bldVis27(g); forSale27(g); life27(g); nbInfo27(g); panel27(g, 'hq');
-    expect(JSON.stringify(g.rng)).toBe(rng);
+    expect(rngSnapshot19(g)).toBe(rng);
     expect(g.player.cash).toBe(cash);
   });
 });

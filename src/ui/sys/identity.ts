@@ -10,12 +10,13 @@ import {
   type ProfileId,
 } from '../../sim/sys/identity';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { bar, h } from '../dom';
 import { registerArea, registerSection } from '../registry';
 import { store } from '../store';
 import { ic, tabs } from '../vis';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null) => { if (e) toast(t(e), 'bad'); rerender(); };
 const list = (items: L[], cls = '') => h('ul', { class: `small ${cls}` }, items.map((x) => h('li', null, t(x))));
@@ -71,7 +72,7 @@ function identityTab(s: GameState): HTMLElement {
           return h('div', { class: `idt-action ${mine ? '' : 'muted'}`, style: 'margin-bottom:0.6rem' },
             h('b', null, t(a.name)), ' ', h('small', { class: 'muted' }, `(${t(profileById[a.profile].name)})`),
             h('div', { class: 'small' }, t(a.desc)),
-            h('button', { class: `btn small ${mine ? 'primary' : 'ghost'}`, disabled: !!block, title: block ? t(block) : '', onclick: () => say(runProfileAction(s, rngOf(s), a.id)) },
+            h('button', { class: `btn small ${mine ? 'primary' : 'ghost'}`, disabled: !!block, title: block ? t(block) : '', onclick: () => say(runProfileAction(s, rng19(s, 'act'), a.id)) },
               a.cost ? `${t(l('Fazer', 'Do it'))} (${$(money(s, a.cost))})` : t(l('Fazer', 'Do it'))),
             block && mine ? h('div', { class: 'muted small' }, t(block)) : null);
         }),

@@ -26,6 +26,7 @@ import { l } from '../data/world';
 import { takeoverTerms, type TakeoverTerms } from './takeover';
 import { runSimHooks } from './ext4';
 import { LB29, labelsOn29 } from './labels29gate'; // r29: gravadoras escolhidas na Nova run
+import { RNG_VERSION19, rng19 } from './rng19';
 
 export const SAVE_VERSION = 6;
 /** r27 (F): modelo histórico novo (passagens, laços com período, apelidos, composição, procedência) — saves anteriores
@@ -313,8 +314,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     version: SAVE_VERSION,
     config: cfg,
     signature: runSignature(cfg.seed, cfg.startYear),
-    rng: seedState(cfg.seed),
-    rngVersion: 19,
+    rngVersion: RNG_VERSION19,
     week: 0,
     day: startDay,
     year: cfg.startYear,
@@ -377,7 +377,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   };
   registerMovementGenres(s);
   s.day = dayOfDate(cfg.startYear, cfg.startYear, 0);
-  const r = new Rng(s.rng);
+  const r = rng19(s, 'world'); // r31: geração do mundo inicial no fluxo próprio (o fluxo único s.rng saiu)
 
   // L1 — mundo
   const tech = genTechDates(cfg, r);

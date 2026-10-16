@@ -446,7 +446,7 @@ export function deliverJunk19(s: GameState, actId: string): L | null {
   if (cool(s, `djunk:${a.id}`)) return l('Você acabou de entregar um: espere.', 'You just delivered one: wait.');
   setCd(s, `djunk:${a.id}`, 26);
   k.releasesDone += 1;
-  const r = rng19(s, 'mb19', () => Rng.fromSeed(`${s.config.seed}|mb19dj|${s.week}`));
+  const r = rng19(s, 'mb19');
   const x = r.next();
   if (x < lb.aggression / 160) {
     const c = money(s, 4000 + a.fame * 200);
@@ -584,7 +584,7 @@ function chronMonth(s: GameState): void {
 
 // ---------------------------------------------------------------- mês
 registerSimHook('month', 'moneyb19', (s) => {
-  const r = rng19(s, 'mb19', () => Rng.fromSeed(`${s.config.seed}|mb19m|${s.week}`));
+  const r = rng19(s, 'mb19');
   chronMonth(s);
   overrides(s);
   mgrMonth(s, r);

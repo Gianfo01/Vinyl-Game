@@ -53,7 +53,7 @@ export function lv19(s: GameState): Live19 {
 }
 const cnt = (s: GameState, k: string) => { const n = lv19(s).n; n[k] = (n[k] ?? 0) + 1; };
 export const logL19 = (s: GameState, t: L) => { const st = lv19(s); st.log.unshift([s.year, s.month, t]); if (st.log.length > 40) st.log.length = 40; };
-const rng = (s: GameState) => rng19(s, 'live19', () => Rng.fromSeed(`${s.config.seed}|live19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'live19');
 const mine = (s: GameState, a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
 const npc = (a: Act): boolean => a.owner !== 'player' && !a.playerBand;
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;

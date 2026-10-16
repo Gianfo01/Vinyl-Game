@@ -16,8 +16,9 @@ import { actBond, actTies, bump, social, tieOf } from '../src/sim/sys/social8';
 import { acceptFeatCounter, fairFeat, featSongs, feats, npcInvite, proposeFeat } from '../src/sim/sys/feats8';
 import { composeSongs } from '../src/sim/production';
 import { perk } from '../src/sim/perks';
-import { rngOf, playerActs, post } from '../src/sim/util';
+import { playerActs, post } from '../src/sim/util';
 import type { GameState, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
@@ -25,7 +26,7 @@ const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultCo
 describe('herdeiros', () => {
   it('morte com filho adulto: a escolha vai para a mesa e o herdeiro assume com patrimônio taxado', () => {
     const s = mk('r8-heir', { startYear: 1975 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const o = ownerOf(s);
     o.kids.push({ name: 'Herdeira Um', born: s.year - 30, aptitude: 70 }, { name: 'Herdeiro Dois', born: s.year - 24, aptitude: 40 });
     o.wealth = 1_000_000_00;
@@ -57,7 +58,7 @@ describe('herdeiros', () => {
 
   it('aposentadoria passa o selo ao cônjuge; sem herdeiros, aposentar ou morrer encerra a run', () => {
     const s = mk('r8-retire', { startYear: 1990 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     life(s).partner = { name: 'Par Teste', born: s.year - 40, job: { pt: 'x', en: 'x' }, trait: 'kind', affinity: 70, since: s.year - 10, stage: 'married', lastDate: s.week };
     expect(retireOwner(s, r, 'spouse')).toBeNull();
     expect(ownerOf(s).name).toBe('Par Teste');
@@ -69,15 +70,15 @@ describe('herdeiros', () => {
     o2.spouse = undefined;
     life(s2).partner = null;
     expect(heirCandidates(s2).length).toBe(0);
-    expect(retireOwner(s2, rngOf(s2))).not.toBeNull();
+    expect(retireOwner(s2, rng19(s2, 'act'))).not.toBeNull();
     expect(s2.ended).toBeFalsy();
-    expect(retireOwner(s2, rngOf(s2), 'none')).toBeNull();
+    expect(retireOwner(s2, rng19(s2, 'act'), 'none')).toBeNull();
     expect(s2.ended?.ending).toBe('quiet_retirement');
     const s3 = mk('r8-death', { startYear: 1990 });
     ownerOf(s3).kids = [];
     life(s3).partner = null;
     ownerOf(s3).spouse = undefined;
-    beginSuccession(s3, rngOf(s3), 'death');
+    beginSuccession(s3, rng19(s3, 'act'), 'death');
     expect(s3.ended?.ending).toBe('end_of_line');
   });
 
@@ -85,7 +86,7 @@ describe('herdeiros', () => {
     const s = mk('r8-auto', { startYear: 1980 });
     const o = ownerOf(s);
     o.kids.push({ name: 'Filha Apta', born: s.year - 35, aptitude: 90 });
-    beginSuccession(s, rngOf(s), 'health');
+    beginSuccession(s, rng19(s, 'act'), 'health');
     expect(heirs(s).pending).toBeTruthy();
     advanceWeek(s); // abre o mês: decisões vencidas seguem o padrão
     advanceMonth(s);
@@ -99,7 +100,7 @@ describe('participações em selos rivais', () => {
     const s = mk(seed, { startYear: 1985 });
     post(s, 'teste:aporte', 500_000_000_00, 'financing', 'Aporte de teste'); // caixa sempre pelo extrato
     const lb = Object.values(s.labels).filter((x) => x.active && x.roster.length > 0).sort((a, b) => a.cash - b.cash)[0];
-    return { s, lb, r: rngOf(s) };
+    return { s, lb, r: rng19(s, 'act') };
   };
 
   it('negociação com resposta: preço generoso fecha, a fatia entra e o caixa respeita o extrato', () => {
@@ -188,7 +189,7 @@ describe('feats negociados', () => {
   it('convite com resposta na hora: aceita, contraproposta ou recusa; o caixa fica certo', () => {
     const s = mk('r8-feat', { startYear: 1995, role: 'artist' });
     post(s, 'teste:aporte', 50_000_000_00, 'financing', 'Aporte de teste');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const host = playerActs(s).map((id) => s.acts[id]).find((a) => a.members.length)!;
     composeSongs(s, r, host, 3);
     const songs = featSongs(s, host.id);
@@ -218,7 +219,7 @@ describe('feats negociados', () => {
 
   it('convites de fora chegam na caixa de entrada e podem ser aceitos', () => {
     const s = mk('r8-invite', { startYear: 2000, role: 'artist' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const guest = playerActs(s).map((id) => s.acts[id]).find((a) => a.members.length)!;
     expect(npcInvite(s, r, guest.id)).toBe(true);
     const msg = P(s).inbox.find((m) => m.ref?.sys === 'feat8' && !m.resolved)!;

@@ -21,7 +21,7 @@ import { addStress, stressOf } from './stress17';
 import { advanceWeek } from './tick';
 import { cityDemand } from './tours';
 import type { Act, GameState, Release } from './types';
-import { money, rngOf, staffSkill } from './util';
+import { money, staffSkill } from './util';
 import { monthlyCosts } from './economy';
 import { createGame, spawnProceduralAct } from './worldgen';
 import { criticScore } from './relinfo';
@@ -39,6 +39,7 @@ import { cityById } from '../data/world';
 import { runSimHooks } from './ext4';
 import { channels27, setPlan27, startCamp27, targets27 } from './sys/camp27';
 import { addMinor, divorce29, marry29 } from './sys/family29';
+import { rng19 } from './rng19';
 
 export const SYS29 = ['dinheiro', 'reputacao', 'imprensa', 'projetos', 'aovivo', 'sede', 'fama', 'mundo', 'vida', 'contratos', 'premios', 'submundo', 'publico'] as const;
 export type Sys29 = (typeof SYS29)[number];
@@ -52,7 +53,7 @@ export const SYS29_NAME: Record<Sys29, string> = {
 export interface Base29 { s: GameState; act: string; rel: string; npc: string; spare: string[]; next: string; seed: string }
 export function base29(seed = 'r29all', year = 1985): Base29 {
   const s = createGame(defaultConfig(seed, { startYear: year, realNames: true }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), model: '360', id: 'o1', week: 0, status: 'pending', advance: 0 }); // 360: o ao vivo passa pelo livro-caixa do selo
   for (const role of ['publicist', 'booking', 'producer', 'legal']) s.player.staff.push({ id: `st29b-${role}`, name: 'Base', role, skill: 45, salary: money(s, 2000), hiredWeek: 0 });

@@ -65,7 +65,7 @@ export function car19(s: GameState): Car19State {
   st.starter ??= {}; st.ground ??= {}; st.skipW ??= {}; st.fcard ??= {}; st.fused ??= {}; st.renew ??= {}; st.pkg ??= [];
   return st;
 }
-const rngOf = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}:car19:${k}:${monthIndex(s)}`);
+const rngK = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}:car19:${k}:${monthIndex(s)}`);
 
 // ---------------------------------------------------------------- 1) sede de selo só com selo
 
@@ -157,7 +157,7 @@ export function applyStarter19(s: GameState, id: string): L | null {
   return t;
 }
 function seedCatalog(s: GameState, v: Venture): void {
-  const r = rngOf(s, `cat:${v.id}`);
+  const r = rngK(s, `cat:${v.id}`);
   const mk = cityById[s.config.homeCity]?.market;
   const acts = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.fame < 30 && a.owner !== 'player' && !a.playerBand)
     .sort((a, b) => (cityById[b.city]?.market === mk ? 1 : 0) - (cityById[a.city]?.market === mk ? 1 : 0) || b.fame - a.fame).slice(0, 20);
@@ -300,7 +300,7 @@ function festBranchMonth(s: GameState, f: OwnFestival): void {
   const last = st.fcard[f.id] ?? -99;
   if (now - last < 2) return;
   if (s.decisions.some((d) => d.eventId.startsWith('f19_') && d.ctx.fx === f.id)) return;
-  const r = rngOf(s, `fc:${f.id}`);
+  const r = rngK(s, `fc:${f.id}`);
   if (now - last < 3 && !r.chance(0.55)) return;
   const used = (st.fused[f.id] ??= []);
   const left = FKS.filter((k) => !used.includes(k));
@@ -346,7 +346,7 @@ mgRenew12.f = (s, id, p) => {
   if (!a) return false;
   if (st.renew[id] !== undefined) return true;
   st.renew[id] = s.week;
-  const r = rngOf(s, `ren:${id}`);
+  const r = rngK(s, `ren:${id}`);
   emitEvent(s, r, 'c19_mg_renew', { act: id, p: Math.round(p * 100), pc: Math.round(clamp(p + 0.2, 0.05, 0.98) * 100), pp: Math.round(clamp(p + 0.12, 0.05, 0.98) * 100), rate: Math.round(c12(s, id).mandate.rate * 100) });
   if (!s.decisions.some((d) => d.eventId === 'c19_mg_renew' && d.ctx.act === id)) delete st.renew[id]; // filtrado: já resolvido
   return true;
@@ -439,7 +439,7 @@ function mgBranchMonth(s: GameState): void {
   if (!isActive(s, 'manager') || !mg.clients.length) return;
   const now = monthIndex(s);
   if (now - st.mcard < 2 || s.decisions.some((d) => d.eventId.startsWith('c19_mg_') && d.eventId !== 'c19_mg_renew')) return;
-  const r = rngOf(s, 'mg');
+  const r = rngK(s, 'mg');
   // no máximo a cada 2 meses; depois de 3 meses sem nada do ofício, a decisão chega
   if (now - st.mcard < 3 && !r.chance(Math.min(0.45, 0.15 + mg.clients.length * 0.05))) return;
   const c = r.pick(mg.clients);

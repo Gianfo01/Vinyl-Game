@@ -6,7 +6,7 @@ import { toReal } from '../core/money';
 import { l, type L } from '../data/world';
 import { mainAmbition } from './people';
 import type { Act, Contract, GameState, Offer } from './types';
-import { fmtL, hasMutator, money, nextId, notify, playerActs, post, remember, rngOf, staffCount } from './util';
+import { fmtL, hasMutator, money, nextId, notify, playerActs, post, remember, staffCount } from './util';
 import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
@@ -35,6 +35,7 @@ export function registerContractHook(id: string, h: ContractHook): void {
 import { renewalAdj, rightsScore, scopeTerritories, signingTrust } from './rights';
 import { advFactor29, isSide29, royTerms29 } from './terms29';
 import type { ContractModel } from '../data/rules';
+import { rng19 } from './rng19';
 
 /** R29 (contratos+): ganchos dos modelos novos (empresariamento, produção, joint venture) — sys/contracts29 registra.
  *  `accept` assume o aceite inteiro (empresariamento: o ato não muda de selo); `signed` completa um contrato normal
@@ -439,7 +440,7 @@ export function renewContract(s: GameState, actId: string, months: number, bonus
   const c = act?.contractId ? s.contracts[act.contractId] : undefined;
   if (!act || !c || c.party !== 'player') return false;
   if (s.player.cash < bonus) return false;
-  const r = rngOf(s);
+  const r = rng19(s, 'contracts');
   const extra = contractHooks().reduce((t, x) => t + (x.h.renew?.(s, act) ?? 0), 0);
   const p = clamp(0.25 + act.trust / 100 + toReal(bonus, s.year) / expectedAdvance(s, act) * 0.3 + extra + renewalAdj(s, c), 0, 0.97);
   if (!r.chance(p)) {

@@ -3,15 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { hireStaff } from '../src/sim/economy';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { addOrder, d16, delegates, handlersOf, matchOffer, ordersOf, quality } from '../src/sim/sys/deleg16';
 import { roleLoads } from '../src/sim/sys/capacity14';
 import { c12 } from '../src/sim/sys/tour12';
+import { rng19 } from '../src/sim/rng19';
 
 const setup = (seed: string) => {
   const s = createGame(defaultConfig(seed));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   s.player.cash = 5_000_000_00;
   advanceMonth(s); // o mercado de profissionais passa a ter agentes e promotores
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });

@@ -14,10 +14,11 @@ import {
 } from '../../sim/sys/project13';
 import type { Deltas } from '../../sim/sys/music/state';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { $, N, kv, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, ic } from '../vis';
+import { rng19 } from '../../sim/rng19';
 
 const ui = { draft: null as null | (Choice13 & { pid: string }), newC2: '' };
 const ATTR: Record<string, L> = { melody: l('melodia', 'melody'), lyrics: l('letra', 'lyrics'), originality: l('originalidade', 'originality'), performance: l('performance', 'performance'), production: l('produção', 'production') };
@@ -80,7 +81,7 @@ function crewBits(s: GameState, p: MusicProject, locked: boolean): HTMLElement {
     h('label', null, t(l('Convidado (dueto na faixa principal)', 'Guest (duet on the lead track)')),
       feat || fp.length ? h('b', null, lead ? featCredit29(s, lead.id, feat) : '—') : lead ? h('span', { class: 'row wrap' },
         select(p.guestId ?? '', [{ value: '', label: t(l('Sem convidado', 'No guest')) }, ...guests.map((g) => ({ value: g.id, label: `${g.name} (${$(featureFee(s, g))})` }))], (v) => { p.guestId = v || undefined; rerender(); }, { disabled: locked }),
-        h('button', { class: 'btn small', disabled: !p.guestId || locked, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
+        h('button', { class: 'btn small', disabled: !p.guestId || locked, onclick: () => { toast(t(inviteGuest(s, rng19(s, 'act'), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
         featPersonButton29(s, p.actId, lead.id, locked)) : h('small', { class: 'muted' }, t(l('Escolha as faixas primeiro.', 'Pick the tracks first.'))),
       h('small', { class: 'muted' }, t(l('Um nome conhecido empresta público e alcance; pode recusar se o seu artista for pequeno.', 'A known name lends audience and reach; may refuse if your act is small.')))));
 }

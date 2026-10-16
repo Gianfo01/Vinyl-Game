@@ -4,10 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { FACT_CAP, emitFact, facts17, recentFacts } from '../src/sim/facts17';
 import { RESERVED19, WHITELIST19, consumed19, factMatrix19 } from '../src/sim/factmatrix19';
-import { STREAMS19, perSystem19, rng19 } from '../src/sim/rng19';
+import { RNG_VERSION19, STREAMS19, rng19 } from '../src/sim/rng19';
 import { APPEAL_CAT19, catAdj19, modCat19 } from '../src/sim/caps18';
 import { applyMods, registerSimHook } from '../src/sim/ext4';
 import { simulatePlayer } from '../src/sim/playbot16';
@@ -44,19 +43,19 @@ function scan(): { emitted: Record<string, string[]>; chron: Set<string>; reader
 }
 
 describe('r19 0.1 — rng por sistema', () => {
-  it('jogo novo tem rngVersion; save antigo segue no fluxo único', () => {
+  it('jogo novo tem rngVersion; todo sorteio persistente é por sistema (r31: sem caminho legado)', () => {
     const s = createGame(defaultConfig('r19-rng'));
-    expect(perSystem19(s)).toBe(true);
-    const legacy = rngOf(s);
-    const old = { ...s, rngVersion: undefined } as GameState;
-    expect(rng19(old, 'events', legacy)).toBe(legacy);
-    expect(rng19(s, 'events', legacy)).not.toBe(legacy);
+    expect(s.rngVersion).toBe(RNG_VERSION19);
+    const a = rng19(s, 'events'), b = rng19(s, 'events');
+    a.next(); // o mesmo estado guardado no save: o segundo gerador continua de onde o primeiro parou
+    const c = createGame(defaultConfig('r19-rng')); const ca = rng19(c, 'events'); ca.next();
+    expect(b.next()).toBe(ca.next());
     expect(Object.keys(STREAMS19)).toContain('market');
   });
   it('um sorteio a mais no fluxo comum não muda os fluxos dos sistemas', () => {
     const a = createGame(defaultConfig('r19-ind'));
     const b = createGame(defaultConfig('r19-ind'));
-    rngOf(b).next(); rngOf(b).next(); // "um evento a mais" num consumidor do fluxo comum
+    rng19(b, 'act').next(); rng19(b, 'act').next(); // "um evento a mais" num outro fluxo (ações do jogador)
     advanceMonth(a); advanceMonth(b);
     const st = (s: GameState) => (s as unknown as { x4: { rng19: { st: Record<string, number[]> } } }).x4.rng19.st;
     expect(st(b).market).toEqual(st(a).market);

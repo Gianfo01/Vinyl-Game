@@ -15,12 +15,13 @@ import {
 } from '../src/sim/sys/sound';
 import { instrumentsOf } from '../src/sim/sys/instruments';
 import type { GameState, Release, Song } from '../src/sim/types';
-import { remember, rngOf } from '../src/sim/util';
+import { remember } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, year = 1990) {
   const s = createGame(defaultConfig(seed, { startYear: year }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame: 30 });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   return { s, r, act };

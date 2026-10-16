@@ -9,12 +9,12 @@ import { composeSongs, recordSongs } from '../src/sim/production';
 import { fanScore, reviewBody } from '../src/sim/reviews';
 import { TONES, reaction, resolveInterview, startInterview, type Question } from '../src/sim/sys/scenes/interview';
 import type { Release } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string) {
   const s = createGame(defaultConfig(seed, { startYear: 1980 }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame: 30 });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   return { s, r, act };

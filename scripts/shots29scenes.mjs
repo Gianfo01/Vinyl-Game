@@ -29,9 +29,9 @@ await p.evaluate(async () => {
   if (off) off.setTutorials19(st.store.prefs, false);
   const g = st.store.game;
   const wg = await import('/src/sim/worldgen.ts');
-  const u = await import('/src/sim/util.ts');
+  const u = await import('/src/sim/util.ts'); const R19 = await import('/src/sim/rng19.ts');
   let a = Object.values(g.acts).find((x) => x.owner === 'player');
-  if (!a) { a = wg.spawnProceduralAct(g, u.rngOf(g), { city: g.config.homeCity, fame: 55 }); a.owner = 'player'; }
+  if (!a) { a = wg.spawnProceduralAct(g, R19.rng19(g, 'act'), { city: g.config.homeCity, fame: 55 }); a.owner = 'player'; }
   window.__a29 = a.id;
 });
 for (const k of keys) {

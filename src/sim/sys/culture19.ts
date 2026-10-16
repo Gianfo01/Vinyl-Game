@@ -5,7 +5,7 @@
 // erros de metadados e vazamentos no caos). Trocar de cultura abala a equipe (`culture_shift`) e só pode a cada 12 meses.
 // Treinamento pago (A&R, jurídico, metadados) sobe a habilidade e a lealdade da equipe e evita os erros do caos.
 
-import { Rng, clamp } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerConseq18 } from '../decide18';
 import { schedule18 } from './decide18';
@@ -36,7 +36,7 @@ declare module '../ext4' { interface Ext4 { culture19: Culture19 } }
 const fresh = (): Culture19 => ({ c: null, since: -999, prev: null, train: false, err: 0, leaks: 0, trainPaid: 0, log: [], n: {} });
 registerExt4('culture19', fresh);
 export const cul19 = (s: GameState): Culture19 => xs19(s, 'culture19', fresh);
-const rng = (s: GameState) => rng19(s, 'culture19', () => Rng.fromSeed(`${s.config.seed}|cul19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'culture19');
 const payroll = (s: GameState) => s.player.staff.reduce((t, m) => t + m.salary, 0);
 export const trainCost19 = (s: GameState) => money(s, 150) * s.player.staff.length;
 export const avgLoy19 = (s: GameState): number => { const xs = s.player.staff.map((m) => P(s).career[m.id]?.loyalty).filter((x): x is number => x !== undefined); return xs.length ? Math.round(xs.reduce((t, x) => t + x, 0) / xs.length) : 0; };

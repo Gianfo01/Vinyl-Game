@@ -15,7 +15,6 @@ import {
   type Prop18, type VKind18,
 } from '../../sim/sys/shared18';
 import { acceptDeal, declineDeal } from '../../sim/brands';
-import { rngOf } from '../../sim/util';
 import { $, actLink, labelLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
@@ -23,6 +22,7 @@ import { setTab, tabs } from '../vis';
 import { emptyState27 } from '../ps/ui27';
 import { why18 } from '../explain18';
 import { confirm18, emptyState18 } from '../quick18';
+import { rng19 } from '../../sim/rng19';
 
 const muted = (x: L) => h('p', { class: 'muted small' }, t(x));
 const say = (x: { ok: boolean; text: L } | L | null, ok?: L) => {
@@ -178,7 +178,7 @@ function teamTab(s: GameState): HTMLElement {
       h('b', null, o.who), ' ', pill(t(KIND[o.k])), ' ',
       o.k === 'mgr' ? `${pc(o.rate ?? 0)} · ${t(l('negociação', 'negotiation'))} ${o.neg}${o.mgr ? ' · ' + t(l('empresário real', 'real manager')) : ''}` : o.k === 'agent' ? `+${pc(o.boost ?? 0)} ${t(l('nos cachês', 'on fees'))} · ${pc(o.rate ?? 0)}` : `${t(PTYPE18[o.ptype ?? 'admin'])} · ${t(l('adiantamento', 'advance'))} ${$(o.adv)}`,
       h('div', { class: 'row wrap' }, btn(l('Aceitar', 'Accept'), () => say(accept18(s, o.id)), 'btn small primary'), btn(l('Recusar', 'Decline'), () => { decline18(s, o.id); rerender(); }, 'btn small ghost')))))) : null,
-    section(t(l('Patrocínio e marcas', 'Sponsorship and brands')), brand.length ? h('ul', { class: 'small' }, brand.map((d) => h('li', null, `${d.brand} · ${d.kind} · ${$(d.fee)} · ${d.status}`, d.status === 'offered' ? h('span', null, ' ', btn(l('Aceitar', 'Accept'), () => say(acceptDeal(s, rngOf(s), d.id)), 'btn tiny'), btn(l('Recusar', 'Decline'), () => { declineDeal(s, d.id); rerender(); }, 'btn tiny ghost')) : null))) : muted(l('Marcas procuram quem tem fama e imagem compatível; com contrato 360, o selo leva uma fatia.', 'Brands look for fame and a matching image; with a 360 deal, the label takes a cut.'))));
+    section(t(l('Patrocínio e marcas', 'Sponsorship and brands')), brand.length ? h('ul', { class: 'small' }, brand.map((d) => h('li', null, `${d.brand} · ${d.kind} · ${$(d.fee)} · ${d.status}`, d.status === 'offered' ? h('span', null, ' ', btn(l('Aceitar', 'Accept'), () => say(acceptDeal(s, rng19(s, 'act'), d.id)), 'btn tiny'), btn(l('Recusar', 'Decline'), () => { declineDeal(s, d.id); rerender(); }, 'btn tiny ghost')) : null))) : muted(l('Marcas procuram quem tem fama e imagem compatível; com contrato 360, o selo leva uma fatia.', 'Brands look for fame and a matching image; with a 360 deal, the label takes a cut.'))));
 }
 
 // ---------------------------------------------------------------- faça você mesmo × selo

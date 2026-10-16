@@ -78,7 +78,7 @@ function alumnus(s: GameState, r: Rng, city: string, mine: boolean): Act {
   return a;
 }
 export function schoolsYear19(s: GameState): void {
-  const st = sch19(s), r = rng19(s, 'sch19', () => Rng.fromSeed(`${s.config.seed}|sch19|${s.year}`));
+  const st = sch19(s), r = rng19(s, 'sch19');
   // coros das cidades do gospel
   for (const [c] of choirsNow19(s)) if (r.chance(0.18)) alumnus(s, r, c, false);
   if (st.prog) { alumnus(s, r, st.prog.city, true); post(s, 'sch19up', -money(s, 1500), 'artist_dev', 'Programa de coral: regente e bolsas'); }

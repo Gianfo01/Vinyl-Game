@@ -10,7 +10,7 @@
 
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { mineAct19 } from '../mine19';
-import { Rng, clamp } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { cityById, l, type L, type MarketId } from '../../data/world';
 import { acceptOffer, defaultOffer } from '../contracts';
 import { registerDeadline } from '../calendar19';
@@ -65,7 +65,7 @@ export function ct19(s: GameState): St19 {
 }
 const cnt = (s: GameState, k: string) => { const n = ct19(s).n; n[k] = (n[k] ?? 0) + 1; };
 const logT = (s: GameState, t: L) => { const st = ct19(s); st.log.unshift([s.year, s.month, t]); if (st.log.length > 40) st.log.length = 40; };
-const rng = (s: GameState) => rng19(s, 'contests19', () => Rng.fromSeed(`${s.config.seed}|ct19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'contests19');
 const mine = (s: GameState, a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
 const npc = (a: Act): boolean => a.owner !== 'player' && !a.playerBand;
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;

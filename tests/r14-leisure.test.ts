@@ -7,12 +7,12 @@ import { registerSimHook } from '../src/sim/ext4';
 import { goOut14, leisureMonth14, lz14, pool14, regulars14, spotsHere14, CAP14, HOB14 } from '../src/sim/sys/leisure14';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string, y = 1985) => {
   const s = createGame(defaultConfig(seed, { startYear: y }));
-  const act = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity });
+  const act = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash *= 3; // rodada 16: o começo do zero ficou mais apertado; aqui o selo fica parado 2 anos e não pode quebrar
   return s;

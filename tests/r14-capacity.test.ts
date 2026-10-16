@@ -3,15 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer, makeOffer, signWithRival } from '../src/sim/contracts';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { actCapacity, busyWhy, cap14, meetingCap, rivalSignCap, roleLoads, scoutInPerson } from '../src/sim/sys/capacity14';
 import { energyLeft } from '../src/sim/sys/life';
 import { scoutActionsPerMonth } from '../src/sim/scouting';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string) => {
   const s = createGame(defaultConfig(seed));
-  return { s, r: rngOf(s) };
+  return { s, r: rng19(s, 'act') };
 };
 
 describe('capacidade 14', () => {

@@ -45,7 +45,7 @@ declare module '../ext4' { interface Ext4 { remix19: Remix19 } }
 const fresh = (): Remix19 => ({ rx: [], res: [], wl: {}, disc: {}, resAsk: {}, seq: 0, log: [], n: {} });
 registerExt4('remix19', fresh);
 export const rmx19 = (s: GameState): Remix19 => xs19(s, 'remix19', fresh);
-const rng = (s: GameState) => rng19(s, 'remix19', () => Rng.fromSeed(`${s.config.seed}|rmx19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'remix19');
 export const remixOpen19 = (s: GameState): boolean => s.year >= REMIX_FROM19;
 export const whiteOpen19 = (s: GameState): boolean => s.year >= WHITE_FROM19;
 /** Faixa antiga elegível para remix de catálogo (3+ anos). */

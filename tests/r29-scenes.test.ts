@@ -10,7 +10,7 @@ import { emitFact } from '../src/sim/facts17';
 import { album28 } from '../src/sim/sys/end28';
 import { attnScenes28 } from '../src/sim/sys/story28';
 import type { Act, GameState } from '../src/sim/types';
-import { remember, rngOf } from '../src/sim/util';
+import { remember } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { artHash27 } from '../src/ui/ps/art27';
 import { CUT27, CUT_KEYS27, beat27, beatsOf27, choose27, cutModel27, scan27, type CutData27, type CutKey27 } from '../src/ui/ps/cut27model';
@@ -18,15 +18,16 @@ import { CUT29, KEYS29, coin29, cutOfMemory29, onceKey29 } from '../src/ui/ps/cu
 import { paintCut29 } from '../src/ui/ps/cutpaint29';
 import { FULL_KEYS29, hasStage29 } from '../src/ui/pixel/cenas29';
 import { log29, log29of, outcome29 } from '../src/ui/ps/album29';
+import { rng19, rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (seed = 'r29cut', startYear = 1990): GameState => { const c = defaultConfig(seed, { scenario: 'established', startYear } as Parameters<typeof defaultConfig>[1]); (c as { dbSize?: string }).dbSize = 'small'; return createGame(c); };
-const myAct = (s: GameState): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 60 }); a.owner = 'player'; return a; };
+const myAct = (s: GameState): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 60 }); a.owner = 'player'; return a; };
 const ERAS = [1925, 1948, 1962, 1977, 1986, 1996, 2006, 2021];
 const dataFor = (s: GameState, a: Act, key: CutKey27, year: number): CutData27 => ({
   key, ref: `t29:${key}:${year}`, actId: a.id, pid: a.members[0], p: s.persons[a.members[0]]?.name, a: a.name, year, week: s.week,
   t: key === 'tech' ? 'Rádio' : key === 'verdict' ? 'Sentença: plágio — vitória do selo.' : key === 'plat' ? 'Hino' : 'Uma manchete de teste', city: s.config.homeCity,
 });
-const rngSnap = (s: GameState): string => JSON.stringify([s.rng, (s as unknown as { x4?: { rng19?: unknown } }).x4?.rng19 ?? null]);
+const rngSnap = (s: GameState): string => rngSnapshot19(s);
 
 describe('r29 — catálogo', () => {
   it('15+ cenas novas, cada uma com 2–3 escolhas, cena-base e arte própria (cenário ou camada)', () => {

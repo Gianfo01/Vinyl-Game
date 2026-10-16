@@ -19,9 +19,10 @@ import { defaultOffer, offerNow } from '../src/sim/contracts';
 import { plannedCombos } from '../src/sim/sys/agenda7';
 import { replaceMember } from '../src/sim/sys/lifecycle7';
 import { personDies } from '../src/sim/dynasty';
-import { money, rngOf } from '../src/sim/util';
+import { money } from '../src/sim/util';
 import { l } from '../src/data/world';
 import type { AgendaSlot, GameState, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
@@ -59,7 +60,7 @@ describe('artistas reais e discografia', () => {
 describe('ciclo de vida', () => {
   it('banda que perde um integrante pode seguir com substituto e o catálogo continua vendendo', () => {
     const s = mk('r7-life', { startYear: 1980 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const band = Object.values(s.acts).find((a) => a.members.length >= 3 && a.status === 'active' && a.owner !== 'player')!;
     const old = band.members[0];
     personDies(s, s.persons[old], l('teste', 'test'));
@@ -136,7 +137,7 @@ describe('instrumentos, mobília e vida intensa', () => {
 
   it('vícios, empréstimos e viagens têm consequências e mudam traços', () => {
     const s = mk('r7-vice', { scenario: 'established' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const o = ownerOf(s);
     o.wealth += money(s, 50000);
     expect(takePersonalLoan(s, 'family', money(s, 2000))).toBeNull();
@@ -154,7 +155,7 @@ describe('instrumentos, mobília e vida intensa', () => {
 describe('venda de composições e negociação na hora', () => {
   it('vender uma música rende royalties combinados', () => {
     const s = mk('r7-sale', { role: 'artist', startYear: 1990 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const band = s.acts[s.player.bandActId!];
     const songId = band.songs.find((id) => s.songs[id] && !s.songs[id].releaseId);
     if (!songId) return;
@@ -171,7 +172,7 @@ describe('venda de composições e negociação na hora', () => {
 
   it('oferta de contrato tem resposta imediata (ou o artista pede tempo)', () => {
     const s = mk('r7-neg', { scenario: 'established' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = Object.values(s.acts).find((a) => !a.owner && a.status !== 'retired' && a.status !== 'split' && !a.playerBand)!;
     const { result } = offerNow(s, r, defaultOffer(s, act));
     expect(['accepted', 'counter', 'rejected', 'thinking', 'sniped']).toContain(result);

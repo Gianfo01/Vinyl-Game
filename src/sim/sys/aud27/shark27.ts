@@ -53,7 +53,7 @@ export function shark27(s: GameState): Shark27State {
   return st;
 }
 const logIt = (s: GameState, t: L): void => { const st = shark27(s); st.log.unshift([s.year, s.month, t]); if (st.log.length > 30) st.log.length = 30; };
-const rngOf = (s: GameState, tag: string): Rng => Rng.fromSeed(`${s.config.seed}:shark27:${tag}:${s.week}`);
+const rngK = (s: GameState, tag: string): Rng => Rng.fromSeed(`${s.config.seed}:shark27:${tag}:${s.week}`);
 const live = (s: GameState, o: Org17) => (crime17(s).down[o.id] ?? -Infinity) < s.week;
 
 /** Organização que empresta numa praça (país da cidade; senão a mais perto que existir na época). */
@@ -134,13 +134,13 @@ function playerMonth(s: GameState): void {
     }
     if (x.miss >= 2 && s.week - x.visit > 8 && !s.config.contentFilters.includes('crime') && !s.decisions.some((d) => d.eventId === 'shark27_visit')) {
       x.visit = s.week;
-      emitEvent(s, rngOf(s, `visit:${id}`), 'shark27_visit', { loan: id, orgName: orgName(s, x.o).pt });
+      emitEvent(s, rngK(s, `visit:${id}`), 'shark27_visit', { loan: id, orgName: orgName(s, x.o).pt });
     }
   }
   // vingança de quem você denunciou
   for (const [oid, until] of Object.entries(st.rev)) {
     if (until < s.week) { delete st.rev[oid]; continue; }
-    const r = rngOf(s, `rev:${oid}`);
+    const r = rngK(s, `rev:${oid}`);
     if (!r.chance(0.06)) continue;
     const v = money(s, 1500 + r.int(0, 4) * 500);
     post(s, `shark27rev:${oid}:${s.week}`, -v, 'misc', 'Vandalismo na sede (vingança)');
@@ -232,7 +232,7 @@ const NPC_CAP = 60;
 function npcMonth(s: GameState): void {
   const st = shark27(s);
   const strict = histMode(s) === 'strict';
-  const r = rngOf(s, 'npc');
+  const r = rngK(s, 'npc');
   const n = Object.keys(st.npc).length;
   if (n < NPC_CAP) {
     // selos de NPC no vermelho

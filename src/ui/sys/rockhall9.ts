@@ -3,10 +3,11 @@ import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { HALL_CATS, HALL_CEREMONY_MONTH, HALL_FIRST_CLASS, HALL_FOUNDED, HALL_WAIT, LOBBY_COST, answerHallPerform19 as answerPerform, eligibleActs, hall, hallExists, hallName, hallScore, hallLobby19 as lobby } from '../../sim/awards19'; // r19: fachada
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { $, actLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { registerArea } from '../registry';
+import { rng19 } from '../../sim/rng19';
 
 const mine = (s: GameState, id: string): boolean => s.acts[id]?.owner === 'player' || !!s.acts[id]?.playerBand;
 
@@ -23,7 +24,7 @@ function hallArea(s: GameState): HTMLElement {
         st.noms ? h('div', null,
           h('h4', null, t(l('Indicados à turma de {y}', 'Nominees for the class of {y}'), { y: st.noms.year })),
           h('ul', { class: 'small' }, st.noms.ids.map((id) => h('li', { class: mine(s, id) ? 'mine' : '' }, actLink(s, id),
-            mine(s, id) ? h('span', null, ' ', ...([1, 2, 3] as const).map((lv) => h('button', { class: 'btn small ghost', title: t(l('Campanha junto aos votantes; o nível 3 pode pegar mal.', 'Campaign with voters; level 3 may backfire.')), onclick: () => { const e = lobby(s, rngOf(s), id, lv); toast(t(e ?? l('Campanha feita.', 'Campaign done.')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Campanha', 'Campaign'))} ${lv} · ${$(money(s, LOBBY_COST[lv]))}`))) : null))),
+            mine(s, id) ? h('span', null, ' ', ...([1, 2, 3] as const).map((lv) => h('button', { class: 'btn small ghost', title: t(l('Campanha junto aos votantes; o nível 3 pode pegar mal.', 'Campaign with voters; level 3 may backfire.')), onclick: () => { const e = lobby(s, rng19(s, 'act'), id, lv); toast(t(e ?? l('Campanha feita.', 'Campaign done.')), e ? 'bad' : 'good'); rerender(); } }, `${t(l('Campanha', 'Campaign'))} ${lv} · ${$(money(s, LOBBY_COST[lv]))}`))) : null))),
           h('p', { class: 'muted small' }, t(l('Turma anunciada em {m}/{y}.', 'Class announced in {m}/{y}.'), { m: HALL_CEREMONY_MONTH + 1, y: st.noms.year })),
         ) : h('p', { class: 'muted small' }, t(l('Sem indicados no momento: a lista sai em outubro.', 'No nominees right now: the list comes out in October.'))),
       ),

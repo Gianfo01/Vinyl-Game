@@ -39,7 +39,7 @@ const info = await p.evaluate(async () => {
   const M = await import('/src/sim/sys/mob29.ts');
   const C = await import('/src/sim/sys/crime17.ts');
   let mine = Object.values(g.acts).find((a) => a.owner === 'player');
-  if (!mine) { const wg = await import('/src/sim/worldgen.ts'); const u = await import('/src/sim/util.ts'); mine = wg.spawnProceduralAct(g, u.rngOf(g), { city: 'rio', genre: 'funk_carioca', fame: 30 }); mine.owner = 'player'; }
+  if (!mine) { const wg = await import('/src/sim/worldgen.ts'); const u = await import('/src/sim/util.ts'); const R19 = await import('/src/sim/rng19.ts'); mine = wg.spawnProceduralAct(g, R19.rng19(g, 'act'), { city: 'rio', genre: 'funk_carioca', fame: 30 }); mine.owner = 'player'; }
   const v = Object.values(g.acts).find((a) => a.owner !== 'player' && a.status === 'active' && a.fame > 5 && a.debutYear <= 1962);
   if (v) M.hire29(g, 'fleak', 'cy:leak', v.id);
   const o = C.orgById(g, 'fleak');

@@ -6,7 +6,7 @@
 // patrocínios e campanhas do adsync19 caem pela cláusula de conduta). Quando passa, volta possível: "retorno" pago.
 // Modo exato: gente real só com fatos documentados (sem ondas sorteadas para atos reais travados).
 
-import { Rng, clamp } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerDeadline } from '../calendar19';
 import { registerConseq18 } from '../decide18';
@@ -37,7 +37,7 @@ declare module '../ext4' { interface Ext4 { cancel19: Cancel19 } }
 const fresh = (): Cancel19 => ({ w: [], seq: 0, log: [], n: {} });
 registerExt4('cancel19', fresh);
 export const cx19 = (s: GameState): Cancel19 => xs19(s, 'cancel19', fresh);
-const rng = (s: GameState) => rng19(s, 'cancel19', () => Rng.fromSeed(`${s.config.seed}|cx19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'cancel19');
 export const waveOf19 = (s: GameState, actId: string): Wave19 | undefined => cx19(s).w.find((x) => x.act === actId && x.over === undefined);
 export const eraK19 = (y: number): number => (y >= 2020 ? 1.15 : y >= 2015 ? 1 : 0.8);
 /** Pico da onda pela gravidade, fama e era das redes, com o porquê. */

@@ -4,7 +4,7 @@
 import { GENRES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
-import { fmtL, rngOf } from '../../sim/util';
+import { fmtL } from '../../sim/util';
 import { endorseOdds19 } from '../../sim/sys/careers19';
 import { devChance12 } from '../../sim/sys/manager12';
 import {
@@ -18,6 +18,7 @@ import { $, actLink, cityName, pill, rerender, section, toast } from '../common'
 import { bar, h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
 import { renewTag19 } from './ctx19';
+import { rng19 } from '../../sim/rng19';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -28,7 +29,7 @@ const KINDS: SvcKind[] = ['label', 'producer', 'studio', 'booking', 'festival', 
 
 /** Bloco da rodada 12 em cada agenciado. */
 export function clientPanel12(s: GameState, c: Client): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const a = s.acts[c.actId];
   const x = c12(s, c.actId);
   const amb = ambitionsOf(s, a.id);
@@ -98,7 +99,7 @@ const fmtTitle = (s: GameState, id: string): L => { const a = s.acts[id]; const 
   return { pt: `${o.brand}: ${Math.round(o.chance * 100)}% de chance · ≈ ${v} · ${o.why.map((w) => w.pt).join(' ')}`, en: `${o.brand}: ${Math.round(o.chance * 100)}% chance · ≈ ${v} · ${o.why.map((w) => w.en).join(' ')}` }; };
 
 function servicesForm(s: GameState, id: string): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const a = s.acts[id];
   const x = c12(s, id);
   let kind: SvcKind = a.owner ? 'producer' : 'label';
@@ -129,7 +130,7 @@ function servicesForm(s: GameState, id: string): HTMLElement {
 function agencyTab(s: GameState): HTMLElement {
   const st = mgr12(s);
   const mg = ventures(s).mg;
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const cap = capacityHours(s);
   const dem = demandHours(s);
   return h('div', null,

@@ -9,7 +9,8 @@ import { careers, dropCareer, startCareer, timeLoad } from '../src/sim/sys/caree
 import { providers, remaining, requestService, signService } from '../src/sim/sys/services12';
 import { ambitionsOf, answerIssue, c12, proposePlan, resolveDilemma, talk, type Amb } from '../src/sim/sys/manager12';
 import { ventures } from '../src/sim/sys/ventures9';
-import { money, rngOf } from '../src/sim/util';
+import { money } from '../src/sim/util';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string, careers?: { main: string[]; origin?: string; ambition?: string }) => createGame(defaultConfig(seed, { startYear: 1990, careers }));
 
@@ -32,7 +33,7 @@ describe('carreiras r12', () => {
 describe('serviços e empresário r12', () => {
   it('capacidade limitada, plano co-escolhido, dilema e prestação de contas', () => {
     const s = mk('r12-m', { main: ['manager'], origin: 'musician', ambition: 'legacy' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const a = Object.values(s.acts).find((x) => x.status !== 'retired' && !x.playerBand && x.fame >= 20)!;
     ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0 });
     // mercado: lota a capacidade do mês

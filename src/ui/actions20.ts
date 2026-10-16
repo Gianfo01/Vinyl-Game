@@ -32,7 +32,8 @@ import { STAGE_NAMES, openProjects, projectStage } from '../sim/sys/project8';
 import { canInterview, startInterview } from '../sim/sys/scenes/interview';
 import { canVisitRadio, startRadioVisit } from '../sim/sys/scenes/radio';
 import type { Act, AgendaSlot, GameState } from '../sim/types';
-import { fmtL, money, playerActs, rngOf, staffSkill } from '../sim/util';
+import { fmtL, money, playerActs, staffSkill } from '../sim/util';
+import { rng19 } from '../sim/rng19';
 
 // ---------------------------------------------------------------- tipos
 
@@ -456,11 +457,11 @@ registerAction20({ id: 'contract.market', label: N('Mercado de contratos (opçõ
 registerAction20({ id: 'press.interview', label: N('Dar entrevista', 'Give an interview'), cat: 'media', icon: 'tv', target: 'act', form: 'confirm', mutates: true,
   block: (s, c) => canInterview(s, c.act),
   effect: () => N('Abre a cena da entrevista: o tom das respostas mexe em fama, imagem e momento; pode render polêmica.', 'Opens the interview scene: your answers\' tone moves fame, image and momentum; may spark controversy.'),
-  run: (s, c) => { const cs = startInterview(s, rngOf(s), c.act); return 'kind' in cs ? { ok: true, text: N('Entrevista marcada.', 'Interview booked.'), cutscene: cs as Cutscene } : { ok: false, text: cs as L }; } });
+  run: (s, c) => { const cs = startInterview(s, rng19(s, 'act'), c.act); return 'kind' in cs ? { ok: true, text: N('Entrevista marcada.', 'Interview booked.'), cutscene: cs as Cutscene } : { ok: false, text: cs as L }; } });
 registerAction20({ id: 'press.radio', label: N('Visitar uma rádio', 'Visit a radio station'), cat: 'media', icon: 'radio', target: 'act', form: 'confirm', mutates: true,
   block: (s, c) => canVisitRadio(s, c.act),
   effect: () => N('Abre a cena da rádio: o encaixe com o DJ define execução e alcance.', 'Opens the radio scene: the fit with the DJ sets airplay and reach.'),
-  run: (s, c) => { const cs = startRadioVisit(s, rngOf(s), c.act); return 'kind' in cs ? { ok: true, text: N('Visita à rádio.', 'Radio visit.'), cutscene: cs as Cutscene } : { ok: false, text: cs as L }; } });
+  run: (s, c) => { const cs = startRadioVisit(s, rng19(s, 'act'), c.act); return 'kind' in cs ? { ok: true, text: N('Visita à rádio.', 'Radio visit.'), cutscene: cs as Cutscene } : { ok: false, text: cs as L }; } });
 registerAction20({ id: 'fans.view', label: N('Fãs, fã-clube e imprensa', 'Fans, fan club and press'), cat: 'media', icon: 'fans', target: 'act', form: 'nav', mutates: false,
   effect: (s, c) => { const f = s.acts[c.act].fans; return fmtL(N('Casuais {a} · ativos {b} · núcleo {c}', 'Casual {a} · active {b} · core {c}'), { a: Math.round(f.casual), b: Math.round(f.active), c: Math.round(f.core) }); },
   nav: (_s, c) => ({ sub: 'audience', act: c.act }) });

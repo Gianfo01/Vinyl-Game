@@ -15,7 +15,7 @@ import {
   travelBlocker, travelQuote, travelTo, trialCost,
 } from '../../sim/sys/mapx8';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, genreName, ownerName, pill, releaseLink, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import type { MapOverlay } from '../map';
@@ -23,6 +23,7 @@ import { addTourStop } from '../panels/misc';
 import { store } from '../store';
 import { ic } from '../vis';
 import { visibleAct } from '../../sim/future';
+import { rng19 } from '../../sim/rng19';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -62,7 +63,7 @@ export function cityScene(s: GameState, cityId: string): HTMLElement {
 export function cityActions(s: GameState, cityId: string): HTMLElement {
   const city = cityById[cityId];
   const m = mapx(s);
-  const r = () => rngOf(s);
+  const r = () => rng19(s, 'act');
   const here = isHere(s, cityId);
   const q = travelQuote(s, cityId);
   const tErr = travelBlocker(s, cityId);

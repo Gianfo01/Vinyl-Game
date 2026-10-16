@@ -15,7 +15,7 @@ import {
 import { ROLE_NAMES, type Role } from '../../sim/sys/talent';
 import { ownerOf } from '../../sim/sys/people/owner';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { openActPage, openPersonPage, personCard } from '../pages';
@@ -36,6 +36,7 @@ import { careTab, heartTab, kidsTab, looksTab } from './life17';
 import { kidChoices27 } from './kin27';
 import { ent27 } from '../ps/ent27';
 import { personKey27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -105,7 +106,7 @@ function profileTab(s: GameState): HTMLElement {
 function loveTab(s: GameState): HTMLElement {
   const L0 = life(s);
   const o = ownerOf(s);
-  const r = () => rngOf(s);
+  const r = () => rng19(s, 'act');
   const pt = L0.partner;
   let wedding: WeddingKind = 'party';
   const partnerBox = pt ? section(t(l('Relacionamento', 'Relationship')),
@@ -145,7 +146,7 @@ function loveTab(s: GameState): HTMLElement {
       age < 18 ? h('label', null, t(l('Educação', 'Education')), ' ', select<KidEdu>(kx.edu, (Object.keys(KID_EDU) as KidEdu[]).map((e) => ({ value: e, label: `${t(KID_EDU[e].name)}${KID_EDU[e].monthly ? ` · ${$(money(s, KID_EDU[e].monthly))}/${t(l('mês', 'mo'))}` : ''}` })), (v) => run(setKidEdu(s, i, v)))) : null,
       kx.actId && s.acts[kx.actId] ? h('p', null, t(l('Carreira: ', 'Career: ')), actLink(s, kx.actId))
         : age >= 16 ? h('div', { class: 'row wrap' }, select(g0, GENRES.filter((x) => x.born <= s.year).sort((a, b) => t(a.name).localeCompare(t(b.name))).map((x) => ({ value: x.id, label: t(x.name) })), (v) => (g0 = v)),
-          btn(l('Lançar carreira pelo selo', 'Launch a career on the label'), 1, () => { const res = launchKidCareer(s, rngOf(s), i, g0); if (isL(res)) run(res); else { toast(t(l('Estreia marcada!', 'Debut set!')), 'good'); openActPage(res.id); rerender(); } })) : null,
+          btn(l('Lançar carreira pelo selo', 'Launch a career on the label'), 1, () => { const res = launchKidCareer(s, rng19(s, 'act'), i, g0); if (isL(res)) run(res); else { toast(t(l('Estreia marcada!', 'Debut set!')), 'good'); openActPage(res.id); rerender(); } })) : null,
       kidChoices27(s, i, age, run), // r27 AUD2: apoiar, estudos, empresa, deserdar/pazes + sucessão
     ));
   });
@@ -155,8 +156,8 @@ function loveTab(s: GameState): HTMLElement {
     section(t(l('Família', 'Family')),
       h('div', { class: 'row wrap' },
         btn(l('Tempo com a família', 'Family time'), 1, () => run(familyTime(s), l('Momento em família.', 'Family moment.')), { disabled: !o.kids.length && !pt }),
-        pt ? btn(l('Tentar ter um filho', 'Try for a baby'), 1, () => run(tryForBaby(s, rngOf(s)))) : null,
-        btn(l('Adotar ($6.000)', 'Adopt ($6,000)'), 2, () => run(adopt(s, rngOf(s)))),
+        pt ? btn(l('Tentar ter um filho', 'Try for a baby'), 1, () => run(tryForBaby(s, rng19(s, 'act')))) : null,
+        btn(l('Adotar ($6.000)', 'Adopt ($6,000)'), 2, () => run(adopt(s, rng19(s, 'act')))),
       ),
       kids.length ? h('div', { class: 'cards' }, kids) : h('p', { class: 'muted small' }, t(l('Sem filhos.', 'No children.'))),
       h('p', { class: 'muted small' }, t(l('Filhos com 18+ podem ser herdeiros (aba Patrimônio). Com 16+, podem estrear como artistas. Vínculo baixo e eles não querem saber do seu selo.', 'Children 18+ can be heirs (Wealth tab). At 16+, they can debut as artists. With a low bond they want nothing to do with your label.'))),
@@ -172,7 +173,7 @@ function musicTab(s: GameState): HTMLElement {
   const p = playerPerson(s);
   if (!p) return h('p', null, '—');
   const act = playerAct(s);
-  const r = () => rngOf(s);
+  const r = () => rng19(s, 'act');
   let newRole: Role = ROLES.find((x) => x !== p.role) ?? 'guitar';
   const me = playerPerson(s);
   const fav = persona(s).favGenre;
@@ -248,9 +249,9 @@ function leisureTab(s: GameState): HTMLElement {
       btn(l('Terapia ($300)', 'Therapy ($300)'), 1, () => run(therapy(s), l('Sessão feita. Cabeça mais leve.', 'Session done. Lighter mind.'))),
     )),
     section(t(l('Vida social', 'Social life')), h('div', { class: 'row wrap' },
-      btn(l('Festa da indústria ($400)', 'Industry party ($400)'), 1, () => run(industryParty(s, rngOf(s)))),
+      btn(l('Festa da indústria ($400)', 'Industry party ($400)'), 1, () => run(industryParty(s, rng19(s, 'act')))),
       btn(l('Doação filantrópica ($5.000)', 'Charity donation ($5,000)'), 1, () => run(charity(s), l('Obrigado!', 'Thank you!'))),
-      btn(l('Escrever as memórias', 'Write your memoir'), 3, () => run(writeMemoir(s, rngOf(s))), { disabled: L0.memoir }),
+      btn(l('Escrever as memórias', 'Write your memoir'), 3, () => run(writeMemoir(s, rng19(s, 'act'))), { disabled: L0.memoir }),
     ), L0.candidates.some((c) => c.personId) ? h('p', { class: 'small' }, t(l('Você conheceu gente interessante na festa — veja na aba Amor e família.', 'You met interesting people at the party — see the Love and family tab.'))) : null),
     section(t(l('Hobbies', 'Hobbies')), h('div', { class: 'cards' }, HOBBIES.map((hb) => h('article', { class: 'tile' }, h('div', { class: 'tile-body' },
       h('b', null, t(hb.name), (L0.hobbies[hb.id] ?? 0) ? pill(`${t(l('nível', 'level'))} ${L0.hobbies[hb.id]}`, 'good') : null),

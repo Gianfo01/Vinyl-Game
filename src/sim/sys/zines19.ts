@@ -233,7 +233,7 @@ export const ZINES19_EVENTS = ['zn19_interview'];
 
 // ================================================================ mês
 registerSimHook('month', 'zines19', (s) => {
-  const r = rng19(s, 'zn19', () => Rng.fromSeed(`${s.config.seed}|zn19|${s.week}`));
+  const r = rng19(s, 'zn19');
   const st = zn19(s);
   // 1) nascimentos (NPC): onde um gênero cresce numa cidade e ainda não há cena
   if (s.year >= 1966 && zinesLive19(s).filter((z) => z.by === 'npc').length < 14 && r.chance(s.year >= 1976 && s.year <= 1998 ? 0.3 : 0.15)) {

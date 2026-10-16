@@ -10,17 +10,17 @@ import { ARCHETYPES, archetypeOf, buySecurity, heat19, spyOnRival } from '../../
 import { defaultOffer } from '../../sim/contracts';
 import type { GameState } from '../../sim/types';
 import type { Scout } from '../../sim/xtypes';
-import { rngOf } from '../../sim/util';
 import { $, actLink, cityName, actGenre23, labelLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { chips, ic, stat, tile } from '../vis';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 let pool: Scout[] = [];
 let poolMonth = -1;
 
 export function scoutsSection(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const m = s.year * 12 + s.month;
   if (poolMonth !== m) {
     pool = scoutPool(s, r);
@@ -75,7 +75,7 @@ export function contestsSection(s: GameState): HTMLElement {
 }
 
 export function demosSection(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   return section(t(l('Demos recebidas', 'Incoming demos')), s.demos.length ? h('div', { class: 'cards' }, s.demos.map((d) => {
     const a = s.acts[d.actId];
     return tile('cassette', a?.name ?? '?', [
@@ -87,7 +87,7 @@ export function demosSection(s: GameState): HTMLElement {
 }
 
 export function auctionsSection(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const hot = Object.values(s.acts).filter((a) => !a.owner && a.fame > 12 && (s.knowledge[a.id]?.degree ?? 0) >= 2 && !s.auctions.some((x) => x.actId === a.id && x.status === 'open')).slice(0, 6);
   const open = s.auctions.filter((a) => a.status === 'open');
   return section(t(l('Leilões de contrato', 'Contract bidding wars')),
@@ -115,7 +115,7 @@ export function auctionsSection(s: GameState): HTMLElement {
 }
 
 export function rivalsExtra(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => heat19(s, b.id) - heat19(s, a.id)).slice(0, 12);
   return section(t(l('Arquétipos, rivalidades e inteligência', 'Archetypes, rivalries and intel')),
     h('div', { class: 'row wrap' },
