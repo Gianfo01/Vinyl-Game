@@ -103,7 +103,7 @@ describe('r31 AMOR: família Fossati nunca', () => {
     p.name = 'Lucia Fossati';
     expect(romanceLock31(s, `p:${p.id}`)).toBeTruthy();
     expect(askOut31(s, `p:${p.id}`).ok).toBe(false);
-    expect(personActions18(s, `p:${p.id}`).some((r) => r.def.id === 'amor31.ask' || r.def.id === 'flirt')).toBe(false);
+    expect(personActions18(s, `p:${p.id}`).some((r) => r.def.group === 'love')).toBe(false);
     p.name = old;
     expect(romanceLock31(s, `p:${p.id}`)).toBeNull();
   });
@@ -165,7 +165,7 @@ describe('r31 AMOR: explorar não muda o mundo', () => {
 });
 
 describe('r31 AMOR: interruptores desligados = comportamento antigo', () => {
-  it('sem "chamar": pedido travado com o motivo, o flertar antigo volta ao menu, ganchos do love17 neutros', () => {
+  it('sem "chamar": pedido travado com o motivo, o flertar antigo volta a ser o de antes, ganchos do love17 neutros', () => {
     const s = game(1990);
     ready(s);
     for (const id of [SW_ASK31, SW_AFFAIR31, SW_MARKET31]) setSw(s, id, false);
@@ -173,16 +173,16 @@ describe('r31 AMOR: interruptores desligados = comportamento antigo', () => {
     const lk = askLock31(s, k);
     expect(lk?.why.pt).toMatch(/desligado/);
     expect(lk?.unlock.pt).toMatch(/Editor/);
-    const rows = personActions18(s, k).map((r) => r.def.id);
-    expect(rows).toContain('flirt');
-    expect(rows).not.toContain('amor31.ask');
+    const row = () => personActions18(s, k).find((r) => r.def.id === 'flirt');
+    expect(row()).toBeTruthy();
+    const offP = row()!.chance?.p;
     expect(AMOR17.pm?.(s, { personId: k.slice(2), name: 'x', since: 0 })).toBeUndefined();
     expect(AMOR17.risk?.(s, { name: 'x', since: s.week, sx: 'f', disc: 50 })).toBe(0);
-    // ligado: o menu troca o flertar pelo pedido novo
+    // ligado: o mesmo item do menu passa a usar a chance do pedido novo
     setSw(s, SW_ASK31, true);
-    const on = personActions18(s, k).map((r) => r.def.id);
-    expect(on).toContain('amor31.ask');
-    expect(on).not.toContain('flirt');
+    expect(row()!.chance?.p).toBe(askOdds31(s, k).p);
+    expect(personActions18(s, k).filter((r) => r.def.group === 'love').length).toBe(1);
+    void offP;
   });
 
   it('casos desligados: comprometido(a), o pedido fica travado com o motivo', () => {

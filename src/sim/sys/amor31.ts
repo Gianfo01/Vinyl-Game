@@ -767,26 +767,29 @@ registerDeadline('amor31', (s, from, to) => {
 
 // ---------------------------------------------------------------- menu de ações de pessoa
 
+// o "flertar" do menu de pessoa (sys/personact18) passa a usar o pedido novo quando 'amor31.ask' está ligado: o mesmo
+// item, com a chance e os fatores daqui e o motivo da recusa; desligado, volta a ser exatamente o antigo.
 const flirt = personActionDefs18().find((d) => d.id === 'flirt');
 if (flirt) {
-  const vis0 = flirt.visible;
-  registerPersonAction({ ...flirt, visible: (s, k) => !askOn31(s) && (vis0 ? vis0(s, k) : true) && !romanceLock31(s, k) });
+  const old = { ...flirt };
+  registerPersonAction({
+    ...old,
+    desc: l('Namoro (solteiro), caso secreto (comprometido) ou você como amante (a pessoa é casada). Com "Amor: chamar qualquer pessoa" ligado, a resposta é a conta mostrada e a recusa diz o motivo.', 'Dating (single), a secret affair (taken) or you as the lover (they are married). With "Love: ask anyone out" on, the answer is the odds shown and a refusal says why.'),
+    visible: (s, k) => !romanceLock31(s, k) && (askOn31(s) ? PERSONLIKE.includes(k.split(':')[0]) && !(s.persons[k.slice(2)]?.isPlayer) : (old.visible ? old.visible(s, k) : true)),
+    cooldown: undefined,
+    selfRoll: true, // a resposta é sorteada no próprio pedido (ligado) ou como antes, com o mesmo gerador (desligado)
+    cost: (s, k) => (askOn31(s) ? { usd: PERSON_COST31, balls: 1, shown: true } : old.cost?.(s, k) ?? {}),
+    available: (s, k) => { if (!askOn31(s)) return old.available?.(s, k) ?? null; const lk = askLock31(s, k); return lk && !/tempo livre|free time/.test(lk.why.pt + lk.why.en) ? lk.why : null; },
+    chance: (s, k) => { if (!askOn31(s)) return old.chance?.(s, k) ?? null; const o = askOdds31(s, k); return { p: o.p, why: o.why.map(([t, v]) => fmtL(l('{t} {v}', '{t} {v}'), { t, v: pctS(v) })) }; },
+    run: (s, k, r, ok) => {
+      if (!askOn31(s)) { const ch = old.chance?.(s, k); const out = old.run(s, k, r, ch ? r.chance(clamp(ch.p, 0, 1)) : ok); if (old.cooldown) pa18(s).cd[`flirt|${k}`] = s.week + old.cooldown; return out; }
+      // o menu já cobrou o tempo livre: devolve antes de pedir (o pedido cobra o seu)
+      life(s).used = Math.max(0, life(s).used - 1);
+      const res = askOut31(s, k);
+      return { ok: res.ok, text: res.text };
+    },
+  });
 }
-registerPersonAction({
-  id: 'amor31.ask', group: 'love', icon: 'heart', label: l('Chamar para sair', 'Ask out'),
-  desc: l('Namoro (solteiro), caso secreto (comprometido) ou você como amante (a pessoa é casada). A resposta é a conta mostrada; recusa diz o motivo.', 'Dating (single), a secret affair (taken) or you as the lover (they are married). The answer is the odds shown; a refusal says why.'),
-  visible: (s, k) => askOn31(s) && !romanceLock31(s, k) && PERSONLIKE.includes(k.split(':')[0]) && !(s.persons[k.slice(2)]?.isPlayer),
-  cost: () => ({ usd: PERSON_COST31, balls: 1, shown: true }),
-  available: (s, k) => { const lk = askLock31(s, k); return lk && !/tempo livre|free time/.test(lk.why.pt + lk.why.en) ? lk.why : null; },
-  chance: (s, k) => { const o = askOdds31(s, k); return { p: o.p, why: o.why.map(([t, v]) => fmtL(l('{t} {v}', '{t} {v}'), { t, v: pctS(v) })) }; },
-  selfRoll: true,
-  run: (s, k) => {
-    // o menu já cobrou o tempo livre: devolve antes de pedir (o pedido cobra o seu)
-    life(s).used = Math.max(0, life(s).used - 1);
-    const r = askOut31(s, k);
-    return { ok: r.ok, text: r.text };
-  },
-});
 void pa18;
 
 // ---------------------------------------------------------------- editor (regra 10)
