@@ -91,6 +91,8 @@ export const HANGAR_FROM31 = 1965;
 /** Onde fica a sala VIP do intermediário (como em broker31: porto, hotel, aeroporto). */
 export const vipPlace31 = (y: number): L => (y < 1919 ? l('Sala de espera do porto', 'Port waiting room') : y < 1950 ? l('Saguão do hotel do aeroporto', 'Airport hotel lobby') : l('Sala VIP', 'VIP lounge'));
 
+/** Ato seu (elenco ou banda do jogador). */
+const mineAct = (s: GameState, id: string): boolean => { const a = s.acts[id]; return !!a && (a.owner === 'player' || !!a.playerBand || playerActs(s).includes(id)); };
 const homeA3 = (s: GameState): string => countryOfCity(s.config.homeCity) ?? '';
 const weekOfDay = (s: GameState, day: number): number => s.week + Math.round((day - (s.day + s.clock.dayInMonth)) / 7);
 const abroad = (s: GameState, city: string): boolean => (countryOfCity(city) ?? '') !== homeA3(s);
@@ -202,7 +204,7 @@ export function linerPorts31(s: GameState): string[] {
 export function cruiseLock31(s: GameState, actId: string, k: CruiseK31): Lock31 | null {
   const a = s.acts[actId];
   if (!cruiseOn31(s)) return lock31(l('Temporadas no mar estão desligadas nesta partida.', 'Seasons at sea are off in this game.'), l('Ligue o interruptor no editor.', 'Turn the switch on in the editor.'));
-  if (!a || !playerActs(s).includes(actId)) return lockOf31(l('Só para artistas do seu elenco.', 'Only for acts on your roster.'));
+  if (!a || !mineAct(s, actId)) return lockOf31(l('Só para artistas do seu elenco.', 'Only for acts on your roster.'));
   if (!cruiseOpen31(s).includes(k)) return lock31(fmtL(l('{n} não existe nesta época.', '{n} does not exist in this era.'), { n: CRUISE31[k].name }), fmtL(l('Abre em {y}.', 'Opens in {y}.'), { y: CRUISE31[k].from }));
   if (atSea31(s, actId)) return lock31(l('O ato já está no mar.', 'The act is already at sea.'), UNLOCK31.generic);
   if (touring(s, actId)) return lock31(l('O ato tem turnê marcada ou em andamento.', 'The act has a tour booked or under way.'), l('Espere a turnê acabar ou cancele-a.', 'Wait for the tour to end or cancel it.'));
@@ -266,7 +268,7 @@ export function holoQuote31(s: GameState, actId: string, cities: string[]): Holo
 export function holoLock31(s: GameState, actId: string): Lock31 | null {
   if (!holoOn31(s)) return lock31(l('O show por holograma está desligado nesta partida.', 'Hologram shows are off in this game.'), l('Ligue o interruptor no editor.', 'Turn the switch on in the editor.'));
   if (s.year < HOLO_FROM31) return lock31(l('A tecnologia do holograma volumétrico ainda não existe.', 'Volumetric hologram technology does not exist yet.'), fmtL(l('Chega em {y}.', 'Arrives in {y}.'), { y: HOLO_FROM31 }));
-  if (!playerActs(s).includes(actId)) return lockOf31(l('Só para artistas do seu elenco.', 'Only for acts on your roster.'));
+  if (!mineAct(s, actId)) return lockOf31(l('Só para artistas do seu elenco.', 'Only for acts on your roster.'));
   const last = peek(s)?.holo[actId];
   if (last !== undefined && s.week - last < HOLO_GAP31) return lock31(l('Este ato fez um show por holograma há pouco.', 'This act did a hologram show recently.'), fmtL(l('Libera em {n} semana(s).', 'Unlocks in {n} week(s).'), { n: HOLO_GAP31 - (s.week - last) }));
   return null;
