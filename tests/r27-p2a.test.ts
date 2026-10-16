@@ -93,9 +93,11 @@ beforeAll(() => {
   // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
   // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
   // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
-  expect(s.player.cash).toBe(1034775);
-  expect(hashString(JSON.stringify(s.acts))).toBe(829002627);
-  expect(hashString(JSON.stringify(s.rng))).toBe(1362224447);
+  // R31 W0-KN (de propósito; mesmos do r27-p2b, que explica): estimate() por know.ts, faixa nunca centrada no real; o
+  // playbot escolhe por ela. Antes: 1034775 / 829002627 / 1362224447.
+  expect(s.player.cash).toBe(643875);
+  expect(hashString(JSON.stringify(s.acts))).toBe(2127307384);
+  expect(hashString(JSON.stringify(s.rng))).toBe(1500677605);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
