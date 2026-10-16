@@ -100,9 +100,9 @@ beforeAll(() => {
   // de mercado igual para todos, previsão pela conta real, demanda e paradas por país (fama local, língua, leis no país,
   // dominó, teto de fama fora de casa, mercado reservado) e transporte por trecho: caixa, acts e rng mudam e o bot passa a
   // marcar turnê nesses 8 meses. Antes: 178753 / 1382068899 / 3472429155 / 3703770621.
-  expect(s.player.cash).toBe(398956);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1392358860);
-  expect(hashString(rngSnapshot19(s))).toBe(3564147059);
+  expect(s.player.cash).toBe(581243);
+  expect(hashString(JSON.stringify(s.acts))).toBe(4153284673);
+  expect(hashString(rngSnapshot19(s))).toBe(2827906377);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

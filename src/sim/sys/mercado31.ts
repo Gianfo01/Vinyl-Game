@@ -152,7 +152,7 @@ function no1Of(s: GameState, relId: string): string[] | undefined {
 }
 
 const W0 = new Array<number>(NC).fill(0);
-function relY(s: GameState, rel: Release, act: Act): RelY {
+function relY(s: GameState, rel: Release, act: Act, wBase?: number[]): RelY {
   const c = cacheOf(s);
   const hit = rel.id.startsWith('__') ? undefined : c?.rels.get(rel.id);
   if (hit) return hit;
@@ -173,8 +173,11 @@ function relY(s: GameState, rel: Release, act: Act): RelY {
     }
   }
   // demanda total: a mesma repartição antiga, com a fama de cada país (desvio local), leis e dominó; língua só reparte
-  const w = W0;
-  const sum = baseWeights7(s, rel, w);
+  // (as paradas já passam os pesos de base: não recalcula)
+  const w = wBase ?? W0;
+  let sum = 0;
+  if (wBase) for (let i = 0; i < NC; i++) sum += wBase[i];
+  else sum = baseWeights7(s, rel, w);
   let num = 0, den = 0, nLoc = 0, nLaw = 0;
   for (let i = 0; i < NC; i++) {
     const g = ay.g ? ay.g[i] : 1, g0 = ay.g0 ? ay.g0[i] : 1, lw = ay.law ? ay.law[i] : 1, dm = dom ? dom[i] : 1;
@@ -198,12 +201,21 @@ const yOn = (s: GameState) => on31(s, 'y31.local') || on31(s, 'y31.laws') || on3
 Y31.normalize = (s, rels) => {
   if (!yOn(s)) return;
   let num = 0, den = 0;
-  for (const r of rels) { const a = s.acts[r.actId]; if (!a || !(r.appeal > 0)) continue; num += r.appeal * relY(s, r, a).K; den += r.appeal; }
+  for (const r of rels) { const a = s.acts[r.actId]; if (!a || !(r.appeal > 0)) continue; num += r.appeal * kOf(s, r, a); den += r.appeal; }
   s.stats.lastKn31 = den > 0 ? num / den : 1;
 };
+/** Fator do mês (desempenho: a conta por país sai uma vez por mês por lançamento e fica no lançamento, então salvar e
+ *  carregar no meio do mês dá o mesmo resultado). Só o mercado grava; fora dele (previsão, interface) só lê ou recalcula. */
+function kOf(s: GameState, rel: Release, act: Act): number {
+  const mi = s.year * 12 + s.month;
+  if (rel.y31k && rel.y31k[0] === mi) return rel.y31k[1];
+  const K = relY(s, rel, act).K;
+  if (cacheOf(s)?.open && !rel.id.startsWith('__')) rel.y31k = [mi, Math.round(K * 1e6) / 1e6];
+  return rel.y31k?.[0] === mi ? rel.y31k[1] : K;
+}
 Y31.demand = (s, rel, act) => {
   if (!yOn(s)) return 1;
-  return relY(s, rel, act).K / (s.stats.lastKn31 ?? 1);
+  return kOf(s, rel, act) / (s.stats.lastKn31 ?? 1);
 };
 Y31.why = (s, rel, act): Y31Why[] => {
   const y = relY(s, rel, act);
@@ -215,7 +227,7 @@ Y31.why = (s, rel, act): Y31Why[] => {
 };
 Y31.weights = (s, rel, act, w) => {
   if (!on31(s, 'y31.local') && !on31(s, 'y31.lang') && !on31(s, 'y31.laws') && !on31(s, 'y31.domino')) return;
-  const { m } = relY(s, rel, act);
+  const { m } = relY(s, rel, act, w);
   for (let i = 0; i < w.length; i++) w[i] *= m[i];
 };
 

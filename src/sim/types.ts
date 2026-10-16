@@ -400,6 +400,8 @@ export interface Release {
   fc?: number;
   /** R31 D: procura das 10 primeiras semanas (antes do estoque) — o que a previsão `fc` tenta acertar */
   dem10?: number;
+  /** R31 Y: demanda por país do mês [ano·12 + mês, fator] (refeita uma vez por mês, dentro do mercado) */
+  y31k?: [number, number];
   fa?: number;
   expl?: boolean;
 }

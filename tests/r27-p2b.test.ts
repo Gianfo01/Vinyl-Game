@@ -101,10 +101,10 @@ describe('r27 P2B — modo rápido intacto', () => {
     // de mercado igual para todos, previsão pela conta real, demanda e paradas por país (fama local, língua, leis no país,
     // dominó, teto de fama fora de casa, mercado reservado) e transporte por trecho: caixa, acts e rng mudam e o bot passa a
     // marcar turnê nesses 8 meses. Antes: 178753 / 1382068899 / 3472429155 / 3703770621.
-    expect(AFTER.player.cash).toBe(398956);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3161478615);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1392358860);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3564147059);
+    expect(AFTER.player.cash).toBe(581243);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1160361153);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4153284673);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(2827906377);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

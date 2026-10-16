@@ -51,7 +51,9 @@ describe('R31 Y · fama local vende', () => {
     advanceMonth(s);
     const live = Object.values(s.releases).filter((r) => r.live && s.acts[r.actId] && r.appeal > 0);
     let num = 0, den = 0;
-    for (const r of live) { num += r.appeal * Y31.demand!(s, r, s.acts[r.actId]); den += r.appeal; }
+    // o fator do mês fica gravado no lançamento (r.y31k) pelo mercado; a média dele, dividida pela da semana, é 1
+    for (const r of live) { num += r.appeal * (r.y31k?.[1] ?? 1) / (s.stats.lastKn31 ?? 1); den += r.appeal; }
+    expect(live.filter((r) => r.y31k).length).toBeGreaterThan(live.length * 0.9);
     expect(num / den).toBeGreaterThan(0.97);
     expect(num / den).toBeLessThan(1.03);
   });
