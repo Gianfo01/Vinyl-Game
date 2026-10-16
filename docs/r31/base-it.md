@@ -1,7 +1,7 @@
 # R31 · onda 4 · BASE-IT — base de artistas italianos
 
-**Resultado:** 283 atos italianos novos (src/data/base31it.ts), todos com fonte, obra marcante com ano e cidade do jogo.
-A Itália passa de **205 → 488** atos em REAL_ALL (desde 1992: 140 → 253). A meta de 1 000 **não** foi alcançada;
+**Resultado:** 284 atos italianos novos (src/data/base31it.ts), todos com fonte, obra marcante com ano e cidade do jogo.
+A Itália passa de **205 → 489** atos em REAL_ALL (desde 1992: 140 → 253). A meta de 1 000 **não** foi alcançada;
 o motivo está em "Até onde deu e por quê", no fim.
 
 - Entram no FIM de REAL_ALL, depois de BASE31_ACTS (`BASE31IT_FROM`/`BASE31IT_TO` em sim/sys/realworld.ts); os números de
@@ -26,7 +26,7 @@ o motivo está em "Até onde deu e por quê", no fim.
 | 1930s | 5 |
 | 1940s | 12 |
 | 1950s | 29 |
-| 1960s | 36 |
+| 1960s | 37 |
 | 1970s | 43 |
 | 1980s | 36 |
 | 1990s | 45 |
@@ -36,7 +36,7 @@ o motivo está em "Até onde deu e por quê", no fim.
 
 ### Por gênero do jogo (nenhum gênero novo)
 
-canzone 72 · cantautori 39 · pop_rock 19 · opera 12 · canzone_napoletana 12 · indie 12 · soundtrack 10 · italo 10 · prog 8 ·
+canzone 73 · cantautori 39 · pop_rock 19 · opera 12 · canzone_napoletana 12 · indie 12 · soundtrack 10 · italo 10 · prog 8 ·
 alt_rock 8 · eurodance 7 · hiphop 6 · pop_rnb 6 · trad_pop 5 · classical 5 · new_wave 5 · beat 4 · folk 4 · dance_pop 4 · trap 4 ·
 big_band 3 · vocal_jazz 3 · reggae 3 · cool_jazz 3 · rnr 2 · punk 2 · house 2 · trance 2 · edm 2 · cabaret, fusion, synthpop,
 heavy_metal, celtic_rock, boom_bap, drill, reggaeton, death_metal 1 cada.
@@ -49,7 +49,7 @@ tenores de disco → opera; Sanremo e música ligeira → canzone; trilhas → s
 | Cidade do jogo | Atos | 
 |---|---:|
 | Milão | 144 |
-| Roma | 79 |
+| Roma | 80 |
 | Nápoles | 60 |
 
 O jogo só tem essas três cidades na Itália. 176 atos têm a cidade real anotada (`rc`) e a ficha diz "cidade do jogo
@@ -59,9 +59,9 @@ Campânia, Molise, Apúlia, Basilicata, Calábria, Sicília e Formia → Nápole
 
 ### Outros números
 
-- 72 bandas/duplas, 211 solos; 57 em nível 2 (grande nome), o resto 3; nenhum nível 1 novo (os globais já estavam).
-- Sanremo: 49 atos levam o albo d'oro como fonte; somados aos que já estavam na base, todos os vencedores de 1951 a 2026
-  estão no jogo, menos os da lista de fora (abaixo).
+- 72 bandas/duplas, 212 solos; 57 em nível 2 (grande nome), o resto 3; nenhum nível 1 novo (os globais já estavam).
+- Sanremo: 50 atos levam o albo d'oro como fonte; somados aos que já estavam na base, todos os vencedores de 1951 a 2026
+  estão no jogo (com Claudia Mori, 1970), menos os da lista de fora (abaixo) e Patricia Carli (1964, belga).
 - 148 atos com algum campo marcado aproximado (`ap`: quase sempre o ano da estreia em disco, que fica antes da obra
   marcante); nenhum `exact: false`.
 

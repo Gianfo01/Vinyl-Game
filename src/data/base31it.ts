@@ -131,6 +131,7 @@ s('Nico Fidenco', 'canzone', 'rome', 1960, 1933, 2022, [['What a Sky (Su nel cie
 s('Gianni Meccia', 'canzone', 'milan', 1959, 1931, u, [['Il barattolo', 1960, 'single']], '', { rc: 'Ferrara', cf: ['cidade de nascimento'] });
 s('Tony Renis', 'canzone', 'milan', 1959, 1938, u, [['Quando quando quando', 1962, 'single'], ['Uno per tutte', 1963, 'single']], 'sr1963', { nick: ['Elio Cesari'], ap: ['d'] });
 s('Emilio Pericoli', 'canzone', 'rome', 1958, 1928, 2013, [['Al di là', 1962, 'single'], ['Uno per tutte', 1963, 'single']], 'sr1963', { rc: 'Cesenatico', ap: ['d'] });
+s('Claudia Mori', 'canzone', 'rome', 1960, 1944, u, [['Chi non lavora non fa l\'amore', 1970, 'single']], 'sr1970', { nick: ['Claudia Moroni'], ap: ['d'], cf: ['ano do 1º disco'] });
 s('Peppino di Capri', 'canzone', 'naples', 1958, 1939, u, [['St. Tropez Twist', 1962, 'single'], ['Roberta', 1963, 'single'], ['Un grande amore e niente più', 1973, 'single'], ['Non lo faccio più', 1976, 'single']], 'sr1973 sr1976', { t: 2, rc: 'Capri', nick: ['Giuseppe Faiella'] });
 s('Sergio Endrigo', 'cantautori', 'milan', 1959, 1933, 2005, [['Io che amo solo te', 1962, 'single'], ['Canzone per te', 1968, 'single']], 'sr1968', { t: 2, rc: 'Pola (Ístria)', cf: ['cidade de origem no jogo (viveu em Veneza, Milão e Roma)'] });
 s('Bruno Lauzi', 'cantautori', 'milan', 1962, 1937, 2006, [['Ritornerai', 1963, 'single']], '', { rc: 'Gênova (nascido em Asmara)', ap: ['d'] });

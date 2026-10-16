@@ -1181,6 +1181,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'cur:gianni_meccia': { real: 'Gianni Meccia', substituto: 'Giaaro Mecby', tipo: 'artist' },
   'cur:tony_renis': { real: 'Tony Renis', substituto: 'Toino Renby', tipo: 'artist' },
   'cur:emilio_pericoli': { real: 'Emilio Pericoli', substituto: 'Emford Perton', tipo: 'artist' },
+  'cur:claudia_mori': { real: 'Claudia Mori', substituto: 'Clano Moella', tipo: 'artist' },
   'cur:peppino_di_capri': { real: 'Peppino di Capri', substituto: 'Peppella di Capent', tipo: 'artist' },
   'cur:sergio_endrigo': { real: 'Sergio Endrigo', substituto: 'Serine Endrers', tipo: 'artist' },
   'cur:bruno_lauzi': { real: 'Bruno Lauzi', substituto: 'Brella Lauola', tipo: 'artist' },

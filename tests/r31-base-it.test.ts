@@ -15,7 +15,7 @@ import type { GameState } from '../src/sim/types';
 
 const IT_CITIES = new Set(['milan', 'rome', 'naples']);
 /** Contagem mínima da base nova (o máximo que deu com dados conferidos — docs/r31/base-it.md). */
-const MIN31IT = 280;
+const MIN31IT = 284;
 const NOW = 2026;
 
 describe('base italiana: dados', () => {

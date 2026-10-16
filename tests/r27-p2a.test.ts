@@ -124,12 +124,12 @@ beforeAll(() => {
   // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
   // UNI-4 + I juntos: re-medido — só acts muda em relação ao UNI-4 sozinho (4266817177 → 3500990849).
   // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
-  // R31 onda 4 (BASE-IT · base italiana, de propósito — docs/r31/DECISOES.md e docs/r31/base-it.md): 283 artistas italianos reais
+  // R31 onda 4 (BASE-IT · base italiana, de propósito — docs/r31/DECISOES.md e docs/r31/base-it.md): 284 artistas italianos reais
   // no fim de REAL_ALL (nascem no início e estreiam nesses 8 meses): caixa, turnês, acts e rng mudam. Com `base31.it` desligado
   // (config.base31it = false) voltam 182589 / 3575668786 / 1693608899 / 3302724126.
-  expect(s.player.cash).toBe(231334);
-  expect(hashString(JSON.stringify(s.acts))).toBe(3299931953);
-  expect(hashString(rngSnapshot19(s))).toBe(2977368711);
+  expect(s.player.cash).toBe(2343);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3720502148);
+  expect(hashString(rngSnapshot19(s))).toBe(2898923487);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
