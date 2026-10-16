@@ -352,3 +352,8 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - 2026-10-16 · 31.4 BASE-HITS · r27-p2b "turnê no mapa" (fixture do 7º mês de r16pb-5): com BASE-IT + BASE-HITS juntas o único ato livre do jogador já tem 25% da própria agenda reservado no mês e a rota de 10 paradas (86%) não cabia. O `roadFix` tenta os atos do jogador e, se nenhum cabe com saída em 7 dias, sai em 35 dias; "a equipe decide no dia" vira dois meses em vez de um. Asserções iguais · teste alterado
 
 - **Base de sucessos só na base Enorme (decisão do dono, 2026-10-16):** os 1 043 atos de `base31hits` custam até +60% no mês a partir de 2012 e ~40% de save; entram só com base de dados Enorme (`z: 3`, aplicado na carga em `realworld.ts`). Nas outras bases o mundo é o da BASE-IT (goldens p2a/p2b: 2343 / 1382068899 / 3720502148 / 2898923487). A chave `base31.hits` continua valendo dentro da Enorme.
+
+## DECO-M · catálogo publicado (2026-10-16, commit 54ef75b2)
+- `src/data/deco31.ts`: `DECO31` (210 itens: 144 decorativos em móveis/quadros/plantas/luminárias/som/coleção + 17 papéis de parede, 14 pisos/tapetes, 12 luzes de teto, 11 cortinas/molduras, 12 letreiros), cada um com id, nome bilíngue, `cat`, `slots` (parede/chão/mesa/teto/papel/piso/janela/letreiro), `w`×`h` em px na escala do boneco 24×34 (0×0 = superfície que cobre o cômodo), `from`/`to`, `style` (8 estilos + 'any'), `price`, `fx` opcional e `places` (casa/sede/negócio).
+- `REQ31` (12 obrigatórios, ids de objects5 + `cama`) e `UPG31` (45 níveis, 2–4 por época; id `u_<req>_<nível>_<ano>`). Nível 0 = o que já vem na cena.
+- `DECO_CAP31` (teto por lugar) e `DECO_TOTAL_CAP31` (teto por dono). DECO-A desenha por `id`+`style`; DECO-L usa `inLine31`/`vintagePrice31`.
