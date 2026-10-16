@@ -224,9 +224,9 @@ export function realNamesActive(): boolean {
   return active;
 }
 
-/** Filtro aplicado ao texto final mostrado na tela. */
-export function realText(s: string): string {
+/** Filtro aplicado ao texto final mostrado na tela. `ui`: rótulo da interface (ver disp31). */
+export function realText(s: string, ui = false): string {
   if (!s) return s;
   // R31 (X): depois do filtro antigo, a troca do interruptor "Nomes e obras reais" (src/data/realdisp31.ts)
-  return disp31(rx ? s.replace(rx, (m0) => map[m0] ?? m0) : s);
+  return disp31(rx ? s.replace(rx, (m0) => map[m0] ?? m0) : s, ui);
 }

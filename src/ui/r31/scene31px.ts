@@ -272,3 +272,6 @@ registerPol31('board27', () => [0, 3, 6].flatMap((n) => [1962, 1990, 2030].map((
   const people = Array.from({ length: n }, (_, i) => ({ x: dirSeatX31(i), y: MFY31, behind: true }));
   return { id: `board27:${n}:${year}`, W: MW31, H: MH31, back: r.back, front: r.front, floors: [MFY31], people, texts: [], spots: [] };
 })));
+
+// R31 · onda 5 (SALAS): a mesma casca/mesa/cadeira para as salas antigas do r27 refeitas em salas5px.ts
+export { begin as roomBegin31, end as roomEnd31, tableFront as tableFront31 };
