@@ -74,3 +74,5 @@
 .c18-tip .m5-bang { margin-top: 3px; }
 .m5-cbtn { white-space: nowrap; gap: 4px; }
 .m5-cbtn .pill { font-size: 9.5px; padding: 0 4px; line-height: 1.5; }
+/* dentro da casca nova (reg5) a região não tem margem própria: o mapa ganha a calha de 16px */
+.reg5 .m5-world, .reg5 .m5-visit { padding: 8px 16px 16px; box-sizing: border-box; }

@@ -35,22 +35,29 @@ const newGame = (city, year, months = 6) => p.evaluate(async ([city, year, month
   for (let i = 0; i < months; i++) { pb.playMonth(g, 'balanced'); tick.advanceMonth(g); }
   sw.setSw(g, 'exp5.nav', true);
   st.store.game = g;
+  (await import('/src/ui/common.ts')).rerender(); // a casca nova se instala no primeiro desenho
+  await new Promise((r) => setTimeout(r, 800));
   return { year: g.year, city: g.config.homeCity };
 }, [city, year, months]);
+/** Vai à cidade ou ao mundo pela casca nova (viagem de região); outras páginas como antes. */
 const area = (a, sub) => p.evaluate(async ([a, sub]) => {
   const st = await import('/src/ui/store.ts');
   const c = await import('/src/ui/common.ts');
   const vis = await import('/src/ui/vis.ts');
+  const sh = await import('/src/ui/r31/shell5.ts');
+  const m = await import('/src/ui/r31/map5ui.ts');
   document.querySelectorAll('.overlay').forEach((e) => e.remove());
-  st.store.area = a;
   if (sub) vis.setTab(sub[0], sub[1]);
+  m.WORLD5.city = undefined; m.WORLD5.country = undefined;
+  if (sh.shell5On(st.store.game) && (a === 'campus18' || a === 'world')) { sh.travel5go(a === 'campus18' ? 'cidade' : 'mundo'); return; }
+  st.store.area = a;
   c.rerender();
 }, [a, sub]);
-const top = () => p.evaluate(() => { document.querySelector('.c27-main, .map27, .m5-visit')?.scrollIntoView({ block: 'start' }); });
+const top = () => p.evaluate(() => { const e = document.querySelector('.m5-visit, .map27, .c27-main'); const sc = e?.closest('.reg5, main, .page21-host'); e?.scrollIntoView({ block: 'start' }); void sc; });
 
 for (const [city, year, name] of [['rio', 1975, 'rio1975'], ['london', 1965, 'londres1965'], ['new_york', 2005, 'novayork2005']]) {
   console.log('jogo', JSON.stringify(await newGame(city, year)));
-  await area('campus18'); await p.waitForTimeout(1200); await top(); await shot(`cidade-${name}`);
+  await area('campus18'); await p.waitForTimeout(2500); await top(); await shot(`cidade-${name}`);
   if (name === 'rio1975') {
     // teclado: foco no mapa, setas andam de prédio em prédio (a dica acompanha)
     await p.locator('.m5-city .w19-vp').first().focus();
@@ -72,7 +79,7 @@ for (const [city, year, name] of [['rio', 1975, 'rio1975'], ['london', 1965, 'lo
 }
 for (const year of [1925, 1985, 2025]) {
   console.log('jogo', JSON.stringify(await newGame('rio', year, 3)));
-  await area('world', ['worldHub', 'map27']); await p.waitForTimeout(1500);
+  await area('world', ['worldHub', 'map27']); await p.waitForTimeout(2500);
   // abre um país pelo painel (Alemanha / Europa: mostra as fronteiras da época)
   await p.evaluate(async (year) => {
     const m = await import('/src/ui/r31/map5ui.ts');

@@ -13,6 +13,7 @@ import { getLang, t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { nav5On } from '../../sim/r31/exp5';
 import { registerRegion5 } from './nav5';
+import { SH5, shell5On, show5, travel5go } from './shell5';
 import { buildScene18, drawFrame18, env18 } from '../pixel/campus18px';
 import { mapLms27 } from '../pixel/city27';
 import { skylineThumbImg29 } from '../pixel/geo29';
@@ -54,7 +55,17 @@ export function regionCmds5(s: GameState, q: string): RegionCmd5[] {
 export const CITY5: { layers: Set<Layer5>; want?: string; /** partida+cidade já vista (zera o zoom ao trocar) */ seen?: string } = { layers: defaultLayers5() };
 export const WORLD5: { country?: string; city?: string; focus?: string; want?: { lon: number; lat: number; span: number } } = {};
 
-const goArea5 = (area: string): void => { (store as { area: string }).area = area; rerender(); };
+/** Vai a uma página. Com a casca nova (frente NAV), cidade e mundo são viagens de região (o mesmo lugar só redesenha) e as
+ *  outras páginas abrem como papel do objeto dono; sem casca, troca a página como sempre. */
+function goArea5(area: string): void {
+  const s = store.game;
+  if (s && shell5On(s)) {
+    const r = area === 'campus18' ? 'cidade' : area === 'world' || area === CITY_AREA5 ? 'mundo' : null;
+    if (r) { if (SH5.region === r) rerender(); else travel5go(r); return; }
+    show5(area); return;
+  }
+  (store as { area: string }).area = area; rerender();
+}
 
 /** Apontar um prédio: abre "Nosso mundo" e, ao desenhar, centraliza e mostra a seta em cima dele. */
 export function pointCity5(id: string): void { CITY5.want = id; goArea5('campus18'); }
@@ -82,7 +93,7 @@ registerFind5('mundo', (s, q) => find5(s, q).filter((x) => x.region === 'mundo')
 // Casca (frente NAV): a cena das regiões 'cidade' e 'mundo' É o mapa — a página da região (campus18 / mapa-múndi), que
 // com exp5.nav ligado já vem sem lista. Registrar devolve essa página; a casca põe topo, viagem e bolso em volta.
 registerRegion5('cidade', (c) => c.old());
-registerRegion5('mundo', (c) => c.old());
+registerRegion5('mundo', (c) => (WORLD5.city ? visitCity5(c.s, WORLD5.city) : c.old())); // cidade de outro país = o mapa dela, dentro do Mundo
 
 // ---------------------------------------------------------------- cidade: placas, "!", teclado, apontar
 
@@ -111,7 +122,7 @@ export function cityPanel5(s: GameState, pins: Pin5[], o: { fn: boolean; setFn: 
       h('li', null, kbd5('+ −'), ' ', T(l('aproxima e afasta', 'zoom in and out')), ' · ', kbd5('0'), ' ', T(l('cidade inteira', 'whole city'))),
       h('li', null, kbd5('N'), ' ', T(l('próxima novidade', 'next news'))),
       h('li', null, kbd5('Ctrl K'), ' ', T(l('busca e aponta no mapa', 'search and point on the map')))),
-    h('p', { class: 'small muted' }, `${T(city?.name ?? l('Sua cidade', 'Your city'))} · ${s.year}`));
+    h('p', { class: 'small muted' }, document.createTextNode(`${T(city?.name ?? l('Sua cidade', 'Your city'))} · ${s.year}`))); // nome da cidade cru (o filtro de nomes reais trocaria "Rio")
 }
 
 const center5 = (b: HTMLElement): Pt5 => ({ id: b.dataset.id ?? '', x: b.offsetLeft + b.offsetWidth / 2, y: b.offsetTop + b.offsetHeight / 2 });
@@ -156,9 +167,10 @@ export function cityKeys5(vp: HTMLElement, layer: HTMLElement, o: { zoom: (f: nu
       if (nb) { nb.focus({ preventScroll: true }); o.show(nb); }
       return;
     }
-    if (e.key === '+' || e.key === '=') { e.preventDefault(); o.zoom(1.4); return; }
-    if (e.key === '-' || e.key === '_') { e.preventDefault(); o.zoom(1 / 1.4); return; }
-    if (e.key === '0' || e.key === 'Home') { e.preventDefault(); o.reset(); return; }
+    // as teclas do mapa não vazam para as teclas da casca (0, +, − também são atalhos de objetos)
+    if (e.key === '+' || e.key === '=') { e.preventDefault(); e.stopPropagation(); o.zoom(1.4); return; }
+    if (e.key === '-' || e.key === '_') { e.preventDefault(); e.stopPropagation(); o.zoom(1 / 1.4); return; }
+    if (e.key === '0' || e.key === 'Home') { e.preventDefault(); e.stopPropagation(); o.reset(); return; }
     if (e.key === 'n' || e.key === 'N' || e.key === '!') { e.preventDefault(); e.stopPropagation(); nextBang5(layer, o.show); }
   });
 }
