@@ -1,6 +1,6 @@
 // Componentes visuais compartilhados: ícone, medidor com ícone, chips de status, cartões,
 // barras de carga mensal, linha do tempo diária e contagem regressiva. Menos texto, mais leitura
-// rápida (pedido do criador). Ícones em pixel art quando disponíveis; emoji como reserva.
+// rápida (pedido do criador). Ícones em pixel art (r31 EMO: sem emoji de reserva).
 
 import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
@@ -9,14 +9,6 @@ import { h } from './dom';
 import { nameSvg20 } from './ux20';
 import { shownTabs31 } from './ps/view27'; // R31 (A): ≤ 6 abas à mostra + "Mais ▾" em toda faixa
 
-const EMOJI: Record<string, string> = {
-  money: '💰', fame: '⭐', fans: '👥', disc: '💿', cd: '📀', cassette: '📼', stream: '📶', 'chart-up': '📈', 'chart-down': '📉',
-  mic: '🎤', guitar: '🎸', drums: '🥁', calendar: '📅', contract: '📜', warning: '⚠️', heart: '❤️', 'broken-heart': '💔', trophy: '🏆',
-  'gold-disc': '🥇', 'platinum-disc': '💿', house: '🏠', 'tour-bus': '🚌', plane: '✈️', ship: '🚢', train: '🚆', newspaper: '📰', tv: '📺',
-  radio: '📻', camera: '📷', film: '🎬', gamepad: '🎮', shirt: '👕', handshake: '🤝', gavel: '⚖️', bank: '🏦', hologram: '👻', brain: '🧠',
-  flag: '🚩', star: '🎪', note: '🎵', pen: '✍️', vault: '🗄️', bulb: '💡', building: '🏢', rocket: '🚀',
-  fire: '🔥', skull: '💀', sleep: '😴', sparkle: '✨', stress: '😣', clock: '⏱', globe: '🌍', lock: '🔒', key: '🔑',
-};
 
 type IconFn = (name: string, scale?: number) => HTMLElement | null;
 let pixelIcon: IconFn | null = null;
@@ -33,7 +25,8 @@ export function ic(name: string, scale = 1, title?: string): HTMLElement {
     px.classList.add('ic-px');
     return px;
   }
-  return h('span', { class: 'ic-emoji', 'aria-hidden': title ? undefined : 'true', title, role: title ? 'img' : undefined, 'aria-label': title }, EMOJI[name] ?? '•');
+  // r31 onda 4 (EMO): sem emoji do sistema — nome desconhecido vira um ponto neutro
+  return h('span', { class: 'ic-emoji', 'aria-hidden': title ? undefined : 'true', title, role: title ? 'img' : undefined, 'aria-label': title }, '•');
 }
 
 /** Valor com ícone e rótulo acessível — substitui "Fama: 42" por ⭐42. */

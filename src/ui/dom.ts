@@ -1,5 +1,6 @@
 // Mini-helper de DOM sem framework.
 import { disp31 } from '../data/realdisp31';
+import { emoPlain31, hasEmo31, pxNodes31 } from './pixel/emo31'; // r31 onda 4 (EMO): emoji → ícone em pixel art
 
 type Child = Node | string | number | null | undefined | false | Child[];
 type Attrs = Record<string, unknown> & { class?: string; style?: string };
@@ -17,7 +18,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs | 
       else if (k === 'checked' && 'checked' in el) (el as HTMLInputElement).checked = !!v;
       else if (k === 'disabled') (el as HTMLButtonElement).disabled = !!v;
       else if (k === 'selected' && 'selected' in el) (el as HTMLOptionElement).selected = !!v;
-      else el.setAttribute(k, v === true ? '' : k === 'title' || k === 'aria-label' ? disp31(String(v)) : String(v));
+      else el.setAttribute(k, v === true ? '' : k === 'title' || k === 'aria-label' || k === 'placeholder' ? emoPlain31(disp31(String(v))) : String(v));
     }
   }
   append(el, children);
@@ -29,7 +30,13 @@ function append(el: HTMLElement, children: Child[]): void {
     if (c === null || c === undefined || c === false) continue;
     if (Array.isArray(c)) append(el, c);
     else if (c instanceof Node) el.appendChild(c);
-    else el.appendChild(document.createTextNode(disp31(String(c)))); // R31 (X): interruptor "Nomes e obras reais" na exibição
+    else {
+      const txt = disp31(String(c)); // R31 (X): interruptor "Nomes e obras reais" na exibição
+      // r31 onda 4 (EMO): emoji vira ícone em pixel art (em <option>/<textarea>, palavra)
+      if (!hasEmo31(txt)) el.appendChild(document.createTextNode(txt));
+      else if (el.tagName === 'OPTION' || el.tagName === 'TEXTAREA') el.appendChild(document.createTextNode(emoPlain31(txt)));
+      else for (const n of pxNodes31(txt, el.tagName === 'BUTTON' && children.length === 1)) el.appendChild(n);
+    }
   }
 }
 
