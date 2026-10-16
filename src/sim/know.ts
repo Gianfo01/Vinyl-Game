@@ -403,7 +403,7 @@ export function see(s: GameState, id: string, f: SeeField, obs = 'player'): Seen
 export const seen = (s: GameState, id: string, f: SeeField, obs = 'player'): boolean => see(s, id, f, obs) !== 'hidden';
 
 /** Limiar ÚNICO de informação interna de uma empresa (antes 5% no pregão e 25% no dossiê): participação a partir daqui. */
-export const INSIDE31 = 0.1;
+export const INSIDE31 = 0.05;
 
 /** Fama MOSTRADA de um ato ou pessoa: a vista do seu país (#4); o que é seu, o número de sempre. */
 export function fameHere31(s: GameState, id: string): number {

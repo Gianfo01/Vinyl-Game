@@ -24,6 +24,7 @@ import { ventures } from './ventures9';
 import { withCatalogSums } from '../business';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
+import { INSIDE31 } from '../know';
 
 // ---------------------------------------------------------------- catálogo
 
@@ -231,7 +232,8 @@ const nice = (n: number): number => { const f = Math.pow(10, Math.floor(Math.log
 export const MAX_STAKE = 0.2;
 const FEE = 0.005;
 const DRIFT = 0.04;
-export const INSIGHT_AT = 0.05;
+/** r31 F #25: o limiar único de informação interna mora em know.ts (INSIDE31); mesmo valor de antes no pregão. */
+export const INSIGHT_AT = INSIDE31;
 export const CONFLICT_AT = 0.1;
 
 // ---------------------------------------------------------------- nomes e universo
@@ -932,7 +934,7 @@ export const stocksValue = (s: GameState, acct: Acct = 'p'): number => holdingsO
 export function insight(s: GameState, id: string): { revenue: number; cash: number; roster: number; ceo?: string; standing: number } | null {
   if (!isLbl(id)) return null;
   const lb = s.labels[id.slice(3)];
-  if (!lb || playerFrac(s, id) < INSIGHT_AT) return null;
+  if (!lb || !insider31(s, lb.id)) return null; // r31 F #25: limiar único, somando bolsa e compra direta
   return { revenue: revenueOf(lb), cash: lb.cash, roster: lb.roster.length, ceo: lb.ceo, standing: Math.round(standingOf(s, lb.id).mom) };
 }
 
@@ -1015,4 +1017,9 @@ function crossing(s: GameState, id: string, from: number, to: number): void {
     s.rivalries[lb.id] = (s.rivalries[lb.id] ?? 0) + 5;
     news(s, fmtL(l('A imprensa pergunta se {c} tem conflito de interesses: acionista de peso de {n}.', 'The press asks whether {c} has a conflict of interest: a major shareholder of {n}.'), { c: s.config.companyName, n: lb.name }), 'info', id, true);
   }
+}
+
+/** r31 F #25: você vê os números internos de um selo? Participação (bolsa OU compra direta) a partir do limiar único. */
+export function insider31(s: GameState, labelId: string): boolean {
+  return Math.max(stakeOf(s, labelId), playerFrac(s, `lb:${labelId}`)) >= INSIDE31;
 }
