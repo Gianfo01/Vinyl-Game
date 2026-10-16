@@ -109,9 +109,11 @@ beforeAll(() => {
   // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
   // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
   // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
-  expect(s.player.cash).toBe(257209);
-  expect(hashString(JSON.stringify(s.acts))).toBe(68287867);
-  expect(hashString(rngSnapshot19(s))).toBe(205718420);
+  // R31 onda 4 (N · bandas de ficção no mundo, de propósito — docs/r31/DECISOES.md e docs/r31/nx.md): ~4 bandas de filmes e séries
+  // (Stillwater, Electric Mayhem…) estreiam nesses 8 meses e mudam a trajetória; com `fic31` desligado voltam 257209 / 4026815485 / 68287867 / 205718420.
+  expect(s.player.cash).toBe(1132366);
+  expect(hashString(JSON.stringify(s.acts))).toBe(616336881);
+  expect(hashString(rngSnapshot19(s))).toBe(3274579681);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
