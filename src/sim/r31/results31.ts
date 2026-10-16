@@ -192,7 +192,7 @@ export function recordRes31(s: GameState, t: Txn, sect: Sect18): void {
   const p = t.tags.project;
   if (p) {
     let P = st.P[p];
-    if (!P) { const o = projOf(s, p); P = st.P[p] = { v: [0, 0, 0], n: o.n, k: o.k, y: s.year, ...(o.a ?? a ? { a: o.a ?? a } : {}) }; }
+    if (!P) { const o = projOf(s, p); P = st.P[p] = { v: [0, 0, 0], n: o.n, k: t.tags.tour === p ? 'tour' : o.k, y: s.year, ...(o.a ?? a ? { a: o.a ?? a } : {}) }; }
     if (!P.n) { const o = projOf(s, p); if (o.n) { P.n = o.n; if (o.k !== 'x') P.k = o.k; P.a ??= o.a; } }
     add3(P.v, amt, rev ? 0 : 1);
     const m = (st.cur.p[p] ??= [0, 0]);
