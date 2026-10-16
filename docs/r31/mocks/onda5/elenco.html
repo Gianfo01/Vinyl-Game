@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Press+Start+2P&family=Special+Elite&display=swap');
+:root{--bg:#0f1a26;--line:#2b4260;--ink:#e9e2d0;--mute:#9aa8b8;--gold:#f0c060;--pink:#e05a8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
+kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
+.hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;gap:18px;padding:0 18px;background:#0b141e;border-bottom:3px solid var(--pink);z-index:3}
+.hud .logo{font-family:'Press Start 2P';font-size:12px;color:var(--gold)}
+.hud .chip{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:18px}.hud .chip b{color:var(--gold)}
+.hud .sp{flex:1}.hud .k{font-size:15px;color:var(--mute)}
+.adv{background:var(--gold);color:#1a1214;font-weight:700;font-size:18px;padding:9px 16px;border-radius:6px}
+.bgsede{position:absolute;left:100px;top:58px;width:1240px;height:780px;image-rendering:pixelated;filter:brightness(.28)}
+.bottom{position:absolute;left:0;right:0;bottom:0;background:#0b141e;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:3}
+.lbl{font-family:'Press Start 2P';font-size:8px;color:var(--mute);margin-right:4px}
+.slot{border:1px solid var(--line);background:#16263a;border-radius:6px;padding:6px 9px;font-size:14px;display:flex;gap:7px;align-items:center}
+.slot.empty{border-style:dashed;color:#5d7088}
+.frame{position:absolute;left:50px;top:70px;width:1340px;height:740px;border-radius:8px;box-shadow:0 14px 40px #000c}
+.title{position:absolute;left:22px;top:14px;font-family:'Press Start 2P';font-size:15px}
+.title span{font-size:9px;margin-left:10px;opacity:.85}
+.close{position:absolute;right:18px;top:12px;font-size:15px}
+.px{image-rendering:pixelated}
+/* MURAL DE CORTIÇA */
+.cork{background:#b98a52;background-image:radial-gradient(#a57944 1px,transparent 1.5px),radial-gradient(#c99a62 1px,transparent 1.5px);background-size:7px 7px,11px 11px;border:10px solid #5e3a1e}
+.cork .title{color:#fff6dd;text-shadow:2px 2px 0 #3a2414}.cork .close{color:#fff6dd}
+.tabs{position:absolute;left:22px;top:48px;display:flex;gap:6px}
+.tab{background:#f6ecd4;border:2px solid #3a2414;border-radius:4px;padding:5px 11px;font-size:15px;font-weight:600;color:#3a2414}
+.tab.on{background:#3a2414;color:#ffe9b0}
+.pol{position:absolute;width:176px;height:212px;background:#fbf8f0;border:1px solid #9a8a70;box-shadow:3px 5px 0 #0004;padding:10px 10px 0}
+.pol .pin{position:absolute;left:50%;top:-7px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:2px solid #0006}
+.pol .ph{height:120px;background:#2a3a52;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;border:2px solid #1a1214}
+.pol .ph img{height:104px;image-rendering:pixelated}
+.pol .nm{font-family:'Special Elite',monospace;font-size:16px;color:#2a2018;margin-top:6px;white-space:nowrap}
+.pol .gn{font-size:13px;color:#6d5a44}
+.badges{position:absolute;right:6px;top:16px;display:flex;flex-direction:column;gap:4px}
+.bd{font-family:'Press Start 2P';font-size:7px;color:#fff;padding:3px 4px;border:2px solid #1a1214;border-radius:3px}
+.stat{position:absolute;left:10px;right:10px;bottom:6px;display:flex;gap:4px}
+.bar{flex:1;height:7px;background:#ddd2bb;border:1px solid #9a8a70;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0}
+.note{position:absolute;background:#fff59a;border:1px solid #9a8a30;padding:9px 10px;font-size:14px;color:#3a3010;box-shadow:3px 4px 0 #0003;width:200px}
+.string{position:absolute;height:2px;background:#c0392b;transform-origin:0 0}
+.menu{position:absolute;background:#16263a;border:2px solid var(--gold);border-radius:6px;padding:6px;width:230px;z-index:5;font-size:15px}
+.menu div{padding:6px 8px;border-radius:4px;display:flex;justify-content:space-between}
+.menu div.h{background:#2a3a52}
+.menu small{color:var(--mute)}
+/* QUADRO DE PLANEJAMENTO */
+.board{background:#f4f2ea;border:10px solid #8a8a8a;border-radius:6px}
+.board .title{color:#2a2a2a}.board .close{color:#2a2a2a}
+.grid{position:absolute;left:22px;top:82px;right:22px;bottom:70px;display:grid;grid-template-columns:170px repeat(12,1fr);grid-auto-rows:1fr;border-left:2px solid #444;border-top:2px solid #444}
+.grid>div{border-right:1px solid #bbb;border-bottom:1px solid #bbb;position:relative}
+.mh{font-family:'Press Start 2P';font-size:9px;color:#333;display:flex;align-items:center;justify-content:center;background:#e4e1d6}
+.mh.now{background:#f0c060}
+.an{display:flex;align-items:center;gap:8px;padding:0 8px;background:#ebe8de;font-weight:700;color:#222;font-size:15px}
+.an img{height:46px;image-rendering:pixelated}
+.an small{display:block;font-weight:400;color:#666;font-size:12px}
+.card{position:absolute;top:8px;bottom:8px;border:2px solid #1a1214;border-radius:3px;font-size:13px;font-weight:700;color:#1a1214;padding:3px 6px;overflow:hidden;white-space:nowrap;box-shadow:2px 2px 0 #0003;z-index:2}
+.card small{display:block;font-weight:400;font-size:11px}
+.c-rec{background:#9ad0f5}.c-rel{background:#f5d06a}.c-tour{background:#f59a6a}.c-rest{background:#b6e3a0}.c-pro{background:#d7b0f0}
+.conf{outline:3px solid #e04848;outline-offset:2px;animation:none}
+.ghost{opacity:.55;border-style:dashed}
+.legend{position:absolute;left:22px;bottom:18px;display:flex;gap:10px;align-items:center;font-size:14px;color:#333}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{width:16px;height:12px;border:2px solid #1a1214;display:inline-block}
+.warn{position:absolute;background:#fff;border:2px solid #e04848;border-radius:4px;padding:8px 10px;font-size:14px;color:#222;width:280px;z-index:6;box-shadow:3px 4px 0 #0003}
+.warn b{color:#c0392b}
+/* AGENDA DE COURO */
+.leather{background:#5a2e1a;border:6px solid #2e160a;border-radius:14px;background-image:repeating-linear-gradient(45deg,#5a2e1a 0 3px,#552b18 3px 6px)}
+.leather .title{color:#f3d79a}.leather .close{color:#f3d79a}
+.page{position:absolute;top:56px;bottom:22px;background:#fbf6e8;border:1px solid #b9a07a;padding:16px 18px;color:#2a2018;box-shadow:inset -8px 0 12px -8px #0003}
+.page.l{left:28px;width:620px}.page.r{left:668px;width:640px;box-shadow:inset 8px 0 12px -8px #0003}
+.page h3{font-family:'Special Elite',monospace;margin:0 0 6px;font-size:20px}
+.page .sub{font-size:14px;color:#6d5a44;margin-bottom:10px}
+.days{display:grid;grid-template-columns:110px 1fr 1fr;gap:6px}
+.days .hd{font-family:'Press Start 2P';font-size:8px;color:#8a6a44;padding:4px 0}
+.days .wk{font-family:'Special Elite',monospace;font-size:15px;display:flex;align-items:center}
+.sl{border:2px solid #b9a07a;border-radius:4px;min-height:44px;padding:4px 8px;font-size:14px;background:#fff}
+.sl b{display:block;font-size:14px}
+.sl small{color:#6d5a44}
+.sl.exp{background:#e8f0ff;border-color:#6a8ac0}
+.sl.del{background:#eee;border-style:dashed;color:#777}
+.sl.over{background:#ffe2dc;border-color:#e04848}
+.sl.free{border-style:dashed;color:#9a8a70;display:flex;align-items:center}
+.balls{display:flex;gap:6px;align-items:center;margin:10px 0}
+.ball{width:20px;height:20px;border-radius:50%;border:2px solid #2a2018}
+.ball.p{background:#f0c060}.ball.e{background:#6a8ac0}.ball.x{background:#e04848}.ball.o{background:#fff}
+.box{border:1px dashed #b9a07a;border-radius:4px;padding:10px;margin-top:10px;font-size:14px;line-height:1.45}
+.box h4{font-family:'Press Start 2P';font-size:8px;margin:0 0 8px;color:#8a3a10}
+.chief{display:flex;gap:10px;align-items:center}
+.chief img{height:64px;image-rendering:pixelated;border:2px solid #2a2018;background:#cfe0ee}
+</style></head><body>
+<div class="hud"><span class="logo">SELO AGULHA</span><span class="chip">Set 1962</span><span class="chip">Caixa <b>$3.447</b></span><span class="chip">★ 38</span>
+<span class="sp"></span><span class="k"><kbd>Ctrl K</kbd> buscar</span><span class="k"><kbd>?</kbd> teclas</span><span class="k"><kbd>Esc</kbd> pausa</span><span class="adv">▶ AVANÇAR MÊS</span></div>
+<img class="bgsede" src="sede.png">
+<div id="app"></div>
+<div class="bottom" id="bolso"><span class="lbl">BOLSO</span><span class="slot"><kbd>E</kbd> Caixa de entrada</span><span class="slot"><kbd>4</kbd> Mural do elenco</span><span class="slot"><kbd>C</kbd> Quadro de planejamento</span><span class="slot"><kbd>G</kbd> Agenda</span><span class="slot empty">+ fixar</span></div>
+<script src="travel.js"></script>
+<script>
+const v=new URLSearchParams(location.search).get('v')||'mural';
+const A=[['Maria Bastos','Folk',0,[['GRAVANDO','#2c5aa0']],72,60,'#e04848'],['Os Lunáticos','Beat',1,[['TURNÊ','#d4600a']],61,40,'#2c7a3c'],
+ ['Silver Avenue','Ska',2,[['CONTRATO 2 MESES','#c0392b']],55,80,'#d4a017'],['Marta Quinn','Skiffle',3,[],48,90,'#2c5aa0'],
+ ['Milo Fenn','Folk',4,[['SAÚDE RUIM','#8e44ad'],['DESCANSO','#2c7a3c']],44,25,'#e04848'],['Duo Riviera','Chanson',0,[['LANÇAMENTO','#b08a10']],39,70,'#2c7a3c'],
+ ['Kingston 5','Ska',1,[],35,55,'#d4a017'],['Mabel Ortiz','Bolero',2,[['NOVA','#1f8a8a']],22,85,'#2c5aa0']];
+const V={
+ mural:()=>`<div class="frame cork"><div class="title">MURAL DO ELENCO <span>8 artistas · tecla 4</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+  <div class="tabs"><span class="tab on">Elenco</span><span class="tab">Saúde</span><span class="tab">Relações</span><span class="tab">Segredos</span><span class="tab">Equipe</span><span class="tab">Cartas</span></div>
+  ${A.map((a,i)=>{const x=40+(i%4)*230+(i%2)*12, y=104+Math.floor(i/4)*262+(i%3)*8, r=[-2,1.5,-1,2.5,1,-2.5,2,-1][i];
+   return `<div class="pol" style="left:${x}px;top:${y}px;transform:rotate(${r}deg)"><span class="pin" style="background:${a[6]}"></span>
+    <div class="ph"><img src="p${a[2]}.png"></div><div class="nm">${a[0]}</div><div class="gn">${a[1]} · fama ${a[4]}</div>
+    <div class="badges">${a[3].map(([t,c])=>`<span class="bd" style="background:${c}">${t}</span>`).join('')}</div>
+    <div class="stat"><span class="bar"><i style="width:${a[5]}%;background:#2c7a3c"></i></span><span class="bar"><i style="width:${100-a[5]/2}%;background:#d4a017"></i></span></div></div>`}).join('')}
+  <div class="string" style="left:262px;top:200px;width:228px;transform:rotate(3deg)"></div>
+  <div class="note" style="left:960px;top:110px;transform:rotate(2deg)"><b>Barras</b>: verde = moral, amarelo = energia.<br>Fio vermelho = rixa entre dois artistas (aba Relações mostra todas).</div>
+  <div class="note" style="left:980px;top:230px;transform:rotate(-1.5deg)"><b>Selinhos</b> mostram o estado do mês: gravando, turnê, descanso, contrato vencendo, saúde ruim, lançamento.</div>
+  <div class="menu" style="left:520px;top:350px"><div class="h"><b>Silver Avenue</b><small>ficha ▸</small></div><div>Renovar contrato<small>vence em 2 meses</small></div><div>Marcar gravação<small>estúdio</small></div><div>Planejar turnê</div><div>Divulgar<small>rádio, TV, imprensa</small></div><div>Dar descanso</div><div>Punir / liberar</div></div>
+  <div class="note" style="left:1000px;top:560px;width:300px;background:#fbf8f0;transform:rotate(-1deg)"><b>+ Vaga no elenco</b><br>Polaroid vazia: clique para ir ao caderno do olheiro (A&R) e contratar.</div>
+  </div>`,
+ quadro:()=>{const M=['SET','OUT','NOV','DEZ','JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO'];
+  const rows=[['Maria Bastos',0,'Folk',[['c-rec',0,2,'Gravação','LP "Rio Cinza"'],['c-rel',3,1,'Lançamento','LP'],['c-pro',4,2,'Divulgação','rádio e TV'],['c-tour',6,3,'Turnê','Reino Unido']]],
+   ['Os Lunáticos',1,'Beat',[['c-tour',0,2,'Turnê','Alemanha'],['c-rest',2,1,'Férias',''],['c-rec',3,2,'Gravação','single'],['c-rel',5,1,'Lançamento','single']]],
+   ['Silver Avenue',2,'Ska',[['c-rec',1,2,'Gravação','LP'],['c-tour',2,2,'Turnê','Jamaica']]],
+   ['Marta Quinn',3,'Skiffle',[['c-pro',0,1,'Divulgação','TV'],['c-rec',2,1,'Gravação','EP'],['c-rel',4,1,'Lançamento','EP']]],
+   ['Milo Fenn',4,'Folk',[['c-rest',0,2,'Descanso','saúde'],['c-rec',5,2,'Gravação','LP']]],
+   ['Duo Riviera',0,'Chanson',[['c-rel',0,1,'Lançamento','single'],['c-tour',1,2,'Turnê','França'],['c-rel',9,1,'Lançamento','LP',1]]]];
+  let cells=`<div class="mh" style="background:#d8d4c6">ARTISTA</div>`+M.map((m,i)=>`<div class="mh ${i==0?'now':''}">${m}${i==4?' 63':''}</div>`).join('');
+  rows.forEach(([n,p,g,cs],ri)=>{cells+=`<div class="an"><img src="p${p}.png"><span>${n}<small>${g}</small></span></div>`;
+   for(let c=0;c<12;c++){let inner='';cs.filter(x=>x[1]==c).forEach(([cl,s,w,t,d,gh])=>{const conf=(ri==2&&c==2);
+     inner+=`<div class="card ${cl} ${conf?'conf':''} ${gh?'ghost':''}" style="left:4px;width:calc(${w*100}% + ${(w-1)*1}px - 8px)">${t}<small>${d}</small></div>`});
+    cells+=`<div>${inner}</div>`}});
+  return `<div class="frame board"><div class="title">QUADRO DE PLANEJAMENTO <span>próximos 12 meses · tecla C</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+   <div style="position:absolute;left:22px;top:48px;display:flex;gap:6px;font-size:14px"><span class="tab on" style="background:#333;color:#fff">Seu elenco</span><span class="tab" style="background:#fff;border-color:#333;color:#333">Equipe</span><span class="tab" style="background:#fff;border-color:#333;color:#333">Só conflitos</span></div>
+   <div class="grid">${cells}</div>
+   <div class="warn" style="left:470px;top:350px"><b>Conflito:</b> Silver Avenue gravando e em turnê em NOV.<br>Arraste um dos cartões para outro mês.</div>
+   <div class="legend"><span><b class="c-rec"></b>Gravação</span><span><b class="c-rel"></b>Lançamento</span><span><b class="c-pro"></b>Divulgação</span><span><b class="c-tour"></b>Turnê</span><span><b class="c-rest"></b>Férias / descanso</span><span><b style="border-style:dashed"></b>Arrastando</span><span style="margin-left:20px">Clique num espaço vazio = menu de ações · arraste = mudar o mês</span></div></div>`},
+ agenda:()=>`<div class="frame leather"><div class="title">SUA AGENDA <span>setembro de 1962 · tecla G</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+  <div class="page l"><h3>Setembro</h3><div class="sub">5 horários pessoais + 2 de expediente por mês</div>
+   <div class="balls"><span class="ball p"></span><span class="ball p"></span><span class="ball p"></span><span class="ball p"></span><span class="ball o"></span><span style="width:12px"></span><span class="ball e"></span><span class="ball e"></span><span style="margin-left:10px;font-size:14px">4 de 5 pessoais · 2 de 2 expediente</span></div>
+   <div class="days"><span class="hd"></span><span class="hd">MANHÃ</span><span class="hd">TARDE</span>
+    <span class="wk">Semana 1</span><div class="sl exp"><b>Selo (à frente)</b><small>expediente</small></div><div class="sl exp"><b>Selo (à frente)</b><small>expediente</small></div>
+    <span class="wk">Semana 2</span><div class="sl"><b>Estúdio com Maria Bastos</b><small>produzir o LP</small></div><div class="sl"><b>Reunião com a Guilda</b><small>negociação</small></div>
+    <span class="wk">Semana 3</span><div class="sl"><b>Praticar violão</b><small>vida pessoal</small></div><div class="sl del"><b>Agência de shows</b><small>diretor cuida (delegada)</small></div>
+    <span class="wk">Semana 4</span><div class="sl"><b>Festa da indústria</b><small>contatos</small></div><div class="sl free">+ livre (1 horário)</div>
+   </div></div>
+  <div class="page r"><h3>Carreiras e delegação</h3><div class="sub">Envolvimento por carreira: à frente (2), normal (1), delegada (0)</div>
+   <div class="days" style="grid-template-columns:1fr 120px"><span class="hd">CARREIRA</span><span class="hd">ENVOLVIMENTO</span>
+    <div class="sl"><b>Selo Agulha</b><small>dono do selo · principal</small></div><div class="sl exp"><b>À frente</b><small>2 horários</small></div>
+    <div class="sl"><b>Agência de shows</b><small>2ª carreira</small></div><div class="sl del"><b>Delegada</b><small>diretor: R. Oakes</small></div>
+   </div>
+   <div class="box"><h4>CHEFE DE GABINETE</h4><div class="chief"><img src="p1.png"><div><b>Ruth Oakes</b> · na sua sala<br>+1 horário de expediente · relatório da agência: "turnê da Suécia fechada, 3 datas".<br><span style="color:#8a3a10">clique nela na cena para os relatórios</span></div></div></div>
+   <div class="box"><h4>SE PASSAR DO LIMITE</h4>Horários extras viram páginas riscadas em vermelho: estresse sobe e tudo rende menos. O seu personagem aparece cansado na sede.</div>
+   <div class="box"><h4>CONTRATAR</h4>Vaga nova: anúncio no jornal → candidatos esperam na recepção. Freelancers e músicos de estúdio: telefone.</div>
+  </div></div>`
+};
+document.getElementById('app').innerHTML=V[v]();
+const bo=document.getElementById('bolso');bo.insertBefore(buildTravel('sede'),bo.firstChild);
+</script></body></html>

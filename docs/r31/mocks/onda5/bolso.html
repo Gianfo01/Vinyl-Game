@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Press+Start+2P&family=Special+Elite&family=Permanent+Marker&display=swap');
+:root{--bg:#0f1a26;--line:#2b4260;--ink:#e9e2d0;--mute:#9aa8b8;--gold:#f0c060;--pink:#e05a8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
+kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
+.hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;gap:18px;padding:0 18px;background:#0b141e;border-bottom:3px solid var(--pink);z-index:3}
+.hud .logo{font-family:'Press Start 2P';font-size:12px;color:var(--gold)}
+.hud .chip{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:18px}.hud .chip b{color:var(--gold)}
+.hud .sp{flex:1}.hud .k{font-size:15px;color:var(--mute)}
+.adv{background:var(--gold);color:#1a1214;font-weight:700;font-size:18px;padding:9px 16px;border-radius:6px}
+.bgsede{position:absolute;left:100px;top:58px;width:1240px;height:780px;image-rendering:pixelated;filter:brightness(.28)}
+.bottom{position:absolute;left:0;right:0;bottom:0;background:#0b141e;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:3}
+.lbl{font-family:'Press Start 2P';font-size:8px;color:var(--mute);margin-right:4px}
+.slot{border:1px solid var(--line);background:#16263a;border-radius:6px;padding:6px 9px;font-size:14px;display:flex;gap:7px;align-items:center}
+.slot.on{border-color:var(--gold);color:var(--gold)}
+.slot.empty{border-style:dashed;color:#5d7088}
+.frame{position:absolute;left:50px;top:70px;width:1340px;height:740px;border-radius:8px;box-shadow:0 14px 40px #000c}
+.title{position:absolute;left:24px;top:14px;font-family:'Press Start 2P';font-size:15px;z-index:2}
+.title span{font-size:9px;margin-left:10px;opacity:.85}
+.close{position:absolute;right:18px;top:12px;font-size:15px;z-index:2}
+.tabs{position:absolute;left:24px;top:48px;display:flex;gap:6px;z-index:2}
+.tab{border-radius:4px;padding:5px 11px;font-size:15px;font-weight:600}
+.page{position:absolute;top:92px;bottom:22px;padding:16px 20px;color:#2a2018}
+.hand{font-family:'Special Elite',monospace}
+.mk{font-family:'Permanent Marker',cursive}
+h3{margin:0 0 8px;font-size:20px}
+.sub{font-size:14px;color:#6d5a44;margin-bottom:10px}
+.stamp{display:inline-block;font-family:'Press Start 2P';font-size:9px;padding:5px 7px;border:3px solid;transform:rotate(-4deg)}
+.btn{display:inline-block;font-family:'Press Start 2P';font-size:9px;color:#fff;padding:7px 9px;border:2px solid #1a1214;border-radius:4px;margin-right:6px}
+/* LIVRO-CAIXA */
+.ledger{background:#2d4a34;border:6px solid #1a2c1e;background-image:repeating-linear-gradient(45deg,#2d4a34 0 3px,#2a4631 3px 6px)}
+.ledger .title,.ledger .close{color:#f3e6b0}
+.ledger .tab{background:#e8dfc0;border:2px solid #1a2c1e;color:#1a2c1e;border-radius:4px 4px 0 0;border-bottom:none}
+.ledger .tab.on{background:#c0392b;color:#fff}
+.lp{background:#fbf7ea;border:1px solid #b9a07a;background-image:repeating-linear-gradient(#fbf7ea 0 25px,#cfe2cf 25px 26px);box-shadow:inset -8px 0 12px -8px #0003}
+.row{display:flex;justify-content:space-between;font-family:'Special Elite',monospace;font-size:16px;height:26px;align-items:center;border-bottom:1px dotted transparent}
+.row .v{width:120px;text-align:right}
+.pos{color:#1d6b2c}.neg{color:#b0281c}
+.tot{border-top:2px solid #2a2018;font-weight:700}
+.bars{display:flex;align-items:flex-end;gap:10px;height:190px;border-bottom:2px solid #2a2018;border-left:2px solid #2a2018;padding:0 10px;margin:8px 0 4px}
+.bars div{flex:1;position:relative}
+.bars i{display:block;border:2px solid #1a1214}
+.bars small{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:12px;color:#6d5a44}
+.clip{position:absolute;right:30px;top:30px;width:190px;background:#fff59a;border:1px solid #9a8a30;padding:9px;font-size:14px;transform:rotate(2deg);color:#3a3010;box-shadow:3px 4px 0 #0003}
+/* CADERNO DO OLHEIRO */
+.spiral{background:#3a3f4a;border:6px solid #23262e}
+.spiral .title,.spiral .close{color:#e9edf5}
+.spiral .tab{background:#e9edf5;border:2px solid #23262e;color:#23262e}
+.spiral .tab.on{background:#f0c060}
+.np{background:#fdfdf6;background-image:repeating-linear-gradient(#fdfdf6 0 27px,#c9d8ee 27px 28px);border:1px solid #9aa}
+.np:before{content:'';position:absolute;left:46px;top:0;bottom:0;width:2px;background:#f2a0a0}
+.rings{position:absolute;left:663px;top:96px;bottom:26px;width:14px;background:repeating-linear-gradient(#c8ccd4 0 10px,transparent 10px 24px);z-index:3}
+.pros{display:grid;grid-template-columns:60px 1fr 90px 90px;gap:4px 10px;align-items:center;padding-left:40px;font-size:15px}
+.pros img{height:52px;image-rendering:pixelated;background:#e8eef7;border:2px solid #2a2018}
+.pros b{font-size:16px}
+.pros .st{font-family:'Press Start 2P';font-size:7px;padding:3px 4px;border:2px solid;text-align:center}
+.pros .sel{outline:3px solid #f0c060}
+.sketch{float:right;width:120px;height:150px;border:2px solid #2a2018;background:#e8eef7;display:flex;align-items:flex-end;justify-content:center;margin:0 0 8px 12px}
+.sketch img{height:130px;image-rendering:pixelated}
+.rng{font-family:'Special Elite',monospace;font-size:16px}
+/* QUADRO BRANCO */
+.wb{background:#f7f8f8;border:12px solid #9aa0a6;border-radius:6px;box-shadow:inset 0 0 40px #0001,0 14px 40px #000c}
+.wb .title,.wb .close{color:#333}
+.wb .tab{background:#fff;border:2px solid #555;color:#333}
+.wb .tab.on{background:#2a5ad0;color:#fff;border-color:#2a5ad0}
+.cols{position:absolute;left:24px;top:96px;width:560px;bottom:110px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.cols>div{border-left:3px solid #2a5ad0;padding:0 8px}
+.cols h4{font-family:'Permanent Marker';color:#2a5ad0;font-size:20px;margin:0 0 8px;font-weight:400}
+.post{background:#ffe680;border:1px solid #c9b040;padding:8px;margin-bottom:10px;font-size:14px;color:#3a3010;box-shadow:2px 3px 0 #0002;position:relative}
+.post:before{content:'';position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#c0392b;border:2px solid #600}
+.post.b{background:#a8e0ff;border-color:#4a90c0}.post.g{background:#b9eba0;border-color:#5a9a40}.post.sel{outline:3px solid #2a5ad0}
+.timeline{position:absolute;left:610px;right:24px;top:96px;height:300px}
+.tl-line{position:absolute;left:0;right:0;top:110px;height:4px;background:#333}
+.wk{position:absolute;top:96px;width:30px;margin-left:-15px;text-align:center;font-family:'Permanent Marker';color:#333;font-size:15px}
+.wk:before{content:'';display:block;width:4px;height:30px;background:#333;margin:0 auto 4px}
+.mag{position:absolute;padding:6px 9px;border:2px solid #1a1214;border-radius:4px;font-size:14px;font-weight:700;color:#1a1214;box-shadow:2px 3px 0 #0003}
+.say{position:absolute;background:#fff;border:2px solid #333;border-radius:10px;padding:8px 10px;font-size:14px;color:#222;width:250px}
+.say img{height:42px;float:left;margin-right:8px;image-rendering:pixelated}
+.fc{position:absolute;left:610px;right:24px;bottom:22px;height:130px;border:3px dashed #2a5ad0;border-radius:6px;padding:12px;color:#222}
+/* REVISTA DE PARADAS */
+.mz{background:#f3efe4;border:3px solid #1a1214}
+.mast{position:absolute;left:0;right:0;top:0;height:74px;background:#c0392b;color:#fff;display:flex;align-items:center;padding:0 24px;gap:20px;border-bottom:4px solid #1a1214}
+.mast .nm{font-family:'Press Start 2P';font-size:26px;letter-spacing:.04em;text-shadow:3px 3px 0 #1a1214}
+.mast .ed{font-size:15px;opacity:.9}
+.mz .close{color:#fff;top:24px}
+.mz .tabs{top:84px}
+.mz .tab{background:#fff;border:2px solid #1a1214;color:#1a1214}
+.mz .tab.on{background:#1a1214;color:#fff}
+.chart{position:absolute;left:24px;top:124px;width:780px;bottom:20px}
+.cr{display:grid;grid-template-columns:44px 44px 1fr 170px 70px;align-items:center;height:42px;border-bottom:1px solid #c9c0a8;font-size:16px;color:#1a1214}
+.cr .n{font-family:'Press Start 2P';font-size:14px;text-align:center}
+.cr .mv{font-family:'Press Start 2P';font-size:9px;text-align:center}
+.cr .up{color:#1d7a2c}.cr .dn{color:#b0281c}.cr .nw{color:#fff;background:#2a5ad0;padding:3px}
+.cr .t b{display:block;font-size:16px}.cr .t small{color:#6d5a44}
+.cr.you{background:#fff3c0;box-shadow:inset 4px 0 0 #f0c060}
+.side{position:absolute;right:24px;top:124px;width:470px;bottom:20px}
+.box{border:3px solid #1a1214;background:#fff;padding:12px;margin-bottom:12px;color:#1a1214}
+.box h4{font-family:'Press Start 2P';font-size:9px;margin:0 0 10px}
+.cover{display:flex;gap:12px;align-items:center}
+.cover .art{width:90px;height:90px;border:3px solid #1a1214;background:repeating-linear-gradient(45deg,#2a5ad0 0 8px,#f0c060 8px 16px)}
+</style></head><body>
+<div class="hud"><span class="logo">SELO AGULHA</span><span class="chip">Set 1962</span><span class="chip">Caixa <b>$3.447</b></span><span class="chip">★ 38</span>
+<span class="sp"></span><span class="k"><kbd>Ctrl K</kbd> buscar</span><span class="k"><kbd>?</kbd> teclas</span><span class="k"><kbd>Esc</kbd> pausa</span><span class="adv">▶ AVANÇAR MÊS</span></div>
+<img class="bgsede" src="sede.png">
+<div id="app"></div>
+<div class="bottom" id="bolso"><span class="lbl">BOLSO</span>
+ <span class="slot" data-k="caixa"><kbd>Z</kbd> Livro-caixa</span><span class="slot" data-k="olheiro"><kbd>5</kbd> Caderno do olheiro</span><span class="slot" data-k="quadro"><kbd>U</kbd> Quadro branco</span><span class="slot" data-k="revista"><kbd>3</kbd> Revista de paradas</span><span class="slot"><kbd>E</kbd> Caixa de entrada</span><span class="slot empty">+ fixar</span></div>
+<script src="travel.js"></script>
+<script>
+const v=new URLSearchParams(location.search).get('v')||'caixa';
+const R=(a,b,c='')=>`<div class="row"><span>${a}</span><span class="v ${c}">${b}</span></div>`;
+const V={
+caixa:()=>`<div class="frame ledger"><div class="title">LIVRO-CAIXA <span>setembro de 1962 · tecla Z</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+ <div class="tabs">${['Posição','Resultado (DRE)','Capital e sócios','Empréstimos','Bolsa','Dívida','Seu bolso','Aprendizados'].map((t,i)=>`<span class="tab ${i==0?'on':''}">${t}</span>`).join('')}</div>
+ <div class="page lp" style="left:24px;width:640px"><h3 class="hand">Posição do mês</h3><div class="sub">o que entrou e saiu em agosto · valores de 1962</div>
+  ${R('Vendas de discos','+ $2.940','pos')}${R('Shows (sua parte)','+ $1.120','pos')}${R('Rádio e direitos','+ $380','pos')}
+  ${R('Folha (equipe e artistas)','− $1.650','neg')}${R('Estúdio e prensagem','− $1.210','neg')}${R('Divulgação e jabá','− $420','neg')}${R('Aluguel e sede','− $300','neg')}${R('Juros do empréstimo','− $95','neg')}
+  <div class="row tot"><span>Resultado do mês</span><span class="v pos">+ $765</span></div>
+  ${R('Caixa no início','$2.682')}<div class="row tot"><span>Caixa agora</span><span class="v">$3.447</span></div>
+  <div style="margin-top:16px"><span class="stamp" style="color:#1d6b2c;border-color:#1d6b2c">FÔLEGO ~44 MESES</span> <span class="stamp" style="color:#b0281c;border-color:#b0281c;margin-left:10px">PARCELA EM NOV</span></div></div>
+ <div class="page lp" style="left:676px;width:640px;box-shadow:inset 8px 0 12px -8px #0003"><h3 class="hand">Últimos 12 meses</h3><div class="sub">resultado por mês (verde = lucro, vermelho = prejuízo)</div>
+  <div class="bars">${[[40,1],[22,1],[18,0],[35,1],[60,1],[12,0],[28,1],[50,1],[70,1],[44,1],[30,0],[56,1]].map(([h,p],i)=>`<div><i style="height:${h*2}px;background:${p?'#48b85c':'#e04848'}"></i><small>${['set','out','nov','dez','jan','fev','mar','abr','mai','jun','jul','ago'][i]}</small></div>`).join('')}</div>
+  <div style="margin-top:34px" class="hand">${R('Receita no ano','$41.300','pos')}${R('Despesa no ano','$35.900','neg')}${R('Lucro no ano','$5.400','pos')}${R('Dívida','$1.900','neg')}</div>
+  <div class="clip"><b>Contador:</b> "A prensagem subiu 12% desde o verão. Vale renegociar com a fábrica."<br><span style="color:#8a3a10">clique no contador na cena</span></div></div></div>`,
+olheiro:()=>`<div class="frame spiral"><div class="title">CADERNO DO OLHEIRO <span>A&R · tecla 5</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+ <div class="tabs">${['Funil','Procurar','Olheiros','Feiras','Dossiês','Leilões'].map((t,i)=>`<span class="tab ${i==0?'on':''}">${t}</span>`).join('')}</div>
+ <div class="page np" style="left:24px;width:636px"><h3 class="hand" style="padding-left:40px">Funil · 9 nomes</h3><div class="sub" style="padding-left:40px">ouvido → visto ao vivo → reunião → proposta</div>
+  <div class="pros">
+   ${[['Kingston 5','Ska · Londres','visto ao vivo','#2a5ad0',1],['Marta Quinn','Skiffle · Liverpool','reunião','#8e44ad',3],['Os Corvos','Beat · Hamburgo','ouvido','#777',4],['Lia Moreau','Chanson · Paris','proposta','#2c7a3c',0],['Banda Riacho','Folk · Dublin','ouvido','#777',2],['Sammy Cole','R&B · Londres','visto ao vivo','#2a5ad0',1]]
+     .map(([n,g,s,c,p],i)=>`<img src="p${p}.png" class="${i==1?'sel':''}"><span><b>${n}</b><br><small>${g}</small></span><span class="st" style="color:${c};border-color:${c}">${s.toUpperCase()}</span><span class="rng">${['59–85','72–98','40–70','65–90','35–80','55–75'][i]}</span>`).join('')}
+  </div><div class="sub" style="padding-left:40px;margin-top:10px">faixa = talento estimado; quanto mais você conhece, mais estreita</div></div>
+ <div class="rings"></div>
+ <div class="page np" style="left:680px;width:636px"><div class="sketch"><img src="p3.png"></div>
+  <h3 class="hand" style="padding-left:40px">Marta Quinn</h3>
+  <div class="hand" style="padding-left:40px;font-size:16px;line-height:28px">Skiffle · 23 anos · Liverpool<br>Talento: 72–98 (estrela?)<br>Visto no Cavern Club, 14 ago:<br>"voz rasgada, banda fraca, público cantando junto."<br>Sem selo. EMI também está olhando.<br>Pede: adiantamento ~ $400, 3 discos.</div>
+  <div style="padding-left:40px;margin-top:12px"><span class="btn" style="background:#2c7a3c">FAZER PROPOSTA</span><span class="btn" style="background:#2a5ad0">VER AO VIVO</span><span class="btn" style="background:#777">MANDAR OLHEIRO</span></div>
+  <div class="sub" style="padding-left:40px;margin-top:10px">"Fazer proposta" abre a cena de negociação.</div></div></div>`,
+quadro:()=>`<div class="frame wb"><div class="title">QUADRO BRANCO · LANÇAMENTOS <span>sala de reunião · tecla U</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+ <div class="tabs">${['Lançamentos','Rollout','Capa e vídeo','Catálogo'].map((t,i)=>`<span class="tab ${i==0?'on':''}">${t}</span>`).join('')}</div>
+ <div class="cols"><div><h4>Planejado</h4><div class="post">Silver Avenue · LP<br><small>gravar em out</small></div><div class="post">Milo Fenn · LP<br><small>depois do descanso</small></div></div>
+  <div><h4>Pronto</h4><div class="post b sel">Maria Bastos · LP "Rio Cinza"<br><small>sai em dez</small></div><div class="post b">Marta Quinn · EP</div></div>
+  <div><h4>Na rua</h4><div class="post g">Duo Riviera · single<br><small>nº 14 · subindo</small></div><div class="post g">Os Lunáticos · single<br><small>nº 31</small></div></div></div>
+ <div class="timeline"><div class="mk" style="font-size:22px;color:#333">"Rio Cinza" · rollout</div>
+  <div class="tl-line"></div>${['−6 sem','−4','−2','LANÇA','+2','+4','+6'].map((w,i)=>`<div class="wk" style="left:${6+i*14.5}%">${w}</div>`).join('')}
+  <div class="mag" style="left:2%;top:48px;background:#f5d06a">Single na rádio</div><div class="mag" style="left:28%;top:48px;background:#9ad0f5">Entrevista: Melody Maker</div>
+  <div class="mag" style="left:50%;top:160px;background:#f59a6a">Show de lançamento</div><div class="mag" style="left:67%;top:48px;background:#d7b0f0">TV: Ready Steady Go!</div>
+  <div class="mag" style="left:84%;top:160px;background:#ddd;border-style:dashed">+ ímã</div></div>
+ <div class="say" style="left:620px;top:400px"><img src="p1.png"><b>A&R:</b> "Segura a TV para a semana +2; o single ainda está subindo."</div>
+ <div class="say" style="left:900px;top:400px"><img src="p4.png"><b>Assessoria:</b> "A Melody Maker topa capa se for exclusiva."</div>
+ <div class="fc"><span class="mk" style="font-size:20px;color:#2a5ad0">Previsão:</span> 12–20 mil cópias no Reino Unido · melhor mês: dezembro (Natal) · risco: Beatles lançam em novembro<br><span class="btn" style="background:#2c7a3c;margin-top:10px">ABRIR REUNIÃO DE LANÇAMENTO</span><span style="font-size:14px;color:#555">arraste os ímãs na linha do tempo · clique num post-it para escolher outro disco</span></div></div>`,
+revista:()=>`<div class="frame mz"><div class="mast"><span class="nm">PARADA SEMANAL</span><span class="ed">edição de 29 de setembro de 1962 · Reino Unido · tecla 3</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+ <div class="tabs">${['Singles','LPs','Por país','Hype','Fim de ano','Todos os tempos'].map((t,i)=>`<span class="tab ${i==0?'on':''}">${t}</span>`).join('')}</div>
+ <div class="chart">${[['1','▲2','Telstar','The Tornados',''],['2','▼1','She\'s Not You','Elvis Presley',''],['3','▲5','Sheila','Tommy Roe',''],['4','—','It\'ll Be Me','Cliff Richard',''],['5','NOVA','Love Me Do','The Beatles','nw'],['6','▲8','Canção do Cais','Duo Riviera','you'],['7','▼3','Roses Are Red','Ronnie Carroll',''],['8','▲1','Ramblin\' Rose','Nat King Cole',''],['9','▼2','Things','Bobby Darin',''],['10','▲4','Brisa de Kingston','Os Lunáticos','you'],['11','▼5','Speedy Gonzales','Pat Boone',''],['12','▲2','Breaking Up Is Hard to Do','Neil Sedaka','']]
+   .map(([n,m,t,a,c])=>`<div class="cr ${c=='you'?'you':''}"><span class="n">${n}</span><span class="mv ${m.startsWith('▲')?'up':m.startsWith('▼')?'dn':m=='NOVA'?'nw':''}">${m}</span><span class="t"><b>${t}</b><small>${a}${c=='you'?' · SELO AGULHA':''}</small></span><span style="font-size:13px;color:#6d5a44">${c=='you'?'subindo forte':''}</span><span style="font-size:13px">${['8 sem','10','5','7','1','4','12','3','9','2','11','6'][+n-1]}</span></div>`).join('')}</div>
+ <div class="side"><div class="box"><h4>SEU SELO NESTA SEMANA</h4>2 discos no top 12 · melhor: nº 6 (▲8)<br>4 no top 40 · 1 caindo</div>
+  <div class="box"><h4>SUBINDO MAIS</h4><div class="cover"><div class="art"></div><div><b>Canção do Cais</b><br>Duo Riviera<br><span style="color:#1d7a2c">▲8 · nº 6</span><br><small>clique = ficha da obra</small></div></div></div>
+  <div class="box"><h4>NOTA DO EDITOR</h4>"Um quarteto de Liverpool estreia em 5º. Fiquem de olho."</div>
+  <div class="box"><h4>OUTRAS PARADAS</h4>Rádio · Vendas · Por país (EUA, França, Alemanha…) · Hype<br><small>os capítulos aparecem conforme a época e o país</small></div></div></div>`
+};
+document.getElementById('app').innerHTML=V[v]();
+document.querySelectorAll('.slot[data-k]').forEach(s=>{if(s.dataset.k==v)s.classList.add('on')});
+const bo=document.getElementById('bolso');bo.insertBefore(buildTravel('sede'),bo.firstChild);
+</script></body></html>
