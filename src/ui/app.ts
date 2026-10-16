@@ -37,6 +37,8 @@ import { restartTutorial, tutorialCard, tutorialTick28 } from './tutorial';
 import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
 import { paletteBase31, paletteCmds31 } from './r31/quick31'; // R31 (O): busca que abre a ação, favoritos e metas
+import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
+import { salaHook31 } from './r31/salahook31';
 import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)
 import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';
@@ -583,7 +585,7 @@ function renderApp(): void {
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
     nav(),
-    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), TOP_KEEP31.has(store.area) ? screenTop29(store.area, g, body) : null, body, places31()), // R31 (A): cabeçalho único; os cartões-atalho do topo r29 saem (ficam o trio de Finanças e a trajetória em Você)
+    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), TOP_KEEP31.has(store.area) ? screenTop29(store.area, g, body) : null, salaHook31.top?.(store.area, g) ?? null, body, places31()), // R31 (A): cabeçalho único; os cartões-atalho do topo r29 saem (ficam o trio de Finanças e a trajetória em Você)
     mayShow27('tutorial', g) ? tutorialCard(g, render) : null, // r27: as metas de abertura vêm antes (fila de janelas)
     h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
@@ -629,7 +631,7 @@ function pageTitle21(body: HTMLElement): HTMLElement | null {
   const c = menuCtx31();
   const pl = placeOf31(store.area, c);
   const kp = kpis27(store.area, g, locale()).filter((k) => !TOP_KPI31.has(k.label.pt)).slice(0, 3);
-  return pageHeader27({ eyebrow: t(entryLabel31(pl.entry, c)), title: it.label, sub: why, kpis: kp, art: artHook27.f?.(store.area, g) ?? null, area: store.area, go });
+  return pageHeader27({ eyebrow: t(entryLabel31(pl.entry, c)), title: it.label, sub: why, kpis: kp, art: salaHook31.owns?.(store.area) ? null : artHook27.f?.(store.area, g) ?? null, area: store.area, go }); // R31 (K): a cena em cima substitui a ilustração
 }
 
 function crumbs(_body: HTMLElement, sub: HTMLElement | null): HTMLElement {

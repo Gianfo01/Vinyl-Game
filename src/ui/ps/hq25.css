@@ -183,3 +183,7 @@ button.hq27-hit { cursor: pointer; }
 }
 /* r27 INT: área invisível do gramofone (ovo de Páscoa) — sem contorno nem cursor de botão */
 .hq27-gramo { position: absolute; display: block; z-index: 2; background: none; }
+/* R31 (K): o arquivo de fitas abre o Catálogo em cena */
+.hq27-deco-btn { pointer-events: auto; padding: 0; margin: 0; border: 2px solid transparent; border-radius: 4px; background: transparent; cursor: pointer; }
+.hq27-deco-btn:hover { background: rgba(255, 220, 140, .08); border-color: color-mix(in srgb, var(--gold) 70%, transparent); }
+.hq27-deco-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
