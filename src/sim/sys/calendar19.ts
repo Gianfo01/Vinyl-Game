@@ -168,10 +168,10 @@ registerDeadline('awardcal19', (s) => {
 // sistemas não muda) e sem criar nada.
 type Commit31 = { id: string; due: number; amt: number; what: L; done?: boolean };
 registerDeadline('fest12', (s) => {
-  const st = (s.x4 as unknown as { fest12?: { f?: Record<string, { commits?: Commit31[] }> } }).fest12?.f;
+  const st = (s.x4 as unknown as { festivals?: { f?: Record<string, { biz?: { commits?: Commit31[] } }> } }).festivals?.f; // UNI-4: registro único de festivais
   if (!st) return [];
   const out: Deadline19[] = [];
-  for (const f of ownFests(s)) for (const c of st[f.id]?.commits ?? []) {
+  for (const f of ownFests(s)) for (const c of st[f.id]?.biz?.commits ?? []) {
     if (c.done) continue;
     const w = weekOfMonth19(s, Math.floor(c.due / 12), c.due % 12);
     if (w < s.week) continue;

@@ -115,7 +115,7 @@ describe('r27 P2B — modo rápido intacto', () => {
     expect(hashString(rngSnapshot19(AFTER))).toBe(205718420);
   });
   it('nada de estado P2B criado sem o jogador', () => {
-    expect(x4(AFTER).road27).toBeUndefined();
+    expect(AFTER.tours.some((t) => t.road)).toBe(false); // UNI-4: estrada na própria turnê
     expect(x4(AFTER).crisis27).toBeUndefined();
     expect(x4(AFTER).board27).toBeUndefined();
     expect(AFTER.tours.some((t) => isRoad27(AFTER, t.id))).toBe(false);

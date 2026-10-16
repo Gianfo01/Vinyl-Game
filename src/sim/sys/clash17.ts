@@ -7,6 +7,7 @@
 // fã-clube, ingresso nominal anti-cambista) com receita × reação dos fãs, e cambistas quando a casa esgota.
 // Arquivo sem dependência de tour12/tours (eles importam daqui). Gerador próprio por semana/ato.
 
+import { editions8 } from './feststore';
 import { Rng } from '../../core/rng';
 import { FESTIVALS } from '../../data/catalog';
 import { countryOfCity } from '../../data/geo';
@@ -52,9 +53,8 @@ export function playerShows(s: GameState): PShow[] {
 }
 export interface FWeek { fi: number; name: string; city: string; w: number; acts: string[]; prestige: number }
 export function festWeeks(s: GameState): FWeek[] {
-  const f8 = (s.x4 as unknown as { fest8?: { editions: { fi: number; year: number; month: number; lineup: { actId: string }[]; done: boolean }[] } }).fest8;
   const out: FWeek[] = [];
-  for (const e of f8?.editions ?? []) {
+  for (const e of editions8(s)) { // UNI-4: edições do mundo no registro único de festivais
     const f = FESTIVALS[e.fi];
     if (!f || e.done) continue;
     const day = Math.round((Date.UTC(e.year, e.month, 15) - Date.UTC(s.config.startYear, 0, 1)) / 86400000);

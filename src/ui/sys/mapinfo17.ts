@@ -187,7 +187,7 @@ export function openMapInfo17(s: GameState, kind: 'city' | 'country', id: string
 export function openVenue17(s: GameState, id: string): void {
   const v = VENUES17.find((x) => x.id === id) as VDef | undefined;
   if (!v || !venueOpen(s, v)) return;
-  const owned = s.x4 && (s.x4 as unknown as { venues17?: { own: { id: string }[] } }).venues17?.own.some((o) => o.id === id);
+  const owned = s.x4 && !!(s.x4 as unknown as { venues27?: { v: Record<string, unknown> } }).venues27?.v[`ve:${id}`]; // UNI-4: registro único das casas
   openScene(v.name, (close) => h('div', { class: 'mi17' },
     h('div', { class: 'row' }, venueArt29(v.id, v.name, v.cap, s.year, v.city, 64), signArt29(v.id, v.name, Math.max(v.from, s.year), 192)), // r29: fachada e placa
     h('div', { class: 'chips' }, pill(cityName(v.city)), pill(`${N(v.cap)} ${T(l('lugares', 'seats'))}`), pill(`${T(l('prestígio', 'prestige'))} ${v.prestige}`), pill(`${T(l('desde', 'since'))} ${v.from}`), pill(genreName(v.fam)), owned ? pill(T(l('sua casa', 'your venue')), 'good') : null),

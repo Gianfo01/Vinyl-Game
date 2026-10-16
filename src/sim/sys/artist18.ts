@@ -111,7 +111,7 @@ export function hon18(s: GameState, id: string): number {
   if (tr !== undefined) v += (tr - 50) / 500;
   return clamp(v, 0.1, 0.97);
 }
-const dropsOf = (s: GameState, id: string): number => Object.keys((s.x4 as unknown as { rivalmind18?: { m: Record<string, { drop?: Record<string, number> }> } }).rivalmind18?.m?.[id]?.drop ?? {}).length;
+const dropsOf = (s: GameState, id: string): number => Object.keys((s.x4 as unknown as { rivals?: { lb: Record<string, { mind?: { drop?: Record<string, number>; target?: { k: string; id: string } } }> } }).rivals?.lb?.[id]?.mind?.drop ?? {}).length; // UNI-4: estado único dos rivais
 
 /** o que se ouve do selo: artistas do elenco, dispensas, histórico com você */
 export function testi18(s: GameState, id: string): L[] {
@@ -158,7 +158,7 @@ export function interest18(s: GameState, lb: Label, a: Act, c = ctx18(s, a)): { 
   if (lb.strategy === 'stars') v += 0.12 * c.fameN - 0.05;
   if (lb.family === 'A' && c.fameN < 0.3) v -= 0.12;
   if (lb.cash < money(s, 60000)) v -= 0.08;
-  const tgt = (s.x4 as unknown as { rivalmind18?: { m: Record<string, { target?: { k: string; id: string } }> } }).rivalmind18?.m?.[lb.id]?.target;
+  const tgt = (s.x4 as unknown as { rivals?: { lb: Record<string, { mind?: { drop?: Record<string, number>; target?: { k: string; id: string } } }> } }).rivals?.lb?.[lb.id]?.mind?.target; // UNI-4: estado único dos rivais
   if (tgt && ((tgt.k === 'fam' && tgt.id === fam) || tgt.id === a.id)) { v += 0.08; why.push(l('estão caçando esse som', 'they are hunting this sound')); }
   const b = st.boost[lb.id];
   if (b && b[0] >= s.week) { v += b[1]; why.push(b[1] > 0 ? l('gostaram do showcase', 'they liked the showcase') : l('o showcase foi mal', 'the showcase went badly')); }

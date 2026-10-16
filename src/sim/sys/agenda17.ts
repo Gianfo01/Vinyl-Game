@@ -487,7 +487,7 @@ function agendaMonth(s: GameState): void {
     const mine = k ? vs.list.filter((v) => v.kind === k) : [];
     for (const v of mine) v.rep = clamp(v.rep + d * 4 + (slip ? -3 : coup ? 2 : 0), 0, 100);
     if (id === 'manager') for (const c of vs.mg.clients) addClientTrust9(s, c.actId, d * 5 + (slip ? -4 : 0));
-    if (id === 'venue') { const x = (s.x4 as unknown as { venue12?: { v?: { regulars: number } } }).venue12?.v; if (x) x.regulars = clamp(x.regulars + d * 3, 0, 200); }
+    if (id === 'venue') { const x = (s.x4 as unknown as { venues27?: { v?: Record<string, { prog?: { regulars: number } }> } }).venues27?.v?.['lv:venue']?.prog; if (x) x.regulars = clamp(x.regulars + d * 3, 0, 200); } // UNI-4: programação na própria casa
     const name = careerDef(id)?.name ?? l(id, id);
     if (!careers(s).active.includes(id) && !hd && (mine.length || id === 'manager' || id === 'venue') && s.month % 3 === 0)
       report(s, fmtL(l('{c}: sem a carreira e sem diretor, ninguém cuida — reputação caindo. Contrate um diretor (Agenda) ou assuma a carreira.', '{c}: no career and no director, nobody minds it — reputation slipping. Hire a director (Agenda) or take up the career.'), { c: name }), 'bad');

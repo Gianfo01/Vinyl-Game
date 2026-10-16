@@ -5,7 +5,8 @@ import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga do
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { applyMods, runSimHooks } from '../src/sim/ext4';
-import { Rng } from '../src/core/rng';
+import { Rng, clamp } from '../src/core/rng';
+import { c12 } from '../src/sim/sys/manager12';
 import { countryOfCity } from '../src/data/geo';
 import { setSw } from '../src/sim/r31/switches';
 import { calendar19 } from '../src/sim/calendar19';
@@ -246,7 +247,7 @@ describe('R31 CAR · estúdio, editora, agência, empresário, crítico e trilha
     const run = () => {
       const s = mk('car-mgr', 1985);
       const a = Object.values(s.acts).filter((x) => x.owner && x.owner !== 'player' && s.labels[x.owner] && x.releases.some((id) => s.releases[id]?.live)).sort((p, q) => q.fame - p.fame || (p.id < q.id ? -1 : 1))[0];
-      ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 70, earned: 0 });
+      ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0 }); c12(s, a.id).trust = clamp(c12(s, a.id).trust + 5, 0, 100); // UNI-4: satisfação 70 → confiança da ficha
       const r = askFor31(s, a.id, 'radio');
       return { s, a, r };
     };

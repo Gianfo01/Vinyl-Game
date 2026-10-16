@@ -232,7 +232,7 @@ describe('r27 determinismo', () => {
     for (let i = 0; i < 2; i++) { advanceMonth(a); advanceMonth(b); }
     const x = (s: GameState) => (s as unknown as { x4: Record<string, unknown> }).x4;
     expect(JSON.stringify(x(b).sc27)).toBe(JSON.stringify(x(a).sc27));
-    expect(JSON.stringify(x(b).rv27)).toBe(JSON.stringify(x(a).rv27));
+    expect(JSON.stringify(x(b).rivals)).toBe(JSON.stringify(x(a).rivals)); // UNI-4: estado único dos rivais
     expect(JSON.stringify(x(b).rng19)).toBe(JSON.stringify(x(a).rng19));
   });
 });

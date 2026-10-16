@@ -25,7 +25,7 @@ import { fmtL, money } from '../util';
 import { boost31, car31On, exec31, registerExec31, touch31 } from './car31';
 import { fameIn } from './fame16';
 import { SCREEN31 } from './screen18';
-import { ROUTE31, vpay, type Venture } from './ventures9';
+import { ROUTE31, clientTrust9, vpay, type Venture } from './ventures9';
 
 export interface Pledge31 { act: string; vid: string; t: string; u: number; k: number }
 export interface More31State {
@@ -165,8 +165,8 @@ export const ASK31: Record<Ask31k, { name: L; desc: L }> = {
 };
 export const ASK_COOL31 = 13;
 export function askOdds31(s: GameState, a: Act, k: Ask31k): number {
-  const c = ((s as unknown as { x4?: { ventures9?: { mg?: { clients?: { actId: string; sat: number }[] } } } }).x4?.ventures9?.mg?.clients ?? []).find((x) => x.actId === a.id);
-  const sat = c?.sat ?? 50;
+  const c = ((s as unknown as { x4?: { ventures9?: { mg?: { clients?: { actId: string }[] } } } }).x4?.ventures9?.mg?.clients ?? []).find((x) => x.actId === a.id);
+  const sat = c ? clientTrust9(s, a.id) : 50; // UNI-4: satisfação do cliente = confiança da ficha do empresário
   const lb = s.labels[a.owner ?? ''];
   const rel = lb?.leaderId ? opinionOf(s, `l:${lb.leaderId}`) : 0;
   if (k === 'radio') return clamp(0.25 + a.fame / 200 + sat / 300, 0.05, 0.9);

@@ -259,8 +259,7 @@ function runEditions(s: GameState, r: Rng): void {
 // r31 (UNI-1): calendário único — festivais do mundo com gente sua no line-up (ou os maiores, como referência) e
 // convites de festival que vencem. Só leitura.
 registerDeadline('fests8', (s, from, to) => {
-  const st = (s.x4 as unknown as { fest8?: Fest8State }).fest8;
-  if (!st) return [];
+  const st = w8(s);
   const mine = new Set(playerActs(s)), out: Deadline19[] = [];
   for (const ed of editions8(s)) {
     const f = FESTIVALS[ed.fi];

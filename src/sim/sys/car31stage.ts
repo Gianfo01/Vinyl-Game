@@ -37,7 +37,7 @@ function st31(s: GameState): Stage31State {
 }
 const note = (st: Stage31State, w: number, t: L) => { st.log.unshift({ w, t }); if (st.log.length > 12) st.log.length = 12; };
 const mine = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
-const v12ro = (s: GameState): V12 | null => (s as unknown as { x4?: { venue12?: { v: V12 | null } } }).x4?.venue12?.v ?? null;
+const v12ro = (s: GameState): V12 | null => (s as unknown as { x4?: { venues27?: { v?: Record<string, { prog?: V12 }> } } }).x4?.venues27?.v?.['lv:venue']?.prog ?? null; // UNI-4: programação na própria casa
 /** a casa e a programação (só leitura) */
 export function venueNow31(s: GameState): { cityId: string; a3: string; cap: number; kind: string; name: string; x: V12 } | null {
   const v = (s as unknown as { x4?: { live?: { venue?: { cityId: string; kind: 'club' | 'theater' | 'arena'; name: string } | null } } }).x4?.live?.venue;

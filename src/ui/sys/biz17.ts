@@ -2,6 +2,7 @@
 // Licenças entre regiões, Imagem & voz, Merch, Circuito (festivais/reunião/financiamento coletivo) e a
 // Agenda de shows com concorrência. Cada escolha mostra chance, custo e o porquê.
 
+import { w8 } from '../../sim/sys/feststore';
 import { houses27, realVenues } from '../../sim/sys/venuestore27';
 import { txt19, fmtL19 } from '../../sim/era19';
 import { FESTIVALS } from '../../data/catalog';
@@ -233,7 +234,7 @@ function circuitTab(s: GameState): HTMLElement {
   const crowdActs = myActs(s).filter((a) => crowdOpen(s, a));
   return h('div', null,
     section(t(l('Guerra de headliners', 'Headliner war')), st.wars.length ? h('div', null, st.wars.map((w) => {
-      const inv = (id: string) => (s.x4 as unknown as { fest8: { invites: { id: string; fi: number }[] } }).fest8.invites.find((x) => x.id === id);
+      const inv = (id: string) => w8(s).invites.find((x) => x.id === id); // UNI-4: convites no registro único de festivais
       const A = inv(w.a), B = inv(w.b);
       return h('div', { class: 'card' }, h('p', null, t(l('{a}: dois festivais querem exclusividade. Aceitar um fecha a porta do outro por 2 anos.', '{a}: two festivals want exclusivity. Taking one shuts the other\'s door for 2 years.'), { a: s.acts[w.act]?.name ?? '' })),
         h('div', { class: 'row wrap' },
