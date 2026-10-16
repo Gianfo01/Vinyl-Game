@@ -14,6 +14,7 @@ import { h } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
 import { freeCash20 } from '../../sim/oblig20';
 import { askConfirm } from '../ask31';
+import { BASIS31, companyValue31, value31On, type Part31 } from '../../sim/r31/value31';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 function run(res: unknown, ok?: L): void {
@@ -60,6 +61,31 @@ function wealthChips(s: GameState): HTMLElement {
   );
 }
 
+// ------------------------------------------------------------------ r31 (E · Bolsa): por que vale isso
+
+const NET31 = new Set(['cash', 'advances', 'debt', 'suits']);
+/** Ficha "por que vale isso": a conta do valor por parte (fato / cálculo / hipótese). Rival sem 5% das ações mostra o
+ *  balanço numa linha só (o detalhe de caixa e dívida é número do conselho). Só leitura. */
+export function whySheet31(s: GameState, id: string, open = false): HTMLElement | null {
+  if (!value31On(s)) return null;
+  const me = id === 'player';
+  const v = companyValue31(s, id);
+  let parts: Part31[] = v.parts.filter((p) => p.v !== 0 || p.k === 'roster' || p.k === 'masters');
+  if (!me && !insight(s, `lb:${id}`)) {
+    const net = parts.filter((p) => NET31.has(p.k));
+    if (net.length) parts = [{ k: 'cash', v: net.reduce((a, p) => a + p.v, 0), basis: 'fact', name: l('Balanço publicado (caixa menos dívidas)', 'Published balance (cash less debt)'), why: l('Com 5% das ações você vê o detalhe do conselho.', 'With 5% of the shares you see the board detail.') }, ...parts.filter((p) => !NET31.has(p.k))];
+  }
+  return h('details', { class: 'small', ...(open ? { open: true } : {}) },
+    h('summary', null, t(l('Por que vale isso: {v}', 'Why it is worth this: {v}'), { v: $(v.total) })),
+    h('table', { class: 'tbl compact' }, h('tbody', null,
+      parts.map((p) => h('tr', null,
+        h('td', null, h('b', null, t(p.name)), h('div', { class: 'muted' }, t(p.why))),
+        h('td', { class: p.v >= 0 ? 'good' : 'bad' }, `${p.v >= 0 ? '+' : '−'}${$(Math.abs(p.v))}`),
+        h('td', { class: 'muted' }, t(BASIS31[p.basis])))),
+      h('tr', null, h('td', null, h('b', null, t(l('Total', 'Total')))), h('td', null, h('b', null, $(v.total))), h('td', null, '')))),
+    h('p', { class: 'muted' }, t(l('O preço segue este valor por ação, com um pequeno humor do mercado. O mercado só conhece o que é público: fama, paradas, prêmios e números publicados — nunca o potencial de ninguém.', 'The price follows this value per share, with a small market mood. The market only knows what is public: fame, charts, awards and published numbers — never anyone\'s potential.'))));
+}
+
 // ------------------------------------------------------------------ bolsa
 
 function stockRow(s: GameState, r: ReturnType<typeof listed>[number]): HTMLElement {
@@ -78,7 +104,8 @@ function stockRow(s: GameState, r: ReturnType<typeof listed>[number]): HTMLEleme
       r.q.note ? h('div', { class: `small ${cls(r.q.chg)}` }, t(r.q.note)) : null,
       ins ? h('div', { class: 'small' }, pill(t(l('Conselho: receita {r} · caixa {c} · {n} artistas', 'Board: revenue {r} · cash {c} · {n} acts'), { r: $(ins.revenue), c: $(ins.cash), n: ins.roster }), 'good')) : null,
       lbl && (pos || other) ? h('div', { class: 'small muted' }, t(l('Você e o selo têm {p} do selo (teto 20%; 5% mostra o conselho, 10% chama a atenção da imprensa).', 'You and your label hold {p} of it (cap 20%; 5% shows you the board, 10% attracts the press).'), { p: pc1(playerFrac(s, r.id)) })) : null,
-      top.length ? h('div', { class: 'small muted' }, `${t(l('Maiores acionistas', 'Top holders'))}: `, top.map((x) => `${t(x.name)} ${pc1(x.frac)}`).join(' · ')) : null),
+      top.length ? h('div', { class: 'small muted' }, `${t(l('Maiores acionistas', 'Top holders'))}: `, top.map((x) => `${t(x.name)} ${pc1(x.frac)}`).join(' · ')) : null,
+      lbl ? whySheet31(s, r.id.slice(3)) : r.id === OWN ? whySheet31(s, 'player') : null),
     h('td', null, spark(r.q.hist.slice(-36))),
     h('td', null, h('b', null, price(r.q.p)), ' ', pill(pct(r.q.chg), cls(r.q.chg)), h('div', { class: 'muted small' }, `12m ${pct(c12)}`)),
     h('td', { class: 'small' }, `P/L ${r.pe.toFixed(1)}`, h('div', { class: 'muted' }, r.div ? `${t(l('dividendo', 'yield'))} ${(r.div * 100).toFixed(1)}%` : t(l('sem dividendo', 'no dividend')))),
@@ -133,6 +160,7 @@ function bolsaTab(s: GameState): HTMLElement {
     h('p', { class: 'muted small' }, t(l('Ações de empresas que existem em {y}. Os preços seguem o mundo do jogo: números dos selos rivais, hits, escândalos, trocas de comando, viradas de formato (CD, pirataria, streaming…) e as crises históricas. Corretagem de 0,5%. Fechou? A ação vai a quase zero; foi comprada? Você recebe ágio.', 'Shares of companies that exist in {y}. Prices follow the game world: rival label numbers, hits, scandals, leadership changes, format shifts (CD, piracy, streaming…) and historic crises. 0.5% brokerage. Closed down? The share goes to almost zero; bought out? You get a premium.'), { y: s.year }), ' ', t(l('Selos só aparecem depois de abrir capital (IPO). Você e o seu selo negociam no mesmo pregão; fundos, selos rivais, chefes de gravadora e artistas também.', 'Labels only appear after going public (IPO). You and your label trade on the same exchange; so do funds, rival labels, label heads and artists.'))),
     nw.length ? section(t(l('Notícias do pregão', 'Market news')), h('ul', { class: 'memory' }, nw.map((n) => h('li', { class: n.tone }, h('span', { class: 'muted' }, `${n.y} · `), t(n.t))))) : null,
     ...kinds.map((k) => section(t(KIND_NAME[k]), h('table', { class: 'tbl compact' }, h('tbody', null, rows.filter((r) => r.kind === k).map((r) => stockRow(s, r)))))),
+    !own && value31On(s) ? section(t(l('Quanto vale o seu selo', 'What your label is worth')), whySheet31(s, 'player'), h('p', { class: 'small muted' }, t(l('O mesmo valor define o preço de abertura de capital, a venda de participação a sócios e as ofertas de compra.', 'The same value sets the IPO price, stake sales to partners and buyout offers.')))) : null,
     own ? section(t(l('Seu selo na bolsa', 'Your label on the exchange')), h('div', { class: 'row wrap' }, h('b', null, `${own.name} · ${price(own.price)}`), spark(own.hist), h('small', { class: 'muted' }, t(l('Gerida em Finanças → Capital e sócios. A cotação entra no valor da empresa e nas fatias.', 'Managed in Finance → Capital and partners. The quote feeds the company valuation and stakes.')))),
       h('table', { class: 'tbl compact' }, h('tbody', null, holders(s, OWN, 8).map((x) => h('tr', null, h('td', null, t(x.name)), h('td', null, pc1(x.frac))))))) : null,
     unlistedNotes(s).length ? h('p', { class: 'muted small' }, t(l('Fora da bolsa: ', 'Not listed: ')), unlistedNotes(s).map((u) => `${t(u.name)} (${t(u.why)})`).join(' · ')) : null,
