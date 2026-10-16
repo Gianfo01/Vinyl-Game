@@ -57,7 +57,7 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   fechada, leilão silencioso do mercado negro, apreensão de carga na alfândega como mecânica) · AMOR (chamar qualquer adulto para sair, amantes com risco de descoberta,
   romance com gente do mercado, integrado a vida/família/segredos/opinião; família Fossati nunca é alvo).
 
-## Onda 5 (31.5) · jogo explorável (pedido do dono, 2026-10-16)
+## Onda 5 (31.5) · jogo explorável (pedido do dono, 2026-10-16) — mapa completo das telas: `docs/r31/onda5-mapa.md`
 > Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
 > cada função é um lugar, um objeto, uma porta ou uma pessoa. As telas atuais ficam por baixo (a camada nova é de navegação);
 > números do jogo não mudam. Foco no PC (celular fica para depois).
