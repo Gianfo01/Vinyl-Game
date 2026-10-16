@@ -20,7 +20,10 @@ describe('playbot16', () => {
     // contratar; pb-10 tem todas as ações nos dois (2 turnês, 8 festivais, 1 contratação).
     // R31 (W1, faixas do know.ts com desvio de 20–45% da largura, sorteado por largura): pb-10 deixou de contratar no 1º
     // ano; varredura pb-1..16: 7 de 16 com todas as ações (pb-4, 5, 6, 8, 11, 12, 16); pb-16 (2 turnês, 2 festivais, 1 contratação).
-    const cfg = defaultConfig('r16pb-16', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
+    // R31 (Z, base nova: 68 artistas reais e 28 relíquias): pb-16 deixou de sair em turnê, ir a festival e contratar no 1º
+    // ano; varredura pb-1..16 (na ordem de carga do teste): 9 de 16 com todas as ações (pb-3, 5, 7, 8, 9, 10, 11, 12, 13);
+    // pb-11 tem folga (11 festivais, 1 turnê, 1 contratação).
+    const cfg = defaultConfig('r16pb-11', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
     const years = FULL ? 2 : 1;
     // a mesma partida que simulatePlayer joga, guardando o retrato do 3º mês para a reprise curta
     const s = createGame(cfg);

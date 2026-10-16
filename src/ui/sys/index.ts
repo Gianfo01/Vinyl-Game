@@ -191,6 +191,7 @@ import './money19';
 // Rodada 19 (Frente 6, T5): Mundo › Regiões e política (selos regionais, comuna, vistos, greves, campanhas, leis, celeiros).
 import './regions19';
 import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpit
+import './fossati31'; // R31 onda 3 (Z): Mundo › Família Fossati (homenagem)
 // Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
 import './market19a';
 // Rodada 19 (onda 3, T9): Imprensa e fanzines (zines19) e Fraudes e sósias (fakes19).

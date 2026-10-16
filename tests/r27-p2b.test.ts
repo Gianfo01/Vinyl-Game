@@ -99,10 +99,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // Antes: 1034775 / 2631883956 / 829002627 / 1362224447.
     // R31 (E · Bolsa, de propósito — docs/r31/DECISOES.md): selos rivais com preço pelo valor único (r31/value31) mudam as
     // participações e compras de NPCs (acts); o humor do mercado ganhou fluxo próprio 'bolsa31' (rng muda só por ele). Antes: acts 3472429155 / rng 3703770621.
-    expect(AFTER.player.cash).toBe(178753);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1746594873);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3786914192);
+    // R31 (Z · base nova, de propósito — docs/r31/DECISOES.md): 68 artistas reais novos no fim de REAL_ALL e 28 relíquias
+    // reais novas mudam o mundo (atos novos estreando, peças e fatos de relíquia): caixa, turnês, acts e rng mudam. A família
+    // Fossati sozinha não muda nada (conferido com a base nova desligada). Antes: 178753 / 1382068899 / 1746594873 / 3786914192.
+    expect(AFTER.player.cash).toBe(282363);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3399640978);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3542054693);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(1784442490);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
