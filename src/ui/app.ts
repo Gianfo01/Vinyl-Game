@@ -114,7 +114,8 @@ import { PURPOSE27, kpis27 } from './ps/ui27model';
 import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em nomes abre o menu de ações
 // R31 (onda 1, A): menu "mundo primeiro" (entradas ≤ 10 + Lugares + Listas), Hoje, cabeçalho único e topo enxuto
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
-import { NAV5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
+import { NAV5, keyNav5 } from './r31/nav5';
+import { paperGo5, paperKey5Ev, wrapPaper5 } from './r31/papers5'; // R31 onda 5 (PAPEL): páginas dentro dos papéis (só com exp5.nav) // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { chordLabel5 } from './r31/keys5';
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
@@ -182,8 +183,8 @@ export function boot(el: HTMLElement): void {
   initRouter15((r) => { if (store.game && r.area === LISTS31) { goLists31(r.tab?.[0] === LKEY31 ? r.tab[1] : undefined); return true; } if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (store.game && (REDIRECT29[r.area] || !areaExists(r.area))) { const x = resolve29(r.area); if (x && (x.util || (x.area && areaExists(x.area)))) { open29(x); return true; } } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
   // R31 onda 5 (TEC): ganchos da navegação nova (só usados com exp5.nav ligado)
-  NAV5.go = (x) => open29({ area: x.area, tab: x.tab }); NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings();
-  NAV5.paper = () => (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined); // caixa de entrada aberta: as teclas dela ganham
+  NAV5.go = (x) => { paperGo5(store.game ?? undefined, x); open29({ area: x.area, tab: x.tab }); }; NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings();
+  NAV5.paper = () => document.querySelector<HTMLElement>('main [data-paper5]')?.dataset.paper5 ?? (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined); // caixa de entrada aberta: as teclas dela ganham
   NAV5.help = (rows) => shortcutsHelp15(rows.map((r) => ({ key: chordLabel5(r.key), label: t(r.label) })));
   document.addEventListener('vtn31-go', (e) => { if (!store.game) return; e.preventDefault(); go((e as CustomEvent<string>).detail); }); // R31 (O): destino do painel rápido/favoritos
   titleScreen(root, startGame);
@@ -208,6 +209,7 @@ function onKey(e: KeyboardEvent): void {
   const ck = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
   if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')) return;
   if (document.querySelector('.overlay')) return;
+  if (paperKey5Ev(e, store.game)) { e.preventDefault(); return; } // R31 onda 5 (PAPEL): A, 1–4 e Esc do papel aberto
   if (keyNav5(store.game, e)) { e.preventDefault(); return; } // R31 onda 5 (TEC): só com exp5.nav ligado
   if (ck) {
     e.preventDefault();
@@ -602,10 +604,11 @@ function renderApp(): void {
   const [sub, body] = withPlayerActsCache(g, () => [subnav(), panel()] as const);
   enhanceSelects27(body); // r27 UX: escolhas curtas (2–4 opções) viram controle segmentado; o <select> segue por baixo
   liveTabs27 = new Map([...body.querySelectorAll<HTMLElement>('[data-tabs]')].map((e) => [e.dataset.tabs ?? '', e.dataset.cur ?? '']));
+  const paper5 = wrapPaper5(g, store.area, body, areaLabel); // R31 onda 5 (PAPEL): com exp5.nav, a página abre dentro do papel do objeto
   const app = withPlayerActsCache(g, () => h('div', { class: 'app' },
     topBar(),
     nav(),
-    h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), TOP_KEEP31.has(store.area) ? screenTop29(store.area, g, body) : null, salaHook31.top?.(store.area, g) ?? null, body, places31()), // R31 (A): cabeçalho único; os cartões-atalho do topo r29 saem (ficam o trio de Finanças e a trajetória em Você)
+    paper5 ? h('main', { id: 'main', tabindex: '-1' }, paper5) : h('main', { id: 'main', tabindex: '-1' }, crumbs(body, sub), pageTitle21(body), TOP_KEEP31.has(store.area) ? screenTop29(store.area, g, body) : null, salaHook31.top?.(store.area, g) ?? null, body, places31()), // R31 (A): cabeçalho único; os cartões-atalho do topo r29 saem (ficam o trio de Finanças e a trajetória em Você)
     mayShow27('tutorial', g) ? tutorialCard(g, render) : null, // r27: as metas de abertura vêm antes (fila de janelas)
     h('div', { id: 'sr-live', class: 'sr-only', 'aria-live': 'polite' }),
   ));
