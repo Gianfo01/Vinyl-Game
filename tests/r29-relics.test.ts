@@ -13,7 +13,7 @@ import type { Act, GameState } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
 import { crime17 } from '../src/sim/sys/crime17';
 import { realAct17 } from '../src/sim/sys/realidx17';
-import { authenticate18, isFake18, rel18 } from '../src/sim/sys/relics18';
+import { authenticate18, isFake18 } from '../src/sim/sys/relics18';
 import {
   ARCH29, ARCHDEF29, CAPS29, DENS29, R29, REAL_ARCH29, actCaps29, arc29, archive29, canBorn29, caps29, famousAuction29, realArch29, candidates29, flush29, forge29, make29, meta29, realKinds29, rel29, story29, venuePick29, type Arch29,
 } from '../src/sim/sys/relics29';
@@ -95,7 +95,7 @@ describe('r29 relíquias — arquétipos', () => {
       expect(st.en.length).toBeGreaterThan(20);
       expect(`${st.pt}${st.en}`).not.toMatch(/[{}]|undefined| \? /);
       expect(rl!.v).toBeGreaterThan(0);
-      expect(rel18(s).m[rl!.id]?.b).toBe(rl!.v);
+      expect(rl!.meta?.b).toBe(rl!.v);
       expect(born).toContain(rl!.id);
       if (arch === 'signed' || arch === 'fixture') expect(rl!.st).toBe('auction'); // leilão beneficente / do estúdio que fechou
     });
@@ -222,7 +222,7 @@ describe('r29 relíquias — valor, falsificação, modo exato', () => {
     expect(copy.n.pt).toMatch(/falsificação/);
     const ok = authenticate18(s, src.id);
     expect(ok.pt).toMatch(/Autêntica/);
-    expect(rel18(s).m[src.id].auth).toBe(1);
+    expect(src.meta?.auth).toBe(1);
   });
 
   it('modo exato: ato real intocado só ganha arquétipo genérico; nenhum ato real repete o tipo de uma peça real dele', () => {
@@ -258,7 +258,7 @@ describe('r29 relíquias — valor, falsificação, modo exato', () => {
     const a = await run(), b = await run();
     expect(rel29(a).seq).toBeGreaterThan(0); // nasceu alguma coisa de verdade
     expect(JSON.stringify(rel29(a))).toBe(JSON.stringify(rel29(b)));
-    const r29 = (s: GameState) => relics(s).list.filter((x) => rel29(s).m[x.id]);
+    const r29 = (s: GameState) => relics(s).list.filter((x) => x.meta?.q);
     expect(JSON.stringify(r29(a))).toBe(JSON.stringify(r29(b)));
   }, 600000);
 });
@@ -322,10 +322,10 @@ describe('r29 relíquias — densidade', () => {
     expect(relics(s).list.length).toBe(before - n);
     expect(arc29(s).n).toBe(n);
     expect(relics(s).list).toContain(notable); // a mais valiosa fica
-    expect(Object.keys(rel29(s).m).every((id) => relics(s).list.some((x) => x.id === id))).toBe(true);
+    expect(relics(s).arc.every((a) => !relics(s).list.some((x) => x.id === a.id))).toBe(true);
     // leilão do ano: precisa de colecionador ou herdeiros como dono
-    const left = relics(s).list.filter((x) => rel29(s).m[x.id] && x.st === 'kept');
-    rel29(s).m[left[0].id] = rel29(s).m[left[0].id].replace(/^(\d+\|\d+\|)[a-z]/, '$1c');
+    const left = relics(s).list.filter((x) => x.meta?.q && x.st === 'kept');
+    left[0].meta!.q = left[0].meta!.q!.replace(/^(\d+\|\d+\|)[a-z]/, '$1c');
     const facts: Fact[] = [];
     onFact('relic', (_s, f) => { if (f.tags.includes('famous')) facts.push(f); }, 'r29test:famous');
     const au = famousAuction29(s);
@@ -347,7 +347,7 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     for (const [y, n] of Object.entries(byY)) expect(n, `ano ${y}`).toBeLessThanOrEqual(4);
     for (const [k, n] of Object.entries(byAY)) expect(n, k).toBeLessThanOrEqual(1);
     expect(births.length).toBeGreaterThan(5);
-    expect(relics(s).list.filter((x) => rel29(s).m[x.id] && x.st !== 'lost').length).toBeLessThanOrEqual(30);
+    expect(relics(s).list.filter((x) => x.meta?.q && x.st !== 'lost').length).toBeLessThanOrEqual(30);
   }, 900000);
 
   it('"muitas" (padrão): tetos valem (por ano, por ato, total, falsas) e o save fica abaixo de 100 KB', async () => {
@@ -363,16 +363,16 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     for (const [k, n] of Object.entries(byAY)) expect(n, k).toBeLessThanOrEqual(M.actYear);
     expect(births.length).toBeGreaterThanOrEqual(150); // bem mais relíquias por save
     expect(new Set(births.map((b) => b.arch)).size).toBeGreaterThanOrEqual(10); // e variadas
-    const live = relics(s).list.filter((x) => rel29(s).m[x.id] && x.st !== 'lost');
+    const live = relics(s).list.filter((x) => x.meta?.q && x.st !== 'lost');
     expect(live.length).toBeLessThanOrEqual(M.total);
     const byAct: Record<string, number> = {};
     for (const x of live) if (x.a && !meta29(s, x.id)!.fake) byAct[x.a] = (byAct[x.a] ?? 0) + 1; // a cópia falsa não é peça nova do ato
     for (const n of Object.values(byAct)) expect(n).toBeLessThanOrEqual(M.actLive);
     expect(live.filter((x) => meta29(s, x.id)!.fake).length).toBeLessThanOrEqual(M.fakes);
-    expect(Object.keys(rel29(s).m).every((id) => relics(s).list.some((x) => x.id === id))).toBe(true); // compactado
+    expect(relics(s).arc.every((a) => !relics(s).list.some((x) => x.id === a.id))).toBe(true); // compactado
     expect(arc29(s).n).toBeGreaterThan(0); // o acervo histórico entrou em ação
-    const list = relics(s).list.filter((x) => rel29(s).m[x.id]);
-    const bytes = JSON.stringify(rel29(s)).length + JSON.stringify(list).length + JSON.stringify(list.map((x) => rel18(s).m[x.id])).length;
+    const list = relics(s).list.filter((x) => x.meta?.q);
+    const bytes = JSON.stringify(rel29(s)).length + JSON.stringify(list).length; // R31 G: os metadados moram na peça
     console.log(`r29 bot 20 anos (muitas): ${births.length} nascidas, ${live.length} vivas, acervo histórico ${arc29(s).n}, ${bytes} bytes`, JSON.stringify(rel29(s).n));
     expect(bytes).toBeLessThan(100000);
   }, 1500000);

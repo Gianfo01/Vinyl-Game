@@ -102,7 +102,7 @@ describe('r17 dados reais', () => {
     expect(relic9Of17(s, 'lennon_j160e')?.st).toBe('stolen'); // sumiu em 1963
     runTo(s, 1969, 9);
     expect(relic9Of17(s, 'woodstock_strat')).toBeTruthy();
-    expect(realRelics17(s).every((r) => r.year <= s.year)).toBe(true);
+    expect(realRelics17(s).every((r) => r.y <= s.year)).toBe(true);
     // r18: história alternativa — relíquias reais posteriores ao início não nascem pelo roteiro
     const alt = createGame(defaultConfig('r17rel', { startYear: 1969, realNames: true, history: 'loose' }));
     runTo(alt, 1969, 9);

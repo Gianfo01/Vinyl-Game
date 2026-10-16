@@ -30,8 +30,8 @@ import { fan18 } from './fans18';
 import { LINK18_PARTS, LINKS18, lk18 } from './links18';
 import { estate18, post18 } from './post18';
 import { registerDimAdj18, type Dim18 } from './quality18';
-import { ORIGIN18, rel18 } from './relics18';
-import { addRelic, relics, type RelicKind } from './relics9';
+import { ORIGIN18 } from './relics18';
+import { addRelic, relMeta, relics, type RelicKind } from './relics9';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
@@ -186,7 +186,7 @@ export function iconize19(s: GameState, pid: string): string | null {
   const nk = NICK[hashString(`${s.config.seed}|nick|${pid}`) % NICK.length];
   const n = F(l('"{k}" — {g} de {p}', '"{k}" — {p}\'s {g}'), { k: l(nk[0], nk[1]), g: gearName19(s, g), p: p.name });
   const rl = addRelic(s, RELIC_OF[p.role] ?? 'guitar', n, a.id, pid, 30000 + a.fame * 2000);
-  rel18(s).m[rl.id] = { o: 'icon', b: rl.v, st: F(l('O instrumento gasto de tanto palco, com apelido próprio; os fãs reconhecem pelo som.', 'The stage-worn instrument with its own nickname; fans know it by its sound.'), {}) };
+  Object.assign(relMeta(rl), { o: 'icon', b: rl.v, st: F(l('O instrumento gasto de tanto palco, com apelido próprio; os fãs reconhecem pelo som.', 'The stage-worn instrument with its own nickname; fans know it by its sound.'), {}) });
   st.icon[pid] = rl.id;
   emitFact(s, { kind: 'icon_instrument', actors: [a.id, pid], place: a.city, severity: clamp(30 + a.fame / 3, 30, 65), visibility: 'public', tags: ['gear', 'relic', 'icon'], text: F(l('O instrumento de {p} vira ícone: {n}.', '{p}\'s instrument becomes an icon: {n}.'), { p: p.name, n }), src: 'gear19', data: { pid, relic: rl.id } });
   return rl.id;
