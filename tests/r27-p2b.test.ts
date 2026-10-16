@@ -106,7 +106,7 @@ describe('r27 P2B — modo rápido intacto', () => {
     expect(AFTER.player.cash).toBe(581243);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(1160361153);
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(4153284673);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(2827906377);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(754530152);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

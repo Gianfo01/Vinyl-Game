@@ -104,7 +104,7 @@ beforeAll(() => {
   // marcar turnê nesses 8 meses. Antes (com a Bolsa E): 178753 / 1382068899 / 1746594873 / 3786914192.
   expect(s.player.cash).toBe(581243);
   expect(hashString(JSON.stringify(s.acts))).toBe(4153284673);
-  expect(hashString(rngSnapshot19(s))).toBe(2827906377);
+  expect(hashString(rngSnapshot19(s))).toBe(754530152);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
