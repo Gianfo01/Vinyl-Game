@@ -20,6 +20,7 @@ import { meter } from '../vis';
 import { cutscene27, reduced27 } from './mode27';
 import { H27, W27, drawStage27, type Member27 } from './stage27';
 import './show27.css';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const songTitle = (x: Song27): string => (x.kind === 'cover' ? t(coverTitle27(x.id) ?? l(x.title, x.title)) : x.title);
 const MAX27 = 16;
@@ -208,7 +209,7 @@ export function openShow27(key: string, onEnd?: (played: boolean) => void): void
   };
 
   planView();
-  close = modal(t(l('Show ao vivo — jogar', 'Live show — play')), root, { wide: true, onClose: () => { stop(); cancelAnimationFrame(raf); onEnd?.(!!show27Log(s)[key]); rerender(); } });
+  close = modal(t(l('Show ao vivo — jogar', 'Live show — play')), withCast31(s, [c.actId], root, () => close()), { wide: true, onClose: () => { stop(); cancelAnimationFrame(raf); onEnd?.(!!show27Log(s)[key]); rerender(); } });
 }
 
 const curve27 = (pts: string, label: string): HTMLElement => { const d = h('div', { class: 'a27-curve', role: 'img', 'aria-label': label }); d.innerHTML = `<svg viewBox="0 0 200 42" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`; return d; };
