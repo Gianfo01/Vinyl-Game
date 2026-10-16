@@ -90,7 +90,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
   const play = (g: NonNullable<typeof store.game>) => { store.game = g; onStart(); };
   const loadSlot = async (m: SaveMeta) => {
     const g = await loadGame(m.slot);
-    if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
+    if (!g) return toast(['too_big', 'future', 'schema', 'malformed', 'format', 'old', 'old31'].includes(lastLoadErr20) ? saveErrText20(new SaveError20(lastLoadErr20 as never)) : t(l('Não foi possível carregar.', 'Could not load.')), 'bad');
     play(g);
   };
   const fileInput = h('input', { type: 'file', style: 'display:none', 'aria-hidden': 'true', onchange: async (e: Event) => {

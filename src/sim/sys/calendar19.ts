@@ -4,6 +4,7 @@
 // da fábrica (supply18), turnês e festivais próprios, obras (campus18), tribunal (crime17), empréstimos e prêmios.
 // Escreve: dica do Conselheiro (semana apertada), estresse do dono (fato 'crunch' com ouvinte) e "por quê" (cal19.week).
 
+import { formatMoney } from '../../core/money';
 import { l, type L } from '../../data/world';
 import { CRITICS_CAL19, ECHOES_CAL19, INDUSTRY_CAL19, LIVE_CAL19, type Cal19 } from '../awardcal19';
 import { calendar19, crunch19, nextMonthWeek19, registerDeadline, weekOfMonth19, type Deadline19 } from '../calendar19';
@@ -173,7 +174,7 @@ registerDeadline('fest12', (s) => {
     if (c.done) continue;
     const w = weekOfMonth19(s, Math.floor(c.due / 12), c.due % 12);
     if (w < s.week) continue;
-    out.push({ id: `f12:${c.id}`, w, kind: 'money', t: fmtL(N('{f}: {w}', '{f}: {w}'), { f: f.name, w: c.what }), d: fmtL(c.amt < 0 ? N('A pagar: {v}', 'To pay: {v}') : N('A receber: {v}', 'To receive: {v}'), { v: `$${Math.round(Math.abs(c.amt) / 100).toLocaleString('en-US')}` }), tone: c.amt < 0 && s.player.cash < -c.amt ? 'bad' : 'info', goto: { area: 'shows' } });
+    out.push({ id: `f12:${c.id}`, w, kind: 'money', t: fmtL(N('{f}: {w}', '{f}: {w}'), { f: f.name, w: c.what }), d: fmtL(c.amt < 0 ? N('A pagar: {v}', 'To pay: {v}') : N('A receber: {v}', 'To receive: {v}'), { v: l(formatMoney(Math.abs(c.amt), 'pt-BR'), formatMoney(Math.abs(c.amt), 'en-US')) }), tone: c.amt < 0 && s.player.cash < -c.amt ? 'bad' : 'info', goto: { area: 'shows' } });
   }
   return out;
 });

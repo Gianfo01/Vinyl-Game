@@ -1,7 +1,7 @@
 // Descoberta (GDD §6, §42.4): olheiros com região, gênero, viés e custo; concursos de talentos
 // e festivais de revelação; mercado de demos; leilão de contratos disputado com rivais.
 
-import { clamp, type Rng } from '../core/rng';
+import { Rng, clamp } from '../core/rng';
 import { CITIES, FAMILIES, MARKETS, cityById, familyOf, l, type L } from '../data/world';
 import { acceptOffer, defaultOffer, evaluateOffer, expectedAdvance, signWithRival } from './contracts';
 import { personName, langForCity } from './people';
@@ -11,26 +11,53 @@ import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { addSignal, spawnProceduralAct } from './worldgen';
 import { cashWhy20, freeCash20 } from './oblig20';
 import { actsNow27 } from './tickcache27';
+import { registerExt4, registerSimHook } from './ext4';
 
 // ---------- Olheiros ----------
 
-export function scoutPool(s: GameState, r: Rng): Scout[] {
+/** Candidatos a olheiro com a sorte `r`. `idOf(i)` dá o id (padrão: contador do jogo). */
+export function scoutPool(s: GameState, r: Rng, idOf: (i: number) => string = () => nextId(s, 'sc')): Scout[] {
   const out: Scout[] = [];
   for (let i = 0; i < 4; i++) {
     const m = r.pick(MARKETS);
     const fam = r.pick(FAMILIES);
     const city = r.pick(CITIES.filter((c) => c.market === m.id));
     const skill = clamp(Math.round(r.normal(50, 15)), 20, 92);
-    out.push({ id: nextId(s, 'sc'), name: personName(r, langForCity(city.id, r)), region: m.id, family: fam.id, skill, bias: Math.round(r.normal(0, 7)), salary: money(s, 600 + skill * 18), found: 0 });
+    out.push({ id: idOf(i), name: personName(r, langForCity(city.id, r)), region: m.id, family: fam.id, skill, bias: Math.round(r.normal(0, 7)), salary: money(s, 600 + skill * 18), found: 0 });
   }
   return out;
 }
+
+// r31: os olheiros disponíveis no mês são gerados pelo motor (virada do mês e jogo novo) e guardados aqui; a tela só
+// lê. Sorte pura por (semente, mês) e ids derivados do mês: não gasta fluxo de sorteio nem o contador de ids.
+export interface ScoutPool31 { m: number; list: Scout[] }
+declare module './ext4' { interface Ext4 { scoutpool: ScoutPool31 } }
+registerExt4('scoutpool', () => ({ m: -1, list: [] }));
+const spool = (s: GameState): ScoutPool31 => ((s.x4 as unknown as { scoutpool?: ScoutPool31 }).scoutpool ??= { m: -1, list: [] });
+
+/** Gera (no motor) os olheiros disponíveis no mês corrente. */
+export function refreshScoutPool(s: GameState): void {
+  const m = s.year * 12 + s.month;
+  const st = spool(s);
+  if (st.m === m) return;
+  st.m = m;
+  st.list = scoutPool(s, Rng.fromSeed(`${s.config.seed}|scoutpool|${m}`), (i) => `sc${m}-${i}`).filter((x) => !s.scouts.some((y) => y.id === x.id));
+}
+registerSimHook('newgame', 'scoutpool31', (s) => refreshScoutPool(s));
+
+/** Olheiros disponíveis neste mês (só leitura). */
+export const availableScouts = (s: GameState): readonly Scout[] => {
+  const st = (s.x4 as unknown as { scoutpool?: ScoutPool31 }).scoutpool;
+  return st && st.m === s.year * 12 + s.month ? st.list : [];
+};
 
 export function hireScout(s: GameState, sc: Scout): L | null {
   if (s.scouts.length >= 2 + s.player.hq * 2) return l('Limite de olheiros para o tamanho da sede.', 'Scout limit for your HQ size.');
   if (freeCash20(s) < sc.salary) return cashWhy20(s, sc.salary, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `scouthire:${sc.id}`, -sc.salary, 'scouting', `Contratação ${sc.name}`);
   s.scouts.push({ ...sc });
+  const st = spool(s);
+  st.list = st.list.filter((x) => x.id !== sc.id);
   return null;
 }
 
@@ -232,6 +259,7 @@ export function auctionsWeek(s: GameState, r: Rng): void {
 }
 
 export function discoveryMonth(s: GameState, r: Rng): void {
+  refreshScoutPool(s);
   scoutsMonth(s, r);
   contestsMonth(s, r);
   demosMonth(s, r);

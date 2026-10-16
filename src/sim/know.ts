@@ -140,37 +140,45 @@ export function know3(k: Know, tie = false): 0 | 1 | 2 | 3 {
 
 // ---------------------------------------------------------------- faixas
 
-/** Desvio determinístico (nunca zero) da faixa de um campo, por semente/observador/alvo/campo. */
-export function knowSkew(s: GameState, id: string, field: string, w: number, obs = 'player'): number {
+/**
+ * Desvio determinístico (nunca zero) da faixa de um campo. O SINAL é fixo por (semente, observador, alvo, campo) —
+ * ou o do viés do olheiro, quando há um —; a MAGNITUDE é uma fração de 20–45% da largura sorteada de novo para cada
+ * largura (hash estável): duas leituras com larguras diferentes não se alinham numa reta, então não dá para
+ * extrapolar o valor real comparando-as (com fração fixa, `v = (c1·w2 − c2·w1)/(w2 − w1)` entregava o número).
+ */
+export function knowSkew(s: GameState, id: string, field: string, w: number, obs = 'player', bias = 0): number {
   if (w <= 0 || w >= KNOW_HIDDEN) return 0;
   const h = hashString(`${s.config.seed}|know31|${obs}|${id}|${field}`);
-  const u = (h % 10007) / 10007;
-  const sign = (h >>> 20) & 1 ? 1 : -1;
-  return sign * Math.max(1, w * (0.05 + 0.2 * u));
+  const sign = Math.abs(bias) >= 0.5 ? Math.sign(bias) : (h >>> 20) & 1 ? 1 : -1;
+  const hw = hashString(`${s.config.seed}|know31w|${obs}|${id}|${field}|${Math.round(w * 4)}`);
+  const u = (hw % 10007) / 10007;
+  return sign * Math.max(1, w * (0.2 + 0.25 * u));
 }
 
 export interface Band { lo: number; hi: number; mid: number; exact: boolean }
 
 /**
- * Faixa mostrada de um valor real `v` (0..100) com largura `w`: null quando oculto, exata quando w = 0. O meio da
- * faixa nunca é o valor real. `bias` = viés do olheiro (s.knowledge[].bias): quando existe, é o desvio; senão (ou se
- * for menor que 1 ponto) entra o desvio fixo do par (semente, observador, alvo, campo).
+ * Faixa mostrada de um valor real `v` (0..100) com largura `w`: null quando oculto, exata quando w = 0. Nem o meio
+ * da faixa nem o palpite (`mid`) são o valor real: o palpite é `v` deslocado por `knowSkew` (o viés do olheiro, se
+ * houver, só escolhe o lado), e a janela inteira cabe em 0..100. Perto das bordas o desvio vira para dentro; se
+ * mesmo assim o centro ficar a menos de max(1, 15% de w) do valor real, usa o lado que se afasta mais.
  */
 export function band(s: GameState, id: string, field: string, v: number, w: number, o: { obs?: string; bias?: number } = {}): Band | null {
   if (w >= KNOW_HIDDEN) return null;
   if (w <= 0) { const r = Math.round(v); return { lo: r, hi: r, mid: r, exact: true }; }
-  const sk = knowSkew(s, id, field, w, o.obs);
-  // com viés do olheiro, o desvio é o próprio viés; o desvio fixo só entra quando o viés é pequeno demais (|<1|)
-  let off = (o.bias ?? 0) * (w / 30);
-  if (Math.abs(off) < 1) off = sk;
+  const off = knowSkew(s, id, field, w, o.obs, o.bias ?? 0);
   // o palpite (mid) é o valor real deslocado; perto da borda o deslocamento vira para dentro
   let m = v + off;
   if (m < 0 || m > 100) m = v - off;
   m = clamp(m, 0, 100);
   // a janela inteira cabe em 0..100 (cortar a borda recentralizaria a faixa no valor real)
   const half = Math.min(w, 100) / 2;
+  const minD = Math.max(1, 0.15 * w);
   let c = clamp(m, half, 100 - half);
-  if (Math.abs(c - v) < 1) c = clamp(v - (m - v), half, 100 - half);
+  if (Math.abs(c - v) < minD) {
+    const alt = clamp(v - (m - v), half, 100 - half);
+    if (Math.abs(alt - v) > Math.abs(c - v)) c = alt;
+  }
   return { lo: Math.round(c - half), hi: Math.round(c + half), mid: Math.round(m), exact: false };
 }
 

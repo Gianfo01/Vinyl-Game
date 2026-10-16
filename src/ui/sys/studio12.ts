@@ -4,7 +4,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { ownerOf } from '../../sim/sys/people/owner';
 import {
-  ROOMS, SPEC_NAME, STYLES, STYLE_NAME, acceptJob, addRoom, buyGear, closeProject, conflictKind, dated, declineJob, deliver, engCandidates, fire, fitReport, gearCost, gearName, hire, hotStyle, maintain, maintainCost, months, offerFee, pointsEV,
+  ROOMS, SPEC_NAME, STYLES, STYLE_NAME, acceptJob, addRoom, buyGear, closeProject, conflictKind, dated, declineJob, engCandidates, fire, fitReport, gearCost, gearName, hire, hotStyle, maintain, maintainCost, months, offerFee, pointsEV,
   prod, reinvent, roomCost, roomLimit, specialty, startProducer, stepBand, stepConflict, stepIntent, stepTake, studioOf, studios, synthOpen, takeChance, takeJob, unitName,
   type Spec, type Style, type Proj,
 } from '../../sim/sys/studio12';
@@ -149,7 +149,6 @@ function producerTab(s: GameState): HTMLElement {
   if (!P.on) return h('div', null, h('p', null, t(l('Produtor é uma carreira só sua: seu nome nos créditos, seu cachê (ou pontos) no seu patrimônio pessoal, independente de quem é dono do estúdio.', 'Producer is a career of your own: your name in the credits, your fee (or points) in your personal wealth, independent of who owns the studio.'))), btn(l('Começar a produzir', 'Start producing'), () => { startProducer(s); rerender(); }, 'btn primary'));
   if (P.proj) {
     const pr = P.proj;
-    if (pr.done || pr.step >= 4) { if (!pr.done && pr.step === 4) deliver(s, rng19(s, 'act')); }
     return projView(s, pr);
   }
   const hot = hotStyle(s);

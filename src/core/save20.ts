@@ -1,7 +1,7 @@
 // Rodada 20 (G1) — formato de save versionado, importação segura e avanço transacional.
 // Puro (sem DOM): usado por ui/store (local/arquivo/texto) e core/cloud17 (nuvem).
 //
-// Envelope (B6):  {"$masters":1,"formatVersion":2,"saveVersion":5,"rngVersion":19,"game":{...}}
+// Envelope (B6):  {"$masters":1,"formatVersion":2,"saveVersion":6,"rngVersion":31,"game":{...}}
 //   formatVersion  = forma do arquivo (1 = jogo "cru" das rodadas antigas, ainda aceito; 2 = envelope)
 //   saveVersion    = esquema do estado (SAVE_VERSION); migrações em sequência v → v+1 (MIG20) e depois o backfill
 //   rngVersion     = fluxos de sorteio (s.rngVersion; RNG_VERSION19): sem ele a mesma semente contaria outra história
@@ -28,7 +28,7 @@ export const MAX_OUT20 = 128 * 1024 * 1024;
 export const MAX_FILE23 = MAX_OUT20;
 export const MAX_DEPTH20 = 256;
 
-export type SaveErrCode = 'too_big' | 'malformed' | 'future' | 'schema' | 'format' | 'old';
+export type SaveErrCode = 'too_big' | 'malformed' | 'future' | 'schema' | 'format' | 'old' | 'old31';
 export class SaveError20 extends Error {
   constructor(public code: SaveErrCode, public detail = '') { super(`save20:${code}${detail ? ' ' + detail : ''}`); }
 }
@@ -96,6 +96,7 @@ export function decodeSave20(text: string, backfill: (g: GameState) => GameState
   const bad = schemaProblems20(game);
   if (bad.length) throw new SaveError20('schema', bad.join(','));
   if (sv < MIN_SAVE_VERSION) throw new SaveError20('old', `v${sv}`); // r27 (F): save de antes do modelo histórico novo
+  if (rv < RNG_VERSION19) throw new SaveError20('old31', `r${rv}`); // r31: sorteio de antes da 31 (regra 5: sem ponte)
   const g = game as unknown as GameState;
   for (let v = Math.max(1, Math.floor(sv)); v < SAVE_VERSION; v++) MIG20[v]?.(g);
   const out = backfill(g);

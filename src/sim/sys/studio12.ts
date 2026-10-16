@@ -276,9 +276,14 @@ export function stepTake(s: GameState, r: Rng, pick: 'keep' | 'redo' | 'comp'): 
   else if (r.chance(takeChance(P, 40))) { c.emo += 8; c.prec += 6; c.time -= 1; ev(pr, l('Edição cirúrgica: a alma do take com a precisão dos outros. Deu certo.', 'Surgical edit: the soul of the take with the precision of the rest. It worked.')); }
   else { c.emo -= 6; c.prec -= 2; c.time -= 1; ev(pr, l('A colagem soou costurada e o artista percebeu: perdeu-se o feeling.', 'The splice sounded stitched and the artist noticed: the feeling is lost.')); }
   pr.step = 4;
+  // r31: a entrega (nota, cachê, créditos) acontece na própria decisão do take — abrir a aba só mostra o resultado
+  deliver(s, r);
 }
+/** Entrega o projeto (idempotente: um projeto entregue não sorteia de novo). */
 export function deliver(s: GameState, r: Rng): void {
-  const P = prod(s), pr = P.proj!, c = pr.sc, a = s.acts[pr.job.actId], j = pr.job;
+  const P = prod(s), pr = P.proj;
+  if (!pr || pr.done || pr.step < 4) return;
+  const c = pr.sc, a = s.acts[pr.job.actId], j = pr.job;
   const w = j.own ? [0.25, 0.5, 0.25] : [0.3, 0.3, 0.4];
   let q = c.prec * w[0] + c.emo * w[1] + c.com * w[2] + (P.skill.arr - 40) / 8 + (P.fresh - 50) / 10 - (P.learning > 0 ? 5 : 0) + r.normal(0, 3);
   q = clamp(q, 0, 100);
