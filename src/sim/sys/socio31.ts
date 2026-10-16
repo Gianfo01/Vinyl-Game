@@ -115,7 +115,7 @@ export function socio31(s: GameState): Socio31State {
 // ---------------------------------------------------------------- dados
 
 export const SKIND31: Record<SKind31, { name: L; plural: L; icon: string; found: number; topics: Topic31[]; noise: number }> = {
-  fest: { name: l('Festival', 'Festival'), plural: l('Festivais', 'Festivals'), icon: 'festival', found: 120000, topics: ['price', 'prog', 'date', 'invest'], noise: 0.12 },
+  fest: { name: l('Festival', 'Festival'), plural: l('Festivais', 'Festivals'), icon: 'fans', found: 120000, topics: ['price', 'prog', 'date', 'invest'], noise: 0.12 },
   venue: { name: l('Casa de shows', 'Venue'), plural: l('Casas de shows', 'Venues'), icon: 'house', found: 90000, topics: ['price', 'prog', 'invest'], noise: 0.08 },
   radio: { name: l('Rádio', 'Radio station'), plural: l('Rádios', 'Radio stations'), icon: 'radio', found: 70000, topics: ['price', 'prog', 'invest'], noise: 0.06 },
   studio: { name: l('Estúdio', 'Studio'), plural: l('Estúdios', 'Studios'), icon: 'mic', found: 60000, topics: ['price', 'prog', 'invest'], noise: 0.07 },
