@@ -51,6 +51,11 @@ export interface Relics9State { list: Relic[] }
 export const relicHook: { f: (s: GameState, rl: Relic) => number } = { f: () => 1 };
 /** R29 (relics29): peças que a poda do teto de 90 não tira (as procedurais, que já têm teto e poda próprios). */
 export const relicKeep9: { f: (s: GameState, rl: Relic) => boolean } = { f: () => false };
+/** R31 (Z): peças FORA DO COMÉRCIO — museu nacional que nunca vende (Stradivarius "Messiah", piano de Beethoven,
+ *  fortepiano de Mozart) e o violino de Efro Fossati: ninguém negocia, compra, dá lance nem leva a leilão; a poda do teto e
+ *  o destino aleatório (leilão, roubo, incêndio, museu) não as tocam. Chave: id da peça no relics9 ou id real (`rr`). */
+export const relicFixed9 = new Set<string>();
+export const isRelicFixed9 = (rl: Pick<Relic, 'id' | 'rr'>): boolean => relicFixed9.has(rl.id) || (!!rl.rr && relicFixed9.has(rl.rr));
 /** R29 (relics29): avisa quando a poda do teto tira uma peça da lista (o relics29 limpa o registro compacto na hora). */
 export const relicGone9: { f: (s: GameState, rl: Relic) => void } = { f: () => {} };
 declare module '../ext4' { interface Ext4 { relics9: Relics9State } }
@@ -82,7 +87,7 @@ export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undef
   st.list.push(rl);
   if (st.list.length > 90) { // r18: mais fontes de peças — descarta perdida, senão a de menor valor fora do seu acervo
     let i = st.list.findIndex((x) => x.st === 'lost' && !x.rr);
-    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && !relicKeep9.f(s, x) && (i < 0 || x.v < st.list[i].v)) i = j; }
+    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && !isRelicFixed9(x) && !relicKeep9.f(s, x) && (i < 0 || x.v < st.list[i].v)) i = j; }
     if (i >= 0) relicGone9.f(s, st.list.splice(i, 1)[0]);
   }
   return rl;
@@ -127,6 +132,7 @@ export type NegRes = { r: 'accept' | 'counter' | 'refuse'; price: number; msg: L
 export function negotiateRelic(s: GameState, id: string, mult: number): NegRes | L {
   const rl = find(s, id);
   if (!rl || rl.st !== 'kept') return l('O dono atual não está negociando.', 'The current owner is not negotiating.');
+  if (isRelicFixed9(rl)) return l('Esta peça não está à venda, a preço nenhum.', 'This piece is not for sale at any price.');
   if (rl.cd && s.week < rl.cd) return l('O dono não quer conversa agora. Tente mais tarde.', 'The owner will not talk right now. Try later.');
   const ask = relicPrice(s, rl);
   const price = Math.round(ask * clamp(mult, 0.5, 2.5));
@@ -147,7 +153,7 @@ export function negotiateRelic(s: GameState, id: string, mult: number): NegRes |
 }
 export function acceptCounter(s: GameState, id: string): L | null {
   const rl = find(s, id);
-  if (!rl?.ctr || rl.st !== 'kept' || s.week > rl.ctr.w) return l('A contraproposta expirou.', 'The counter-offer expired.');
+  if (!rl?.ctr || rl.st !== 'kept' || s.week > rl.ctr.w || isRelicFixed9(rl)) return l('A contraproposta expirou.', 'The counter-offer expired.');
   if (freeCash20(s) < rl.ctr.p) return cashWhy20(s, rl.ctr.p, l('Caixa insuficiente.', 'Not enough cash.'));
   buyFrom(s, rl, rl.ctr.p, 'compra');
   return null;
@@ -163,7 +169,7 @@ function buyFrom(s: GameState, rl: Relic, price: number, how: string): void {
 /** Lance fechado no leilão: resolvido quando o martelo bate (paga pouco acima do 2º lance, até o seu teto). */
 export function placeBid(s: GameState, id: string, amount: number): L | null {
   const rl = find(s, id);
-  if (!rl || rl.st !== 'auction') return l('Não está em leilão.', 'Not at auction.');
+  if (!rl || rl.st !== 'auction' || isRelicFixed9(rl)) return l('Não está em leilão.', 'Not at auction.');
   if (amount < openingBid(s, rl)) return l('Abaixo do lance inicial.', 'Below the opening bid.');
   if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente para cobrir o lance.', 'Not enough cash to cover the bid.'));
   rl.bid = Math.round(amount);
@@ -235,7 +241,7 @@ export function seekRelic(s: GameState, id: string): L | null {
 /** Arrematar uma relíquia em leilão. Devolve erro ou null. */
 export function buyRelic(s: GameState, id: string): L | null {
   const rl = relics(s).list.find((x) => x.id === id);
-  if (!rl || rl.st !== 'auction') return l('Não está em leilão.', 'Not at auction.');
+  if (!rl || rl.st !== 'auction' || isRelicFixed9(rl)) return l('Não está em leilão.', 'Not at auction.');
   const price = relicPrice(s, rl);
   if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `relic:${rl.id}`, -price, 'acquisitions', `Leilão: ${rl.n.pt}`);
@@ -317,7 +323,7 @@ registerSimHook('month', 'relics9', (s, r) => {
   }
 });
 registerSimHook('year', 'relics9', (s, r) => {
-  for (const rl of relics(s).list) if (rl.st !== 'auction' && !rl.rr) fate(s, r, rl); // r17: relíquias reais seguem a história (sim/relics17)
+  for (const rl of relics(s).list) if (rl.st !== 'auction' && !rl.rr && !isRelicFixed9(rl)) fate(s, r, rl); // r17: relíquias reais seguem a história (sim/relics17)
   // peças expostas na sede (suas ou emprestadas de museu) rendem prestígio
   const shown = relics(s).list.filter((x) => (x.st === 'player' && x.ex && !x.ln) || x.brw).length;
   if (shown) s.player.reputation.artistic = clamp(s.player.reputation.artistic + Math.min(3, shown), 0, 100);

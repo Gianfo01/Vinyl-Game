@@ -229,6 +229,8 @@ function apply(s: GameState, d: RelicDef17, rl: Relic9, st: RelicStep17): void {
   if (ev === 'auction') notify(s, fmtL(l('Leilão histórico: {n} (dá para dar lance em Lendas → Relíquias).', 'Historic auction: {n} (you can bid in Legends → Relics).'), { n: d.name }), 'info');
 }
 
+/** R31 (Z): peças reais com id próprio no relics9 (`rr_<id>`) — lotes novos não mexem no contador global de ids. */
+export const RELIC_OWNID17 = new Set<string>();
 /** r18 (talent18): quem decide se uma peça real nasce nesta partida (modos de história). */
 export const relics17Gate: { f: (s: GameState, d: RelicDef17) => boolean; step: (s: GameState, st: RelicStep17) => boolean } = { f: () => true, step: () => true };
 
@@ -241,7 +243,7 @@ registerSimHook('month', 'relics17', (s) => {
     let rl = relic9Of17(s, d.id);
     if (!rl && st.done[d.id] === undefined && relics17Gate.f(s, d)) {
       const act = realAct17(s, d.owner);
-      rl = addRelic(s, d.kind, d.name, act?.id, undefined, d.value, d.year);
+      rl = addRelic(s, d.kind, d.name, act?.id, undefined, d.value, d.year, RELIC_OWNID17.has(d.id) ? `rr_${d.id}` : undefined);
       rl.rr = d.id;
       rl.own[0][0] = d.owner;
       st.done[d.id] = 0;

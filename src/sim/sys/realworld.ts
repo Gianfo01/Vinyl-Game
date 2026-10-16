@@ -28,6 +28,7 @@ import { ARTISTS27, FILL27 } from '../../data/audit27_artists';
 import { SONGS27 } from '../../data/audit27_songs';
 import { applyAudit27, applyFix27, applySongs27, type AnyArtist27 } from '../../data/audit27';
 import { NEW27_C1 } from '../../data/new27c1';
+import { BASE31_ACTS } from '../../data/base31acts';
 import { frontmanSings27, lineupMonth27, realRoles27 } from '../../data/lineup27';
 import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
 import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
@@ -73,6 +74,9 @@ applyMembers25(REAL_ALL); // r25: formações pesquisadas para quem não tinha i
 applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (banda de 5 aparecia com 2–3)
 // r27: atos novos da auditoria (3T) no fim, no sorteio do acervo; depois as correções auditadas (mortes, saídas, voltas…)
 for (const a of [...NEW27_C1, ...NEW27_F]) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } } // r27 (F): + artistas da pesquisa
+/** R31 (Z): base nova (data/base31acts) no FIM — os números de catálogo de quem já existia não mudam; usa o sorteio do acervo. */
+export const BASE31_FROM = REAL_ALL.length;
+for (const a of BASE31_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
 // r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
 {
