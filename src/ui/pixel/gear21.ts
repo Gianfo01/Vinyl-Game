@@ -4,7 +4,6 @@
 // Objetos sem asset no pacote continuam procedurais em sprites.ts, com o acabamento da casa (gearFinish).
 
 import { eraIndex, type EraId } from './palette';
-import { Px } from './px';
 import { GEAR_ATLAS, type GearId } from './gear21-atlas';
 
 const ATLAS_URL = new URL('../../assets/gear21.png', import.meta.url).href;
@@ -102,31 +101,3 @@ export function drawGear(ctx: CanvasRenderingContext2D, id: GearId, x: number, y
 }
 
 export const gearSize = (id: GearId): { w: number; h: number } => ({ w: GEAR_ATLAS[id][2], h: GEAR_ATLAS[id][3] });
-
-// r27 (port): o mesmo atlas como buffer Px, para quem pinta pixel a pixel (sede em corte, interiores da cidade).
-const pxCache = new Map<GearId, Px>();
-let atlasData: Uint32Array | null = null;
-let atlasW = 0;
-
-/** Sprite do atlas como Px (com contorno), ou null antes de o atlas chegar / sem DOM (testes) — aí o desenho é procedural. */
-export function gearPx(id: GearId): Px | null {
-  const hit = pxCache.get(id);
-  if (hit) return hit;
-  if (!atlas) return null;
-  if (!atlasData) {
-    try {
-      const cv = document.createElement('canvas');
-      cv.width = atlas.naturalWidth; cv.height = atlas.naturalHeight;
-      const ctx = cv.getContext('2d');
-      if (!ctx) return null;
-      ctx.drawImage(atlas, 0, 0);
-      atlasData = new Uint32Array(ctx.getImageData(0, 0, cv.width, cv.height).data.buffer.slice(0));
-      atlasW = cv.width;
-    } catch { return null; }
-  }
-  const [sx, sy, w, h] = GEAR_ATLAS[id];
-  const q = new Px(w, h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const c = atlasData[(sy + y) * atlasW + sx + x]; if ((c >>> 24) > 127) q.d[y * w + x] = c | 0xff000000; }
-  pxCache.set(id, q);
-  return q;
-}
