@@ -24,7 +24,7 @@ import { songProfile } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
 import { noteRelease17 } from './relidx17';
-import { PRESSURE_LABEL31, Y31, commodOn31, marketPressure31, on31 } from './r31/market31';
+import { FC_ID31, FORECAST31, PRESSURE_LABEL31, Y31, commodOn31, marketPressure31, on31 } from './r31/market31';
 import { allReleases17 } from './relidx17';
 
 const POOL: [number, number][] = [
@@ -385,6 +385,7 @@ export function marketWeek(s: GameState, r: Rng): void {
     const [rel] = heats[i];
     let units = Math.round(pre[i] * (mine(rel) ? k : 1));
     if (units <= 0) continue;
+    if (rel.fc !== undefined && s.week - rel.week < 10) rel.dem10 = (rel.dem10 ?? 0) + units; // R31 D: procura × previsão
     // estoque: demanda física só vira venda com estoque
     const physUnits = Math.round(units * physShareRel18(s, rel));
     let physSold = physUnits;
@@ -619,12 +620,16 @@ function forecast31(s: GameState, act: Act, type: Release['type'], q: number, ma
   const E = Math.min(0.95, marketingE(s, marketing, 'player', act.id) + (owner !== 'player' ? 0.25 : 0));
   // lançamento de mentira (não entra no estado): os mesmos campos que launchPending monta
   const rel: Release = {
-    id: '__fc31', actId: act.id, owner, prov: 'sim', type, title: '', songs: x.songs ?? [], week: s.week, year: s.year, q, appeal: 0,
+    id: FC_ID31, actId: act.id, owner, prov: 'sim', type, title: '', songs: x.songs ?? [], week: s.week, year: s.year, q, appeal: 0,
     formats: [], stock: 0, pressed: 0, marketing, marketingE: E, territories, weekly: [], totalUnits: 0, revenue: 0, peak: 999,
     weeksOnChart: 0, lastPos: 0, coverSeed: 0, shortage: 0, reissueOf: x.reissueOf, live: false,
   };
   rel.kind = x.kind;
-  rel.appeal = computeAppeal(s, null, rel, act, { luck: LUCK_MEAN31 }).appeal * (1 + (x.hype ?? 0)) * superfanDebut(s, act);
+  // o lançamento aquece o momento do ato (launchPending): a previsão já conta com esse momento, como as vendas
+  const a: Act = { ...act, momentum: clamp(act.momentum + 12 + E * 15, 0, 100) };
+  rel.hypeBoost = (1 + (x.hype ?? 0)) * superfanDebut(s, act);
+  rel.appeal = computeAppeal(s, null, rel, a, { luck: LUCK_MEAN31 }).appeal * rel.hypeBoost;
+  for (const f of FORECAST31.appeal) rel.appeal *= f(s, rel);
   const pool = weeklyPool(s);
   const H = s.stats.lastH ?? 80;
   const B = MARKET_TAIL * (s.year < 1950 ? 0.6 : 1);
@@ -637,8 +642,9 @@ function forecast31(s: GameState, act: Act, type: Release['type'], q: number, ma
   const fc = focusCap(s, owner);
   let total = 0;
   for (let age = 0; age < 10; age++) {
-    let h = heatOf(s, rel, act, age, NOISE_MEAN31, MEDIA18.fterm?.(s, marketing, E, age, type, q));
+    let h = heatOf(s, rel, a, age, NOISE_MEAN31, MEDIA18.fterm?.(s, marketing, E, age, type, q));
     if (n > fc) h *= Math.sqrt(fc / n);
+    rel.week = s.week - age; // os modificadores leem a idade pela semana do lançamento
     const u = Math.min(cap, applyMods(s, 'chartUnits', (pool * h) / (H + h + B), { release: rel }).value);
     total += u * k;
   }

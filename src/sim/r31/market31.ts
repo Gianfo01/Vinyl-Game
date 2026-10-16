@@ -60,6 +60,13 @@ export function marketPressure31(s: GameState, year = s.year): number {
 export const commodOn31 = (s: GameState): boolean => !on31(s, 'd31.pressure');
 export const PRESSURE_LABEL31: L = l('Mercado saturado (era digital), igual para todos', 'Saturated market (digital era), same for everyone');
 
+/** Lançamento de mentira da previsão de vendas (market.forecastUnits): nunca entra no estado. */
+export const FC_ID31 = '__fc31';
+export const isForecast31 = (rel: Release): boolean => rel.id === FC_ID31;
+/** Fatores de apelo que um sistema só aplica no gancho de lançamento (ex.: expectativa do hype12): a previsão chama a
+ *  mesma conta sem gravar. Cada função devolve um multiplicador. */
+export const FORECAST31: { appeal: ((s: GameState, rel: Release) => number)[] } = { appeal: [] };
+
 // ---------------------------------------------------------------- Y · ganchos (preenchidos por sys/mercado31.ts)
 
 export interface Y31Why { k: number; label: L }

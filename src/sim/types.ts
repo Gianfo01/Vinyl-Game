@@ -398,6 +398,8 @@ export interface Release {
   coverChoice?: string;
   /** rodada 8: previsão de unidades em 10 semanas guardada no lançamento, unidades reais nessas 10 semanas e leitura já enviada */
   fc?: number;
+  /** R31 D: procura das 10 primeiras semanas (antes do estoque) — o que a previsão `fc` tenta acertar */
+  dem10?: number;
   fa?: number;
   expl?: boolean;
 }
