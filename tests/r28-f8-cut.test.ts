@@ -5,13 +5,13 @@ import { l } from '../src/data/world';
 import { defaultConfig } from '../src/sim/bot';
 import { emitFact } from '../src/sim/facts17';
 import type { Act, GameState } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { CUT27, choose27, cutModel27, cutOfFact27, scan27 } from '../src/ui/ps/cut27model';
 import { BRIDGE27 } from '../src/ui/ps/cut27';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (): GameState => { const c = defaultConfig('r28cut', { scenario: 'established', startYear: 1990 } as Parameters<typeof defaultConfig>[1]); (c as { dbSize?: string }).dbSize = 'small'; return createGame(c); };
-const myAct = (s: GameState): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 60 }); a.owner = 'player'; return a; };
+const myAct = (s: GameState): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 60 }); a.owner = 'player'; return a; };
 const npcAct = (s: GameState): Act => Object.values(s.acts).find((a) => a.owner && a.owner !== 'player')!;
 
 describe('r28 F8 — cenas de golpe, holograma e herdeiros', () => {

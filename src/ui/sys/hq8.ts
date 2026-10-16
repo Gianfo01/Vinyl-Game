@@ -10,7 +10,7 @@ import { PRODUCERS, resolveTake } from '../../sim/studio';
 import { actStatus, hq8, hqChanges, studioLoad, type ActStatus, type Attention, type HqKind } from '../../sim/sys/hq8';
 import { overCapacity } from '../../sim/sys/pacing8';
 import type { GameState } from '../../sim/types';
-import { playerActs, rngOf } from '../../sim/util';
+import { playerActs } from '../../sim/util';
 import { $, actLink, inspect, logo, modal, pill, rerender, section } from '../common';
 import { h } from '../dom';
 import { hqHooks, type BubbleKind, type RoomTag } from '../hq';
@@ -94,7 +94,7 @@ function goArea(area: string, tab?: [string, string], actId?: string): void {
 
 /** Sessões em andamento (o estúdio da sede). */
 export function openSessions(s: GameState): void {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   let close = () => {};
   const sessions = s.sessions.filter((x) => !x.done);
   const load = studioLoad(s);
@@ -241,3 +241,4 @@ hqHooks.onRoom = (kind) => {
 registerSection('hq', { id: 'hq8-growth', order: 5, render: (s) => section(t(l('Crescimento da empresa', 'Company growth')), timeline(s)) });
 
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';

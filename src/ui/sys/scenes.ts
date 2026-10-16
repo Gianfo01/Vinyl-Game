@@ -15,7 +15,7 @@ import { MOOD_NAMES, canVisitRadio, radioFit, resolveRadio, startRadioVisit, typ
 import { sc, type PlaceKind } from '../../sim/sys/scenes/state';
 import { resolveVignette, vignetteOptions, type VignetteKind } from '../../sim/sys/scenes/tour';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { randomLook, lookOf } from '../pixel/avatar';
@@ -25,6 +25,7 @@ import { store } from '../store';
 import { ic, lineChart, scoreBadge } from '../vis';
 import './scenes.css';
 import { awardChoices17 } from './scene17';
+import { rng19 } from '../../sim/rng19';
 
 // ------------------------------------------------------------------ peças comuns
 
@@ -102,7 +103,7 @@ registerCutscene('awards', (s, cs, close) => {
       { id: 'team', label: l('Agradecer a equipe', 'Thank the team'), hint: l('Moral e confiança.', 'Morale and trust.') },
       { id: 'short', label: l('Curto e elegante', 'Short and elegant'), hint: l('Seguro.', 'Safe.') },
     ];
-    speech.replaceChildren(h('h4', null, t(l('Seu discurso', 'Your speech'))), choices(sp.map((o) => ({ label: o.label, hint: o.hint, run: () => awardSpeech(s, rngOf(s), cs.id, o.id) }))));
+    speech.replaceChildren(h('h4', null, t(l('Seu discurso', 'Your speech'))), choices(sp.map((o) => ({ label: o.label, hint: o.hint, run: () => awardSpeech(s, rng19(s, 'act'), cs.id, o.id) }))));
   };
   setTimeout(reveal, 0);
   return frame(s, cs, close, h('div', null,
@@ -122,7 +123,7 @@ registerCutscene('interview', (s, cs, close) => {
   let timer = 0;
   const finish = () => {
     clearInterval(timer);
-    const res = resolveInterview(s, rngOf(s), cs.id, answers);
+    const res = resolveInterview(s, rng19(s, 'act'), cs.id, answers);
     if ('pt' in res) { box.replaceChildren(h('p', null, t(res))); return; }
     box.replaceChildren(...([
       h('p', null, t(l('Nota da entrevista: ', 'Interview grade: ')), scoreBadge(res.grade / 10)),
@@ -163,7 +164,7 @@ registerCutscene('interview', (s, cs, close) => {
   };
   const start = h('div', { class: 'row' },
     h('button', { class: 'btn primary', onclick: () => ask(0) }, t(l('Começar a entrevista', 'Start the interview'))),
-    h('button', { class: 'btn ghost', onclick: () => { const a = autoAnswers(s, rngOf(s), cs.id); a.forEach((x, i) => (answers[i] = x)); finish(); } }, t(l('Resolver automático', 'Auto-resolve'))));
+    h('button', { class: 'btn ghost', onclick: () => { const a = autoAnswers(s, rng19(s, 'act'), cs.id); a.forEach((x, i) => (answers[i] = x)); finish(); } }, t(l('Resolver automático', 'Auto-resolve'))));
   box.append(h('p', { class: 'muted small' }, t(l('Escolha a resposta para cada pergunta. O tom de cada uma aparece embaixo; sem resposta em 15 segundos, conta como silêncio.', 'Pick the answer to each question. Each one\'s tone is shown below it; no answer in 15 seconds counts as silence.'))), start);
   if (actMode27() !== 'play') setTimeout(() => (start.lastChild as HTMLButtonElement)?.click(), 0);
   return frame(s, cs, () => { clearInterval(timer); close(); }, box, { fx: 'flash' });
@@ -180,7 +181,7 @@ registerCutscene('radio', (s, cs, close) => {
     h('p', null, `${dj?.name ?? 'DJ'} · ${t(MOOD_NAMES[dj?.mood] ?? l('?', '?'))} · ${dj?.audience ?? ''}`),
     h('p', { class: 'muted small' }, t(l('Escolha o disco certo para o perfil do programa.', 'Pick the right record for the show profile.'))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', onchange: (e: Event) => { payola = (e.target as HTMLInputElement).checked; } }), t(l('Deixar um envelope (jabá)', 'Leave an envelope (payola)'))),
-    choices(opts.map((rel) => ({ label: `"${rel.title}" (${Math.round(radioFit(s, dj as never, rel) * 100)}%)`, run: () => resolveRadio(s, rngOf(s), cs.id, rel.id, payola) }))),
+    choices(opts.map((rel) => ({ label: `"${rel.title}" (${Math.round(radioFit(s, dj as never, rel) * 100)}%)`, run: () => resolveRadio(s, rng19(s, 'act'), cs.id, rel.id, payola) }))),
   );
   return frame(s, cs, close, body, { fx: 'spot' });
 });
@@ -197,7 +198,7 @@ registerCutscene('court', (s, cs, close) => {
   ];
   return frame(s, cs, close, h('div', null,
     h('p', null, `${textOf(cs.data.plaintiff)} × ${textOf(cs.data.defendant)} · ${t(l('chance estimada', 'estimated odds'))} ${Math.round(Number(cs.data.odds ?? 0.5) * 100)}%`),
-    choices(opts.map((o) => ({ label: o.label, hint: o.hint, run: () => courtChoice(s, rngOf(s), cs.id, o.id) }))),
+    choices(opts.map((o) => ({ label: o.label, hint: o.hint, run: () => courtChoice(s, rng19(s, 'act'), cs.id, o.id) }))),
   ));
 });
 
@@ -206,8 +207,8 @@ registerCutscene('appeal', (s, cs, close) => {
   return frame(s, cs, close, h('div', null,
     h('p', null, `${t(l('Condenação', 'Damages'))}: ${$(Number(cs.data.claim ?? 0))} · ${t(l('custo do recurso', 'appeal cost'))}: ${$(Number(cs.data.fee ?? 0))}`),
     choices([
-      { label: l('Recorrer', 'Appeal'), run: () => appealVerdict(s, rngOf(s), cs.id, true) },
-      { label: l('Aceitar a sentença', 'Accept the verdict'), run: () => appealVerdict(s, rngOf(s), cs.id, false) },
+      { label: l('Recorrer', 'Appeal'), run: () => appealVerdict(s, rng19(s, 'act'), cs.id, true) },
+      { label: l('Aceitar a sentença', 'Accept the verdict'), run: () => appealVerdict(s, rng19(s, 'act'), cs.id, false) },
     ]),
   ));
 });
@@ -229,7 +230,7 @@ registerCutscene('agm', (s, cs, close) => {
   ];
   return frame(s, cs, close, h('div', null,
     h('ul', { class: 'small agm-list' }, sh.map((x) => h('li', null, `${x.name} · ${x.weight}% · `, pill(x.mood > 0.2 ? t(l('satisfeito', 'pleased')) : x.mood < -0.2 ? t(l('irritado', 'annoyed')) : t(l('neutro', 'neutral')), x.mood > 0.2 ? 'good' : x.mood < -0.2 ? 'bad' : '')))),
-    choices(opts.map((o) => ({ label: o.label, run: () => agmVote(s, rngOf(s), cs.id, o.id) }))),
+    choices(opts.map((o) => ({ label: o.label, run: () => agmVote(s, rng19(s, 'act'), cs.id, o.id) }))),
   ));
 });
 
@@ -241,7 +242,7 @@ registerCutscene('vignette', (s, cs, close) => {
   if (cs.data.done) return frame(s, cs, close, already(cs));
   const k = cs.data.vkind as VignetteKind;
   const extra = cs.data.rider ? h('p', { class: 'small' }, `${t(l('Pedido do camarim', 'Rider request'))}: ${textOf(cs.data.rider)}`) : null;
-  return frame(s, cs, close, h('div', null, extra, choices(vignetteOptions(k).map((o) => ({ label: o.label, hint: o.hint, run: () => resolveVignette(s, rngOf(s), cs.id, o.id) })))));
+  return frame(s, cs, close, h('div', null, extra, choices(vignetteOptions(k).map((o) => ({ label: o.label, hint: o.hint, run: () => resolveVignette(s, rng19(s, 'act'), cs.id, o.id) })))));
 });
 
 // ------------------------------------------------------------------ vida
@@ -283,7 +284,7 @@ registerCutscene('fair', (s, cs, close) => {
   const names: Record<BoothSize, L> = { none: l('Só visitar', 'Just visit'), small: l('Estande pequeno', 'Small booth'), medium: l('Estande médio', 'Medium booth'), large: l('Estande grande', 'Large booth') };
   return frame(s, cs, close, h('div', null,
     h('p', { class: 'small' }, `${textOf(cs.data.city)} · ${t(l('rivais presentes', 'rivals attending'))}: ${((cs.data.rivals as { name: string }[]) ?? []).map((x) => x.name).join(', ')}`),
-    choices(sizes.map((z) => ({ label: `${t(names[z])}${z !== 'none' ? ` (${$(money(s, BOOTH_COST[z]))})` : ''}`, run: () => fairChoice(s, rngOf(s), cs.id, z) }))),
+    choices(sizes.map((z) => ({ label: `${t(names[z])}${z !== 'none' ? ` (${$(money(s, BOOTH_COST[z]))})` : ''}`, run: () => fairChoice(s, rng19(s, 'act'), cs.id, z) }))),
   ));
 });
 
@@ -297,7 +298,7 @@ registerCutscene('factory', (s, cs, close) => {
 
 registerCutscene('club', (s, cs, close) => {
   if (cs.data.done) return frame(s, cs, close, already(cs));
-  return frame(s, cs, close, choices(CLUB_NIGHTS.map((n) => ({ label: n.name, run: () => clubNight(s, rngOf(s), cs.id, n.id) }))), { energy: 0.9 });
+  return frame(s, cs, close, choices(CLUB_NIGHTS.map((n) => ({ label: n.name, run: () => clubNight(s, rng19(s, 'act'), cs.id, n.id) }))), { energy: 0.9 });
 });
 
 // ------------------------------------------------------------------ ações: entrevista e rádio
@@ -312,8 +313,8 @@ registerSection('artists', {
     const rdErr = canVisitRadio(s, id);
     return section(t(l('Imprensa e rádio', 'Press and radio')),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn', disabled: !!ivErr, title: ivErr ? t(ivErr) : '', onclick: () => { const cs = startInterview(s, rngOf(s), id); if ('pt' in cs && !('kind' in cs)) toast(t(cs as L), 'bad'); else openCutscene(s, cs as Cutscene, rerender); } }, ic('tv'), ` ${t(l('Dar entrevista', 'Give an interview'))}`),
-        h('button', { class: 'btn', disabled: !!rdErr, title: rdErr ? t(rdErr) : '', onclick: () => { const cs = startRadioVisit(s, rngOf(s), id); if ('pt' in cs && !('kind' in cs)) toast(t(cs as L), 'bad'); else openCutscene(s, cs as Cutscene, rerender); } }, ic('radio'), ` ${t(l('Visitar uma rádio', 'Visit a radio station'))}`)),
+        h('button', { class: 'btn', disabled: !!ivErr, title: ivErr ? t(ivErr) : '', onclick: () => { const cs = startInterview(s, rng19(s, 'act'), id); if ('pt' in cs && !('kind' in cs)) toast(t(cs as L), 'bad'); else openCutscene(s, cs as Cutscene, rerender); } }, ic('tv'), ` ${t(l('Dar entrevista', 'Give an interview'))}`),
+        h('button', { class: 'btn', disabled: !!rdErr, title: rdErr ? t(rdErr) : '', onclick: () => { const cs = startRadioVisit(s, rng19(s, 'act'), id); if ('pt' in cs && !('kind' in cs)) toast(t(cs as L), 'bad'); else openCutscene(s, cs as Cutscene, rerender); } }, ic('radio'), ` ${t(l('Visitar uma rádio', 'Visit a radio station'))}`)),
       ivErr || rdErr ? h('p', { class: 'muted small' }, [ivErr, rdErr].filter(Boolean).map((x) => t(x as L)).join(' · ')) : null,
     );
   },

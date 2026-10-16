@@ -5,7 +5,7 @@
 import type { Rng } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
 import type { GameState, Notification } from '../../types';
-import { fmtL, money, post, rngOf } from '../../util';
+import { fmtL, money, post } from '../../util';
 import { P, actOf, addMsg, clamp01, mediumFor, trackedPersons, type InboxMsg, type Medium } from './state';
 import { activeThoughts, addThought, thoughtText } from './thoughts';
 import { startTreatment, type Treatment } from './health';
@@ -15,6 +15,7 @@ import { leakSecret } from './secrets';
 import { talk } from './talks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 import { isSeen18, noteKey18 } from '../../inbox18';
+import { rng19 } from '../../rng19';
 
 /**
  * Rodada 8: respostas de mensagens de outros sistemas (convites de feat, propostas). A mensagem leva
@@ -29,7 +30,7 @@ export function msgMedium(m: { year: number; tone?: string; kind?: string }): Me
 }
 
 /** Responde uma mensagem. Devolve o texto do resultado. */
-export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = rngOf(s)): L {
+export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = rng19(s, 'act')): L {
   const st = P(s);
   const m = st.inbox.find((x) => x.id === msgId);
   if (!m || m.resolved) return l('Mensagem já respondida.', 'Message already answered.');

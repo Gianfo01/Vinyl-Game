@@ -10,7 +10,6 @@ import { applyMods, runSimHooks } from '../src/sim/ext4';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
 import { cityDemand } from '../src/sim/tours';
-import { rngOf } from '../src/sim/util';
 import { createGame, grantPlayerContract } from '../src/sim/worldgen';
 import { audience, bondOf, collectorsOf, readAudience, startRevival } from '../src/sim/sys/audience8';
 import { bondNote, careerPhase, identity, memOf, prefsOf, reactToResult } from '../src/sim/sys/identity8';
@@ -18,6 +17,7 @@ import { moveText, playbookOf, rivals8 } from '../src/sim/sys/rivals8';
 import { maybeStartCult, stories } from '../src/sim/sys/stories8';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { courtOf18 } from '../src/sim/sys/world18';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, year = 1975) => createGame(defaultConfig(seed, { startYear: year }));
@@ -126,7 +126,7 @@ describe('histórias com continuidade: o disco cult', () => {
     grantPlayerContract(s, a, 60);
     a.fame = 20;
     const rel = fakeRelease(s, a);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const st = maybeStartCult(s, r, a, rel, true)!;
     expect(st).toBeTruthy();
     expect(st.ch).toEqual(['start_cult']);
@@ -170,7 +170,7 @@ describe('rivais com estratégia reconhecível', () => {
     lb.cash = Math.max(lb.cash, 1e10);
     const rivalAct = freeBand(s, 1, [mine.id]);
     rivalAct.genre = mine.genre;
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     // atribui o ato ao selo sem custo de contrato
     rivalAct.owner = lb.id;
     lb.roster.push(rivalAct.id);

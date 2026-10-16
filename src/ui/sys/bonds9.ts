@@ -5,7 +5,7 @@
 import { CITIES, cityById, genreById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { Act, GameState } from '../../sim/types';
-import { playerActs, rngOf } from '../../sim/util';
+import { playerActs } from '../../sim/util';
 import { $, actLink, modal, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { ACT_HEAD_EXTRAS, ACT_TABS, PERSON_TABS, openActPage, openPersonPage } from '../pages';
@@ -23,6 +23,7 @@ import { a29 } from '../art29ui'; // r29 (arte)
 import { movementBadgeImg29 } from '../pixel/badge29';
 import { ent27 } from '../ps/ent27';
 import { personKey27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
 const myActs = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.members.length > 0 && a.status !== 'split' && a.status !== 'retired');
@@ -41,7 +42,7 @@ function bondRow(s: GameState, b: Bond, close: () => void): HTMLElement {
     ...b.p.slice(0, 5).map((p) => h('button', { ...ent27('person', personKey27(p)), class: 'link small', onclick: () => { close(); openPersonPage(p); } }, s.persons[p]?.name ?? '?')),
     b.act ? h('span', null, ' → ', actLink(s, b.act)) : null, ' ',
     b.end ? h('small', { class: 'muted' }, ` ${b.y}–${b.end.y} · ${t(END_NAME[b.end.c])}${b.end.ep ? ` · ${t(EPI_NAME[b.end.ep])}` : ''}`) : h('span', null, bar(b.str, 100, b.str > 40 ? 'good' : 'warn'), h('small', { class: 'muted' }, ` ${t(l('desde', 'since'))} ${b.y} · ${t(l('obras', 'works'))} ${b.works}`)),
-    b.pl && !b.end ? h('button', { class: 'btn small ghost', onclick: () => { leaveBond(s, rngOf(s), b.id); rerender(); close(); } }, t(l('Encerrar', 'End'))) : null,
+    b.pl && !b.end ? h('button', { class: 'btn small ghost', onclick: () => { leaveBond(s, rng19(s, 'act'), b.id); rerender(); close(); } }, t(l('Encerrar', 'End'))) : null,
     b.hist.length > 1 ? h('details', null, h('summary', { class: 'small muted' }, t(l('História', 'History'))), h('ul', { class: 'small' }, b.hist.map((x) => h('li', null, `${x.y} · `, t(x.t))))) : null,
   );
 }
@@ -75,7 +76,7 @@ export function openBondModal(s: GameState, pre: { mine?: string; other?: string
   const reply = h('div');
   close = modal(t(l('Propor laço artístico', 'Propose an artistic bond')), h('div', null, box, h('div', { class: 'actions' },
     h('button', { class: 'btn primary', onclick: () => {
-      const res = proposeBond(s, rngOf(s), o.k, o.mine, o.others.slice(0, o.k === 'super' ? 3 : 1).filter(Boolean));
+      const res = proposeBond(s, rng19(s, 'act'), o.k, o.mine, o.others.slice(0, o.k === 'super' ? 3 : 1).filter(Boolean));
       if (res.ok) { toast(t(res.text), 'good'); close(); rerender(); } else reply.replaceChildren(h('p', { class: 'bad' }, t(res.text)));
     } }, t(l('Propor', 'Propose'))), reply)), { wide: true });
 }
@@ -189,7 +190,7 @@ export function openFoundModal(s: GameState): void {
   const reply = h('div');
   close = modal(t(l('Fundar um movimento', 'Start a movement')), h('div', null, box, h('div', { class: 'actions' },
     h('button', { class: 'btn primary', onclick: () => {
-      const res = foundMovement(s, rngOf(s), o);
+      const res = foundMovement(s, rng19(s, 'act'), o);
       if (res.ok) { toast(t(res.text), 'good'); close(); rerender(); if (res.id) openMovementPage(s, res.id); } else { reply.replaceChildren(h('p', { class: 'bad' }, t(res.text))); rerender(); }
     } }, t(l('Lançar o manifesto', 'Launch the manifesto'))), reply)), { wide: true });
 }

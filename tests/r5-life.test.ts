@@ -3,13 +3,13 @@
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import {
   ENERGY_PER_MONTH, energyLeft, goOnDate, joinableActs, leaveBand, life, marry, meetPeople, playBar, playerAct, playerPerson, practice, propose, startDating,
   startProject, tryForBaby,
 } from '../src/sim/sys/life';
 import { ownerOf } from '../src/sim/sys/people/owner';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string, over = {}) => createGame(defaultConfig(seed, { character: { name: 'Ana Teste', age: 28, background: 'musician', role: 'vocal' }, ...over }));
 
@@ -41,7 +41,7 @@ describe('personagem', () => {
 
   it('namoro, pedido, casamento e filho', () => {
     const s = mk('l5-d');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     ownerOf(s).wealth += 50_000_000;
     const c = meetPeople(s, r);
     expect(Array.isArray(c)).toBe(true);
@@ -72,7 +72,7 @@ describe('personagem', () => {
 
   it('carreira solo, bar e sair do projeto; caixa da empresa fecha', () => {
     const s = mk('l5-e');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = startProject(s, r, 'solo', 'rnr', 'Ana');
     expect(typeof act === 'object' && 'members' in act).toBe(true);
     expect(playerAct(s)?.name).toBe('Ana');

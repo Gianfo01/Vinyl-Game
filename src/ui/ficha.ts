@@ -12,7 +12,7 @@ import { criticScore, fmtSecs, scoreClass, trackList } from '../sim/relinfo';
 import { $, N, actLink, cityLink, cover, songName, genreName, inspect, kv, labelLink, logo, modal, ownerName, pill, rerender, sparkline, strategyName, toast } from './common';
 import { h, select } from './dom';
 import { store } from './store';
-import { money, rngOf } from '../sim/util';
+import { money } from '../sim/util';
 import { l } from '../data/world';
 import { openActPage, openPersonPage } from './pages';
 import { reviewCard, reviewSummary } from './reviewView';
@@ -29,6 +29,7 @@ import { offerLayers20, type Layers20 } from './sys/offer20';
 import { screen27 } from './act27/flow27';
 import { promiseChecks28 } from './sys/promises28';
 import { settleMember29, shells29 } from '../sim/sys/member29';
+import { rng19 } from '../sim/rng19';
 
 function g(): GameState {
   return store.game!;
@@ -240,7 +241,7 @@ export function openOffer(actId: string, classic27 = false, model0?: ContractMod
       reply.replaceChildren(
         h('p', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', t(l('{a} gostou, mas pediu até {n} semana(s) para pensar. A resposta chega sozinha — ou você pode pressionar agora (perde um pouco de confiança).', '{a} liked it but asked for up to {n} week(s) to think. The answer arrives on its own — or you can push now (costs a little trust).'), { a: a.name, n: Math.max(1, (offer.thinkUntil ?? s.week) - s.week) })),
         h('div', { class: 'row' },
-          h('button', { class: 'btn small', onclick: () => showReply(offer, pressForAnswer(s, rngOf(s), offer.id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
+          h('button', { class: 'btn small', onclick: () => showReply(offer, pressForAnswer(s, rng19(s, 'act'), offer.id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
           h('button', { class: 'btn small ghost', onclick: () => { close(); rerender(); } }, t(l('Esperar', 'Wait')))),
       );
       return;
@@ -261,7 +262,7 @@ export function openOffer(actId: string, classic27 = false, model0?: ContractMod
     layers.review, // r20: caixa livre/reservado, dívidas, promessas e requisitos antes de enviar
     h('button', { class: 'btn primary', onclick: () => {
       if (freeCash20(s) < o.advance) return toast(reservedAdvances20(s) > 0 ? t(l('Caixa livre insuficiente: {r} já está reservado em ofertas pendentes.', 'Not enough free cash: {r} is already reserved for pending offers.'), { r: $(reservedAdvances20(s)) }) : t(l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.')), 'bad');
-      const { offer, result } = offerNow(s, rngOf(s), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined, x29: o.x29 ? { ...o.x29 } : undefined });
+      const { offer, result } = offerNow(s, rng19(s, 'act'), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined, pk12: o.pk12 ? { ...o.pk12 } : undefined, x29: o.x29 ? { ...o.x29 } : undefined });
       showReply(offer, result);
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))),
     reply,

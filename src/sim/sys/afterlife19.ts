@@ -11,7 +11,7 @@
 // manchetes. Fatos: estate_contract, estate_suit, estate_offer, estate_partner, arena_open, avatar_residency (+ hologram).
 // Modo exato: atos reais intocados não processam nem oferecem nada (crônica do post18 cobre o real).
 
-import { Rng, clamp, hashString } from '../../core/rng';
+import { clamp, hashString } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { recordAward19 } from '../awards19';
 import { registerDeadline, type Deadline19 } from '../calendar19';
@@ -36,7 +36,7 @@ import { sh18, type Style18 as VStyle } from './shared18';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
-const rr = (s: GameState, tag: string) => rng19(s, 'af19', () => Rng.fromSeed(`${s.config.seed}|af19|${tag}|${s.week}`));
+const rr = (s: GameState, tag: string) => rng19(s, 'af19');
 const $k = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 
 // ---------------------------------------------------------------- estado

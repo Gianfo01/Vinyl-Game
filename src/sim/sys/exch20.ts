@@ -10,7 +10,7 @@
 //  • Relação com a cena local: cada residência aumenta a relação com a cidade; relação alta barateia a próxima e rende
 //    ecos (parceria com músicos locais). Locaute contra o sindicato (union20) esfria todas as cenas.
 // Era: o meio de transporte do texto segue o ano (navio/trem/avião). Determinismo: fluxo rng19 'exch20'.
-import { Rng, clamp } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { CITIES, cityById, familyOf, gfName, l, type L } from '../../data/world';
 import { registerConseq18 } from '../decide18';
 import { registerExplain, type WhyPart } from '../explain18';
@@ -46,7 +46,7 @@ export function exch20(s: GameState): Exch20 {
   t.inf ??= {}; t.rel ??= {}; t.next ??= 0; t.seq ??= 0; t.log ??= [];
   return t;
 }
-const rng = (s: GameState) => rng19(s, 'exch20', () => Rng.fromSeed(`${s.config.seed}|exch20|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'exch20');
 const mine = (a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand) && a.status !== 'retired' && a.status !== 'split' && !a.deceased;
 const usd = (c: number) => l(`US$ ${Math.round(c / 100).toLocaleString('pt-BR')}`, `US$${Math.round(c / 100).toLocaleString('en-US')}`);
 

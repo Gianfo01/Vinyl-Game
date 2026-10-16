@@ -10,11 +10,11 @@ import {
 } from '../../sim/sys/capital';
 import { ownerOf } from '../../sim/sys/people/owner';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { registerTab } from '../registry';
 import { chips, ic, stat } from '../vis';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
@@ -30,7 +30,7 @@ export function transferSection(s: GameState): HTMLElement {
     h('div', { class: 'row wrap' },
       h('button', { class: 'btn small', title: t(l('Seu dinheiro vira capital da empresa. Com sócios, sua fatia cresce.', 'Your money becomes company capital. With partners, your stake grows.')), onclick: () => say(injectCapital(s, amount), l('Aporte feito.', 'Capital injected.')) }, ic('money'), ' ', t(l('Aportar na empresa', 'Inject into the company'))),
       h('button', { class: 'btn small', title: t(l('A empresa devolve 3% do saldo + 1% de juros por mês.', 'The company pays back 3% of the balance + 1% interest a month.')), onclick: () => say(lendToCompany(s, amount), l('Empréstimo feito.', 'Loan made.')) }, t(l('Emprestar à empresa', 'Lend to the company'))),
-      h('button', { class: 'btn small ghost', title: t(l('20% de imposto; sócios, acionistas e artistas reagem.', '20% tax; partners, shareholders and artists react.')), onclick: () => { if (confirm(t(l('Retirar ${v} da empresa? Haverá imposto e reações.', 'Withdraw ${v} from the company? There will be tax and reactions.'), { v: amount }))) say(withdrawFromCompany(s, rngOf(s), amount), l('Retirada feita.', 'Withdrawal made.')); } }, t(l('Retirar para o bolso', 'Withdraw to your pocket'))),
+      h('button', { class: 'btn small ghost', title: t(l('20% de imposto; sócios, acionistas e artistas reagem.', '20% tax; partners, shareholders and artists react.')), onclick: () => { if (confirm(t(l('Retirar ${v} da empresa? Haverá imposto e reações.', 'Withdraw ${v} from the company? There will be tax and reactions.'), { v: amount }))) say(withdrawFromCompany(s, rng19(s, 'act'), amount), l('Retirada feita.', 'Withdrawal made.')); } }, t(l('Retirar para o bolso', 'Withdraw to your pocket'))),
     ),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: c.companyCard, onchange: () => { toggleCompanyCard(s); rerender(); } }),
       t(l('Pagar despesas pessoais com o cartão da empresa (economiza seu bolso; uma auditoria pode descobrir — mais provável com sócios ou em bolsa)', 'Pay personal expenses with the company card (saves your pocket; an audit may find out — likelier with partners or when listed)'))),
@@ -70,7 +70,7 @@ function offersSection(s: GameState): HTMLElement {
   const live = c.offers.filter((o) => o.expires > s.week);
   return section(t(l('Propostas de investidores', 'Investor offers')),
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small', onclick: () => say(seekInvestors(s, rngOf(s)), l('O banco trouxe propostas.', 'The bankers brought offers.')) }, ic('bank'), ' ', t(l('Buscar sócios (banco $1.500 + 1 tempo)', 'Look for partners (bank $1,500 + 1 time)'))),
+      h('button', { class: 'btn small', onclick: () => say(seekInvestors(s, rng19(s, 'act')), l('O banco trouxe propostas.', 'The bankers brought offers.')) }, ic('bank'), ' ', t(l('Buscar sócios (banco $1.500 + 1 tempo)', 'Look for partners (bank $1,500 + 1 time)'))),
       h('span', { class: 'muted small' }, t(l('Valor estimado da empresa: {v}', 'Estimated company value: {v}'), { v: $(valuation(s)) }))),
     live.length ? h('div', { class: 'cards' }, live.map((o) => {
       const kd = KINDS[o.kind];

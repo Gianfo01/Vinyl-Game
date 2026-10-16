@@ -354,7 +354,7 @@ registerInboxKind('trib19_renew', { label: l('Licença de tributo', 'Tribute lic
 // ---------------------------------------------------------------- mês
 
 registerSimHook('month', 'tribute19', (s, r0) => {
-  const r = rng19(s, 'tribute19', () => Rng.fromSeed(`${s.config.seed}|t19|${s.week}`));
+  const r = rng19(s, 'tribute19');
   void r0;
   const st = t19(s);
   // 1) separações e reuniões (o "antes e depois" que os tributos e o sósia leem)

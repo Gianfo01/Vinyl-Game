@@ -2,7 +2,7 @@
 // Dev: `npx vite tools/cutsheet29` e abra ?part=new | old | all (&before=1 usa só a pintura antiga do r27/r28,
 // para comparar num checkout anterior). As PNG de docs/shots29scenes saem daqui (scripts/shots29scenes.mjs).
 import { defaultConfig } from '../../src/sim/bot';
-import { rngOf } from '../../src/sim/util';
+import { rng19 } from '../../src/sim/rng19';
 import { createGame, spawnProceduralAct } from '../../src/sim/worldgen';
 import { drawFigs27, paintArt27 } from '../../src/ui/ps/art27';
 import * as M from '../../src/ui/ps/cut27model';
@@ -15,7 +15,7 @@ const root = document.getElementById('root')!;
 const cfg = defaultConfig('cutsheet29', { scenario: 'established', startYear: 1990 } as Parameters<typeof defaultConfig>[1]);
 (cfg as { dbSize?: string }).dbSize = 'small';
 const s = createGame(cfg);
-const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 60 }); a.owner = 'player';
+const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 60 }); a.owner = 'player';
 const OLD = ['press1', 'chart1', 'no1', 'star', 'show1', 'sold', 'flop', 'tour', 'award', 'scandal', 'raid', 'leave', 'death', 'broke', 'era', 'fest', 'magic', 'betray', 'coup', 'holo', 'heirs'];
 const keys = (M.CUT_KEYS27 as string[]).filter((k) => (part === 'old' ? OLD.includes(k) : part === 'new' ? !OLD.includes(k) : true));
 const P29 = '../../src/ui/ps/cutpaint29.ts';

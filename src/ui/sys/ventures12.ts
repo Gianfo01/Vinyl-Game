@@ -4,7 +4,6 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { visibleAct } from '../../sim/future';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import { MEDIA, type Venture } from '../../sim/sys/ventures9';
 import {
   AUDS, LINES, ROLE_NAME, SLOT_NAME, adPulled, adapt, advertisers, chaseExclusive, fireStaff, formatName, hireStaff, medOf, overdue, resolveReview, setLine, setSlot, shiftsOf, slotCap, slotKinds, staffCap, staffPool, staffBy,
@@ -22,6 +21,7 @@ import { $, actLink, genreName, pill, rerender, section, toast } from '../common
 import { bar, h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
 import { why18 } from '../explain18';
+import { rng19 } from '../../sim/rng19';
 
 const say = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const btn = (label: L, fn: () => void, cls = 'btn small') => h('button', { class: cls, onclick: fn }, t(label));
@@ -34,7 +34,7 @@ const actsFor = (s: GameState) => Object.values(s.acts).filter((a) => visibleAct
 // ================================================================== editora
 
 function publisher(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s), x = pubOf(s, v.id), ws = v.writers!;
+  const r = rng19(s, 'act'), x = pubOf(s, v.id), ws = v.writers!;
   const wopts = ws.map((w) => ({ value: w.pid, label: w.name }));
   let pickKey = '', pa = ws[0]?.pid ?? '', pb = ws[1]?.pid ?? '', gen = genresInPlay(s)[0] ?? '', cw = ws[0]?.pid ?? '';
   const protectedN = v.cat!.filter((c) => c.x?.stance === 'protect').length;
@@ -88,7 +88,7 @@ function publisher(s: GameState, v: Venture): HTMLElement {
 // ================================================================== mídia
 
 function media(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s), x = medOf(s, v.id), acts = actsFor(s), cap = slotCap(v);
+  const r = rng19(s, 'act'), x = medOf(s, v.id), acts = actsFor(s), cap = slotCap(v);
   const pool = staffPool(s, v.id).filter((z) => !x.staff.some((q) => q.id === z.id));
   let exAct = acts[0]?.id ?? '';
   const fmt = formatName(s, v, x);
@@ -132,7 +132,7 @@ function media(s: GameState, v: Venture): HTMLElement {
 // ================================================================== plataforma
 
 function platform(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s), x = platOf(s, v.id), P = PROPS[x.prop], q = discoveryQuality(s, v, x), cat = catalogOf(s, v);
+  const r = rng19(s, 'act'), x = platOf(s, v.id), P = PROPS[x.prop], q = discoveryQuality(s, v, x), cat = catalogOf(s, v);
   const acts = actsFor(s);
   let fa = acts[0]?.id ?? '';
   const cfg = (o: Parameters<typeof configure>[2]) => say(configure(s, v.id, o));

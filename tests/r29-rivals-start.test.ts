@@ -14,6 +14,7 @@ import { roleFromMain } from '../src/sim/sys/careers12';
 import { VKINDS, ventures } from '../src/sim/sys/ventures9';
 import type { GameState, RunConfig } from '../src/sim/types';
 import { buildRun27, draftDefaults27, quickDefaults27, quickRunConfig27 } from '../src/ui/ps/home27model';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 const pt = (x: { pt: string }) => x.pt;
 const ERAS = [1889, 1962, 1990, 2020];
@@ -119,7 +120,7 @@ describe('r29 — nível dos rivais: o mundo gerado', () => {
     expect(rivals29St(z)!.big).toHaveLength(1);
     expect(JSON.stringify(z.labels)).not.toBe(JSON.stringify(x.labels));
     // gerador próprio: o estado do sorteio principal é o mesmo do mundo padrão
-    expect(x.rng).toEqual(game('r29r-det', 1990).rng);
+    expect(rngSnapshot19(x, 'world')).toBe(rngSnapshot19(game('r29r-det', 1990), 'world'));
   });
 
   for (const year of ERAS) {

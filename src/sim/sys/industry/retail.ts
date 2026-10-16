@@ -6,7 +6,7 @@ import { MARKETS, cityById, l, type L, type MarketId } from '../../../data/world
 import { registerMod, registerSimHook } from '../../ext4';
 import { personName } from '../../people';
 import type { GameState, Release } from '../../types';
-import { fmtL, hasTech, money, nextId, notify, post, remember, rngOf } from '../../util';
+import { fmtL, hasTech, money, nextId, notify, post, remember } from '../../util';
 import { researchDone } from './research';
 import type { PriceTier, Store, StoreCell } from './state';
 import { cashWhy20, freeCash20 } from '../../oblig20';
@@ -237,4 +237,3 @@ export function toggleMailClub(s: GameState): L | null {
 
 registerSimHook('month', 'industry:retail', (s, r) => { storesMonth(s, r); channelsMonth(s, r); });
 
-export { rngOf };

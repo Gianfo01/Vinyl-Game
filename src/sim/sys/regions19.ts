@@ -45,7 +45,7 @@ const off = (): boolean => !!(globalThis as { __reg19Off?: boolean }).__reg19Off
 const mineA = (s: GameState, a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
 const myActs = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.status !== 'retired' && a.status !== 'split');
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
-const rng = (s: GameState) => rng19(s, 'reg19', () => Rng.fromSeed(`${s.config.seed}|reg19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'reg19');
 const a3Of = (a: Act) => countryOfCity(a.city);
 
 // ================================================================ estado

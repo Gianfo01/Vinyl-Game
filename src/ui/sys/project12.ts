@@ -18,7 +18,7 @@ import {
 import { audLine29 } from './demo29'; // R29 demo29: quem é o público-alvo (faixas) × onde o público está
 import { AUDIENCES, effectName, focusIdeal, recipeFit, stageName, studioContext, type Aud12 } from '../../sim/sys/recipe12';
 import type { GameState, ReleaseType } from '../../sim/types';
-import { playerActs, rngOf } from '../../sim/util';
+import { playerActs } from '../../sim/util';
 import { $, N, kv, logo, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { openRelease } from '../ficha';
@@ -33,6 +33,7 @@ import { phaseReview20 } from './review20';
 import { empty20 } from '../st20';
 import { journey23 } from './journey23';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -117,7 +118,7 @@ function nextAction(s: GameState, p: MusicProject, st: ProjStage): HTMLElement |
     h('button', { class: 'btn small ghost', onclick: () => say(recordNow(s, p), l('Sessão de estúdio marcada.', 'Studio session booked.')) }, ic('mic'), ' ', t(l('Ou gravar já as {n} faixas do projeto (sessão com o produtor escolhido)', 'Or record the project\'s {n} tracks right now (session with the chosen producer)'), { n: unrec }))));
   if (st === 'finishing') body.push(h('span', { class: 'row wrap' },
     h('label', { class: 'pj-inline' }, t(l('Sai em (semanas)', 'Out in (weeks)')), h('input', { type: 'number', min: 1, max: 26, value: p.weeksAhead, onchange: (e: Event) => { p.weeksAhead = Math.max(1, Math.min(26, Number((e.target as HTMLInputElement).value) || 1)); rerender(); } })),
-    h('button', { class: 'btn primary small', onclick: () => say(scheduleProject(s, rngOf(s), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
+    h('button', { class: 'btn primary small', onclick: () => say(scheduleProject(s, rng19(s, 'act'), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
     p.type === 'lp' ? h('button', { class: 'btn small', onclick: () => say(rolloutProject(s, p), l('Rollout planejado.', 'Rollout planned.')) }, ic('calendar'), ' ', t(l('Lançar com rollout', 'Release with a rollout'))) : null));
   if (st === 'scheduled') body.push(h('p', null, pr ? t(l('Chega às lojas na semana {w}. Shows e entrevistas nessa semana somam.', 'Hits stores in week {w}. Shows and interviews that week add up.'), { w: pr.week }) : t(l('Rollout em andamento.', 'Rollout in progress.'))),
     pr ? h('button', { class: 'btn ghost small', onclick: () => { unscheduleProject(s, p); rerender(); } }, t(l('Cancelar lançamento', 'Cancel release'))) : null);

@@ -16,8 +16,9 @@ import {
 import { cityDemand } from '../src/sim/tours';
 import { perk } from '../src/sim/perks';
 import { CITIES, cityById } from '../src/data/world';
-import { money, playerActs, rngOf } from '../src/sim/util';
+import { money, playerActs } from '../src/sim/util';
 import type { GameState, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
@@ -56,15 +57,15 @@ describe('bens pessoais', () => {
     setRoutine(s, 'none');
     expect(buyGood(s, 'car_family')).toBeNull();
     const w0 = ownerOf(s).wealth;
-    goodsMonth(s, rngOf(s));
+    goodsMonth(s, rng19(s, 'act'));
     expect(ownerOf(s).wealth).toBe(w0 - goodUpkeep(s, goodById.car_family));
     // valor deprecia com o tempo (média)
     const item = goods(s).owned[0];
-    for (let i = 0; i < 24; i++) goodsMonth(s, rngOf(s));
+    for (let i = 0; i < 24; i++) goodsMonth(s, rng19(s, 'act'));
     expect(item.value).toBeLessThan(item.paid);
     // sem dinheiro: atrasa e, no terceiro mês, perde o carro
     ownerOf(s).wealth = 0;
-    for (let i = 0; i < 3; i++) goodsMonth(s, rngOf(s));
+    for (let i = 0; i < 3; i++) goodsMonth(s, rng19(s, 'act'));
     expect(goods(s).owned.length).toBe(0);
     expect(ownerOf(s).wealth).toBeGreaterThan(0); // o leilão devolve uma parte
     invariant(s);
@@ -78,7 +79,7 @@ describe('bens pessoais', () => {
     buyGood(s, 'chalet');
     buyGood(s, 'sailboat');
     const st0 = o.stress;
-    goodsMonth(s, rngOf(s));
+    goodsMonth(s, rng19(s, 'act'));
     expect(o.stress).toBeLessThan(st0);
     const e0 = maxEnergy(s);
     expect(buyGood(s, 'jet')).toBeNull();
@@ -95,7 +96,7 @@ describe('investimentos, equipe, cursos e aparições', () => {
     expect(invest(s, 'stocks', amt)).toBeNull();
     expect(ownerOf(s).wealth).toBe(w0 - amt);
     expect(invest(s, 'crypto', amt)).not.toBeNull(); // ainda não existe em 1995
-    for (let i = 0; i < 12; i++) goodsMonth(s, rngOf(s));
+    for (let i = 0; i < 12; i++) goodsMonth(s, rng19(s, 'act'));
     const v = goods(s).inv.stocks!.value;
     expect(v).toBeGreaterThan(0);
     const w1 = ownerOf(s).wealth;
@@ -112,7 +113,7 @@ describe('investimentos, equipe, cursos e aparições', () => {
     expect(hirePStaff(s, 'assistant')).toBeNull();
     expect(maxEnergy(s)).toBe(e0 + 1);
     ownerOf(s).wealth = 0;
-    goodsMonth(s, rngOf(s));
+    goodsMonth(s, rng19(s, 'act'));
     expect(goods(s).staff.assistant).toBeUndefined(); // sem salário, pediu demissão
   });
 
@@ -143,7 +144,7 @@ describe('mapa jogável', () => {
     const q = travelQuote(s, dest.id);
     const cash = s.player.cash;
     const w0 = ownerOf(s).wealth;
-    const res = travelTo(s, rngOf(s), dest.id);
+    const res = travelTo(s, rng19(s, 'act'), dest.id);
     if ('pt' in res) {
       // visto negado: perdeu metade da viagem
       expect(ownerOf(s).wealth).toBe(w0 - Math.round(q.cost * 0.5));
@@ -153,7 +154,7 @@ describe('mapa jogável', () => {
     expect(s.player.cash).toBe(cash);
     expect(isHere(s, dest.id)).toBe(true);
     const club = s.clubs.find((k) => k.city === dest.id && !k.closed)!;
-    const r2 = venueNight(s, rngOf(s), club.id);
+    const r2 = venueNight(s, rng19(s, 'act'), club.id);
     if (energyLeft(s) >= 0) expect('text' in r2 || 'pt' in r2).toBe(true);
     invariant(s);
   });

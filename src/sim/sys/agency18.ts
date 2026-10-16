@@ -616,7 +616,7 @@ export function agencyMonth18(s: GameState, r: Rng): Ag18Log[] {
   return out;
 }
 
-registerSimHook('month', 'agency18', (s) => { agencyMonth18(s, rng19(s, 'ag18', () => Rng.fromSeed(`${s.config.seed}:ag18:${s.week}`))); });
+registerSimHook('month', 'agency18', (s) => { agencyMonth18(s, rng19(s, 'ag18')); });
 
 // ---------------------------------------------------------------- respostas do jogador
 

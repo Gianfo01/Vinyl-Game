@@ -12,8 +12,8 @@ import { nominal } from '../src/core/money';
 import { leaderOf, leaders } from '../src/sim/sys/leaders10';
 import { PLAYBOOKS, playbookOf, rivals8 } from '../src/sim/sys/rivals8';
 import { runSimHooks } from '../src/sim/ext4';
-import { rngOf } from '../src/sim/util';
 import type { RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const cfg = (seed: string, over: Partial<RunConfig> = {}) => defaultConfig(seed, over) as RunConfig;
 
@@ -107,7 +107,7 @@ describe('líderes', () => {
     const lb = Object.values(s.labels).find((x) => x.active)!;
     const L0 = leaderOf(s, lb.id)!;
     L0.retireAge = s.year - L0.born; // aposenta no próximo fechamento de ano
-    runSimHooks('year', s, rngOf(s));
+    runSimHooks('year', s, rng19(s, 'act'));
     expect(L0.st).toBe('retired');
     const next = leaderOf(s, lb.id)!;
     expect(next).toBeDefined();
@@ -126,7 +126,7 @@ describe('líderes', () => {
         if (!L0) continue;
         L0.founder = false; L0.bad = 3; lb.cash = -1;
       }
-      runSimHooks('year', s, rngOf(s));
+      runSimHooks('year', s, rng19(s, 'act'));
       fired += Object.values(leaders(s).L).filter((x) => x.jobs.some((j) => j.end === 'fired')).length;
     }
     expect(fired).toBeGreaterThan(0);

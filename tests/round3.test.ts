@@ -5,7 +5,6 @@ import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { canOpenBranch, hqBlocker, hqCaps, openBranch, upgradeBranch } from '../src/sim/branches';
 import { upgradeHq } from '../src/sim/economy';
@@ -16,10 +15,11 @@ import {
 } from '../src/sim/repertoire';
 import { GEO_EVENTS, geoEffects } from '../src/sim/culture';
 import type { GameState } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, over = {}) {
   const s = createGame(defaultConfig(seed, over));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 50_000_000_00;

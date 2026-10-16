@@ -15,7 +15,7 @@ import {
 import { opinionOf } from '../../sim/sys/persona13';
 import { mgCap, mgChance, pitchClient, ventures } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { $, actLink, cityName, modal, pill, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { openOffer } from '../ficha';
@@ -27,6 +27,7 @@ import { mgrsOfAct16 } from '../../sim/sys/people16';
 import { favorAct27 } from '../act27/flow27p2'; // r27 FLOW2: o almoço abre a conversa de favor (rápido dentro)
 import { staffFace29 } from '../art29ui'; // r29 (arte)
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 /** Rodada 16: quem já empresariou o ato (com anos). */
 function mgrHist16(s: GameState, actId: string): HTMLElement | null {
@@ -55,7 +56,7 @@ function contestBtn(s: GameState, actId: string, redraw: () => void): HTMLElemen
   return h('button', {
     class: 'btn small', disabled: full,
     title: full ? t(l('Sua carteira está cheia.', 'Your roster is full.')) : t(l('Chance {c} (15% de comissão). O empresário atual pesa {d} pontos: negociação + carisma dele, rixa e o que ele pensa de você. Tirar o cliente dele gera mágoa — e rixa com tubarões e linhas-duras.', 'Chance {c} (15% commission). The current manager weighs {d} points: their negotiation + charisma, feud and what they think of you. Taking their client hurts them — and starts a feud with sharks and enforcers.'), { c: pct(ch), d: signed(adj * 100) }),
-    onclick: act14(redraw, () => pitchClient(s, rngOf(s), actId, 0.15)),
+    onclick: act14(redraw, () => pitchClient(s, rng19(s, 'act'), actId, 0.15)),
   }, `${t(l('Disputar cliente', 'Contest client'))} · ${pct(ch)}`);
 }
 

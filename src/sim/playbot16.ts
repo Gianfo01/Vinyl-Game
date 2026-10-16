@@ -43,7 +43,7 @@ import { botKit18 } from './sys/live18';
 import { labelTourNet16, sizedDraft16, suggestRoute16 } from './route16';
 import { advanceMonth } from './tick';
 import type { Act, GameState, RunConfig } from './types';
-import { money, playerActs, rngOf } from './util';
+import { money, playerActs } from './util';
 import { createGame } from './worldgen';
 import { unreleasedRecorded } from './production';
 import { freshLog17, play17, type Log17 } from './playbot17';
@@ -52,6 +52,7 @@ import { doPersonAction18, personActions18 } from './personact18';
 import { botMedia18 } from './botmedia18';
 import { rankChannels18 } from './sys/mkt18';
 import { freshLogBiz27, playBiz27, type LogBiz27 } from './botbiz27';
+import { rng19 } from './rng19';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -241,7 +242,7 @@ function scoutAndSign(s: GameState, k: Knobs, p: Profile): void {
     }
     if (ev.band === 'unlikely') continue;
     if (o.advance > s.player.cash * k.advCash || s.player.cash - o.advance < burn(s) * k.cut * 1.5) continue;
-    const { offer, result } = offerNow(s, rngOf(s), o);
+    const { offer, result } = offerNow(s, rng19(s, 'act'), o);
     if (!offer && result === 'invalid') break; // sem reunião disponível (cota/tempo livre)
     L.offers++;
     if (result === 'accepted') L.signs++;
@@ -318,7 +319,7 @@ function records(s: GameState, k: Knobs, prof: Profile): void {
       if (runway(s) < k.cut) for (const m of p.marketing) m.budget = Math.round(m.budget / 3);
       const lp = p.type === 'lp' && prof !== 'cautious' && runway(s) > k.cut * 2;
       if (lp && !rolloutProject(s, p)) { L.rollouts++; L.releases++; }
-      else if (!scheduleProject(s, rngOf(s), p)) L.releases++;
+      else if (!scheduleProject(s, rng19(s, 'act'), p)) L.releases++;
     } else if ((st === 'writing' || st === 'concept') && s.week - (p.created ?? s.week) > 26 && unreleasedRecorded(s, act).length === 0 && p.type !== 'single') {
       // projeto empacado: vira single com o que há
       p.type = 'single';
@@ -368,9 +369,9 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
       const tier = festTierFor(s, f, fi, act);
       if (!tier) return;
       pitches++;
-      const res = pitchAct(s, rngOf(s), fi, id, tier, festFee(s, f, act, tier));
+      const res = pitchAct(s, rng19(s, 'act'), fi, id, tier, festFee(s, f, act, tier));
       if (res.result === 'accepted') L.festivals++;
-      else if (res.result === 'counter' && res.tier && res.fee) { const r2 = pitchAct(s, rngOf(s), fi, id, res.tier, res.fee); if (r2.result === 'accepted') L.festivals++; }
+      else if (res.result === 'counter' && res.tier && res.fee) { const r2 = pitchAct(s, rng19(s, 'act'), fi, id, res.tier, res.fee); if (r2.result === 'accepted') L.festivals++; }
     });
   }
   for (const inv of [...fest8(s).invites]) if (!acceptInvite(s, inv.id)) L.festivals++;
@@ -441,7 +442,7 @@ function roster(s: GameState, k: Knobs): void {
     const act = s.acts[d.actId];
     const good = !!act && act.fame >= 15;
     const ans = s.player.cash > d.bonus * 6 && good ? 'accept' : good || runway(s) > k.cut * 2 ? 'counter' : 'refuse';
-    respondDemand(s, rngOf(s), d.id, ans); L.demands++;
+    respondDemand(s, rng19(s, 'act'), d.id, ans); L.demands++;
   }
   for (const id of playerActs(s)) {
     const act = s.acts[id];
@@ -481,7 +482,7 @@ function personal(s: GameState): void {
     if (kind && !mentorAct(s, a.id, kind)) L.personal++;
   }
   if (energyLeft(s) >= 2 && s.month % 3 === 0 && M.party !== s.month + s.year * 12) {
-    const r = industryParty(s, rngOf(s));
+    const r = industryParty(s, rng19(s, 'act'));
     if (!('pt' in r)) { L.personal++; M.party = s.month + s.year * 12; }
   }
   if (energyLeft(s) >= 1 && s.month % 4 === 1 && !therapy(s)) L.personal++;

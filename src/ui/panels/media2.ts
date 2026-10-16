@@ -5,14 +5,15 @@ import { MARKETS, l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { CRITICS, PR_AGENCIES, activeCritics, appealBan, avgReview, hirePrAgency, magazineCover, tvAppearance } from '../../sim/media';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, actLink, cover, logo, pill, releaseLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { chips, ic, scoreBadge, stat, tile } from '../vis';
 import { tagName14 } from '../../sim/sys/polish14';
+import { rng19 } from '../../sim/rng19';
 
 export function pressSection(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const mine = Object.values(s.releases).filter((x) => (x.owner === 'player' || s.acts[x.actId]?.playerBand) && s.reviews[x.id]).sort((a, b) => b.week - a.week).slice(0, 8);
   return h('div', null,
     section(t(l('Resenhas', 'Reviews')), mine.length ? h('div', { class: 'reviews' }, mine.map((rel) => h('article', { class: 'review-card' },

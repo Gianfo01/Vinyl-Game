@@ -21,7 +21,8 @@ import { launchPending, marketWeek } from './market';
 import { rivalYearEnd, rivalsMonth } from './rivals';
 import { monthlySignals, syncPipeline } from './scouting';
 import type { GameState, Notification } from './types';
-import { dateOfDay, fmtL, money, notify, playerActs, post, remember, rngOf } from './util';
+import { dateOfDay, fmtL, money, notify, playerActs, post, remember } from './util';
+import { rng19 } from './rng19';
 
 export const END_YEAR = 2040;
 
@@ -60,7 +61,7 @@ export function advanceWeek(s: GameState): boolean {
 }
 
 function advanceWeekIn(s: GameState): boolean {
-  const r = rngOf(s);
+  const r = rng19(s, 'tick');
   // gêneros de movimentos são globais: garante que pertençam a este jogo (várias partidas no mesmo processo)
   registerMovementGenres(s);
   if (!s.clock.opened) openMonth(s, r);
@@ -178,7 +179,7 @@ function contractsMonth(s: GameState): void {
   }
 }
 
-function genresMonth(s: GameState, r: ReturnType<typeof rngOf>): void {
+function genresMonth(s: GameState, r: Rng): void {
   const counts: Record<string, number> = {};
   for (const e of s.charts.singles.concat(s.charts.albums)) {
     const rel = s.releases[e.releaseId];

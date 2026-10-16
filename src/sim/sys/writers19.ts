@@ -322,7 +322,7 @@ function courts(s: GameState, r: Rng): void {
 
 // ---------------------------------------------------------------- mês
 registerSimHook('month', 'writers19', (s) => {
-  const r = rng19(s, 'wr19', () => Rng.fromSeed(`${s.config.seed}|wr19m|${s.week}`));
+  const r = rng19(s, 'wr19');
   const st = wr19(s);
   for (const g of st.gh) if (g.st === 'on') ghostWrite(s, g, r);
   st.gh = st.gh.filter((g) => g.st === 'on' || s.week - g.since < 520).slice(-20);

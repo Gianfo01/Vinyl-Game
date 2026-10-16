@@ -10,8 +10,9 @@ import { answerMsg } from '../src/sim/sys/people/inbox';
 import { P } from '../src/sim/sys/people/state';
 import { admiration, bondInvite, bonds, endBond, formBond, opinionsOf, proposeBond } from '../src/sim/sys/bonds9';
 import { foundChance, foundMovement, members, mov9, movX, requestJoin, tierOf } from '../src/sim/sys/movements9';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import type { Act, GameState, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
@@ -29,7 +30,7 @@ describe('laços duradouros', () => {
     const v = applyMods(s, 'songQ', 60, { act: A, song }).value;
     expect(v).toBeGreaterThan(60);
     s.persons[lead(B)].alive = false;
-    endBond(s, rngOf(s), b, 'death');
+    endBond(s, rng19(s, 'act'), b, 'death');
     expect(b.end?.ep).toBe('tribute');
   });
 
@@ -42,7 +43,7 @@ describe('laços duradouros', () => {
     expect(mine).toBeTruthy();
     s.player.cash += 10_000_000_00;
     s.player.initialCash += 10_000_000_00;
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     let ok = false;
     // R28: com o mundo inicial pela cena da cidade (F3) os primeiros 40 podem não topar; procura em todos
     for (const o of npcs(s).slice(5)) { if (proposeBond(s, r, 'ally', mine, [o.id]).ok) { ok = true; break; } }
@@ -103,7 +104,7 @@ describe('movimentos', () => {
     const p = foundChance(s, spec);
     expect(p).toBeGreaterThan(0);
     expect(p).toBeLessThan(1);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const res = foundMovement(s, r, spec);
     invariant(s);
     expect(foundMovement(s, r, spec).ok).toBe(false); // espera entre tentativas / já está

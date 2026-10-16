@@ -13,7 +13,7 @@ import { emitFact, onFact } from '../facts17';
 import { pushInbox18, registerInboxKind } from '../inbox18';
 import { rng19 } from '../rng19';
 import type { Decision, GameState } from '../types';
-import { fmtL, NOTIFY19, playerActs, rngOf } from '../util';
+import { fmtL, NOTIFY19, playerActs } from '../util';
 import { careers } from './careers12';
 import { pending18 } from './decide18';
 import { dm18 } from './dm18';
@@ -139,7 +139,7 @@ onFact('deleg_exc', (s, f) => {
 export function delegateMonth(s: GameState): void {
   const D = dlg19(s);
   if (D.mg) {
-    const r = rng19(s, 'dlg19', () => rngOf(s));
+    const r = rng19(s, 'dlg19');
     for (const c of ventures(s).mg.clients) {
       const a = s.acts[c.actId], x = c12(s, c.actId), left = x.mandate.until - s.week;
       if (!a || left <= 0 || left > 8) continue;

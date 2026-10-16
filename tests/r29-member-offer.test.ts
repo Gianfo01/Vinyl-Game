@@ -17,6 +17,7 @@ import {
   bandOf29, buyout29, memberBlock29, memberJoin29, memberOptions29, memberSession29, memberSide29, memberStaff29, mo29,
   settleMember29, soloChance29, startMemberSolo29,
 } from '../src/sim/sys/member29';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (seed = 'r29mo', year = 1975): GameState => { const s = createGame(defaultConfig(seed, { startYear: year })); s.player.cash += 50_000_000_00; return s; };
 const sign = (s: GameState, a: Act) => acceptOffer(s, a, { ...defaultOffer(s, a), id: `o-${a.id}`, week: s.week, status: 'pending', advance: 0 });
@@ -199,13 +200,13 @@ describe('R29 — oferta a um integrante específico', () => {
       const s = game('r29mo-h');
       const mine = myBand(s, []);
       const other = freeBand(s, [mine.id]);
-      const rng0 = JSON.stringify(s.rng);
+      const rng0 = rngSnapshot19(s);
       const outs = other.members.map((pid) => memberJoin29(s, pid, mine.id, 'buyout', mine.members.find((x) => s.persons[x].role === s.persons[pid].role)).ok);
       const third = freeBand(s, [mine.id, other.id]);
       const r = startMemberSolo29(s, third.members[1], 'free');
       if ('actId' in r) closeAtTable(s, r.actId);
       settleMember29(s);
-      const untouched = JSON.stringify(s.rng) === rng0;
+      const untouched = rngSnapshot19(s) === rng0;
       for (let i = 0; i < 3; i++) advanceWeek(s);
       return { outs, untouched, mine: s.acts[mine.id].members.join(','), other: s.acts[other.id]?.members.join(','), third: s.acts[third.id]?.members.join(','), acts: Object.keys(s.acts).length, cash: s.player.cash, log: mo29(s).log.map((x) => `${x.k}:${x.ok}:${x.t.pt}`).join('|') };
     };

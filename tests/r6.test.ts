@@ -13,8 +13,8 @@ import { makeOffer, defaultOffer } from '../src/sim/contracts';
 import { deriveAttrs, persona } from '../src/sim/sys/persona';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { acceptInvestor, capital, goPublic6, injectCapital, opinion, ownerShare, payDividend, seekInvestors, valuation, withdrawFromCompany } from '../src/sim/sys/capital';
-import { rngOf } from '../src/sim/util';
 import type { RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const spec = { name: 'Rita Teste', age: 30, background: 'street', role: 'mc' as const, traits: ['rebel', 'charismatic', 'workaholic'], style: 'curator', visual: 'street', favGenre: 'rnr', points: { ear: 4 } };
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, { character: spec, ...over }));
@@ -81,7 +81,7 @@ describe('cartas e mutators novos', () => {
 describe('capital', () => {
   it('aporte, retirada, sócios, dividendos e IPO mantêm o caixa fechando', () => {
     const s = mk('r6-cap', { startYear: 1980 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const o = ownerOf(s);
     o.wealth += 100000_00;
     const w0 = o.wealth;
@@ -144,11 +144,11 @@ describe('intriga e decisões (CK3)', () => {
     s.player.cash += 0;
     const before = perk(s, 'signals');
     if (s.player.cash > 100000_00) {
-      expect(I.takeDecision(s, rngOf(s), 'music_school')).toBeNull();
+      expect(I.takeDecision(s, rng19(s, 'act'), 'music_school')).toBeNull();
       expect(perk(s, 'signals')).toBeGreaterThan(before);
     }
-    expect(I.takeDecision(s, rngOf(s), 'artistic_manifesto')).toBeNull();
-    expect(I.takeDecision(s, rngOf(s), 'commercial_pact')).not.toBeNull();
+    expect(I.takeDecision(s, rng19(s, 'act'), 'artistic_manifesto')).toBeNull();
+    expect(I.takeDecision(s, rng19(s, 'act'), 'commercial_pact')).not.toBeNull();
     expect(perk(s, 'critics')).toBeGreaterThan(0.2);
     invariant(s);
   });

@@ -17,11 +17,11 @@ import {
   scenesMonth19, star360Month19, streamYear19, test19, testBonus19, thOf19, tierOf19,
 } from '../src/sim/sys/market19a';
 import type { Act, GameState, Release, Song } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (y = 1995) => { const s = createGame(defaultConfig(`mka-${y}`, { startYear: y })); s.config.history = 'loose'; return s; };
-const myAct = (s: GameState, o: { city?: string; genre?: string; fame?: number } = {}): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: o.city ?? s.config.homeCity, genre: o.genre, fame: o.fame ?? 30 }); a.owner = 'player'; return a; };
+const myAct = (s: GameState, o: { city?: string; genre?: string; fame?: number } = {}): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: o.city ?? s.config.homeCity, genre: o.genre, fame: o.fame ?? 30 }); a.owner = 'player'; return a; };
 let nRel = 0;
 function rel(s: GameState, a: Act, o: Partial<Release> = {}): Release {
   const r: Release = { id: `mr${++nRel}`, actId: a.id, owner: 'player', type: 'lp', title: `Disco ${nRel}`, songs: [], week: s.week, year: s.year, q: 60, appeal: 30,
@@ -137,7 +137,7 @@ describe('r19 T6 N12/N15/N21 — playlists, promotora 360, antitruste', () => {
   it('fusão acima do limiar → remédio, leilão, lote vai para alguém', () => {
     const s = game(2005);
     const lb = Object.values(s.labels).find((x) => x.active)!;
-    for (let i = 0; i < 80; i++) { const a = spawnProceduralAct(s, rngOf(s), { fame: 20 }); a.owner = lb.id; lb.roster.push(a.id); rel(s, a, { owner: lb.id, totalUnits: 20000 + i * 1000 }); }
+    for (let i = 0; i < 80; i++) { const a = spawnProceduralAct(s, rng19(s, 'act'), { fame: 20 }); a.owner = lb.id; lb.roster.push(a.id); rel(s, a, { owner: lb.id, totalUnits: 20000 + i * 1000 }); }
     const x = review19(s, lb.id, { pt: 'teste', en: 'test' })!;
     expect(x).not.toBeNull();
     expect(msgs(s, 'mka19_divest').length).toBe(1);
@@ -159,7 +159,7 @@ describe('r19 T6 N23+E7 — ciclo da cena (cadeia 6: corrida → ressaca)', () =
     const s = game(1990);
     const k = 'seattle:grunge';
     s.scenes[k] = 60;
-    for (let i = 0; i < 6; i++) { const a = spawnProceduralAct(s, rngOf(s), { city: 'seattle', genre: 'grunge', fame: 10 }); a.owner = null; }
+    for (let i = 0; i < 6; i++) { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: 'seattle', genre: 'grunge', fame: 10 }); a.owner = null; }
     scenesMonth19(s);
     const x = mka19(s).sc[k];
     expect(x?.ph).toBe(1);
@@ -167,7 +167,7 @@ describe('r19 T6 N23+E7 — ciclo da cena (cadeia 6: corrida → ressaca)', () =
     scenesMonth19(s);
     expect(x.ph).toBe(2);
     expect(recentFacts(s, { kind: 'scene_boom' }).length).toBe(1);
-    const local = spawnProceduralAct(s, rngOf(s), { city: 'seattle', genre: 'grunge', fame: 20 });
+    const local = spawnProceduralAct(s, rng19(s, 'act'), { city: 'seattle', genre: 'grunge', fame: 20 });
     const mod = offerMods().find((m) => m.id === 'mka19:rush')!;
     expect(mod.fn(s, local, { actId: local.id, model: 'classic', advance: 0, royalty: 0.15, termMonths: 36, releasesOwed: 3, creativeControl: false, publishing: false, share360: 0, promises: [] })?.delta).toBeLessThan(0);
     x.sg = 6; x.w = s.week - 120;

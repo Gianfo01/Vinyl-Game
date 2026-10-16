@@ -560,7 +560,7 @@ function opener(s: GameState, r: Rng): void {
 const THREADS_W: Record<string, number> = { secret: 1.4, grudge: 1.3, feud: 1.6, debt: 1.1, nemesis: 1, rival_rise: 0.9, fall: 0.9, legacy: 1.2 };
 
 export function dmMonth18(s: GameState): void {
-  const r = rng19(s, 'dm18', () => Rng.fromSeed(`${s.config.seed}:dm18:${s.week}`));
+  const r = rng19(s, 'dm18');
   phaseStep(s, r);
   opener(s, r);
   for (const th of openThreads(s)) if (th.wait === undefined && s.week >= th.nx) beat(s, th, r);

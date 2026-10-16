@@ -6,7 +6,6 @@ import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs, recordSongs, scheduleRelease } from '../src/sim/production';
 import { advanceMonth, advanceWeek } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { baseQueue18, book18, lateOf18, physMix18, setDist18, setLatePol18, sup18 } from '../src/sim/sys/supply18';
 import { postSalesAR18 } from '../src/sim/sys/econ18';
@@ -15,10 +14,11 @@ import { makeReport18 } from '../src/sim/sys/report18';
 import { deals18, startDev18 } from '../src/sim/sys/deals18';
 import { rivalSignOk } from '../src/sim/sys/gate14';
 import { PKG18, applyPkg18 } from '../src/sim/sys/contracts18';
+import { rng19 } from '../src/sim/rng19';
 
 function withRelease(seed: string, year: number) {
   const s = createGame(defaultConfig(seed, { startYear: year }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 50_000_000_00; s.player.initialCash += 50_000_000_00;
@@ -90,7 +90,7 @@ describe('supply18', () => {
 
   it('desenvolvimento bloqueia rivais; pacotes de serviços viram modelo distribuição', () => {
     const s = createGame(defaultConfig('sup18-e', { startYear: 1990 }));
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     s.player.cash += 10_000_000; s.player.initialCash += 10_000_000;
     let ok = false;
     for (let i = 0; i < 12 && !ok; i++) {

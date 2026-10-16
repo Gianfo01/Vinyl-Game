@@ -5,13 +5,13 @@ import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { attrsOf, groupAvg, lessonFor, otherInstruments, overall, startLessons, tal } from '../src/sim/sys/talent';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string) {
   const s = createGame(defaultConfig(seed));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 1_000_000_00;

@@ -12,7 +12,6 @@ import { availableFormats, composeSongs, recordSongs, scheduleRelease } from '..
 import { scandal } from '../src/sim/scandal17';
 import { advanceMonth, advanceWeek } from '../src/sim/tick';
 import type { Act, GameState } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import {
   campMeter27, camps27, choose27, doMove27, makeEv27, moves27, setPayola27, setPlan27, startCamp27, targets27, tickCamps27, type Camp27,
@@ -23,6 +22,7 @@ import { answer27, curQ27, land27, opps27, startIv27, type Iv27, type Stance27 }
 import { askNow27, burn27, call27, contacts27, give27, repay27, talkFit27, type Contact27 } from '../src/sim/sys/favors27';
 import { opinionOf, sendGift } from '../src/sim/sys/persona13';
 import { w4 } from '../src/sim/sys/world4/state';
+import { rng19, rngSnapshot19 } from '../src/sim/rng19';
 
 const clone = (s: GameState): GameState => structuredClone(s);
 const nan = (o: unknown): boolean => JSON.stringify(o, (_k, v) => (typeof v === 'number' && !Number.isFinite(v) ? 'NaN!' : v)).includes('NaN!');
@@ -30,7 +30,7 @@ const nan = (o: unknown): boolean => JSON.stringify(o, (_k, v) => (typeof v === 
 /** Ato contratado com um single programado para daqui a `ahead` semanas (ano `year`). */
 function withRelease(seed: string, year = 1975, ahead = 4): { s: GameState; act: Act } {
   const s = createGame(defaultConfig(seed, { startYear: year }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   s.player.cash += 50_000_000_00;
@@ -95,7 +95,7 @@ beforeAll(() => {
   // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
   expect(s.player.cash).toBe(1034775);
   expect(hashString(JSON.stringify(s.acts))).toBe(829002627);
-  expect(hashString(JSON.stringify(s.rng))).toBe(1362224447);
+  expect(hashString(rngSnapshot19(s))).toBe(1362224447);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

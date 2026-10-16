@@ -19,7 +19,7 @@ import {
   scheduleProject, setProjectSongs, stageIndex, unscheduleProject, type MusicProject, type ProjGoal, type ProjStage,
 } from '../../sim/sys/project8';
 import type { Act, GameState, Release, ReleaseType } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { coverUrl } from '../art';
 import { $, N, actLink, cityName, genreName, kv, logo, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
@@ -31,6 +31,7 @@ import { ic, setTab } from '../vis';
 import { compose23 } from './journey23';
 import { openRecord20 } from './actmenu20';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const ui = { sel: '' as string, type: 'single' as ReleaseType, concept: CONCEPTS[0].id };
 
@@ -154,7 +155,7 @@ function tracksSection(s: GameState, p: MusicProject, locked: boolean): HTMLElem
       feat || featPersons29(s, lead.id).length ? h('p', null, t(l('Faixa principal com participação de ', 'Lead track featuring ')), featCredit29(s, lead.id, feat)) :
         locked ? h('p', { class: 'muted small' }, '—') : h('div', { class: 'row wrap' },
           select(p.guestId ?? '', [{ value: '', label: t(l('Sem convidado', 'No guest')) }, ...guests.map((g) => ({ value: g.id, label: `${g.name} (${$(featureFee(s, g))})` }))], (v) => { p.guestId = v || undefined; rerender(); }),
-          h('button', { class: 'btn small', disabled: !p.guestId, onclick: () => { toast(t(inviteGuest(s, rngOf(s), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
+          h('button', { class: 'btn small', disabled: !p.guestId, onclick: () => { toast(t(inviteGuest(s, rng19(s, 'act'), p)), 'info'); rerender(); } }, t(l('Convidar', 'Invite'))),
           featPersonButton29(s, p.actId, lead.id),
           !p.guestId ? h('small', { class: 'muted' }, t(guests.length ? l('Escolha um convidado na lista para convidar.', 'Pick a guest from the list to invite.') : l('Nenhum convidado possível agora: veja Parcerias em Composição.', 'No possible guest right now: see Partners in Songwriting.'))) : null)) : null,
 
@@ -227,7 +228,7 @@ function calendarSection(s: GameState, p: MusicProject, st: ProjStage): HTMLElem
     st !== 'scheduled' && st !== 'released' && st !== 'followup' ? h('div', { class: 'form' },
       h('label', { class: 'pj-inline' }, t(l('Lançar daqui a (semanas)', 'Release in (weeks)')), h('input', { type: 'number', min: 1, max: 26, value: p.weeksAhead, onchange: (e: Event) => { p.weeksAhead = Math.max(1, Math.min(26, Number((e.target as HTMLInputElement).value) || 1)); } })),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn primary', disabled: !ready, onclick: () => say(scheduleProject(s, rngOf(s), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
+        h('button', { class: 'btn primary', disabled: !ready, onclick: () => say(scheduleProject(s, rng19(s, 'act'), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
         p.type === 'lp' ? h('button', { class: 'btn', disabled: !ready, title: t(l('Teaser, pré-save, singles de trabalho, clipe e álbum, fase a fase.', 'Teaser, pre-save, lead singles, video and album, phase by phase.')), onclick: () => say(rolloutProject(s, p), l('Rollout planejado.', 'Rollout planned.')) }, ic('calendar'), ' ', t(l('Lançar com rollout', 'Release with a rollout'))) : null),
       !ready ? h('p', { class: 'muted small' }, t(l('Disponível quando todas as faixas estiverem gravadas.', 'Available once every track is recorded.'))) : null,
     ) : null,

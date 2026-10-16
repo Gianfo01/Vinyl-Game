@@ -16,6 +16,7 @@ import { rst } from '../src/sim/rights';
 import { acceptOffer, defaultOffer, evaluateOffer, makeOffer } from '../src/sim/contracts';
 import { scoutEligible20 } from '../src/sim/scout20';
 import { defaultRights } from '../src/sim/rights';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 let FIX: GameState; // 1º mês (a partir do 8º) da semente r16pb-4 com show jogável marcado
 let AFTER: GameState; // o mês seguinte (modo rápido)
@@ -62,7 +63,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));
     expect(hashString(JSON.stringify(again.acts))).toBe(hashString(JSON.stringify(AFTER.acts)));
-    expect(hashString(JSON.stringify(again.rng))).toBe(hashString(JSON.stringify(AFTER.rng)));
+    expect(hashString(rngSnapshot19(again))).toBe(hashString(rngSnapshot19(AFTER)));
   });
 });
 
@@ -89,11 +90,11 @@ describe('r27 M2 — show jogável', () => {
     const ids = autoSet27(ca);
     const ms = moments27(a, ca, ids);
     const ch = ms.map(() => 0);
-    const rng0 = JSON.stringify(a.rng);
+    const rng0 = rngSnapshot19(a);
     const ra = playShow27(a, k, ids, ch) as Result27;
     const rb = playShow27(b, k, ids, ch) as Result27;
     expect(JSON.stringify(ra)).toBe(JSON.stringify(rb));
-    expect(JSON.stringify(a.rng)).toBe(rng0);
+    expect(rngSnapshot19(a)).toBe(rng0);
     expect(nan(ra)).toBe(false);
     expect(ra.sold).toBeGreaterThanOrEqual(0);
     // a data foi resolvida pelo caminho normal e não pode ser jogada de novo
@@ -196,13 +197,13 @@ describe('r27 M2 — negociação jogável', () => {
   it('determinística e sem tocar no s.rng', () => {
     const a = clone(FIX); const b = clone(FIX);
     const act = pickAct(a);
-    const rng0 = JSON.stringify(a.rng);
+    const rng0 = rngSnapshot19(a);
     const na = startNego27(a, act.id, draft(a, act.id)) as Nego27;
     const nb = startNego27(b, act.id, draft(b, act.id)) as Nego27;
     propose27(a, na, na.ours); propose27(b, nb, nb.ours);
     expect(JSON.stringify(na.log)).toBe(JSON.stringify(nb.log));
     expect(na.res).toBe(nb.res);
-    expect(JSON.stringify(a.rng)).toBe(rng0);
+    expect(rngSnapshot19(a)).toBe(rng0);
     expect(nan({ ...na })).toBe(false);
   });
 

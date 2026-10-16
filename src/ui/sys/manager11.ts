@@ -4,7 +4,6 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import {
   CAMPAIGN_NAME, GOAL_NAME, acceptDeal, answerPoach, bookTour, campaignCost, canShop, conflictsOf, cxOf, imageCampaign, mgr11, poachBonus, poachChance, poachClient, prReady,
   rateChance, renegotiateRate, shopDeal, tourCost, tourReady, type Campaign, type PoachMove,
@@ -14,6 +13,7 @@ import { $, actLink, pill, rerender, toast } from '../common';
 import { RATE19 } from './neg19';
 import { h, select } from '../dom';
 import { fameText } from '../../sim/sys/fame15';
+import { rng19 } from '../../sim/rng19';
 
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -22,7 +22,7 @@ const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', '
 
 /** Bloco extra de cada agenciado no "Meus agenciados". */
 export function clientExtras(s: GameState, c: Client): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const a = s.acts[c.actId];
   const x = cxOf(s, c.actId);
   const pitch = mgr11(s).pitches.find((p) => p.actId === c.actId);
@@ -68,7 +68,7 @@ export function reportsTab(s: GameState): HTMLElement {
 }
 
 export function poachTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const rate = RATE19.poach;
   const cands = mgCandidates(s).filter((a) => a.fame >= 20).slice(0, 15);
   return h('div', null,

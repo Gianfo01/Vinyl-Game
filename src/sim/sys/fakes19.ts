@@ -303,7 +303,7 @@ registerConseq18('ib:fk19_whistle:deny', { later: [{ in: [2, 8], p: 0.4, tone: '
 
 // ================================================================ mês
 registerSimHook('month', 'fakes19', (s) => {
-  const r = rng19(s, 'fk19', () => Rng.fromSeed(`${s.config.seed}|fk19|${s.week}`));
+  const r = rng19(s, 'fk19');
   const st = fk19(s);
   realChron(s);
   // 1) esquemas de voz-fantasma: risco, denúncia, exposição

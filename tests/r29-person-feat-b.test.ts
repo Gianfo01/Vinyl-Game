@@ -9,7 +9,6 @@ import { composeSongs } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
 import type { Act, GameState } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
-import { rngOf } from '../src/sim/util';
 import { biography29, personFeats29 } from '../src/sim/sys/connect29';
 import { inviteFeaturePersons, songX } from '../src/sim/sys/creation/core';
 import { f15, personFame } from '../src/sim/sys/fame15';
@@ -21,6 +20,7 @@ import { answerMsg } from '../src/sim/sys/people/inbox';
 import { P } from '../src/sim/sys/people/state';
 import { items18 } from '../src/sim/sys/inbox18';
 import { letter27 } from '../src/ui/sys/mail27model';
+import { rng19, rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (seed: string, year = 1995): GameState => { const s = createGame(defaultConfig(seed, { startYear: year })); s.player.cash += 50_000_000_00; return s; };
 const live = (a: Act) => a.status === 'active' || a.status === 'emerging';
@@ -103,7 +103,7 @@ describe('R29 B — convite de fora a uma pessoa sua', () => {
     const cash = s.player.cash, fans = A.fans.casual, po = f15(s).po[pid] ?? 0;
     const mate = A.members.find((m) => m !== pid)!;
     const rel0 = s.persons[mate].rel[pid] ?? 0;
-    answerMsg(s, msg.id, 'accept', rngOf(s));
+    answerMsg(s, msg.id, 'accept', rng19(s, 'act'));
     expect(msg.resolved).toBe('accept');
     expect(s.player.cash).toBe(cash + Number(msg.ref!.fee));
     const d = feats(s).deals.find((x) => x.side === 'guest' && x.hostActId === H.id)!;
@@ -130,7 +130,7 @@ describe('R29 B — convite de fora a uma pessoa sua', () => {
       const msg = P(s).inbox.find((m) => m.ref?.sys === 'featp29' && m.ref?.pid === pid && !m.resolved)!;
       const H = String(msg.ref!.host);
       const n0 = feats(s).deals.length;
-      const txt = answerMsg(s, msg.id, 'band', rngOf(s));
+      const txt = answerMsg(s, msg.id, 'band', rng19(s, 'act'));
       const d = feats(s).deals.slice(n0).find((x) => x.side === 'guest' && x.hostActId === H);
       if (d) { expect(d.guestActId).toBe(A.id); expect(d.guestPersons).toBeUndefined(); expect(s.songs[d.songId].title).toContain(`(feat. ${A.name})`); out.push('ok'); }
       else { expect(txt.pt).toMatch(/queria só|Não deu certo/); out.push('no'); }
@@ -145,7 +145,7 @@ describe('R29 B — convite rápido de pessoa(s)', () => {
   it('preço de tabela = fama + habilidade + liberação; os mesmos bloqueios; credita a pessoa', () => {
     const s = game('r29pfb-d');
     const H = sign(s, freeBands(s)[3]);
-    composeSongs(s, rngOf(s), H, 6);
+    composeSongs(s, rng19(s, 'act'), H, 6);
     const so = featSongs(s, H.id)[0];
     const rb = rivalBand(s);
     const [pid] = sorted(s, rb);
@@ -197,7 +197,7 @@ describe('R29 B — determinismo', () => {
       const s = createGame(defaultConfig('r29pfb-det', { startYear: 2000 }));
       for (let i = 0; i < 6; i++) { advanceMonth(s); await new Promise((r) => setImmediate(r)); }
       const np = (feats(s) as unknown as { np29?: { s: string; p: string[] }[] }).np29 ?? [];
-      return { st: npcStats29(s), titles: np.map((x) => `${s.songs[x.s]?.title}|${x.p.join(',')}`), rng: JSON.stringify(s.rng), acts: Object.keys(s.acts).length };
+      return { st: npcStats29(s), titles: np.map((x) => `${s.songs[x.s]?.title}|${x.p.join(',')}`), rng: rngSnapshot19(s), acts: Object.keys(s.acts).length };
     };
     const a = await run(), b = await run();
     expect(a).toEqual(b);

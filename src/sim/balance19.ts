@@ -18,13 +18,14 @@ import { onFact } from './facts17';
 import { releaseDemo } from './repertoire';
 import { advanceMonth } from './tick';
 import type { GameState, RunConfig } from './types';
-import { playerActs, rngOf } from './util';
+import { playerActs } from './util';
 import { createGame } from './worldgen';
 import { hqCaps } from './branches';
 import { commitCrime, crimeById, crimeOdds, targetsFor } from './sys/crime17';
 import { playerFame } from './sys/love17';
 import { ownerOf } from './sys/people/owner';
 import { bidNet, hasLabel, makeBids, sale17, sellLabel, sellMaster17, valuation17 } from './sys/sale17';
+import { rng19 } from './rng19';
 
 export type Base19 = 'balanced' | 'cautious' | 'aggressive' | 'artist';
 export type Adv19 = 'spam' | 'loans' | 'flip' | 'signall' | 'catalog' | 'crime';
@@ -73,7 +74,7 @@ function hookFacts(): void {
 
 function spam(s: GameState): number {
   let n = 0;
-  for (const id of playerActs(s)) for (const sid of s.acts[id]?.songs ?? []) if (!releaseDemo(s, rngOf(s), sid)) n++;
+  for (const id of playerActs(s)) for (const sid of s.acts[id]?.songs ?? []) if (!releaseDemo(s, rng19(s, 'act'), sid)) n++;
   return n;
 }
 function loans(s: GameState): number {

@@ -1,4 +1,3 @@
-import type { RngState } from '../core/rng';
 import type { AmbitionId, SkillId } from '../data/people';
 import type { ContractModel, FormatId, RoleId } from '../data/rules';
 import type { L, MarketId } from '../data/world';
@@ -664,9 +663,9 @@ export interface GameState extends ExtState {
   version: number;
   config: RunConfig;
   signature: string;
-  rng: RngState;
-  /** r19: 19+ = um fluxo de sorteio por sistema (rng19.ts); ausente = save antigo, fluxo único */
-  rngVersion?: number;
+  /** Versão do esquema de sorteio (RNG_VERSION19 em rng19.ts: um fluxo por sistema, guardado em x4.rng19). r31: o fluxo único
+   *  antigo (`rng`) não existe mais; a geração do mundo usa a chave 'world'. */
+  rngVersion: number;
   week: number; // semanas desde o início
   day: number; // dias desde 1/jan do ano inicial
   year: number;

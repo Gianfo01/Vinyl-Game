@@ -1,11 +1,11 @@
-// Rodada 19 (0.1) — UM FLUXO DE SORTEIO POR SISTEMA. Antes, quase tudo puxava do mesmo s.rng: um evento a mais
-// (ou um sistema novo que sorteia uma vez) deslocava todos os sorteios seguintes de todos os outros sistemas, e
-// um A/B de equilíbrio media ruído. Agora cada chave tem seu próprio estado sfc32 (semeado por seed+chave e
-// guardado no save em s.x4.rng19), então o mercado, os eventos e o diretor sorteiam sempre a mesma sequência,
-// não importa o que os outros fizeram. Saves antigos (sem s.rngVersion) seguem no fluxo único: mesma história.
+// Rodada 19 (0.1) — UM FLUXO DE SORTEIO POR SISTEMA. Cada chave tem seu próprio estado sfc32 (semeado por
+// seed+chave e guardado no save em s.x4.rng19), então o mercado, os eventos e o diretor sorteiam sempre a mesma
+// sequência, não importa o que os outros fizeram.
+// Rodada 31 (W0-RNG): o fluxo único antigo (`rngOf`/`s.rng`) e o caminho de save antigo foram removidos — toda
+// sorte persistente passa por aqui, com a chave registrada em STREAMS19. Sorte pura por chave continua sendo
+// `Rng.fromSeed(\`${s.config.seed}|...\`)`.
 //
-//   const r2 = rng19(s, 'events', r);                       // fluxo persistente da chave (ou `r` em save antigo)
-//   const r3 = rng19(s, 'ag18', () => Rng.fromSeed(...));   // legado preguiçoso (sistemas que já semeavam por semana)
+//   const r = rng19(s, 'events');   // fluxo persistente da chave
 //
 // Módulo puro (só ext4 e core/rng): importável de qualquer lugar sem ciclo.
 
@@ -13,6 +13,7 @@ import { Rng, seedState, type RngState } from '../core/rng';
 import { registerExt4 } from './ext4';
 import type { GameState } from './types';
 
+/** Versão do esquema de sorteio gravada em s.rngVersion e no envelope do save (19 = um fluxo por sistema). */
 export const RNG_VERSION19 = 19;
 export interface Rng19State { st: Record<string, RngState> }
 declare module './ext4' { interface Ext4 { rng19: Rng19State } }
@@ -53,9 +54,19 @@ export const STREAMS19: Record<string, string> = {
   cancel19: 'ondas de cancelamento: resposta de NPCs e contra-ataque (cancel19)',
   culture19: 'cultura caótica: erros de metadados e vazamentos (culture19)',
   dlg19: 'delegação por carreira: renovações de mandato feitas pela equipe (budget19)',
+  exch20: 'residência de intercâmbio entre cenas: convites, ecos e parcerias com músicos locais (exch20)',
+  union20: 'negociação coletiva de músicos de estúdio e equipe de estrada: pautas, greves e locautes (union20)',
+  r21: 'funções múltiplas por pessoa: quem abre selo, empresaria ou cria festival (roles21)',
+  // r31 (W0-RNG): chaves que substituíram o fluxo único antigo (rngOf / s.rng)
+  world: 'geração do mundo inicial: datas das tecnologias, gêneros, gravadoras, artistas e pessoas (worldgen)',
+  tick: 'motor da semana e do mês: dias, abertura do mês e os sistemas que recebem o sorteio do motor (tick)',
+  act: 'ações do jogador: botões das telas, respostas, ofertas e os robôs que jogam no lugar dele (ui, bots, testes)',
+  contracts: 'renovação de contrato: talento novo que surge na renovação (contracts renewContract)',
+  scout: 'olheiros: viés inicial da leitura de um artista recém-observado (scouting)',
+  dossier8: 'dossiê: ruído de cada leitura nova sobre um artista (dossier8)',
+  scenes4: 'cenas locais: talento que aparece para o selo que bancou a cena (world4/scenes)',
+  bonds9: 'laços: banda nova formada a partir de amizades, quando o chamador não passa sorteio (bonds9)',
 };
-
-export const perSystem19 = (s: GameState): boolean => (s.rngVersion ?? 0) >= RNG_VERSION19;
 
 function stream(s: GameState, key: string): Rng {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
@@ -65,8 +76,13 @@ function stream(s: GameState, key: string): Rng {
   return new Rng((st.st[key] ??= seedState(`${s.config.seed}|rng19|${key}`)));
 }
 
-/** Gerador do sistema `key`. Em save antigo devolve o legado (o `Rng` passado ou o criado pela função). */
-export function rng19(s: GameState, key: string, legacy: Rng | (() => Rng)): Rng {
-  if (perSystem19(s)) return stream(s, key);
-  return typeof legacy === 'function' ? legacy() : legacy;
+/** Gerador persistente do sistema `key` (registre a chave em STREAMS19). */
+export function rng19(s: GameState, key: string): Rng {
+  return stream(s, key);
+}
+
+/** Retrato (JSON) do estado de sorteio — de todos os fluxos, ou só da chave `key`. Para testes de "explorar não sorteia". */
+export function rngSnapshot19(s: GameState, key?: string): string {
+  const st = ((s as unknown as { x4?: { rng19?: Rng19State } }).x4?.rng19?.st) ?? {};
+  return JSON.stringify(key ? st[key] ?? null : Object.keys(st).sort().map((k) => [k, st[k]]));
 }

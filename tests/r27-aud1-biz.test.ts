@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import type { GameState } from '../src/sim/types';
 import { buyVenue, liveOf } from '../src/sim/sys/live';
@@ -14,11 +13,12 @@ import { addNight12 } from '../src/sim/sys/venue12';
 import { foundVenture, ventures } from '../src/sim/sys/ventures9';
 import { festOf, sync12 } from '../src/sim/sys/fest12';
 import { freshLogBiz27, playBiz27 } from '../src/sim/botbiz27';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 function rich(seed: string, startYear = 1985, acts = 3) {
   const s = createGame(defaultConfig(seed, { startYear }));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   for (let i = 0; i < acts; i++) {
     const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame: 25 + i * 5 });
     acceptOffer(s, act, { ...defaultOffer(s, act), id: `o${i}`, week: 0, status: 'pending', advance: 0 });

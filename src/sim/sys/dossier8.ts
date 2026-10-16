@@ -12,9 +12,10 @@ import { MARKETS, MARKET_PREF, cityById, familyOf, l, type L, type MarketId } fr
 import { registerExt4, registerSimHook } from '../ext4';
 import { estimate, scoutActionsPerMonth } from '../scouting';
 import type { Act, GameState } from '../types';
-import { fmtL, money, notify, post, remember, rngOf, staffSkill } from '../util';
+import { fmtL, money, notify, post, remember, staffSkill } from '../util';
 import { actAttr, attrById } from './talent/attrs';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { rng19 } from '../rng19';
 
 export type Dim = 'live' | 'orig' | 'fans' | 'scene' | 'comm' | 'risk' | 'rival';
 export type Src = 'producer' | 'promoter' | 'critic' | 'local' | 'demo' | 'residency';
@@ -149,7 +150,7 @@ function record(s: GameState, actId: string, src: Src): void {
   if (!act) return;
   const d = (dos(s).d[actId] ??= { reads: [], n: {}, spent: 0 });
   const n = (d.n[src] = (d.n[src] ?? 0) + 1);
-  const r = rngOf(s);
+  const r = rng19(s, 'dossier8');
   const si = SRC_IDS.indexOf(src);
   const skill = 1 - staffSkill(s, 'anr') / 300;
   const single = src === 'demo' || src === 'residency' ? 5 : 0; // uma amostra só

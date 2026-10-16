@@ -5,7 +5,7 @@
 import { l, type L } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import type { Act, GameState, Label } from '../../sim/types';
-import { playerActs, rngOf } from '../../sim/util';
+import { playerActs } from '../../sim/util';
 import { $, actLink, labelLink, modal, pill, rerender, section, strategyName, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { LABEL_EXTRAS } from '../ficha';
@@ -28,6 +28,7 @@ import { actOfPerson } from '../../sim/sys/social8';
 import { fameText } from '../../sim/sys/fame15';
 import { kinLabel15, kinOf15 } from '../../sim/sys/kin15';
 import { personKey27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const band = (p: number) => (p >= 0.6 ? 'likely' : p >= 0.3 ? 'uncertain' : 'unlikely') as 'likely' | 'uncertain' | 'unlikely';
@@ -45,10 +46,10 @@ function heirSection(s: GameState): HTMLElement {
         ? h('div', null,
           h('p', null, t(l('Você passa o selo em vida e passa a jogar como o sucessor. Família recebe 60% do seu patrimônio (sem imposto); funcionários, artistas e parceiros assumem só o selo.', 'You hand over the label while alive and play on as the successor. Family receives 60% of your wealth (tax free); staff, artists and partners take only the company. The run continues with them.'))),
           h('label', null, t(l('Herdeiro: ', 'Heir: ')), select(pick, cands.map((c) => ({ value: c.key, label: `${c.name} — ${t(REL_NAME[c.rel])}, ${s.year - c.born}` })), (v) => { pick = v; })),
-          h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => { const e = retireOwner(s, rngOf(s), pick); close(); say(e, l('O selo tem um novo comando.', 'The label has new leadership.')); } }, t(l('Aposentar-se e passar o selo', 'Retire and hand over the label')))))
+          h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => { const e = retireOwner(s, rng19(s, 'act'), pick); close(); say(e, l('O selo tem um novo comando.', 'The label has new leadership.')); } }, t(l('Aposentar-se e passar o selo', 'Retire and hand over the label')))))
         : h('div', null,
           h('p', { class: 'bad' }, t(l('Ninguém pode assumir o selo (família adulta, parceiro, funcionário de confiança ou artista próximo). Aposentar-se agora encerra a run (final: Aposentadoria Tranquila).', 'You have no living adult heirs. Retiring now ends the run (ending: Quiet Retirement).'))),
-          h('button', { class: 'btn danger', onclick: () => { const e = retireOwner(s, rngOf(s), 'none'); close(); say(e, l('Fim de carreira.', 'Career over.')); window.dispatchEvent(new Event('vtn-ended')); } }, t(l('Aposentar e encerrar a run', 'Retire and end the run')))),
+          h('button', { class: 'btn danger', onclick: () => { const e = retireOwner(s, rng19(s, 'act'), 'none'); close(); say(e, l('Fim de carreira.', 'Career over.')); window.dispatchEvent(new Event('vtn-ended')); } }, t(l('Aposentar e encerrar a run', 'Retire and end the run')))),
     );
     const close = modal(t(l('Aposentadoria', 'Retirement')), body);
   };
@@ -112,14 +113,14 @@ function openStakeModal(s: GameState, labelId: string, onDone: () => void): void
     if (res.result === 'thinking' && res.talk) {
       const id = res.talk.id;
       reply.replaceChildren(h('p', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', t(res.text)), h('div', { class: 'row' },
-        h('button', { class: 'btn small', onclick: () => show(pressStake(s, rngOf(s), id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
+        h('button', { class: 'btn small', onclick: () => show(pressStake(s, rng19(s, 'act'), id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
         h('button', { class: 'btn small ghost', onclick: () => { close(); rerender(); } }, t(l('Esperar', 'Wait')))));
       return;
     }
     if (res.result === 'counter' && res.talk) {
       const id = res.talk.id;
       reply.replaceChildren(h('p', null, pill(t(l('contraproposta', 'counter')), 'warn'), ' ', t(res.text)), h('div', { class: 'row' },
-        h('button', { class: 'btn small primary', onclick: () => { const e = acceptStakeCounter(s, rngOf(s), id); if (e) toast(t(e), 'bad'); else { toast(t(l('Fechado!', 'Deal!')), 'good'); close(); onDone(); rerender(); } } }, t(l('Aceitar', 'Accept'))),
+        h('button', { class: 'btn small primary', onclick: () => { const e = acceptStakeCounter(s, rng19(s, 'act'), id); if (e) toast(t(e), 'bad'); else { toast(t(l('Fechado!', 'Deal!')), 'good'); close(); onDone(); rerender(); } } }, t(l('Aceitar', 'Accept'))),
         h('button', { class: 'btn small ghost', onclick: () => { dropStakeTalk(s, id); reply.replaceChildren(h('p', { class: 'muted small' }, t(l('Ajuste a proposta e envie de novo.', 'Adjust the offer and send it again.')))); } }, t(l('Ajustar e reenviar', 'Adjust and resend')))));
       return;
     }
@@ -135,7 +136,7 @@ function openStakeModal(s: GameState, labelId: string, onDone: () => void): void
   );
   update();
   const close = modal(`${t(l('Comprar participação', 'Buy a stake'))}: ${lb.name}`, h('div', null, form, h('div', { class: 'actions' },
-    h('button', { class: 'btn primary', onclick: () => show(proposeStake(s, rngOf(s), labelId, o.share, o.price, o.mode)) }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))), reply)));
+    h('button', { class: 'btn primary', onclick: () => show(proposeStake(s, rng19(s, 'act'), labelId, o.share, o.price, o.mode)) }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))), reply)));
 }
 
 function ownershipBlock(s: GameState, labelId: string, close: () => void): HTMLElement | null {
@@ -158,7 +159,7 @@ function ownershipBlock(s: GameState, labelId: string, close: () => void): HTMLE
       h('button', { class: 'btn small primary', disabled: founderShare(s, labelId) < 0.02, onclick: () => openStakeModal(s, labelId, () => { close(); }) }, t(l('Negociar participação', 'Negotiate a stake'))),
       mine > 0 ? h('button', { class: 'btn small ghost', onclick: () => { const e = sellStake(s, labelId); close(); say(e, l('Fatia vendida.', 'Stake sold.')); } }, `${t(l('Vender fatia', 'Sell stake'))} ≈ ${$(Math.round(v.value * mine * 0.85))}`) : null) : null,
     mine > CONTROL && lb.active ? h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small', onclick: () => { const e = absorbLabel(s, rngOf(s), labelId); close(); say(e, l('Selo absorvido: elenco e catálogo agora são seus.', 'Label absorbed: roster and catalog are now yours.')); } }, `${t(l('Absorver', 'Absorb'))} (${t(l('minoritários', 'minority'))} ${$(squeezeCost(s, labelId))})`),
+      h('button', { class: 'btn small', onclick: () => { const e = absorbLabel(s, rng19(s, 'act'), labelId); close(); say(e, l('Selo absorvido: elenco e catálogo agora são seus.', 'Label absorbed: roster and catalog are now yours.')); } }, `${t(l('Absorver', 'Absorb'))} (${t(l('minoritários', 'minority'))} ${$(squeezeCost(s, labelId))})`),
       h('button', { class: 'btn small', onclick: () => { const e = makeSubLabel(s, labelId); close(); say(e, l('Agora é um subselo seu.', 'It is now your sub-label.')); } }, t(l('Transformar em subselo', 'Turn into a sub-label'))),
       select(strat, (['develop', 'buy_catalog', 'niche', 'stars'] as const).map((x) => ({ value: x, label: strategyName(x) })), (x) => { strat = x; }),
       h('button', { class: 'btn small ghost', onclick: () => say(directLabel(s, labelId, strat), l('Nova estratégia imposta.', 'New strategy imposed.')) }, t(l('Mandar na estratégia', 'Set its strategy')))) : null,
@@ -175,9 +176,9 @@ function stakesTab(s: GameState): HTMLElement {
     section(t(l('Participações em selos concorrentes', 'Stakes in rival labels')),
       h('p', { class: 'muted small' }, t(l('Compre uma fatia (ou o selo inteiro) negociando com o dono. 25% dá assento no conselho; mais de 50%, o controle (absorver, subselo ou mandar na estratégia). Fatias pagam dividendos todo ano. Abra a ficha do selo para negociar.', 'Buy a slice (or the whole label) by negotiating with the owner. 25% gives a board seat; over 50%, control (absorb, sub-label or run its strategy). Stakes pay dividends every year. Open the label page to negotiate.'))),
       talks.length ? h('ul', { class: 'small' }, talks.map((x) => h('li', null, labelLink(s, x.labelId), ` ${pct(x.share)} · ${$(x.price)} · `,
-        x.status === 'thinking' ? h('span', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', h('button', { class: 'btn small', onclick: () => { const res = pressStake(s, rngOf(s), x.id); toast(t(res.text), res.result === 'accepted' ? 'good' : 'bad'); rerender(); } }, t(l('Pressionar', 'Push'))))
+        x.status === 'thinking' ? h('span', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', h('button', { class: 'btn small', onclick: () => { const res = pressStake(s, rng19(s, 'act'), x.id); toast(t(res.text), res.result === 'accepted' ? 'good' : 'bad'); rerender(); } }, t(l('Pressionar', 'Push'))))
           : h('span', null, pill(`${t(l('contraproposta', 'counter'))}: ${pct(x.counter?.share ?? 0)} ${$(x.counter?.price ?? 0)}`, 'warn'), ' ',
-            h('button', { class: 'btn small primary', onclick: () => say(acceptStakeCounter(s, rngOf(s), x.id), l('Fechado!', 'Deal!')) }, t(l('Aceitar', 'Accept'))),
+            h('button', { class: 'btn small primary', onclick: () => say(acceptStakeCounter(s, rng19(s, 'act'), x.id), l('Fechado!', 'Deal!')) }, t(l('Aceitar', 'Accept'))),
             h('button', { class: 'btn small ghost', onclick: () => { dropStakeTalk(s, x.id); rerender(); } }, t(l('Recusar', 'Decline'))))))) : null,
       h('table', { class: 'tbl compact' },
         h('thead', null, h('tr', null, h('th', null, t(l('Selo', 'Label'))), h('th', null, t(l('Receita (ano passado)', 'Revenue (last year)'))), h('th', null, t(S.roster)), h('th', null, t(l('Sua fatia', 'Your stake'))), h('th', null, t(l('Outros acionistas', 'Other shareholders'))))),
@@ -308,7 +309,7 @@ export function openFeatModal(s: GameState, pre: { host?: string; guest?: string
     if (res.result === 'thinking' && res.deal) {
       const id = res.deal.id;
       reply.replaceChildren(h('p', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', t(res.text)), h('div', { class: 'row' },
-        h('button', { class: 'btn small', onclick: () => show(pressFeat(s, rngOf(s), id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
+        h('button', { class: 'btn small', onclick: () => show(pressFeat(s, rng19(s, 'act'), id)) }, t(l('Pressionar por uma resposta', 'Push for an answer'))),
         h('button', { class: 'btn small ghost', onclick: () => { close(); rerender(); } }, t(l('Esperar', 'Wait')))));
       return;
     }
@@ -329,7 +330,7 @@ export function openFeatModal(s: GameState, pre: { host?: string; guest?: string
         return show(proposeFeat29(s, o.song, g29(), { fee: o.fee, split: o.split }));
       }
       if (!o.song || !o.guest) return toast(t(l('Escolha música e convidado.', 'Pick a song and a guest.')), 'bad');
-      show(proposeFeat(s, rngOf(s), o.song, o.guest, { fee: o.fee, split: o.split }));
+      show(proposeFeat(s, rng19(s, 'act'), o.song, o.guest, { fee: o.fee, split: o.split }));
     } }, t(l('Propor e ouvir a resposta', 'Propose and hear the answer'))), reply)), { wide: true });
 }
 
@@ -355,7 +356,7 @@ function featsSection(s: GameState): HTMLElement | null {
   return section(t(l('Feats e relações', 'Features and relationships')),
     h('div', { class: 'row' }, h('button', { class: 'btn small primary', onclick: () => openFeatModal(s) }, t(l('Negociar um feat', 'Negotiate a feature')))),
     open.length ? h('ul', { class: 'small' }, open.map((d) => h('li', null, `"${d.title}" + `, ...dealGuests29(s, d), ' ',
-      d.status === 'thinking' ? h('span', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', h('button', { class: 'btn small', onclick: () => { const res = pressFeat(s, rngOf(s), d.id); toast(t(res.text), res.result === 'accepted' ? 'good' : 'bad'); rerender(); } }, t(l('Pressionar', 'Push'))))
+      d.status === 'thinking' ? h('span', null, pill(t(l('pensando', 'thinking')), 'warn'), ' ', h('button', { class: 'btn small', onclick: () => { const res = pressFeat(s, rng19(s, 'act'), d.id); toast(t(res.text), res.result === 'accepted' ? 'good' : 'bad'); rerender(); } }, t(l('Pressionar', 'Push'))))
         : h('span', null, pill(`${t(l('contraproposta', 'counter'))}: ${$(d.counter?.fee ?? 0)} · ${pct(d.counter?.split ?? 0)}`, 'warn'), ' ',
           h('button', { class: 'btn small primary', onclick: () => say(acceptFeatCounter(s, d.id), l('Participação gravada.', 'Feature recorded.')) }, t(l('Aceitar', 'Accept'))),
           h('button', { class: 'btn small ghost', onclick: () => { dropFeatDeal(s, d.id); rerender(); } }, t(l('Recusar', 'Decline'))))))) : null,

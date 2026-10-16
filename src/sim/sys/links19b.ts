@@ -16,7 +16,7 @@
 //  7. (11.11) Ofertas de selo ao artista (artist18) pela PA e pelo olho do A&R (`pa_bet`); selos NPC disputam o
 //     mesmo jovem que você achou no discover18 (`talent_race`).
 
-import { clamp, hashString, Rng } from '../../core/rng';
+import { clamp, hashString } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { subById18, SUBS18, subOfA3_18 } from '../../data/regions18';
 import { familyOf, l, type L } from '../../data/world';
@@ -83,7 +83,7 @@ export function l19b(s: GameState): L19B {
   for (const [k, v] of Object.entries(fresh())) (st as unknown as Record<string, unknown>)[k] ??= v;
   return st;
 }
-const rng = (s: GameState) => rng19(s, 'l19b', () => Rng.fromSeed(`${s.config.seed}|l19b|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'l19b');
 const mIdx = (s: GameState) => s.year * 12 + s.month;
 const $k = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 

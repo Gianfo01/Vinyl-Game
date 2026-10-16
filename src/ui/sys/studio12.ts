@@ -2,7 +2,6 @@
 
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { rngOf } from '../../sim/util';
 import { ownerOf } from '../../sim/sys/people/owner';
 import {
   ROOMS, SPEC_NAME, STYLES, STYLE_NAME, acceptJob, addRoom, buyGear, closeProject, conflictKind, dated, declineJob, deliver, engCandidates, fire, fitReport, gearCost, gearName, hire, hotStyle, maintain, maintainCost, months, offerFee, pointsEV,
@@ -17,6 +16,7 @@ import { registerArea } from '../registry';
 import { foundInline } from './careerui13';
 import { tabs } from '../vis';
 import { fameText } from '../../sim/sys/fame15';
+import { rng19 } from '../../sim/rng19';
 
 const btn = (label: L, fn: () => void, cls = 'btn small', dis = false) => h('button', { class: cls, disabled: dis, onclick: fn }, t(label));
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
@@ -137,9 +137,9 @@ function projView(s: GameState, pr: Proj): HTMLElement {
   return h('div', null, head, h('h5', null, t(l('4. O take imperfeito', '4. The imperfect take')), ' ', pill(t(l('cena', 'scene')), 'good')),
     h('p', null, t(l('O melhor take da música tem uma nota desafinada e o tempo escorregou no refrão, mas a interpretação é extraordinária: o estúdio inteiro parou de respirar.', 'The best take of the song has one flat note and the tempo slips in the chorus, but the performance is extraordinary: the whole room stopped breathing.'))),
     h('ul', { class: 'small' }, h('li', null, h('b', null, t(l('Artista: ', 'Artist: '))), t(l('"É essa. Se refizer, morre."', '"That\'s the one. Redo it and it dies."'))), h('li', null, h('b', null, t(pr.job.own ? l('Seu selo: ', 'Your label: ') : l('Selo/cliente: ', 'Label/client: '))), t(l('"Dá para consertar? Rádio não perdoa afinação."', '"Can it be fixed? Radio doesn\'t forgive pitch."'))), h('li', null, h('b', null, t(l('Seu ouvido: ', 'Your ear: '))), t(l('"Nunca vou conseguir isso de novo... mas puristas vão reparar."', '"I\'ll never get that again... but purists will notice."')))),
-    opt(l('Manter o take', 'Keep the take'), l('+emoção, −precisão. Artista adora.', '+emotion, −precision. The act loves it.'), () => { stepTake(s, rngOf(s), 'keep'); rerender(); }),
-    opt(l('Refazer para acertar', 'Redo it right'), l('+precisão, −emoção, perde um dia. O selo respira.', '+precision, −emotion, costs a day. The label breathes.'), () => { stepTake(s, rngOf(s), 'redo'); rerender(); }),
-    opt(l('Editar/colar (cirúrgico)', 'Edit/splice (surgical)'), fmtChance(chance), () => { stepTake(s, rngOf(s), 'comp'); rerender(); }));
+    opt(l('Manter o take', 'Keep the take'), l('+emoção, −precisão. Artista adora.', '+emotion, −precision. The act loves it.'), () => { stepTake(s, rng19(s, 'act'), 'keep'); rerender(); }),
+    opt(l('Refazer para acertar', 'Redo it right'), l('+precisão, −emoção, perde um dia. O selo respira.', '+precision, −emotion, costs a day. The label breathes.'), () => { stepTake(s, rng19(s, 'act'), 'redo'); rerender(); }),
+    opt(l('Editar/colar (cirúrgico)', 'Edit/splice (surgical)'), fmtChance(chance), () => { stepTake(s, rng19(s, 'act'), 'comp'); rerender(); }));
 }
 const fmtChance = (c: number): L => l(`Chance de dar certo: ${Math.round(c * 100)}%. Falhando, soa costurado.`, `Chance it works: ${Math.round(c * 100)}%. If it fails it sounds stitched.`);
 const clamp100 = (x: number) => Math.max(0, Math.min(100, x));
@@ -149,7 +149,7 @@ function producerTab(s: GameState): HTMLElement {
   if (!P.on) return h('div', null, h('p', null, t(l('Produtor é uma carreira só sua: seu nome nos créditos, seu cachê (ou pontos) no seu patrimônio pessoal, independente de quem é dono do estúdio.', 'Producer is a career of your own: your name in the credits, your fee (or points) in your personal wealth, independent of who owns the studio.'))), btn(l('Começar a produzir', 'Start producing'), () => { startProducer(s); rerender(); }, 'btn primary'));
   if (P.proj) {
     const pr = P.proj;
-    if (pr.done || pr.step >= 4) { if (!pr.done && pr.step === 4) deliver(s, rngOf(s)); }
+    if (pr.done || pr.step >= 4) { if (!pr.done && pr.step === 4) deliver(s, rng19(s, 'act')); }
     return projView(s, pr);
   }
   const hot = hotStyle(s);

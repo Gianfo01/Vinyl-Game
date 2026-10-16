@@ -8,13 +8,14 @@ import {
   schemeOdds, schemeRisk, schemeSpeed, startScheme, takeDecision, targetName, useHook, type HookUse, type SchemeKind, type Target,
 } from '../../sim/sys/intrigue';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { heat19 } from '../../sim/rivals19';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { lifeEventsSection } from './lifeevents10';
 import { ic } from '../vis';
 import { visibleAct } from '../../sim/future';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -68,7 +69,7 @@ function secretsSection(s: GameState): HTMLElement {
         h('header', null, h('b', null, targetName(s, sec.target)), ' ', pill(def.criminal ? t(l('gancho forte', 'strong hook')) : t(l('gancho fraco', 'weak hook')), def.criminal ? 'bad' : 'warn')),
         h('div', { class: 'small' }, t(def.name)),
         h('small', { class: 'muted' }, def.criminal ? t(l('Crime: reutilizável a cada 5 anos.', 'A crime: reusable every 5 years.')) : t(l('Vergonhoso: uso único.', 'Shameful: single use.'))),
-        ready ? h('div', { class: 'row wrap' }, uses.map((u) => h('button', { class: 'btn small', title: t(HOOK_USES[u].desc), onclick: () => say(useHook(s, rngOf(s), sec.id, u), l('Gancho usado.', 'Hook used.')) }, t(HOOK_USES[u].name)))) : h('small', { class: 'muted' }, t(l('Gancho já usado.', 'Hook already used.'))),
+        ready ? h('div', { class: 'row wrap' }, uses.map((u) => h('button', { class: 'btn small', title: t(HOOK_USES[u].desc), onclick: () => say(useHook(s, rng19(s, 'act'), sec.id, u), l('Gancho usado.', 'Hook used.')) }, t(HOOK_USES[u].name)))) : h('small', { class: 'muted' }, t(l('Gancho já usado.', 'Hook already used.'))),
         h('button', { class: 'btn small ghost', onclick: () => { if (confirm(t(l('Expor o segredo publicamente? O gancho se perde.', 'Expose the secret publicly? The hook is lost.')))) say(exposeSecret(s, sec.id), l('Segredo exposto.', 'Secret exposed.')); } }, t(l('Expor publicamente', 'Expose publicly'))),
       );
     })) : h('p', { class: 'muted small' }, t(l('Nenhum segredo conhecido. Use a trama Investigar, ou fique de ouvidos abertos em galas e retiros.', 'No known secrets. Use the Dig scheme, or keep your ears open at galas and retreats.'))),
@@ -102,7 +103,7 @@ function bigDecisions(s: GameState): HTMLElement {
         h('b', null, t(d.name)), done && !d.cooldown ? pill(t(l('feito', 'done')), 'good') : null,
         h('small', null, t(d.desc)),
         h('small', { class: 'muted' }, `${$(money(s, d.cost))}${d.energy ? ` · ${d.energy} ${t(l('tempo livre', 'free time'))}` : ''}`),
-        h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => say(takeDecision(s, rngOf(s), d.id), l('Decisão tomada.', 'Decision taken.')) }, t(l('Decidir', 'Decide'))),
+        h('button', { class: 'btn small', disabled: !!blk, title: blk ? t(blk) : '', onclick: () => say(takeDecision(s, rng19(s, 'act'), d.id), l('Decisão tomada.', 'Decision taken.')) }, t(l('Decidir', 'Decide'))),
         blk ? h('small', { class: 'muted' }, t(blk)) : null,
       );
     })),

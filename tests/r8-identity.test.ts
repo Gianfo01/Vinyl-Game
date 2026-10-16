@@ -15,8 +15,9 @@ import {
   profileOfferEffect, retentionBonus, runProfileAction, trackLaunch, type CoreProfileId, type ProfileId,
 } from '../src/sim/sys/identity';
 import { cityById } from '../src/data/world';
-import { money, rngOf } from '../src/sim/util';
+import { money } from '../src/sim/util';
 import type { Act, CharacterSpec, GameState, Offer, Release, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, { startYear: 1985, ...over }));
@@ -62,7 +63,7 @@ describe('perfis do selo emergem das decisões', () => {
   it('reedições repetidas consolidam o selo de catálogo; depois, lançar sem parar vira selo de hits (com estranhamento do elenco)', () => {
     const s = mk('r8-cat');
     blank(s);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = anyAct(s);
     for (let m = 0; m < 7; m++) {
       trackLaunch(s, fakeRel(s, act.id, { reissueOf: 'x', kind: 'anniversary' }));
@@ -86,7 +87,7 @@ describe('perfis do selo emergem das decisões', () => {
   it('contratar artistas da cidade-sede faz nascer o selo de cena', () => {
     const s = mk('r8-scene');
     blank(s);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const locals = Object.values(s.acts).filter((a) => !a.owner && !a.playerBand && a.city === s.config.homeCity && a.members.length && (a.status === 'active' || a.status === 'emerging')).slice(0, 3);
     expect(locals.length).toBeGreaterThan(0);
     s.player.cash += 0; // assinaturas via contrato real (adiantamento lançado no extrato)
@@ -102,7 +103,7 @@ describe('perfis do selo emergem das decisões', () => {
   it('cada perfil muda oportunidades, custo/risco e reações (nunca só um bônus passivo)', () => {
     const s = mk('r8-effects', { startYear: 1995 });
     blank(s);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const home = cityById[s.config.homeCity].market;
     const foreignM = (['us', 'uk', 'br', 'jp', 'de', 'fr'] as string[]).find((m) => m !== home) ?? 'us';
     const act = anyAct(s);
@@ -202,7 +203,7 @@ describe('perfis do selo emergem das decisões', () => {
 
   it('as oportunidades exclusivas custam e rendem pelo extrato, com recarga', () => {
     const s = mk('r8-opps');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     s.player.cash += 0;
     const act = anyAct(s, (a) => a.city === s.config.homeCity);
     act.owner = 'player';
@@ -267,7 +268,7 @@ describe('trajetória profissional: contatos e preço', () => {
     expect(inHome).toBeGreaterThan(other);
     const c0 = s.player.totalPosted;
     s.week += 1;
-    identityMonth(s, rngOf(s));
+    identityMonth(s, rng19(s, 'act'));
     expect(st.debtLeft).toBe(left - 1);
     expect(s.player.totalPosted).toBeLessThan(c0);
     invariant(s);
@@ -283,7 +284,7 @@ describe('estilo de liderança consolidado pelas decisões', () => {
   it('apoiar artistas nas crises consolida "artista em primeiro lugar": melhores ofertas para quem quer liberdade e mais retenção', () => {
     const s = mk('r8-lead');
     blank(s);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = anyAct(s, (a) => a.fame < 30);
     setAmbition(s, act, 'art');
     const o = { ...defaultOffer(s, act), creativeControl: false };
@@ -305,7 +306,7 @@ describe('estilo de liderança consolidado pelas decisões', () => {
   it('controlador: artistas de arte fogem, retenção cai e o dono se estressa mais que o delegador', () => {
     const s = mk('r8-ctrl');
     blank(s);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = anyAct(s);
     setAmbition(s, act, 'freedom');
     const o = defaultOffer(s, act);
@@ -342,7 +343,7 @@ describe('estilo de liderança consolidado pelas decisões', () => {
 
   it('o estado cabe num save pequeno', () => {
     const s = mk('r8-save');
-    for (let m = 0; m < 3; m++) { s.week += 4; identityMonth(s, rngOf(s)); }
+    for (let m = 0; m < 3; m++) { s.week += 4; identityMonth(s, rng19(s, 'act')); }
     expect(JSON.stringify(ident(s)).length).toBeLessThan(3000);
   });
 });

@@ -13,8 +13,9 @@ import {
 import { DIMS, SOURCES8, anrRecord, dos, passOnAct, readsFor, research, synthesis, trueSignal, type Src } from '../src/sim/sys/dossier8';
 import { runSimHooks } from '../src/sim/ext4';
 import { mainAmbition } from '../src/sim/people';
-import { money, nextId, rngOf } from '../src/sim/util';
+import { money, nextId } from '../src/sim/util';
 import type { Act, GameState, Offer, Release, RightsTerms, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
@@ -81,7 +82,7 @@ describe('ficha de direitos negociável', () => {
 describe('royalties, recoupment e catálogo', () => {
   it('pontos de produtor saem do caixa, o adiantamento é recuperado antes de pagar o artista e o caixa fecha', () => {
     const s = mk('r8-money', { startYear: 1985, scenario: 'established' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = freeAct(s);
     const id = sign(s, act, { advance: money(s, 400), royalty: 0.2 }, { pointsFromLabel: true, producerPts: 0.04 });
     const c = s.contracts[id];
@@ -100,7 +101,7 @@ describe('royalties, recoupment e catálogo', () => {
 
   it('o master segue o acordo da época: o artista sai e o selo continua recebendo o catálogo', () => {
     const s = mk('r8-keep', { startYear: 1985 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = freeAct(s);
     const id = sign(s, act, { advance: 0 });
     const rel = release(s, act, { appeal: 300 });
@@ -115,7 +116,7 @@ describe('royalties, recoupment e catálogo', () => {
 
   it('reversão anos depois: os masters voltam ao artista e passam a pagar só a ele; dá para recomprar antes', () => {
     const s = mk('r8-revert', { startYear: 1985 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = freeAct(s);
     const id = sign(s, act, { advance: 0 }, { reversionYears: 1, reversionNeedsRecoup: false });
     const c = s.contracts[id];
@@ -155,7 +156,7 @@ describe('royalties, recoupment e catálogo', () => {
 
   it('sem direito de reedição o aniversário é bloqueado até comprar a autorização', () => {
     const s = mk('r8-reissue', { startYear: 1985, scenario: 'established' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = freeAct(s);
     sign(s, act, { advance: 0 }, { reissue: false });
     const rel = release(s, act, { year: s.year - 10, type: 'lp' });
@@ -171,7 +172,7 @@ describe('royalties, recoupment e catálogo', () => {
 
   it('artista que cresceu pede renegociação; aceitar paga bônus e sobe o royalty, ignorar custa confiança', () => {
     const s = mk('r8-reneg', { startYear: 1985, scenario: 'established' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = freeAct(s);
     const id = sign(s, act, { advance: 0, termMonths: 60 });
     const c = s.contracts[id];
@@ -250,7 +251,7 @@ describe('dossiê de descoberta', () => {
 
   it('o histórico de A&R julga as apostas: deixar passar quem estourou e acertar antes do mercado', () => {
     const s = mk('r8-calls', { startYear: 1990, scenario: 'established' });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const passed = freeAct(s, 4);
     s.knowledge[passed.id] ??= { actId: passed.id, degree: 2, stage: 'monitoring', bias: 0, updatedWeek: s.week, source: 'watch' };
     passOnAct(s, passed.id);

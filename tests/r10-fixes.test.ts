@@ -7,10 +7,10 @@ import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import type { GameState, RunConfig } from '../src/sim/types';
 import { composeSongs, songQ } from '../src/sim/production';
-import { rngOf } from '../src/sim/util';
 import { rw } from '../src/sim/sys/realworld';
 import { hasSinger, hireSessionSinger } from '../src/sim/sys/vocals10';
 import { opinionText, opinionsOf } from '../src/sim/sys/bonds9';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, over));
 const personsNamed = (s: GameState, name: string) => Object.values(s.persons).filter((p) => p.name === name);
@@ -54,7 +54,7 @@ describe('vocalista e faixas instrumentais', () => {
 
   it('sem vocalista a música sai instrumental (letra não conta); cantor de estúdio resolve', () => {
     const s = mk('r10-instr');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const act = Object.values(s.acts).find((a) => a.members.length >= 2 && a.archetype !== 'synthetic')!;
     const inst = (s.x4 as unknown as { inst: { people: Record<string, { list: { id: string; lvl: number }[] }> } }).inst;
     for (const id of act.members) {

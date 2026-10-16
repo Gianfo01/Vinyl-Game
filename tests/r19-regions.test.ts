@@ -24,11 +24,11 @@ import { fireMilestone, milestoneById } from '../src/sim/sys/world4/milestones';
 import { w4 } from '../src/sim/sys/world4/state';
 import { hireGhost19, wr19 } from '../src/sim/sys/writers19';
 import type { Act, GameState, Release } from '../src/sim/types';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (y: number) => { const s = createGame(defaultConfig('reg19', { startYear: y })); s.player.cash += 1e9; return s; };
-const myAct = (s: GameState, city: string, genre?: string) => { const a = spawnProceduralAct(s, rngOf(s), { city, genre, fame: 40 }); a.owner = 'player'; return a; };
+const myAct = (s: GameState, city: string, genre?: string) => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city, genre, fame: 40 }); a.owner = 'player'; return a; };
 const facts = (s: GameState, k: string) => recentFacts(s, { kind: k, months: 600 });
 const msgs = (s: GameState, k: string) => P(s).inbox.filter((m) => m.ref?.k18 === k);
 const heard = (k: string) => factListeners19().some((x) => x.kind === k);

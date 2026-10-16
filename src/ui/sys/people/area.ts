@@ -15,7 +15,7 @@ import { P, healthOf } from '../../../sim/sys/people/state';
 import { PROMISE_INFO, TALK_NAME, canTalk, openPromises, talk, type PromiseKind, type TalkKind } from '../../../sim/sys/people/talks';
 import { activeThoughts, moodOf, thoughtText } from '../../../sim/sys/people/thoughts';
 import type { GameState, Person } from '../../../sim/types';
-import { money, playerActs, rngOf } from '../../../sim/util';
+import { money, playerActs } from '../../../sim/util';
 import { $, N, actLink, pill, rerender, section, toast } from '../../common';
 import { h, select } from '../../dom';
 import { ent27 } from '../../ps/ent27';
@@ -26,6 +26,7 @@ import { renewBtn27 } from '../../act27/flow27p2'; // r27 FLOW2: renovar = a mes
 import { feedView, socialDiagram } from './views';
 import { ficha13Btn } from '../persona13';
 import { hireBlock as hireBlock17 } from '../agenda17';
+import { rng19 } from '../../../sim/rng19';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { person: '', promise: 'single' as PromiseKind, detective: '', invest: 0 };
@@ -130,13 +131,13 @@ function secretsTab(s: GameState): HTMLElement {
     section(t(l('Dossiês', 'Dossiers')),
       h('p', { class: 'muted small' }, t(l('Todo mundo tem segredos. Usar um segredo numa negociação funciona — até alguém descobrir que você usou.', 'Everyone has secrets. Using one in a negotiation works — until someone finds out you used it.'))),
       h('div', { class: 'row wrap' }, select(ui.detective, targets, (v) => { ui.detective = v; }, { 'aria-label': t(l('Investigar', 'Investigate')) }),
-        h('button', { class: 'btn', onclick: () => { toast(t(hireDetective(s, rngOf(s), ui.detective)), 'info'); rerender(); } }, `${t(l('Contratar detetive', 'Hire a detective'))} (${$(detectiveCost(s))})`)),
+        h('button', { class: 'btn', onclick: () => { toast(t(hireDetective(s, rng19(s, 'act'), ui.detective)), 'info'); rerender(); } }, `${t(l('Contratar detetive', 'Hire a detective'))} (${$(detectiveCost(s))})`)),
       known.length ? h('div', { class: 'cards' }, known.map((x) => tile('key', t(ownerLabel(s, x)), [
         h('small', null, `${t(SECRET_NAME[x.kind])} · ${t(l('gravidade', 'severity'))} ${x.severity}/3 · ${t(l('usado', 'used'))} ${x.used}×`),
         x.knownBy.length ? h('small', { class: 'muted' }, `${t(l('Também sabem', 'Also known by'))}: ${x.knownBy.map((k) => (k === 'press' ? t(l('imprensa', 'the press')) : s.labels[k]?.name ?? k)).join(', ')}`) : null,
         x.owner.startsWith('label:') ? h('div', { class: 'row' },
-          h('button', { class: 'btn small', onclick: () => { toast(t(pressureCeo(s, rngOf(s), x.id, 'back_off')), 'info'); rerender(); } }, t(l('Pressionar: recuar', 'Pressure: back off'))),
-          h('button', { class: 'btn small ghost', onclick: () => { toast(t(pressureCeo(s, rngOf(s), x.id, 'cash')), 'info'); rerender(); } }, t(l('Pressionar: dinheiro', 'Pressure: cash')))) : null,
+          h('button', { class: 'btn small', onclick: () => { toast(t(pressureCeo(s, rng19(s, 'act'), x.id, 'back_off')), 'info'); rerender(); } }, t(l('Pressionar: recuar', 'Pressure: back off'))),
+          h('button', { class: 'btn small ghost', onclick: () => { toast(t(pressureCeo(s, rng19(s, 'act'), x.id, 'cash')), 'info'); rerender(); } }, t(l('Pressionar: dinheiro', 'Pressure: cash')))) : null,
       ]))) : h('p', { class: 'muted small' }, t(l('Nenhum segredo conhecido.', 'No known secrets.'))),
     ),
   );

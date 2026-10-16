@@ -9,8 +9,9 @@ import { actTalent } from './people';
 import type { Act, GameState, Knowledge } from './types';
 import { addSignal, talentScore } from './worldgen';
 import { perk } from './perks';
-import { hasTech, money, rngOf, staffCount, staffSkill } from './util';
+import { hasTech, money, staffCount, staffSkill } from './util';
 import { actsNow27 } from './tickcache27';
+import { rng19 } from './rng19';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -85,7 +86,7 @@ export function scoutCost(s: GameState, degree: number): number {
 export function watchAct(s: GameState, actId: string): boolean {
   const a = s.acts[actId];
   if (!a || a.owner === 'player' || s.knowledge[actId]) return false;
-  s.knowledge[actId] = { actId, degree: 1, stage: 'monitoring', bias: rngOf(s).normal(0, 6), updatedWeek: s.week, source: 'watch' };
+  s.knowledge[actId] = { actId, degree: 1, stage: 'monitoring', bias: rng19(s, 'scout').normal(0, 6), updatedWeek: s.week, source: 'watch' };
   return true;
 }
 

@@ -7,7 +7,7 @@
 // Gatilhos de outros sistemas: screen18 (estreias), media18 (viral, concurso de remix, parada de clube), tribute19
 // (documentário) e os tipos reservados de remix19/adsync19/score19 (remix_hit, ad_sync, needle_drop).
 
-import { Rng, clamp } from '../../core/rng';
+import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerDeadline } from '../calendar19';
 import { registerExplain, type WhyPart } from '../explain18';
@@ -60,7 +60,7 @@ export function rv19(s: GameState): R19 {
 }
 const cnt = (s: GameState, k: string) => { const n = rv19(s).n; n[k] = (n[k] ?? 0) + 1; };
 const logR = (s: GameState, t: L) => { const st = rv19(s); st.log.unshift([s.year, s.month, t]); if (st.log.length > 40) st.log.length = 40; };
-const rng = (s: GameState) => rng19(s, 'revival19', () => Rng.fromSeed(`${s.config.seed}|rv19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'revival19');
 export const activeRev19 = (s: GameState): Rev19[] => rv19(s).rv.filter((x) => x.until > s.week);
 const mineRel = (s: GameState, rel: Release): boolean => rel.owner === 'player' || !!s.acts[rel.actId]?.playerBand;
 export const flop19 = (rel: Release): boolean => !rel.peak || rel.peak > 20;

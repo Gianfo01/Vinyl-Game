@@ -17,10 +17,11 @@ import { REAL19, realCards19, rh19 } from '../src/sim/sys/realhist19';
 import { MILESTONES, fireMilestone } from '../src/sim/sys/world4/milestones';
 import { advisorTips18 } from '../src/sim/inbox18';
 import { facts17 } from '../src/sim/facts17';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
 import { w4 } from '../src/sim/sys/world4/state';
 import type { GameState } from '../src/sim/types';
 import '../src/sim/sys';
+import { rng19 } from '../src/sim/rng19';
 
 const own = (k: string) => !!ownConseq18(k)?.later?.length;
 const myAct = (s: GameState) => {
@@ -66,7 +67,7 @@ describe('r19 ecos (11.2)', () => {
     advanceMonth(s);
     const a = myAct(s);
     s.decisions = [];
-    emitEvent(s, rngOf(s), 'extra_date', { act: a.id });
+    emitEvent(s, rng19(s, 'act'), 'extra_date', { act: a.id });
     const d = s.decisions.find((x) => x.eventId === 'extra_date')!;
     expect(d).toBeTruthy();
     resolveDecision(s, d.id, 'add');
@@ -95,7 +96,7 @@ describe('r19 era 1889 (11.5) e contratos por época (11.6)', () => {
     for (const k of ['ib:era1889_patent:lic', 'ib:era1889_patent:risk', 'ev:era19_cyl_bet:disc', 'ev:era19_vaud:exclusive', 'ev:shellac_breakage:repress']) expect(own(k), k).toBe(true);
     s.year = 1900;
     s.decisions = [];
-    emitEvent(s, rngOf(s), 'era19_cyl_bet', {});
+    emitEvent(s, rng19(s, 'act'), 'era19_cyl_bet', {});
     const d = s.decisions.find((x) => x.eventId === 'era19_cyl_bet')!;
     resolveDecision(s, d.id, 'disc');
     expect(era19(s).bet).toBe('disc');
@@ -135,7 +136,7 @@ describe('r19 Frente 2 — piloto da história real', () => {
     const m = MILESTONES.find((x) => x.id === 'rh19_mtv')!;
     myAct(s);
     delete w4(s).ms.rh19_mtv;
-    fireMilestone(s, rngOf(s), { ...m, tech: undefined });
+    fireMilestone(s, rng19(s, 'act'), { ...m, tech: undefined });
     const d = s.decisions.find((x) => x.eventId === 'rh19_mtv');
     expect(d).toBeTruthy();
     resolveDecision(s, d!.id, 'pressure');
@@ -155,7 +156,7 @@ describe('r19 Frente 2 — piloto da história real', () => {
     const s = createGame(defaultConfig('r19-rh-2', { startYear: 1970 }));
     advanceMonth(s);
     const a = myAct(s);
-    const f = new Fx18(s, { act: a.id }, rngOf(s));
+    const f = new Fx18(s, { act: a.id }, rng19(s, 'act'));
     const t = k.fx(f);
     expect(t.pt).toMatch(/não foi divulgado/);
     expect(t.pt).not.toMatch(/sangue|faca|esfaque/i);

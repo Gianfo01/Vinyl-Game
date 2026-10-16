@@ -7,7 +7,6 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import { advanceMonth } from '../src/sim/tick';
 import { planTour } from '../src/sim/tours';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { resolveDecision } from '../src/sim/events';
 import type { GameState } from '../src/sim/types';
@@ -17,10 +16,11 @@ import {
   setNextGameSetup, startResidency, validatePack, weekKeyOf, weeklyChallenge, SAMPLE_PACK, setFestival,
 } from '../src/sim/sys/live';
 import { runEdition12, sync12 } from '../src/sim/sys/fest12';
+import { rng19 } from '../src/sim/rng19';
 
 function withAct(seed: string, over = {}, fame = 30) {
   const s = createGame(defaultConfig(seed, over));
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   act.fans = { casual: 400000, active: 60000, core: 12000 };

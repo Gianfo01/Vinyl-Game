@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { queueCutscene, runSimHooks } from '../src/sim/ext4';
-import { remember, rngOf } from '../src/sim/util';
+import { remember } from '../src/sim/util';
 import { emitFact } from '../src/sim/facts17';
 import { calOf19, awardExists19, honoredYear19 } from '../src/sim/awardcal19';
 import { ceremonies19, winners19 } from '../src/sim/awards19';
@@ -21,10 +21,11 @@ import { s17 } from '../src/sim/sys/scene17';
 import { ventures } from '../src/sim/sys/ventures9';
 import { hallOfFameYear } from '../src/sim/dynasty';
 import type { Act, GameState, Release } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 afterEach(() => { LIVE19.on = false; });
 const game = (y = 1990, seed = 'scn19', role: 'label' | 'artist' | 'manager' = 'label') => createGame(defaultConfig(seed, { startYear: y, role }));
-const npcAct = (s: GameState, fame = 40): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame }); a.owner = Object.values(s.labels)[0].id; return a; };
+const npcAct = (s: GameState, fame = 40): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame }); a.owner = Object.values(s.labels)[0].id; return a; };
 const myAct = (s: GameState): Act => { const a = npcAct(s, 50); a.owner = 'player'; return a; };
 let relN = 0;
 /** Lançamento sintético (clona um existente) do ato `a` no ano `y`. */
@@ -51,7 +52,7 @@ describe('r19 cenas: 1. resultado só depois da cerimônia', () => {
     const mine = mkRel(s, myAct(s), s.year, 99), other = mkRel(s, npcAct(s), s.year, 10);
     const n0 = s.notifications.length, a0 = s.awards.length;
     const E = night(s, [mine, other]);
-    gramoNight19(s, rngOf(s));
+    gramoNight19(s, rng19(s, 'act'));
     const cs = s.cutscenes.find((c) => c.kind === 'awards' && c.data.year === E)!;
     expect(cs).toBeTruthy();
     expect(heldResults19(s)).toBe(1);
@@ -71,7 +72,7 @@ describe('r19 cenas: 1. resultado só depois da cerimônia', () => {
     other.totalUnits = 5_000_000;
     const n0 = s.notifications.length;
     const E = night(s, [mine, other]);
-    gramoNight19(s, rngOf(s));
+    gramoNight19(s, rng19(s, 'act'));
     expect(heldResults19(s)).toBe(0);
     expect(s.awards.find((a) => a.year === E && a.category === 'album')?.releaseId).toBe(other.id);
     expect(s.notifications.slice(n0).some((n) => /perdeu/.test(n.text.pt))).toBe(true);
@@ -84,17 +85,17 @@ describe('r19 cenas: 2. indicados oficiais', () => {
     const rels = [mkRel(s, myAct(s), s.year), mkRel(s, npcAct(s), s.year), mkRel(s, npcAct(s), s.year)];
     const E = s.year;
     cer8(s).noms = { year: E, cats: { album: rels.map((r) => r.id) } };
-    const cs = awardsYear(s, rngOf(s), E, [{ cat: 'album', releaseId: rels[1].id, actId: rels[1].actId }])!;
+    const cs = awardsYear(s, rng19(s, 'act'), E, [{ cat: 'album', releaseId: rels[1].id, actId: rels[1].actId }])!;
     const names = (cs.data.cats as { nominees: { name: string }[] }[])[0].nominees.map((n) => n.name).sort();
     expect(names).toEqual(rels.map((r) => `${s.acts[r.actId].name} — ${r.title}`).sort());
     expect(cs.data.won).toBe(0);
-    expect(awardSpeech(s, rngOf(s), cs.id, 'team').pt).toMatch(/Só quem ganha/); // sem discurso de categoria perdida
+    expect(awardSpeech(s, rng19(s, 'act'), cs.id, 'team').pt).toMatch(/Só quem ganha/); // sem discurso de categoria perdida
     // sem indicado oficial seu: nenhuma cerimônia (mesmo que tenha ganho outro prêmio)
     const s2 = game(1990, 'scn19d');
     const r2 = [mkRel(s2, npcAct(s2), s2.year), mkRel(s2, npcAct(s2), s2.year)];
     cer8(s2).noms = { year: s2.year, cats: { album: r2.map((r) => r.id) } };
     s2.awards.push({ year: s2.year, category: 'live_act', name: 'x', byPlayer: true });
-    expect(awardsYear(s2, rngOf(s2), s2.year, [{ cat: 'album', releaseId: r2[0].id }])).toBeNull();
+    expect(awardsYear(s2, rng19(s2, 'act'), s2.year, [{ cat: 'album', releaseId: r2[0].id }])).toBeNull();
   });
   it('papel empresário: indicado do cliente gera cerimônia; artista: a própria banda', () => {
     const s = game(1995, 'scn19e', 'manager');
@@ -102,14 +103,14 @@ describe('r19 cenas: 2. indicados oficiais', () => {
     ventures(s).mg.clients.push({ actId: c.id } as never);
     const rel = mkRel(s, c, s.year);
     cer8(s).noms = { year: s.year, cats: { album: [rel.id, mkRel(s, npcAct(s), s.year).id] } };
-    const cs = awardsYear(s, rngOf(s), s.year, [{ cat: 'album', releaseId: rel.id, actId: c.id }])!;
+    const cs = awardsYear(s, rng19(s, 'act'), s.year, [{ cat: 'album', releaseId: rel.id, actId: c.id }])!;
     expect(cs).toBeTruthy();
     expect(cs.data.won).toBe(1);
     const a = game(1995, 'scn19f', 'artist');
     const band = Object.values(a.acts).find((x) => x.playerBand)!;
     const br = mkRel(a, band, a.year);
     cer8(a).noms = { year: a.year, cats: { album: [br.id] } };
-    expect(awardsYear(a, rngOf(a), a.year, [{ cat: 'album', releaseId: br.id }])).toBeTruthy();
+    expect(awardsYear(a, rng19(a, 'act'), a.year, [{ cat: 'album', releaseId: br.id }])).toBeTruthy();
   });
 });
 
@@ -132,7 +133,7 @@ describe('r19 cenas: 3. calendário real', () => {
     // Gramófonos antes de 1959: nada acontece na noite
     s.month = CEREMONY_MONTH;
     cer8(s).noms = { year: s.year - 1, cats: {} };
-    gramoNight19(s, rngOf(s));
+    gramoNight19(s, rng19(s, 'act'));
     expect(s.cutscenes.some((c) => c.kind === 'awards')).toBe(false);
   });
   it('figurino escolhido entre indicação e cerimônia: pesa pouco no voto (com porquê) e a cena não pede de novo', () => {
@@ -142,14 +143,14 @@ describe('r19 cenas: 3. calendário real', () => {
     s.month = NOMS_MONTH + 1;
     const before = relAdj18(s, mine).v;
     const msg = { ref: { y: s.year, act: mine.actId } } as never;
-    inboxKind18('scn19_fit')!.handle!(s, msg, 'classic', rngOf(s));
+    inboxKind18('scn19_fit')!.handle!(s, msg, 'classic', rng19(s, 'act'));
     const adj = relAdj18(s, mine);
     expect(adj.v).not.toBe(before);
     expect(Math.abs(adj.v - before)).toBeLessThanOrEqual(2);
     expect(adj.why.some(([t]) => /Figurino/.test(t.pt))).toBe(true);
     expect(relAdj18(s, other).v).toBe(relAdj18(s, other).v); // só os seus
     const E = night(s, [mine, other]);
-    gramoNight19(s, rngOf(s));
+    gramoNight19(s, rng19(s, 'act'));
     const cs = s.cutscenes.find((c) => c.kind === 'awards' && c.data.year === E)!;
     expect(cine18(s).fit[`aw:${cs.id}`]).toBe('classic');
     const b = awardBoard18(s, { cs: cs.id, year: E, cats: cs.data.cats as never, won: Number(cs.data.won) });
@@ -162,11 +163,11 @@ describe('r19 cenas: 4. ganchos por marca processada', () => {
     const s = game(1990, 'scn19i');
     const mine = mkRel(s, myAct(s), s.year, 99);
     night(s, [mine, mkRel(s, npcAct(s), s.year)]);
-    gramoNight19(s, rngOf(s));
+    gramoNight19(s, rng19(s, 'act'));
     const cs = s.cutscenes.find((c) => c.kind === 'awards')!;
     queueCutscene(s, 'life', { title: { pt: 'Casamento', en: 'Wedding' }, kind: 'wedding', size: 'small' });
     s.week += 1; // o gancho semanal roda depois do fechamento do mês
-    runSimHooks('week', s, rngOf(s));
+    runSimHooks('week', s, rng19(s, 'act'));
     expect(cine18(s).log.some((x) => x.aw?.cs === cs.id)).toBe(true);
     expect(Object.values(s17(s).pend).some((p) => p.def === 'wedding17')).toBe(true);
   });
@@ -198,7 +199,7 @@ describe('r19 cenas: 6. regionais e ato ao vivo', () => {
     const E = s.year;
     s.tours.push({ status: 'done', actId: a.id, stops: [{ status: 'played', day: Math.ceil((E - s.config.startYear) * 365.25) + 30, sold: 50000 }] } as never);
     s.year = E + 1; s.month = calOf19('live_act').month;
-    yearlyAwards2(s, rngOf(s));
+    yearlyAwards2(s, rng19(s, 'act'));
     const w = s.awards.find((x) => x.category === 'live_act' && x.year === E);
     expect(w?.actId).toBe(a.id);
     expect(w?.byPlayer).toBe(false);
@@ -214,11 +215,11 @@ describe('r19 cenas: 7. volume', () => {
     s.cutscenes = [];
     remember(s, 'hall_of_fame', { pt: 'npc', en: 'npc' }, { actId: npc.id, important: true });
     remember(s, 'death', { pt: 'npc morre', en: 'npc dies' }, { actId: npc.id, important: true });
-    memoryWatch(s, rngOf(s));
+    memoryWatch(s, rng19(s, 'act'));
     expect(s.cutscenes.length).toBe(0);
     remember(s, 'hall_of_fame', { pt: 'meu', en: 'mine' }, { actId: mine.id, important: true });
     remember(s, 'death', { pt: 'ex-artista morre', en: 'former act dies' }, { actId: former.id });
-    memoryWatch(s, rngOf(s));
+    memoryWatch(s, rng19(s, 'act'));
     expect(s.cutscenes.map((c) => c.kind).sort()).toEqual(['farewell', 'hall']);
     const log0 = cine18(s).log.length;
     emitFact(s, { kind: 'contest_final', actors: [npc.id], severity: 40, visibility: 'public', tags: ['contest'], src: 'test', text: { pt: 'final', en: 'final' } });
@@ -236,7 +237,7 @@ describe('r19 cenas: 7. volume', () => {
     expect(st.later.length).toBe(12 - s.cutscenes.length);
     s.month = (s.month + 1) % 12; if (s.month === 0) s.year++;
     s.week += 1;
-    runSimHooks('week', s, rngOf(s));
+    runSimHooks('week', s, rng19(s, 'act'));
     expect(st.later.length).toBe(12 - s.cutscenes.filter((c) => c.kind === 'factory').length);
     expect(s.cutscenes.filter((c) => c.kind === 'factory').length).toBeGreaterThan(MONTH_CAP19 - 1);
   });

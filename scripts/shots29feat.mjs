@@ -35,7 +35,7 @@ async function setup(p) {
     if (off) off.setTutorials19(st.store.prefs, false);
     const C = await import('/src/sim/contracts.ts');
     const P = await import('/src/sim/production.ts');
-    const U = await import('/src/sim/util.ts');
+    const U = await import('/src/sim/util.ts'); const R19 = await import('/src/sim/rng19.ts');
     const F = await import('/src/sim/sys/feats8.ts');
     const g = st.store.game;
     g.player.cash = Math.max(g.player.cash, 2e8);
@@ -45,7 +45,7 @@ async function setup(p) {
     const free = acts.filter((a) => !a.owner && !a.playerBand);
     let mine = U.playerActs(g).map((id) => g.acts[id]).find((a) => a && a.members.length);
     if (!mine) { mine = free[2] ?? free[0]; C.acceptOffer(g, mine, { ...C.defaultOffer(g, mine), id: 'shot-o', week: g.week, status: 'pending', advance: 0 }); }
-    if (F.featSongs(g, mine.id).length < 3) P.composeSongs(g, U.rngOf(g), mine, 4);
+    if (F.featSongs(g, mine.id).length < 3) P.composeSongs(g, R19.rng19(g, 'act'), mine, 4);
     const other = free.find((a) => a !== mine);
     const pick = (a) => a.members.find((m) => g.persons[m].role === 'vocal') ?? a.members.find((m) => m !== a.leaderId) ?? a.members[0];
     const cm = await import('/src/ui/common.ts');

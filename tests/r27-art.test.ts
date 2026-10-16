@@ -8,14 +8,15 @@ import { defaultConfig } from '../src/sim/bot';
 import { emitFact } from '../src/sim/facts17';
 import { crime17, heatIn, a3Of } from '../src/sim/sys/crime17';
 import type { Act, GameState } from '../src/sim/types';
-import { remember, rngOf } from '../src/sim/util';
+import { remember } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { ART_KINDS27, AREA_ART27, artHash27, artKindOf27, artModel27, paintArt27 } from '../src/ui/ps/art27';
 import { bandOf27 } from '../src/ui/ps/art27kit';
 import { CUT27, CUT_KEYS27, choose27, coin27, cut27, cutModel27, cutOfFact27, cutOfMemory27, paintFx27, scan27, type CutData27 } from '../src/ui/ps/cut27model';
+import { rng19, rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (y = 1966, seed = 'r27k'): GameState => { const c = defaultConfig(seed, { scenario: 'established', startYear: y } as Parameters<typeof defaultConfig>[1]); (c as { dbSize?: string }).dbSize = 'small'; return createGame(c); };
-const myAct = (s: GameState, fame = 60): Act => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame }); a.owner = 'player'; a.fame = fame; return a; };
+const myAct = (s: GameState, fame = 60): Act => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame }); a.owner = 'player'; a.fame = fame; return a; };
 const opaque = (p: { d: Uint32Array }) => p.d.filter((c) => c >>> 24 === 255).length / p.d.length;
 
 describe('r27 K — arte de página: área → cena', () => {
@@ -175,14 +176,14 @@ describe('r27 K — cenas: escolhas com efeito real', () => {
     const s = game();
     const a = myAct(s); a.momentum = 20;
     const inst = s.player.reputation.institutional;
-    const rng = JSON.stringify(s.rng);
+    const rng = rngSnapshot19(s);
     const ref = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6'].find((r) => coin27(r))!;
     choose27(s, { ...dOf(s, 'scandal', a.id), ref }, 'deny');
     expect(a.momentum).toBe(23);
     const bad = ['y1', 'y2', 'y3', 'y4', 'y5', 'y6'].find((r) => !coin27(r))!;
     choose27(s, { ...dOf(s, 'scandal', a.id), ref: bad }, 'deny');
     expect(s.player.reputation.institutional).toBeCloseTo(Math.max(0, inst - 2.5), 5);
-    expect(JSON.stringify(s.rng)).toBe(rng);
+    expect(rngSnapshot19(s)).toBe(rng);
   });
   it('toda cena tem quadro pintável nas duas pontas da história e 0–3 escolhas', () => {
     const s = game();

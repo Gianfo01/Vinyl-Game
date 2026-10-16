@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { indexFacts as recentFacts } from '../src/sim/facts17';
 import { advanceMonth } from '../src/sim/tick';
-import { recordAward, rngOf } from '../src/sim/util';
+import { recordAward } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import * as fandomOld from '../src/sim/fandom';
 import { fandomOf, fandomView19, fanEvents19, fanTotal19, fansByRegion19, loyalty19, mobilization19, scaleFans19 } from '../src/sim/fandom19';
@@ -15,9 +15,10 @@ import { ceremonies19, ceremonyOfCutscene19, isPosthumous19, juryMemory19, nomin
 import { FACTS19, f19, juryLedger19 } from '../src/sim/sys/facades19';
 import { Fx18 } from '../src/sim/decide18';
 import type { GameState } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (y = 1990, seed = 'fac19') => createGame(defaultConfig(seed, { startYear: y }));
-const myAct = (s: GameState) => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame: 50 }); a.owner = 'player'; a.fans.core = 2000; a.fans.active = 3000; a.fans.casual = 10000; return a; };
+const myAct = (s: GameState) => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame: 50 }); a.owner = 'player'; a.fans.core = 2000; a.fans.active = 3000; a.fans.casual = 10000; return a; };
 const rival = (s: GameState) => Object.values(s.labels).find((x) => x.active)!;
 
 describe('fandom19', () => {
@@ -40,7 +41,7 @@ describe('fandom19', () => {
     const a = myAct(s);
     const b = { ...a, fans: { ...a.fans } };
     scaleFans19(b, 20);
-    new Fx18(s, { act: a.id }, rngOf(s)).fans(20);
+    new Fx18(s, { act: a.id }, rng19(s, 'act')).fans(20);
     expect(a.fans).toEqual(b.fans);
     advanceMonth(s);
     a.fans.casual *= 2; a.fans.active *= 2;

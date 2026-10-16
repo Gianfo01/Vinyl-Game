@@ -6,7 +6,6 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { emitFact } from '../src/sim/facts17';
 import { sect18 } from '../src/sim/ledger18';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { openBranch } from '../src/sim/branches';
 import { CITIES } from '../src/data/world';
@@ -16,6 +15,7 @@ import { v17 } from '../src/sim/sys/venues17';
 import {
   HOME_LOT18, buildings18, campus18, decode18, encode18, freeLots18, layout18, snapshot18, startProj18, styleOf18, sync18, vehicleOf18,
 } from '../src/sim/sys/campus18';
+import { rng19 } from '../src/sim/rng19';
 
 const rich = (y: number, seed = 'c18') => { const s = createGame(defaultConfig(seed, { startYear: y })); s.player.cash += 5e9; s.player.initialCash += 5e9; return s; };
 
@@ -85,7 +85,7 @@ describe('campus18', () => {
 
   it('incêndio num ato seu danifica a sede; reforma conserta e muda o estilo para a época atual', () => {
     const s = rich(1950);
-    const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity });
+    const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity });
     acceptOffer(s, a, { ...defaultOffer(s, a), id: 'o1', week: 0, status: 'pending', advance: 0 });
     sync18(s);
     campus18(s).ren.hq = 1931;

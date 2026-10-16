@@ -12,6 +12,7 @@ import { playerActs } from '../src/sim/util';
 import type { GameState } from '../src/sim/types';
 import { borrowedRisk27, composeBlock27, finishCompose27, playRound27, startCompose27, totals27, type Card27, type Comp27 } from '../src/sim/sys/compose27';
 import { bars27, mixPreview27, mixRecord27, moveRecord27, startRecord27, takeBase27, type Rec27 } from '../src/sim/sys/record27';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 const game = (seed = 'm1', year = 1975): GameState => {
   const cfg = defaultConfig(`${seed}-${year}`, { scenario: 'established', startYear: year });
@@ -55,12 +56,12 @@ describe('r27 M1 — compor jogável', () => {
 
   it('não sorteia do fluxo compartilhado (s.rng intacto) e bloqueia a segunda sessão do mês', () => {
     const s = game('m1b');
-    const rng0 = JSON.stringify(s.rng);
+    const rng0 = rngSnapshot19(s);
     const act = firstAct(s);
     const c = startCompose27(s, act.id) as Comp27;
     play(s, c, 'single');
     finishCompose27(s, c);
-    expect(JSON.stringify(s.rng)).toBe(rng0);
+    expect(rngSnapshot19(s)).toBe(rng0);
     expect(composeBlock27(s, act.id)).not.toBeNull();
   });
 
@@ -169,13 +170,13 @@ describe('r27 M1 — gravar jogável', () => {
     const run = () => {
       const s = game('r1');
       const id = session(s)!;
-      const rng0 = JSON.stringify(s.rng);
+      const rng0 = rngSnapshot19(s);
       const rc = startRecord27(s, id) as Rec27;
       let guard = 0;
       while (rc.phase === 'takes' && guard++ < 20) moveRecord27(s, rc, rc.takes.length >= 2 ? 'keep' : 'another');
       expect(rc.phase).toBe('mix');
       expect(mixRecord27(s, rc, 'raw')).toBeNull();
-      expect(JSON.stringify(s.rng)).toBe(rng0);
+      expect(rngSnapshot19(s)).toBe(rng0);
       for (const x of rc.results) { const so = s.songs[x.songId]; expect(so.recorded).toBe(true); for (const k of ['performance', 'production', 'originality', 'q'] as const) expect(Number.isFinite(so[k])).toBe(true); }
       return rc.results.map((x) => [x.songId, x.q, x.perf]);
     };

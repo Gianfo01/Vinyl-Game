@@ -1,7 +1,6 @@
 // Rodada 20c (N2): preço com moeda/base de tempo, gastos contra o caixa livre e o saldo perdoado pelo teto da trava.
 // Rápido: um jogo, sem simulação longa.
 import { describe, expect, it } from 'vitest';
-import { Rng } from '../src/core/rng';
 import { toReal } from '../src/core/money';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer, makeOffer } from '../src/sim/contracts';
@@ -15,6 +14,7 @@ import type { Act, GameState, Offer } from '../src/sim/types';
 import { money } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import '../src/sim/hooks';
+import { rng19 } from '../src/sim/rng19';
 
 const game = (y = 1998): GameState => createGame(defaultConfig('r20cn2', { startYear: y }));
 const freeAct = (s: GameState, skip: string[] = []): Act => Object.values(s.acts).find((x) => !x.owner && !x.playerBand && !x.catalogNo && !skip.includes(x.id))!;
@@ -66,7 +66,7 @@ describe('r20c N2', () => {
     c.endWeek = s.week - 200;
     expect(revertWeek(c) + 52).toBeLessThanOrEqual(s.week);
     const cash0 = s.player.cash;
-    runSimHooks('month', s, new Rng(s.rng));
+    runSimHooks('month', s, rng19(s, 'tick'));
     expect(c.reverted).toBe(true);
     expect(c.recoupBalance).toBe(0);
     expect(c.recoupWrittenOff20).toBe(1_234_500);

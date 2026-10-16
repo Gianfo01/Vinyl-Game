@@ -36,7 +36,7 @@ import { cashWhy20, freeCash20 } from '../oblig20';
 
 const F = fmtL;
 const $k = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
-const rr = (s: GameState, tag: string) => rng19(s, 'gear19', () => Rng.fromSeed(`${s.config.seed}|gear19|${tag}|${s.week}`));
+const rr = (s: GameState, tag: string) => rng19(s, 'gear19');
 
 // ---------------------------------------------------------------- estado
 

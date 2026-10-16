@@ -9,9 +9,10 @@ import { composeSongs, recordSongs } from '../src/sim/production';
 import { createProject, projectStage, projectCosts, projectResult, scheduleProject, proj8, needSongs, unscheduleProject, type MusicProject } from '../src/sim/sys/project8';
 import { explainRelease, expectedFor } from '../src/sim/sys/explain8';
 import { retrospective } from '../src/sim/sys/retro8';
-import { money, playerActs, rngOf } from '../src/sim/util';
+import { money, playerActs } from '../src/sim/util';
 import { l } from '../src/data/world';
 import type { GameState, Release, RunConfig } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, { scenario: 'emerging', ...over }));
@@ -23,7 +24,7 @@ function setup(seed: string) {
   const act = s.acts[actId];
   // começa com o artista sem músicas inéditas, para ver o projeto atravessar todas as etapas
   for (const id of act.songs) if (!s.songs[id].releaseId) s.songs[id].vault = true;
-  return { s, act, r: rngOf(s) };
+  return { s, act, r: rng19(s, 'act') };
 }
 
 describe('projeto musical', () => {

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { resolveDecision } from '../src/sim/events';
 import { advanceMonth } from '../src/sim/tick';
-import { remember, rngOf } from '../src/sim/util';
+import { remember } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import { biography, chron, chronQuery, chronState, genealogy } from '../src/sim/sys/chron9';
 import { describeSoul, dreamOf, FACETS, formAct, freeMusicians, soul, soulState, trance } from '../src/sim/sys/soul9';
@@ -14,6 +14,7 @@ import { press, rumorText } from '../src/sim/sys/press9';
 import { bookText, exportWorld } from '../src/sim/sys/world9';
 import type { GameState } from '../src/sim/types';
 import { l } from '../src/data/world';
+import { rng19 } from '../src/sim/rng19';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, extra: Record<string, unknown> = {}) => createGame({ ...defaultConfig(seed, { startYear: 1970 }), ...extra });
@@ -59,7 +60,7 @@ describe('rodada 9 — mundo vivo', () => {
 
   it('surto criativo de NPC atendido vira obra-prima e relíquia; do jogador vira decisão', () => {
     const s = mk('r9-trance');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const a = Object.values(s.acts).find((x) => x.status === 'active' && x.owner !== 'player' && x.members.length)!;
     const p = s.persons[a.members[0]];
     trance(s, r, a, p, true);
@@ -101,7 +102,7 @@ describe('rodada 9 — mundo vivo', () => {
 
   it('músicos livres formam bandas novas com pessoas reais', () => {
     const s = mk('r9-band');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const ids = Object.values(s.acts).filter((x) => x.members.length).slice(0, 2).map((x) => x.members[0]);
     const n = Object.keys(s.persons).length;
     const a = formAct(s, r, ids, 'rnr', 'london');

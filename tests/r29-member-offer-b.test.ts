@@ -21,6 +21,7 @@ import { screenOffered27 } from '../src/ui/act27/flow27model';
 import { freeStep16, l16 } from '../src/sim/sys/lineup16';
 import { Rng } from '../src/core/rng';
 import { advanceWeek } from '../src/sim/tick';
+import { rngSnapshot19 } from '../src/sim/rng19';
 
 const BEATLES = 26;
 function world(seed = 'b3'): GameState {
@@ -245,13 +246,13 @@ describe('R29 — oferta a uma pessoa SEM banda', () => {
     const run = () => {
       const s = world();
       const mine = myBand(s);
-      const rng0 = JSON.stringify(s.rng);
+      const rng0 = rngSnapshot19(s);
       const pete = person(s, 'Pete Best'), stu = person(s, 'Stuart Sutcliffe');
       const a = memberJoin29(s, stu.id, mine.id, 'buyout', memberOptions29(s, stu.id).find((o) => o.id.startsWith(`mo.join:${mine.id}`))?.id.split(':')[2]).ok;
       const rb = startMemberBand29(s, pete.id);
       const bs = 'actId' in rb ? closeAtTable(s, rb.actId) : 'none';
       settleMember29(s);
-      return { a, b: bs, bt: 'actId' in rb ? s.acts[rb.actId]?.name ?? '' : '', same: JSON.stringify(s.rng) === rng0, acts: Object.keys(s.acts).length, mine: s.acts[mine.id].members.join(','), log: mo29(s).log.map((x) => `${x.k}:${x.ok}:${x.t.pt}`).join('|') };
+      return { a, b: bs, bt: 'actId' in rb ? s.acts[rb.actId]?.name ?? '' : '', same: rngSnapshot19(s) === rng0, acts: Object.keys(s.acts).length, mine: s.acts[mine.id].members.join(','), log: mo29(s).log.map((x) => `${x.k}:${x.ok}:${x.t.pt}`).join('|') };
     };
     const x = run();
     expect(x.same).toBe(true);

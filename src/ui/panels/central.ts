@@ -14,11 +14,12 @@ import { respondCrisis } from '../../sim/media';
 import { resolveTake, PRODUCERS } from '../../sim/studio';
 import type { GameState } from '../../sim/types';
 import type { Crisis } from '../../sim/xtypes';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, actLink, labelLink, logo, modal, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, countdown, dailyTimeline, ic, loadBar, portrait, stat } from '../vis';
 import { sessMark27 } from '../act27/flow27';
+import { rng19 } from '../../sim/rng19';
 
 setActionNameLookup((id) => agendaById[id]?.name ?? EXTRA_ACTIONS.find((x) => x.id === id)?.name ?? l(id));
 
@@ -98,7 +99,7 @@ export function centralPanel(s: GameState): HTMLElement {
   const crises = s.crises.filter((c) => !c.resolved);
   const sessions = s.sessions.filter((x) => !x.done);
   const arcs = s.arcs.filter((a) => !a.done);
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
 
   const cashRow = chips(
     stat('money', $(s.player.cash), l('Caixa atual', 'Current cash'), s.player.cash < 0 ? 'bad' : ''),

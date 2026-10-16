@@ -11,7 +11,7 @@ import { tributeCandidates } from '../../sim/dynasty';
 import { setSplits } from '../../sim/finance';
 import { unrecorded, unreleasedRecorded } from '../../sim/production';
 import type { GameState } from '../../sim/types';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, actLink, genreName, logo, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { store } from '../store';
@@ -21,6 +21,7 @@ import { repertoireTab } from './repertoire';
 import { mergeTabs } from '../registry';
 import { stylePill17 } from '../sys/style17';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const say = (res: L | null | object, ok: L) => {
   const err = res && typeof res === 'object' && 'pt' in res ? (res as L) : null;
@@ -99,7 +100,7 @@ function splitsSection(s: GameState): HTMLElement {
 }
 
 function versionsTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const a = s.acts[store.selectedAct ?? ''];
   const released = Object.values(s.songs).filter((so) => so.releaseId && so.recorded).sort((x, y) => (s.releases[y.releaseId!]?.totalUnits ?? 0) - (s.releases[x.releaseId!]?.totalUnits ?? 0)).slice(0, 24);
   const own = a.songs.map((id) => s.songs[id]).filter((x) => x?.recorded).slice(0, 12);
@@ -123,7 +124,7 @@ function versionsTab(s: GameState): HTMLElement {
 const ro = { singles: new Set<string>(), teaser: true, presave: true, video: true, limited: 0, budget: 3000, title: '' };
 
 function rolloutTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const a = s.acts[store.selectedAct ?? ''];
   const ready = unreleasedRecorded(s, a).sort((x, y) => y.q - x.q);
   const album = ready.slice(0, 12);
@@ -164,7 +165,7 @@ function rolloutTab(s: GameState): HTMLElement {
 const neuralDraft = { offer: 0 };
 
 function neuralTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const legends = deceasedLegends(s);
   if (!hologramReady(s) && !aiVoiceReady(s)) return section(t(l('Novas tecnologias', 'New technologies')), h('p', { class: 'muted' }, t(l('Nada disso existe ainda. Quando a tecnologia chegar, você vai saber pelo noticiário.', 'None of this exists yet. When the technology arrives, you will hear about it in the news.'))));
   return h('div', null,

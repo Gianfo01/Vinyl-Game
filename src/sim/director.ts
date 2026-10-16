@@ -237,7 +237,7 @@ function recall(s: GameState, r: Rng): void {
 }
 
 export function directorMonth(s: GameState, r: Rng): void {
-  r = rng19(s, 'director', r);
+  r = rng19(s, 'director');
   paceMonth(s); // rodada 9: ritmo dos fatos autônomos do mundo
   // séries para gatilhos (pico de fama, fama de um ano atrás)
   for (const id of playerActs(s)) {

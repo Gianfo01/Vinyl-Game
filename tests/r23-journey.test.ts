@@ -8,7 +8,8 @@ import { runSimHooks } from '../src/sim/ext4';
 import { composeSongs, recordSongs } from '../src/sim/production';
 import { addAgendaAction, createProject, projectResult, scheduleProject, type MusicProject } from '../src/sim/sys/project8';
 import { bookedAction23, bookedText23, nextStep23 } from '../src/sim/sys/journey23';
-import { playerActs, rngOf } from '../src/sim/util';
+import { playerActs } from '../src/sim/util';
+import { rng19 } from '../src/sim/rng19';
 
 function setup(seed: string) {
   const s = createGame(defaultConfig(seed, { scenario: 'emerging' }));
@@ -17,7 +18,7 @@ function setup(seed: string) {
   // agenda manual e vazia: nada marcado no começo
   s.delegated[act.id] = false;
   s.agenda[act.id] = [];
-  return { s, act, r: rngOf(s) };
+  return { s, act, r: rng19(s, 'act') };
 }
 
 describe('r23 nextStep23', () => {

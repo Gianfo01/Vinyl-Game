@@ -37,7 +37,7 @@ declare module '../ext4' { interface Ext4 { adsync19: Ad19 } }
 const fresh = (): Ad19 => ({ runs: [], cred: {}, back: {}, seq: 0, last: -99, log: [], n: {} });
 registerExt4('adsync19', fresh);
 export const ad19 = (s: GameState): Ad19 => xs19(s, 'adsync19', fresh);
-const rng = (s: GameState) => rng19(s, 'adsync19', () => Rng.fromSeed(`${s.config.seed}|ad19|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'adsync19');
 export const adOpen19 = (s: GameState, k: AdK19): boolean => s.year >= ADK19[k].from;
 export const medium19 = (s: GameState): L => (s.year >= 2005 ? l('internet e TV', 'internet and TV') : s.year >= 1950 ? l('TV', 'TV') : s.year >= 1922 ? l('rádio', 'radio') : l('jornais e cartazes', 'newspapers and posters'));
 export const brandsNow19 = (s: GameState, k: AdK19): BrandDef[] => {

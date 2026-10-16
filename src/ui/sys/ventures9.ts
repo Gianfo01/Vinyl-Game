@@ -4,7 +4,6 @@
 import { CITIES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import { ownerOf } from '../../sim/sys/people/owner';
 import { STAND_KEYS, STAND_NAME, standingOf, standingRanking } from '../../sim/sys/standing9';
 import {
@@ -31,6 +30,7 @@ import { f12, festOf } from '../../sim/sys/fest12';
 import { store } from '../store';
 import { ventureArt29 } from '../art29ui'; // r29 (arte)
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const res = (x: { ok: boolean; text: L }) => { toast(t(x.text), x.ok ? 'good' : 'bad'); rerender(); };
@@ -103,7 +103,7 @@ function festivalBody(s: GameState, v: Venture): HTMLElement {
 }
 
 function publisherBody(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const cands = writerCandidates(s, v.id);
   let wpick = cands[0]?.pid ?? '';
   const acts = Object.values(s.acts).filter((a) => visibleAct(s, a) && a.status !== 'retired' && a.status !== 'split' && a.fame >= 10).sort((a, b) => b.fame - a.fame).slice(0, 30);
@@ -135,7 +135,7 @@ function studioBody(s: GameState, v: Venture): HTMLElement {
 }
 
 function bookingBody(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const cands = bookingCandidates(s, v.id);
   const pick = cands.some((a) => a.id === RATE19.bkAct) ? RATE19.bkAct : cands[0]?.id ?? '';
   const rate = RATE19.booking;
@@ -152,7 +152,7 @@ function bookingBody(s: GameState, v: Venture): HTMLElement {
 }
 
 function mediaBody(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const acts = Object.values(s.acts).filter((a) => visibleAct(s, a) && a.status !== 'retired' && a.status !== 'split' && a.members.length).sort((a, b) => b.momentum - a.momentum).slice(0, 40);
   const genres = [...new Set(Object.values(s.acts).filter((a) => a.city === v.city).map((a) => a.genre))];
   return h('div', null,
@@ -166,7 +166,7 @@ function mediaBody(s: GameState, v: Venture): HTMLElement {
 }
 
 function platformBody(s: GameState, v: Venture): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const labs = Object.values(s.labels).filter((x) => x.active && !v.deals!.includes(x.id));
   let pick = labs[0]?.id ?? '';
   return h('div', null,
@@ -217,7 +217,7 @@ registerArea({ id: 'ventures', label: l('Empreendimentos', 'Ventures'), icon: 'b
 
 function rosterTab(s: GameState): HTMLElement {
   const mg = ventures(s).mg;
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   return h('div', null,
     section(t(l('Seu escritório de empresário', 'Your management office')),
       h('div', { class: 'row wrap small' }, t(l('Reputação de empresário', 'Manager reputation')), ' ', bar(mg.rep), ` ${Math.round(mg.rep)} · ${t(l('Clientes', 'Clients'))} ${mg.clients.length}/${mgCap(s)} · ${t(l('Comissões totais', 'Total commissions'))} ${$(mg.total)}`),
@@ -243,7 +243,7 @@ function rosterTab(s: GameState): HTMLElement {
 }
 
 function prospectTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const rate = RATE19.prospect;
   const cands = mgCandidates(s);
   return h('div', null,

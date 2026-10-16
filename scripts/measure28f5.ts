@@ -10,7 +10,7 @@ import type { GameState } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
 import { acceptOffer, defaultOffer, makeOffer, offerNow, resolveOffers } from '../src/sim/contracts';
 import { scoutEligible20 } from '../src/sim/scout20';
-import { rngOf } from '../src/sim/util';
+import { rng19 } from '../src/sim/rng19';
 
 // Sonda: no mês 9, para cada ato livre com fama > 10 (até 8), oferta padrão numa CÓPIA do estado —
 // ao vivo (offerNow) e pelo fechamento do mês (makeOffer → resolveOffers). Conta quem fica com o ato.
@@ -26,13 +26,13 @@ function runProbe(s: GameState): void {
       c.player.cash = Math.max(c.player.cash, o.advance * 4);
       let res: string;
       if (mode !== 'month') {
-        const x = offerNow(c, rngOf(c), o);
+        const x = offerNow(c, rng19(c, 'act'), o);
         res = x.result;
         if (res === 'accepted' && mode === 'live') probe.advLive.push(toReal(o.advance, c.year));
       } else {
         const off = makeOffer(c, o);
         if (!off) res = 'invalid';
-        else { resolveOffers(c, rngOf(c)); res = off.status; }
+        else { resolveOffers(c, rng19(c, 'act')); res = off.status; }
       }
       const b = probe[mode];
       b[res] = (b[res] ?? 0) + 1;

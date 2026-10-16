@@ -19,15 +19,16 @@ import { subMonth, subRules } from '../src/sim/sys/sound/subgenre';
 import { TIMBRES } from '../src/sim/sys/sound/timbre';
 import { composeSongs } from '../src/sim/production';
 import type { Act, GameState, Release, Song } from '../src/sim/types';
-import { money, post, rngOf } from '../src/sim/util';
+import { money, post } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string, year = 1990) => createGame(defaultConfig(seed, { startYear: year }));
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 
 function withAct(seed: string, year = 1990) {
   const s = mk(seed, year);
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const act = spawnProceduralAct(s, r, { city: s.config.homeCity, fame: 30 });
   acceptOffer(s, act, { ...defaultOffer(s, act), id: 'o1', week: 0, status: 'pending', advance: 0 });
   return { s, r, act };
@@ -78,7 +79,7 @@ describe('18 perfis de selo', () => {
     const act = Object.values(s.acts).find((a) => !a.owner && !a.playerBand && (a.status === 'active' || a.status === 'emerging'))!;
     act.owner = 'player';
     post(s, 'test:cash', money(s, 900000), 'test', 'cash');
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     for (const x of XPROFILES) {
       forceProfile(s, null);
       expect(actionBlock(s, x.action!.id)?.pt.startsWith('Só para'), x.def.id).toBe(true);
@@ -124,7 +125,7 @@ describe('18 perfis de selo', () => {
     forceProfile(s, 'predator');
     act.trust = 70;
     const cash0 = s.player.cash;
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     identityMonth(s, r);
     expect(s.player.cash).toBeGreaterThan(cash0);
     expect(act.trust).toBeLessThan(70);
@@ -160,7 +161,7 @@ describe('13 manuais de rival', () => {
     const seen = new Set<string>();
     for (let i = 0; i < 260; i++) {
       s.week += 4;
-      runSimHooks('month', s, rngOf(s));
+      runSimHooks('month', s, rng19(s, 'act'));
       for (const lb of labels) lb.cash = Math.max(lb.cash, money(s, 5e7));
     }
     for (const list of Object.values(rivals8(s).log)) for (const m of list) seen.add(m.k);
@@ -257,7 +258,7 @@ describe('assinaturas de timbre', () => {
 describe('modo livre: subgêneros', () => {
   it('uma cena forte gera um subgênero com nome, instrumentação, regras e cidade; ele se espalha entre atos da família', () => {
     const s = mk('r9-sub', 1995);
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     const home = s.config.homeCity;
     const ids: Act[] = [];
     for (let i = 0; i < 6; i++) ids.push(spawnProceduralAct(s, r, { city: home, fame: 15 }));
@@ -266,7 +267,7 @@ describe('modo livre: subgêneros', () => {
     s.scenes[`${home}:${genre}`] = 6;
     const st = subs(s);
     let born = 0;
-    for (let i = 0; i < 300 && !st.list.some((x) => x.city === home); i++) born += subMonth(s, rngOf(s), st).length;
+    for (let i = 0; i < 300 && !st.list.some((x) => x.city === home); i++) born += subMonth(s, rng19(s, 'act'), st).length;
     expect(st.list.length).toBeGreaterThan(0);
     const sg = st.list.find((x) => x.city === home) ?? st.list[0]; // outras cenas reais podem nascer antes
     expect(sg.name.pt && sg.name.en).toBeTruthy();
@@ -274,7 +275,7 @@ describe('modo livre: subgêneros', () => {
     expect(sg.inst.length).toBeGreaterThan(0);
     expect(subRules(sg).pt.length).toBeGreaterThan(5);
     const n0 = sg.acts.length;
-    for (let i = 0; i < 400; i++) subMonth(s, rngOf(s), st);
+    for (let i = 0; i < 400; i++) subMonth(s, rng19(s, 'act'), st);
     expect(sg.acts.length).toBeGreaterThanOrEqual(n0);
     expect(sg.spread).toBeGreaterThan(0);
     expect(Object.keys(st.adopt).length).toBeGreaterThanOrEqual(sg.acts.length); // outras cenas também adotam

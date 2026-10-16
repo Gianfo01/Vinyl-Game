@@ -3,7 +3,7 @@
 import { VENUE_TIERS } from '../../data/rules';
 import { CITIES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { dateOfDay, rngOf } from '../../sim/util';
+import { dateOfDay } from '../../sim/util';
 import {
   DEAL_NAME, WEEKS_AHEAD, acceptChance, acceptOffer, askFee, bookRoute, c12, cancelShow, clientsOf, defaultStop, fatigueTrack, hasAgency, isNewMarket, localDraw, npcOffer, openPromoter, rel, suggestTier, tiersOpen, validate,
   type Deal, type Pred, type Role, type Stop,
@@ -17,6 +17,7 @@ import { store } from '../store';
 import { foundInline, signInline } from './careerui13';
 import { PROMOTER_LICENSE } from '../../sim/sys/tour12';
 import { money } from '../../sim/util';
+import { rng19 } from '../../sim/rng19';
 
 let role: Role = 'agent';
 let actId = '';
@@ -122,7 +123,7 @@ function builder(s: GameState): HTMLElement {
       btn(l('Adicionar parada', 'Add stop'), () => { const st = defaultStop(s, act, selCity, week); st.ask = 1; refee(s, st, actId); draft.push(st); draft.sort((a, b) => a.week - b.week); rerender(); }, 'btn small primary')),
     ...draft.map((st, i) => predRow(s, st, v.preds[i], v.reasons[i], i)),
     draft.length ? h('div', { class: 'row wrap' }, h('b', null, `${t(l('Total esperado', 'Expected total'))}: `, role === 'agent' ? $(v.preds.reduce((a, p) => a + p.comm, 0)) : $(v.preds.reduce((a, p) => a + p.prom[1], 0))),
-      btn(l('Fechar rota', 'Book route'), () => { const r = bookRoute(s, rngOf(s), role, actId, draft); if (r.ok) draft = []; say(r); }, 'btn primary'), btn(l('Limpar', 'Clear'), () => { draft = []; rerender(); }, 'btn small ghost')) : h('p', { class: 'muted small' }, t(l('Clique numa cidade do mapa, escolha a semana e adicione. A previsão aparece em cada parada.', 'Click a city on the map, pick a week and add it. A forecast shows on every stop.'))));
+      btn(l('Fechar rota', 'Book route'), () => { const r = bookRoute(s, rng19(s, 'act'), role, actId, draft); if (r.ok) draft = []; say(r); }, 'btn primary'), btn(l('Limpar', 'Clear'), () => { draft = []; rerender(); }, 'btn small ghost')) : h('p', { class: 'muted small' }, t(l('Clique numa cidade do mapa, escolha a semana e adicione. A previsão aparece em cada parada.', 'Click a city on the map, pick a week and add it. A forecast shows on every stop.'))));
 }
 
 function offersView(s: GameState): HTMLElement | null {
@@ -138,12 +139,12 @@ function offersView(s: GameState): HTMLElement | null {
         h('div', { class: 'small' }, `${t(l('Público previsto por noite', 'Predicted crowd per night'))}: ${p.att[0]}–${p.att[2]} ${t(l('de', 'of'))} ${p.cap} (${pct(p.att[1] / p.cap)}) · ${t(l('lotar', 'sell out'))} ${pct(p.pSell)}`),
         h('div', { class: 'small' }, `${t(l('Cachê esperado do artista', 'Expected artist take'))}: ${$(tot)} · ${t(l('sua comissão', 'your commission'))}: ${$(v.preds.reduce((a, q) => a + q.comm, 0))}`),
         ...v.preds[0].warn.map((w) => h('div', { class: 'small muted' }, '• ', t(w))),
-        btn(l('Aceitar', 'Accept'), () => say(acceptOffer(s, rngOf(s), o.id, k)), 'btn small primary'));
+        btn(l('Aceitar', 'Accept'), () => say(acceptOffer(s, rng19(s, 'act'), o.id, k)), 'btn small primary'));
     };
     return h('div', null, h('p', null, actLink(s, o.actId), ` · ${cityName(o.city)} · ${t(l('responder até', 'reply by'))} ${wk(s, o.until)}`),
       h('p', { class: 'small muted' }, t(l('A arena paga um cachê alto olhando para a fama do artista; mas o público é a força LOCAL, e arena vazia machuca imagem e relação com a cidade. Duas noites numa casa menor pagam menos agora, com pouco risco, e uma noite lotada alimenta a próxima visita.', 'The arena pays big looking at the act\'s fame; but the crowd is LOCAL strength, and an empty arena hurts image and city relations. Two nights in a smaller house pay less now, at low risk, and a sold-out night feeds the next visit.'))),
       h('div', { class: 'row wrap', style: 'gap:8px;align-items:stretch' }, side('a', l('A) Data na arena, cachê alto', 'A) Arena date, big guarantee')), side('b', l('B) Duas noites em casa menor, porta + piso', 'B) Two nights, smaller house, door + floor'))),
-      btn(l('Recusar', 'Decline'), () => say(acceptOffer(s, rngOf(s), o.id, 'no')), 'btn small ghost'));
+      btn(l('Recusar', 'Decline'), () => say(acceptOffer(s, rng19(s, 'act'), o.id, 'no')), 'btn small ghost'));
   }));
 }
 

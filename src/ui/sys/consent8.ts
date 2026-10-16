@@ -10,11 +10,12 @@ import {
   lawCountries, lawLevel, lobby, lobbyCost, resolveImitation, scaleIncome, setUse, uncoveredActs, voiceIncome, type AiUse, type ImitChoice,
 } from '../../sim/sys/consent8';
 import type { GameState } from '../../sim/types';
-import { playerActs, rngOf } from '../../sim/util';
+import { playerActs } from '../../sim/util';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerTab } from '../registry';
 import { ic } from '../vis';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok?: L) => { if (e) toast(t(e), 'bad'); else if (ok) toast(t(ok), 'good'); rerender(); };
 const form = { share: 0.3, credit: true };
@@ -37,7 +38,7 @@ function consentLabel(v?: 'g' | 'r'): HTMLElement {
 export function aiTab(s: GameState): HTMLElement {
   if (!aiEra(s)) return section(t(l('IA e autoria', 'AI and authorship')), h('p', { class: 'muted' }, t(l('Por enquanto, toda voz é de alguém: ninguém consegue imitar um cantor sem que ele esteja no estúdio.', 'For now every voice belongs to someone: nobody can imitate a singer without them in the studio.'))));
   const st = ai(s);
-  const r = () => rngOf(s);
+  const r = () => rng19(s, 'act');
   const ids = playerActs(s);
   const blocker = certBlocker(s);
   const unc = uncoveredActs(s).length;

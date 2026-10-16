@@ -10,7 +10,6 @@ import { autoNegotiate, negBlocked } from '../../sim/sys/people/negotiation';
 import { campOf27, liveCamps27, targets27, type Camp27, type Target27 } from '../../sim/sys/camp27';
 import { opps27, type Opp27 } from '../../sim/sys/press27';
 import type { GameState } from '../../sim/types';
-import { rngOf } from '../../sim/util';
 import { rerender, toast } from '../common';
 import { h } from '../dom';
 import { openNegotiation } from '../sys/people/negotiation';
@@ -23,6 +22,7 @@ import { campKey27, campReady27, decline27, ivKey27, type FavorGesture27 } from 
 import { openFavors27 } from './favors27';
 import { openInterview27 } from './interview27';
 import { openRoad27, openRoute27 } from './road27';
+import { rng19 } from '../../sim/rng19';
 
 const tgOf = (c: Camp27): Target27 => ({ actId: c.actId, ...(c.prId ? { prId: c.prId } : {}), ...(c.relId ? { relId: c.relId } : {}), title: c.title, launchW: c.launchW, type: c.type });
 const fn = (x: unknown): (() => void) | undefined => (typeof x === 'function' ? (x as () => void) : undefined);
@@ -91,7 +91,7 @@ export function renewBtn27(s: GameState, actId: string, label: string): HTMLElem
   const go = () => {
     const d = rst(s).demands.find((x) => x.actId === actId);
     if (d && screenOn27('reneg', s, { actId, data: { demandId: d.id } })) {
-      screen27('reneg', s, { actId, data: { demandId: d.id } }, () => { const r = respondDemand(s, rngOf(s), d.id, 'accept'); toast(t(r ?? l('Renegociado.', 'Renegotiated.')), r ? 'bad' : 'good'); rerender(); });
+      screen27('reneg', s, { actId, data: { demandId: d.id } }, () => { const r = respondDemand(s, rng19(s, 'act'), d.id, 'accept'); toast(t(r ?? l('Renegociado.', 'Renegotiated.')), r ? 'bad' : 'good'); rerender(); });
       return;
     }
     if (!screen27('renew', s, { actId }, quick)) quick();

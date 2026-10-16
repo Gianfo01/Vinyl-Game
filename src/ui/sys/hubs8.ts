@@ -18,7 +18,7 @@ import { AWARD_CATS, awardName, ch7 } from '../../sim/sys/charts7';
 import { TIER_NAME, TIER_ORDER, acceptInvite, declineInvite, editionOf, fest8, festActive, festCapacity, festFee, festMonth, festTierFor, pitchAct, withdraw, type FestTier, type PitchResult } from '../../sim/sys/fests8';
 import { festForecast12, refreshForecast12 } from './explain12';
 import type { GameState } from '../../sim/types';
-import { fmtL, money, playerActs, rngOf } from '../../sim/util';
+import { fmtL, money, playerActs } from '../../sim/util';
 import { existsNow } from '../../sim/future';
 import { $, N, actLink, cityName, kv, modal, pill, releaseLink, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
@@ -30,6 +30,7 @@ import { personRoute16 } from '../route16';
 import { festivalPinImg28, festivalPosterImg28, mastheadImg28 } from '../pixel/extras28'; // r28 (arte)
 import { relicImg28 } from '../pixel/relic28';
 import { ent27 } from '../ps/ent27';
+import { rng19 } from '../../sim/rng19';
 
 /** r28 (arte): estatueta da premiação (gramofone, astronauta, taça ou estrela, pela semente do id). */
 const trophyImg = (c: { id: string; name: string }, size: number) => relicImg28('trophy', c.id === 'gramo' ? 'gramophone' : c.id === 'critics' ? 'critics cup' : c.name, 1990, `aw:${c.id}`, size, c.name);
@@ -107,7 +108,7 @@ export function openFestivalPage(fi: number): void {
     refreshFee();
     const showReply = (res: PitchResult) => {
       reply.replaceChildren(h('p', { class: res.result === 'accepted' ? 'good' : res.result === 'rejected' ? 'bad' : '' }, t(res.text)),
-        ...(res.result === 'counter' && res.tier && res.fee ? [h('button', { ...ent27('festival', String(fi)), class: 'btn small primary', onclick: () => { const r2 = pitchAct(s, rngOf(s), fi, form.actId, res.tier!, res.fee!); toast(t(r2.text), r2.result === 'accepted' ? 'good' : 'bad'); close(); openFestivalPage(fi); rerender(); } }, t(l('Aceitar a contraproposta', 'Accept the counter-offer')))] : []));
+        ...(res.result === 'counter' && res.tier && res.fee ? [h('button', { ...ent27('festival', String(fi)), class: 'btn small primary', onclick: () => { const r2 = pitchAct(s, rng19(s, 'act'), fi, form.actId, res.tier!, res.fee!); toast(t(r2.text), r2.result === 'accepted' ? 'good' : 'bad'); close(); openFestivalPage(fi); rerender(); } }, t(l('Aceitar a contraproposta', 'Accept the counter-offer')))] : []));
     };
     const tierBlock = (tier: FestTier) => {
       const slots = ed?.lineup.filter((x) => x.tier === tier) ?? [];
@@ -138,7 +139,7 @@ export function openFestivalPage(fi: number): void {
           h('label', null, t(l('Artista', 'Act')), select(form.actId, mine.map((a) => ({ value: a.id, label: `${a.name} (★${Math.round(a.fame)}) — ${festTierFor(s, f, fi, a) ? t(TIER_NAME[festTierFor(s, f, fi, a)!]) : t(l('fora do perfil', 'not a fit'))}` })), (v) => { form.actId = v; refreshFee(); })),
           h('label', null, t(l('Faixa pedida', 'Slot requested')), select(form.tier, TIER_ORDER.map((x) => ({ value: x, label: t(TIER_NAME[x]) })), (v) => { form.tier = v; refreshFee(); })),
           h('label', null, t(l('Cachê pedido ($)', 'Fee requested ($)')), feeInput),
-          h('button', { class: 'btn primary', onclick: () => showReply(pitchAct(s, rngOf(s), fi, form.actId, form.tier, form.fee)) }, t(l('Negociar', 'Negotiate'))),
+          h('button', { class: 'btn primary', onclick: () => showReply(pitchAct(s, rng19(s, 'act'), fi, form.actId, form.tier, form.fee)) }, t(l('Negociar', 'Negotiate'))),
           festForecast12(s, fi, form),
           reply,
           h('small', { class: 'muted' }, t(l('O festival olha fama, rede, seu booking e se o artista já tocou lá. Pedir faixa acima do possível gera contraproposta; cachê muito alto, recusa.', 'The festival weighs fame, network, your booking staff and past appearances. Asking for a higher slot brings a counter-offer; a very high fee, a refusal.'))),
@@ -240,7 +241,7 @@ function campaignBox(s: GameState, cat: GramoCat, redraw: () => void): HTMLEleme
     t(l('Campanha:', 'Campaign:')), ' ',
     select(pick.rel, mine.map((r) => ({ value: r.id, label: r.title })), (v) => (pick.rel = v)),
     select('1', CAMPAIGN_COST.map((c, i) => ({ value: String(i + 1), label: `${[t(l('Discreta', 'Low-key')), t(l('Forte', 'Strong')), t(l('Agressiva (risco de crítica)', 'Aggressive (backlash risk)'))][i]} · ${$(money(s, c))}` })), (v) => (pick.lv = Number(v))),
-    h('button', { class: 'btn small', onclick: () => { const e = runCampaign(s, rngOf(s), pick.rel, cat, pick.lv); toast(e ? t(e) : t(l('Campanha no ar.', 'Campaign running.')), e ? 'bad' : 'good'); if (!e) { redraw(); rerender(); } } }, t(l('Fazer campanha', 'Run campaign'))),
+    h('button', { class: 'btn small', onclick: () => { const e = runCampaign(s, rng19(s, 'act'), pick.rel, cat, pick.lv); toast(e ? t(e) : t(l('Campanha no ar.', 'Campaign running.')), e ? 'bad' : 'good'); if (!e) { redraw(); rerender(); } } }, t(l('Fazer campanha', 'Run campaign'))),
   );
 }
 
@@ -314,7 +315,7 @@ export function criticBody(s: GameState, name: string, redraw: () => void, full 
       ),
       section(t(l('Relação com o seu selo', 'Relationship with your label')),
         h('p', null, relPill(relWith(s, name)), ` ${relWith(s, name) > 0 ? '+' : ''}${relWith(s, name)}`),
-        h('div', { class: 'row wrap' }, CRIT_ACTIONS.map((a) => h('button', { class: 'btn small', title: t(a.desc), onclick: () => { const e = criticAction(s, rngOf(s), name, a.id); toast(e ? t(e) : t(l('Feito.', 'Done.')), e ? 'bad' : 'good'); if (!e) { redraw(); rerender(); } } }, `${t(a.name)}${a.cost ? ` · ${$(money(s, a.cost))}` : ''}`))),
+        h('div', { class: 'row wrap' }, CRIT_ACTIONS.map((a) => h('button', { class: 'btn small', title: t(a.desc), onclick: () => { const e = criticAction(s, rng19(s, 'act'), name, a.id); toast(e ? t(e) : t(l('Feito.', 'Done.')), e ? 'bad' : 'good'); if (!e) { redraw(); rerender(); } } }, `${t(a.name)}${a.cost ? ` · ${$(money(s, a.cost))}` : ''}`))),
       ),
       full ? section(t(l('Ficha completa', 'Full profile')), ficha13(s, `c:${name}`, redraw)) : null,
       section(t(l('Notas que deu', 'Scores given')) + (given.length ? ` — ${t(l('média', 'average'))} ${avg.toFixed(1)}` : ''),

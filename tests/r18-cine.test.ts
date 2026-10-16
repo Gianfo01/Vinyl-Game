@@ -4,17 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { emitFact } from '../src/sim/facts17';
 import { advanceMonth } from '../src/sim/tick';
-import { rngOf } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { OFF_S17, choose17 } from '../src/sim/sys/scene17';
 import { awardScene17 } from '../src/sim/sys/scenedefs17';
 import { awardBoard18, board18, chooseFit18, crowd18, momentBoard18, type Aw18, type Kind18 } from '../src/sim/sys/cine18';
 import { PK18, ask18, back18, block18, estate18, kindsNow18, post18, start18, tech18 } from '../src/sim/sys/post18';
 import type { GameState } from '../src/sim/types';
+import { rng19 } from '../src/sim/rng19';
 
 OFF_S17.auto = true;
 const game = (y: number, seed = 'cine18', history?: 'strict' | 'loose') => { const s = createGame(defaultConfig(seed, { startYear: y, ...(history ? { history } : {}) })); s.player.cash += 5e9; return s; };
-const myAct = (s: GameState, fame = 60) => { const a = spawnProceduralAct(s, rngOf(s), { city: s.config.homeCity, fame }); a.owner = 'player'; a.fame = fame; a.fans.core = 20000; a.fans.casual = 200000; return a; };
+const myAct = (s: GameState, fame = 60) => { const a = spawnProceduralAct(s, rng19(s, 'act'), { city: s.config.homeCity, fame }); a.owner = 'player'; a.fame = fame; a.fans.core = 20000; a.fans.casual = 200000; return a; };
 const awOf = (s: GameState, actId: string, won: boolean): Aw18 => ({ cs: `cs-test-${won ? 'w' : 'l'}`, year: s.year, won: won ? 1 : 0, actId: won ? actId : null, rivalId: null, rivalName: 'Rival Records',
   cats: [{ id: 'album', name: { pt: 'Álbum do ano', en: 'Album of the year' }, winner: won ? 0 : 1, nominees: [{ name: s.acts[actId].name, mine: true, actId }, { name: 'Outro Ato', mine: false }, { name: 'Terceiro', mine: false }] }] });
 const csOf = (aw: Aw18) => ({ id: aw.cs, data: { cats: aw.cats, won: aw.won, actId: aw.actId, rivalId: null, year: aw.year } as Record<string, unknown> });

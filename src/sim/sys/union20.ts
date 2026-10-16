@@ -49,7 +49,7 @@ export function union20(s: GameState): Union20 {
   t.pay ??= { session: 0, road: 0 }; t.non ??= {}; t.lock ??= {}; t.trust ??= 50; t.next ??= 0; t.log ??= [];
   return t;
 }
-const rng = (s: GameState) => rng19(s, 'union20', () => Rng.fromSeed(`${s.config.seed}|union20|${s.week}`));
+const rng = (s: GameState) => rng19(s, 'union20');
 const T = (pt: string, en: string): L => l(pt, en);
 export const GRP20: Record<UGrp20, { n: L; from: number }> = {
   session: { n: T('Guilda dos Músicos de Sessão', 'Session Musicians\' Guild'), from: 1900 },

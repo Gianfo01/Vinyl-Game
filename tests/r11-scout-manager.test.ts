@@ -12,7 +12,8 @@ import { scout11, toggleCompare, toggleWatch } from '../src/sim/sys/scout11';
 import { scout23, startMission, tripOf23 } from '../src/sim/sys/scout23';
 import { acceptDeal, conflictsOf, mgr11, renegotiateRate, shopDeal } from '../src/sim/sys/manager11';
 import { ventures } from '../src/sim/sys/ventures9';
-import { money, post, rngOf } from '../src/sim/util';
+import { money, post } from '../src/sim/util';
+import { rng19 } from '../src/sim/rng19';
 
 const mk = (seed: string) => createGame(defaultConfig(seed, { startYear: 1990 }));
 
@@ -20,7 +21,7 @@ describe('scouting r11', () => {
   it('missão (r27: viagem do motor único) revela pistas aos poucos e os relatórios amadurecem', () => {
     const s = mk('r11-sc');
     post(s, 'r11', money(s, 500000), 'business', 'teste');
-    const sc = { ...scoutPool(s, rngOf(s))[0], skill: 90 };
+    const sc = { ...scoutPool(s, rng19(s, 'act'))[0], skill: 90 };
     expect(hireScout(s, sc)).toBeNull();
     const me = s.scouts[0];
     expect(startMission(s, me.id, me.region, 'any', 12)).toBeNull();
@@ -49,7 +50,7 @@ describe('empresário r11', () => {
     const a = Object.values(s.acts).find((x) => !x.owner && x.status !== 'retired' && x.status !== 'split' && x.members.length > 0 && x.fame >= 5)!;
     const mg = ventures(s).mg;
     mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0 });
-    const r = rngOf(s);
+    const r = rng19(s, 'act');
     expect(renegotiateRate(s, r, a.id, 0.12).ok).toBe(true);
     expect(mg.clients[0].rate).toBe(0.12);
     expect(shopDeal(s, r, a.id).ok).toBe(true);

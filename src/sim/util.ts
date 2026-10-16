@@ -1,4 +1,3 @@
-import { Rng } from '../core/rng';
 import { nominal } from '../core/money';
 import type { L } from '../data/world';
 import type { GameState, MemoryEntry, Notification } from './types';
@@ -7,10 +6,6 @@ import { noteSect23 } from './close23';
 import { playerActIds27 } from './tickcache27';
 
 export const START_DAY_MS = (year: number) => Date.UTC(year, 0, 1);
-
-export function rngOf(s: GameState): Rng {
-  return new Rng(s.rng);
-}
 
 export function nextId(s: GameState, prefix: string): string {
   s.idSeq += 1;

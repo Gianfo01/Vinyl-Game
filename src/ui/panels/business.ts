@@ -10,7 +10,7 @@ import { assignAct, buyBack, closeSubLabel, foundSubLabel, proposeCapital, propo
 import { buyoutContract, buyoutPrice } from '../../sim/contracts2';
 import type { GameState } from '../../sim/types';
 import type { SubLabel } from '../../sim/xtypes';
-import { money, playerActs, rngOf } from '../../sim/util';
+import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, genreName, labelLink, logo, memoText, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { logoUrl } from '../art';
@@ -18,6 +18,7 @@ import { chips, ic, lineChart, stat, tabs, tile } from '../vis';
 import { mergeTabs } from '../registry';
 import { a29 } from '../art29ui'; // r29 (arte)
 import { caseImg29 } from '../pixel/paper29';
+import { rng19 } from '../../sim/rng19';
 
 const say = (e: L | null, ok: L) => toast(t(e ?? ok), e ? 'bad' : 'good');
 
@@ -44,7 +45,7 @@ function overview(s: GameState): HTMLElement {
 }
 
 function subCard(s: GameState, sl: SubLabel): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const free = playerActs(s).filter((id) => !s.subLabels.some((x) => x.roster.includes(id)) && !s.acts[id].playerBand);
   const statusPill = pill(t({ active: l('ativo', 'active'), distress: l('em crise', 'in distress'), bankrupt: l('falido', 'bankrupt'), closed: l('encerrado', 'closed') }[sl.status]), sl.status === 'active' ? 'good' : 'bad');
   return h('article', { class: 'sub-card' },
@@ -71,7 +72,7 @@ function subCard(s: GameState, sl: SubLabel): HTMLElement {
 }
 
 function subsTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const draft = { name: '', capital: 20000, strategy: 'development' as SubLabel['strategy'] };
   return h('div', null,
     section(t(l('Fundar subselo', 'Found a sub-label')),
@@ -107,7 +108,7 @@ function companiesTab(s: GameState): HTMLElement {
       h('tbody', null, forSale.map((lb) => { const v = labelValuation(s, lb); return h('tr', null, h('td', null, labelLink(s, lb.id)), h('td', null, String(lb.roster.length)), h('td', null, $(Math.round(v.value * 0.9))), h('td', { class: 'bad' }, $(v.liabilities)), h('td', null, h('button', { class: 'btn small', onclick: () => { say(acquireLabel(s, lb.id), l('Aquisição concluída: elenco, catálogo e dívidas agora são seus.', 'Acquisition done: roster, catalog and debts are now yours.')); rerender(); } }, t(l('Comprar', 'Buy'))))); })),
     ) : h('p', { class: 'muted small' }, t(l('Nenhum selo em crise no momento.', 'No label in distress right now.')))),
     section(t(l('Joint venture', 'Joint venture')), h('div', { class: 'row wrap' }, partners.map((lb) => h('button', { class: 'btn small ghost', onclick: () => { say(startJointVenture(s, lb.id, money(s, 30000)), l('JV criada.', 'JV created.')); rerender(); } }, ic('handshake'), ' ', lb.name)))),
-    section(t(l('Comprar contratos de rivais (buyout)', 'Buy rival contracts (buyout)')), h('div', { class: 'cards' }, Object.values(s.acts).filter((a) => a.owner && a.owner !== 'player' && a.fame > 25 && (s.knowledge[a.id]?.degree ?? 0) >= 2).slice(0, 8).map((a) => tile('contract', a.name, [h('small', null, labelLink(s, a.owner)), h('button', { class: 'btn small', onclick: () => { say(buyoutContract(s, rngOf(s), a.id), l('Contrato comprado!', 'Contract bought!')); rerender(); } }, `${t(l('Comprar', 'Buy'))} ${$(buyoutPrice(s, a))}`)])))),
+    section(t(l('Comprar contratos de rivais (buyout)', 'Buy rival contracts (buyout)')), h('div', { class: 'cards' }, Object.values(s.acts).filter((a) => a.owner && a.owner !== 'player' && a.fame > 25 && (s.knowledge[a.id]?.degree ?? 0) >= 2).slice(0, 8).map((a) => tile('contract', a.name, [h('small', null, labelLink(s, a.owner)), h('button', { class: 'btn small', onclick: () => { say(buyoutContract(s, rng19(s, 'act'), a.id), l('Contrato comprado!', 'Contract bought!')); rerender(); } }, `${t(l('Comprar', 'Buy'))} ${$(buyoutPrice(s, a))}`)])))),
   );
 }
 
@@ -163,7 +164,7 @@ function legalTab(s: GameState): HTMLElement {
 }
 
 function brandsTab(s: GameState): HTMLElement {
-  const r = rngOf(s);
+  const r = rng19(s, 'act');
   const offers = s.deals.filter((d) => d.status === 'offered');
   const active = s.deals.filter((d) => d.status === 'active');
   const icon = (k: string) => (k === 'sponsor' ? 'handshake' : k === 'sync_film' ? 'film' : k === 'sync_tv' ? 'tv' : k === 'sync_game' ? 'gamepad' : k === 'sync_ad' ? 'camera' : 'contract');

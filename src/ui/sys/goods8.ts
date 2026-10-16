@@ -14,11 +14,12 @@ import { energyLeft, maxEnergy } from '../../sim/sys/life';
 import { ATTR_NAME, ownerOf } from '../../sim/sys/people/owner';
 import type { PerkKey } from '../../sim/perks';
 import type { GameState } from '../../sim/types';
-import { money, rngOf } from '../../sim/util';
+import { money } from '../../sim/util';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
 import { investmentsTab } from './bolsa10';
+import { rng19 } from '../../sim/rng19';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -194,7 +195,7 @@ function freeTime(s: GameState): HTMLElement {
 /** Aba "Agenda pessoal" da área Você. */
 export function personalAgendaTab(s: GameState): HTMLElement {
   const st = goods(s);
-  const r = () => rngOf(s);
+  const r = () => rng19(s, 'act');
   const courses = (Object.keys(COURSES) as CourseId[]).filter((id) => s.year >= COURSES[id].from);
   const routines = (Object.keys(ROUTINES) as RoutineId[]).filter((id) => s.year >= ROUTINES[id].from);
   const apps = (Object.keys(APPEARANCES) as AppearId[]).filter((id) => s.year >= APPEARANCES[id].from);
