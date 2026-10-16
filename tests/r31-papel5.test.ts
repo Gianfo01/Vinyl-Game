@@ -17,9 +17,9 @@ import { TABS_REG27 } from '../src/ui/ps/tabsreg27';
 import { getTab, setTab } from '../src/ui/vis';
 import { MOVES5, object5 } from '../src/ui/r31/objects5';
 import { key5 } from '../src/ui/r31/keys5';
-import { pin5 } from '../src/ui/r31/nav5';
+import { paperOf5, pin5 } from '../src/ui/r31/nav5';
 import { INBOX5, inbox5Look, PAPER5 } from '../src/ui/pixel/exp5paper';
-import { INBOX_LOOK5, PAPER_FRAMES5, PAPER_OBJS5, ledgerData5, paperGo5, paperIds5, paperKey5Ev, paperObjOf5, paperOf5, paperTabs5, wrapPaper5 } from '../src/ui/r31/papers5';
+import { INBOX_LOOK5, PAPER_FRAMES5, PAPER_OBJS5, ledgerData5, paperGo5, paperPageIds5, paperKey5Ev, paperObjOf5, paperPageOf5, paperTabs5, wrapPaper5 } from '../src/ui/r31/papers5';
 
 const game = (y = 1962, months = 0): GameState => {
   const g = createGame(defaultConfig(`papel5-${y}`, { startYear: y, scenario: 'established' }));
@@ -41,14 +41,15 @@ describe('R31 onda 5 PAPEL — registro', () => {
     expect(PAPER_OBJS5.sort()).toEqual(['arquivoaco', 'caderno', 'cofre', 'contador', 'correspondencia', 'diario', 'graficos', 'jornal', 'livrocaixa', 'olheiro', 'quadrobranco', 'quadrometas', 'radiotv', 'revista', 'secretaria', 'telefone']);
     for (const id of PAPER_OBJS5) {
       expect(object5(id), id).toBeTruthy();
-      expect(paperOf5(id), id).toBeTruthy();
+      expect(paperPageOf5(id), id).toBeTruthy();
+      expect(paperOf5(id), `${id} na API da casca`).toBeTruthy();
       expect(key5(`obj:${id}`)?.chord, id).toBeTruthy();
     }
     for (const g of Object.values(PAPER_FRAMES5)) {
       if (g.frame.k === 'paper') expect(PAPER5).toContain(g.frame.p);
       else for (const y of [1900, 1955, 1980, 1995, 2005, 2030]) expect(INBOX5).toContain(g.frame.look(y));
     }
-    expect(paperIds5()).toEqual(expect.arrayContaining(PAPER_OBJS5));
+    expect(paperPageIds5()).toEqual(expect.arrayContaining(PAPER_OBJS5));
   });
 
   it('cada página dona abre no papel do seu objeto; abas que mudaram de objeto abrem no papel novo', () => {
@@ -140,7 +141,7 @@ describe('R31 onda 5 PAPEL — caixa de entrada igual em toda época', () => {
     expect(new Set(looks)).toEqual(new Set(INBOX5));
     for (const lk of INBOX5) expect(INBOX_LOOK5[lk].pt.length).toBeGreaterThan(0);
     // o mesmo desenho para qualquer ano (não há um papel por época)
-    expect(paperOf5('correspondencia')).toBe(paperOf5('correspondencia'));
+    expect(paperPageOf5('correspondencia')).toBe(paperPageOf5('correspondencia'));
     expect(PAPER_OBJS5.filter((id) => id.startsWith('correspondencia'))).toEqual(['correspondencia']);
   });
 });

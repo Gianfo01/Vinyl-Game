@@ -6,8 +6,9 @@
 // e cadernos abrem em duas páginas. Fonte única: nada aqui calcula regra do jogo; o papel move os elementos que a página
 // antiga já desenhou (os cliques continuam ligados) ou chama as mesmas funções (caixa de entrada: mailView27).
 //
-// Registro: `registerPaper5(id, render)` (a casca NAV liga quando abrir objeto → papel). Enquanto a casca não tem o gancho,
-// `wrapPaper5` é chamado pelo desenho da página em app.ts (DECISOES, onda 5 PAPEL). Desligado: devolve null e nada muda.
+// Registro: cada papel entra na API da casca (`registerPaperPage5` de nav5.ts, frente NAV) e devolve o papel INTEIRO, com a
+// moldura em pixel art (o elemento traz `data-paper5`: a casca não põe segunda moldura). Enquanto a casca (shell5) não
+// liga a API, `wrapPaper5` é chamado pelo desenho da página em app.ts (DECISOES, onda 5 PAPEL). Desligado: null = hoje.
 // Explorar não muda o mundo: abrir, trocar marcador e fechar só leem o estado (o bolso é escolha do jogador, no save).
 
 import { l, type L } from '../../data/world';
@@ -26,14 +27,14 @@ import { COST, REV } from '../sys/finance18';
 import { mailKey27, mailView27 } from '../sys/inbox27';
 import { getTab, setTab } from '../vis';
 import { chordLabel5, key5 } from './keys5';
-import { NAV5, pin5, travelTarget5 } from './nav5';
+import { NAV5, pin5, registerPaper5, travelTarget5 } from './nav5';
 import { MOVES5, object5, ownerOf5, type Obj5, type Open5 } from './objects5';
 import './papers5.css';
 
 // ---------------------------------------------------------------- registro
 
 /** O que o desenho da página passa ao papel. */
-export interface PaperCtx5 {
+export interface PageCtx5 {
   s: GameState;
   obj: Obj5;
   /** página antiga aberta agora (dona ou de onde o marcador veio) */
@@ -42,21 +43,24 @@ export interface PaperCtx5 {
   page: HTMLElement;
   /** rótulo de uma página (o mesmo do menu de hoje) */
   label?: (area: string) => string;
+  /** casca (nav5): fechar e trocar de marcador sem sair do papel */
+  close?: () => void;
+  mark?: (m: Open5) => void;
 }
-export type PaperRender5 = (c: PaperCtx5) => HTMLElement;
-const PAPERS5 = new Map<string, PaperRender5>();
-export function registerPaper5(id: string, render: PaperRender5): void { PAPERS5.set(id, render); }
-export const paperIds5 = (): string[] => [...PAPERS5.keys()];
-export const paperOf5 = (id: string): PaperRender5 | undefined => PAPERS5.get(id);
+export type PageRender5 = (c: PageCtx5) => HTMLElement;
+const PAGES5 = new Map<string, PageRender5>();
+export function registerPaperPage5(id: string, render: PageRender5): void { PAGES5.set(id, render); }
+export const paperPageIds5 = (): string[] => [...PAGES5.keys()];
+export const paperPageOf5 = (id: string): PageRender5 | undefined => PAGES5.get(id);
 
 /** Objeto cujo papel mostra a página aberta agora (a aba aberta pode ter vindo de outro objeto: MOVES5). */
 export function paperObjOf5(area: string): string | undefined {
   for (const m of MOVES5) if (m.area === area && m.tab && getTab(m.key) === m.tab) {
-    if (object5(m.to) && PAPERS5.has(m.to)) return m.to;
+    if (object5(m.to) && PAGES5.has(m.to)) return m.to;
     if (m.to === 'topo' && area === 'cockpit') return 'secretaria'; // o painel do mês: recados da secretária (até o topo ampliável existir)
   }
   const o = ownerOf5(area);
-  return o && PAPERS5.has(o.id) ? o.id : undefined;
+  return o && PAGES5.has(o.id) ? o.id : undefined;
 }
 
 /** Antes de abrir um objeto dono sem aba: a aba que tinha ido para outro papel (cofre, caderno) volta à 1ª,
@@ -71,7 +75,7 @@ export function wrapPaper5(s: GameState, area: string, page: HTMLElement, label?
   if (!nav5On(s)) return null;
   const id = paperObjOf5(area);
   const obj = id ? object5(id) : undefined;
-  const r = id ? PAPERS5.get(id) : undefined;
+  const r = id ? PAGES5.get(id) : undefined;
   if (!obj || !r) return null;
   return r({ s, obj, area, page, label });
 }
@@ -145,15 +149,15 @@ export function paperName5(o: Obj5, year: number): L {
 /** Fechar = voltar à sede (Esc), sem passar tempo. */
 export function closePaper5(s: GameState): void { NAV5.go?.(travelTarget5(s, 'sede')); }
 
-const KIND5 = new WeakMap<PaperCtx5, string>();
-const frameKind5 = (c: PaperCtx5): string => KIND5.get(c) ?? '';
+const KIND5 = new WeakMap<PageCtx5, string>();
+const frameKind5 = (c: PageCtx5): string => KIND5.get(c) ?? '';
 /** Molduras claras (título e textos escuros). */
 const LIGHT5 = new Set(['whiteboard', 'planning', 'form', 'rolodex', 'inbox-fax', 'inbox-phone']);
 
 interface Shell5 { head: HTMLElement; tabs: HTMLElement; pages: HTMLElement[]; extra?: Partial<Record<'filters' | 'notes' | 'keys', HTMLElement>> }
 
 /** Cabeçalho comum: título do objeto (nome da época), mês, tecla, fixar no bolso e fechar. */
-function head5(c: PaperCtx5, sub?: string): HTMLElement {
+function head5(c: PageCtx5, sub?: string): HTMLElement {
   const { s, obj } = c;
   const k = paperKey5(obj.id);
   const pinned = pocketIds5(s).includes(obj.id);
@@ -173,11 +177,11 @@ function head5(c: PaperCtx5, sub?: string): HTMLElement {
     h('span', { class: 'paper5-sub' }, pxText5(sub0, light ? '#3a3a44' : '#eadfc4'), k ? [pxText5(t(l('tecla', 'key')), light ? '#3a3a44' : '#eadfc4'), pxKey5(k)] : null),
     h('span', { class: 'paper5-sp' }),
     pinBtn,
-    h('button', { type: 'button', class: 'paper5-close', 'aria-label': t(l('Fechar (Esc)', 'Close (Esc)')), onclick: () => closePaper5(s) }, pxKey5('Esc'), pxText5(t(l('fechar', 'close')), '#f0e8d8')));
+    h('button', { type: 'button', class: 'paper5-close', 'aria-label': t(l('Fechar (Esc)', 'Close (Esc)')), onclick: () => (c.close ? c.close() : closePaper5(s)) }, pxKey5('Esc'), pxText5(t(l('fechar', 'close')), '#f0e8d8')));
 }
 
 /** Monta o papel: moldura em pixel art (quando há layout) + áreas HTML posicionadas pelas áreas da moldura. */
-function frame5(c: PaperCtx5, f: Frame5x, parts: Shell5): HTMLElement {
+function frame5(c: PageCtx5, f: Frame5x, parts: Shell5): HTMLElement {
   const kind = f.k === 'paper' ? f.p : `inbox-${f.look(c.s.year)}`;
   const root = h('section', { class: `paper5 paper5-${kind} paper5-o-${c.obj.id.replace(/[^a-z0-9]/gi, '')}`, 'data-paper5': c.obj.id, 'data-area': c.area, role: 'region', 'aria-label': t(c.obj.label) });
   const hd = h('header', { class: 'paper5-head' }, parts.head);
@@ -272,11 +276,11 @@ function split5(panel: HTMLElement): [HTMLElement, HTMLElement] | null {
 }
 
 /** Pastas: as outras páginas de que o objeto é dono (Mercado de contratos, Direitos…), com a aberta acesa. */
-function folders5(c: PaperCtx5): HTMLElement[] {
+function folders5(c: PageCtx5): HTMLElement[] {
   const own = c.obj.opens.filter((x, i, a) => a.findIndex((y) => y.area === x.area) === i);
   if (own.length < 2) return [];
   return own.map((x: Open5) => h('button', { type: 'button', class: `paper5-folder ${x.area === c.area ? 'on' : ''}`, 'aria-current': x.area === c.area ? 'page' : 'false',
-    onclick: () => NAV5.go?.({ area: x.area }) }, pxText5(c.label?.(x.area) ?? x.area, '#2a2018')));
+    onclick: () => (c.mark ? c.mark({ area: x.area }) : NAV5.go?.({ area: x.area })) }, pxText5(c.label?.(x.area) ?? x.area, '#2a2018')));
 }
 
 /** Marcadores que o papel `id` mostra numa página (as abas de hoje menos as que foram para outro objeto). */
@@ -292,10 +296,10 @@ function keepTab5(c: { obj: { id: string }; area: string }): (key: string, id: s
   };
 }
 
-export interface Generic5 { frame: Frame5x; two?: boolean; sub?: (c: PaperCtx5) => string; first?: (c: PaperCtx5, tab: string | undefined) => [HTMLElement, HTMLElement] | null }
+export interface Generic5 { frame: Frame5x; two?: boolean; sub?: (c: PageCtx5) => string; first?: (c: PageCtx5, tab: string | undefined) => [HTMLElement, HTMLElement] | null }
 
 /** Papel padrão: a página antiga, com as abas como marcadores e (livros) em duas páginas. */
-export function genericPaper5(o: Generic5): PaperRender5 {
+export function genericPaper5(o: Generic5): PageRender5 {
   return (c) => {
     KIND5.set(c, o.frame.k === 'paper' ? o.frame.p : `inbox-${o.frame.look(c.s.year)}`);
     const { key, marks, panel } = liftTabs5(c.page, keepTab5(c));
@@ -326,7 +330,7 @@ export function ledgerData5(s: GameState): { shown: number; rows: [L, number][];
     year: { rev: sumP18(Y, 'rev:'), cost: sumP18(Y, 'cost:'), net: netProfit18(Y) } };
 }
 
-function ledgerFirst5(c: PaperCtx5, tab: string | undefined): [HTMLElement, HTMLElement] | null {
+function ledgerFirst5(c: PageCtx5, tab: string | undefined): [HTMLElement, HTMLElement] | null {
   if (tab && tab !== 'pos20') return null;
   const D = ledgerData5(c.s);
   const { shown, net, last } = D;
@@ -362,7 +366,7 @@ function ledgerFirst5(c: PaperCtx5, tab: string | undefined): [HTMLElement, HTML
 // ---------------------------------------------------------------- caixa de entrada (mesma estrutura em toda época)
 
 /** A caixa de entrada inteira de hoje (mailView27), distribuída nas áreas da aparência da época. */
-export const inboxPaper5: PaperRender5 = (c) => {
+export const inboxPaper5: PageRender5 = (c) => {
   const { s } = c;
   KIND5.set(c, `inbox-${inbox5Look(s.year)}`);
   const mail = mailView27(s);
@@ -460,8 +464,14 @@ export const PAPER_FRAMES5: Record<string, Generic5> = {
   graficos: { frame: P('planning') },
   contador: { frame: P('form') },
 };
-for (const [id, g] of Object.entries(PAPER_FRAMES5)) registerPaper5(id, genericPaper5(g));
-registerPaper5('correspondencia', inboxPaper5);
+for (const [id, g] of Object.entries(PAPER_FRAMES5)) registerPaperPage5(id, genericPaper5(g));
+registerPaperPage5('correspondencia', inboxPaper5);
 
 /** Os objetos desta frente (teste e capturas). */
 export const PAPER_OBJS5 = [...Object.keys(PAPER_FRAMES5), 'correspondencia'];
+
+// na API da casca (nav5): o papel inteiro a partir da página antiga do marcador aberto; sem desenho próprio, null
+for (const id of PAPER_OBJS5) registerPaper5(id, (c) => {
+  const r = PAGES5.get(id);
+  return r ? r({ s: c.s, obj: c.obj, area: c.marker.area, page: c.old(), close: c.close, mark: c.mark }) : null;
+});
