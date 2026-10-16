@@ -192,7 +192,7 @@ export function masterYield31(s: GameState, r: Release): { rate: number; years: 
   const rate = (u / n) * 52 * rpu;
   const age = (s.week - r.week) / 52;
   // disco novo cai rápido; catálogo antigo rende estável por anos (vida útil equivalente, em anos de ritmo atual)
-  const years = age < 0.5 ? 0.5 : age < 1 ? 0.9 : age < 3 ? 2.2 : 5;
+  const years = age < 0.5 ? 0.35 : age < 1 ? 0.8 : age < 3 ? 2.2 : 5;
   return { rate, years };
 }
 
@@ -386,7 +386,7 @@ export function companyValue31(s: GameState, id: string): Value31 {
     for (let t = 0; t < Math.ceil(yrs); t++) v += e * Math.min(1, yrs - t) * Math.pow(0.9, t);
     v *= labelShare(c);
     ros += v;
-    topWhy.push({ v, t: fmtL(l('{n}: {w}, {y} anos de contrato', '{n}: {w}, {y} years of contract'), { n: a.name, w: why, y: yrs.toFixed(1) }) });
+    topWhy.push({ v, t: fmtL(l('{n}: {w}, {y} anos de contrato', '{n}: {w}, {y} years of contract'), { n: a.name, w: why, y: l(yrs.toFixed(1).replace('.', ','), yrs.toFixed(1)) }) });
   }
   topWhy.sort((x, y) => y.v - x.v);
   add('roster', ros, 'hyp', lot.acts.length
@@ -529,7 +529,8 @@ export function stepPrice31(s: GameState, id: string, p: number, shares: number)
   const mood = clamp((st.mood[id] ?? 0) * 0.8 + r.normal(0, 0.025), -0.12, 0.12);
   st.mood[id] = mood;
   const target = Math.max(1, v.total / Math.max(1, shares)) * Math.exp(mood);
-  const np = Math.max(1, Math.round(p + (target - p) * 0.35));
+  // segue 35% do caminho até o valor, com limite de oscilação de 20% por pregão (o mercado não salta de uma vez)
+  const np = Math.max(1, Math.round(clamp(p + (target - p) * 0.35, p * 0.8, p * 1.2)));
   const chg = p > 0 ? np / p - 1 : 0;
   const prev = st.last[id];
   const now: Record<string, number> = {};
