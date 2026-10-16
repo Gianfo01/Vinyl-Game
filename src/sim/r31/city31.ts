@@ -220,33 +220,66 @@ export const festLot31 = (fillers: number[]): number | undefined => { const sz =
 
 export type Board31Style = 'painted' | 'neon' | 'backlit' | 'led';
 export const boardStyle31 = (y: number): Board31Style => (y < 1950 ? 'painted' : y < 1990 ? 'neon' : y < 2000 ? 'backlit' : 'led');
-export interface Billboard31 { relId: string; title: string; act: string; label: L; mine: boolean; paid?: boolean }
+/** `kind` (R31 POL2): chart = nº 1 de uma parada (capa do disco); paid = seu lançamento em campanha; release = lançamento
+ *  recente de rival/seu; hot = artista em alta (retrato); tour = turnê com show marcado na sua cidade (retrato). Todo
+ *  outdoor aponta para um lançamento que existe (`relId`); os de artista também para o ato (`actId`). */
+export interface Billboard31 { relId: string; title: string; act: string; label: L; mine: boolean; paid?: boolean; kind?: 'chart' | 'paid' | 'release' | 'hot' | 'tour'; actId?: string }
 const BOARD_NAME31: Record<ChartKind, L> = {
   songs: l('Nº 1 em músicas', 'No. 1 in songs'), albums: l('Nº 1 em álbuns', 'No. 1 in albums'), stream: l('Nº 1 no streaming', 'No. 1 in streaming'),
   sales: l('Nº 1 em vendas', 'No. 1 in sales'), video: l('Nº 1 em clipes', 'No. 1 in videos'),
 };
-/** Anúncios: o nº 1 de cada parada do seu país que existe na época (cada um com o nome da parada; nada somado) e o
- *  seu lançamento em campanha (anúncio pago, ação de marketing que já existe). Antes de 1900 não há outdoor. */
+/** Anúncios (no máximo 4, misturados): até 2 nº 1 das paradas do seu país que existem na época (cada um com o nome da
+ *  parada; nada somado), o artista em alta (maior momento entre os ativos com fama), um lançamento recente (o seu em
+ *  campanha = anúncio pago; senão o de rival mais famoso das últimas 8 semanas), uma turnê com show marcado na sua
+ *  cidade nos próximos 30 dias e, se sobrar lugar, as outras paradas. Um artista/disco aparece uma vez só. Só lê o
+ *  estado (sem sorteio). Antes de 1900 não há outdoor. */
 export function billboards31(s: GameState): Billboard31[] {
   if (s.year < 1900) return [];
   const a3 = countryOfCity(s.config.homeCity);
-  const out: Billboard31[] = [];
-  const seen = new Set<string>();
+  const charts: Billboard31[] = [];
+  const seen = new Set<string>(), acts = new Set<string>();
+  const rel = (r: { id: string; title: string; actId: string; owner: string }, label: L, kind: Billboard31['kind'], extra: Partial<Billboard31> = {}): Billboard31 =>
+    ({ relId: r.id, title: r.title, act: s.acts[r.actId]?.name ?? '', label, mine: r.owner === 'player', kind, ...extra });
   if (a3) for (const k of ['songs', 'albums', 'stream', 'sales', 'video'] as ChartKind[]) {
     if (!kindAvailable(s, k)) continue;
     const r = board(s, a3, k)[0];
-    const rel = r ? s.releases[r.relId] : undefined;
-    if (!rel || seen.has(rel.id)) continue;
-    seen.add(rel.id);
-    out.push({ relId: rel.id, title: rel.title, act: s.acts[rel.actId]?.name ?? '', label: BOARD_NAME31[k], mine: rel.owner === 'player' });
+    const rl = r ? s.releases[r.relId] : undefined;
+    if (!rl || charts.some((x) => x.relId === rl.id)) continue;
+    charts.push(rel(rl, BOARD_NAME31[k], 'chart'));
   }
-  if (!out.length) { // sem parada da semana ainda: a parada geral do jogo
+  if (!charts.length) { // sem parada da semana ainda: a parada geral do jogo
     const top = s.charts.singles[0] ? s.releases[s.charts.singles[0].releaseId] : undefined;
-    if (top) { out.push({ relId: top.id, title: top.title, act: s.acts[top.actId]?.name ?? '', label: BOARD_NAME31.songs, mine: top.owner === 'player' }); seen.add(top.id); }
+    if (top) charts.push(rel(top, BOARD_NAME31.songs, 'chart'));
   }
-  const ad = Object.values(s.releases).filter((r) => r.owner === 'player' && !seen.has(r.id) && (r.marketing?.length ?? 0) > 0 && s.week - (r.week ?? -99) <= 8)
-    .sort((a, b) => (b.week ?? 0) - (a.week ?? 0))[0];
-  if (ad) out.push({ relId: ad.id, title: ad.title, act: s.acts[ad.actId]?.name ?? '', label: l('Lançamento: anúncio pago', 'New release: paid ad'), mine: true, paid: true });
+  const out: Billboard31[] = [];
+  const add = (b: Billboard31 | undefined) => {
+    if (!b || seen.has(b.relId) || acts.has(s.releases[b.relId]?.actId ?? '')) return;
+    seen.add(b.relId); acts.add(s.releases[b.relId]?.actId ?? ''); out.push(b);
+  };
+  const rels = Object.values(s.releases);
+  const lastOf = new Map<string, (typeof rels)[number]>();
+  for (const r of rels) { const o = lastOf.get(r.actId); if ((r.week ?? -1) <= s.week && (!o || (r.week ?? 0) > (o.week ?? 0) || ((r.week ?? 0) === (o.week ?? 0) && r.id < o.id))) lastOf.set(r.actId, r); }
+  charts.slice(0, 2).forEach(add);
+  // artista em alta: maior momento entre os atos ativos com fama (desempate pela fama e pelo id)
+  const hot = Object.values(s.acts).filter((a) => (a.status === 'active' || a.status === 'emerging') && a.fame >= 20 && lastOf.has(a.id) && !acts.has(a.id))
+    .sort((a, b) => b.momentum - a.momentum || b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
+  if (hot) add(rel(lastOf.get(hot.id)!, l('Em alta', 'Hot right now'), 'hot', { actId: hot.id }));
+  const ad = rels.filter((r) => r.owner === 'player' && !seen.has(r.id) && (r.marketing?.length ?? 0) > 0 && s.week - (r.week ?? -99) <= 8 && (r.week ?? 0) <= s.week)
+    .sort((a, b) => (b.week ?? 0) - (a.week ?? 0) || (a.id < b.id ? -1 : 1))[0];
+  if (ad) add(rel(ad, l('Lançamento: anúncio pago', 'New release: paid ad'), 'paid', { mine: true, paid: true }));
+  else {
+    const nw = rels.filter((r) => r.owner !== 'player' && !seen.has(r.id) && s.week - (r.week ?? -99) <= 8 && (r.week ?? 0) <= s.week && s.acts[r.actId])
+      .sort((a, b) => s.acts[b.actId].fame - s.acts[a.actId].fame || (b.week ?? 0) - (a.week ?? 0) || (a.id < b.id ? -1 : 1))[0];
+    if (nw) add(rel(nw, l('Lançamento', 'New release'), 'release'));
+  }
+  // turnê chegando: show marcado na sua cidade nos próximos 30 dias (o mais próximo)
+  let tour: { actId: string; day: number } | undefined;
+  for (const t of s.tours ?? []) {
+    if (t.status === 'cancelled' || t.status === 'done') continue;
+    for (const st of t.stops) if (st.cityId === s.config.homeCity && st.status === 'scheduled' && st.day >= s.day && st.day - s.day <= 30 && lastOf.has(t.actId) && (!tour || st.day < tour.day || (st.day === tour.day && t.actId < tour.actId))) tour = { actId: t.actId, day: st.day };
+  }
+  if (tour) add(rel(lastOf.get(tour.actId)!, l('Turnê chega à cidade', 'Tour coming to town'), 'tour', { actId: tour.actId }));
+  charts.slice(2).forEach(add);
   return out.slice(0, 4);
 }
 /** Força do neon nas fachadas (0..1): começa nos anos 1920, auge de 1930 a 1960, volta nos 80 e vira LED depois de 2000. */
