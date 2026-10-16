@@ -20,7 +20,10 @@ import { $, modal, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf } from '../pixel/avatar';
 import { drawText, fitText } from '../pixel/font';
-import { C, INK, Px, tint, type Col } from '../pixel/px';
+import { beam, box, curtain, floor, lightRig, screen, sign, stagePlatform, wall, type FloorStyle } from '../pixel/places/kit';
+import { eraOf, paletteOf, type Palette, type WallKind } from '../pixel/palette';
+import { C, INK, Px, discV, ellipseV, lv, tint, withAlpha, type Col } from '../pixel/px';
+import { furniture } from '../pixel/sprites';
 import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
@@ -35,107 +38,114 @@ const ROUND_S31 = 10;
 // ---------------------------------------------------------------- pintura
 
 const TIER_GLOW: Col[] = [C('#b8b0a0'), C('#7ac070'), C('#6aa0e8'), C('#f0c040'), C('#c080f0')];
-const WALL: Record<Auc31['room'], [Col, Col, Col]> = {
-  salon: [C('#5a1e24'), C('#6a2a2e'), C('#6e4428')], // damasco, friso, lambri
-  hall: [C('#b8a888'), C('#a89878'), C('#7a6448')],
-  screen: [C('#4a5a70'), C('#56667c'), C('#384458')],
-  app: [C('#e8ecf0'), C('#d8dee6'), C('#b8c0cc')],
+/** Parede e piso por sala: salão com lustre (papel de damasco e lambri), auditório (painéis e carpete), tela de lances
+ *  (parede lisa escura, carpete), aplicativo (parede clara, concreto). Tons da paleta da época (pixel/palette). */
+const ROOMK: Record<Auc31['room'], { wall: (pal: Palette) => Col; kind: WallKind; floor: FloorStyle; fa: (pal: Palette) => Col; fb: (pal: Palette) => Col }> = {
+  salon: { wall: () => C('#6a2430'), kind: 'wainscot', floor: 'boards', fa: (p) => p.floors.lounge.a, fb: (p) => p.floors.lounge.b },
+  hall: { wall: (p) => tint(p.wall, -0.05), kind: 'panel', floor: 'carpet', fa: () => C('#8a2a34'), fb: () => C('#7a2230') },
+  screen: { wall: () => C('#3a4458'), kind: 'plain', floor: 'carpet', fa: () => C('#4a4e5c'), fb: () => C('#42465a') },
+  app: { wall: () => C('#e4e8ee'), kind: 'plain', floor: 'concrete', fa: () => C('#c8ccd4'), fb: () => C('#bcc0ca') },
 };
-const FLOOR: Record<Auc31['room'], Col> = { salon: C('#7a4a28'), hall: C('#8a2a30'), screen: C('#5a5a64'), app: C('#c8ccd4') };
 
-function paintRoom(p: Px, m: Auc31): void {
-  const [wall, frieze, wain] = WALL[m.room];
-  for (let y = 0; y < 112; y++) for (let x = 0; x < m.W; x++) {
-    const n = m.room === 'salon' ? ((x >> 2) + (y >> 2)) % 4 === 0 && (x + y) % 3 === 0 : (x * 7 + y * 3) % 23 === 0;
-    p.put(x, y, n ? tint(wall, 0.08) : wall);
-  }
-  p.rect(0, 84, m.W, 2, frieze);
-  p.rect(0, 86, m.W, 26, wain);
-  for (let x = 0; x < m.W; x += 24) p.vline(x, 86, 111, tint(wain, -0.2));
-  const fl = FLOOR[m.room];
-  for (let y = 112; y < m.H; y++) for (let x = 0; x < m.W; x++) {
-    const plank = m.room === 'salon' ? ((x + (y >> 3) * 11) % 16 === 0 || y % 8 === 0) : m.room === 'hall' ? (x + y) % 9 === 0 : y % 12 === 0;
-    p.put(x, y, plank ? tint(fl, -0.15) : fl);
-  }
-  // porta
-  p.rect(4, 60, 18, 52, INK); p.rect(5, 61, 16, 50, tint(wain, 0.1)); p.disc(18, 88, 1, C('#f0d080'));
-  // lustre (salão) / refletores (auditório)
+function paintRoom(p: Px, m: Auc31, pal: Palette): void {
+  const R = ROOMK[m.room];
+  wall(p, pal, 0, 92, R.wall(pal), R.kind);
+  floor(p, 92, R.fa(pal), R.fb(pal), R.floor);
+  // porta de saída
+  box(p, 5, 52, 18, 40, pal.woodDark, 0);
+  p.rect(8, 55, 12, 37, lv(pal.woodDark, 2.2)); discV(p, 18, 74, 1, pal.gold, { ink: false });
+  // cortina à esquerda do palco
+  curtain(p, 26, 0, 14, 80, m.room === 'app' ? C('#5a6a8a') : C('#8a1e2a'));
+  // luz: lustre no salão, refletores no auditório, faixa de LED depois
   if (m.room === 'salon') {
-    p.vline(160, 0, 6, C('#c09048'));
-    p.ellipse(160, 9, 14, 4, C('#e0b050'));
-    for (let i = -12; i <= 12; i += 4) { p.disc(160 + i, 12, 1, C('#fff4c0')); p.put(160 + i, 14, C('#ffe080')); }
-  } else if (m.room === 'hall') {
-    for (const x of [60, 260]) { p.rect(x - 4, 0, 8, 4, C('#2a2a30')); p.poly([[x - 6, 4], [x + 6, 4], [x + 14, 30], [x - 14, 30]], (xx, yy) => ((xx + yy) % 2 ? C('#d8c8a0', 60) : C('#d8c8a0', 30))); }
-  }
+    p.vline(160, 0, 4, pal.gold);
+    ellipseV(p, 160, 8, 16, 4, pal.gold);
+    for (let i = -14; i <= 14; i += 4) { discV(p, 160 + i, 13, 1, C('#fff4c8'), { ink: false }); p.put(160 + i, 15, C('#ffe080')); }
+    beam(p, 160, 14, 90, 30, C('#fff0c0'), 16);
+  } else if (m.room === 'hall') lightRig(p, 1, pal, 5, 50, 230);
+  else for (let x = 46; x < 236; x += 2) p.put(x, 1, (x >> 1) % 3 ? C('#80e0ff') : C('#ffffff'));
 }
 
-function paintScreen(p: Px, s: GameState, m: Auc31): void {
-  const x0 = 96, y0 = 6, w = 128, hh = 38;
-  const bg = m.room === 'salon' ? C('#2a2018') : m.room === 'hall' ? C('#e8e4d8') : m.room === 'screen' ? C('#10283c') : C('#202024');
+function paintScreen(p: Px, s: GameState, m: Auc31, pal: Palette): void {
+  const x0 = 96, y0 = 8, w = 128, hh = 36;
+  const body = m.room === 'salon' ? C('#2c2018') : m.room === 'hall' ? C('#e8e2d0') : m.room === 'screen' ? C('#0e2236') : C('#18181c');
   const fg = m.room === 'salon' ? C('#f0e0b0') : m.room === 'hall' ? C('#2a2420') : m.room === 'screen' ? C('#80e0ff') : C('#ffffff');
-  if (m.room === 'app') { p.rect(x0 + 36, y0 - 2, 56, hh + 4, INK); p.rect(x0 + 38, y0, 52, hh, bg); }
-  else { p.rect(x0 - 2, y0 - 2, w + 4, hh + 4, m.room === 'salon' ? C('#c09048') : INK); p.rect(x0, y0, w, hh, bg); }
+  const rim = m.room === 'salon' ? pal.gold : m.room === 'hall' ? pal.metalDark : C('#202630');
+  if (m.room === 'app') { screen(p, x0 + 38, y0, 52, hh, body, rim, false); } else screen(p, x0, y0, w, hh, body, rim, m.room === 'screen');
   const lot = m.lot;
-  if (!lot) { drawText(p, t(l('SEM LOTES', 'NO LOTS')).toUpperCase(), x0 + 30, y0 + 16, fg); return; }
   const left = m.room === 'app' ? x0 + 40 : x0 + 3, maxW = m.room === 'app' ? 48 : w - 6;
-  drawText(p, fitText(t(l('DONOS', 'OWNERS')), maxW), left, y0 + 2, fg);
-  lot.own.slice(-4).forEach((o, i) => drawText(p, fitText(`${o[1]} ${o[0]}`.toUpperCase(), maxW), left, y0 + 9 + i * 7, tint(fg, -0.15)));
+  if (!lot) { drawText(p, fitText(t(l('SEM LOTES', 'NO LOTS')).toUpperCase(), maxW), left, y0 + 14, fg); return; }
+  drawText(p, fitText(t(l('DONOS DA PEÇA', 'OWNERS')).toUpperCase(), maxW), left, y0 + 2, fg);
+  lot.own.slice(-3).forEach((o, i) => drawText(p, fitText(`${o[1]} ${o[0]}`.toUpperCase(), maxW), left, y0 + 9 + i * 7, tint(fg, -0.18)));
   if (m.lad && m.today && m.room !== 'salon') drawText(p, fitText($(m.lad.price), maxW), left, y0 + hh - 7, C('#f0c040'));
   void s;
 }
 
 function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
   const p = new Px(m.W, m.H);
-  paintRoom(p, m);
-  paintScreen(p, s, m);
-  // catálogo na parede: folhas com os próximos lotes
-  p.rect(236, 14, 64, 66, INK); p.rect(238, 16, 60, 62, C('#f4ecd8'));
-  drawText(p, fitText(t(l('CATÁLOGO', 'CATALOGUE')), 56), 240, 18, C('#5a3a20'));
-  const next = m.picks.slice(0, 3);
-  next.forEach((x, i) => { p.rect(241, 27 + i * 16, 54, 13, C('#e8dcc0')); drawText(p, fitText(`${t(HOUSE31[x.house].name)}`.toUpperCase(), 52), 243, 29 + i * 16, C('#3a2a1a')); drawText(p, `${x.lots.length} - ${Math.max(0, x.w - s.week)}S`, 243, 35 + i * 16, C('#8a5a30')); });
-  // balcão de consignação
-  p.rect(262, 104, 54, 30, INK); p.rect(263, 105, 52, 8, C('#c09048')); p.rect(263, 113, 52, 20, C('#6e2e20'));
-  drawText(p, fitText(t(l('CONSIGNAÇÃO', 'CONSIGNMENT')), 50), 265, 106, INK);
-  // pedestal com o brilho do nível
+  const pal = paletteOf(m.year);
+  paintRoom(p, m, pal);
+  paintScreen(p, s, m, pal);
+  // catálogo na parede: quadro com as folhas dos próximos pregões
+  box(p, 238, 14, 62, 64, m.room === 'salon' ? pal.gold : pal.woodDark, 0);
+  p.rect(241, 17, 56, 58, C('#f2ead6'));
+  drawText(p, fitText(t(l('CATÁLOGO', 'CATALOGUE')), 52), 243, 19, C('#5a3a20'));
+  m.picks.slice(0, 3).forEach((x, i) => {
+    box(p, 243, 28 + i * 15, 52, 12, C('#e6d8b8'), 0, lv(C('#e6d8b8'), 1.4));
+    drawText(p, fitText(t(HOUSE31[x.house].name).toUpperCase(), 48), 245, 30 + i * 15, C('#3a2a1a'));
+    drawText(p, `${x.lots.length} - ${Math.max(0, x.w - s.week)}S`, 245, 35 + i * 15, C('#8a5a30'));
+  });
+  // palco com o púlpito e o pedestal
+  stagePlatform(p, 26, 98, 200, 8, pal.wood, pal.woodDark);
+  box(p, 40, 82, 28, 16, pal.woodDark, 3);
+  p.rect(48, 86, 12, 3, pal.gold);
   const glow = TIER_GLOW[Math.max(0, m.tier - 1)];
   if (m.lot) {
-    for (let r = 20; r >= 12; r -= 2) p.ellipse(160, 60, r, r, (x, y) => ((x + y) % 3 === 0 ? C('#ffffff', 0) : withA(glow, 40 + (20 - r) * 8)));
-    p.rect(150, 74, 20, 36, INK); p.rect(151, 75, 18, 34, C('#ece4d4')); p.rect(148, 72, 24, 4, C('#d8cebc')); p.rect(148, 108, 24, 4, C('#b8ae9c'));
+    for (let r = 22; r >= 10; r -= 3) p.disc(160, 58, r, withAlpha(glow, 26));
+    box(p, 151, 76, 18, 22, C('#e8e0d0'), 3);
+    p.rect(149, 73, 22, 3, C('#d6ccb8')); p.hline(149, 170, 73, C('#f4eee2'));
     const art = relicArtOf28(m.lot.k, m.lot.n.pt, m.lot.y, m.lot.id);
     p.blit(relicPx28(art, m.lot.id, m.lot.y, m.lot.n.pt), 148, 48);
     for (let i = 0; i < 5; i++) { p.disc(148 + i * 6, 42, 2, INK); p.disc(148 + i * 6, 42, 1, i < m.tier ? glow : C('#5a5048')); }
   }
-  // púlpito do leiloeiro
-  p.rect(40, 84, 30, 26, INK); p.rect(41, 85, 28, 24, C('#6e2e20')); p.rect(41, 85, 28, 3, C('#c09048'));
+  // balcão de consignação
+  box(p, 262, 114, 52, 18, pal.woodDark, 4);
+  p.rect(264, 116, 48, 2, lv(pal.woodDark, 4.4));
+  sign(p, 288, 98, t(l('CONSIGNAÇÃO', 'CONSIGNMENT')).toUpperCase(), pal.paper, tint(pal.accent2, -0.35));
   const ctx = blitPx31(cv, p.d, m.W, m.H);
   if (!ctx) return;
-  const spr = (look: ReturnType<typeof lookOf>, role: Parameters<typeof avatarSprite>[1]['role'], x: number, y: number, dir: 'SE' | 'SW' | 'NE' | 'NW'): void => {
-    const sp = avatarSprite(look, { year: m.year, role: role ?? null, pose: 'stand', dir });
-    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x - 6, y, 12, 2);
+  const era = eraOf(m.year);
+  const spr = (look: ReturnType<typeof lookOf>, role: Parameters<typeof avatarSprite>[1]['role'], x: number, y: number, dir: 'SE' | 'SW' | 'NE' | 'NW', pose: 'stand' | 'sit' = 'stand'): void => {
+    const sp = avatarSprite(look, { year: m.year, role: role ?? null, pose, dir });
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x - 6, y, 12, 2);
     ctx.drawImage(sp.c, x - sp.ax, y - sp.ay + 1);
   };
-  spr(lookOf({ id: `auctioneer-${m.sess?.house ?? 'x'}` }), null, 55, 84, 'SE');
-  // martelo
-  ctx.fillStyle = '#5a3018'; ctx.fillRect(66, 80, 2, 6); ctx.fillStyle = '#8a5028'; ctx.fillRect(63, 78, 8, 3);
-  // plateia com plaquinhas
+  // leiloeiro atrás do púlpito, com o martelo
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, m.W, 83); ctx.clip();
+  spr(lookOf({ id: `auctioneer-${m.sess?.house ?? 'x'}` }), null, 54, 96, 'SE');
+  ctx.restore();
+  ctx.fillStyle = '#3a1e10'; ctx.fillRect(66, 76, 1, 6); ctx.fillStyle = '#8a5028'; ctx.fillRect(64, 75, 6, 3);
+  // plateia sentada, de costas para você, com as plaquinhas
   for (const x of m.seats) {
+    const ch = furniture('chair', era, 'SW'); ctx.drawImage(ch.c, x.x - ch.ax, x.y - ch.ay + 2);
     const pr = x.b.pid ? s.persons[x.b.pid] : undefined;
-    spr(lookOf(pr ?? { id: x.b.key }), pr?.role ?? null, x.x, x.y, 'NW');
-    const up = x.lead ? 14 : x.outAt !== undefined ? -2 : 6;
-    ctx.fillStyle = '#170e12'; ctx.fillRect(x.x + 5, x.y - 28 - up + 8, 1, up + 6);
+    spr(lookOf(pr ?? { id: x.b.key }), pr?.role ?? null, x.x, x.y, 'NW', 'sit');
+    const up = x.lead ? 12 : x.outAt !== undefined ? -4 : 4;
+    ctx.fillStyle = '#170e12'; ctx.fillRect(x.x + 6, x.y - 26 - up, 1, up + 8);
+    ctx.fillStyle = '#170e12'; ctx.fillRect(x.x + 1, x.y - 34 - up, 11, 9);
     ctx.fillStyle = x.outAt !== undefined ? '#8a8a8a' : x.lead ? '#f0c040' : '#f4ecd8';
-    ctx.fillRect(x.x + 1, x.y - 34 - up + 8, 9, 7);
+    ctx.fillRect(x.x + 2, x.y - 33 - up, 9, 7);
   }
-  // você, de costas, com a sua plaquinha
+  // você, de pé no corredor, com a sua plaquinha
   const me = playerPerson(s);
   spr(lookOf(me ?? { id: 'player' }), me?.role ?? null, 160, 178, 'NE');
   if (!m.cons && m.lot) {
     const lead = m.lad?.lead === 'player';
-    ctx.fillStyle = '#170e12'; ctx.fillRect(166, lead ? 140 : 148, 1, lead ? 18 : 10);
-    ctx.fillStyle = lead ? '#f0c040' : '#ffffff'; ctx.fillRect(162, lead ? 133 : 141, 10, 8);
+    ctx.fillStyle = '#170e12'; ctx.fillRect(166, lead ? 138 : 146, 1, lead ? 20 : 12); ctx.fillRect(161, lead ? 131 : 139, 12, 9);
+    ctx.fillStyle = lead ? '#f0c040' : '#ffffff'; ctx.fillRect(162, lead ? 132 : 140, 10, 7);
   }
 }
-const withA = (c: Col, a: number): Col => (c & 0x00ffffff) | (Math.max(0, Math.min(255, a)) << 24);
+
 
 // ---------------------------------------------------------------- painéis
 
