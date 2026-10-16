@@ -97,6 +97,12 @@ function reactAround(s: GameState, who: string, d: { r?: number; t?: number }, n
 const RECORD = new Set(['session_credit', 'cowrite_split', 'charity_single', 'feat', 'collab', 'tie']);
 
 onFact('*', (s: GameState, f: Fact) => {
+  const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
+  factMeet(s, f);
+  if (t0) SOC31_PERF.factMs += performance.now() - t0;
+}, 'social31');
+
+function factMeet(s: GameState, f: Fact): void {
   const k = f.kind;
   const A = f.actors;
   if (!A.length) return;
@@ -170,7 +176,7 @@ onFact('*', (s: GameState, f: Fact) => {
         pairwise(s, ns, 'record', true);
       }
   }
-}, 'social31');
+}
 
 // ---------------------------------------------------------------- o mês social
 

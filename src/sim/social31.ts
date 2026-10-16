@@ -270,4 +270,4 @@ export function coolMonth31(s: GameState, gone: (id: string) => boolean): { cool
 export const edgeCount31 = (s: GameState): number => Object.keys(soc31(s).e).length;
 
 /** Medição de desempenho (só memória do processo, nunca no save): ms gastos pelo mês social. */
-export const SOC31_PERF = { ms: 0, months: 0, max: 0 };
+export const SOC31_PERF = { ms: 0, months: 0, max: 0, factMs: 0 };
