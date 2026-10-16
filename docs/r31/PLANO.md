@@ -59,6 +59,10 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 
 ## Onda 5 (31.5) · jogo explorável (pedido do dono, 2026-10-16) — mapa completo das telas: `docs/r31/onda5-mapa.md`
 > Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
+> **Começo antecipado (pedido do dono, 2026-10-16):** enquanto a onda 4 termina, a onda 5 começa só pelo que não esbarra
+> nela: ART5 (objetos e papéis em pixel art, `claude/r31-w5-art`), INI (tela inicial e nova run, `claude/r31-w5-ini`) e
+> TEC (teclas, especificação de cada tela e esqueleto da navegação atrás de `exp5.nav`, `claude/r31-w5-tec`). A sede como
+> centro, a retirada dos menus, a casa como "Você" e o mapa sem lista ficam para depois da build da onda 4 e dos ajustes.
 > cada função é um lugar, um objeto, uma porta ou uma pessoa. As telas atuais ficam por baixo (a camada nova é de navegação);
 > números do jogo não mudam. Foco no PC (celular fica para depois).
 - **Mocks** em `docs/r31/mocks/onda5/` (sede, fichário, casa, cidade, pausa). Decisão do dono (2026-10-16): a ideia está
