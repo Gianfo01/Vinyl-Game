@@ -16,8 +16,9 @@ describe('playbot16', () => {
     // (liquidez 1,57 mi < 18 × salário × 1,1). Varredura pb-1..15 no 1º ano: só pb-2, pb-8, pb-11 e pb-13 têm todas as
     // ações (contratar no 1º ano continua raro: 9 de 15 sem contratação); pb-11 tem a maior folga (8 festivais, 2 turnês).
     // R31 (W0-RNG): mundo no fluxo 'world', motor em 'tick', bot em 'act' — varredura pb-1..16 no 1º ano: 8 de 16 têm todas as
-    // ações (pb-3, 5, 6, 8, 9, 10, 12, 16); pb-11 deixou de contratar no 1º ano. pb-9 tem folga (3 turnês, 7 festivais, 1 contratação).
-    const cfg = defaultConfig('r16pb-9', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
+    // ações (pb-3, 5, 6, 8, 9, 10, 12, 16); pb-11 deixou de contratar no 1º ano. com W0-KN (estimativa pela regra única) pb-9 também deixa de
+    // contratar; pb-10 tem todas as ações nos dois (2 turnês, 8 festivais, 1 contratação).
+    const cfg = defaultConfig('r16pb-10', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
     const years = FULL ? 2 : 1;
     // a mesma partida que simulatePlayer joga, guardando o retrato do 3º mês para a reprise curta
     const s = createGame(cfg);
