@@ -86,3 +86,7 @@ export interface Y31Hooks {
   reserve?: (s: GameState, rels: Release[], U: Float64Array, nC: number) => void;
 }
 export const Y31: Y31Hooks = {};
+
+/** R31 CAR (sys/car31.ts): execuções das carreiras (rádio, playlist, palcos…) puxam o lançamento para o país da
+ *  execução — multiplica os pesos por país (mesma ordem de COUNTRY_INFO) depois dos fatores Y. */
+export const CAR31: { weights?: (s: GameState, rel: Release, w: number[]) => void } = {};

@@ -53,7 +53,14 @@ export type Do31 =
   | { k: 'relic'; id: string }
   | { k: 'release'; id: string }
   | { k: 'you' }
-  | { k: 'agg' };
+  | { k: 'agg' }
+  /** R31 CAR: decisão de carreira resolvida na própria cena (RUN31[id]) */
+  | { k: 'run'; id: string; arg?: string };
+
+/** R31 CAR (ui/r31/car31ui.ts): decisões da cena-assinatura, rodadas por `run31` ({ k: 'run' }). Devolvem erro ou null. */
+export const RUN31: Record<string, (s: GameState, arg?: string) => L | null> = {};
+/** R31 CAR: ações extras por ponto da cena-assinatura, lista (degraus/grade) e alertas — preenchido por car31ui. */
+export const SIG31: { acts?: (s: GameState, c: Career31, hotId: string) => Btn31[]; list?: (s: GameState, c: Career31) => Row31[]; alerts?: (s: GameState, c: Career31) => Chip31[]; listTitle?: L } = {};
 
 export interface Btn31 { id: string; label: L; do: Do31; /** motivo do bloqueio (mostrado antes do clique) */ lock?: L | null; main?: boolean }
 
@@ -750,14 +757,15 @@ function sigM(s: GameState, c: Career31): SalaM31 {
   const sp = sigSpec(s, c);
   const def = careerDef(c);
   const active = (x4<{ active?: string[] }>(s, 'careers12')?.active ?? []).includes(c);
-  const hots: Hot31[] = sp.props.map((p) => ({ id: p.id, kind: 'object', prop: p.prop, x: p.x, w: p.w, pp: p.pp, label: p.label, tip: p.tip, chip: p.chip, do: p.do }));
+  const hots: Hot31[] = sp.props.map((p) => ({ id: p.id, kind: 'object', prop: p.prop, x: p.x, w: p.w, pp: p.pp, label: p.label, tip: p.tip, chip: p.chip, do: p.do, acts: SIG31.acts?.(s, c, p.id) ?? [] }));
   for (const p of sp.people ?? []) hots.push({ id: `p:${p.seed}`, kind: 'person', x: p.x, w: 0.07, personId: p.personId, actId: p.actId, fig: { personId: p.personId, seed: p.seed, pose: p.pose, dir: 'SE', lift: p.lift }, label: p.label, tip: p.label, do: p.actId ? { k: 'act', id: p.actId } : { k: 'you' } });
   const name = def?.name ?? L1(c);
   return {
     id, title: SALA_NAME31[id], sub: active ? fmtL(l('Carreira ativa: {c}', 'Active career: {c}'), { c: name }) : fmtL(l('{c} · carreira ainda não ativa', '{c} · career not active yet'), { c: name }),
     intro: fmtL(l('A cena da carreira {c}: cada objeto leva à tela dela.', 'The {c} career scene: each object leads to its screen.'), { c: name }),
     art, hots, deco: sp.deco, you: youIn(s, id, 0.95), details: { k: 'go', area: def?.area ?? 'careers' },
-    alerts: active ? [] : [{ sym: 'i', text: l('Comece esta carreira em Carreiras para que os números andem', 'Start this career under Careers for the numbers to move'), tone: 'info' }], list: [],
+    alerts: [...(active ? [] : [{ sym: 'i', text: l('Comece esta carreira em Carreiras para que os números andem', 'Start this career under Careers for the numbers to move'), tone: 'info' as const }]), ...(SIG31.alerts?.(s, c) ?? [])],
+    list: SIG31.list?.(s, c) ?? [], listTitle: SIG31.listTitle,
   };
 }
 

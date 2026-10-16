@@ -49,5 +49,7 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   **R · Resultados e aprendizados** · **N · Extras** · **M · Estilos por época** · **X · Nomes e obras reais**.
 
 ## Onda 5 (31.5) · fechamento
+> **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a onda 5. Juntar tudo, gerar a build `Masters_31_onda4.html`
+> com tudo, enviar ao dono e esperar os pedidos de ajuste. A onda 5 fica para o final, depois dos ajustes.
 - Metas e fim de jogo num motor só; robôs das 12 carreiras; balanço com tudo ligado; salvar/carregar; desempenho contra a
   v30; acessibilidade; regressão completa.

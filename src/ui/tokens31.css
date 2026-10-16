@@ -39,7 +39,7 @@
   --good: #a9e6c3; --bad: #ffb3a9; --warn: #f6d48a;
 }
 /* claro em qualquer modo de daltonismo: mesmo cinza/destaque do claro normal (o ux19 só vale sem daltonismo) */
-:root[data-theme='light']:not(.contrast):not([data-cb='none'])[data-cb] { --muted: #6b5f55; --accent: #a4501a; }
+:root[data-theme='light'][data-era-skin='estudio']:not(.contrast):not([data-cb='none'])[data-cb] { --muted: #6b5f55; --accent: #a4501a; } /* só o Estúdio: os estilos por época têm cinza/destaque próprios */
 
 /* ================= 3. daltonismo: cores de estado por tema (antes o theme25 apagava a troca) ================= */
 /* deuteranopia/protanopia: bom = azul, ruim = laranja-vermelhão, alerta = amarelo (paleta Okabe-Ito, AA) */
@@ -74,7 +74,7 @@
   background-image: radial-gradient(rgb(0 0 0 / 0.38) 1px, transparent 1.5px); background-size: 4px 4px;
 }
 
-/* ================= 4. estilo da interface por era (mecânica; os 9 estilos chegam na onda 4) ================= */
+/* ================= 4. estilo da interface por era (mecânica; os 9 estilos moram em skins31.css) ================= */
 /* :root[data-era-skin='<id>'] é sempre o estilo efetivo (ui/skin31.ts). 'estudio' = o visual de hoje: nada muda. */
 .skin31-row { display: flex; flex-direction: column; gap: var(--sp-1); }
 .skin31-row small { color: var(--muted); }

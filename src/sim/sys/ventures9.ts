@@ -385,6 +385,8 @@ export function signBooking(s: GameState, r: Rng, id: string, actId: string, rat
   return { ok: true, text: fmtL(l('{a} agora é agenciado por {n}.', '{a} is now booked by {n}.'), { a: a.name, n: v.name }) };
 }
 
+/** R31 CAR (sys/car31more.ts): turnê agenciada pelo mercado-alvo do cliente. */
+export const ROUTE31: { f?: (s: GameState, v: Venture, a: Act) => void } = {};
 export function routeTour(s: GameState, r: Rng, id: string, actId: string): { ok: boolean; text: L } {
   const v = byId(s, id);
   const c = v?.clients?.find((x) => x.actId === actId);
@@ -402,6 +404,7 @@ export function routeTour(s: GameState, r: Rng, id: string, actId: string): { ok
   a.fame = clamp(a.fame + 2, 0, 100);
   a.cash += Math.round(gross * (1 - c.rate) * 0.3);
   v.rep = clamp(v.rep + 2, 0, 100);
+  ROUTE31.f?.(s, v, a); // R31 CAR: a turnê passa pelas cidades do mercado-alvo (fama no país)
   return { ok: true, text: fmtL(l('Turnê de {a} roteirizada: casas cheias e comissão no bolso.', '{a}\'s tour routed: full rooms and the commission in the bank.'), { a: a.name }) };
 }
 
@@ -451,10 +454,13 @@ export function isConglomerate(s: GameState): boolean {
   return new Set(ventures(s).list.filter((v) => v.kind === 'media').map((v) => v.media)).size >= 3;
 }
 
+/** R31 CAR (sys/car31media.ts): com a grade e a audiência ligadas, o anúncio segue a audiência (pago lá, não aqui). */
+export const MEDIA9X: { ads?: (s: GameState, v: Venture) => boolean } = {};
+
 function mediaMonth(s: GameState, r: Rng, v: Venture): void {
   v.reach = Math.round((v.reach! + (mediaReach(s, v) - v.reach!) * 0.15) * 10) / 10;
   const conglo = isConglomerate(s) ? 1.25 : 1;
-  vpay(s, v.owner, money(s, MEDIA[v.media!].ad) * (v.reach / 50) * (0.6 + v.level * 0.4) * conglo, `ads:${v.id}`, `Publicidade ${v.name}`, v);
+  if (!MEDIA9X.ads?.(s, v)) vpay(s, v.owner, money(s, MEDIA[v.media!].ad) * (v.reach / 50) * (0.6 + v.level * 0.4) * conglo, `ads:${v.id}`, `Publicidade ${v.name}`, v);
   const fav = v.favored ? s.acts[v.favored] : undefined;
   if (fav) {
     fav.momentum = clamp(fav.momentum + v.reach / 20, 0, 100);
