@@ -53,7 +53,10 @@ const COMMON31 = new Set(('yes kiss heart queen prince boston chicago america eu
   + 'logic common nas eve brandy monica mya aaliyah sade shakira anitta xuxa mina rita elis gal cazuza djavan sandy junior cher dido enya bjork '
   + 'jewel lorde halsey prince madonna rihanna beyoncé usher ciara akon pitbull juanes alpha omega zero one two three four five six seven eight '
   + 'nine ten the a o os as e de da do um uma rádio radio festival tv band banda music música rock pop jazz blues samba bossa funk soul disco '
-  + 'punk metal rap reggae ska house techno trance gospel country folk mpb forró axé sertanejo pagode tango salsa').split(/\s+/));
+  + 'punk metal rap reggae ska house techno trance gospel country folk mpb forró axé sertanejo pagode tango salsa '
+  // nomes reais que são palavras comuns da interface ou de frases (pt/en): só trocam como texto inteiro ou entre aspas
+  + 'elenco nada menor magro alemão dente levante clara area gala mango city culture focus jet winter sabotage bender accept '
+  + 'deluxe random melody shade hub jun jul flood youth vinyl friends friday savage gazebo syria variety').split(/\s+/));
 
 let STOP31: Set<string> | null = null;
 function stop31(): Set<string> {
