@@ -7,3 +7,4 @@ import './pendsrc';
 import './role';
 import './object';
 import './txn';
+import './pendattn';

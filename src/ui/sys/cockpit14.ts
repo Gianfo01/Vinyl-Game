@@ -32,6 +32,11 @@ import { rumoInto28 } from '../end28'; // r28 (F4)
 import { cockpit29Into } from '../ps/screens29'; // r29 REORG (M04/M17)
 import { parts21 } from './ui20';
 import { openSede27 } from '../ps/hqpeek27';
+import { hoje31 } from '../ps/hoje31model'; // R31 (A): Hoje — 3 perguntas e linha do tempo única
+import { hoje31View } from '../ps/menu31ui';
+import { placeOf31 } from '../ps/menu31';
+import { sedeNav25 } from '../ps/slot25';
+import { careers } from '../../sim/sys/careers12';
 import './cockpit14.css';
 import './cockpit27.css';
 
@@ -89,6 +94,26 @@ function panel27(m: Cockpit27): HTMLElement {
       m.more.map((x) => h('button', { type: 'button', class: 'link', onclick: () => goTo(x.go) }, t(x.label)))));
 }
 
+/** R31 (A): o painel do Hoje — decidir agora · em andamento · o que mudou · linha do tempo; depois os cartões que
+ *  sobram do painel r27 (sem "Projetos", que já estão em "Em andamento") e os links de "Ver mais". */
+function panel31(m: Cockpit27, s: GameState): HTMLElement {
+  const go = (g: { area?: string; tab?: [string, string]; act?: string; hub?: { actId: string; pid: string } }): void => {
+    if (g.hub) return goToHub(g.hub.actId, g.hub.pid);
+    if (g.act) return go25({ act: g.act } as Goto25);
+    if (g.tab) setTab(g.tab[0], g.tab[1]);
+    if (g.area) sedeNav25.go(g.area); // mesmo caminho do menu (nomes antigos como 'desk'/'inbox' abrem a aba certa)
+  };
+  const ctx = { active: careers(s).active };
+  const cards = m.cards.filter((c) => c.id !== 'proj');
+  return h('div', { class: 'ck27' },
+    hoje31View(hoje31(s), s.week, go, (a) => t(placeOf31(a, ctx).label)),
+    cards.length ? h('div', { class: 'ck27-grid' }, cards.map(cardView)) : null,
+    h('nav', { class: 'ck27-more', 'aria-label': t(l('Ver mais', 'See more')) },
+      h('span', { class: 'ck27-more-l' }, t(l('Ver mais', 'See more')), ':'),
+      m.more.map((x) => h('button', { type: 'button', class: 'link', onclick: () => goTo(x.go) }, t(x.label)))));
+}
+void panel27;
+
 /** Mesa do mês: tudo o que saiu do painel (Hoje/Ameaças, blocos por peso, o que mudou, a Mesa e o Nosso mundo). */
 function desk27(s: GameState): HTMLElement {
   const desk = deskPanel(s);
@@ -110,9 +135,9 @@ export function cockpit(s: GameState): HTMLElement {
   return h('div', { class: 'ck14 ck21 ck27-page' },
     // r27 (COCK): cabeçalho do sistema (ui27) — título, o que vale ao avançar e a faixa do mês (data, caixa, fôlego, fama).
     // Sem botões "Decisões (n)"/"Mensagens (n)": decisões aparecem uma vez (no Agora) e a caixa tem a própria aba.
-    pageHeader27({ title: l('Cockpit', 'Cockpit'), area: 'cockpit', sub: M.sub, kpis: M.strip, art: artHook27.f?.('cockpit', s) ?? null, go: (a) => { setTab('ck20', 'panel'); goArea27(a); } }),
+    pageHeader27({ title: l('Hoje', 'Today'), area: 'cockpit', sub: M.sub, kpis: M.strip.filter((k) => !['Mês', 'Caixa', 'Fama'].includes(k.label.pt)), /* R31 (A): sem repetir a barra do topo */ art: artHook27.f?.('cockpit', s) ?? null, go: (a) => { setTab('ck20', 'panel'); goArea27(a); } }),
     tabs('ck20', [
-      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => cockpit29Into(rumoInto28(panel27(M), s), s) }, // r28 (F4): + "Rumo a: <final> (x/100)"; r29: + retomada e acompanhamento
+      { id: 'panel', label: t(l('Painel', 'Panel')), render: () => cockpit29Into(rumoInto28(panel31(M, s), s), s) }, // r28 (F4): + "Rumo a: <final> (x/100)"; r29: + retomada e acompanhamento
       { id: 'inbox', label: t(l('Caixa de entrada', 'Inbox')), badge: m || undefined, render: () => h('div', { class: 'ck14-inbox', id: 'ck14-inbox' }, ib ? ib.render(s) : h('p', { class: 'muted' }, '—')) },
       { id: 'desk', label: t(l('Mesa do mês', 'Monthly desk')), render: () => desk27(s) },
     ], rerender));
@@ -121,4 +146,4 @@ export function cockpit(s: GameState): HTMLElement {
 /** r27 (J): KPI do cabeçalho leva à página (mesmo efeito de clicar no menu). */
 function goArea27(a: string): void { store.area = a as typeof store.area; rerender(); }
 
-registerArea({ id: 'cockpit', label: l('Cockpit', 'Cockpit'), icon: 'calendar', key: '1', render: cockpit, badge: (s) => cockpitBadge23(s) || undefined }); // r23 (B): só o que pede ação
+registerArea({ id: 'cockpit', label: l('Hoje', 'Today'), icon: 'calendar', key: '1', render: cockpit, badge: (s) => cockpitBadge23(s) || undefined }); // r23 (B): só o que pede ação

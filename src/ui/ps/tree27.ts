@@ -30,6 +30,8 @@ export interface TreeCtx27 {
   search: () => void;
   /** r27 UX: seletor Essencial/Completa (a folha do celular mostra no topo) */
   viewToggle?: () => HTMLElement;
+  /** R31 (A): "Menu completo" — a árvore clássica inteira (sem hubs), seja qual for a vista guardada */
+  full?: boolean;
 }
 
 // ---------------------------------------------------------------- aberto/fechado (por pessoa)
@@ -150,7 +152,7 @@ export function navSection27(ctx: TreeCtx27, gr: NavGroup25): HTMLElement {
       ctx.go(ctx.home(gr));
     } },
     h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(gr.icon, 2)), h('span', { class: 'lbl' }, t(gr.label)), badge ? h('span', { class: 'badge' }, badge) : null);
-  const simple = view27() === 'simple';
+  const simple = !ctx.full && view27() === 'simple';
   const body = one ? h('div', { class: 'tree27-pages tree27-single' }, oneTabs.length ? tabList(ctx, oneTabs, 1) : null) : simple
     // r27 UX (Essencial): poucas entradas por seção — hubs (páginas unificadas) e páginas soltas, sem cabeçalhos de tema
     ? h('ul', { class: 'tree27-pages tree27-simple', role: 'group', 'aria-label': t(gr.label) }, entries27(gr).map((e) => entryNode(ctx, e)))

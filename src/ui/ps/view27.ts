@@ -21,3 +21,13 @@ export function shownTabs27(n: number, cur: number, max = TABS_SHOWN27): number[
   if (cur >= max) xs.push(cur);
   return xs;
 }
+
+/** R31 (A): teto de abas visíveis numa faixa antes do "Mais ▾" (plano-telas §5.3), em qualquer vista. */
+export const TABS_MAX31 = 6;
+/** Quais abas aparecem de cara: até 6; numa faixa maior, as 5 primeiras + a aberta (o resto vai para "Mais ▾"). */
+export function shownTabs31(n: number, cur: number, max = TABS_MAX31): number[] {
+  if (n <= max) return [...Array(n).keys()];
+  const xs = [...Array(max - 1).keys()];
+  if (cur >= max - 1) xs.push(cur);
+  return xs;
+}

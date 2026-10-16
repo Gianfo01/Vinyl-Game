@@ -60,7 +60,7 @@ export const ROOMS25: Room25[] = ['studio', 'lounge', 'office', 'anr', 'stage', 
 const META: Record<Room25, { name: L; desc: L; icon: string; go: Goto25; minHq: number }> = {
   studio: { name: l('Estúdio', 'Studio'), desc: l('Gravações e projetos', 'Recordings and projects'), icon: 'mic', go: { area: 'studio' }, minHq: 0 },
   lounge: { name: l('Lounge do elenco', 'Artist lounge'), desc: l('Artistas e relações', 'Artists and relations'), icon: 'guitar', go: { area: 'artists' }, minHq: 0 },
-  office: { name: l('Escritório', 'Office'), desc: l('Caixa, equipe e gestão', 'Cash, staff and management'), icon: 'money', go: { area: 'finance' }, minHq: 0 },
+  office: { name: l('Escritório', 'Office'), desc: l('Equipe, contratações e gestão', 'Staff, hiring and management'), icon: 'money', go: { area: 'team' }, minHq: 0 }, // R31 (A): o escritório abre a Equipe (finanças ficam em Listas)
   anr: { name: l('A&R e talentos', 'A&R and talent'), desc: l('Olheiros e funil de descobertas', 'Scouts and the discovery funnel'), icon: 'fans', go: { area: 'market', market: 'scouting' }, minHq: 2 },
   stage: { name: l('Ensaio e palco', 'Rehearsal and stage'), desc: l('Shows e turnês', 'Shows and tours'), icon: 'tour-bus', go: { area: 'shows' }, minHq: 1 },
   lobby: { name: l('Recepção', 'Reception'), desc: l('Caixa de entrada e decisões', 'Inbox and decisions'), icon: 'newspaper', go: { area: 'cockpit', tab: ['ck20', 'inbox'] }, minHq: 0 },

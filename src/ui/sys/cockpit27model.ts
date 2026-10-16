@@ -91,7 +91,8 @@ function commit(s: GameState): Row27m[] {
   }))].slice(0, ROWS_MAX27);
 }
 
-function proj(s: GameState): Row27m[] {
+/** R31 (A): exportado para o Hoje ("em andamento"). */
+export function proj(s: GameState): Row27m[] {
   let xs: ReturnType<typeof openProjects> = [];
   try { xs = openProjects(s).filter((p) => { const a = s.acts[p.actId]; return !!a && (a.owner === 'player' || !!a.playerBand); }); } catch { xs = []; }
   return xs.slice(0, ROWS_MAX27).map((p) => {
