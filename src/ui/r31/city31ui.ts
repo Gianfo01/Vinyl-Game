@@ -29,20 +29,31 @@ import { PLACE_UI31 } from '../sys/place27ui';
 import { lockBtn31 } from './lock31';
 import { goDest31 } from './quick31';
 import { blitPx31, sceneView31 } from './scene31';
-import { MON31 } from './scene31model';
+import { MON31, type Spot31 } from './scene31model';
 import { card, shop31Tab } from './shop31';
-import { SH31, SW31, paintHouse31, paintShop31, type Fam31px, type ShopArt31 } from './shop31px';
+import { SH31, SW31, paintHouse31, paintShop31, tagPrice31, type Fam31px, type Painted31, type ShopArt31 } from './shop31px';
 
 export const SHOP_AREA31 = 'loja31';
 export const HOUSE_AREA31 = 'casa31';
 const UI = { city: '' };
 
-/** Bonecos sobre a pintura: você (sempre presente) e, na loja, o vendedor atrás do balcão. */
-function people(s: GameState, ctx: CanvasRenderingContext2D, you: [number, number], clerk?: [number, number]): void {
-  const me = playerPerson(s);
-  if (me) { const sp = avatarSprite(lookOf(me), { year: s.year, pose: 'stand', dir: 'SE', frame: 0 }); ctx.drawImage(sp.c, you[0] - 12, you[1] - 31); }
-  if (clerk) { const sp = avatarSprite(lookOf({ id: `clerk31:${s.config.homeCity}` }), { year: s.year, pose: 'stand', dir: 'SW', frame: 0 }); ctx.drawImage(sp.c, clerk[0] - 12, clerk[1] - 31); }
+/** Pinta a cena em camadas: fundo → bonecos (pé no chão, com sombra, como na sede) → frente (balcão por cima de quem
+ *  está atrás dele: o vendedor aparece do tronco para cima). */
+function paintLayers(s: GameState, cv: HTMLCanvasElement, d: Painted31): void {
+  const ctx = blitPx31(cv, d.px.d, SW31, SH31);
+  if (!ctx) return;
+  for (const pp of d.people) {
+    const who = pp.id === 'you' ? playerPerson(s) : { id: `clerk31:${s.config.homeCity}` };
+    if (!who) continue;
+    const sp = avatarSprite(lookOf(who), { year: s.year, pose: 'stand', dir: pp.dir, frame: 0 });
+    if (!pp.behind) { ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(pp.x - 6, pp.y, 12, 1); }
+    ctx.drawImage(sp.c, pp.x - sp.ax, pp.y - sp.ay + 1);
+  }
+  const fc = document.createElement('canvas');
+  const fctx = blitPx31(fc, d.front.d, SW31, SH31);
+  if (fctx) ctx.drawImage(fc, 0, 0);
 }
+const youSpot = (d: Painted31): Spot31 => { const y = d.people.find((x) => x.id === 'you')!; return { id: 'you', x: y.x - 8, y: y.y - 32, w: 16, h: 33, label: l('Você', 'You'), tip: l('O seu painel: agenda, energia e dinheiro pessoal', 'Your panel: agenda, energy and personal money'), go: { area: 'you' }, quiet: true }; };
 
 // ---------------------------------------------------------------- loja
 
@@ -57,9 +68,10 @@ export function shopArt31(s: GameState, city: string): { art: ShopArt31; rows: S
   const w = weeksToRestock31(s);
   const pt = getLang() === 'pt';
   const art: ShopArt31 = {
-    year: s.year, head: `${pt ? 'Novidades' : 'New in'} ${t(MON31[s.month])}`, when: pt ? `muda em ${w} sem` : `changes in ${w} wk`, gar: pt ? 'Garagem' : 'Garage', clerk: true,
+    year: s.year, month: s.month, city, seed: city.length * 31 + s.year, name: pt ? 'Loja de instrumentos' : 'Instrument shop',
+    head: `${pt ? 'Novidades' : 'New in'} ${t(MON31[s.month])}`, when: pt ? `muda em ${w} sem` : `changes in ${w} wk`, gar: pt ? 'Garagem' : 'Garage', clerk: true,
     weeks: w,
-    items: items.slice(0, 6).map((r) => ({ offer: r.offer, fam: famOf(r), price: $(r.price), gift: ppl.length > 0, name: r.def!.name })),
+    items: items.slice(0, 6).map((r) => ({ offer: r.offer, fam: famOf(r), kind: r.def?.id, price: $(r.price), tag: tagPrice31($(r.price)), gift: ppl.length > 0, name: r.def!.name })),
     news: [...items.slice(0, 3).map((r) => `+ ${t(r.def!.name)}`), gar.length ? `+ ${t(gar[0].def!.name)}` : (pt ? '- esgotou o resto' : '- rest sold out')],
     relic: rel?.relic ? { name: l(rel.relic.n.pt, rel.relic.n.en), stars: relicMeasure31(s, rel.relic).tier, price: $(rel.price), offer: rel.offer } : undefined,
     garage: gar.length ? { price: $(gar[0].price), n: gar.length, car: gar[0].offer.length } : undefined,
@@ -77,13 +89,14 @@ export function shopScene31(s: GameState): HTMLElement {
   const cities = shopCities31(s);
   const city = cities.includes(UI.city) ? UI.city : cities[0];
   const { art, rows } = shopArt31(s, city);
-  const { px, spots } = paintShop31(art);
+  const d = paintShop31(art);
+  const { spots } = d;
   const by = (offer: string) => rows.filter((r) => r.offer === offer);
   return sceneView31(s, {
     id: 'loja31', title: l('Loja de instrumentos', 'Instrument shop'), W: SW31, H: SH31,
     spots: [...spots.map((sp) => (sp.id === 'garage' ? { ...sp, quick: { kind: 'city' as const, id: city } } : sp)),
-      { id: 'you', x: 118, y: 72, w: 22, h: 30, label: l('Você', 'You'), tip: l('O seu painel: agenda, energia e dinheiro pessoal', 'Your panel: agenda, energy and personal money'), go: { area: 'you' }, quiet: true }],
-    paint: (cv) => { const ctx = blitPx31(cv, px.d, SW31, SH31); if (ctx) people(s, ctx, [128, 101], [172, 86]); },
+      youSpot(d)],
+    paint: (cv) => paintLayers(s, cv, d),
     panels: {
       buy: (offer?: string) => rowsModal(s, l('Item à venda', 'Item for sale'), by(offer ?? ''), l('Este item já saiu.', 'This item is gone.')),
       news: () => rowsModal(s, l('Novidades do mês', 'New this month'), rows.filter((r) => !r.relic), l('Tudo vendido. Volte no mês que vem.', 'Sold out. Come back next month.')),
@@ -109,12 +122,12 @@ export function houseScene31(s: GameState): HTMLElement {
   const cars = vehiclesOf(s);
   const garageItems = [...itemsOf31(s, ME31), ...itemsOf31(s, CO31)].filter((x) => x.def.cat === 'garage');
   const pt = getLang() === 'pt';
-  const { px, spots } = paintHouse31({ year: s.year, gar: pt ? 'Garagem' : 'Garage', empty: pt ? 'vazia' : 'empty', house: hs?.id ?? 'rent', prestige: hs?.prestige ?? 0,
-    cars: cars.length, carNames: cars.map((c) => goodById[c.id].name), piano: s.year < 1960 || (hs?.prestige ?? 0) >= 5, gold: Math.min(3, s.player.stats.gold), pool: hs?.id === 'modernist' || hs?.id === 'smart' });
+  const d = paintHouse31({ year: s.year, month: s.month, city: s.config.homeCity, gar: pt ? 'Garagem' : 'Garage', house: hs?.id ?? 'rent', prestige: hs?.prestige ?? 0,
+    cars: cars.length, carNames: cars.map((c) => goodById[c.id].name), carYears: cars.map((c) => Math.min(s.year, goodById[c.id].from ?? s.year)), piano: s.year < 1960 || (hs?.prestige ?? 0) >= 5, gold: Math.min(3, s.player.stats.gold), pool: hs?.id === 'modernist' || hs?.id === 'smart' });
   return sceneView31(s, {
     id: 'casa31', title: hs ? hs.name : l('Sua moradia (aluguel)', 'Your place (rented)'), W: SW31, H: SH31,
-    spots: [...spots, { id: 'you', x: 132, y: 72, w: 22, h: 30, label: l('Você', 'You'), tip: l('O seu painel: agenda, energia e dinheiro pessoal', 'Your panel: agenda, energy and personal money'), go: { area: 'you' }, quiet: true }],
-    paint: (cv) => { const ctx = blitPx31(cv, px.d, SW31, SH31); if (ctx) people(s, ctx, [142, 101]); },
+    spots: [...d.spots, youSpot(d)],
+    paint: (cv) => paintLayers(s, cv, d),
     panels: {
       home: () => modal(t(l('Sala', 'Living room')), h('div', null,
         h('p', null, t(l('Patrimônio pessoal: {v}. Estresse: {e}.', 'Personal wealth: {v}. Stress: {e}.'), { v: $(o.wealth), e: Math.round(o.stress) })),

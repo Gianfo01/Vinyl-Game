@@ -9,7 +9,7 @@ import type { PlaceK27, Person27 } from '../../sim/sys/place27';
 import { avatarSprite, lookOf, type Pose } from './avatar';
 import { paletteOf } from './palette';
 import { C, INK, Px, inked, lv, mix, noise, tint, withAlpha, type Col } from './px';
-import { bars31, crowd31, speaker31 } from './stage31px';
+import { bars31, crowd31, inst31, instSpec31, speaker31 } from './stage31px';
 import { eraOf } from './palette';
 import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 
@@ -210,35 +210,69 @@ function pxOnCtx(ctx: CanvasRenderingContext2D, q: Px): void {
   ctx.drawImage(cv, 0, 0);
 }
 
-export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people: Person27[], o: IDrawOpts27 = {}): IDrawn27 {
-  const W = Math.max(300, Math.floor(o.minW ?? 0)), H = 150;
+/** R31 (POL): o corte (céu, vizinhos, rua, parede da época) num Px, com a camada de adereços já separada —
+ *  a mesma casca da sede usada pelos interiores e pelas cenas de loja/casa (fonte única do acabamento). */
+export interface Cut27 { W: number; H: number; gy: number; bx: number; bw: number; y0: number; x0: number; w0: number; top: number; fy: number; RH: number;
+  back: Px; layer: Px; g: Ctx27; pal: ReturnType<typeof paletteOf>; X: (f: number) => number; Wd: (f?: number) => number; seed: number; year: number }
+export function cut27(W0: number, year: number, o: { floor: Interior27['floor']; dim: boolean; shell?: 'garage' | 'shop'; seed: number; city?: string }): Cut27 {
+  const W = Math.max(300, Math.floor(W0)), H = 150;
   const gy = H - STREET, bx = 12, bw = W - 24, y0 = gy - FOUND - RH, x0 = bx + OW, w0 = bw - 2 * OW, top = y0 - 14;
-  const year = m.year;
-  const seed = hs(`${o.seed ?? ''}|${m.k}|${o.city ?? ''}`);
-  const cell = { kind: (m.floor === 'office' ? 'office' : m.floor === 'studio' ? 'studio' : m.floor === 'lounge' ? 'lounge' : 'lobby') as Plan27['cells'][number]['kind'], floor: 0, x: x0, y: y0, w: w0, h: RH };
-  const shell: Plan27['shell'] = m.k === 'rehearsal' ? 'garage' : 'shop';
-  const pl = { hq: 1, year, shell, gear: gearOf27(year), light: m.dim ? (year < 1960 ? 'bulb' : lightOf27('shop', year)) : lightOf27('shop', year), era: eraOf(year), facade: 'block',
+  const seed = o.seed;
+  const cell = { kind: (o.floor === 'office' ? 'office' : o.floor === 'studio' ? 'studio' : o.floor === 'lounge' ? 'lounge' : 'lobby') as Plan27['cells'][number]['kind'], floor: 0, x: x0, y: y0, w: w0, h: RH };
+  const shell: Plan27['shell'] = o.shell ?? 'shop';
+  const pl = { hq: 1, year, shell, gear: gearOf27(year), light: o.dim ? (year < 1960 ? 'bulb' : lightOf27('shop', year)) : lightOf27('shop', year), era: eraOf(year), facade: 'block',
     W, H, gy, bx, bw, top, floors: 1, cells: [cell], rooms: [], city: o.city ?? '', lms: [], brand: '', seed, flock: {}, vip: null, crown: null } as unknown as Plan27;
-  let p = new Px(W, H);
+  const back = new Px(W, H);
   const pal = paletteOf(year);
-  const g: Ctx27 = { p, pal, pl, r: prim27.rng27(seed), lamp: pl.light === 'tube' ? C('#e8f4ff') : pl.light === 'led' ? mix(C('#ffffff'), pal.accent, 0.25) : pl.light === 'globe' ? C('#ffc070') : C('#ffd889') };
+  const g: Ctx27 = { p: back, pal, pl, r: prim27.rng27(seed), lamp: pl.light === 'tube' ? C('#e8f4ff') : pl.light === 'led' ? mix(C('#ffffff'), pal.accent, 0.25) : pl.light === 'globe' ? C('#ffc070') : C('#ffd889') };
   prim27.sky(g); prim27.neighbours(g); prim27.street(g);
   prim27.wallFill(g, cell as Plan27['cells'][number]);
-  void FLOORK;
-  const fy = y0 + RH - 3;
-  const X = (f: number) => Math.round(x0 + f * w0);
-  const Wd = (f = 0.1) => Math.max(6, Math.round(f * w0));
-  const { blk } = prim27;
-  const k0 = m.k;
+  const layer = new Px(W, H);
+  g.p = layer;
+  return { W, H, gy, bx, bw, y0, x0, w0, top, fy: y0 + RH - 3, RH, back, layer, g, pal, seed, year,
+    X: (f: number) => Math.round(x0 + f * w0), Wd: (f = 0.1) => Math.max(6, Math.round(f * w0)) };
+}
+/** Fecha o corte: contorno INK nos adereços, moldura da fachada, letreiro, lâmpadas e oclusão nos cantos. */
+export function cutEnd27(c: Cut27, o: { name?: string; dim: boolean; facade: Col }): Px {
+  const { g, back: p, W, bx, bw, top, gy, y0, x0, w0, fy, year } = c;
+  c.layer.outline(INK);
+  g.p = p;
+  p.blit(c.layer, 0, 0);
+  const fc = o.facade;
+  blk(p, bx, top, OW, gy - top, fc); blk(p, bx + bw - OW, top, OW, gy - top, tint(fc, -0.18));
+  blk(p, bx, top, bw, y0 - top, tint(fc, 0.06));
+  p.rect(bx - 2, top - 2, bw + 4, 3, tint(fc, -0.3));
+  blk(p, bx, gy - FOUND, bw, FOUND, tint(fc, -0.35));
+  if (o.name) prim27.sign(g, Math.round(W / 2), top + 2, o.name, Math.min(bw - 20, 200), o.dim || year >= 1925);
+  const nL = w0 > 200 ? 3 : 2;
+  for (let i = 0; i < nL; i++) prim27.lamp(g, x0 + Math.round((w0 * (i + 0.5)) / nL), y0, fy, 26);
+  if (o.dim) p.rect(x0, y0, w0, RH, withAlpha(C('#0a0820'), 70));
+  for (let i = 0; i < 3; i++) { p.rect(x0 + i, y0, 1, RH, withAlpha(OCC, 90 - i * 28)); p.rect(x0 + w0 - 1 - i, y0, 1, RH, withAlpha(OCC, 80 - i * 25)); }
+  return p;
+}
+const blk = prim27.blk;
+export const facadeCol27 = (year: number, k: IKind27): Col => facadeCol(year, k);
+
+/** R31 (POL): a pintura PURA do interior — fundo, camada da frente (balcão, grade das celas, plateia de costas) e onde
+ *  fica o pé de cada pessoa (quem está no balcão fica atrás dele: aparece do tronco para cima). */
+export interface IPaint27 { W: number; H: number; fy: number; px: Px; front: Px; placed: { who: Person27; s0: ISpot27; x: number; y: number; behind: boolean }[]; stages: { x: number; w: number; y: number }[] }
+export function paintInterior27(m: Interior27, people: Person27[], o: IDrawOpts27 = {}): IPaint27 {
+  const year = m.year;
+  const seed = hs(`${o.seed ?? ''}|${m.k}|${o.city ?? ''}`);
+  const c = cut27(o.minW ?? 0, year, { floor: m.floor, dim: m.dim, shell: m.k === 'rehearsal' ? 'garage' : 'shop', seed, city: o.city });
+  const { W, H, y0, x0, w0, fy, X, Wd, pal, g } = c;
+  void FLOORK; void x0; void w0;
   let crowd: Prop27 | undefined;
+  const front = new Px(W, H), counterL = new Px(W, H);
+  const stages: IPaint27['stages'] = [];
   // adereços numa camada própria, contornada com INK no fim (mesmo acabamento da sede e do pacote de equipamentos)
-  const back = p, layer = new Px(W, H);
-  p = layer; g.p = layer;
+  let p = c.layer;
+  const k0 = m.k;
   for (const pr of m.props) {
     const x = X(pr.x), w = Wd(pr.w);
     switch (pr.t) {
       case 'stage': {
-        const sh = k0 === 'bar' ? 5 : 9;
+        const sh = liftOf27(m, { x: 0, z: 'stage', pose: 'stand', dir: 'SE' }); // R31 (POL): mesma altura em que as pessoas pisam
         // fundo do palco: cortina de veludo (antes de 1968) ou parede preta com refletores
         const curtain = year < 1968 ? C('#8a1c24') : C('#18161e');
         p.rect(x, y0 + 4, w, fy - sh - y0 - 4, curtain);
@@ -246,14 +280,17 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
         else for (let i = 0; i < 4; i++) { const cx = x + Math.round((w * (i + 0.5)) / 4); p.rect(cx - 1, y0 + 5, 3, 2, C('#3a3a40')); p.poly([[cx, y0 + 7], [cx - 6, fy - sh], [cx + 6, fy - sh]], withAlpha(i % 2 ? C('#ff60c0') : C('#60d0ff'), 26)); }
         blk(p, x, fy - sh, w, sh, pal.woodDark);
         p.hline(x, x + w - 1, fy - sh, tint(pal.wood, 0.3));
+        stages.push({ x, w, y: fy - sh });
         break;
       }
       case 'crowd': crowd = pr; break; // a plateia vai NA FRENTE dos bonecos (pintada no fim)
-      case 'counter': {
+      case 'counter': { // R31 (POL): o balcão vai na FRENTE de quem trabalha atrás dele
+        const p0 = p; p = counterL;
         blk(p, x, fy - 14, w, 14, pal.wood);
         p.rect(x - 1, fy - 15, w + 2, 2, tint(pal.wood, 0.3));
         if (k0 === 'records' || k0 === 'instruments') { blk(p, x + w - 12, fy - 21, 9, 6, year < 1980 ? C('#9a8a6a') : C('#2a2a30')); p.rect(x + w - 10, fy - 20, 5, 2, C('#7ad070')); }
         if (k0 === 'hotel') p.rect(x + 4, fy - 17, 3, 2, C('#e8c050'));
+        p = p0;
         break;
       }
       case 'bottles': {
@@ -301,9 +338,13 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       case 'drums': prim27.drums(g, x, k0 === 'venue' ? fy - 9 : fy); break;
       case 'amp': prim27.amp(g, x, k0 === 'venue' ? fy - 9 : fy, k0 !== 'instruments'); break;
       case 'mic': prim27.micStand(g, x, k0 === 'venue' ? fy - 9 : k0 === 'bar' ? fy - 5 : fy); break;
-      case 'piano': prim27.piano(g, x, fy); break;
+      case 'piano': if (k0 === 'instruments') inst31(p, 'upright_piano', x, fy - 26, year); else prim27.piano(g, x, fy); break;
       case 'guitar': prim27.guitar(g, x, fy, pal.accent); break;
-      case 'guitars': { const n = pr.n ?? 4; for (let i = 0; i < n; i++) { const gx = x + Math.round((w * (i + 0.5)) / n); p.rect(gx - 1, y0 + 14, 3, 2, pal.metalDark); prim27.guitar(g, gx - 3, y0 + 52, [pal.accent, pal.gold, pal.accent2, C('#2a2a30'), C('#e8e0d0')][i % 5]); } break; }
+      case 'guitars': { // R31 (POL): pendurados no gancho (antes era o violão de suporte de chão, flutuando na parede)
+        const n = pr.n ?? 4, kinds = year < 1950 ? ['parlor_guitar', 'violin', 'mandolin', 'banjo', 'ukulele'] : ['solid_body', 'electric_bass', 'archtop', 'parlor_guitar', 'cavaquinho'];
+        for (let i = 0; i < n; i++) { const gx = x + Math.round((w * (i + 0.5)) / n), sp = instSpec31(kinds[i % 5]); p.rect(gx - 1, y0 + 14, 3, 2, pal.metalDark); inst31(p, kinds[i % 5], gx - (sp.w >> 1), y0 + 16, year, i); }
+        break;
+      }
       case 'typewriters':
       case 'screens': { const n = pr.n ?? 3; for (let i = 0; i < n; i++) { const dx = x + Math.round((w * i) / n); prim27.desk(g, dx, fy, Math.min(34, Math.round(w / n) - 6)); prim27.deskGear(g, dx + 4, fy); prim27.chair(g, dx + 14, fy); } break; }
       case 'presses': { for (let i = 0; i < 3; i++) blk(p, x + i * 9, fy - 6 - i * 3, 12, 6 + i * 3, C('#e8e0cc')); p.rect(x, fy - 15, 30, 1, C('#4a4440')); break; }
@@ -372,50 +413,40 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
     }
   }
   o.extra?.(g, seed);
-  layer.outline(INK);
-  p = back; g.p = back;
-  p.blit(layer, 0, 0);
-  // moldura do corte: paredes da fachada, laje, cornija e letreiro com o nome
-  const fc = facadeCol(year, m.k);
-  blk(p, bx, top, OW, gy - top, fc); blk(p, bx + bw - OW, top, OW, gy - top, tint(fc, -0.18));
-  blk(p, bx, top, bw, y0 - top, tint(fc, 0.06));
-  p.rect(bx - 2, top - 2, bw + 4, 3, tint(fc, -0.3));
-  blk(p, bx, gy - FOUND, bw, FOUND, tint(fc, -0.35));
-  if (o.name) prim27.sign(g, Math.round(W / 2), top + 2, o.name, Math.min(bw - 20, 200), m.dim || year >= 1925);
-  // luz: uma ou duas lâmpadas; casa escura (show, bar) tem halo mais forte no palco
-  const nL = w0 > 200 ? 3 : 2;
-  for (let i = 0; i < nL; i++) prim27.lamp(g, x0 + Math.round((w0 * (i + 0.5)) / nL), y0, fy, 26);
-  if (m.dim) p.rect(x0, y0, w0, RH, withAlpha(C('#0a0820'), 70));
-  for (let i = 0; i < 3; i++) { p.rect(x0 + i, y0, 1, RH, withAlpha(OCC, 90 - i * 28)); p.rect(x0 + w0 - 1 - i, y0, 1, RH, withAlpha(OCC, 80 - i * 25)); }
+  p = cutEnd27(c, { name: o.name, dim: m.dim, facade: facadeCol(year, m.k) });
+  const placed = placePeople27(m, people).map(([who, s0]) => ({ who, s0, x: X(s0.x), y: fy - liftOf27(m, s0), behind: s0.z === 'counter' }));
+  // na frente dos bonecos (mesmo acabamento dos adereços): o balcão, a grade das celas e a plateia de costas
+  counterL.outline(INK); front.blit(counterL, 0, 0);
+  for (const pr of m.props) if (pr.t === 'cells') {
+    const n = pr.n ?? 3, cw = Math.floor(Wd(pr.w) / n), x1 = X(pr.x);
+    for (let i = 0; i < n; i++) bars31(front, x1 + i * cw, y0 + 6, cw - 2, fy);
+  }
+  // plateia de costas, em frente ao palco (casa vazia — ninguém no palco — fica sem plateia)
+  if (crowd && placed.some(({ who: x }) => !!x.actId && !x.staff && !x.you)) inked(front, (q) => crowd31(q, X(crowd!.x), Wd(crowd!.w), crowd!.n ?? 12, fy, year, seed));
+  return { W, H, fy, px: p, front, placed, stages };
+}
+
+export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people: Person27[], o: IDrawOpts27 = {}): IDrawn27 {
+  const { W, H, px, front, placed } = paintInterior27(m, people, o);
+  const year = m.year;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
   const hits: IDrawn27['hits'] = [];
   if (ctx) {
     const img = ctx.createImageData(W, H);
-    new Uint32Array(img.data.buffer).set(p.d);
+    new Uint32Array(img.data.buffer).set(px.d);
     ctx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    const placed = placePeople27(m, people);
-    for (const [who, s0] of placed) {
-      const lift = liftOf27(m, s0);
-      const fx = X(s0.x), fyy = fy - lift;
+    for (const { who, s0, x: fx, y: fyy, behind } of placed) {
       const look = o.look ? o.look(who) : lookOf({ id: who.pid ?? `npc:${who.name}` });
       const role = (o.role?.(who) ?? null) as Parameters<typeof avatarSprite>[1]['role'];
       const pose: Pose = s0.pose === 'play' && !who.actId ? 'stand' : s0.pose;
       const a = avatarSprite(look, { year, role, pose, dir: s0.dir });
-      ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(fx - 6, fyy, 12, 1);
+      if (!behind) { ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(fx - 6, fyy, 12, 1); }
       ctx.drawImage(a.c, fx - a.ax, fyy - a.ay + 1);
       hits.push({ x: fx - 7, y: fyy - 31, w: 14, h: 32, who });
       if (who.you) { ctx.fillStyle = '#ffe070'; ctx.fillRect(fx - 1, fyy - 38, 3, 3); ctx.fillStyle = '#1a1214'; ctx.fillRect(fx, fyy - 37, 1, 1); } // marcador de você
     }
-    // na frente dos bonecos (mesmo acabamento dos adereços): a grade das celas e a plateia de costas
-    const front = new Px(W, H);
-    for (const pr of m.props) if (pr.t === 'cells') {
-      const n = pr.n ?? 3, cw = Math.floor(Wd(pr.w) / n), x1 = X(pr.x);
-      for (let i = 0; i < n; i++) bars31(front, x1 + i * cw, y0 + 6, cw - 2, fy);
-    }
-    // plateia de costas, em frente ao palco (casa vazia — ninguém no palco — fica sem plateia)
-    if (crowd && placed.some(([x]) => !!x.actId && !x.staff && !x.you)) inked(front, (q) => crowd31(q, X(crowd!.x), Wd(crowd!.w), crowd!.n ?? 12, fy, year, seed));
     pxOnCtx(ctx, front);
   }
   return { W, H, hits };

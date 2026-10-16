@@ -451,8 +451,9 @@ relicAuctionHook9.f = (s, rl, top, col) => {
   return !!se && !!hammer31(s, se, rl.id, { top, col });
 };
 
-registerSimHook('newgame', 'auction31', (s) => { if (auctionOn31(s)) { ensureSessions31(s); assignLots31(s); } });
-registerSimHook('month', 'auction31', (s) => { if (auctionOn31(s)) { ensureSessions31(s); assignLots31(s); } });
+/** r31 (VIT): os lotes do mês são uma das fontes da vitrine do mês (r31/vitrine31) — o motor da vitrine chama isto na nova
+ *  partida e na virada do mês (a casa de leilões não tem mais gancho próprio de catálogo; o martelo segue no gancho semanal). */
+export function restockAuction31(s: GameState): void { if (auctionOn31(s)) { ensureSessions31(s); assignLots31(s); } }
 registerSimHook('week', 'auction31', (s) => {
   if (!auctionOn31(s) || !peek(s)) return;
   assignLots31(s);

@@ -143,6 +143,9 @@ body.w19-open .tutorial, body.w19-open .tip18 { display: none; }
 .w19-hs.nb:hover .c27-pin, .w19-hs.nb.on .c27-pin { border-radius: 9px; }
 .w19-hs.sale .c27-pin { background: #fbf6ea; box-shadow: 0 0 0 1.5px #c8302c, 0 2px 4px rgba(0,0,0,0.4); }
 .w19-hs.sale .c27-nm { color: #8a1c18; }
+/* R31 (POL): mapa de longe = menos etiquetas; o preço da placa aparece ao passar o mouse, no foco ou aproximando */
+.c27-far .w19-hs.sale .c27-nm { display: none; }
+.c27-far .w19-hs.sale:hover .c27-nm, .c27-far .w19-hs.sale:focus-visible .c27-nm { display: inline; }
 .w19-hs.sale .c27-pin::after { border-top-color: #c8302c; }
 /* r27 (LOTS): à venda, mas fora do caixa — mesma placa, apagada */
 .w19-hs.sale.dis .c27-pin { background: #e4e0d8; box-shadow: 0 0 0 1.5px #8a8490, 0 2px 4px rgba(0,0,0,0.3); opacity: 0.85; }

@@ -18,3 +18,11 @@
 .in31-hub { display: flex; flex-direction: column; gap: 0.5rem; }
 .in31-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.4rem; }
 .in31-mural summary { cursor: pointer; font-weight: 600; }
+
+/* r31 (VIT): vitrine do mês — cartão do item, lista e faixa nas telas sem interior */
+.vit31-card { border-left: 3px solid var(--accent, #c8a040); padding-left: 8px; margin: 6px 0; }
+.vit31-card p { margin: 2px 0; }
+.vit31-strip { margin-top: 10px; }
+.vit31-strip > summary { cursor: pointer; font-weight: 600; }
+/* os itens da prateleira ficam por cima das áreas grandes (parede, prateleira antiga), mesmo com elas em foco */
+.sc31-spot[data-spot^="vit:"] { z-index: 4; }
