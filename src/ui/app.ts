@@ -116,6 +116,7 @@ import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em n
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
 import { NAV5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { chordLabel5 } from './r31/keys5';
+import './r31/elenco5'; // R31 onda 5 (ELENCO): mural, quadro, agenda, fichário, contratação e chefe como papéis (só com exp5.nav ligado)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
 import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
