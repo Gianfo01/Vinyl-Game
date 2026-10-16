@@ -11,7 +11,10 @@ import { FACADE31, bailes31, cells31, cityName31, countryOf31, facadeOf31, under
 import { h } from '../dom';
 import { store } from '../store';
 import { rerender } from '../common';
-import { C, INK, Px, withAlpha, type Col } from '../pixel/px';
+import { C, Px, inked, lv, mix, noise, withAlpha } from '../pixel/px';
+import { portraitPx } from '../pixel/avatar';
+import { playerPerson } from '../../sim/sys/life';
+import type { Appearance } from '../../sim/types';
 import { openFicha13 } from '../sys/persona13';
 import { inspect } from '../common';
 import { insideView31 } from './inside31';
@@ -37,7 +40,7 @@ export function muralModel31(s: GameState): MuralM31 {
   const pos = new Map(placed.map((n) => [n.id, n]));
   const es = edges.map((e, i) => ({ ...e, i })).filter((e) => pos.has(e.a) && pos.has(e.b));
   const spots: Spot31[] = [];
-  for (const n of placed) spots.push({ id: `n:${n.id}`, x: n.x - 12, y: n.y - 14, w: 24, h: 28, label: n.name, tip: n.k === 'org' ? (n.local ? l('Facção do país: ficha do chefe.', 'Faction in the country: the boss\'s card.') : l('Facção de fora já contatada.', 'Foreign faction already contacted.')) : n.k === 'act' ? l('Artista com laço de rua: ficha.', 'Act with street ties: card.') : n.k === 'you' ? l('Você: seus favores e dívidas.', 'You: your favours and debts.') : l('Cena ligada à facção.', 'Scene tied to the faction.'), go: { panel: `node:${n.id}` }, quiet: n.k === 'you' });
+  for (const n of placed) spots.push({ id: `n:${n.id}`, x: n.x - 12, y: n.y - 16, w: 24, h: 31, label: n.name, tip: n.k === 'org' ? (n.local ? l('Facção do país: ficha do chefe.', 'Faction in the country: the boss\'s card.') : l('Facção de fora já contatada.', 'Foreign faction already contacted.')) : n.k === 'act' ? l('Artista com laço de rua: ficha.', 'Act with street ties: card.') : n.k === 'you' ? l('Você: seus favores e dívidas.', 'You: your favours and debts.') : l('Cena ligada à facção.', 'Scene tied to the faction.'), go: { panel: `node:${n.id}` }, quiet: n.k === 'you' });
   for (const e of es) {
     const a = pos.get(e.a)!, b = pos.get(e.b)!;
     const mx = Math.round((a.x + b.x) / 2), my = Math.round((a.y + b.y) / 2);
@@ -45,31 +48,50 @@ export function muralModel31(s: GameState): MuralM31 {
   }
   return { W, H, nodes: placed, edges: es, spots };
 }
-function paintMural(cv: HTMLCanvasElement, m: MuralM31, year: number): void {
+/** Quem aparece na foto de cada nó (chefe, primeiro integrante, você); cena = sem rosto (disco). */
+type Face31 = { id: string; look?: Appearance; born?: number } | null;
+function paintMural(cv: HTMLCanvasElement, m: MuralM31, year: number, face: (n: MNode31) => Face31): void {
   const p = new Px(m.W, m.H);
-  // cortiça com moldura de madeira
-  p.rect(0, 0, m.W, m.H, C('#5a3a20'));
-  p.fill((x, y) => (((x * 7 + y * 13) % 11) < 2 ? C('#a8784a') : ((x + y * 3) % 7) === 0 ? C('#b8885a') : C('#c09060')), 6, 6, m.W - 12, m.H - 12);
+  // R31 (arte): cortiça com grão em 3 tons (luz de cima à esquerda) e moldura de madeira com relevo — antes um
+  // padrão de módulo repetido e uma moldura chapada; fotos com o retrato do boneco no estilo do jogo (antes um
+  // círculo bege sobre um retângulo preto, igual para todo mundo).
+  const wood = C('#6a4426'), cork = C('#b8875a');
+  p.rect(0, 0, m.W, m.H, wood);
+  p.hline(0, m.W - 1, 0, lv(wood, 4.4)); p.vline(0, 1, m.H - 2, lv(wood, 4)); p.hline(0, m.W - 1, m.H - 1, lv(wood, 1.2)); p.vline(m.W - 1, 1, m.H - 2, lv(wood, 2));
+  for (let y = 1; y < 6; y++) for (let x = 1; x < m.W - 1; x += 1) if (noise(x >> 2, y, 41) < 0.18) p.put(x, y, lv(wood, 2.4)); // veio
+  p.fill((x, y) => { const v = noise(x, y, 7); return v < 0.08 ? lv(cork, 2.2) : v > 0.93 ? lv(cork, 4) : v > 0.8 ? lv(cork, 3.4) : cork; }, 6, 6, m.W - 12, m.H - 12);
+  p.hline(6, m.W - 7, 6, lv(cork, 1.4)); p.vline(6, 7, m.H - 7, lv(cork, 1.8)); // sombra da moldura na cortiça
   const pos = new Map(m.nodes.map((n) => [n.id, n]));
   // fios (a cor diz o tipo; o símbolo no meio diz também, para não depender de cor)
   for (const e of m.edges) {
     const a = pos.get(e.a)!, b = pos.get(e.b)!;
     const c = C(EDGE31[e.k].col);
+    p.line(a.x + 1, a.y + 1, b.x + 1, b.y + 1, withAlpha(lv(cork, 1), 150)); // sombra do fio
     p.line(a.x, a.y, b.x, b.y, c);
-    p.line(a.x + 1, a.y, b.x + 1, b.y, withAlpha(c, 140));
     const mx = Math.round((a.x + b.x) / 2), my = Math.round((a.y + b.y) / 2);
     p.disc(mx, my, 3, C('#f4ecd8'));
     p.ring(mx, my, 3, c);
   }
-  // fotos (polaroides) com percevejo
-  for (const n of m.nodes) {
-    const base: Col = n.k === 'org' ? C('#2a2a30') : n.k === 'act' ? C('#4a3a5a') : n.k === 'you' ? C('#7a5a1a') : C('#2a4a6a');
-    p.rect(n.x - 11, n.y - 13, 22, 26, C('#f4ecd8'));
-    p.rect(n.x - 9, n.y - 11, 18, 16, year < 1960 ? C('#5a5048') : base);
-    p.disc(n.x, n.y - 5, 3, C('#d8b090')); p.rect(n.x - 4, n.y - 1, 8, 6, year < 1960 ? C('#3a3430') : C('#1e1e24'));
-    p.disc(n.x, n.y - 13, 2, n.k === 'org' ? C('#d8342c') : C('#3a6ad0'));
-  }
-  p.outline(INK);
+  // fotos (polaroides 24×30) com o retrato e percevejo; contornadas como os outros objetos
+  inked(p, (q) => {
+    for (const n of m.nodes) {
+      const x0 = n.x - 12, y0 = n.y - 15, paper = C('#f4ecd8');
+      q.rect(x0, y0, 24, 30, paper); q.hline(x0, x0 + 23, y0, lv(paper, 5)); q.vline(x0 + 23, y0 + 1, y0 + 29, lv(paper, 2.6)); q.hline(x0, x0 + 23, y0 + 29, lv(paper, 2.4));
+      const who = face(n);
+      if (who) {
+        const pic = portraitPx(who, year);
+        for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) { const c = pic.get(x + 6, y + 5); q.put(x0 + 2 + x, y0 + 2 + y, (c >>> 24) > 127 ? c : lv(paper, 1.6)); }
+      } else {
+        const bg = C('#2a4a6a');
+        q.rect(x0 + 2, y0 + 2, 20, 20, bg);
+        q.disc(x0 + 12, y0 + 12, 7.5, (xx, yy) => (xx + yy < x0 + y0 + 20 ? C('#3a3a44') : C('#1a1a1e'))); q.disc(x0 + 12, y0 + 12, 2.5, C('#d8b040')); // disco da cena
+      }
+      if (year < 1960) for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) { const c = q.get(x0 + 2 + x, y0 + 2 + y); q.put(x0 + 2 + x, y0 + 2 + y, mix(c, C('#8a6a4a'), 0.35)); } // foto sépia
+      q.hline(x0 + 3, x0 + 20, y0 + 25, lv(paper, 2.8)); // legenda a lápis
+      const pin = n.k === 'org' ? C('#d8342c') : C('#3a6ad0');
+      q.disc(n.x, y0, 2, pin); q.put(n.x - 1, y0 - 1, lv(pin, 4.6));
+    }
+  });
   blitPx31(cv, p.d, m.W, m.H);
 }
 
@@ -91,7 +113,12 @@ export function muralView31(s: GameState): HTMLElement {
   const legend = h('p', { class: 'sc31-legend' }, ...(Object.keys(EDGE31) as EdgeK31[]).map((k) => h('span', null, h('b', { style: `color:${EDGE31[k].col}` }, EDGE31[k].sym), ' ', t(EDGE31[k].name))));
   return h('div', { class: 'in31 in31-inline' }, sceneView31(s, {
     id: 'mural31', title: l('Mural de ligações', 'Connections board'), W: m.W, H: m.H, spots: m.spots, panels,
-    paint: (cv) => paintMural(cv, m, s.year),
+    paint: (cv) => paintMural(cv, m, s.year, (n) => {
+      if (n.k === 'you') return playerPerson(s) ?? { id: 'you' };
+      if (n.k === 'act') { const a = n.actId ? s.acts[n.actId] : undefined; const pid = a?.members[0]; return (pid && s.persons[pid]) || { id: n.id }; }
+      if (n.k === 'org') return { id: n.key ?? n.id };
+      return null;
+    }),
     list: () => h('ul', { class: 'in31-list' }, m.edges.map((e) => h('li', null, EDGE31[e.k].sym, ' ', t(e.story)))),
     intro: l('Fotos dos chefes, fios entre facções, artistas, cenas e você. Mostra as do país e as de fora já contatadas.', 'Bosses\' photos and strings between factions, acts, scenes and you. Shows the country\'s and foreign ones already contacted.'),
     legend,

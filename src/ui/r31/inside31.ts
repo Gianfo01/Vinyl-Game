@@ -30,6 +30,7 @@ import { shop31Tab } from './shop31';
 import { lockBtn31, quickBtn31 } from './lock31';
 import { sceneView31 } from './scene31';
 import { INSIDE_W31, infoLines31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
+import { artPanelEl31, paintArt31 } from './art31';
 import './inside31.css';
 
 /** Painel aberto e sala dos fundos (só na sessão: explorar não muda o mundo). */
@@ -215,17 +216,18 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     else if (k === 'do') el = actPanel(s, m, x, arg);
     else if (k === 'info') el = infoPanel(s, m, x, arg);
     else if (k === 'go') el = goPanel(s, x, arg, back);
+    else if (k === 'art') el = artPanelEl31(s, x, arg, show, back);
     else if (k === 'room') { ui31.room = arg === 'enter' ? x0.id : undefined; ui31.panel = undefined; rerender(); return; }
     const head = k === 'who' ? m.people[+arg]?.name ?? '' : t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''));
     if (el) pane.replaceChildren(h('div', { class: 'row in31-ph' }, h('b', { class: 'small' }, head),
       h('button', { type: 'button', class: 'icon', 'aria-label': t(l('Fechar', 'Close')), onclick: () => show() }, '✕')), el);
   };
   const panels: Record<string, (arg?: string) => void> = {};
-  for (const k of ['who', 'you', 'do', 'info', 'go', 'room']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
+  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
   const scene = sceneView31(s, {
     id: `in31-${x.k}`, title: m.title, W: m.W, H: m.H, spots: m.spots, panels,
     paint: (cv) => { drawInterior27(cv, m.room, m.people, { minW: INSIDE_W31, city: x.city, name: x.name, seed: x.seed,
-      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null }); },
+      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null, extra: paintArt31(m) }); },
     list: () => h('ul', { class: 'in31-list' }, m.spots.map((sp) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => show(sp.go.panel) }, t(sp.label)), ' ', h('small', { class: 'muted' }, t(sp.tip))))),
     intro: l('Pessoas e objetos são clicáveis: o painel embaixo resolve a ação aqui mesmo.', 'People and objects are clickable: the panel below resolves the action right here.'),
     note: m.note,

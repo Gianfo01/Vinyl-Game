@@ -8,7 +8,8 @@
 import type { PlaceK27, Person27 } from '../../sim/sys/place27';
 import { avatarSprite, lookOf, type Pose } from './avatar';
 import { paletteOf } from './palette';
-import { C, INK, Px, lv, mix, noise, tint, withAlpha, type Col } from './px';
+import { C, INK, Px, inked, lv, mix, noise, tint, withAlpha, type Col } from './px';
+import { bars31, crowd31, speaker31 } from './stage31px';
 import { eraOf } from './palette';
 import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 
@@ -184,7 +185,8 @@ const RH = 92, STREET = 16, FOUND = 4, OW = 6;
 /** Oclusão nos cantos: o tom mais fundo da rampa, puxado para o roxo (igual à sede). */
 const OCC = C('#2a1634');
 export interface IDrawn27 { W: number; H: number; hits: { x: number; y: number; w: number; h: number; who: Person27 }[] }
-export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined }
+export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined;
+  /** r31 (ART2): adereços extras pintados na mesma camada (mesmo contorno), antes das pessoas */ extra?: (g: Ctx27, seed: number) => void }
 
 const hs = (str: string): number => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619) >>> 0; return x; };
 const FLOORK: Record<Interior27['floor'], 'studio' | 'lounge' | 'lobby' | 'office'> = { studio: 'studio', lounge: 'lounge', lobby: 'lobby', office: 'office' };
@@ -193,6 +195,19 @@ const FLOORK: Record<Interior27['floor'], 'studio' | 'lounge' | 'lobby' | 'offic
 function facadeCol(year: number, k: IKind27): Col {
   if (k === 'apartments' && year < 1930) return C('#8a5a44');
   return year < 1920 ? C('#874430') : year < 1946 ? C('#dccaa0') : year < 1968 ? C('#e0dccf') : year < 1990 ? C('#9a968e') : year < 2020 ? C('#8a9aa8') : C('#e8e6dc');
+}
+
+/** Põe um buffer Px (com transparência) por cima do que já está no canvas. */
+function pxOnCtx(ctx: CanvasRenderingContext2D, q: Px): void {
+  if (typeof document === 'undefined') return;
+  const cv = document.createElement('canvas');
+  cv.width = q.w; cv.height = q.h;
+  const c2 = cv.getContext('2d');
+  if (!c2) return;
+  const img = c2.createImageData(q.w, q.h);
+  new Uint32Array(img.data.buffer).set(q.d);
+  c2.putImageData(img, 0, 0);
+  ctx.drawImage(cv, 0, 0);
 }
 
 export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people: Person27[], o: IDrawOpts27 = {}): IDrawn27 {
@@ -311,17 +326,52 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
           const cx = x + i * cw;
           blk(p, cx, y0 + 6, cw - 2, fy - y0 - 6, C('#4a4a50'));
           p.rect(cx + 2, y0 + 8, cw - 6, fy - y0 - 10, C('#2a2a30'));
-          blk(p, cx + 3, fy - 6, Math.min(16, cw - 8), 4, C('#7a6a5a')); // catre
+          for (let yy = y0 + 12; yy < fy - 8; yy += 6) p.hline(cx + 2, cx + cw - 5, yy, C('#262630')); // juntas do bloco
+          const cot = Math.min(16, cw - 8);
+          blk(p, cx + 3, fy - 6, cot, 4, C('#7a6a5a')); p.rect(cx + 4, fy - 7, cot - 5, 2, C('#4a5a3a')); p.rect(cx + cot - 1, fy - 8, 3, 2, C('#d8d0bc')); // catre, cobertor, travesseiro
         }
         break;
       }
-      case 'crates': { const n = pr.n ?? 3; const cw = Math.max(10, Math.floor(w / n) - 2); for (let i = 0; i < n; i++) { const cx = x + i * (cw + 2), hh = 12 + ((i * 7 + seed) % 3) * 4; blk(p, cx, fy - hh, cw, hh, C('#8a6a3a')); p.hline(cx + 1, cx + cw - 2, fy - hh + Math.round(hh / 2), C('#6a4a24')); if (i % 2 === 0) blk(p, cx + 2, fy - hh - 9, cw - 4, 9, C('#9a7a46')); } break; }
-      case 'safe': { blk(p, x, fy - 22, 18, 22, C('#4a4e56')); p.disc(x + 9, fy - 12, 3, C('#c8c8c0')); p.rect(x + 3, fy - 20, 12, 1, C('#6a6e78')); break; }
-      case 'roulette': { blk(p, x, fy - 10, w, 10, C('#1e5a2a')); p.ellipse(x + 10, fy - 13, 8, 3, C('#5a2a1a')); p.ellipse(x + 10, fy - 13, 5, 2, C('#d8b040')); p.rect(x + w - 14, fy - 12, 10, 1, C('#e8e0c8')); break; }
-      case 'speakers': { const sw0 = Math.max(10, w); blk(p, x, fy - 30, sw0, 30, C('#1a1a1e')); p.disc(x + (sw0 >> 1), fy - 22, 4, C('#3a3a42')); p.disc(x + (sw0 >> 1), fy - 9, 5, C('#3a3a42')); break; }
-      case 'door': { blk(p, x, y0 + 30, Math.max(10, w), fy - y0 - 30, pal.woodDark); p.rect(x + Math.max(10, w) - 3, y0 + 30 + ((fy - y0 - 30) >> 1), 2, 2, C('#d8b040')); break; }
+      case 'crates': { // caixotes de porto: tábuas com fio de luz, sarrafos nas pontas, estêncil
+        const n = pr.n ?? 3; const cw = Math.max(10, Math.floor(w / n) - 2);
+        const crate = (cx: number, cy: number, ww: number, hh: number, wood: Col) => {
+          blk(p, cx, cy, ww, hh, wood);
+          for (let yy = cy + 4; yy < cy + hh - 1; yy += 4) { p.hline(cx + 1, cx + ww - 2, yy, lv(wood, 1.8)); p.hline(cx + 1, cx + ww - 2, yy + 1, lv(wood, 3.6)); }
+          p.vline(cx + 1, cy + 1, cy + hh - 2, lv(wood, 4)); p.vline(cx + 2, cy + 1, cy + hh - 2, lv(wood, 2.4));
+          p.vline(cx + ww - 3, cy + 1, cy + hh - 2, lv(wood, 3.4)); p.vline(cx + ww - 2, cy + 1, cy + hh - 2, lv(wood, 1.8));
+          if (ww >= 12 && hh >= 10) p.rect(cx + (ww >> 1) - 2, cy + (hh >> 1) - 1, 4, 2, lv(wood, 1)); // estêncil
+        };
+        for (let i = 0; i < n; i++) { const cx = x + i * (cw + 2), hh = 12 + ((i * 7 + seed) % 3) * 4; crate(cx, fy - hh, cw, hh, C('#8a6a3a')); if (i % 2 === 0) crate(cx + 2, fy - hh - 9, cw - 4, 9, C('#9a7a46')); }
+        break;
+      }
+      case 'safe': { // cofre: porta embutida, dobradiças, segredo com marcas e manopla de 3 raios, pés
+        const st = C('#4a4e56');
+        blk(p, x, fy - 24, 18, 22, st);
+        p.rect(x + 2, fy - 22, 14, 18, lv(st, 2.4)); p.hline(x + 2, x + 15, fy - 22, lv(st, 1.6)); p.hline(x + 2, x + 15, fy - 5, lv(st, 3.8)); p.vline(x + 2, fy - 21, fy - 6, lv(st, 1.8));
+        p.rect(x + 3, fy - 21, 12, 16, st);
+        p.rect(x + 1, fy - 19, 1, 3, lv(st, 4.4)); p.rect(x + 1, fy - 10, 1, 3, lv(st, 4.4)); // dobradiças
+        p.disc(x + 9, fy - 15, 3.5, (xx, yy) => (xx + yy < x + 9 + fy - 15 - 2 ? C('#e8e8e0') : xx + yy > x + 9 + fy - 15 + 2 ? C('#8a8a84') : C('#c8c8c0')));
+        p.put(x + 9, fy - 19, INK); p.put(x + 8, fy - 15, INK);
+        p.hline(x + 7, x + 11, fy - 9, lv(st, 4.4)); p.vline(x + 9, fy - 11, fy - 8, lv(st, 4.4)); // manopla
+        p.rect(x + 1, fy - 2, 3, 2, lv(st, 1.6)); p.rect(x + 14, fy - 2, 3, 2, lv(st, 1.6)); // pés
+        break;
+      }
+      case 'roulette': { // mesa de feltro com borda de madeira; roda com casas vermelhas/pretas e cubo de latão; fichas
+        const felt = C('#1e5a2a'), wood = C('#5a2a1a');
+        blk(p, x, fy - 12, w, 3, wood); p.rect(x + 1, fy - 11, w - 2, 1, lv(felt, 3.4));
+        p.rect(x + 2, fy - 9, 2, 9, lv(wood, 2.4)); p.rect(x + w - 4, fy - 9, 2, 9, lv(wood, 2));
+        const cx = x + 10, cy = fy - 14;
+        p.ellipse(cx, cy, 8, 3, lv(wood, 3.6)); p.hline(cx - 7, cx + 6, cy - 3, lv(wood, 4.6));
+        p.ellipse(cx, cy, 6, 2, (xx) => ((xx - cx + 20) % 2 ? C('#c8302c') : C('#1a1a1e')));
+        p.rect(cx - 1, cy - 1, 2, 1, C('#e8c050')); p.put(cx - 1, cy - 2, lv(C('#e8c050'), 4.6));
+        for (let i = 0; i < 3; i++) { const fx0 = x + w - 12 + i * 3, ch = [C('#e8e0c8'), C('#c8302c'), C('#2a5ab0')][i]; for (let k = 0; k < 2 + i; k++) p.hline(fx0, fx0 + 1, fy - 13 - k, k % 2 ? lv(ch, 2.4) : ch); }
+        break;
+      }
+      case 'speakers': speaker31(p, x, fy, Math.max(10, w), 30); break;
+      case 'door': prim27.door(g, x, fy, Math.max(10, w), fy - y0 - 30); break;
     }
   }
+  o.extra?.(g, seed);
   layer.outline(INK);
   p = back; g.p = back;
   p.blit(layer, 0, 0);
@@ -358,25 +408,15 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       hits.push({ x: fx - 7, y: fyy - 31, w: 14, h: 32, who });
       if (who.you) { ctx.fillStyle = '#ffe070'; ctx.fillRect(fx - 1, fyy - 38, 3, 3); ctx.fillStyle = '#1a1214'; ctx.fillRect(fx, fyy - 37, 1, 1); } // marcador de você
     }
-    // r31 (S): a grade das celas fica NA FRENTE de quem está preso
+    // na frente dos bonecos (mesmo acabamento dos adereços): a grade das celas e a plateia de costas
+    const front = new Px(W, H);
     for (const pr of m.props) if (pr.t === 'cells') {
       const n = pr.n ?? 3, cw = Math.floor(Wd(pr.w) / n), x1 = X(pr.x);
-      ctx.fillStyle = '#8a8e98';
-      for (let i = 0; i < n; i++) { const cx = x1 + i * cw; for (let bx0 = cx + 3; bx0 < cx + cw - 4; bx0 += 4) ctx.fillRect(bx0, y0 + 8, 1, fy - y0 - 8); ctx.fillRect(cx + 2, y0 + 30, cw - 6, 1); }
+      for (let i = 0; i < n; i++) bars31(front, x1 + i * cw, y0 + 6, cw - 2, fy);
     }
-    // plateia de costas, em frente ao palco (silhuetas na luz do palco; alguns braços para cima)
-    if (crowd && placed.some(([x]) => !!x.actId && !x.staff && !x.you)) { // casa vazia (ninguém no palco) = sem plateia
-      const n = crowd.n ?? 12, cx0 = X(crowd.x), cw = Wd(crowd.w);
-      const cols = year < 1946 ? ['#3a2a24', '#4a3a30', '#2a2a30', '#5a4a3a'] : year < 1968 ? ['#2c3a5e', '#5a2a2a', '#2a2a30', '#4a4a3a'] : year < 1990 ? ['#2a2a30', '#3a2a4a', '#1e2a3a', '#4a2a2a'] : ['#20222a', '#2a3040', '#3a2a3a', '#1e2420'];
-      for (let i = 0; i < n; i++) {
-        const row = i % 2, cx = cx0 + Math.round((cw * (i + 0.5)) / n) + (row ? 3 : 0), by = fy + 2 - row * 2;
-        const hh = 15 + ((seed >> (i % 16)) & 3);
-        ctx.fillStyle = cols[(i + row) % cols.length]; ctx.fillRect(cx - 4, by - hh, 9, hh);
-        ctx.fillStyle = row ? '#1a1414' : '#2a1e1a'; ctx.fillRect(cx - 2, by - hh - 6, 6, 6);
-        if (((seed >> (i % 11)) & 7) === 0) { ctx.fillStyle = cols[(i + row) % cols.length]; ctx.fillRect(cx + 4, by - hh - 9, 2, 9); }
-        ctx.fillStyle = 'rgba(255,220,160,0.18)'; ctx.fillRect(cx - 2, by - hh - 6, 6, 1);
-      }
-    }
+    // plateia de costas, em frente ao palco (casa vazia — ninguém no palco — fica sem plateia)
+    if (crowd && placed.some(([x]) => !!x.actId && !x.staff && !x.you)) inked(front, (q) => crowd31(q, X(crowd!.x), Wd(crowd!.w), crowd!.n ?? 12, fy, year, seed));
+    pxOnCtx(ctx, front);
   }
   return { W, H, hits };
 }
