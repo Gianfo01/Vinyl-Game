@@ -14,7 +14,7 @@ import { advanceUntil, digestEnd, digestStart, type Digest } from '../sim/sys/pa
 import { openUntilConfig, showDigest, stopSummary } from './sys/pacing8';
 import { playerActs } from '../sim/util';
 import { $, dateLabel, inspect, kv, modal, toast } from './common';
-import { applySkin31, settingsSkin31 } from './skin31'; // r31 (C)
+import { applySkin31, settingsSkin31, skinHook31 } from './skin31'; // r31 (C) + onda 4 (M)
 import { bar, h, select } from './dom';
 import { registerInspect } from './ficha';
 import { titleScreen } from './newgame';
@@ -159,6 +159,7 @@ export function boot(el: HTMLElement): void {
   registerInspect();
   store.rerender = render;
   store.toast = toast;
+  skinHook31.options = () => settings(); skinHook31.rerender = () => render(); // r31 (M): ações do aviso de virada
   // r25: a cena da Sede navega pelo mesmo caminho do menu
   sedeNav25.go = (id) => go(id);
   sedeNav25.rerender = () => { navMemo = null; groupsMemo = null; if (store.game) render(); };

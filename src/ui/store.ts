@@ -46,6 +46,8 @@ export interface Prefs {
   skin31?: SkinPref31;
   /** r31 (C): avisar quando a época trocar o estilo (padrão ligado) */
   skinNotice31?: boolean;
+  /** r31 onda 4 (M): animar a troca de estilo (respeita "movimento reduzido"; padrão desligado) */
+  skinAnim31?: boolean;
   /** r19 (B.5): perguntar antes de avançar quando há cartões que vão valer o padrão (false = não perguntar) */
   ask19?: boolean;
   /** r18 tutorial18: tours vistos, dicas vistas, visitas, trilhas concluídas e o que está desligado */
