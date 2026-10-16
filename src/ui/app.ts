@@ -4,7 +4,9 @@ import { attnSeq, notes } from '../sim/attention';
 import { LABEL_LEGACY20 } from '../sim/oblig20';
 import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
-import { l, type L } from '../data/world';
+import { cityById, l, type L } from '../data/world';
+import type { GameState } from '../sim/types';
+import { ownerCity } from '../sim/sys/mapx8';
 import { rw } from '../sim/sys/realworld';
 import { S, t, type Lang } from '../i18n/strings';
 import { endingScores, legacyTotal } from '../sim/legacy';
@@ -119,6 +121,8 @@ import { paperGo5, paperKey5Ev, wrapPaper5 } from './r31/papers5'; // R31 onda 5
 import { chordLabel5 } from './r31/keys5';
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
+import { settingsTrn31, transition31, trnBack31, trnGate31 } from './r31/trn31'; // R31 onda 5 (TRN): transições entre telas
+import { cardInfo31, monthInfo31, type TrnPend31, type TrnPlace31 } from './r31/trn31model';
 import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale) ?? (isIcon31(name) ? pxEmoImg31(name, undefined, scale) : null))); // r17: + ícones do menu; r31 EMO: + icons31
@@ -228,6 +232,8 @@ function onKey(e: KeyboardEvent): void {
     return;
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // R31 onda 5 (TRN): Esc numa página aberta pelo zoom de um objeto da sede faz o papel descer e volta à sede
+  if (e.key === 'Escape' && trnBack31(store.area)) { e.preventDefault(); go(entryHome31('sede', menuCtx31()) ?? SEDE25); return; }
   // R31 (A): Shift+1…6 = entradas do menu (Hoje, Sede, Cidade, Mundo, Você, Listas); e.code não depende do teclado
   if (e.shiftKey && /^Digit[1-6]$/.test(e.code)) { const en = menu31(menuCtx31()).find((x) => x.key === e.code.slice(5)); if (en) { e.preventDefault(); openEntry31(en); return; } }
   // r17: { e } trocam de aba na página atual
@@ -266,6 +272,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
   const prevUndo = store.undoSnapshot;
   if (!g.config.ironman) store.undoSnapshot = snap0;
   const before = attnSeq(g); // r31 UNI-1: avisos = itens da fila única
+  const m0: [number, number] = [g.month, g.year]; // R31 onda 5 (TRN): mês que sai (para a folha do calendário)
   // rodada 8: avanços longos terminam num resumo agrupado em vez de uma chuva de avisos
   let digest = null as { d: Digest; why?: L } | null;
   let res = {} as { stopReason?: L };
@@ -302,6 +309,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
     return;
   }
   render();
+  if (g.month !== m0[0] || g.year !== m0[1]) transition31('month', { year: g.year, month: monthInfo31({ old: m0, now: [g.month, g.year], pend: trnPend31(g) }) }); // R31 onda 5 (TRN): virada do mês (só a tela)
   INT_PREF23.v = store.prefs.interrupt23 ?? 'milestones'; // r23 (A)
   for (const f of AFTER_ADVANCE) f(g); // r18 decide18: resumo do mês
   if (digest) showDigest(g, digest.d, digest.why, () => showPendingCutscene(g, render, store.prefs.cutscenes === false));
@@ -571,8 +579,31 @@ function basePanel(g: NonNullable<typeof store.game>): HTMLElement {
   }
 }
 
+// ---------------------------------------------------------------- R31 onda 5 (TRN): lugares das transições
+/** Lugar (Sede/Casa/Cidade/Mundo) de uma área, pelo menu (a casa do jogador mora na cidade, mas é o lugar Casa). */
+function trnPlace31(area: string): TrnPlace31 | null {
+  if (area === 'casa31') return 'casa';
+  const e = placeOf31(area, menuCtx31()).entry;
+  return e === 'sede' || e === 'hoje' ? 'sede' : e === 'cidade' || e === 'mundo' ? e : e === 'voce' ? 'casa' : null;
+}
+/** Pendências únicas com o lugar dono (só leitura). */
+function trnPend31(g: GameState): TrnPend31[] {
+  let xs: ReturnType<typeof pendingList> = [];
+  try { xs = pendingList(g); } catch { xs = []; }
+  return xs.map((p) => ({ title: p.title, prio: p.prio, due: p.due, place: trnPlace31(p.owner.area) }));
+}
+function trnNav31() {
+  const g = store.game!;
+  const c = menuCtx31();
+  const sede = entryHome31('sede', c) ?? SEDE25;
+  const homeOf = (a: string): TrnPlace31 | null => a === 'casa31' ? 'casa' : a === sede ? 'sede' : a === entryHome31('cidade', c) ? 'cidade' : a === entryHome31('mundo', c) ? 'mundo' : null;
+  return { from: shownArea, to: alias14(store.area), year: g.year, sede, placeOf: (a: string) => trnPlace31(alias14(a)), homeOf,
+    info: (to: TrnPlace31) => ({ year: g.year, card: cardInfo31({ to, city: t(cityById[ownerCity(g)]?.name) || ownerCity(g), month: g.month, year: g.year, pend: trnPend31(g) }) }) };
+}
+
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
+  if (trnGate31(trnNav31(), render)) return; // R31 onda 5 (TRN): a página nova entra com a cortina fechada / o zoom cheio
   const t0 = performance.now();
   renderApp();
   perfNote('render', performance.now() - t0);
@@ -725,6 +756,7 @@ function settings(): void {
     settingsAudio28(), // r28 (F4): Som — desligado por padrão
     alertsSettings29(), // r29 REORG (M44): alertas por categoria (preferência, fora do save)
     editorModeSetting31(), // R31 (EDT): Modo editor (testes)
+    settingsTrn31(), // R31 onda 5 (TRN): Transições completas / rápidas / desligadas
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo
