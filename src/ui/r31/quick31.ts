@@ -25,6 +25,7 @@ import { goToProjects } from '../sys/project8';
 import { ic, setTab } from '../vis';
 import { lockBtn31, quickHook31 } from './lock31';
 import { actOf31, quickRows31, searchActions31, targetName31, type QRow31, type QTarget31 } from './quick31core';
+import { TOPBAR31 } from '../ps/menu31ui';
 
 // ---------------------------------------------------------------- navegação por destino
 
@@ -192,3 +193,6 @@ export function paletteCmds31(s: GameState, q: string): Cmd31[] {
     run: () => openQuick31(s, x.target, x.row.def.id),
   }));
 }
+
+// R31 onda 1 (integração A × O): favoritos e metas ganham um botão na barra do topo.
+TOPBAR31.push((g) => (g ? h('button', { class: 'btn small ghost', title: t(l('Favoritos e metas', 'Favourites and goals')), 'aria-label': t(l('Favoritos e metas', 'Favourites and goals')), onclick: () => openMine31(g as GameState) }, '☆') : null));
