@@ -50,6 +50,8 @@ export interface Plan27 {
   gramo?: [number, number, number, number];
   /** R29: a vaga da garagem está ocupada por um objeto extra (calhambeque do ovo) — a van não é pintada */
   garageTaken?: boolean;
+  /** R31 onda 5 (NAV): salas sem a mobília padrão (a casca põe os objetos clicáveis da onda 5 no lugar) */
+  bare?: Kind27[];
 }
 export interface Spot27 { id: string; room: Room25; x: number; y: number; pose: Pose; dir: 'SE' | 'SW'; sprite: Sprite25 }
 export interface More27 { room: Room25; x: number; y: number; n: number }
@@ -1269,7 +1271,7 @@ export function paint27(pl: Plan27): Px {
   // mobília numa camada própria: contorno INK de 1 px na silhueta (o fundo é opaco, o contorno do Px só vê o vazio)
   const q = new Px(pl.W, pl.H);
   g.p = q;
-  for (const c of pl.cells) if (!c.lock) { extras(g, c); furnish(g, c); }
+  for (const c of pl.cells) if (!c.lock && !pl.bare?.includes(c.kind)) { extras(g, c); furnish(g, c); }
   const lounge = pl.cells.find((c) => c.kind === 'lounge');
   if (lounge && pl.vip) vip27(g, lounge, pl.vip);
   q.outline(INK);
@@ -1365,7 +1367,7 @@ export function slotXY27(pl: Plan27, slot: string, w: number, hh: number): [numb
   // outras cascas: estacionado na rua, junto ao meio-fio, no lado esquerdo da fachada
   return [Math.max(2, pl.bx + 14), pl.gy + STREET - 1 - hh];
 }
-export interface DrawOpts27 { /** objetos extras (ovos) */ props?: PropIn27[]; /** largura mínima em pixels lógicos (preenche o contêiner) */ minW?: number; /** aparência real (padrão: pelo id) */ look?: (x: Sprite25) => ReturnType<typeof lookOf>; role?: (x: Sprite25) => string | null | undefined }
+export interface DrawOpts27 { /** objetos extras (ovos) */ props?: PropIn27[]; /** R31 onda 5 (NAV): salas sem mobília padrão */ bare?: Kind27[]; /** largura mínima em pixels lógicos (preenche o contêiner) */ minW?: number; /** aparência real (padrão: pelo id) */ look?: (x: Sprite25) => ReturnType<typeof lookOf>; role?: (x: Sprite25) => string | null | undefined }
 
 /** Desenha a sede em corte no canvas (tamanho lógico; quem chama escala por inteiro com CSS). Exportado para o
  *  "Nosso mundo" (D2) abrir o interior no zoom. */
@@ -1373,6 +1375,7 @@ export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25
   const units = model.units ? Object.fromEntries(model.units.map((u) => [u.id, u.status])) : undefined;
   const plan = plan27({ hq: model.hq, year: model.year, facadeYear: model.facadeYear, city: model.city, brand: model.brand, seedKey: model.seedKey, minW: o.minW, units });
   if (plan.shell === 'garage' && (o.props ?? []).some((pr) => pr.slot === 'garage')) plan.garageTaken = true;
+  if (o.bare) plan.bare = o.bare;
   const px = paint27(plan);
   canvas.width = plan.W; canvas.height = plan.H;
   const ctx = canvas.getContext('2d');
