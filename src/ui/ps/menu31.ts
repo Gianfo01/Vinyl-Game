@@ -180,6 +180,8 @@ export interface MenuCtx31 {
   has?: (area: string) => boolean;
   /** páginas registradas fora da tabela (caem em Listas › Outras páginas) */
   extra?: string[];
+  /** onda 5 (exp5.nav): a entrada Você vira a Casa (objetos da casa) */
+  nav5?: boolean;
 }
 export const mainCareer31 = (ctx: MenuCtx31): string => ctx.active[0] ?? 'label';
 const careerOfArea = (area: string): string | undefined => ORDER17.find((id) => CAREER_PAGE17[id].area === area);
@@ -199,9 +201,11 @@ export function entryHome31(id: EntryId31, ctx: MenuCtx31): string | undefined {
     const m = mainCareer31(ctx);
     return m === 'label' && ctx.sede !== false ? SEDE31 : CAREER_PAGE17[m]?.area ?? SEDE31;
   }
+  if (id === 'voce' && ctx.nav5) return 'casa31';
   return entry31(id).home;
 }
 export function entryLabel31(id: EntryId31, ctx: MenuCtx31): L {
+  if (id === 'voce' && ctx.nav5) return l('Casa', 'Home');
   return id === 'sede' ? SEDE_LABEL31[mainCareer31(ctx)] ?? entry31('sede').label : entry31(id).label;
 }
 

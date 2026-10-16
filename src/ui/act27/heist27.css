@@ -1,7 +1,7 @@
 /* Rodada 27 (M3) — operação jogável do Submundo: quadro em pixel art, cartões da equipe, medidor e linha do tempo. */
 .hz27 { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .hz27-board { margin: 0; background: var(--hq-bg, #0b1723); border: 2px solid var(--line); border-radius: var(--radius, 3px); overflow: hidden; }
-.hz27-board canvas { display: block; width: 100%; max-width: 720px; margin: 0 auto; height: auto; aspect-ratio: 192 / 72; image-rendering: pixelated; image-rendering: crisp-edges; }
+.hz27-board canvas { display: block; width: 100%; max-width: 720px; margin: 0 auto; height: auto; aspect-ratio: 300 / 150; image-rendering: pixelated; image-rendering: crisp-edges; }
 .hz27-meter { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 6px 8px; background: var(--panel-2); border-top: 2px solid var(--line); font-size: 12px; }
 .hz27-meter > span { display: inline-flex; align-items: center; gap: 6px; }
 .hz27-meter em { font-style: normal; font-family: var(--mono); min-width: 3.2em; }

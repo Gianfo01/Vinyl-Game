@@ -8,6 +8,8 @@
 //    país ou gênero — trocado em qualquer ponto do texto, palavra inteira, maiúsculas exatas;
 //  - título (camada "inteira"): músicas, discos e nomes de uma palavra comum ("Queen", "Boston", "Help!") — só quando o
 //    texto inteiro é o título, ou quando ele aparece entre aspas.
+// Palavra da interface ("Elenco", "Telefone", "Status"…) que coincide com um título NÃO é trocada: t() avisa que o texto
+// veio de um rótulo da interface (ui = true) e devolve a palavra com a marca invisível UI31, para o h() também não trocar.
 // A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing).
 
 export type DispPair31 = [from: string, to: string];
@@ -68,14 +70,24 @@ function swapNames(text: string): string {
   return last ? out + text.slice(last) : text;
 }
 
+/** Marca invisível de "palavra da interface" (posta por t(); disp31 tira antes de mostrar). */
+export const UI31 = '\u2063';
+/** Tira a marca UI31 (texto que não passa pelo disp31: atributos, value…). */
+export const plain31 = (text: string): string => (text.includes(UI31) ? text.split(UI31).join('') : text);
+
 const QUOTED = /(["“«'‘])([^"”»'’\n]{1,90})(["”»'’])/g;
 
-/** Texto final com as trocas (sem filtro ligado, devolve o mesmo texto). */
-export function disp31(text: string): string {
-  if (!active || !text) return text;
+/** Texto final com as trocas (sem filtro ligado, devolve o mesmo texto). `ui`: o texto é um rótulo da interface, não o
+ *  nome de uma gravadora, ato ou obra — a camada "inteira" não troca, e o texto volta marcado (UI31) para o h(). */
+export function disp31(text: string, ui = false): string {
+  if (!text) return text;
+  // marca vinda de um t() anterior: não troca; só t() (ui = true) devolve marcado — o h() mostra sem a marca
+  const marked = text.includes(UI31);
+  if (marked) text = plain31(text);
+  if (!active) return text;
   const trimmed = text.trim();
   const w = whole.get(trimmed);
-  if (w !== undefined) return text.replace(trimmed, w);
+  if (w !== undefined) return ui ? UI31 + text : marked ? text : text.replace(trimmed, w);
   let s = text;
   if (whole.size && /["“«'‘]/.test(s)) s = s.replace(QUOTED, (all, a: string, inner: string, b: string) => { const r = whole.get(inner); return r === undefined ? all : a + r + b; });
   return swapNames(s);

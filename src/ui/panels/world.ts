@@ -16,6 +16,7 @@ import { money, playerActs } from '../../sim/util';
 import { $, N, actLink, cityName, dateLabel, genreName, pill, releaseLink, rerender, section, toast } from '../common';
 import { h } from '../dom';
 import { WorldMap, glyphCanvas, type MapCity, type MapOverlay } from '../map';
+import { trnMap31 } from '../r31/trn31';
 import { store } from '../store';
 import { ic, stat, chips, tabs, tile } from '../vis';
 import { select } from '../dom';
@@ -328,6 +329,7 @@ function mapSection(s: GameState): HTMLElement {
   };
   if (!worldMap) worldMap = new WorldMap(opts);
   else worldMap.update(opts);
+  trnMap31.at = (id) => worldMap?.screenOf(id) ?? null; // R31 onda 5 (TRN): rota da viagem no mapa
   return section(t(l('Mapa do mundo', 'World map')), presetBar20(s), legend20(s),
     h('details', { class: 'layers20', open: preset20 ? undefined : true }, h('summary', { class: 'small' }, t(l('Todas as camadas (especialista)', 'All layers (expert)'))), layerBar()),
     worldMap.element,

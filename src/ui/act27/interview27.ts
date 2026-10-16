@@ -14,8 +14,8 @@ import { h } from '../dom';
 import { meter } from '../vis';
 import { store } from '../store';
 import { cutscene27, playBtn27, reduced27 } from './mode27';
-import { drawScene27, type Who27 } from './scene27';
-import { paintPress27, paintPressFront27 } from './p2apx27';
+import { paintPress5 } from '../r31/salas5px'; // R31 onda 5 (SALAS): coletiva no corte da sede, repórteres de pé
+import { drawSala5 } from '../r31/salas5ui';
 import './p2a27.css';
 import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
@@ -59,11 +59,8 @@ export function openInterview27(o: Opp27, onDone?: (played: boolean) => void): v
   let cv: HTMLCanvasElement | null = null;
   const paint = () => {
     if (!cv) return;
-    const who: Who27[] = lead ? [{ p: lead, x: 100, y: 54, pose: 'sit' }] : [];
-    try {
-      drawScene27(cv, paintPress27(s.year, iv.ctx, flash && !reduced27(), iv.heat), s.year, who);
-      if (lead) cv.getContext('2d')?.drawImage(paintPressFront27(s.year, iv.ctx).canvas(), 0, 0); // quem fala fica atrás da mesa
-    } catch { /* sem canvas */ }
+    const reps = [0, 1, 2, 3].map((i) => ({ id: `press:${iv.ctx}:${i}`, role: 'producer' as const, born: s.year - 30 - i * 4 }));
+    try { drawSala5(cv, paintPress5(s.year, iv.ctx, flash && !reduced27(), iv.heat, { city: s.config.homeCity, month: s.month, lead: !!lead }), s.year, [...(lead ? [lead] : []), ...reps]); } catch { /* sem canvas */ }
   };
   const draw = () => {
     const q = curQ27(iv);
