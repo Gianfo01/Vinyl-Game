@@ -18,6 +18,7 @@ import { personRoute16, searchRoute16 } from '../route16';
 import { ic } from '../vis';
 import { ent27 } from '../ps/ent27';
 import './family29.css';
+import { see } from '../../sim/know';
 
 const $$ = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 const age = (s: GameState, born: number, died?: number) => (died !== undefined ? `† ${died}` : `${s.year - born} ${t(l('anos', 'yrs'))}`);
@@ -144,6 +145,7 @@ export const isMinor29 = (s: GameState, pid: string): boolean => !!fam29(s).min[
 PERSON_HEAD_EXTRAS.push((s, p) => {
   const F = famOf29(s, p.id);
   if (!F.minor && !F.partner?.pid) return null;
+  if (!p.isPlayer && see(s, p.id, 'family') === 'hidden') return null; // r31 F #20: o cabeçalho segue a mesma regra da aba Família
   return h('span', { class: 'row wrap small' },
     F.minor ? h('button', { class: 'btn small ghost', title: t(l('Menor de idade: responsável, fundo e limite de horas (aba Família).', 'Minor: guardian, trust and hour limits (Family tab).')), onclick: () => openFamily29(`p:${p.id}`) }, ic('star'), ` ${t(l('Menor', 'Minor'))} · ${F.minor.g}`) : null,
     F.partner?.pid ? h('button', { class: 'btn small ghost', onclick: () => openFamily29(`p:${F.partner!.pid}`) }, ic('heart'), ` ${F.partner.name}`) : null);

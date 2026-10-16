@@ -43,13 +43,16 @@ import { famOf29 } from '../../sim/sys/family29';
 import { leaderBody, playerLeaderBody } from './leaders10';
 import { timeline } from './leisure14';
 import { profile as mgrProfile } from './managers14';
-import { ficha13 } from './persona13';
+import { ficha13, relation31 } from './persona13';
 import { profile as prodProfile } from './producers15';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
 
 interface Tab16 { id: string; label: L; icon?: string; render: () => HTMLElement | null }
 /** Rodada 17: abas extras da página única (quem não é artista), ex.: Fatos & Obrigações. */
 export const PAGE16_TABS: ((s: GameState, key: string) => Tab16 | null)[] = [];
+import { see, seen } from '../../sim/know';
+import { knowsMe31 } from '../../sim/sys/social31sys';
+import { factsAbout } from '../../sim/facts17';
 /** Rodada 18: blocos extras no cabeçalho da página única (ex.: menu de ações). */
 export const PAGE16_HEAD: ((s: GameState, key: string) => HTMLElement | null)[] = [];
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -140,7 +143,8 @@ function relBlock16(s: GameState, key: string): HTMLElement {
   const ties = Object.entries(lz14(s).r[key]?.t ?? {}).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 8);
   const lt = L0 ? Object.entries(L0.rel).filter(([k]) => k !== 'player' && leaders(s).L[k]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 6) : [];
   return h('div', null,
-    h('p', null, t(l('O que pensa de você: ', 'What they think of you: ')), pill(signed(op), tone(op))),
+    h('p', null, t(l('O que pensa de você: ', 'What they think of you: ')), knowsTag31(s, key, op)), // r31 F #24
+    relation31(s, key),
     led?.w.length ? h('ul', { class: 'small' }, [...led.w].reverse().slice(0, 8).map(([y, m, d, w]) => h('li', { class: d >= 0 ? 'good' : 'bad' }, `${signed(d)} · ${m + 1}/${y} — `, t(w)))) : null,
     lt.length ? section(t(l('Outros líderes', 'Other label heads')), h('ul', { class: 'small' }, lt.map(([k, v]) => h('li', null, personLink16(s, `l:${k}`, leaders(s).L[k].name), ' ', pill(signed(v), tone(v)))))) : null,
     ties.length ? section(t(l('Amizades e rixas fora do trabalho', 'Friendships and feuds off the clock')), h('ul', { class: 'small' }, ties.map(([k, v]) => h('li', null, personLink16(s, canon16(s, k)), ' ', pill(signed(v), tone(v)))))) : null,
@@ -346,11 +350,15 @@ PERSON_TABS.push((s, p) => ({
   id: 'fam16', label: l('Família', 'Family'), icon: 'fans',
   render: () => {
     const rk = realKin16(s, `p:${p.id}`);
+    // r31 F #20: a família aparece com convivência/olheiro/fama; senão, só os fatos públicos (casamento, filhos, separação)
+    const fv = p.isPlayer ? 'exact' : see(s, p.id, 'family');
+    if (fv === 'hidden') return empty(l('Vida familiar é privada: aparece com convivência, olheiros ou quando a pessoa é famosa.', 'Family life is private: it shows with closeness, scouts or when the person is famous.'));
+    if (fv === 'label') return section(t(l('O que é público', 'What is public')), h('ul', { class: 'small' }, factsAbout(s, p.id, { limit: 30, notSecret: true }).filter((f) => f.visibility === 'public' && ['marriage', 'birth', 'breakup', 'romance'].includes(f.kind)).slice(0, 8).map((f) => h('li', null, `${f.y} · `, t(f.text)))));
     return h('div', null, familyBlock15(s, p), famSection29(s, p), // R29 (família): par, filhos, pais, menor e a árvore
       rk.length ? section(t(l('Parentes na indústria', 'Relatives in the industry')), h('ul', { class: 'small' }, rk.map((r) => h('li', null, r.key ? personLink16(s, r.key, r.name) : r.name, ` · ${t(KIN16_REL[r.rel] ?? l(r.rel))}`)))) : null);
   },
 }));
-PERSON_TABS.push((s, p) => ({ id: 'belief16', label: l('Crenças', 'Beliefs'), icon: 'globe', render: () => beliefBlock16(s, p.isPlayer ? 'player' : `p:${p.id}`) }));
+PERSON_TABS.push((s, p) => ({ id: 'belief16', label: l('Crenças', 'Beliefs'), icon: 'globe', render: () => (p.isPlayer || seen(s, p.id, 'beliefs') ? beliefBlock16(s, p.isPlayer ? 'player' : `p:${p.id}`) : empty(l('Política e fé aparecem com convivência, olheiros ou quando a pessoa é pública.', 'Politics and faith show with closeness, scouts or when the person is public.'))) })); // r31 F #13
 PERSON_TABS.push((s, p, closeAll) => {
   const ts = roleTabs(s, p.isPlayer ? 'player' : `p:${p.id}`, () => { closeAll(); openPersonPage(p.id); });
   return ts[0] ?? null;
@@ -408,3 +416,11 @@ searchRoute16.f = (s, q) => {
   for (const x of Object.values(leaders(s)?.L ?? {})) if (x.st === 'active') add(`l:${x.id}`, x.name, l('Líder de gravadora', 'Label head'));
   return out.slice(0, 30);
 };
+
+/** r31 F #24: "Não te conhece" / "Conhece de nome" / número — a mesma regra da ficha unificada. */
+function knowsTag31(s: GameState, key: string, op: number): HTMLElement {
+  const k = knowsMe31(s, key);
+  if (k === 'none') return pill(t(l('Não te conhece', 'Does not know you')), '');
+  if (k === 'name') return pill(t(op >= 15 ? l('Conhece de nome · impressão boa', 'Knows you by name · good impression') : op <= -15 ? l('Conhece de nome · impressão ruim', 'Knows you by name · bad impression') : l('Conhece de nome', 'Knows you by name')), op >= 15 ? 'good' : op <= -15 ? 'bad' : '');
+  return pill(signed(op), tone(op));
+}
