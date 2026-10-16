@@ -75,6 +75,10 @@ export const LOTS27: {
 } = {};
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
 
+/** R31 (H): negócio da época num prédio de cidade comum (lojas com ano de abertura e fechamento — sim/r31/city31). */
+export const PLACE_X27: { biz?: (s: GameState, lot: number, k: PlaceK27) => { name: L; what: L; draw: BKind; shop: boolean } | null } = {};
+const BIZ_K27 = new Set<PlaceK27>(['office', 'hotel', 'instruments', 'apartments']);
+
 // ---------------------------------------------------------------- utilidades estáveis
 
 const hash = (str: string): number => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619) >>> 0; return x / 4294967296; };
@@ -277,7 +281,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
     if (k === 'instruments' && s.year < 1900) k = 'apartments';
     const p = fillPlace(s, k, lot, i, k === 'venue' ? rv[0]?.id : undefined, k === 'press' ? out0?.id : undefined);
     // nomes únicos no bairro (duas "Companhia de Seguros" na mesma quadra, não)
-    for (let j = 1; used.has(p.name.pt) && j < 6 && !p.venue; j++) p.name = placeName27(s, k, lot + j * 101);
+    for (let j = 1; used.has(p.name.pt) && j < 6 && !p.venue && p.name !== p.what; j++) p.name = placeName27(s, k, lot + j * 101);
     used.add(p.name.pt);
     out.push(p);
   });
@@ -312,8 +316,10 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   return out;
 }
 
-function fillPlace(s: GameState, k: PlaceK27, lot: number, i: number, venueId?: string, outletId?: string): Place27 {
+function fillPlace(s: GameState, k0: PlaceK27, lot: number, i: number, venueId?: string, outletId?: string): Place27 {
   const key = `pl${lot}`;
+  const biz = BIZ_K27.has(k0) ? PLACE_X27.biz?.(s, lot, k0) ?? null : null; // R31 (H): loja da época no lugar do prédio genérico
+  const k: PlaceK27 = biz ? (biz.shop ? 'instruments' : k0 === 'instruments' ? 'office' : k0) : k0;
   const vd = venueId ? VENUES17.find((x) => x.id === venueId) : undefined;
   const ou = outletId ? outlets17(s).find((x) => x.id === outletId) : undefined;
   const owner = npcName27(s, `${key}|o`);
@@ -323,6 +329,7 @@ function fillPlace(s: GameState, k: PlaceK27, lot: number, i: number, venueId?: 
   void i;
   // casa real: o tipo vem do tamanho (clube, teatro, arena), não da década
   const what = vd ? (vd.cap <= 600 ? l('Clube de música', 'Music club') : vd.cap <= 3000 ? l('Teatro e casa de shows', 'Theatre and concert hall') : l('Arena e grande auditório', 'Arena and great hall')) : eraWhat27(k, s.year, s.config.homeCity);
+  if (biz) return { id: `pl:${lot}`, lot, k, name: biz.name, what: biz.what, owner, ownerK: 'npc', now, people, also: [], src: 'fill', draw: biz.draw };
   return { id: `pl:${lot}`, lot, k, name, what, owner, ownerK: vd ? 'venue' : 'npc', now, people, also: [], src: 'fill', draw: DRAW27[k],
     sale: vd && vd.buyable !== false ? venuePrice(s, vd) : undefined, venue: vd?.id, outlet: ou?.id };
 }

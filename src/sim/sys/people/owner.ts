@@ -14,6 +14,7 @@ import { P, clamp01, type Owner } from './state';
 import { perk } from '../../perks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 import { purse, purseSet } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { registerSwitch, sw } from '../../r31/switches';
 
 export type OwnerAttr = keyof Owner['attrs'];
 
@@ -50,10 +51,21 @@ export const HOUSES: HouseDef[] = [
   { id: 'loft', name: l('Loft industrial', 'Industrial loft'), from: 1975, to: 2040, price: 320000, relief: 5, prestige: 4 },
   { id: 'penthouse', name: l('Cobertura com vista', 'Penthouse with a view'), from: 1982, to: 2040, price: 1200000, relief: 7, prestige: 7 },
   { id: 'smart', name: l('Casa inteligente', 'Smart home'), from: 2015, to: 2040, price: 1800000, relief: 8, prestige: 8 },
+  // R31 (H · casa desde 1889): só acrescenta (os índices de cima não mudam). Interruptor h31.casas.
+  { id: 'tenement', name: l('Quarto em casa de cômodos', 'Room in a tenement house'), from: 1880, to: 1935, price: 3000, relief: 1, prestige: 0 },
+  { id: 'townhouse', name: l('Sobrado no centro', 'Downtown townhouse'), from: 1880, to: 1950, price: 14000, relief: 2, prestige: 1 },
+  { id: 'chalet', name: l('Chalé com jardim', 'Chalet with a garden'), from: 1880, to: 1945, price: 42000, relief: 4, prestige: 3 },
+  { id: 'palacete', name: l('Palacete com salão de música', 'Mansion with a music room'), from: 1880, to: 1930, price: 160000, relief: 5, prestige: 5 },
 ];
 
+registerSwitch({ id: 'h31.casas', def: true, scope: 'game',
+  desc: l('Casas desde 1889 e imóveis em outras cidades (com manutenção mensal). Desligado: só os 8 tipos de 1920 em diante e uma casa só.',
+    'Houses from 1889 and homes in other cities (with monthly upkeep). Off: only the 8 types from 1920 on and a single home.') });
+/** R31 (H): tipos anteriores a 1920 só com o interruptor ligado. */
+const houseOn = (s: GameState, h: HouseDef): boolean => h.from >= 1920 || !!sw<boolean>(s, 'h31.casas');
+
 export function availableHouses(s: GameState): HouseDef[] {
-  return HOUSES.filter((h) => s.year >= h.from && s.year <= h.to);
+  return HOUSES.filter((h) => s.year >= h.from && s.year <= h.to && houseOn(s, h));
 }
 
 export function makeOwner(s: GameState, r: Rng, gen = 1): Owner {
@@ -154,7 +166,7 @@ export function buyHouse(s: GameState, id: string): L | null {
   const o = ownerOf(s);
   const idx = HOUSES.findIndex((x) => x.id === id);
   const def = HOUSES[idx];
-  if (!def || s.year < def.from || s.year > def.to) return l('Casa indisponível nesta época.', 'House not available in this era.');
+  if (!def || s.year < def.from || s.year > def.to || !houseOn(s, def)) return l('Casa indisponível nesta época.', 'House not available in this era.');
   if (o.house === idx) return l('Você já mora aqui.', 'You already live here.');
   const resale = o.house >= 0 ? Math.round(money(s, HOUSES[o.house].price) * 0.7) : 0;
   const price = money(s, def.price);

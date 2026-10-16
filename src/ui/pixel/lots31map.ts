@@ -10,10 +10,12 @@ import { nb19 } from '../../sim/sys/hood19';
 import { places27, type Place27, type PlaceK27 } from '../../sim/sys/place27';
 import { lotLock31, lotsOn31, lotPrice31, noPurpose31 } from '../../sim/sys/lots31';
 import { fillerLots27, forSale27, type Sale27 } from './city27';
+import { cityX31, type CityX31 } from '../r31/city31model';
 
 export type LotFn31 = 'hq' | 'mine' | 'business' | 'sale' | 'own' | 'home' | 'none';
-export interface LotCell31 { lot: number; fn: LotFn31; k?: PlaceK27; name: L; who?: string }
-export interface CityLots31 { sale: Sale27[]; filler: number[]; places: Place27[]; cells: LotCell31[]; /** fração dos prédios com função (0..1) */ cover: number }
+/** `lot` = índice em LOTS18; os lugares reais (terrenos reservados da frente H) vêm com `lot` = −1 e `id`. */
+export interface LotCell31 { lot: number; fn: LotFn31; k?: PlaceK27; name: L; who?: string; id?: string }
+export interface CityLots31 { sale: Sale27[]; filler: number[]; places: Place27[]; cells: LotCell31[]; /** fração dos prédios com função (0..1) */ cover: number; /** camada da cidade da época (frente H) */ cx: CityX31 }
 export const FN31: Record<LotFn31, L> = {
   hq: l('Sua sede', 'Your HQ'), mine: l('Prédio seu', 'Your building'), business: l('Negócio com dono', 'Business with an owner'), sale: l('Terreno à venda', 'Plot for sale'),
   own: l('Terreno seu', 'Your plot'), home: l('Casa de quem mora na cidade', 'Home of a local'), none: l('Sem função', 'No purpose'),
@@ -27,8 +29,11 @@ export function cityLots31(s: GameState, txt: { sale: string; own: string } = { 
   const mine = new Set(lay.values());
   for (const p of campus18(s).proj) mine.add(p.lot);
   let sale = forSale27(s);
-  let filler = fillerLots27(s, sale);
-  let places = places27(s, filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1);
+  const fill0 = fillerLots27(s, sale);
+  const cx = cityX31(s, fill0); // frente H: lugares reais nos terrenos reservados e o festival do mês
+  let filler = cx.filler;
+  let places = [...places27(s, filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1), ...cx.places];
+  const fest = new Set(fill0.filter((x) => !cx.filler.includes(x)));
   const on = lotsOn31(s);
   if (on) {
     // terreno vago (à venda ou seu) sai da cidade comum e vira placa: o fluxo de sempre do lote (construir) + comprar o terreno
@@ -43,7 +48,7 @@ export function cityLots31(s: GameState, txt: { sale: string; own: string } = { 
     filler = filler.filter((x) => !vl.has(x));
     places = places.filter((p) => p.k !== 'vacant');
   }
-  const bad = noPurpose31(places);
+  const bad = noPurpose31(s, places);
   const byLot = new Map(places.map((p) => [p.lot, p]));
   const saleAt = new Map(sale.map((x) => [x.lot, x]));
   const cells: LotCell31[] = [];
@@ -54,10 +59,12 @@ export function cityLots31(s: GameState, txt: { sale: string; own: string } = { 
     if (mine.has(lot)) { cells.push({ lot, fn: 'mine', name: nm }); continue; }
     const sl = saleAt.get(lot);
     if (sl) { cells.push({ lot, fn: sl.own ? 'own' : 'sale', name: nm }); continue; }
+    if (fest.has(lot)) { cells.push({ lot, fn: 'business', name: cx.festName ? l(cx.festName, cx.festName) : nm }); continue; } // festival do mês
     const p = byLot.get(lot);
     if (p) { cells.push({ lot, fn: p.k === 'home' ? 'home' : bad.has(lot) ? 'none' : 'business', k: p.k, name: p.name, who: p.lot31?.who }); continue; }
     cells.push({ lot, fn: 'none', name: nm }); // lote fora das listas (não deveria acontecer)
   }
+  for (const p of cx.places) cells.push({ lot: -1, id: p.id, fn: 'business', k: p.k, name: p.name }); // lugares reais (terreno reservado)
   const n = cells.length || 1;
-  return { sale, filler, places, cells, cover: cells.filter((c) => c.fn !== 'none').length / n };
+  return { sale, filler, places, cells, cover: cells.filter((c) => c.fn !== 'none').length / n, cx };
 }

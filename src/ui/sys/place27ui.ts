@@ -61,6 +61,8 @@ function runP27(s: GameState, p: Place27, a: PAct27, o: PlaceCtx27): void {
 }
 
 /** Painel de um lugar de terceiros: o que é, dono, agora, quem está lá, ações. */
+/** R31 (H): botões extras do painel do lugar (ex.: "Entrar na loja" na loja de instrumentos). */
+export const PLACE_UI31: { extra: ((s: GameState, p: Place27) => HTMLElement | null)[] } = { extra: [] };
 export function placePanel27(s: GameState, p: Place27, o: PlaceCtx27): HTMLElement {
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split' && !a.deceased);
   if (sel27.act && !mine.some((a) => a.id === sel27.act)) sel27.act = undefined;
@@ -78,7 +80,7 @@ export function placePanel27(s: GameState, p: Place27, o: PlaceCtx27): HTMLEleme
       ...(p.sale !== undefined ? kv(l('Preço', 'Price'), $(p.sale)) : [])),
     p.also.length ? h('p', { class: 'small c2-also' }, ic('building'), ' ', t(l('Também neste prédio: ', 'Also in this building: ')), p.also.map((k) => t(KNAME27[k])).join(', ')) : null,
     h('div', null, h('b', { class: 'small' }, t(l('Quem está lá', 'Who\'s there'))), whoList(s, p.people)),
-    h('div', { class: 'c27-main-acts' }, h('button', { type: 'button', class: 'btn small primary c2-enter', onclick: o.inside }, ic('door'), ' ', t(l('Entrar (ver por dentro)', 'Step inside')))),
+    h('div', { class: 'c27-main-acts' }, h('button', { type: 'button', class: 'btn small primary c2-enter', onclick: o.inside }, ic('door'), ' ', t(l('Entrar (ver por dentro)', 'Step inside'))), ...PLACE_UI31.extra.map((f) => f(s, p))),
     needAct ? h('label', { class: 'small c2-actsel' }, t(l('Artista: ', 'Act: ')), h('select', { onchange: (e: Event) => { sel27.act = (e.target as HTMLSelectElement).value; rerender(); } },
       mine.map((a) => h('option', { value: a.id, selected: (sel27.act ?? mine[0].id) === a.id ? true : undefined }, a.name)))) : null,
     acts.length ? h('div', { class: 'w19-acts c2-acts' }, acts.map(btn)) : null,

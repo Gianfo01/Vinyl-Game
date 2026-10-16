@@ -26,11 +26,11 @@ import { landValue31 } from '../r31/value31';
 import { rng19 } from '../rng19';
 import type { Act, GameState } from '../types';
 import { fmtL, post } from '../util';
-import { HOME_LOT18, LAND18, LOTS18, buildings18, campus18, layout18, lotsOpen18 } from './campus18';
+import { LAND18, LOTS18, buildings18, campus18, homeLot18, layout18, lotsOpen18 } from './campus18';
 import { famCity31, famNow31 } from './fossati31';
 import { meetHere31, scoutHere31 } from './gente31';
 import { hoodStats19, nb19 } from './hood19';
-import { LOTS27, type PAct27, type Person27, type Place27 } from './place27';
+import { LOTS27, PLACE_X27, type PAct27, type Person27, type Place27 } from './place27';
 import { where31 } from './where31';
 import { met31, meNode31, node31 } from '../social31';
 
@@ -208,7 +208,7 @@ export function lotLock31(s: GameState, lot: number): L | null {
   if (lot >= lotsOpen18(s, bs)) return l('Esse bairro ainda não abriu.', 'That district is not open yet.');
   if (new Set(layout18(s, bs).values()).has(lot) || campus18(s).proj.some((p) => p.lot === lot)) return l('Já tem um prédio seu nesse lote.', 'You already have a building on that plot.');
   if (nb19(s).some((x) => x.lot === lot)) return l('Esse imóvel é de um vizinho (compre pelo vizinho).', 'That property belongs to a neighbour (buy it from the neighbour).');
-  if (lot === HOME_LOT18) return l('Esse é o lote residencial da sua casa.', 'That is your home\'s residential plot.');
+  if (lot === homeLot18(s)) return l('Esse é o lote residencial da sua casa.', 'That is your home\'s residential plot.');
   const price = lotPrice31(s, lot);
   if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa insuficiente.', 'Not enough cash.'));
   return null;
@@ -234,23 +234,26 @@ LAND18.mult = ownLotBuildMult31;
 
 // ---------------------------------------------------------------- o mapa: prédio sem função → casa ou terreno
 
-/** Prédio com função de verdade: liga a algo que existe (casa real, veículo, facção, vizinho, rival) ou tem dono real
- *  próprio. Prédio de apartamentos genérico não é negócio; a mesma equipe repetida em outro prédio (a cidade comum
- *  repete escritórios e hotéis) também não. */
-export function functional31(p: Place27): boolean {
-  if (p.lot31) return true;
+/** Prédio com função de verdade: liga a algo que existe (casa real, veículo, facção, vizinho, rival, lugar real da
+ *  frente H, loja da época) ou tem dono real próprio. Prédio de apartamentos genérico não é negócio; a mesma equipe
+ *  repetida em outro prédio (a cidade comum repete escritórios e hotéis) também não. */
+export function functional31(s: GameState, p: Place27): boolean {
+  if (p.lot31 || p.lot < 0) return true;
   if (p.src === 'nb' || p.venue || p.outlet || p.org || p.k === 'police' || p.k === 'market' || p.k === 'label') return true;
+  if (eraBiz31(s, p)) return true;
   if (p.k === 'apartments') return false;
   const o = p.people[0];
   return !!(o && (o.pid || o.key));
 }
+/** Loja da época (frente H, city31): o prédio de cidade comum virou negócio com nome e ano de abrir e fechar. */
+const eraBiz31 = (s: GameState, p: Place27): boolean => { const b = PLACE_X27.biz?.(s, p.lot, p.k); return !!b && b.name.pt === p.name.pt; };
 /** Lotes (da cidade comum) sem função: os que `functional31` recusa e os que repetem o dono de outro lugar. */
-export function noPurpose31(out: Place27[]): Set<number> {
+export function noPurpose31(s: GameState, out: Place27[]): Set<number> {
   const seen = new Set<string>(), bad = new Set<number>();
   for (const p of out) {
     const o = p.people[0], id = o?.pid ?? o?.key;
-    if (p.src !== 'fill') { if (id) seen.add(id); continue; }
-    if (!functional31(p) || (id && seen.has(id) && !p.lot31)) bad.add(p.lot);
+    if (p.src !== 'fill' || p.lot < 0) { if (id) seen.add(id); continue; }
+    if (!functional31(s, p) || (id && seen.has(id) && !p.lot31 && !eraBiz31(s, p))) bad.add(p.lot);
     else if (id) seen.add(id);
   }
   return bad;
@@ -299,7 +302,7 @@ export function applyLots31(s: GameState, out: Place27[]): void {
   const st = peekLots31(s);
   const own = st?.own ?? {};
   const homes = Object.entries(st?.h ?? {}).map(([k, v]) => [+k, v] as const).sort((a, b) => a[0] - b[0]).map(([, v]) => v);
-  const bad = noPurpose31(out);
+  const bad = noPurpose31(s, out);
   const idx = out.map((p, i) => [p, i] as const).filter(([p]) => p.src === 'fill').sort((a, b) => a[0].lot - b[0].lot);
   for (const [p, i] of idx) {
     if (own[p.lot]) { out[i] = vacantPlace31(s, p.lot, true); continue; }
