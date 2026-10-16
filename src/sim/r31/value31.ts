@@ -149,9 +149,23 @@ const ownerOfRel = (r: Release): string => r.owner;
 const isLive = (r: Release): boolean => r.live !== false;
 
 interface Lot { rels: Release[]; acts: Act[]; contracts: Map<string, Contract> }
+/** Índice dono → lançamentos, refeito quando muda a semana ou o número de lançamentos (só leitura; nada no save). */
+const REL_IX = new WeakMap<GameState, { w: number; n: number; m: Map<string, Release[]> }>();
+function relsOf(s: GameState, id: string): Release[] {
+  const all = s.releases;
+  let n = 0;
+  for (const _ in all) n++;
+  let c = REL_IX.get(s);
+  if (!c || c.w !== s.week || c.n !== n) {
+    const m = new Map<string, Release[]>();
+    for (const k in all) { const r = all[k]; const o = ownerOfRel(r); let a = m.get(o); if (!a) m.set(o, (a = [])); a.push(r); }
+    c = { w: s.week, n, m };
+    REL_IX.set(s, c);
+  }
+  return (c.m.get(id) ?? []).filter((r) => r.owner === id);
+}
 function lotOf(s: GameState, id: string): Lot {
-  const rels: Release[] = [];
-  for (const r of Object.values(s.releases)) if (ownerOfRel(r) === id) rels.push(r);
+  const rels = relsOf(s, id);
   const acts: Act[] = [];
   const contracts = new Map<string, Contract>();
   const ids = id === 'player' ? playerActs(s) : (s.labels[id]?.roster ?? []);
