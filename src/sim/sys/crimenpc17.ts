@@ -5,6 +5,7 @@
 // criam rixas sangrentas (diss → briga → tiros; r18: com qualquer um fora do modo "Vida real exata"). Situações do diretor: pizzo,
 // carreira atrás das grades e a oferta de lavagem.
 
+import { opinionOf } from '../opinion';
 import { clamp, Rng, seedState } from '../../core/rng';
 import { countryName } from '../../data/geo';
 import { familyOf, l, type L } from '../../data/world';
@@ -132,7 +133,7 @@ function plotMonth(s: GameState, r: Rng): void {
       const ally = Object.values(s.labels).find((lb) => lb.active && lb.id !== A.id && lb.id !== E.id && (() => { const Lb = leaderOf(s, lb.id); return !!(L0 && Lb && (Lb.rel[L0.id] ?? 0) > 30 && (E.id === 'player' ? (s.rivalries[lb.id] ?? 0) > 30 : (Lb.rel[leaderOf(s, E.id)?.id ?? ''] ?? 0) < -20)); })());
       if (ally && !(histMode(s) === 'strict' && isReal(s, ally.id))) partners.push(ally.id);
       // convite para você: o inimigo deles também é seu rival
-      if (E.id !== 'player' && (s.rivalries[E.id] ?? 0) > 40 && (L0?.rel.player ?? 0) > 10 && st.warn.length < 4 && r.chance(0.5)) {
+      if (E.id !== 'player' && (s.rivalries[E.id] ?? 0) > 40 && (L0 ? opinionOf(s, `l:${L0.id}`) : 0) > 10 && st.warn.length < 4 && r.chance(0.5)) {
         st.warn.push({ id: `cw${++st.seq}`, actor: A.id, c: ch.c, target, w: s.week, dl: s.week + 4, partners: ['invite'] });
         notify(s, fmtL(l('{a} convida você para um "trabalho" contra {t}. Veja Crime → Planos.', '{a} invites you to a "job" against {t}. See Crime → Plans.'), { a: nameOf17(s, A.id), t: nameOf17(s, target) }), 'event');
         continue;

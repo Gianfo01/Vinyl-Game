@@ -331,7 +331,7 @@ export type Unc23 = { kind: '?' } | { kind: '~'; lo: number; hi: number } | { ki
 export function unc23(s: GameState, actId: string, field: 'fame' | 'talent' | 'potential'): Unc23 {
   const e = estimate(s, actId, field);
   if (!e) return { kind: '?' };
-  if (e.hi - e.lo <= 4) return { kind: '✓', v: e.mid };
+  if (e.hi === e.lo) return { kind: '✓', v: e.mid }; // r31: só confirma o que é exato (faixa nunca centrada no real)
   return { kind: '~', lo: e.lo, hi: e.hi };
 }
 export const uncText23 = (u: Unc23): string => (u.kind === '?' ? '?' : u.kind === '✓' ? `✓ ${u.v}` : `~ ${u.lo}–${u.hi}`);

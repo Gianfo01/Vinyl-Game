@@ -9,7 +9,7 @@ import { nominal } from '../../../core/money';
 import { hqCaps } from '../../branches';
 import type { GameState, StaffMember } from '../../types';
 import { fmtL, money, nextId, notify, post, remember } from '../../util';
-import { P, addMsg, clamp01, type StaffCareer } from './state';
+import { P, addMsg, careerOf, clamp01 } from './state';
 import { gainXp, ownerBonus } from './owner';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 
@@ -29,10 +29,8 @@ export const ROLE_PATHS: Record<string, string[]> = {
   manager: ['agent'],
 };
 
-export function careerOf(s: GameState, st: StaffMember): StaffCareer {
-  const c = P(s).career;
-  return (c[st.id] ??= { xp: 0, level: st.skill > 75 ? 2 : st.skill > 55 ? 1 : 0, loyalty: 60 });
-}
+// r31: careerOf mora em ./state (leve) para opinion.ts poder ler a lealdade sem carregar este módulo.
+export { careerOf };
 
 /** Leitura sem criar a ficha (quem só lê não pode mexer no estado): sem ficha, a lealdade inicial (60). */
 export const careerLoyalty = (s: GameState, st: StaffMember): number => P(s).career[st.id]?.loyalty ?? 60;

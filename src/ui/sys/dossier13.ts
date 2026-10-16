@@ -2,6 +2,7 @@
 // o seu e o ranking de Prestígio) e abas novas na ficha do artista e da pessoa: marcos e recordes,
 // "definiu uma época", fracassos, contratos e selos, relíquias e vida pessoal (com campos genéricos).
 
+import { opinionOf } from '../../sim/opinion';
 import { CONTRACT_MODELS } from '../../data/rules';
 import { active29, isSpecial29, npcParty29, partyName29, termTxt29 } from '../../sim/terms29';
 import { l, marketById, type L } from '../../data/world';
@@ -199,7 +200,7 @@ function relationTab(s: GameState, id: string): HTMLElement {
   const poach = Object.values(s.acts).filter((a) => a.owner === 'player' && rivals8(s)?.interest?.[a.id]?.lb === id);
   return h('div', null,
     chips(stat('fire', feud, l('rixa com você (0–100)', 'feud with you (0–100)')),
-      ld ? stat('handshake', Math.round(ld.rel.player ?? 0), l('líder com você (−100 a 100)', 'leader toward you (−100 to 100)')) : null,
+      ld ? stat('handshake', opinionOf(s, `l:${ld.id}`), l('líder com você (−100 a 100)', 'leader toward you (−100 to 100)')) : null,
       stat('flag', fights.length, l('disputas registradas', 'recorded fights'))),
     why(l('Rixa sobe quando vocês disputam artistas, datas e vagas; acima de 50 eles atacam seus lançamentos e elenco. Acordos de distribuição baixam a rixa, mas criam tensão.', 'Feud rises when you fight over acts, dates and slots; above 50 they attack your releases and roster. Distribution deals lower the feud but add tension.')),
     d ? h('p', null, pill(`${t(l('distribui você em', 'distributes you in'))} ${t(marketById[d.m].name)} · ${t(l('tensão', 'tension'))} ${Math.round(d.ten)}`, d.ten > 70 ? 'bad' : 'good')) : null,

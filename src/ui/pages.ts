@@ -3,6 +3,7 @@
 // por grupo, instrumentos, personalidade, saúde, relações, carreira e aulas.
 // O que o jogador vê de atos alheios depende do grau de conhecimento (faixas, não números exatos).
 
+import { KNOW_WIDTHS, band, bandText, know } from '../sim/know';
 import { isSpecial29, mgmtOf29, termTxt29 } from '../sim/terms29';
 import { fmtL } from '../sim/util';
 import { CAT_MIN17, catCount17, groupTabs17 } from './popcat17';
@@ -98,9 +99,9 @@ function formIcon(f: number): HTMLElement {
   return h('span', { class: `form f${f + 2}`, title: `${t(l('Forma', 'Form'))}: ${t(names[f + 2])}` }, arrows[f + 2]);
 }
 
-/** Largura da incerteza dos atributos conforme o grau de conhecimento. */
+/** Largura da incerteza dos atributos conforme o grau de conhecimento (r31: tabela única do sim, know.ts). */
 function fuzz(deg: number, mine: boolean): number {
-  return mine ? 0 : [99, 30, 18, 10, 4, 0][Math.max(0, Math.min(5, deg))];
+  return mine ? 0 : KNOW_WIDTHS.attrs.byDeg[Math.max(0, Math.min(5, deg))];
 }
 
 function personDegree(s: GameState, p: Person): { act?: Act; mine: boolean; deg: number } {
@@ -111,10 +112,9 @@ function personDegree(s: GameState, p: Person): { act?: Act; mine: boolean; deg:
 }
 const hid15 = (): HTMLElement => h('span', { class: 'muted', title: t(HINT15) }, '?');
 
-function shown(v: number, w: number): string {
-  if (!w) return String(v);
-  if (w >= 99) return '?';
-  return `${Math.max(1, Math.round(v - w / 2))}–${Math.min(99, Math.round(v + w / 2))}`;
+/** Valor mostrado: exato, faixa (r31: nunca centrada no valor real — desvio do know.ts por pessoa e campo) ou "?". */
+function shown(s: GameState, id: string, f: string, v: number, w: number): string {
+  return bandText(band(s, id, f, v, w));
 }
 
 // ================================================================== card do integrante
@@ -129,11 +129,11 @@ export function personCard(s: GameState, p: Person, opts: { onClick?: () => void
   const extra = all.filter((x) => x.def.group === 'create' || x.def.group === 'stage').sort((a, b) => b.value - a.value).slice(0, 1);
   const top = [...main, ...extra].slice(0, opts.compact ? 2 : 3);
   return h('button', { class: `pcard ${tone(ovr)}`, type: 'button', ...ent27('person', `p:${p.id}`), onclick: opts.onClick ?? (() => openPersonPage(p.id)) },
-    h('div', { class: 'pcard-top' }, w >= 99 ? ovrBadge('?') : ovrBadge(w ? shown(ovr, w) : ovr), h('small', { title: t(roleLine27(s, p)) }, t(roleLine27(s, p, 3))), mine ? formIcon(form(p)) : null), // r27 (LIN): todas as funções
+    h('div', { class: 'pcard-top' }, w >= 99 ? ovrBadge('?') : ovrBadge(w ? shown(s, p.id, 'ovr', ovr, w) : ovr), h('small', { title: t(roleLine27(s, p)) }, t(roleLine27(s, p, 3))), mine ? formIcon(form(p)) : null), // r27 (LIN): todas as funções
     portraitCanvas(p, s, 2),
     h('b', { class: 'pcard-name' }, p.name, p.isPlayer ? ' ★' : ''),
     h('small', { class: 'muted' }, `${s.year - p.born} ${t(l('anos', 'yrs'))}`),
-    w < 99 ? h('div', { class: 'pcard-attrs' }, top.map((x) => h('span', null, t(x.def.name), ' ', h('b', null, shown(x.value, w))))) : null,
+    w < 99 ? h('div', { class: 'pcard-attrs' }, top.map((x) => h('span', null, t(x.def.name), ' ', h('b', null, shown(s, p.id, `a.${x.def.id}`, x.value, w))))) : null,
   );
 }
 
@@ -155,8 +155,8 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
   const ovr = overall(s, p);
   const portraitBox = h('div', { class: 'pg-portrait' }, portraitCanvas(p, s, 4));
   const activity = mine ? personActivity(s, p.id) : null;
-  const pot = Math.round(p.potential);
-  const potShown = mine ? (s.year - p.born < 26 ? `${Math.max(ovr, pot - 6)}–${pot + 6}` : `~${Math.max(ovr, pot)}`) : vis.skills ? `${Math.max(1, pot - 15)}–${pot + 15}` : '?';
+  // r31 (W0-KN): potencial pela regra única (know.ts) — faixa com desvio, até para quem é seu; de terceiros só no grau 3
+  const potShown = bandText(band(s, p.id, 'potential', p.potential, know(s, p.id).width('potential')));
   const editLook = () => {
     const editor = appearanceEditor(p, (look) => {
       if (look) p.look = look;
@@ -168,7 +168,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
   const head = h('div', { class: `pg-head pcard-big ${tone(ovr)}` },
     portraitBox,
     h('div', { class: 'pg-head-main' },
-      h('div', { class: 'row wrap' }, w >= 99 ? ovrBadge('?', true) : ovrBadge(w ? shown(ovr, w) : ovr, true), h('div', null,
+      h('div', { class: 'row wrap' }, w >= 99 ? ovrBadge('?', true) : ovrBadge(w ? shown(s, p.id, 'ovr', ovr, w) : ovr, true), h('div', null,
         h('h3', null, p.name, p.isPlayer ? pill(t(l('você', 'you')), 'gold') : null, !p.alive ? pill(t(l('falecido(a)', 'deceased')), 'bad') : null),
         h('div', null, pill(t(roleLine27(s, p))), ' ', act ? actLink(s, act.id) : h('span', { class: 'muted' }, t(l('sem banda', 'no band'))), mine ? h('span', null, ' ', formIcon(form(p))) : null))),
       chips(
@@ -206,17 +206,17 @@ function attrsTab(s: GameState, p: Person, w: number, mine: boolean): HTMLElemen
       if (!xs.length) return null;
       const avg = Math.round(groupAvg(s, p, gr));
       return h('section', { class: 'attr-col' },
-        h('h4', null, ic(GROUP_ICON[gr]), ' ', t(GROUP_NAMES[gr]), ' ', h('span', { class: `attr-v ${tone(avg)}` }, shown(avg, w))),
+        h('h4', null, ic(GROUP_ICON[gr]), ' ', t(GROUP_NAMES[gr]), ' ', h('span', { class: `attr-v ${tone(avg)}` }, shown(s, p.id, `g.${gr}`, avg, w))),
         h('ul', null, xs.map((x) => {
           const gv = growth[x.def.id] ?? 0;
           return h('li', { title: t(x.def.desc) },
             h('span', null, t(x.def.name)),
-            w ? rangeBar(Math.max(0, x.value - w / 2), Math.min(100, x.value + w / 2)) : bar(x.value, 100, tone(x.value)),
-            h('b', { class: `attr-v ${tone(x.value)}` }, shown(x.value, w)),
+            w ? ((b) => (b ? rangeBar(b.lo, b.hi) : null))(band(s, p.id, `a.${x.def.id}`, x.value, w)) : bar(x.value, 100, tone(x.value)),
+            h('b', { class: `attr-v ${tone(x.value)}` }, shown(s, p.id, `a.${x.def.id}`, x.value, w)),
             mine && Math.abs(gv) >= 0.5 ? h('small', { class: gv > 0 ? 'good' : 'bad' }, gv > 0 ? `+${Math.round(gv)}` : String(Math.round(gv))) : null);
         })));
     })),
-    h('p', null, h('b', null, t(l('Instrumentos: ', 'Instruments: '))), instrumentsOf(s, p).map((x) => pill(`${t(instById[x.id]?.name ?? l(x.id))} ${shown(x.lvl, w)}`))),
+    h('p', null, h('b', null, t(l('Instrumentos: ', 'Instruments: '))), instrumentsOf(s, p).map((x) => pill(`${t(instById[x.id]?.name ?? l(x.id))} ${shown(s, p.id, `i.${x.id}`, x.lvl, w)}`))),
     h('p', { class: 'muted small' }, t(l('Técnica entra na performance das gravações; criação nas notas das músicas; palco na receita dos shows; mental na regularidade; físico no desgaste das turnês. Passe o mouse para ver o que cada atributo faz.', 'Technique feeds recording performance; creativity feeds song scores; stage feeds show revenue; mental feeds consistency; physical feeds tour wear. Hover to see what each attribute does.'))),
     mine ? null : h('p', { class: 'muted small' }, t(l('Faixas = incerteza do seu conhecimento sobre o artista. Olheiros e reuniões estreitam.', 'Ranges = uncertainty of your knowledge. Scouts and meetings narrow them.'))),
   );
@@ -344,7 +344,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
   const w = fuzz(deg, mine);
   const head = h('div', { class: 'pg-head' }, logo(a, 84),
     h('div', { class: 'pg-head-main' },
-      h('div', { class: 'row wrap' }, w >= 99 ? ovrBadge('?', true) : ovrBadge(w ? shown(teamOvr, w) : teamOvr, true),
+      h('div', { class: 'row wrap' }, w >= 99 ? ovrBadge('?', true) : ovrBadge(w ? shown(s, a.id, 'ovr', teamOvr, w) : teamOvr, true),
         h('div', null,
           wordmarkImg28(a.logoSeed, a.name, a.genre, a.formed, 128),
           h('h3', null, a.name, a.legend ? pill(t(l('Lenda', 'Legend')), 'gold') : null, a.archetype === 'synthetic' ? pill('AI', 'neural') : null),

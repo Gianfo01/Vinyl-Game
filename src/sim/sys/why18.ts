@@ -2,6 +2,7 @@
 // resultado do mês, hype do ato, chance de oferta, posição na parada, fama por país, estresse,
 // demanda de show, bolinhas de tempo e opinião sobre você. Cada parte pode abrir o próximo nível.
 
+import { opinionWhy } from '../opinion';
 import { countryName, countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
 import { defaultOffer, evaluateOffer } from '../contracts';
@@ -15,7 +16,7 @@ import { balls, careerBalls, officeCap } from './agenda17';
 import { energyLeft, maxEnergy } from './life';
 import { base16, fameIn, fameMap16, f16, homeA3 } from './fame16';
 import { hypeOf } from './hype12';
-import { opinionOf, p13, per13 } from './persona13';
+import { opinionOf, per13 } from './persona13';
 import { c12, localDraw, baseDraw, suggestTier } from './tour12';
 
 export const CAT18: Record<string, L> = {
@@ -205,8 +206,7 @@ registerExplain('opinion', (s, c) => {
   const key = String(c.key ?? '');
   const P = per13(s, key);
   if (!P) return null;
-  const led = p13(s).op[key];
-  const parts: WhyPart[] = (led?.w ?? []).slice().reverse().map(([y, m, d, w]) => ({ label: fmtL(l('{m}/{y}: {w}', '{m}/{y}: {w}'), { m: m + 1, y, w }), value: d, fmt: 'signed' as const, tone: d >= 0 ? 'good' as const : 'bad' as const }));
+  const parts: WhyPart[] = opinionWhy(s, key).slice().reverse().map(([y, m, d, w]) => ({ label: fmtL(l('{m}/{y}: {w}', '{m}/{y}: {w}'), { m: m + 1, y, w }), value: d, fmt: 'signed' as const, tone: d >= 0 ? 'good' as const : 'bad' as const }));
   const f = P.facets;
   parts.push({ label: l('Personalidade: empatia e generosidade ampliam gestos bons; teimosia e impaciência ampliam os ruins', 'Personality: empathy and generosity amplify kind gestures; stubbornness and impatience amplify bad ones'), value: `${Math.round(f.empatia)}/${Math.round(f.teimosia)}`, fmt: 'text' });
   return { title: fmtL(l('O que {n} pensa de você', 'What {n} thinks of you'), { n: P.name }), value: opinionOf(s, key), fmt: 'signed', parts, note: l('−100 a +100. Gestos recentes; o histórico antigo já está na soma.', '−100 to +100. Recent gestures; older history is already in the total.') };

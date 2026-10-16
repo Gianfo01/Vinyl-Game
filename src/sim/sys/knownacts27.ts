@@ -4,9 +4,10 @@
 // opera, seu elenco e seus clientes, quem está no seu radar (olheiros, sinais), quem a sua gente conhece (relações do
 // seu elenco, parcerias de composição e produção, o line-up do seu festival), as paradas, o elenco dos rivais no seu
 // território e quem saiu na imprensa ou nos boatos deste ano. Um ato pequeno e distante sem laço nenhum não aparece.
-// O quanto se sabe de cada um (0–3) reaproveita a visibilidade da fama (fame15.knownLevel: olheiros + relação + fama).
+// O quanto se sabe de cada um (0–3) reaproveita a visibilidade da fama (know.ts: olheiros + relação + fama, fonte única).
 // Pura e determinística (nenhum sorteio, nenhuma escrita no estado); memo por semana para o banco 'huge'.
 
+import { know as knowOf, know3 } from '../know';
 import { cityById, l, type L } from '../../data/world';
 import { countryOfCity } from '../../data/geo';
 import { actsOfPerson17 } from '../actidx17';
@@ -15,7 +16,6 @@ import { facts17 } from '../facts17';
 import { visibleAct } from '../future';
 import { sourceName } from '../scouting';
 import type { Act, GameState } from '../types';
-import { knownLevel } from './fame15';
 
 /** Motivos (chips) pelos quais o jogador conhece o ato. */
 export type Why27 = 'own' | 'client' | 'former' | 'star' | 'famous' | 'local' | 'scout' | 'signal' | 'contact' | 'collab' | 'festival' | 'chart' | 'rival' | 'press' | 'rumor';
@@ -214,10 +214,9 @@ function build(s: GameState): KnownAct27[] {
     if (!a) continue;
     const why = [...e.why].sort((x, y) => W[y] - W[x]);
     const mine = e.why.has('own') || e.why.has('client');
-    const k = mine ? null : knownLevel(s, id);
-    let know: 0 | 1 | 2 | 3 = mine ? 3 : k!.priv >= 3 ? 3 : k!.priv >= 2 || k!.pub >= 3 ? 2 : k!.pub >= 1 ? 1 : 0;
-    // laço direto (contato, parceria, cena, festival) dá ao menos "de ouvir falar"
-    if (know < 1 && (e.why.has('contact') || e.why.has('collab') || e.why.has('local') || e.why.has('festival') || e.why.has('former'))) know = 1;
+    // r31 (W0-KN): o nível sai de know.ts; laço direto (contato, parceria, cena, festival) dá ao menos "de ouvir falar"
+    const tie = e.why.has('contact') || e.why.has('collab') || e.why.has('local') || e.why.has('festival') || e.why.has('former');
+    const know = mine ? 3 : know3(knowOf(s, id), tie);
     const hv = mine ? a.fame : hereOf(a);
     res.push({ id, why, det: e.det, know, here: Math.round(hv * 10) / 10, score: why.reduce((t, w) => t + W[w], 0) + hv, a3: countryOfCity(a.city) });
   }
