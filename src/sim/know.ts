@@ -65,6 +65,9 @@ export interface Know {
   width: (f: KnowField) => number;
 }
 
+/** R31 (EDT): "revelar tudo" do editor dentro da partida (ui/sim r31/editor.ts preenche; sem editor, nunca revela). */
+export const KNOW_REVEAL31: { f?: (s: GameState) => boolean } = {};
+
 const mineAct = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
 
 /**
@@ -102,6 +105,7 @@ function widthOf(s: GameState, k: Omit<Know, 'width'>, f: KnowField): number {
 function raw(s: GameState, id: string, obs: string): Omit<Know, 'width'> {
   const full = (tier: number) => ({ id, obs, mine: true, deg: 5, rel: 5, exp: 5, priv: 5, pub: 5, tier });
   const none = (tier: number, exp: number) => ({ id, obs, mine: false, deg: 0, rel: 0, exp, priv: 0, pub: exp, tier });
+  if (obs === 'player' && KNOW_REVEAL31.f?.(s)) { const a0 = s.acts[id]; return full(fameTier(a0 ? a0.fame : s.persons[id] ? FF().person(s, id) : 0)); }
   const a = s.acts[id];
   if (a) {
     const tier = fameTier(a.fame);

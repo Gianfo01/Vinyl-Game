@@ -205,6 +205,29 @@ export function runSituations(s: GameState): { mine: string[]; npc: string[] } {
   return out;
 }
 
+/** R31 (EDT): o editor dispara uma situação na hora (ignora orçamento e recargas). Com você no elenco vira cartão de
+ *  decisão; entre NPCs, resolve pela escolha do NPC. Devolve o título, ou null quando ninguém se encaixa. */
+export function forceSituation17(s: GameState, id: string, r: Rng): L | null {
+  const def = byId[id];
+  if (!def) return null;
+  const facts = recentFacts(s, { months: 12 }).reverse();
+  const cands: { fact?: Fact }[] = def.trigger ? facts.filter((f) => def.trigger!.includes(f.kind)).slice(-6).map((fact) => ({ fact })) : [{}];
+  for (const c of cands) {
+    const ctx = def.actorsPick(s, c, r);
+    if (!ctx) continue;
+    if (involvesPlayer(s, ctx) && !def.npcOnly) {
+      const opts = def.options;
+      s.decisions.push({ id: nextId(s, 'd'), eventId: PREFIX + def.id, cat: 'people', title: def.title(s, ctx), text: def.text(s, ctx),
+        options: opts.map((o) => ({ id: o.id, label: o.label, hint: o.hint })), ctx: flat(ctx), week: s.week, defaultOption: opts[opts.length - 1].id, tags: [] });
+    } else {
+      const opt = npcChoice(s, def, ctx, r);
+      record(s, def, ctx, opt, opt.apply(s, ctx, r) ?? null, false);
+    }
+    return def.title(s, ctx);
+  }
+  return null;
+}
+
 registerSimHook('month', 'situations17', (s) => { runSituations(s); });
 
 export const situationById = (id: string): SituationDef | undefined => byId[id];

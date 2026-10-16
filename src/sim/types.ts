@@ -37,6 +37,8 @@ export interface RunConfig {
   custom?: StartCustom;
   /** personagem do jogador (rodada 5); ausente = gerado */
   character?: CharacterSpec;
+  /** R31 (EDT): base de dados editada no editor de base (nome + diferenças da base original); ausente = base original */
+  base31?: import('./r31/base31').BaseRef31;
   /** rodada 9: id de uma gravadora rival gerada que o jogador assume no começo */
   takeover?: string;
   /** rodada 10: quais gravadoras rivais existem e como começam (ausente = comportamento histórico de sempre) */
