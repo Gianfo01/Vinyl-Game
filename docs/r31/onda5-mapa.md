@@ -79,6 +79,87 @@ Abre como papel/tela por cima da cena (mock: `docs/r31/mocks/onda5/onda5-mock-ca
 mecânica quando existe (negociação, banco, compra…). Tecla E de qualquer lugar; o objeto mostra o número de não lidas. A troca de forma por época acontece sozinha; não
 existe linha do tempo nem explicação das épocas na tela (decisão do dono).
 
+### Mecânicas da correspondência por época (propostas)
+
+**Regra do dono (2026-10-16):** a caixa de entrada é a mesma em qualquer época: tudo chega na hora, nada se perde, nada
+atrasa, mesmos filtros, respostas e teclas. A época muda só a aparência (mocks `onda5-mock-caixa-85/00/25.png`). As ideias
+abaixo são mecânicas à parte, que acontecem fora da caixa (eventos, objetos, escolhas), e nunca mudam o funcionamento dela.
+Atributos que guiam essas mecânicas: **custo**, **privacidade** e **alcance**.
+
+**Cartas (1889–1919, e depois como meio "pessoal")**
+- **Censura em guerra** (1914–18, 1939–45) como notícia e evento: carta de artista estrangeiro chega riscada (só texto).
+- **Carta de próprio punho** para artista, crítico ou dono de rádio: sobe a relação mais que um recado. Sai uma por mês,
+  porque gasta energia.
+- **Sacos de cartas de fãs** medem a fama; responder fãs dá lealdade.
+- **Carta de apresentação:** abre porta com quem você não conhece (sobe o conhecimento).
+- **Carta guardada vira prova:** chantagem e trunfo (holds), falsificação no submundo, relíquia ou memórias no futuro.
+
+**Telegrama, telefone fixo e telex (1920–1969)**
+- **Telefone de mesa:**
+  - fechar negócio na hora (negociação mais rápida, sem tempo para pensar);
+  - interurbano caro;
+  - telefonista ou mesa PBX na sede;
+  - linha cruzada pode revelar um segredo;
+  - grampo (polícia ou rival).
+- **Telex (1930+):** acordos internacionais sem viajar.
+- **Lista telefônica** = o fichário ganha telefones.
+
+**Fax, secretária eletrônica, bip e "tijolão" (1970–1989)**
+- **Fax:**
+  - contrato assinado à distância, para fechar acordo em outro país sem viajar;
+  - fax enviado ao número errado vaza documento para a imprensa.
+- **Bip (pager):** emergências de turnê te alcançam fora da sede.
+- **Celular tijolão (1985+):** caro, dá prestígio e você atende em qualquer lugar.
+
+**Computador e e-mail (1990–2009)**
+- **E-mail instantâneo:**
+  - demos por e-mail (MP3) aumentam o funil de A&R, mas com muito mais lixo;
+  - um assistente filtra o spam.
+- **Responder a todos sem querer** vira escândalo.
+- **Disco vazado** antes do lançamento (1999+): risco por e-mail ou FTP; segurança custa.
+- **Mailing list e site do artista:** marketing direto com os fãs; MySpace (2003–2008) com mensagens de fãs.
+- **Dados de vendas mais precisos** (SoundScan, 1991): o conhecimento do mercado sobe.
+- **Vírus e invasão** (2000+): dados roubados.
+
+**Celular e apps (2010–2040)**
+- **Grupo da banda no app:** o clima da banda fica visível; print vazado vira escândalo.
+- **Redes sociais no bolso:** posts do artista, viral, cancelamento, DMs de fãs, números de streaming em tempo real.
+- **Videochamada:** reunião à distância (sem viajar, mas com menos efeito que ao vivo).
+- **Golpes:** phishing, clonagem e deepfake de voz (2025+).
+- **Assistente de IA (2030+)** tria e responde o rotineiro (liga com a delegação `deleg31`).
+
+**Transversais**
+- A chegada de cada meio novo é um evento (o primeiro telefone da sede, o primeiro fax, o primeiro e-mail) e troca a
+  aparência da caixa; não muda prazos.
+- Os meios antigos não somem de vez: carta de próprio punho continua valendo mais em 2030.
+
+## Botões de viagem (lugares principais)
+
+- Uma barra fixa pequena num canto (embaixo à esquerda, antes do bolso) com ícones em pixel art e o nome embaixo (sem botão só de texto): **Sede**,
+  **Casa**, **Cidade** e **Mundo**.
+- Teclas Shift+1 a Shift+4 (as mesmas do menu de hoje).
+- Cada botão ganha "!" quando há novidade lá.
+- Clicar leva na hora, sem passar tempo, e o botão do lugar atual fica aceso.
+- Com várias carreiras, o botão Sede vira a casa da carreira atual (o chaveiro troca).
+- É diferente do bolso: os botões de viagem são fixos; o bolso é de objetos que o jogador escolhe.
+
+## Artistas do selo e agenda (mecânicas iguais, lugar novo)
+
+As mecânicas de hoje continuam (agenda de bolinhas `agenda17`: 5 pessoais + 2 de expediente, envolvimento por
+carreira, delegação, sobrecarga; ações por artista; contratação). Muda só onde ficam:
+
+| Hoje | Na onda 5 |
+|---|---|
+| Lista do elenco (`artists`, 6 abas: elenco, saúde, relações, segredos, equipe, cartas) | **Mural de cortiça** na sala do A&R: uma polaroid por artista, com selos pequenos de estado (gravando, em turnê, descansando, contrato vencendo, saúde ruim). Clicar = ficha (igual) + "Ações ▾" |
+| Compromissos `plan` e planejamento do elenco | **Quadro de planejamento na parede** (estilo gravadora de verdade): linhas = artistas, colunas = próximos 12 meses, cartões = gravação, lançamento, turnê, férias, divulgação. Clicar num espaço abre o menu de ações; dá para arrastar o cartão para outro mês; conflito aparece em vermelho |
+| Agenda do dono (bolinhas) | **Agenda de couro na sua mesa**: as bolinhas viram horários do mês (manhã e tarde); carreira delegada aparece como "diretor cuida"; sobrecarga = páginas riscadas e o personagem cansado na cena |
+| Delegação e chefe de gabinete | O chefe de gabinete é uma pessoa na sua sala; clicar = relatórios de delegação |
+| Contratação (candidatos, freelancers, músicos de estúdio) | **Anúncio no jornal** abre a vaga; candidatos esperam na recepção para entrevista; freelancers e músicos de estúdio no telefone (fichário) |
+| Saúde, relações e cartas do elenco | Lounge (quem está lá conversa), e na ficha de cada artista |
+
+O que se vê na cena segue a agenda: quem está gravando aparece no estúdio, quem está em turnê não está na sede, quem
+descansa está no lounge.
+
 ## Cidade — prédios (o menu "Cidade" de hoje já tem quase todos como lugares)
 
 | Prédio | Abre |
