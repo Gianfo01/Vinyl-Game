@@ -192,7 +192,7 @@ export function board5(s: GameState, mode: 'months' | 'weeks' = 'months', onlyCo
     if (mode === 'months') {
       const kinds = slots.map((x) => AG_KIND[x.action] ?? 'other');
       const kind = (['rec', 'tour', 'pro', 'rest'] as Card5Kind[]).find((k) => kinds.includes(k)) ?? 'other';
-      push({ id: `slot:${a.id}`, act: a.id, kind, c0: 0, c1: 0, title: N('Agenda do mês', 'This month\'s agenda'), sub: l(`${slots.map((x) => agL(x.action).pt).join(', ')} (${who.pt})`, `${slots.map((x) => agL(x.action).en).join(', ')} (${who.en})`), src: 'slot', movable: false, summary: true });
+      push({ id: `slot:${a.id}`, act: a.id, kind, c0: 0, c1: 0, title: N('Agenda', 'Agenda'), sub: l(`${slots.map((x) => agL(x.action).pt).join(', ')} (${who.pt})`, `${slots.map((x) => agL(x.action).en).join(', ')} (${who.en})`), src: 'slot', movable: false, summary: true });
       continue;
     }
     slots.forEach((x, i) => {
