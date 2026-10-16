@@ -96,6 +96,8 @@ export interface Amor31St {
   ak?: string; as?: number;
   /** recusas: chave → semana em que dá para tentar de novo */
   cd: Record<string, number>;
+  /** últimas recusas com o motivo (chave, motivo) */
+  nos: [string, L][];
   /** quem ficou sabendo do caso atual (chaves) */
   knows: string[];
   /** cuidado com a discrição até a semana */
@@ -116,12 +118,12 @@ export interface Amor31St {
   n: { asks: number; yes: number; no: number; found: number; feuds: number };
 }
 declare module '../ext4' { interface Ext4 { amor31: Amor31St } }
-const fresh = (): Amor31St => ({ cd: {}, knows: [], esc: [], intel: [], ann: [], log: [], n: { asks: 0, yes: 0, no: 0, found: 0, feuds: 0 } });
+const fresh = (): Amor31St => ({ cd: {}, nos: [], knows: [], esc: [], intel: [], ann: [], log: [], n: { asks: 0, yes: 0, no: 0, found: 0, feuds: 0 } });
 registerExt4('amor31', fresh);
 export function amor31(s: GameState): Amor31St {
   const x = ((s as unknown as { x4?: Record<string, unknown> }).x4 ??= {});
   const st = (x.amor31 ??= fresh()) as Amor31St;
-  st.cd ??= {}; st.knows ??= []; st.esc ??= []; st.intel ??= []; st.ann ??= []; st.log ??= []; st.n ??= { asks: 0, yes: 0, no: 0, found: 0, feuds: 0 };
+  st.cd ??= {}; st.nos ??= []; st.knows ??= []; st.esc ??= []; st.intel ??= []; st.ann ??= []; st.log ??= []; st.n ??= { asks: 0, yes: 0, no: 0, found: 0, feuds: 0 };
   return st;
 }
 /** Leitura sem criar o estado (interface, testes de "explorar não muda"). */
@@ -314,6 +316,14 @@ export function askLock31(s: GameState, key0: string): Lock31 | null {
   return null;
 }
 
+/** Motivo da última recusa desta pessoa (enquanto não dá para pedir de novo). Só lê. */
+export function lastNo31(s: GameState, key0: string): L | null {
+  const key = norm(s, key0);
+  const st = peek(s);
+  if ((st.cd?.[key] ?? 0) <= s.week) return null;
+  return st.nos?.find(([k]) => k === key)?.[1] ?? null;
+}
+
 /** O que a resposta vai ser (determinístico: semente + pessoa + mês). Só lê. */
 export function askRoll31(s: GameState, key0: string): number {
   const key = norm(s, key0);
@@ -367,6 +377,7 @@ export function askOut31(s: GameState, key0: string): AskRes31 {
     const worst = [...odds.why].sort((a, b) => a[1] - b[1])[0];
     const why = worst && worst[1] < 0 ? worst[0] : l('Não rolou química desta vez.', 'There was no spark this time.');
     const text = fmtL(l('{n} recusou. Motivo: {w}.', '{n} said no. Reason: {w}.'), { n: nm, w: why });
+    st.nos = [[key, why] as [string, L], ...st.nos.filter(([k]) => k !== key)].slice(0, 20);
     log31(s, text);
     return { ok: false, text, why, mode: odds.mode };
   }
@@ -740,13 +751,13 @@ onFact('gift', (s, f) => {
 registerDeadline('amor31', (s, from, to) => {
   const pt = life(s).partner;
   if (!pt) return [];
-  const out: { id: string; w: number; kind: 'other'; t: L; tone: 'info'; goto: { area: string } }[] = [];
+  const out: { id: string; w: number; kind: 'other'; t: L; tone: 'info'; goto: { area: string; tab: [string, string] } }[] = [];
   for (const [kind, w0] of [['since', pt.since], ['wed', love17(s).mw]] as [string, number | undefined][]) {
     if (w0 === undefined) continue;
     for (let y = Math.max(1, Math.ceil((from - w0) / 52)); w0 + y * 52 <= to; y++) {
       const w = w0 + y * 52;
       if (w < from) continue;
-      out.push({ id: `amor31:${kind}:${y}`, w, kind: 'other', tone: 'info', goto: { area: 'life' },
+      out.push({ id: `amor31:${kind}:${y}`, w, kind: 'other', tone: 'info', goto: { area: 'personal', tab: ['life-personal', 'heart17'] },
         t: fmtL(kind === 'wed' ? l('{y} ano(s) de casamento com {p} — marque um encontro', '{y} year(s) married to {p} — plan a date') : l('{y} ano(s) com {p} — marque um encontro', '{y} year(s) with {p} — plan a date'), { y, p: pt.name }) });
     }
   }

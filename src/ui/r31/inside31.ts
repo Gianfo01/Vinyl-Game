@@ -29,6 +29,7 @@ import { lockBtn31, quickBtn31 } from './lock31';
 import { sceneView31 } from './scene31';
 import { INSIDE_W31, infoLines31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
 import { artPanelEl31, paintArt31 } from './art31';
+import { askBox31 } from './amor31ui';
 import './inside31.css';
 
 /** Painel aberto e sala dos fundos (só na sessão: explorar não muda o mundo). */
@@ -68,7 +69,8 @@ function whoPanel(s: GameState, m: InsideM31, p: Person27): HTMLElement {
       p.pid || p.key || p.actId ? btn(l('Ver a ficha', 'See the card'), null, () => openWho(p), true) : null,
       key ? btn(l('Conhecer', 'Meet'), null, () => result(meetHere31(s, key))) : null,
       a ? btn(l('Pôr no radar (descobrir talento)', 'Put on the radar (discover talent)'), canScout ? null : a.owner === 'player' ? l('Esse artista já é seu.', 'That act is already yours.') : l('Já está no seu radar.', 'Already on your radar.'), () => result(scoutHere31(s, a.id))) : null,
-      a ? quickBtn31({ kind: 'act', id: a.id }, a.name) : null));
+      a ? quickBtn31({ kind: 'act', id: a.id }, a.name) : null),
+    key && !p.you && /^(p|l|c|e|pd):/.test(key) ? askBox31(s, key) : null); // r31 (AMOR): chamar para sair quem está aqui
 }
 
 function actPanel(s: GameState, m: InsideM31, x: InsideT31, id: string): HTMLElement {
