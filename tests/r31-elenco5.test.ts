@@ -60,11 +60,12 @@ const played = (y: number, months = 6): GameState => {
 describe('ELENCO 5 · tudo das telas de artistas é alcançável', () => {
   it('cada papel cobre exatamente as páginas do objeto dono (objects5) e tem "página de hoje"', () => {
     for (const [id, p] of Object.entries(PAPERS5)) {
-      expect(E.papers5(), id).toContain(id);
+      expect(E.elencoPapers5(), id).toContain(id);
       const o = object5(p.obj);
       if (!o) { expect(p.areas, `${id}: papel sem objeto (contratação) não é dono de página`).toHaveLength(0); continue; }
       expect(o.opens.map((x) => x.area).sort(), id).toEqual([...p.areas].sort());
       expect(E.paperOfObj5(p.obj), id).toBe(id);
+      expect(N.paperOf5(p.obj), `${id}: conteúdo registrado na API da NAV`).toBeTruthy();
     }
   });
   it('as 6 abas de Pessoas viram marcadores do mural; as 5 de Agenda e contratações têm lugar', () => {
@@ -74,7 +75,7 @@ describe('ELENCO 5 · tudo das telas de artistas é alcançável', () => {
     for (const t of PEOPLE_TABS) expect(REACH5[`people/${t}`], `people/${t}`).toBeTruthy();
     for (const t of AGENDA_TABS) expect(REACH5[`agenda17/${t}`], `agenda17/${t}`).toBeTruthy();
     for (const t of SUB_IDS5) expect(REACH5[`artists20/${t}`], `artists20/${t}`).toBeTruthy();
-    for (const [k, r] of Object.entries(REACH5)) expect(E.papers5(), k).toContain(r.paper);
+    for (const [k, r] of Object.entries(REACH5)) expect(E.elencoPapers5(), k).toContain(r.paper);
   });
   it('todo artista do elenco tem polaroid, e o menu dela é o menu de hoje (todas as ações registradas)', () => {
     const s = played(1962);
@@ -160,7 +161,7 @@ describe('ELENCO 5 · explorar não muda o estado', () => {
       const f = fichario5(s);
       for (const d of ['letter', 'genre', 'country'] as Fich5Filter['drawer'][]) fichario5(s, { ...FICH5_0, drawer: d, sort: 'name', noLabel: true, page: 1 });
       compare5(s, f.cards.slice(0, 4).map((c) => c.id));
-      for (const id of E.papers5()) { E.openPaper5(id); E.closePaper5(); }
+      for (const id of E.elencoPapers5()) { E.openPaper5(id); E.closePaper5(); }
     };
     all(); // 1ª leitura cria as gavetas vazias de sempre (ag17 etc.), como a página de hoje
     const before = JSON.stringify(s), rng = JSON.stringify(rngSnapshot19(s));

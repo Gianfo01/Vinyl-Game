@@ -32,7 +32,7 @@ import { openActionMenu20 } from '../sys/actmenu20';
 import { deleg31View } from '../sys/deleg31';
 import { setTab } from '../vis';
 import { chiefCands } from '../../sim/sys/agenda17';
-import { NAV5, goto5, open5 } from './nav5';
+import { NAV5, goto5, open5, registerPaper5 } from './nav5';
 import { objectFor5, type Open5 } from './objects5';
 import {
   CARD5, FICH5_0, HIRE5, MURAL_TABS5, STAMP5, WHERE5, agenda5, board5, boardMonth5, boardSlotWeek5, compare5, fichKey5, fichario5, hire5, mural5,
@@ -62,12 +62,15 @@ export interface PaperDef5 {
 const REG5 = new Map<string, PaperDef5>();
 /** objeto da onda 5 → papel */
 const BY_OBJ5 = new Map<string, string>();
-/** Registra um papel (frente ELENCO; a casca da NAV pode usar o mesmo registro). */
-export function registerPaper5(id: string, def: PaperDef5, objs: string[] = []): void {
+/** Registra um papel do ELENCO (moldura própria até a casca da NAV existir) e o conteúdo na API da NAV (registerPaper5). */
+export function registerElenco5(id: string, def: PaperDef5, objs: string[] = []): void {
   REG5.set(id, def);
-  for (const o of objs) BY_OBJ5.set(o, id);
+  for (const o of objs) {
+    BY_OBJ5.set(o, id);
+    registerPaper5(o, (c) => navBody5(id, c.s, tabOfMarker5(id, c.marker)));
+  }
 }
-export const papers5 = (): string[] => [...REG5.keys()];
+export const elencoPapers5 = (): string[] => [...REG5.keys()];
 export const paperOfObj5 = (obj: string): string | undefined => BY_OBJ5.get(obj);
 
 let cur: { id: string; tab: string; area: string } | null = null;
@@ -89,6 +92,24 @@ export function closePaper5(): void {
   cur = null;
   host?.remove();
   host = null;
+}
+
+/** Aba do papel a partir do marcador que a casca da NAV abriu (página antiga + aba). */
+export function tabOfMarker5(id: string, m: Open5 | undefined): string {
+  if (id === 'mural') return m?.area === 'people' && m.tab?.[0] === 'people' ? m.tab[1] : 'roster';
+  if (id === 'agenda') return m?.tab?.[1] === 'you' ? 'you' : 'month';
+  if (id === 'quadro') return 'all';
+  return '';
+}
+/** Miolo do papel para a casca da NAV (sem moldura: a casca põe moldura, título, marcadores e Esc). */
+function navBody5(id: string, s: GameState, tab: string): HTMLElement | null {
+  const d = REG5.get(id);
+  if (!d || typeof window === 'undefined') return null;
+  const W = Math.floor(Math.min(window.innerWidth - 80, 1300) / SCALE), H = Math.floor((window.innerHeight - 200) / SCALE);
+  const lay = paper5Layout(d.kind, W, H);
+  const off = lay.body[0];
+  const body = lay.body.map((r) => ({ ...r, x: r.x - off.x, y: r.y - off.y }));
+  return h('div', { class: `el5-paper el5-nav el5-${d.kind} el5-p-${id}`, style: `position:relative;width:${(body[body.length - 1].x + body[body.length - 1].w) * SCALE}px;height:${body[0].h * SCALE}px` }, d.render(s, tab, body));
 }
 
 // ================================================================ ganchos (embrulho de NAV5.go e do redesenho)
@@ -243,7 +264,7 @@ function muralBody(s: GameState, tab: string, body: Rect5[]): HTMLElement {
       ps.length ? null : postit(96, 30, [t(l('Ninguém no elenco ainda.', 'Nobody on the roster yet.'))])));
 }
 
-registerPaper5('mural', {
+registerElenco5('mural', {
   kind: 'cork', title: N('Mural do elenco', 'Roster corkboard'), key: '4', old: { area: 'artists' },
   sub: (s) => l(`${mural5(s).length} artistas`, `${mural5(s).length} acts`),
   tabs: () => MURAL_TABS5,
@@ -320,7 +341,7 @@ function quadroBody(s: GameState, tab: string, body: Rect5[]): HTMLElement {
     legend);
 }
 
-registerPaper5('quadro', {
+registerElenco5('quadro', {
   kind: 'planning', title: N('Quadro de planejamento', 'Planning board'), key: 'C', old: { area: 'plan' },
   sub: () => (BOARD5.mode === 'months' ? N('próximos 12 meses', 'next 12 months') : N('próximas 12 semanas', 'next 12 weeks')),
   tabs: () => [{ id: 'all', label: N('Seu elenco', 'Your roster') }, { id: 'conflicts', label: N('Só conflitos', 'Conflicts only') }, { id: 'team', label: N('Equipe', 'Staff') }],
@@ -359,7 +380,7 @@ function agendaBody(s: GameState, tab: string, body: Rect5[]): HTMLElement {
   return h('div', null, left, right);
 }
 
-registerPaper5('agenda', {
+registerElenco5('agenda', {
   kind: 'agenda', title: N('Sua agenda', 'Your planner'), key: 'G', old: { area: 'agenda17' },
   sub: (s) => l(`${MONTH5[s.month].pt.toLowerCase()} de ${s.year}`, `${MONTH5[s.month].en} ${s.year}`),
   tabs: () => [{ id: 'month', label: N('Mês', 'Month') }, { id: 'you', label: N('Você e delegação', 'You and delegation') }],
@@ -429,7 +450,7 @@ function fichBody(s: GameState, _tab: string, body: Rect5[]): HTMLElement {
     f.cards.length ? cards : h('p', { class: 'el5-empty' }, t(l('Nenhum cartão nesta gaveta com esses filtros.', 'No cards in this drawer with these filters.'))), foot);
 }
 
-registerPaper5('fichario', {
+registerElenco5('fichario', {
   kind: 'rolodex', title: N('Fichário de contatos', 'Contact card file'), key: 'A', old: { area: 'directory' },
   render: fichBody,
 }, ['fichario']);
@@ -446,7 +467,7 @@ function hireBody(s: GameState, tab: string, body: Rect5[]): HTMLElement {
     h('h3', null, t(l('Chefe de gabinete', 'Chief of staff'))), v.chief ? candTable(s, chiefCands(s), true) : h('p', null, t(l('O cargo está ocupado (veja o chefe de gabinete, Shift+D).', 'The post is filled (see the chief of staff, Shift+D).'))));
   return area(body[0], 'el5-sheet el5-embed', intro, freeTab(s), sessionTab(s));
 }
-registerPaper5('contratar', {
+registerElenco5('contratar', {
   kind: 'form', title: N('Contratação', 'Hiring'), old: { area: 'agenda17', tab: ['agenda17', 'hire'] },
   sub: (s) => { const v = hire5(s); return l(`${v.staff} candidatos · ${v.freelancers} freelancers`, `${v.staff} candidates · ${v.freelancers} freelancers`); },
   tabs: () => (Object.keys(HIRE5) as Hire5[]).map((k) => ({ id: k, label: HIRE5[k].label })),
@@ -455,7 +476,7 @@ registerPaper5('contratar', {
 /** Contratação a partir do jornal (classificados), da recepção ou do telefone (para as frentes donas desses objetos). */
 export const openHire5 = (where: Hire5): boolean => openPaper5('contratar', where);
 
-registerPaper5('chefe', {
+registerElenco5('chefe', {
   kind: 'form', title: N('Chefe de gabinete', 'Chief of staff'), key: 'Shift+D', old: { area: 'deleg31' },
   sub: () => N('delegação, políticas e relatórios', 'delegation, policies and reports'),
   render: (s, _tab, body) => {
