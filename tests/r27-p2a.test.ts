@@ -115,7 +115,7 @@ beforeAll(() => {
   // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
   // Com `gente31` desligado volta acts 68287867.
   expect(hashString(JSON.stringify(s.acts))).toBe(3963998575);
-  expect(hashString(rngSnapshot19(s))).toBe(205718420);
+  expect(hashString(rngSnapshot19(s))).toBe(2120486888); // r31 LOTE: fluxo rng19 'lots31' entra no retrato (DECISOES)
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

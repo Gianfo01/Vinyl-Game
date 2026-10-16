@@ -305,7 +305,7 @@ function lotPanel(v: View, id: string, close: () => void, rerun: () => void): HT
   return h('div', { class: 'c27-pn' },
     h('header', { class: 'c27-ph' }, chip27('building', sl?.own ? '#2a9a5a' : '#c8302c', 'sale'), h('div', null, h('b', null, tx(p.title)), h('small', { class: 'muted' }, ui.moving ? t(l('Destino da mudança', 'Move destination')) : sl?.own ? t(l('Seu terreno', 'Your plot')) : t(l('À venda', 'For sale')))),
       h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: close }, '✕')),
-    sl ? h('p', { class: 'small c27-sug' }, t(l('Sugestão: ', 'Suggestion: ')), ic(ICON27[sl.kind]?.ic ?? 'building'), ' ', h('b', null, t(sl.name)), ` · ${$(sl.price)}`) : null,
+    sl && !sl.own ? h('p', { class: 'small c27-sug' }, t(l('Sugestão: ', 'Suggestion: ')), ic(ICON27[sl.kind]?.ic ?? 'building'), ' ', h('b', null, t(sl.name)), ` · ${$(sl.price)}`) : null,
     sl?.dis && sl.opt !== 'lot31' ? h('p', { class: 'small bad c27-sug' }, t(l('Ainda não dá para comprar: ', 'Not buyable yet: ')), t(sl.dis)) : null,
     ui.moving ? null : buyLotBlock31(v.s, lot, rerun), // r31 (LOTE): comprar só o terreno (preço e motivo antes do clique)
     popBody(v, p, close, rerun, true));

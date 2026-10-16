@@ -116,7 +116,7 @@ describe('r27 P2B — modo rápido intacto', () => {
     // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
     // Com `gente31` desligado volta acts 68287867.
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(3963998575);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(205718420);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(2120486888); // r31 LOTE: fluxo rng19 'lots31' entra no retrato (DECISOES)
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

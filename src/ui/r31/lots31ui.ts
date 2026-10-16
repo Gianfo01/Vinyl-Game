@@ -45,14 +45,14 @@ export const fnCol31 = (k: LotFn31): string => COL31[k];
 /** Painel da cidade: terrenos à venda (comprar), os seus, casas e mudanças recentes. */
 export function lotsCityView31(s: GameState): HTMLElement {
   const c = cityLots31(s);
-  const sale = c.sale.filter((x) => !x.own && x.opt === 'lot31');
+  const sale = c.sale.filter((x) => !x.own);
   const own = Object.keys(peekLots31(s)?.own ?? {}).map(Number);
   const homes = c.places.filter((p) => p.k === 'home');
   const log = homeLog31(s, 5);
   const box = h('div', { class: 'lt31-city' },
     coverLine31(c),
     h('h4', null, t(l('Terrenos à venda', 'Plots for sale'))),
-    sale.length ? h('ul', { class: 'lt31-list' }, sale.map((x) => h('li', null, h('b', null, t(LOTS18[x.lot].name)), ' · ', $(x.price), ' ', buyLotBlock31(s, x.lot, () => box.replaceWith(lotsCityView31(s))))))
+    sale.length ? h('ul', { class: 'lt31-list' }, sale.map((x) => h('li', null, h('b', null, t(LOTS18[x.lot].name)), ' ', buyLotBlock31(s, x.lot, () => box.replaceWith(lotsCityView31(s))))))
       : h('p', { class: 'small muted' }, t(l('Nenhum terreno vago agora: os prédios da cidade estão todos ocupados.', 'No vacant plots now: every building in town is in use.'))),
     own.length ? [h('h4', null, t(l('Seus terrenos', 'Your plots'))), h('ul', { class: 'lt31-list' }, own.map((lot) => h('li', null, t(LOTS18[lot]?.name ?? l('?', '?')))))] : null,
     homes.length ? [h('h4', null, t(l('Quem mora na cidade', 'Who lives in town'))), h('ul', { class: 'lt31-list' }, homes.map((p) => h('li', null, h('b', null, t(p.name)), h('small', { class: 'muted' }, ` · ${t(TIER31[p.lot31?.tier ?? 1])} · ${t(p.now)}`))))] : null,
@@ -66,12 +66,12 @@ registerQuick31({
   applies: (s, tg) => tg.id === s.config.homeCity && !!cityById[tg.id],
   lock: (s) => {
     if (!lotsOn31(s)) return { why: l('Compra de terreno desligada nesta partida.', 'Plot buying is off in this game.'), unlock: l('Ligue o interruptor no editor.', 'Turn the switch on in the editor.') };
-    const c = cityLots31(s).sale.filter((x) => !x.own && x.opt === 'lot31');
+    const c = cityLots31(s).sale.filter((x) => !x.own);
     if (!c.length) return { why: l('Nenhum terreno vago agora.', 'No vacant plot right now.'), unlock: l('Volte na virada do mês (casas mudam de dono).', 'Come back at the month turn (homes change hands).') };
     const cheap = c.reduce((a, b) => (b.price < a.price ? b : a));
     return lockOf(lotLock31(s, cheap.lot));
   },
-  cost: (s) => { const c = cityLots31(s).sale.filter((x) => !x.own && x.opt === 'lot31'); return c.length ? Math.min(...c.map((x) => x.price)) : 0; },
+  cost: (s) => { const c = cityLots31(s).sale.filter((x) => !x.own); return c.length ? Math.min(...c.map((x) => x.price)) : 0; },
   dest: () => ({ area: 'campus18' }),
   run: (s) => modal(t(l('Lotes da cidade', 'City lots')), lotsCityView31(s)),
 });
