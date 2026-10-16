@@ -38,6 +38,7 @@ import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } fr
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
 import { paletteBase31, paletteCmds31 } from './r31/quick31'; // R31 (O): busca que abre a ação, favoritos e metas
 import './r31/results31ui'; // R31 onda 3 (P): resultados por projeto/artista e extrato pessoal (Finanças)
+import './r31/learn31ui'; // R31 onda 4 (R): resultados e aprendizados — por projeto, coortes e biblioteca (correlação)
 import './r31/socio31ui'; // R31 onda 3 (SOC): sócios e compras (Negócios, ficha da empresa, painel rápido da cidade)
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
