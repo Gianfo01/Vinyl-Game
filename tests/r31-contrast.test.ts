@@ -1,16 +1,16 @@
-// R31 (C) — base dos estilos: contraste AA dos pares de tokens declarados (ui/skin31model.ts PAIRS31) em todos os modos
-// (escuro/claro × daltonismo × alto contraste), resolvendo a cascata real dos blocos :root dos CSS de tema; o modo
-// daltônico tem de trocar de fato as cores de estado; e o mapa ano → estilo, a preferência e o aviso de troca.
+// R31 (C) + onda 4 (M) — contraste AA dos pares de tokens declarados (ui/skin31model.ts PAIRS31) em todos os modos
+// (10 estilos × escuro/claro × daltonismo × alto contraste), resolvendo a cascata real dos blocos :root dos CSS de tema
+// e dos estilos; o modo daltônico tem de trocar de fato as cores de estado; o mapa ano → estilo, a preferência e o aviso.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { contrast27, mix27 } from '../src/ui/ps/ui27model';
-import { PAIRS31, SKINS31, resolveSkin31, skinNotice31, skinNoticeText31, skinOfYear31, skinPref31, type Ink31 } from '../src/ui/skin31model';
+import { PAIRS31, SKINS31, resolveSkin31, skinBack31, skinNotice31, skinNoticeText31, skinOfYear31, skinPref31, type Ink31, type SkinId31 } from '../src/ui/skin31model';
 
 // ordem de carga real: ux19 (via app) → theme25 → ui27 → tokens31 (main.ts)
-const FILES = ['../src/ui/sys/ux19.css', '../src/ui/ps/theme25.css', '../src/ui/ps/ui27.css', '../src/ui/tokens31.css'];
+const FILES = ['../src/ui/sys/ux19.css', '../src/ui/ps/theme25.css', '../src/ui/ps/ui27.css', '../src/ui/tokens31.css', '../src/ui/skins31.css'];
 const read = (f: string) => readFileSync(new URL(f, import.meta.url), 'utf8');
 
-interface Ctx { theme: 'dark' | 'light'; cb: 'none' | 'deutan' | 'protan' | 'tritan'; contrast: boolean }
+interface Ctx { theme: 'dark' | 'light'; cb: 'none' | 'deutan' | 'protan' | 'tritan'; contrast: boolean; skin?: SkinId31 }
 interface Decl { name: string; value: string; spec: number; order: number; sel: string }
 
 /** Tira comentários e blocos @media (o jogo sempre grava data-theme; os blocos de mídia só valem sem ele). */
@@ -36,7 +36,7 @@ function splitTop(s: string): string[] {
 /** Casa um seletor composto que só fala do <html> (sem espaço/combinador); devolve a especificidade ou null. */
 function matchRoot(sel: string, c: Ctx, top = true): number | null {
   let i = 0, spec = 0, sawRoot = !top;
-  const attrs: Record<string, string> = { 'data-theme': c.theme, 'data-cb': c.cb };
+  const attrs: Record<string, string> = { 'data-theme': c.theme, 'data-cb': c.cb, 'data-era-skin': c.skin ?? 'estudio' };
   while (i < sel.length) {
     const rest = sel.slice(i);
     let m: RegExpMatchArray | null;
@@ -89,14 +89,17 @@ function color(v: Map<string, string>, x: Ink31, seen = 0): string {
 }
 
 const CTXS: Ctx[] = (['dark', 'light'] as const).flatMap((theme) => (['none', 'deutan', 'protan', 'tritan'] as const).flatMap((cb) => [false, true].map((contrast) => ({ theme, cb, contrast }))));
-const label = (c: Ctx) => `${c.theme}${c.cb !== 'none' ? '+' + c.cb : ''}${c.contrast ? '+alto contraste' : ''}`;
+const label = (c: Ctx) => `${c.skin ?? 'estudio'}: ${c.theme}${c.cb !== 'none' ? '+' + c.cb : ''}${c.contrast ? '+alto contraste' : ''}`;
 
-describe('r31 contraste: pares de tokens passam AA em todos os modos', () => {
-  for (const c of CTXS) {
+describe('r31 contraste: pares de tokens passam AA em todos os estilos e modos', () => {
+  for (const sk of SKINS31) for (const c0 of CTXS) {
+    const c: Ctx = { ...c0, skin: sk.id };
     it(label(c), () => {
       const v = declsFor(c);
       const fails: string[] = [];
       for (const p of PAIRS31) {
+        if (p.only === 'estudio' && sk.id !== 'estudio') continue;
+        if (p.only === 'skins' && sk.id === 'estudio') continue;
         const fg = color(v, p.fg), bg = color(v, p.bg);
         const cr = contrast27(fg, bg);
         if (cr < (p.min ?? 4.5)) fails.push(`${p.what}: ${fg} sobre ${bg} = ${cr.toFixed(2)}`);
@@ -144,11 +147,14 @@ describe('r31 estilo da interface por era', () => {
     expect(skinPref31({ skin31: 'auto', eraSkin: false })).toBe('auto');
     expect(skinPref31({ skin31: 'xyz' as never })).toBe('auto');
   });
-  it('estilo efetivo: só estilos prontos (hoje só o Estúdio)', () => {
-    for (const y of [1900, 1960, 1985, 2030]) expect(resolveSkin31('auto', y)).toBe('estudio');
-    expect(resolveSkin31('estudio', 1960)).toBe('estudio');
-    expect(resolveSkin31('fosforo', 1960)).toBe(SKINS31.find((s) => s.id === 'fosforo')!.ready ? 'fosforo' : 'estudio');
+  it('estilo efetivo: os 9 estilos estão prontos; automático segue a época, fixo vale em qualquer ano', () => {
     expect(SKINS31.filter((s) => s.id !== 'estudio')).toHaveLength(9);
+    expect(SKINS31.every((s) => s.ready)).toBe(true);
+    const cases: [number, string][] = [[1900, 'gazeta'], [1930, 'deco'], [1960, 'jukebox'], [1970, 'hifi'], [1985, 'fosforo'], [1995, 'janelas'], [2004, 'portal'], [2014, 'plano'], [2030, 'vidro']];
+    for (const [y, id] of cases) expect(resolveSkin31('auto', y), String(y)).toBe(id);
+    expect(resolveSkin31('estudio', 1960)).toBe('estudio');
+    expect(resolveSkin31('fosforo', 1960)).toBe('fosforo');
+    expect(resolveSkin31('auto', NaN)).toBe('estudio'); // tela inicial, sem partida: o visual de hoje
   });
   it('aviso de troca: só no automático, ligado, e quando o estilo efetivo muda durante a mesma partida', () => {
     expect(skinNotice31(null, 'fosforo', 'auto', true)).toBe(false);
@@ -159,5 +165,32 @@ describe('r31 estilo da interface por era', () => {
     const tx = skinNoticeText31('fosforo');
     expect(tx.pt).toContain('Fósforo (1980–1989)');
     expect(tx.en).toContain('Phosphor');
+  });
+});
+
+describe('r31 onda 4 (M): os 9 estilos no CSS', () => {
+  const css = read('../src/ui/skins31.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  it('cada estilo tem paleta clara e escura e forma própria (fontes/cantos)', () => {
+    for (const s of SKINS31.filter((x) => x.id !== 'estudio')) {
+      for (const th of ['light', 'dark']) expect(css, `${s.id} ${th}`).toContain(`:root[data-era-skin='${s.id}'][data-theme='${th}'][data-cb]`);
+      expect(css, `${s.id} forma`).toMatch(new RegExp(`:root\\[data-era-skin='${s.id}'\\] \\{[^}]*--font-head`));
+    }
+  });
+  it('estados: hover, foco, desabilitado, pressionado e bloqueado com motivo valem em todos os estilos', () => {
+    const g = ":root:where([data-era-skin]:not([data-era-skin='estudio']))";
+    for (const sel of ['.btn:hover:not(:disabled)', ':focus-visible', ':disabled', "[aria-pressed='true']", '.lk31-why', '.lk31-off', '.tabs button:hover', '.nav-head:hover'])
+      expect(css.split('\n').some((ln) => ln.startsWith(g) && ln.includes(sel)), sel).toBe(true);
+  });
+  it('só tokens e escopo: nenhuma regra dos estilos vaza para o Estúdio', () => {
+    for (const m of css.matchAll(/([^{}]+)\{[^{}]*\}/g)) {
+      const sel = m[1].trim();
+      if (!sel || sel.startsWith('@') || /^(from|to|\d+%)$/.test(sel) || sel.startsWith('.skin31') || sel.startsWith(':root.skin31-fade')) continue;
+      if (sel === ':root' || sel === ":root[data-theme='light']") continue; // padrões dos tokens novos (o Estúdio não os usa)
+      for (const part of splitTop(sel)) expect(part, sel).toMatch(/^:root(\[data-era-skin|:where\(\[data-era-skin)/);
+    }
+  });
+  it('aviso: voltar ao anterior em pt e en', () => {
+    expect(skinBack31('hifi').pt).toBe('Voltar ao Hi-Fi');
+    expect(skinBack31('janelas').en).toBe('Back to Windows 95');
   });
 });
