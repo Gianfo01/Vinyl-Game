@@ -15,7 +15,8 @@
 :root[data-theme='light'] {
   --bg: #f4f0e7; --panel: #fff9ef; --panel-2: #efe7d8; --ink: #202826; --muted: #5f655f; --line: #d9cebc;
   --accent: #b5562a; --accent-ink: #ffffff; --accent-2: #8a5a12;
-  --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --gold: #8a6a10; --neural: #5a4fcf; --hq-bg: #2a2230;
+  --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --gold: #7d5f0f; /* r31 C: ouro 4,1 → 5,0:1 sobre o painel */
+  --input-bg: var(--panel); --h1-ink: var(--ink); --neural: #5a4fcf; --hq-bg: #2a2230;
   --sage: #7c927f; --nav-bg: #1e2a33; --nav-ink: #ece6da; --nav-muted: #a3aeb2; --nav-hover: #2a3944; --nav-line: #34444f; --nav-on: #e9a64a; --nav-on-ink: #1a1408;
   --shadow: 0 1px 0 rgba(32, 40, 38, 0.05), 2px 2px 0 rgba(32, 40, 38, 0.07);
   --card-shadow: 2px 2px 0 #e2d7c4;
@@ -27,8 +28,9 @@
   --accent: #edbc65; --accent-ink: #15212e; --accent-2: #f5d38e;
   --good: #8fd0aa; --bad: #ee8f84; --warn: #f2c464; --gold: #edbc65; --neural: #a99cff; --hq-bg: #0b1723;
   --sage: #83b99c; --nav-bg: #0d1824; --nav-ink: #eadfca; --nav-muted: #93a9ba; --nav-hover: #1c3246; --nav-line: #22384c; --nav-on: #edbc65; --nav-on-ink: #15212e;
-  --shadow: 3px 3px 0 #091521;
-  --card-shadow: 3px 3px 0 #091521;
+  --shadow-ink: #091521; --input-bg: #12273a; --h1-ink: #f6ecd2;
+  --shadow: 3px 3px 0 var(--shadow-ink);
+  --card-shadow: 3px 3px 0 var(--shadow-ink);
   --task-art: #2f4a5a;
   --map-halo: #0f1d2a; --map-ocean: #0e2233; --map-ocean-2: #133048; --map-land: #2c4256; --map-coast: #07121c; --map-border: #0b1723; --map-label: #f3e8cc;
   color-scheme: dark;
@@ -38,7 +40,7 @@
 body { background: var(--bg); color: var(--ink); }
 h1, h2, h3, h4, .card h3, .card h2, section.card > h3, .modal h3 { font-family: var(--sans); font-weight: 800; letter-spacing: 0.005em; }
 :root[data-era] .section > h3, :root[data-era] section > h3, :root[data-era] .h21 h3, section.card > h3 { font-family: var(--sans); font-weight: 800; }
-:root[data-theme='dark'] h1 { color: #f6ecd2; }
+:root[data-theme='dark'] h1 { color: var(--h1-ink); }
 /* números: monoespaçados e tabulares (dinheiro, datas, KPIs) */
 td, th, .num, input[type=number], .money, .date, .rep, .stat b { font-variant-numeric: tabular-nums lining-nums; }
 .topbar .money b, .topbar .rep, .kpi b, .kpi .v, .ck14 .big, .num.big, .stat b { font-family: var(--mono); letter-spacing: -0.01em; }
@@ -76,12 +78,12 @@ img, canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
 .btn:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .btn-split > .btn.primary + .btn { background: var(--accent); color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 80%, #fff); }
 input, select, textarea { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); }
-:root[data-theme='dark'] input, :root[data-theme='dark'] select, :root[data-theme='dark'] textarea { background: #12273a; }
+:root[data-theme='dark'] input, :root[data-theme='dark'] select, :root[data-theme='dark'] textarea { background: var(--input-bg); }
 
 /* ================= painéis e cartões ================= */
 .card, section.card, .modal { border-radius: var(--radius); border-color: var(--line); box-shadow: var(--card-shadow); }
 .card > h3:first-child, .card > header h3, section > h3:first-child { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.95rem; border-bottom-color: var(--line); }
-:root[data-theme='dark'] .card > h3:first-child, :root[data-theme='dark'] section > h3:first-child { color: #f3e8cc; }
+:root[data-theme='dark'] .card > h3:first-child, :root[data-theme='dark'] section > h3:first-child { color: var(--ink); }
 main h1.page21 { font-family: var(--sans); font-weight: 800; }
 /* cartões de tarefa ("Precisa de você"): borda forte, sombra de pixel, arte quadrada, ação em largura total */
 .task25, .ck14 .decision, .decision-card, .dec18, .need25 { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--card-shadow); border-radius: var(--radius); }
