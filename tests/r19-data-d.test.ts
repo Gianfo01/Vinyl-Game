@@ -45,5 +45,5 @@ describe('r19 WP-D2/D3: pacotes de artistas', () => {
     // estreia durante a partida: aparece só depois do ano real
     const run = inGame(2022, 30);
     expect(run.has('ILLIT')).toBe(true);
-  }, 120000);
+  }, 240000); // R31 onda 4 (BASE-HITS): +1 044 atos reais no mundo de 2022 deixam as 30 viradas de mês mais lentas (docs/r31/base-hits.md)
 });
