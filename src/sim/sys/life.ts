@@ -22,6 +22,7 @@ import { ensureBandVocalist } from './vocals10';
 import { applyRoles29 } from './char29'; // r29: funções extras do personagem e a banda que o completa
 import { actsTouched17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
+import { relPut } from '../opinion';
 
 export * from './life/data';
 
@@ -202,7 +203,7 @@ function applyCharacter(s: GameState, r: Rng): void {
     band.members[0] = p.id;
     band.leaderId = p.id;
     if (band.members.length === 1 && !s.config.bandName) band.name = p.name;
-    for (const id of band.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(10, 50); p.rel[id] = r.int(10, 50); }
+    for (const id of band.members) if (id !== p.id && s.persons[id]) { relPut(s, id, p.id, r.int(10, 50)); relPut(s, p.id, id, r.int(10, 50)); }
   }
   applyRoles29(s, p, band); // r29: extras da ficha (vocal = canta) e integrantes repetidos passam para a função que falta
   ensureBandVocalist(s, band); // rodada 10: a banda começa com alguém que canta
@@ -555,7 +556,7 @@ export function startProject(s: GameState, r: Rng, kind: 'solo' | 'band', genre:
   if (dropped && s.persons[dropped]) delete s.persons[dropped];
   act.members[0] = p.id;
   act.leaderId = p.id;
-  for (const id of act.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(0, 45); p.rel[id] = r.int(10, 50); }
+  for (const id of act.members) if (id !== p.id && s.persons[id]) { relPut(s, id, p.id, r.int(0, 45)); relPut(s, p.id, id, r.int(10, 50)); }
   act.name = name.trim() ? name.trim().slice(0, 40) : kind === 'solo' ? p.name : act.name;
   ensureBandVocalist(s, act); // rodada 10: sem vocalista não há letra
   signOwn(s, act);
@@ -603,7 +604,7 @@ export function joinBand(s: GameState, r: Rng, actId: string): { ok: boolean; te
     return { ok: false, text };
   }
   act.members.push(p.id); actsTouched17(s); // r17: índice pessoa→atos
-  for (const id of act.members) if (id !== p.id && s.persons[id]) { s.persons[id].rel[p.id] = r.int(-10, 40); p.rel[id] = r.int(0, 40); }
+  for (const id of act.members) if (id !== p.id && s.persons[id]) { relPut(s, id, p.id, r.int(-10, 40)); relPut(s, p.id, id, r.int(0, 40)); }
   if (!act.owner) signOwn(s, act);
   const text = fmtL(l('{o} entra na banda {a}.', '{o} joins the band {a}.'), { o: p.name, a: act.name });
   logLife(s, text, 'good', true);

@@ -27,7 +27,7 @@ import { scene12 } from './scenes12';
 import { actsOfPerson17 } from '../actidx17';
 import { relief27 } from '../relief27';
 import { actsNow27 } from '../tickcache27';
-import { relTouch } from '../opinion';
+import { rel0, relAdd, relTouch } from '../opinion';
 
 // ---------------------------------------------------------------- dados
 
@@ -221,7 +221,7 @@ function tie(s: GameState, a: string, b: string, dv: number): void {
   if (ka === 'p' && kb === 'p') {
     const A = s.persons[ia];
     const B = s.persons[ib];
-    if (A && B) { A.rel[ib] = clamp((A.rel[ib] ?? 0) + dv, -100, 100); B.rel[ia] = clamp((B.rel[ia] ?? 0) + dv, -100, 100); }
+    if (A && B) { relAdd(s, ia, ib, dv); relAdd(s, ib, ia, dv); }
     return;
   }
   if (ka === 'l' && kb === 'l') {
@@ -241,7 +241,7 @@ function tie(s: GameState, a: string, b: string, dv: number): void {
 }
 /** Laço atual entre duas pessoas (relação nativa quando existe). */
 export function tieOf(s: GameState, a: string, b: string): number {
-  if (a[0] === 'p' && b[0] === 'p') return s.persons[a.slice(2)]?.rel[b.slice(2)] ?? 0;
+  if (a[0] === 'p' && b[0] === 'p') return rel0(s, a.slice(2), b.slice(2));
   if (a[0] === 'l' && b[0] === 'l') return leaders(s).L[a.slice(2)]?.rel[b.slice(2)] ?? 0;
   return lz14(s).r[a]?.t?.[b] ?? 0;
 }

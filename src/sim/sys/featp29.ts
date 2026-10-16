@@ -33,7 +33,7 @@ import { rw } from './realworld';
 import { ownerBonus } from './people/owner';
 import { actBond, bump, tieOf } from './social8';
 import { hasSinger, settleVocals, sings } from './vocals10';
-import { relAdd } from '../opinion';
+import { rel0, relAdd } from '../opinion';
 
 export const FEATP29_RNG = 'feats8p29';
 /** No máximo 4 pessoas convidadas numa faixa. */
@@ -155,7 +155,7 @@ function personScore29(s: GameState, songId: string, pid: string, priceRel: numb
   const pf = personFame(s, pid).v;
   const A = homeAct29(s, pid);
   const hl = leadOf(host);
-  const bond = hl ? tieOf(s, hl, pid)?.v ?? p.rel[hl] ?? 0 : 0;
+  const bond = hl ? tieOf(s, hl, pid)?.v ?? rel0(s, p.id, hl) : 0;
   let want = (host.fame - pf) / 55 + (song.q - 55) / 45 + bond / 70 + (A ? (familyOf(A.genre) === familyOf(host.genre) ? 0.15 : -0.05) : 0.1);
   want += (s.player.reputation.artists - 50) / 200 + ownerBonus(s, 'negotiation') * 0.15;
   want -= (feats(s).asked[`p:${pid}`] ?? -99) > s.week - 8 ? 0.25 : 0;

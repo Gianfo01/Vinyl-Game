@@ -18,6 +18,7 @@ import { cxOf } from './manager11';
 import { ownerOf } from './people/owner';
 import { SVC, isForeign, onServiceOutcome, providerById, registerContactBonus, requestService, signService, type Ask, type SvcKind } from './services12';
 import { dropClient, funds, grossShows, markRefused9, mgCap, mgRepGain9, refusedWait9, ventures, type Client } from './ventures9';
+import { addLoyaltyAt, forgetOpinion, loyaltyAt, setLoyaltyAt } from '../opinion';
 
 export type Area = 'recordings' | 'shows' | 'endorsements' | 'international';
 export type Amb = 'money' | 'recognition' | 'genre' | 'family' | 'international' | 'art';
@@ -49,7 +50,9 @@ export interface C12 {
   promises: Promise12[]; issue?: { t: L; w: number }; hidden: { t: L; w: number }[]; dilemma?: { gross: number; w: number }; pressured: number;
   agent?: string; bond: number; dev?: boolean; devDone?: boolean; fame0: number; since: number; flags: { intl?: boolean; art?: boolean }; counter?: { prov: string; price: number; w: number }; endW?: number; book: L[];
 }
-export interface Agent { id: string; name: string; skill: number; loyalty: number; hired: number; raiseW?: number }
+/** r31 (31.3): a lealdade do agente é a opinião dele sobre você (opinion.ts, chave `ag:<id>`; lealdade = 50 + op/2). */
+export interface Agent { id: string; name: string; skill: number; hired: number; raiseW?: number }
+export const agentLoyalty = (s: GameState, g: Agent): number => loyaltyAt(s, `ag:${g.id}`);
 export interface Mgr12 { c: Record<string, C12>; agents: Agent[]; successor?: string; prestige: number; gen: number; seq: number; alumni: { name: string; y: number; took: string[] }[]; devHits: number; /** r19: mandatos renovados × não renovados (KPI relativo) */ ren?: [number, number] }
 
 declare module '../ext4' { interface Ext4 { manager12: Mgr12 } }
@@ -384,8 +387,10 @@ export function hireAgent(s: GameState): Res {
   const st = mgr12(s);
   if (st.agents.length >= agentMax(s)) return bad(l('A agência ainda não comporta mais agentes (reputação e prestígio).', 'The agency cannot hold more agents yet (reputation and prestige).'));
   const r = Rng.fromSeed(`${s.config.seed}:agent12:${st.seq++}`);
-  const ag: Agent = { id: `ag${st.seq}`, name: personName(r, langForCity(s.config.homeCity, r)), skill: r.int(35, 80), loyalty: r.int(50, 75), hired: s.week };
+  const name = personName(r, langForCity(s.config.homeCity, r)), skill = r.int(35, 80), loy = r.int(50, 75);
+  const ag: Agent = { id: `ag${st.seq}`, name, skill, hired: s.week };
   st.agents.push(ag);
+  setLoyaltyAt(s, `ag:${ag.id}`, loy);
   return { ok: true, text: fmtL(l('{n} entra na agência (talento {k}).', '{n} joins the agency (skill {k}).'), { n: ag.name, k: ag.skill }) };
 }
 export function assignAgent(s: GameState, id: string, agentId?: string): Res {
@@ -404,12 +409,13 @@ export function raiseAgent(s: GameState, agentId: string): Res {
   if (funds(s, ventures(s).mg.owner) < cost) return bad(l('Sem dinheiro.', 'Not enough money.'));
   pay(s, -cost, `raise:${g.id}:${s.week}`, `Bônus ${g.name}`);
   g.raiseW = s.week;
-  g.loyalty = clamp(g.loyalty + 15, 0, 100);
+  addLoyaltyAt(s, `ag:${g.id}`, 15, { why: l('ganhou bônus.', 'got a bonus.') });
   return { ok: true, text: fmtL(l('{n} fica mais leal (+15).', '{n} grows more loyal (+15).'), { n: g.name }) };
 }
 export function fireAgent(s: GameState, agentId: string): void {
   const st = mgr12(s);
   st.agents = st.agents.filter((g) => g.id !== agentId);
+  forgetOpinion(s, `ag:${agentId}`);
   for (const x of Object.values(st.c)) if (x.agent === agentId) { x.agent = undefined; x.bond = 0; }
   if (st.successor === agentId) st.successor = undefined;
 }
@@ -453,7 +459,7 @@ function managerMonth(s: GameState, r: Rng): void {
     st.gen = o.generation;
     const succ = st.agents.find((g) => g.id === st.successor);
     for (const c of mg.clients) trust(s, c.actId, succ ? -2 : -12);
-    if (succ) succ.loyalty = clamp(succ.loyalty + 20, 0, 100);
+    if (succ) addLoyaltyAt(s, `ag:${succ.id}`, 20, { why: l('ficou com a agência na sucessão.', 'kept the agency through the succession.') });
     if (mg.clients.length) notify(s, succ ? fmtL(l('{n} segura a agência na transição: os artistas mal sentem a troca.', '{n} holds the agency through the transition: clients barely notice.'), { n: succ.name }) : l('Sem sucessor preparado, os agenciados desconfiam do novo dono (−12 de confiança).', 'With no successor groomed, clients distrust the new owner (−12 trust).'), succ ? 'good' : 'bad');
   }
   const cap = capacityHours(s);
@@ -538,8 +544,8 @@ function managerMonth(s: GameState, r: Rng): void {
     pay(s, -agentSalary(s), `agent:${g.id}`, `Salário ${g.name}`);
     const mine = mg.clients.filter((c) => c12(s, c.actId).agent === g.id);
     const stars = mine.filter((c) => (s.acts[c.actId]?.fame ?? 0) >= 50).length;
-    g.loyalty = clamp(g.loyalty - 0.6 - stars * 0.8 + (st.successor === g.id ? 0.8 : 0) + st.prestige / 200, 0, 100);
-    if (g.loyalty < 35 && r.chance(0.1)) {
+    const loy = addLoyaltyAt(s, `ag:${g.id}`, -0.6 - stars * 0.8 + (st.successor === g.id ? 0.8 : 0) + st.prestige / 200);
+    if (loy < 35 && r.chance(0.1)) {
       const took = mine.filter((c) => c12(s, c.actId).bond > c12(s, c.actId).trust);
       for (const c of took) dropClient(s, c.actId);
       fireAgent(s, g.id);

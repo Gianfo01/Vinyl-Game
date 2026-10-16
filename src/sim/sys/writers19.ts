@@ -32,7 +32,7 @@ import { goSolo16 } from './lineup16';
 import { registerDimAdj18 } from './quality18';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
-import { shiftOpinion } from '../opinion';
+import { shiftOpinion, relAdd } from '../opinion';
 
 /** Editoras por época (nomes reais só com nomes reais ligados). */
 const PUB19: [string, string, number, number][] = [
@@ -371,7 +371,7 @@ registerInboxKind('wr19_sue', { label: l('Plágio', 'Plagiarism'), cat: 'deals',
 onFact('cowrite_split', (s, f) => {
   const ps = f.actors.map((id) => s.persons[id]).filter((p): p is Person => !!p);
   const d = f.tags.includes('band') || f.tags.includes('credit') ? 4 : f.tags.includes('lead') ? -3 : 1;
-  for (const a of ps) for (const b of ps) if (a !== b) a.rel[b.id] = clamp((a.rel[b.id] ?? 0) + d, -100, 100);
+  for (const a of ps) for (const b of ps) if (a !== b) relAdd(s, a.id, b.id, d);
 }, 'writers19:rel');
 onFact('ghostwriter_revealed', (s, f) => {
   const star = s.acts[f.actors[0]], own = actsNow27(s).find((x) => x.members.includes(f.actors[1]) && x.status === 'active');

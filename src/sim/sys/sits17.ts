@@ -15,6 +15,7 @@ import { leaders } from './leaders10';
 import { P, healthOf } from './people/state';
 import { registerSituation, type SitCtx } from './situations17';
 import { actsNow27 } from '../tickcache27';
+import { relAdd } from '../opinion';
 
 const pay = (s: GameState, ctx: SitCtx, key: string, real: number, memo: string): void => {
   const act = ctx.act ? s.acts[ctx.act] : undefined;
@@ -208,7 +209,7 @@ registerSituation({
     { id: 'mediate', label: l('Mediar', 'Mediate'), hint: l('Ressentimento −15, estresse −5.', 'Resentment −15, stress −5.'), weightByTraits: (P0) => F(P0, 'empatia') + F(P0, 'paciencia'),
       apply: (s, c) => { const p = s.persons[c.hero]; if (p) { p.resentment = clamp(p.resentment - 15, 0, 100); addStress(s, c.hero, -5, l('Mediação', 'Mediation')); } } },
     { id: 'rebuke', label: l('Crítica pública', 'Public rebuke'), hint: l('Fiel ao público religioso; a banda racha (relações −20).', 'Wins the religious audience; the band cracks (relations −20).'), weightByTraits: (P0) => F(P0, 'coragem') + F(P0, 'teimosia'),
-      apply: (s, c) => { const a = s.acts[c.act!]; const p = s.persons[c.hero]; if (!a || !p) return; for (const m of a.members) if (m !== p.id && s.persons[m]) { p.rel[m] = clamp((p.rel[m] ?? 0) - 20, -100, 100); s.persons[m].rel[p.id] = clamp((s.persons[m].rel[p.id] ?? 0) - 20, -100, 100); } } },
+      apply: (s, c) => { const a = s.acts[c.act!]; const p = s.persons[c.hero]; if (!a || !p) return; for (const m of a.members) if (m !== p.id && s.persons[m]) { relAdd(s, p.id, m, -20); relAdd(s, s.persons[m].id, p.id, -20); } } },
     { id: 'accept', label: l('Engolir em silêncio', 'Swallow it quietly'), hint: l('Estresse +10; vira mágoa contra o ato.', 'Stress +10; becomes a grudge against the act.'), weightByTraits: (P0) => F(P0, 'lealdade') + F(P0, 'ansiedade') * 0.5,
       apply: (s, c) => { addStress(s, c.hero, 10, l('Fé ferida', 'Wounded faith')); grantHold(s, { holder: c.hero, target: c.act!, kind: 'grievance', strength: 35, months: 24, text: fmtL(l('{p}: escândalo que fere a fé', '{p}: a scandal that wounds faith'), { p: nm(s, c.hero) }), src: 'sit17', quiet: true }); } },
   ],
@@ -257,9 +258,9 @@ registerSituation({
   text: (s, c) => fmtL(l('{p} e {q} não se suportam, e a imprensa adora. Qual o próximo passo de {p}?', '{p} and {q} cannot stand each other, and the press loves it. What is {p}\'s next move?'), { p: nm(s, c.hero), q: nm(s, c.cast.rival) }),
   options: [
     { id: 'diss', label: l('Música de provocação', 'Diss track'), hint: l('Os dois ganham +1 de fama; relação −10; 20% de polêmica.', 'Both gain +1 fame; relationship −10; 20% chance of controversy.'), weightByTraits: (P0) => F(P0, 'ego') + F(P0, 'rebeldia') + F(P0, 'humor') * 0.4,
-      apply: (s, c, r) => { const a = s.acts[c.act!], b = s.acts[c.cast.ract]; if (a) a.fame = clamp(a.fame + 1, 0, 100); if (b) b.fame = clamp(b.fame + 1, 0, 100); const p = s.persons[c.hero]; if (p) p.rel[c.cast.rival] = clamp((p.rel[c.cast.rival] ?? 0) - 10, -100, 100); if (a && r.chance(0.2)) scandal(s, a.id, 'offense', 25, fmtL(l('A provocação de {a} passa do ponto.', '{a}\'s diss goes too far.'), { a: a.name }), { person: c.hero }); } },
+      apply: (s, c, r) => { const a = s.acts[c.act!], b = s.acts[c.cast.ract]; if (a) a.fame = clamp(a.fame + 1, 0, 100); if (b) b.fame = clamp(b.fame + 1, 0, 100); const p = s.persons[c.hero]; if (p) relAdd(s, p.id, c.cast.rival, -10); if (a && r.chance(0.2)) scandal(s, a.id, 'offense', 25, fmtL(l('A provocação de {a} passa do ponto.', '{a}\'s diss goes too far.'), { a: a.name }), { person: c.hero }); } },
     { id: 'reconcile', label: l('Fazer as pazes', 'Make peace'), hint: l('Relação +30, estresse −5 nos dois.', 'Relationship +30, stress −5 for both.'), weightByTraits: (P0) => F(P0, 'empatia') + F(P0, 'generosidade'),
-      apply: (s, c) => { const p = s.persons[c.hero], q = s.persons[c.cast.rival]; if (p) p.rel[c.cast.rival] = clamp((p.rel[c.cast.rival] ?? 0) + 30, -100, 100); if (q) q.rel[c.hero] = clamp((q.rel[c.hero] ?? 0) + 30, -100, 100); addStress(s, c.hero, -5, l('Paz selada', 'Peace made')); addStress(s, c.cast.rival, -5, l('Paz selada', 'Peace made')); } },
+      apply: (s, c) => { const p = s.persons[c.hero], q = s.persons[c.cast.rival]; if (p) relAdd(s, p.id, c.cast.rival, 30); if (q) relAdd(s, q.id, c.hero, 30); addStress(s, c.hero, -5, l('Paz selada', 'Peace made')); addStress(s, c.cast.rival, -5, l('Paz selada', 'Peace made')); } },
     { id: 'ignore', label: l('Ignorar', 'Ignore'), hint: l('Nada muda.', 'Nothing changes.'), weightByTraits: (P0) => F(P0, 'paciencia'), apply: () => undefined },
   ],
 });

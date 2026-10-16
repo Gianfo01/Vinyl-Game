@@ -19,6 +19,7 @@ import { setSongTheme20, themeById } from './creation/core';
 import { lifeMoments, MOMENTS } from './sound';
 import { timbreById } from './sound/timbre';
 import { openPlagSuit19 } from './writers19';
+import { rel0, relAdd } from '../opinion';
 
 // ---------------------------------------------------------------- tipos
 
@@ -108,7 +109,7 @@ function writersOf27(s: GameState, a: Act): Person[] {
 export function chemistry27(s: GameState, ws: Person[]): number {
   if (ws.length < 2) return clamp((ws[0]?.morale ?? 50) / 100 - 0.4, -0.5, 0.5);
   let t = 0, n = 0;
-  for (const a of ws) for (const b of ws) if (a !== b) { t += a.rel[b.id] ?? 0; n++; }
+  for (const a of ws) for (const b of ws) if (a !== b) { t += rel0(s, a.id, b.id); n++; }
   let c = (n ? t / n : 0) / 60;
   for (const p of ws) {
     if (p.traits.includes('diplomatic')) c += 0.1;
@@ -346,7 +347,7 @@ export function finishCompose27(s: GameState, c: Comp27): CompResult27 | L {
     if (c.argued) p.stress = clamp(p.stress + 4 * c.argued, 0, 100);
   }
   const combos = c.log.filter((x) => x.combo).length;
-  for (const p of ws) for (const q of ws) if (p !== q) p.rel[q.id] = clamp((p.rel[q.id] ?? 0) + combos * 2 - c.argued * 3, -100, 100);
+  for (const p of ws) for (const q of ws) if (p !== q) relAdd(s, p.id, q.id, combos * 2 - c.argued * 3);
   const st = st27(s);
   st.last[c.actId] = s.week;
   if (main && t.risk > 0) st.borrowed[main.id] = t.risk;

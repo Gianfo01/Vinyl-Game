@@ -25,7 +25,7 @@ import { staffRoleById } from '../../data/rules';
 import { defaultOffer, evaluateOffer, offerEligible29, offerNow } from '../../sim/contracts';
 import { fireStaff, hireSignOn, hireStaffBlock, hireStaff } from '../../sim/economy';
 import { know, know3 } from '../../sim/know';
-import { loyaltyOf, opinionOf } from '../../sim/opinion';
+import { loyaltyOf, opinionOf, rel0 } from '../../sim/opinion';
 import { lock31, lockOf31, UNLOCK31, type Lock31 } from '../../sim/r31/lock';
 import { leaderOf31, myContract31, REACTION31, rescind31, rescindQuote31 } from '../../sim/r31/rescind31';
 import { rng19 } from '../../sim/rng19';
@@ -445,7 +445,7 @@ export function bandChem31(s: GameState, actId: string): number {
 /** Química do candidato com a banda (relações já existentes; sem relação = neutro). */
 export function chemistry31(s: GameState, actId: string, pid: string): number {
   const a = s.acts[actId];
-  const rs = (a?.members ?? []).map((m) => s.persons[m]).filter((q): q is Person => !!q?.alive && !q.isPlayer).map((q) => q.rel[pid] ?? 0);
+  const rs = (a?.members ?? []).map((m) => s.persons[m]).filter((q): q is Person => !!q?.alive && !q.isPlayer).map((q) => rel0(s, q.id, pid));
   return rs.length ? Math.round(rs.reduce((t, v) => t + v, 0) / rs.length) : 0;
 }
 

@@ -15,6 +15,7 @@ import { fameAt } from './famehook16';
 import { perk } from './perks';
 import type { Act, GameState, Person } from './types';
 import { staffSkill } from './util';
+import { rel0 } from './opinion';
 
 export type KnowField = 'fame' | 'talent' | 'skill' | 'potential' | 'attrs';
 export type KnowAxis = 'pub' | 'priv';
@@ -88,7 +89,7 @@ function relDeg(s: GameState, pid: string): number {
   if (!c || c.w !== s.week) { c = { w: s.week, p: Object.values(s.persons).find((x) => x.isPlayer && x.alive) }; ME.set(s, c); }
   const me = c.p;
   const p = s.persons[pid];
-  const v = Math.max(Math.abs(me && p ? p.rel[me.id] ?? 0 : 0), Math.abs(me ? me.rel[pid] ?? 0 : 0));
+  const v = Math.max(Math.abs(me && p ? rel0(s, pid, me.id) : 0), Math.abs(me ? me.rel[pid] ?? 0 : 0));
   return v >= 60 ? 4 : v >= 35 ? 3 : v >= 15 ? 2 : 0;
 }
 

@@ -41,6 +41,7 @@ import { st18 } from './stream18';
 import { registerSituation } from './situations17';
 import { ventures } from './ventures9';
 import { actsNow27 } from '../tickcache27';
+import { rel0 } from '../opinion';
 
 // ================================================================ tipos
 
@@ -465,7 +466,7 @@ function discoverMonth(s: GameState, r: Rng): void {
       // proximidade: seu círculo e quem é próximo de você
       if (K.p < 3) {
         let pp = mine ? 0.04 * sv : 0;
-        const near = subj.startsWith('p:') && playerPid ? (s.persons[subj.slice(2)]?.rel[playerPid] ?? 0) : 0;
+        const near = subj.startsWith('p:') && playerPid ? rel0(s, subj.slice(2), playerPid) : 0;
         if (near > 40) pp += 0.02;
         if (pp && r.chance(pp)) raise23(s, sec, 'player', (K.p + 1) as Lvl23, 'proximity', act ? fmtL(l('ouvido no estúdio com {a}, semana {w}', 'overheard in the studio with {a}, week {w}'), { a: act.name, w: s.week % 52 || 52 }) : fmtL(l('conversa de corredor, semana {w}', 'hallway talk, week {w}'), { w: s.week % 52 || 52 }));
       }

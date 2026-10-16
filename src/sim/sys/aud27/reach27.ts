@@ -35,6 +35,7 @@ import { courtNewcomer18 } from '../world18';
 import { shockStocks27 } from './macro27';
 import { OFF_AUD27, OFF_KIND27 } from './off';
 import { actsNow27 } from '../../tickcache27';
+import { relAdd } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
 /** recarga por chave (ato:tipo) — a mesma reação não empilha a cada canção/fato do mesmo ato */
@@ -126,7 +127,7 @@ onFact('cowrite_split', (s, f) => {
   else if (f.tags.includes('lead')) {
     mood(s, others, 'resentment', 3);
     const ld = writers[0] ? s.persons[writers[0]] : undefined;
-    if (ld) for (const m of others) { const p = s.persons[m]; if (p) { p.rel[ld.id] = clamp((p.rel[ld.id] ?? 0) - 3, -100, 100); ld.rel[m] = clamp((ld.rel[m] ?? 0) - 1, -100, 100); } }
+    if (ld) for (const m of others) { const p = s.persons[m]; if (p) { relAdd(s, p.id, ld.id, -3); relAdd(s, ld.id, m, -1); } }
   } else if (f.tags.includes('writers')) mood(s, others, 'resentment', 1);
   if (f.tags.includes('cut_in')) mood(s, writers.slice(0, 1), 'resentment', 4);
   if (f.tags.includes('ghost')) mood(s, writers.slice(0, 1), 'morale', 5);
@@ -164,7 +165,7 @@ onFact('judge_feud', (s, f) => {
   if (lo && live(lo)) lo.momentum = clamp(lo.momentum + 3, -100, 100);
   if (j) j.fame = clamp(j.fame - 1, 0, 100);
   const pj = j?.leaderId ?? j?.members[0], pl = lo?.leaderId ?? lo?.members[0];
-  if (pj && pl && s.persons[pj] && s.persons[pl]) { s.persons[pj].rel[pl] = clamp((s.persons[pj].rel[pl] ?? 0) - 10, -100, 100); s.persons[pl].rel[pj] = clamp((s.persons[pl].rel[pj] ?? 0) - 15, -100, 100); }
+  if (pj && pl && s.persons[pj] && s.persons[pl]) { relAdd(s, s.persons[pj].id, pl, -10); relAdd(s, s.persons[pl].id, pj, -15); }
 }, 'reach27:judge');
 onFact('choir_alumni', (s, f) => {
   if (OFF_AUD27.reach || OFF_KIND27.choir_alumni) return;

@@ -18,7 +18,7 @@ import { fmtL, notify, playerActs, remember } from '../util';
 import { capital } from './capital';
 import { careers } from './careers12';
 import { liveOf } from './live/state';
-import { c12, mgr12 } from './manager12';
+import { agentLoyalty, c12, mgr12 } from './manager12';
 import { ownerOf } from './people/owner';
 import { PATHS18, pa18, pathDef18, type Kpi18, type PathDef18 } from './paths18';
 import { pr18 } from './press18';
@@ -88,7 +88,7 @@ export const PATHS19: PathDef18[] = [
     relevant: () => true,
     kpis: (s) => {
       const st = mgr12(s), staff = s.player.staff;
-      const loyal = avg([...st.agents.map((g) => g.loyalty), ...staff.map((x) => clamp(50 + yrs(s, x.hiredWeek) * 5, 0, 100))]);
+      const loyal = avg([...st.agents.map((g) => agentLoyalty(s, g)), ...staff.map((x) => clamp(50 + yrs(s, x.hiredWeek) * 5, 0, 100))]);
       const long = playerActs(s).filter((id) => { const m = s.memory.find((x) => x.kind === 'signed' && x.actId === id); return m && s.week - m.week >= 520; }).length + ventures(s).mg.clients.filter((c) => s.week - c.since >= 520).length;
       return [
         K(l('Anos de casa aberta', 'Years open'), oldestYears(s), 25, 'num', l('O negócio mais antigo que você mantém.', 'The oldest business you keep.')),

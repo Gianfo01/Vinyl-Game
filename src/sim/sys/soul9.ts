@@ -20,6 +20,7 @@ import { histLocked } from '../history15';
 import { scandal } from '../scandal17';
 import { actsTouched17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
+import { rel0, relAdd, relOf, relPut } from '../opinion';
 
 // ---------------------------------------------------------------- facetas e valores
 
@@ -265,7 +266,7 @@ export function formAct(s: GameState, r: Rng, pids: string[], genre: string, cit
   a.members = ps.map((p) => p.id); actsTouched17(s); // r17: índice pessoa→atos
   a.name = name ?? (ps.length === 1 ? ps[0].name : bandName(r, langForCity(city, r), familyOf(genre), ps.length));
   a.leaderId = ps.slice().sort((x, y) => soul(s, y).f.ego - soul(s, x).f.ego)[0]?.id;
-  for (const x of ps) for (const y of ps) if (x !== y) x.rel[y.id] = clamp(x.rel[y.id] ?? 20, -100, 100);
+  for (const x of ps) for (const y of ps) if (x !== y) relPut(s, x.id, y.id, clamp(relOf(s, x.id, y.id) ?? 20, -100, 100));
   return a;
 }
 
@@ -283,7 +284,7 @@ function breakdown(s: GameState, r: Rng, a: Act, p: Person): void {
   let t: L;
   if (f.impulsividade > 60 || f.ego > 66) {
     const other = a.members.find((x) => x !== p.id && s.persons[x]?.alive);
-    if (other) { p.rel[other] = clamp((p.rel[other] ?? 0) - 35, -100, 100); const o = s.persons[other]; o.rel[p.id] = clamp((o.rel[p.id] ?? 0) - 35, -100, 100); addMem(s, other, 'feud', -25, 3); }
+    if (other) { relAdd(s, p.id, other, -35); const o = s.persons[other]; relAdd(s, o.id, p.id, -35); addMem(s, other, 'feud', -25, 3); }
     scandal(s, a.id, 'violence', 45, undefined, { person: p.id });
     a.fame = clamp(a.fame + 1, 0, 100);
     t = fmtL(l('{p} ({a}) briga em pleno palco{o}; o show acaba no meio.', '{p} ({a}) brawls onstage{o}; the show stops halfway.'), { p: p.name, a: a.name, o: other ? fmtL(l(' com {x}', ' with {x}'), { x: s.persons[other].name }) : '' });
@@ -389,7 +390,7 @@ registerSimHook('month', 'soul9', (s, r) => {
     // egos em choque: a banda azeda e pode acabar
     if (egoClash >= 2 && npc && a.members.length >= 2) {
       let sum = 0; let n = 0;
-      for (const x of a.members) for (const y of a.members) if (x !== y && s.persons[x]) { s.persons[x].rel[y] = clamp((s.persons[x].rel[y] ?? 0) - 2, -100, 100); sum += s.persons[x].rel[y]; n++; }
+      for (const x of a.members) for (const y of a.members) if (x !== y && s.persons[x]) { relAdd(s, s.persons[x].id, y, -2); sum += rel0(s, x, y); n++; }
       if (n && sum / n < -40 && a.fame > 15 && !histLocked(s, a) && r.chance(0.03 * pace) && worldDramaOk(s, r, 3)) {
         a.status = 'split';
         a.careerEnd = s.year;

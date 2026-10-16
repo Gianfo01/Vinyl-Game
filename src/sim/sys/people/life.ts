@@ -12,6 +12,7 @@ import { fmtL, money, nextId, playerActs, post, remember } from '../../util';
 import { P, actOf, addMsg, addPost, clamp01, socialEra, trackedPersons } from './state';
 import { addThought } from './thoughts';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { rel0, relAdd } from '../../opinion';
 
 // ---------------------------------------------------------------- romances
 
@@ -34,8 +35,8 @@ export function breakUp(s: GameState, r: Rng, id: string): void {
   if (!a || !b || !act) return;
   addThought(s, a.id, 'breakup', { p: b.name });
   addThought(s, b.id, 'breakup', { p: a.name });
-  a.rel[b.id] = Math.max(-100, (a.rel[b.id] ?? 0) - 60);
-  b.rel[a.id] = Math.max(-100, (b.rel[a.id] ?? 0) - 60);
+  relAdd(s, a.id, b.id, -60);
+  relAdd(s, b.id, a.id, -60);
   a.resentment = clamp01(a.resentment + 10);
   b.resentment = clamp01(b.resentment + 10);
   remember(s, 'breakup', fmtL(l('{a} e {b} ({c}) terminam. O clima no estúdio congela.', '{a} and {b} ({c}) break up. The studio goes cold.'), { a: a.name, b: b.name, c: act.name }), { actId: act.id, important: true });
@@ -59,11 +60,11 @@ function romanceMonth(s: GameState, r: Rng): void {
         for (let j = i + 1; j < ms.length && j < 5; j++) {
           const a = ms[i];
           const b = ms[j];
-          if ((a.rel[b.id] ?? 0) < 35 || st.romances.some((x) => x.status === 'together' && [x.a, x.b].some((y) => y === a.id || y === b.id))) continue;
+          if (rel0(s, a.id, b.id) < 35 || st.romances.some((x) => x.status === 'together' && [x.a, x.b].some((y) => y === a.id || y === b.id))) continue;
           if (!r.chance(0.012)) continue;
           st.romances.push({ id: nextId(s, 'ro'), a: a.id, b: b.id, actId, since: s.week, status: 'together' });
-          a.rel[b.id] = Math.min(100, (a.rel[b.id] ?? 0) + 20);
-          b.rel[a.id] = Math.min(100, (b.rel[a.id] ?? 0) + 20);
+          relAdd(s, a.id, b.id, 20);
+          relAdd(s, b.id, a.id, 20);
           addThought(s, a.id, 'in_love', { p: b.name });
           addThought(s, b.id, 'in_love', { p: a.name });
           remember(s, 'romance', fmtL(l('{a} e {b} ({c}) estão juntos.', '{a} and {b} ({c}) are together.'), { a: a.name, b: b.name, c: act.name }), { actId });

@@ -19,6 +19,7 @@ import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
 import { band, bandText, know, registerKnowFame } from '../know';
+import { relAdd } from '../opinion';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -281,7 +282,7 @@ export function fameMonth(s: GameState): void {
         if (!p?.alive) continue;
         const gap = pf(s, id) - a.fame;
         if (gap >= 8 && r.chance(0.12)) {
-          for (const o of a.members) if (o !== id && s.persons[o]) { const q = s.persons[o]; q.rel[id] = clamp((q.rel[id] ?? 0) - 3, -100, 100); q.resentment = clamp(q.resentment + 2, 0, 100); }
+          for (const o of a.members) if (o !== id && s.persons[o]) { const q = s.persons[o]; relAdd(s, q.id, id, -3); q.resentment = clamp(q.resentment + 2, 0, 100); }
           if (p.ambition === 'fame' || p.goal === 'solo') p.morale = clamp(p.morale - 3, 0, 100);
           const tx = fmtL(l('Ego: {p} é mais famoso(a) que {a} (fama {v} × {b}); os colegas se ressentem e a ideia de carreira solo cresce.', 'Ego: {p} is more famous than {a} (fame {v} × {b}); bandmates resent it and the solo idea grows.'), { p: p.name, a: a.name, v: Math.round(pf(s, id)), b: Math.round(a.fame) });
           flog(s, a.id, tx, 0); flog(s, id, tx, 0); notify(s, tx, 'bad');

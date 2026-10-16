@@ -50,9 +50,9 @@ export const OP_PREFIX = {
   p: 'pessoa', l: 'líder de selo', c: 'crítico', s: 'funcionário', e: 'empresário', o: 'veículo', pd: 'produtor', w: 'grupo',
 } as const;
 /** Tipos que eram campo nativo e agora só existem aqui (não saem por limite). */
-const STORED = new Set(['p', 'l', 'c', 's', 'o']);
+const STORED = new Set(['p', 'l', 'c', 's', 'o', 'ag']);
 /** Tipos com decaimento próprio (o sistema dono chama shift/put): `decayOpinions` não mexe. */
-const OWN_DECAY = new Set(['l', 's', 'o']);
+const OWN_DECAY = new Set(['l', 's', 'o', 'ag']);
 /** Tipos que só esfriam aqui quando houve gesto (antes: nativos com espelho). */
 const GESTURE_DECAY = new Set(['p', 'c']);
 
@@ -219,17 +219,21 @@ export function forgetOpinion(s: GameState, key: string): void { delete opState(
 
 /** Lealdade (0..100) derivada da opinião: 50 + op/2. */
 export const loyaltyOf = (op: number): number => clamp(50 + op / 2, 0, 100);
+/** Lealdade (0..100) de qualquer chave de quem trabalha para você (`s:` equipe, `ag:` agentes da agência). */
+export const loyaltyAt = (s: GameState, key: string): number => loyaltyOf(opinionRaw(s, key));
+/** Fixa a lealdade (0..100) de uma chave — grava a opinião correspondente. */
+export function setLoyaltyAt(s: GameState, key: string, loy: number, why?: L): number {
+  putOpinion(s, key, clamp(loy, 0, 100) * 2 - 100, why);
+  return loyaltyAt(s, key);
+}
+/** Soma à lealdade de uma chave com o corte do próprio sistema (padrão 0..100). */
+export function addLoyaltyAt(s: GameState, key: string, d: number, o: { min?: number; max?: number; why?: L } = {}): number {
+  return setLoyaltyAt(s, key, clamp(loyaltyAt(s, key) + d, o.min ?? 0, o.max ?? 100), o.why);
+}
 /** Lealdade de um funcionário (0..100; sem registro, 60). */
-export const staffLoyalty = (s: GameState, staffId: string): number => loyaltyOf(opinionRaw(s, `s:${staffId}`));
-/** Fixa a lealdade (0..100) — grava a opinião correspondente. */
-export function setStaffLoyalty(s: GameState, staffId: string, loy: number, why?: L): number {
-  putOpinion(s, `s:${staffId}`, clamp(loy, 0, 100) * 2 - 100, why);
-  return staffLoyalty(s, staffId);
-}
-/** Soma à lealdade com o corte do próprio sistema (padrão 0..100). */
-export function addStaffLoyalty(s: GameState, staffId: string, d: number, o: { min?: number; max?: number; why?: L } = {}): number {
-  return setStaffLoyalty(s, staffId, clamp(staffLoyalty(s, staffId) + d, o.min ?? 0, o.max ?? 100), o.why);
-}
+export const staffLoyalty = (s: GameState, staffId: string): number => loyaltyAt(s, `s:${staffId}`);
+export const setStaffLoyalty = (s: GameState, staffId: string, loy: number, why?: L): number => setLoyaltyAt(s, `s:${staffId}`, loy, why);
+export const addStaffLoyalty = (s: GameState, staffId: string, d: number, o: { min?: number; max?: number; why?: L } = {}): number => addLoyaltyAt(s, `s:${staffId}`, d, o);
 
 /** Relação de um crítico na escala antiga do sistema de críticos (−50..50). */
 export const critRelOf = (s: GameState, critic: string): number => opinionRaw(s, `c:${critic}`) / 2;
@@ -261,6 +265,12 @@ export function relPut(s: GameState, a: string, b: string, v: number, why?: L): 
 export function relAdd(s: GameState, a: string, b: string, d: number, o: { min?: number; max?: number; from?: number; why?: L } = {}): void {
   if (a === b) return;
   relPut(s, a, b, clamp((relOf(s, a, b) ?? o.from ?? 0) + d, o.min ?? -100, o.max ?? 100), o.why);
+}
+/** Apaga o registro de `a` sobre `b` (desfazer). */
+export function relDel(s: GameState, a: string, b: string): void {
+  if (b === meId(s) && a !== b) { forgetOpinion(s, `p:${a}`); return; }
+  const p: Person | undefined = s.persons[a];
+  if (p) delete p.rel[b];
 }
 /** Passa a conhecer (registro em 0 quando não havia nada). */
 export function relTouch(s: GameState, a: string, b: string, v = 0): void { if (relOf(s, a, b) === undefined) relPut(s, a, b, v); }

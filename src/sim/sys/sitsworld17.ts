@@ -25,6 +25,7 @@ import { becomeManager17, leaveLabel17, npc17, okAct17, okPerson17, pickNewLabel
 import { per13, type P13 } from './persona13';
 import { registerSituation, type SitCtx } from './situations17';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { rel0, relAdd } from '../opinion';
 
 // ---------------------------------------------------------------- utilidades
 
@@ -44,7 +45,7 @@ const fame = (a: Act | undefined, d: number) => { if (a) a.fame = clamp(a.fame +
 const fans = (a: Act | undefined, k: 'casual' | 'active' | 'core', m: number) => { if (a) a.fans[k] = Math.max(0, Math.round(a.fans[k] * m)); };
 const insp = (s: GameState, pid: string | undefined, d: number) => { const p = pid ? s.persons[pid] : undefined; if (p) p.inspiration = clamp(p.inspiration + d, 0, 100); };
 const resent = (s: GameState, pid: string | undefined, d: number) => { const p = pid ? s.persons[pid] : undefined; if (p) p.resentment = clamp(p.resentment + d, 0, 100); };
-const rel = (s: GameState, a: string, b: string, d: number) => { const x = s.persons[a], y = s.persons[b]; if (x) x.rel[b] = clamp((x.rel[b] ?? 0) + d, -100, 100); if (y) y.rel[a] = clamp((y.rel[a] ?? 0) + d, -100, 100); };
+const rel = (s: GameState, a: string, b: string, d: number) => { const x = s.persons[a], y = s.persons[b]; if (x) x.rel[b] = clamp((x.rel[b] ?? 0) + d, -100, 100); if (y) relAdd(s, y.id, a, d); };
 /** Paga (ou recebe, com valor negativo) em dólares da época: você, o selo do ato ou o próprio ato. */
 const pay = (s: GameState, c: SitCtx, key: string, real: number, memo: string): void => {
   const a = A(s, c);
@@ -64,8 +65,8 @@ registerSituation({
     const cs = pool(s).filter((a) => npcMembers(s, a).length >= 2);
     for (const a of r.shuffle(cs).slice(0, 12)) {
       const ms = npcMembers(s, a); const lead = leadOf(s, a)!;
-      const other = ms.filter((p) => p.id !== lead.id).sort((x, y) => (lead.rel[x.id] ?? 0) - (lead.rel[y.id] ?? 0))[0];
-      if (other && ((lead.rel[other.id] ?? 0) < -5 || F(P(s, lead.id), 'ego') > 1.3)) return { hero: lead.id, act: a.id, cast: { person: lead.id, other: other.id }, data: {} };
+      const other = ms.filter((p) => p.id !== lead.id).sort((x, y) => (rel0(s, lead.id, x.id)) - (rel0(s, lead.id, y.id)))[0];
+      if (other && ((rel0(s, lead.id, other.id)) < -5 || F(P(s, lead.id), 'ego') > 1.3)) return { hero: lead.id, act: a.id, cast: { person: lead.id, other: other.id }, data: {} };
     }
     return null;
   },
@@ -150,7 +151,7 @@ registerSituation({
     for (const a of r.shuffle(pool(s)).slice(0, 15)) {
       if (a.members.length < 3 || histLocked(s, a)) continue;
       const lead = leadOf(s, a);
-      const weak = npcMembers(s, a).filter((p) => p.id !== lead?.id && (p.fatigue > 60 || stressOf(s, p.id).short > 60 || (lead?.rel[p.id] ?? 0) < -25))[0];
+      const weak = npcMembers(s, a).filter((p) => p.id !== lead?.id && (p.fatigue > 60 || stressOf(s, p.id).short > 60 || ((lead ? rel0(s, lead.id, p.id) : 0)) < -25))[0];
       if (lead && weak) return { hero: lead.id, act: a.id, cast: { person: lead.id, victim: weak.id }, data: {} };
     }
     return null;

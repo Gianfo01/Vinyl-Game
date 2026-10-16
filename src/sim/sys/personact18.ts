@@ -25,6 +25,7 @@ import { askFavor, favorBlock, giftBlock, GIFT_COST, opine, opinionOf, per13, pu
 import { p16, status16 } from './people16';
 import { staffRoleById } from '../../data/rules';
 import { hqCaps } from '../branches';
+import { relAdd } from '../opinion';
 
 // ---------------------------------------------------------------- ajudantes
 
@@ -261,8 +262,8 @@ reg({
     const bk = bondKey(p.id, t);
     const st = PS(s);
     st.bonds[bk] = clamp((st.bonds[bk] ?? 0) + d, -100, 100);
-    p.rel[t] = clamp((p.rel[t] ?? 0) + d, -100, 100);
-    const tp = personOf(s, k); if (tp) tp.rel[p.id] = clamp((tp.rel[p.id] ?? 0) + d, -100, 100);
+    relAdd(s, p.id, t, d);
+    const tp = personOf(s, k); if (tp) relAdd(s, tp.id, p.id, d);
     if (ok) { opine(s, k, 3, l('me apresentou gente boa.', 'introduced me to good people.')); const a = actOfP(s, p.id); if (a) a.networking = clamp((a.networking ?? 0) + 4, 0, 100); }
     return ok ? out(true, T('{a} e {b} se deram bem: novo contato (+networking).', '{a} and {b} hit it off: a new contact (+networking).', { a: p.name, b: nm(s, k) }))
       : out(false, T('{a} e {b} se estranharam.', '{a} and {b} rubbed each other the wrong way.', { a: p.name, b: nm(s, k) }));

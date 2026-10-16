@@ -14,6 +14,7 @@ import { registerExt4, registerOfferMod, registerSimHook } from '../ext4';
 import { songProfile } from '../repertoire';
 import type { Act, GameState, Person, Release } from '../types';
 import { fmtL, money, notify, playerActs, remember } from '../util';
+import { rel0, relTouch } from '../opinion';
 
 // ---------------------------------------------------------------- tipos e estado
 
@@ -258,9 +259,9 @@ function lineupChanged(s: GameState, a: Act, m: ActMem): void {
   for (const id of now) {
     const p = s.persons[id];
     if (!p?.alive || p.isPlayer || added.includes(id)) continue;
-    const d = (p.traits.includes('loyal') ? -4 : 0) + (p.traits.includes('experimental') || p.traits.includes('chameleon') ? 3 : 0) + (gone.some((g) => (p.rel[g] ?? 0) > 40) ? -3 : 0);
+    const d = (p.traits.includes('loyal') ? -4 : 0) + (p.traits.includes('experimental') || p.traits.includes('chameleon') ? 3 : 0) + (gone.some((g) => rel0(s, p.id, g) > 40) ? -3 : 0);
     if (d) p.morale = clamp(p.morale + d, 0, 100);
-    for (const n of added) p.rel[n] ??= 10;
+    for (const n of added) relTouch(s, p.id, n, 10);
   }
   if (big) {
     m.rv = s.week;

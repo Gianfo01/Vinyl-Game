@@ -16,7 +16,7 @@ import { cliques, influence } from './people/social';
 import { per13 } from './persona13';
 import { overall } from './talent/attrs';
 import { staffRoleById } from '../../data/rules';
-import { staffLoyalty } from '../opinion';
+import { rel0, staffLoyalty } from '../opinion';
 
 export interface DynNode {
   key: string;
@@ -57,7 +57,7 @@ function components(ids: string[], rel: (a: string, b: string) => number, lim = 
 
 export function dynBand(s: GameState, a: Act): Dyn18 {
   const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p?.alive);
-  const rel = (x: string, y: string) => s.persons[x]?.rel[y] ?? 0;
+  const rel = (x: string, y: string) => rel0(s, x, y);
   const infl = (p: Person): number => {
     const P = per13(s, `p:${p.id}`);
     const avgIn = ms.length > 1 ? ms.filter((o) => o.id !== p.id).reduce((t, o) => t + rel(o.id, p.id), 0) / (ms.length - 1) : 0;
