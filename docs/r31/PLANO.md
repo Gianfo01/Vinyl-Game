@@ -61,6 +61,14 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 > Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
 > cada função é um lugar, um objeto, uma porta ou uma pessoa. As telas atuais ficam por baixo (a camada nova é de navegação);
 > números do jogo não mudam. Foco no PC (celular fica para depois).
+- **Mocks** em `docs/r31/mocks/onda5/` (sede, fichário, casa, cidade, pausa). Decisão do dono (2026-10-16): a ideia está
+  aprovada, mas o acabamento tem que ser polido na implementação:
+  - interface toda em pixel art (molduras, botões, etiquetas e o bolso desenhados no estilo do jogo, não "chips" de site);
+  - etiquetas pequenas que aparecem ao passar o mouse ou com Alt, e não todas de uma vez;
+  - objetos novos desenhados de verdade (espelho, porta-retratos, telefone, calendário, garagem) e nada de placeholder;
+  - mapa sem nomes amontoados;
+  - fichário com retratos dos bonecos e cartões de papel em pixel art;
+  - um passe de acabamento (regra POL) antes de cada entrega.
 - **EXP-1 · Sede como centro** — interface · aceite: as abas do topo somem; cada função abre por um objeto da sede.
   Mapa inicial: porta da rua → cidade (meu mundo); mapa-múndi → outros países/aeroporto; mural de cortiça → artistas
   conhecidos/elenco; arquivo de aço → contratos e catálogo; mesa com livro-caixa → Finanças; caderno na estante →
