@@ -16,7 +16,7 @@ import { nav5On, pocketIds5, pocketToggle5, POCKET_MAX5 } from '../../sim/r31/ex
 import { CAREER_PAGE17 } from '../nav17';
 import { MAP_TAB31, SEDE_LABEL31 } from '../ps/menu31';
 import { bindOf5, chordOf5, key5, keys5, type Bind5, type KeyEv5, type Region5 } from './keys5';
-import { REGION_L5, object5, objectFor5, objects5, regionOf5, type Obj5, type Open5 } from './objects5';
+import { PAUSE5, REGION_L5, object5, objectFor5, objects5, regionOf5, type Obj5, type Open5 } from './objects5';
 
 /** Ganchos que a interface liga (app.ts). Sem gancho, as funções só devolvem o alvo. */
 export const NAV5: {
@@ -27,6 +27,10 @@ export const NAV5: {
   help?: (rows: { key: string; label: L }[]) => void;
   /** papel aberto agora (para as teclas internas dele) */
   paper?: () => string | undefined;
+  /** casca (NAV): viagem desenhada (cena da região) em vez de abrir a página da região */
+  travel?: (r: Region5) => void;
+  /** casca (NAV): abre o papel do objeto `id` no marcador `t` (sem o gancho: `go(t)`) */
+  open?: (id: string, t: Open5) => void;
 } = {};
 
 // ---------------------------------------------------------------- registro das frentes (PAPEL, ELENCO, CASA, MAPA, TRN)
@@ -99,7 +103,7 @@ export function target5(id: string, marker?: Open5): Open5 | undefined {
 /** Abre o objeto. Hoje: a página antiga correspondente (pelo gancho `NAV5.go`). Devolve o alvo (ou undefined). */
 export function open5(id: string, marker?: Open5): Open5 | undefined {
   const t = target5(id, marker);
-  if (t) NAV5.go?.(t);
+  if (t) { if (NAV5.open) NAV5.open(id, t); else NAV5.go?.(t); }
   return t;
 }
 
@@ -146,7 +150,7 @@ export function resolveGoto5(s: GameState, x: GotoIn5): Goto5 | undefined {
 /** "Ir até lá": abre o objeto certo (hoje, a página antiga dona) e devolve o alvo. */
 export function goto5(s: GameState, x: GotoIn5): Goto5 | undefined {
   const g = resolveGoto5(s, x);
-  if (g) NAV5.go?.(g.open);
+  if (g) { if (g.obj && NAV5.open) NAV5.open(g.obj, g.open); else NAV5.go?.(g.open); }
   return g;
 }
 
@@ -205,8 +209,34 @@ export function travel5(s: GameState, current?: Open5): Travel5[] {
 }
 export function travelGo5(s: GameState, r: Region5): Open5 {
   const t = travelTarget5(s, r);
-  NAV5.go?.(t);
+  if (NAV5.travel) NAV5.travel(r); else NAV5.go?.(t);
   return t;
+}
+
+// ---------------------------------------------------------------- índice (menu de pausa) e alcance
+
+export interface Index5 { region: Region5 | 'pausa'; obj?: string; label: L; open: Open5 }
+/** Índice completo do menu de pausa: toda página dona de um objeto (no objeto dono) e as páginas fora do mundo. */
+export function index5(): Index5[] {
+  const out: Index5[] = [];
+  const seen = new Set<string>();
+  for (const r of REGIONS5) for (const o of objects5()) {
+    if ((o.career ? 'cidade' : regionOf5(o.place)) !== r) continue;
+    for (const x of o.opens) { if (seen.has(x.area)) continue; seen.add(x.area); out.push({ region: r, obj: o.id, label: o.label, open: x }); }
+  }
+  for (const [area, label] of Object.entries(PAUSE5)) if (!seen.has(area)) { seen.add(area); out.push({ region: 'pausa', label, open: { area } }); }
+  return out;
+}
+/** Como chegar a uma página antiga: 'key' = uma tecla (objeto ou marcador que abre nela), 'clicks' = cliques (botão de
+ *  pausa + linha do índice = 2). undefined = inalcançável. */
+export function reach5(area: string, list: readonly Bind5[] = keys5()): { key?: string; clicks?: number } | undefined {
+  for (const b of list) {
+    if (b.scope !== 'global') continue;
+    const a = b.act;
+    if (a.kind === 'object' && target5(a.id)?.area === area) return { key: b.chord };
+    if (a.kind === 'marker' && a.area === area) return { key: b.chord };
+  }
+  return index5().some((x) => x.open.area === area) ? { clicks: 2 } : undefined;
 }
 
 // ---------------------------------------------------------------- bolso
