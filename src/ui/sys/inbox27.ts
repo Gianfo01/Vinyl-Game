@@ -149,7 +149,7 @@ function rowEl(s: GameState, th: Thread27, isNew: boolean, pick: (id: string) =>
   const on = ui.sel === th.id;
   return h('li', {
     class: `m27-row ${th.unread ? 'unread' : ''} ${on ? 'sel' : ''} ${isNew ? 'm27-new' : ''} ${th.due ? 'due' : ''}`, role: 'option', 'aria-selected': on ? 'true' : 'false',
-    id: `m27-${hashString(th.id)}`, tabindex: on ? '0' : '-1', 'data-th': th.id, onclick: () => pick(th.id),
+    id: `m27-${hashString(th.id)}`, 'data-cat': th.cat, 'data-urgent': th.due || th.prio >= 3 ? '1' : '0', tabindex: on ? '0' : '-1', 'data-th': th.id, onclick: () => pick(th.id),
   },
   h('span', { class: 'm27-av' }, avatar(s, m.sender, 34), th.unread ? h('span', { class: 'm27-dot', title: t(l('Não lida', 'Unread')) }) : null),
   h('span', { class: 'm27-rb' },
@@ -375,6 +375,13 @@ export function mailView27(s: GameState): HTMLElement {
 }
 
 // ---------------------------------------------------------------- teclado (só com a caixa na tela)
+
+/** R31 onda 5 (PAPEL): a mesma tecla da caixa de entrada chamada de fora (papel da correspondência: A = arquivar). */
+export function mailKey27(key: string): boolean {
+  const L = live27;
+  if (!L || !L.root.isConnected) return false;
+  return L.key({ key } as KeyboardEvent);
+}
 
 if (typeof document !== 'undefined') {
   document.addEventListener('keydown', (e) => {
