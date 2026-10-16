@@ -23,6 +23,7 @@ import { personRoute16 } from '../route16';
 import { openFavors27 } from '../act27/favors27';
 import { favorAct27 } from '../act27/flow27p2'; // r27 FLOW2: presente e pedir favor abrem a conversa de favor (rápido dentro)
 import { actMode27 } from '../act27/prefs27';
+import { lookBlock31 } from '../r31/look31ui'; // R31 · AP: aparência guardada (forma, estilo, marcas, segredos) e cuidados
 
 const tone = (v: number) => (v >= 65 ? 'good' : v <= 35 ? 'bad' : '');
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -82,6 +83,7 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
         h('p', { class: 'small muted' }, t(l('Na {e}, o visual vale {w}% do alcance para cada 10 pontos de imagem acima ou abaixo de 50.', 'In the {e}, looks are worth {w}% of reach per 10 image points above or below 50.'), { e: t(iw.era), w: Math.round(iw.w * 20 * 10) / 10 })),
         act ? barrierList(barriers13(s, act)) : null,
         ob ? barrierList([ob]) : null,
+        lookBlock31(s, P.key, redraw),
         act || ob ? h('p', { class: 'small muted' }, t(l('Barreiras são da época e do país, não da pessoa: diminuem com as décadas, e você pode enfrentá-las quando surgirem (eventos).', 'Barriers belong to the era and country, not the person: they ease over the decades, and you can fight them when they come up (events).'))) : null,
       ),
     ),
