@@ -36,6 +36,7 @@ import { store } from '../store';
 import { hqHooks, type HqAt } from '../hq';
 import type { RoomKind } from '../pixel/sprites';
 import { equipmentSection20, festivalsAside20, gigsSection20, hqPanel, setTourStops20, showsPanel, stopHq, toggleTourStop20, tourMapSection20, tourStops20 } from '../panels/misc';
+import { tourView31 } from '../r31/tour31'; // R31 onda 2 (J): turnê em cena
 import { TOUR_STEPS20, activeToursSection, copyTourPolicy20, merchSection, onTourBooked20, tourDraftEstimate20, tourLivePanel20, tourPlannerSection } from '../panels/tours';
 import { setKitDraft18 } from './live18';
 import { showKey20, showLinks20 } from '../../sim/sys/showops20';
@@ -210,13 +211,15 @@ function toursTab(s: GameState): HTMLElement {
     booked20 ? h('p', { class: 'good small', role: 'status' }, ic('tour-bus'), ' ', T(l('Turnê marcada. A operação dela está aqui embaixo.', 'Tour booked. Its operation is right below.'))) : null,
     activeToursSection(s), ...secs('shows', s, SHOWS_TABS20.tours));
   booked20 = false;
-  if (expert20) return h('div', null, toggle, tourMapSection20(s), cityDrawer20(s), tourPlannerSection(s, stops, set), ops);
+  // R31 onda 2 (J): a turnê em cena (mapa + calendário) no topo; a tabela detalhada continua logo abaixo
+  const scene31 = tourView31(s, () => h('p', { class: 'muted small' }, T(l('Cena oculta: a operação da turnê e a tabela de datas estão logo abaixo.', 'Scene hidden: the tour operation and the date table are right below.'))));
+  if (expert20) return h('div', null, scene31, toggle, tourMapSection20(s), cityDrawer20(s), tourPlannerSection(s, stops, set), ops);
   const nav = h('div', { class: 'row between steps20-nav' },
     h('button', { class: 'btn small', disabled: step20 === 0 ? true : undefined, onclick: () => { step20 = Math.max(0, step20 - 1); rerender(); } }, '← ', T(l('Voltar', 'Back'))),
     step20 < TOUR_STEPS20.length - 1 ? h('button', { class: 'btn small primary', onclick: () => { step20 += 1; rerender(); } }, T(l('Próxima etapa', 'Next step')), ' →') : null);
   return h('div', null,
     intro(l('Comece pelo artista e pela rota; cada etapa guarda as escolhas (voltar não apaga nada). O painel de custo, receita e risco acompanha todas as etapas.', 'Start with the act and the route; each step keeps your choices (going back erases nothing). The cost, revenue and risk panel follows every step.')),
-    toggle, stepper(),
+    scene31, toggle, stepper(),
     h('div', { class: 'live20-wrap' }, tourLivePanel20(s, est, actId ?? '')),
     step20 === 0 ? tourMapSection20(s) : null,
     step20 === 0 ? cityDrawer20(s) : null,

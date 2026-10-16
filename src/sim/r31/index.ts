@@ -13,3 +13,4 @@ import './pendattn';
 import './lock';
 import './tags';
 import './mine'; // R31 · O: favoritos e metas pessoais (my31)
+import './scenesj31'; // R31 onda 2 (J): editáveis/executáveis das cenas (projeto, turnê)

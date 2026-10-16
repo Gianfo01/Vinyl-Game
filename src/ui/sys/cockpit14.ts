@@ -34,6 +34,7 @@ import { parts21 } from './ui20';
 import { openSede27 } from '../ps/hqpeek27';
 import { hoje31 } from '../ps/hoje31model'; // R31 (A): Hoje — 3 perguntas e linha do tempo única
 import { hoje31View } from '../ps/menu31ui';
+import { deskView31 } from '../r31/desk31'; // R31 onda 2 (J): Mesa do chefe em cena
 import { placeOf31 } from '../ps/menu31';
 import { sedeNav25 } from '../ps/slot25';
 import { careers } from '../../sim/sys/careers12';
@@ -106,7 +107,8 @@ function panel31(m: Cockpit27, s: GameState): HTMLElement {
   const ctx = { active: careers(s).active };
   const cards = m.cards.filter((c) => c.id !== 'proj');
   return h('div', { class: 'ck27' },
-    hoje31View(hoje31(s), s.week, go, (a) => t(placeOf31(a, ctx).label)),
+    // R31 onda 2 (J): a Mesa do chefe em cena; "Ver como lista" volta às três colunas e à linha do tempo
+    deskView31(s, () => hoje31View(hoje31(s), s.week, go, (a) => t(placeOf31(a, ctx).label))),
     cards.length ? h('div', { class: 'ck27-grid' }, cards.map(cardView)) : null,
     h('nav', { class: 'ck27-more', 'aria-label': t(l('Ver mais', 'See more')) },
       h('span', { class: 'ck27-more-l' }, t(l('Ver mais', 'See more')), ':'),
