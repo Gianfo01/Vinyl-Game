@@ -80,6 +80,20 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   cima da cena (fechar volta à mesma cena); texto corrido vira falas curtas.
 - **EXP-5 · Sede que cresce** — interface/dados · aceite: garagem → escritório → prédio, por época e tamanho; cada objeto
   aparece quando a função é liberada, substituindo parte do tutorial em texto.
+- **EXP-6 · "Você" vira a sua casa** — interface · aceite: a aba Você some; a casa (frente H, que já tem sala e garagem)
+  vira o lugar da vida pessoal: espelho → ficha do personagem; cama → descansar/energia; calendário da cozinha → agenda
+  pessoal; telefone de casa → contatos e chamar para sair (AMOR); instrumento na parede → praticar/aprender; escrivaninha →
+  compor sozinho e memórias; gaveta/cofre → patrimônio pessoal; porta-retratos → parceiro, filhos e família (ficha "Coração");
+  garagem → veículos; estante → hobbies; quarto das crianças aparece quando há filhos. Atividades fora (tocar num bar,
+  academia, terapia, festa da indústria) viram lugares da cidade. A casa muda com a época e com o imóvel comprado.
+- **EXP-7 · Artistas sem tela solta** — interface · aceite: o seu elenco fica no mural de cortiça da sede (polaroids; quem
+  está ensaiando aparece no estúdio, quem espera reunião aparece na recepção); "todos os artistas conhecidos" vira o
+  fichário de contatos (rolodex) da mesa: gavetas por letra/gênero/país, abas de ordenar e busca continuam (abre como papel
+  por cima da cena, tecla A); prospectos ficam no caderno do olheiro; artistas de outros selos se encontram na cidade
+  (casa de shows, rádio, festa). Muitos artistas pedem lista: ela continua, só que em forma de fichário, não de tela.
+- **Ficha do personagem fica como está** (decisão do dono, 2026-10-16): só polimento — ícones em pixel art (EMO), retrato
+  maior, "o que você sabe" mais claro, aba Coração (AMOR); abre de qualquer lugar (clicar na pessoa numa cena, no cartão do
+  fichário ou no mural).
 - Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
 
 ## Onda 6 (31.6) · fechamento
