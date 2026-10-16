@@ -188,13 +188,7 @@ function prop(g: Ctx27, m: SalaM31, L: Lay31, k: Prop31, f: number, fw: number, 
       drawText(p, era < 1950 ? 'REC' : 'ON AIR', x + 2, y0 + 8, on ? C('#ffe0d0') : C('#8a6a6a'));
       break;
     }
-    case 'door': {
-      blk(p, x, fy - 32, 14, 32, pal.woodDark);
-      for (const [py, ph] of [[fy - 29, 10], [fy - 16, 12]] as const) { p.rect(x + 2, py, 10, ph, lv(pal.woodDark, 2.4)); p.hline(x + 2, x + 11, py + ph - 1, lv(pal.woodDark, 3.8)); }
-      p.rect(x + 3, fy - 27, 8, 6, pal.paper); for (let i = 0; i < 3; i++) p.hline(x + 4, x + 9 - i, fy - 26 + i * 2, INK); // horário na porta
-      p.put(x + 11, fy - 15, pal.gold);
-      break;
-    }
+    case 'door': prim27.door(g, x, fy, 14, 32, true); break; // a mesma porta dos interiores, com o horário colado
     case 'couch': prim27.couch(g, x, fy, Math.max(30, w), pal.fabric); break;
     case 'poster': prim27.poster(g, x, y0 + 12, 12, 17, hs(`${f}`) % 6); break;
     case 'gold': for (let i = 0; i < (pp?.n ?? 2); i++) prim27.goldDisc(g, x + i * 12, y0 + 14, i === 1); break;

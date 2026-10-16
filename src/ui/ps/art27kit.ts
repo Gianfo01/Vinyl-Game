@@ -7,6 +7,7 @@
 import { drawText, textWidth } from '../pixel/font';
 import { paletteOf, tone, type Palette } from '../pixel/palette';
 import { C, Px, dith, inked, mix, noise, shade, withAlpha, type Col } from '../pixel/px';
+import { amp31, drumKit31, speaker31 } from '../pixel/stage31px';
 
 export type Band27 = 0 | 1 | 2 | 3;
 /** Geração dos objetos por ano (os testes conferem as fronteiras). */
@@ -201,10 +202,7 @@ function crowd0(k: K27, x0: number, x1: number, y: number, n: number, hop: numbe
 
 /** R29: objeto contornado (ver ink27). */
 export function speaker(...a: Parameters<typeof speaker0>): void { ink27(a[0], () => speaker0(...a)); }
-function speaker0(k: K27, x: number, y: number, w = 10, h = 16): void {
-  R(k, x, y - h, w, h, k.c('#1c1a20')); R(k, x, y - h, w, 1, k.c('#38343e'));
-  for (let i = 0; i < Math.floor(h / 8); i++) { k.p.disc(x + w / 2 - 0.5, y - h + 4 + i * 8, Math.min(3, w / 3), k.c('#3a3640')); k.p.set(Math.floor(x + w / 2), y - h + 4 + i * 8, k.c('#5a5662')); }
-}
+function speaker0(k: K27, x: number, y: number, w = 10, h = 16): void { speaker31(k.p, x, y, w, h, (hx) => k.c(hx)); }
 /** R29: objeto contornado (ver ink27). */
 export function micStand(...a: Parameters<typeof micStand0>): void { ink27(a[0], () => micStand0(...a)); }
 function micStand0(k: K27, x: number, y: number, h = 20): void {
@@ -213,19 +211,12 @@ function micStand0(k: K27, x: number, y: number, h = 20): void {
 }
 /** R29: objeto contornado (ver ink27). */
 export function drums(...a: Parameters<typeof drums0>): void { ink27(a[0], () => drums0(...a)); }
-function drums0(k: K27, x: number, y: number): void {
-  k.p.ellipse(x + 9, y - 6, 6, 6, k.c('#e8e0d0')); k.p.ring(x + 9, y - 6, 6, k.pal.accent2);
-  R(k, x, y - 9, 5, 7, k.pal.accent2); R(k, x + 15, y - 9, 5, 7, k.pal.accent2);
-  k.p.hline(x - 2, x + 3, y - 14, k.pal.gold); k.p.hline(x + 16, x + 22, y - 16, k.pal.gold);
-  k.p.vline(x, y - 14, y - 1, k.c('#7a7a80')); k.p.vline(x + 19, y - 16, y - 1, k.c('#7a7a80'));
-}
+// R31 (arte): a mesma bateria e o mesmo amplificador do palco e da sede (fonte única, stage31px), na escala dos
+// bonecos — antes era uma bateria menor e mais simples só das ilustrações.
+function drums0(k: K27, x: number, y: number): void { drumKit31(k.p, x, y, k.year, k.pal.accent2, (h) => k.c(h)); }
 /** R29: objeto contornado (ver ink27). */
 export function amp(...a: Parameters<typeof amp0>): void { ink27(a[0], () => amp0(...a)); }
-function amp0(k: K27, x: number, y: number): void {
-  R(k, x, y - 10, 12, 10, k.band >= 2 ? k.c('#1a1a1e') : k.c('#5a3a24'));
-  R(k, x + 1, y - 9, 10, 2, k.band >= 2 ? k.c('#c0c0c8') : k.pal.gold);
-  R(k, x + 1, y - 6, 10, 5, k.c('#2e2a2a'));
-}
+function amp0(k: K27, x: number, y: number): void { amp31(k.p, x, y, k.year, false, (h) => k.c(h)); }
 /** R29: objeto contornado (ver ink27). */
 export function guitar(...a: Parameters<typeof guitar0>): void { ink27(a[0], () => guitar0(...a)); }
 function guitar0(k: K27, x: number, y: number, col?: Col): void {

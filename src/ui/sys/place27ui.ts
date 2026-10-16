@@ -19,18 +19,21 @@ import { bindZoomOut27 } from '../ps/zoom27';
 import { ic } from '../vis';
 import { go18 } from './inbox18';
 import './place27ui.css';
+import { insideView31 } from '../r31/inside31';
 
 /** Ícone e cor por tipo de lugar. */
 export const PLACE_IC27: Record<PlaceK27, { ic: string; col: string }> = {
   venue: { ic: 'stage', col: '#b02868' }, records: { ic: 'cd', col: '#d84848' }, radio: { ic: 'radio', col: '#c89a18' }, studio: { ic: 'mic', col: '#d04040' },
   bar: { ic: 'ticket', col: '#c06028' }, press: { ic: 'typewriter', col: '#6a48b8' }, rehearsal: { ic: 'drums', col: '#a05828' }, label: { ic: 'contract', col: '#8a3a3a' },
   office: { ic: 'briefcase', col: '#3a7a9a' }, apartments: { ic: 'house', col: '#4a8a3a' }, hotel: { ic: 'door', col: '#7a5ab0' }, instruments: { ic: 'headphones', col: '#2a80c8' },
+  facade: { ic: 'mask', col: '#5a2a3a' }, police: { ic: 'gavel', col: '#2a4a8a' }, market: { ic: 'vault', col: '#3a3a30' },
 };
 /** Lugares básicos da música ganham ícone no mapa; cidade comum (prédios, escritórios) só o ponto clicável. */
 export const PINNED27 = new Set<PlaceK27>(['venue', 'records', 'radio', 'studio', 'bar', 'press']);
 const KNAME27: Record<PlaceK27, L> = {
   venue: l('Casa de shows', 'Venue'), records: l('Loja de música', 'Music shop'), radio: l('Rádio', 'Radio'), studio: l('Estúdio', 'Studio'), bar: l('Bar', 'Bar'), press: l('Imprensa', 'Press'),
   rehearsal: l('Sala de ensaio', 'Rehearsal space'), label: l('Gravadora rival', 'Rival label'), office: l('Escritórios', 'Offices'), apartments: l('Moradia', 'Housing'), hotel: l('Hotel', 'Hotel'), instruments: l('Instrumentos', 'Instruments'),
+  facade: l('Fachada', 'Front business'), police: l('Delegacia', 'Police station'), market: l('Mercado negro', 'Black market'),
 };
 
 /** Artista escolhido para as ações (por sessão, não vai para o save). */
@@ -104,9 +107,14 @@ export function ownPlace27(s: GameState, b: Bld18): { k: PlaceK27; name: string;
 
 // ---------------------------------------------------------------- interior (sobreposto ao mapa)
 
-export interface InsideT27 { id: string; k: PlaceK27; name: string; what?: string; people: Person27[]; year: number; city: string; seed: string }
-/** O corte do lugar por dentro, cobrindo o mapa; "Voltar à cidade" (ou Esc, Ctrl + roda, pinça) afasta. */
+export interface InsideT27 { id: string; k: PlaceK27; name: string; what?: string; people: Person27[]; year: number; city: string; seed: string; /** r31: lugar de terceiros (ações) */ place?: Place27; /** r31: prédio seu */ own?: boolean; /** r31 (S): facção da fachada */ org?: string }
+/** O corte do lugar por dentro, cobrindo o mapa; "Voltar à cidade" (ou Esc, Ctrl + roda, pinça) afasta.
+ *  R31 (onda 4 · I): vira cena interativa (inside31) — pessoas e objetos clicáveis, você lá dentro. */
 export function insideView27(s: GameState, x: InsideT27, back: () => void, actions?: () => void): HTMLElement {
+  return insideView31(s, x, back, actions);
+}
+/** O corte antigo (só pessoas clicáveis), mantido para comparação nas capturas. */
+export function insideView27old(s: GameState, x: InsideT27, back: () => void, actions?: () => void): HTMLElement {
   const m = interior27(x.k, x.year, x.people.length);
   const cv = h('canvas', { class: 'c2-in-cv px', role: 'img', 'aria-label': t(l('{n} por dentro', '{n}, inside'), { n: x.name }) }) as HTMLCanvasElement;
   const d = drawInterior27(cv, m, x.people, { minW: 300, city: x.city, name: x.name, seed: x.seed, look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null });
