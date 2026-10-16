@@ -9,6 +9,9 @@ import { FICTION31 } from './fiction31';
 import { FAMILY31, FAM_CITY31, FAM_ORIGIN31 } from './fossati31';
 import { RELICS31 } from './relics31';
 import type { RealArtist } from './realtypes';
+import { HITS31_SRC } from './base31hits';
+import { CHART31_SRC, hitSources31, type HitSrc31 } from './hits31types';
+import { homage31 } from './homage31';
 
 export type CurTipo31 = 'pessoa' | 'banda' | 'personagem' | 'referencia';
 export type CurArea31 = 'artista' | 'tv' | 'reliquia' | 'ficcao' | 'familia' | 'marca';
@@ -202,5 +205,28 @@ export const CUR31: Cur31[] = [
 ];
 void FAM_ORIGIN31;
 
-/** Ficha de curadoria por id. */
-export const cur31 = (id: string): Cur31 | undefined => CUR31.find((c) => c.id === id);
+// ---------------------------------------------------------------- R31 · onda 4 (BASE-HITS): sucessos de 1992 até hoje
+// Ficha por ato de src/data/base31hits.ts: fontes = verbete da Wikipedia (en) + arquivo oficial da parada de cada hit;
+// "a confirmar" lista o aproximado (estreia, cidade do jogo mais próxima) e o hit que não foi conferido por busca nesta
+// rodada. Nome real no espaço próprio 'hit:<id>' de realnames31 (homenagem gerada por homage31, a mesma das bases grandes).
+const LANG_HIT31: Record<string, string> = {
+  USA: 'en', GBR: 'en', IRL: 'en', CAN: 'en', AUS: 'en', NZL: 'en', JAM: 'en', TTO: 'en', BRB: 'en', BHS: 'en', NGA: 'en', GHA: 'en', ZAF: 'en', KEN: 'en',
+  MEX: 'es', ARG: 'es', COL: 'es', CHL: 'es', PER: 'es', VEN: 'es', PRI: 'es', DOM: 'es', CUB: 'es', PAN: 'es', URY: 'es', ECU: 'es', ESP: 'es', BOL: 'es', PRY: 'es', HND: 'es',
+  FRA: 'fr', BEL: 'fr', CHE: 'de', DEU: 'de', AUT: 'de', NLD: 'nl', SWE: 'sv', NOR: 'no', DNK: 'da', FIN: 'fi', ISL: 'is', PRT: 'pt', GRC: 'el', TUR: 'tr',
+  ROU: 'ro', POL: 'pl', RUS: 'ru', UKR: 'uk', JPN: 'ja', KOR: 'ko', CHN: 'zh', TWN: 'zh', HKG: 'zh', IND: 'hi', PHL: 'tl', ISR: 'he', CIV: 'fr', SEN: 'fr', COD: 'fr', CMR: 'fr', HTI: 'fr',
+};
+const hitId31 = (n: string): string => slug31(n) || 'x';
+function fromHit(h: HitSrc31): Cur31 {
+  const solo = !h.m?.length;
+  const confirmar = [...(h.exact === false ? ['dados gerais (não conferidos: some do modo "Vida real exata")'] : []), ...(h.ap ?? []).map((k) => AP_TXT[k]),
+    ...(h.ca ? ['cidade de origem (o jogo usa a cidade mais próxima)'] : []), ...(h.v ? [] : [`hit ("${h.h[0]}", ${h.h[1]}, ${CHART31_SRC[h.h[2]].split(' (')[0]} nº ${h.h[3]}): conferir no arquivo da parada`])];
+  return {
+    id: hitId31(h.n), nome: h.n, apelidos: h.nk ?? [], tipo: solo ? 'pessoa' : 'banda', area: 'artista', anos: [solo && h.b ? h.b : h.d, h.e],
+    cidade: h.c, lingua: LANG_HIT31[h.cn] ?? 'en', fontes: hitSources31(h), confirmar, ref: `base31hits:${h.n}`, sub: homage31(h.n),
+  };
+}
+/** Fichas da base de sucessos (espaço 'hit:<id>' no registro de nomes reais). */
+export const CUR31_HITS: Cur31[] = HITS31_SRC.map(fromHit);
+
+/** Ficha de curadoria por id (base Z, relíquias, ficção, família e, por último, a base de sucessos). */
+export const cur31 = (id: string): Cur31 | undefined => CUR31.find((c) => c.id === id) ?? CUR31_HITS.find((c) => c.id === id);

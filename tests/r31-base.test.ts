@@ -60,7 +60,7 @@ describe('sem duplicata', () => {
     expect(new Set(mine).size).toBe(mine.length);
     expect(BASE31_ACTS.filter((a) => before.has(dedupKey27(a.n))).map((a) => a.n)).toEqual([]);
     // todos entraram de fato na base do mundo, no fim (números de catálogo antigos estáveis)
-    expect(REAL_ALL.length - BASE31_FROM).toBe(BASE31_ACTS.length);
+    expect(REAL_ALL.slice(BASE31_FROM, BASE31_FROM + BASE31_ACTS.length).every((a, i) => a === BASE31_ACTS[i])).toBe(true); // lotes da onda 4 (BR, IT, HITS) vêm depois
     // ficção que já existe como ato real fica marcada (a onda 4 liga, não cria outro)
     for (const f of FICTION31) expect(before.has(dedupKey27(f.n)), f.n).toBe(!!f.naBase);
     // relíquias novas: ids únicos e fora do catálogo antigo

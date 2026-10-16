@@ -21,7 +21,7 @@ export interface RealName31 {
 }
 
 /** espaços de id aceitos (cada um tem um conferidor no teste de varredura; espaço novo = conferidor novo) */
-export const REALNAME_SPACES31 = ['act', 'festival', 'media', 'platform', 'award', 'city', 'cur', 'mode', 'place'] as const;
+export const REALNAME_SPACES31 = ['act', 'festival', 'media', 'platform', 'award', 'city', 'cur', 'mode', 'place', 'hit'] as const;
 export type RealSpace31 = (typeof REALNAME_SPACES31)[number];
 
 export const REALNAMES31: Record<string, RealName31> = {
