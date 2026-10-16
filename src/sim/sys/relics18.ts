@@ -21,7 +21,7 @@ import { fmtL, money, notify, post } from '../util';
 import { chron, chronListeners, cityL, genreL, nameOf, type ChronEv } from './chron9';
 import { crime17 } from './crime17';
 import { simStart20 } from '../worldpolicy20';
-import { addRelic, relics, type Relic, type RelicKind } from './relics9';
+import { addRelic, relMeta, relics, type Relic, type RelicKind, type RelicMeta } from './relics9';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { releasesNow27 } from '../tickcache27';
 
@@ -34,14 +34,24 @@ relics17Gate.f = (s, d) => strict(s) || (d.year < s.config.startYear && !simStar
 relics17Gate.step = (s, x) => strict(s) || (x[0] < s.config.startYear && !simStart20(s));
 
 // ---------------------------------------------------------------- estado
-export interface RelMeta18 { o: string; b: number; st?: L; lg?: number; auth?: 1; alt?: string; tour?: number }
-export interface Relics18State { m: Record<string, RelMeta18>; seen: Record<string, 1>; wing: number; vis: number; inc: number; tourW?: number }
+/** Metadados do relics18 — moram na própria peça (`rl.meta`, a definição única em relics9). */
+export type RelMeta18 = RelicMeta & { o: string; b: number };
+/** Meta da peça com origem e valor de origem garantidos (cria com `o`/`b` se ainda não tem). */
+export function m18(rl: Relic, o = 'base', b = rl.v): RelMeta18 {
+  const m = relMeta(rl);
+  if (m.o === undefined) { m.o = o; m.b = b; }
+  m.b ??= b;
+  return m as RelMeta18;
+}
+/** Meta do relics18 se a peça já tem (sem criar). */
+export const meta18 = (rl: Relic | undefined): RelMeta18 | undefined => (rl?.meta?.o !== undefined ? rl.meta as RelMeta18 : undefined);
+export interface Relics18State { seen: Record<string, 1>; wing: number; vis: number; inc: number; tourW?: number }
 declare module '../ext4' { interface Ext4 { relics18: Relics18State } }
-registerExt4('relics18', () => ({ m: {}, seen: {}, wing: 0, vis: 0, inc: 0 }));
+registerExt4('relics18', () => ({ seen: {}, wing: 0, vis: 0, inc: 0 }));
 export function rel18(s: GameState): Relics18State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
-  const st = (x.relics18 ??= { m: {}, seen: {}, wing: 0, vis: 0, inc: 0 }) as Relics18State;
-  st.m ??= {}; st.seen ??= {};
+  const st = (x.relics18 ??= { seen: {}, wing: 0, vis: 0, inc: 0 }) as Relics18State;
+  st.seen ??= {};
   return st;
 }
 
@@ -77,7 +87,7 @@ function born(s: GameState, k: RelicKind, n: L, a: Act | undefined, pid: string 
   if (st.seen[key]) return null;
   st.seen[key] = 1;
   const rl = addRelic(s, k, n, a?.id, pid, v);
-  st.m[rl.id] = { o, b: rl.v, st: story };
+  Object.assign(relMeta(rl), { o, b: rl.v, st: story });
   // r18 final: a peça nasce DE um fato (o da crônica que acabou de entrar) — encadeia a causa
   const last = facts17(s).f.at(-1), cause = last && last.src === 'chron' && last.w === s.week ? [last.id] : undefined;
   emitFact(s, { kind: 'relic', actors: a ? [a.id] : [], severity: 20 + Math.min(30, Math.round(v / 4000)), visibility: 'public', tags: ['relic', 'born', o], src: 'relics18', cause,
@@ -153,7 +163,7 @@ export function legacy18(s: GameState, rl: Relic): Legacy18 {
   }
   const age = Math.max(0, s.year - rl.y);
   parts.push([l('Idade da peça', 'Age of the piece'), Math.min(0.8, age * 0.02)]);
-  const meta = rel18(s).m[rl.id];
+  const meta = meta18(rl);
   if (meta?.auth) parts.push([l('Certificado de autenticidade', 'Certificate of authenticity'), 0.1]);
   if (meta?.tour) parts.push([l('Exposição itinerante', 'Touring exhibition'), Math.min(0.2, meta.tour * 0.05)]);
   return { m: 1 + parts.reduce((t, x) => t + x[1], 0), parts };
@@ -161,7 +171,7 @@ export function legacy18(s: GameState, rl: Relic): Legacy18 {
 registerExplain('relic.value', (s, c) => {
   const rl = relics(s).list.find((x) => x.id === c.id);
   if (!rl) return null;
-  const meta = rel18(s).m[rl.id];
+  const meta = meta18(rl);
   const lg = legacy18(s, rl);
   return { title: l('Valor da relíquia', 'Relic value'), value: money(s, rl.v) as number, fmt: 'money',
     parts: [{ label: l('Valor de origem', 'Original value'), value: money(s, meta?.b ?? rl.v), fmt: 'money' }, ...lg.parts.map(([lb, v]) => ({ label: lb, value: 1 + v, fmt: 'mult' as const, tone: 'good' as const }))],
@@ -174,9 +184,8 @@ export const isFake18 = (s: GameState, id: string) => !!crime17(s).fake[id];
 /** Perito: revela falsificação (a peça sai do leilão e o vendedor é exposto) ou certifica (+10% de valor). */
 export function authenticate18(s: GameState, id: string): L {
   const rl = relics(s).list.find((x) => x.id === id);
-  const st = rel18(s);
   if (!rl || rl.rr) return l('Peça real catalogada: autenticidade já conhecida.', 'Catalogued real piece: authenticity already known.');
-  const m = (st.m[rl.id] ??= { o: 'base', b: rl.v });
+  const m = m18(rl);
   if (m.auth) return l('Já certificada.', 'Already certified.');
   const fee = authFee18(s, rl);
   if (freeCash20(s) < fee) return cashWhy20(s, fee, l('Caixa insuficiente.', 'Not enough cash.'));
@@ -232,7 +241,7 @@ export function tourExhibit18(s: GameState): L {
   st.tourW = s.week + 26;
   const fee = Math.round(ps.reduce((t, x) => t + money(s, x.v), 0) * 0.04);
   post(s, 'rel18tour', fee, 'services', 'Exposição itinerante');
-  for (const x of ps) { const m = (st.m[x.id] ??= { o: 'base', b: x.v }); m.tour = (m.tour ?? 0) + 1; const a = x.a ? s.acts[x.a] : undefined; if (a) a.fame = clamp(a.fame + 0.8, 0, 100); }
+  for (const x of ps) { const m = m18(x); m.tour = (m.tour ?? 0) + 1; const a = x.a ? s.acts[x.a] : undefined; if (a) a.fame = clamp(a.fame + 0.8, 0, 100); }
   emitFact(s, { kind: 'show', actors: ['player'], severity: 25, visibility: 'public', tags: ['good', 'relic', 'exhibit'], src: 'relics18', text: fmtL(l('A coleção de {c} sai em exposição itinerante ({n} peças).', '{c}\'s collection goes on a touring exhibition ({n} pieces).'), { c: s.config.companyName, n: ps.length }) });
   return fmtL(l('Exposição na estrada por 6 meses: {v} de cachê agora; risco de dano ou roubo no caminho.', 'Exhibition on the road for 6 months: {v} fee now; risk of damage or theft on the way.'), { v: `$${Math.round(fee / 100).toLocaleString('en-US')}` });
 }
@@ -249,13 +258,13 @@ registerSimHook('month', 'relics18', (s) => {
   const st = rel18(s);
   const r = Rng.fromSeed(`${s.config.seed}|relics18|${s.week}`);
   // fora do modo exato: depois do início, peça real vira história alternativa (destino sorteado pelo relics9)
-  if (!strict(s)) for (const rl of relics(s).list) if (rl.rr) (st.m[rl.id] ??= { o: 'real', b: rl.v }).alt = rl.rr;
+  if (!strict(s)) for (const rl of relics(s).list) if (rl.rr) m18(rl, 'real').alt = rl.rr;
   for (const rl of relics(s).list) {
-    if (!st.m[rl.id]) st.m[rl.id] = { o: rl.rr ? 'real' : 'base', b: rl.v };
+    m18(rl, rl.rr ? 'real' : 'base');
     // leilão novo de peça não catalogada: 8% de chance de ser falsificação de um "colecionador"
     if (rl.st === 'auction' && !rl.rr && !st.seen[`auc:${rl.id}:${rl.au}`]) {
       st.seen[`auc:${rl.id}:${rl.au}`] = 1;
-      if (r.chance(0.08) && !st.m[rl.id].auth) {
+      if (r.chance(0.08) && !meta18(rl)?.auth) {
         crime17(s).fake[rl.id] = 1;
         if (rl.v > 20000) pushInbox18(s, 'relic18_fake', { from: l('Perito independente', 'Independent appraiser').pt, subject: fmtL(l('Dúvida sobre {n}', 'Doubts about {n}'), { n: rl.n }),
           body: fmtL(l('Um perito viu fotos do lote e algo não fecha (procedência, ferragens, caligrafia). Uma perícia custa {f}.', 'An appraiser saw photos of the lot and something is off (provenance, hardware, handwriting). An appraisal costs {f}.'), { f: `$${Math.round(authFee18(s, rl) / 100).toLocaleString('en-US')}` }),
@@ -291,7 +300,7 @@ registerSimHook('year', 'relics18', (s) => {
   // valor acompanha o legado (peças reais seguem os leilões reais)
   for (const rl of relics(s).list) {
     if (rl.rr || rl.st === 'lost') continue;
-    const m = (st.m[rl.id] ??= { o: 'base', b: rl.v });
+    const m = m18(rl);
     const lg = legacy18(s, rl).m;
     const prev = m.lg ?? lg;
     m.lg = lg;
@@ -300,7 +309,7 @@ registerSimHook('year', 'relics18', (s) => {
     if (rl.st === 'player' && lg > prev * 1.25) notify(s, fmtL(l('{n} valorizou: o legado do artista cresceu (×{a} → ×{b}).', '{n} gained value: the artist\'s legacy grew (×{a} → ×{b}).'), { n: rl.n, a: prev.toFixed(2), b: lg.toFixed(2) }), 'good');
   }
   // compra sem perícia: falsificação aparece com o tempo
-  for (const rl of relics(s).list) if (rl.st === 'player' && isFake18(s, rl.id) && !st.m[rl.id]?.auth && (hashString(`${s.config.seed}|fk|${rl.id}|${s.year}`) % 100) < 30) {
+  for (const rl of relics(s).list) if (rl.st === 'player' && isFake18(s, rl.id) && !meta18(rl)?.auth && (hashString(`${s.config.seed}|fk|${rl.id}|${s.year}`) % 100) < 30) {
     rl.st = 'lost'; rl.v = Math.round(rl.v * 0.03); rl.n = fmtL(l('{n} (falsificação)', '{n} (forgery)'), { n: rl.n });
     s.player.reputation.artistic = clamp(s.player.reputation.artistic - 2, 0, 100);
     emitFact(s, { kind: 'scandal', actors: ['player'], severity: 40, visibility: 'public', tags: ['bad', 'relic', 'forgery'], src: 'relics18', text: fmtL(l('Vexame: a peça exposta por {c} era falsa ({n}).', 'Embarrassment: the piece shown by {c} was a fake ({n}).'), { c: s.config.companyName, n: rl.n }) });

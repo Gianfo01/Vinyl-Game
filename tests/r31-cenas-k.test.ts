@@ -143,10 +143,11 @@ describe('r31 K: os modelos batem com o estado', () => {
 
   it('Troféus e relíquias: cada peça no pedestal do seu nível; vazio leva a Lendas', () => {
     const s = game('k-trophy', 1975);
-    relics(s).list.push({ id: 'rlk', k: 'guitar', n: { pt: 'Guitarra K', en: 'Guitar K' }, y: 1970, own: [], st: 'player', v: 85000 });
+    const rl = { id: 'rlk', k: 'guitar' as const, n: { pt: 'Guitarra K', en: 'Guitar K' }, y: 1970, own: [] as [string, number, string][], st: 'player' as const, v: 85000 };
+    relics(s).list.push(rl);
     const m = salaModel31(s, 'trophy');
-    const lvl = relicTier31({ v: 85000 });
-    expect(lvl).toBe(3);
+    const lvl = relicTier31(s, rl); // R31 G: nível real (valor + história), não mais a faixa de valor
+    expect(lvl).toBe(2);
     expect(m.hots.find((x) => x.id === `tier:${lvl}`)!.do).toEqual({ k: 'relic', id: 'rlk' });
     expect(m.hots.find((x) => x.id === 'tier:5')!.do).toEqual({ k: 'go', area: 'lendas' });
   });

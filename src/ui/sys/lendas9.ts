@@ -25,6 +25,9 @@ import { newgameCards } from '../newgame';
 import { PERSON_TABS, openActPage } from '../pages';
 import { registerArea, registerPageTab } from '../registry';
 import { relicHype12 } from './hype12';
+import { TIER_NAME31, ownHow31, relicMeasure31, tierStars31, violinOk31 } from '../../sim/r31/relic31';
+import { giveRelic31, knownPeople31 } from '../../sim/r31/items31';
+import { money } from '../../sim/util';
 import { relicImg28 } from '../pixel/relic28';
 import { erasTab17, relicStory17 } from './heritage17';
 import { archiveLine29, relic29Section, relicBrowser29 } from './relics29';
@@ -132,6 +135,8 @@ export function openRelic(s: GameState, id: string): void {
         h('div', { class: 'row wrap' },
           ...[1, 1.2, 1.4, 1.7].map((m) => h('button', { class: 'btn small', onclick: () => res(placeBid(s, rl.id, Math.round(ob * m)), l('Lance registrado.', 'Bid placed.')) }, t(l('Teto {v}', 'Ceiling {v}'), { v: $(Math.round(ob * m)) }))),
           h('button', { class: 'btn small primary', onclick: () => res(buyRelic(s, rl.id), l('Arrematado!', 'Won!')) }, t(l('Arrematar já por {v}', 'Buy now for {v}'), { v: $(relicPrice(s, rl)) }))));
+    } else if (rl.st === 'kept' && rl.meta?.fix) {
+      acts.push(h('p', { class: 'small' }, t(l('Dono: {o}. Relíquia de família: não está à venda por preço nenhum.', 'Owner: {o}. A family heirloom: not for sale at any price.'), { o: ownerName(rl) })));
     } else if (rl.st === 'kept') {
       const ask = relicPrice(s, rl);
       const at = relicAttach(s, rl);
@@ -153,7 +158,8 @@ export function openRelic(s: GameState, id: string): void {
           rl.ln ? null : h('button', { class: 'btn small', onclick: () => res(toggleExhibit(s, rl.id), rl.ex ? l('Exposta na sede.', 'On display.') : l('De volta ao cofre.', 'Back in the vault.')) }, t(rl.ex ? l('Guardar no cofre', 'Put in the vault') : l('Expor na sede', 'Display at HQ'))),
           rl.ln ? null : h('button', { class: 'btn small', onclick: () => res(lendRelic(s, rl.id), l('Emprestada por um ano: cachê recebido.', 'Lent for a year: fee received.')) }, t(l('Emprestar a um museu (cachê {v})', 'Lend to a museum (fee {v})'), { v: $(Math.round(relicPrice(s, rl) / 1.3 * 0.05)) })),
           h('button', { class: 'btn small ghost', onclick: () => res(donateRelic(s, rl.id), l('Doada. A imprensa aplaude.', 'Donated. The press applauds.')) }, t(l('Doar a um museu', 'Donate to a museum'))),
-          rl.ln ? null : h('button', { class: 'btn small ghost', onclick: () => res(sellRelic(s, rl.id), l('Vendida a um colecionador.', 'Sold to a collector.')) }, t(l('Vender (85%)', 'Sell (85%)')))));
+          rl.ln || rl.meta?.fix ? null : h('button', { class: 'btn small ghost', onclick: () => res(sellRelic(s, rl.id), l('Vendida a um colecionador.', 'Sold to a collector.')) }, t(l('Vender (85%)', 'Sell (85%)')))),
+        rl.ln ? null : giftRow31(s, rl, res));
     } else if (rl.st === 'museum') {
       acts.push(h('p', { class: 'small' }, rl.brw ? t(l('Emprestada a você até a semana {w}, exposta na sua sede.', 'Lent to you until week {w}, on display at your HQ.'), { w: rl.brw }) : t(l('Museus não vendem, mas emprestam a quem tem reputação.', 'Museums do not sell, but they lend to those with a reputation.'))),
         rl.brw ? null : h('button', { class: 'btn small', onclick: () => res(borrowRelic(s, rl.id), l('O museu empresta a peça por um ano.', 'The museum lends it for a year.')) }, t(l('Pedir emprestada para expor ({v})', 'Ask to borrow for display ({v})'), { v: $(borrowFee(s, rl)) })));
@@ -167,10 +173,35 @@ export function openRelic(s: GameState, id: string): void {
       relicHype12(s, rl.id),
       relicStory17(s, rl, redraw),
       relic29Section(s, rl), // R29: versão procedural de um arquétipo real (história, estado, procedência)
-      section(t(l('Donos', 'Provenance')), h('ol', { class: 'ln-own' }, rl.own.map((o) => h('li', null, h('b', null, o[0]), h('small', { class: 'muted' }, ` · ${o[1]} · ${o[2]}`))))),
+      tierBlock31(s, rl),
+      section(t(l('Donos', 'Provenance')), h('ol', { class: 'ln-own' }, rl.own.map((o) => h('li', null, h('b', null, o[0]), h('small', { class: 'muted' }, ` · ${o[1]} · ${t(ownHow31(o[2]))}`))))),
       section(t(l('Ações', 'Actions')), ...acts),
       section(t(l('Na crônica', 'In the chronicle')), chronList(s, chronQuery(s, { kinds: ['relic'] }).filter((e) => t(e.t).includes(t(rl.n))), 10)));
   });
+}
+
+/** R31 G: nível da peça (sai do valor e da história), as quatro medidas e como subiu — sem "o que falta". */
+function tierBlock31(s: GameState, rl: Relic): HTMLElement {
+  const m = relicMeasure31(s, rl);
+  const AUTH: Record<typeof m.auth, L> = { doc: l('documentada', 'documented'), cert: l('certificada', 'certified'), unk: l('não conferida', 'unchecked'), fake: l('falsa', 'fake') };
+  const RAR = [l('genérica', 'generic'), l('poucas iguais', 'few like it'), l('única desta história', 'unique to this story'), l('peça única', 'one of a kind')];
+  return section(t(l('Nível', 'Level')),
+    h('div', { class: `ln-tier ln-tier${m.tier}` }, h('b', null, `${tierStars31(m.tier)} ${t(TIER_NAME31[m.tier - 1])}`), m.locked ? ' ' : null, m.locked ? pill(t(rl.meta?.fix ? l('relíquia de família, nunca à venda', 'family heirloom, never for sale') : l('peça de museu, nunca à venda', 'museum piece, never for sale')), 'gold') : null),
+    h('div', { class: 'row wrap' },
+      pill(t(l('Preço {v}', 'Price {v}'), { v: $(money(s, m.price)) })), pill(t(l('Raridade: {r}', 'Rarity: {r}'), { r: t(RAR[m.rarity]) })),
+      pill(t(l('Autenticidade: {a}', 'Authenticity: {a}'), { a: t(AUTH[m.auth]) }), m.auth === 'fake' ? 'bad' : m.auth === 'unk' ? '' : 'good'),
+      pill(t(l('Importância: {n}', 'Importance: {n}'), { n: Math.round(m.importance) }))),
+    h('p', { class: 'small muted' }, t(l('Como chegou a este nível:', 'How it reached this level:'))),
+    h('ul', { class: 'small' }, m.why.map((w) => h('li', null, w.y ? `${w.y} · ` : '', t(w.t)))));
+}
+/** R31 G: dar de presente a quem você conhece (a peça já é sua). */
+function giftRow31(s: GameState, rl: Relic, res: (e: L | null, ok: L) => void): HTMLElement | null {
+  const ppl = knownPeople31(s, 40).filter((id) => violinOk31(s, rl, `p:${id}`));
+  if (!ppl.length) return rl.meta?.fix ? h('p', { class: 'small muted' }, t(l('Relíquia de família: não sai da família.', 'Family heirloom: it does not leave the family.'))) : null;
+  let to = ppl[0];
+  return h('div', { class: 'row wrap' },
+    select(to, ppl.map((id) => ({ value: id, label: s.persons[id].name })), (v) => { to = v; }),
+    h('button', { class: 'btn small', onclick: () => res(giveRelic31(s, rl.id, to), l('Presente entregue. A opinião sobe.', 'Gift delivered. Their opinion rises.')) }, t(l('Dar de presente', 'Give as a gift'))));
 }
 
 function chronList(s: GameState, list: ChronEv[], n = 60): HTMLElement {

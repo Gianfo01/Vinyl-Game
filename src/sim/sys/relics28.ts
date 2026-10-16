@@ -11,7 +11,7 @@ import { histLocked } from '../history15';
 import type { Act, GameState } from '../types';
 import { fmtL } from '../util';
 import { chronListeners, cityL, nameOf, type ChronEv } from './chron9';
-import { addRelic, relics, type RelicKind } from './relics9';
+import { addRelic, relMeta, relics, type RelicKind } from './relics9';
 import { rel18 } from './relics18';
 
 const lead = (a: Act): string | undefined => (a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0]);
@@ -24,7 +24,7 @@ function born28(s: GameState, k: RelicKind, n: L, a: Act | undefined, pid: strin
   if (st.seen[key]) return;
   st.seen[key] = 1;
   const rl = addRelic(s, k, n, a?.id, pid, v);
-  st.m[rl.id] = { o, b: rl.v, st: story };
+  Object.assign(relMeta(rl), { o, b: rl.v, st: story });
 }
 
 chronListeners().push((s: GameState, e: ChronEv) => {
