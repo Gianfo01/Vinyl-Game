@@ -26,6 +26,9 @@ import { foundVenture, ventures, vpay9, type Holder, type Venture, type Verdict 
  *  nota; a revelação ganha um empurrão curto nas paradas. `time`: horário no cartaz (0 tarde … 3 headliner). */
 export interface FestOut31 { acts: string[]; time: Record<string, number>; att: number; cap: number; rating: number; ex: number; verdict: Verdict; disaster: boolean }
 export const FEST31: { after?: (s: GameState, f: OwnFestival, o: FestOut31) => void } = {};
+/** R31 CAR (car31.excl, sys/car31stage.ts): cláusula de exclusividade com raio e prazo — o bônus de procura passa a
+ *  depender do raio, do prazo e de quantos festivais rivais ela bloqueia (null = regra antiga, +6% por exclusividade). */
+export const EXCL31: { dem?: (s: GameState, f: OwnFestival, deals: Deal[]) => number | null } = {};
 
 export type Ident = 'discovery' | 'genre' | 'family' | 'premium' | 'mega';
 export type OpK = 'storm' | 'rain' | 'delay' | 'gear' | 'crowd';
@@ -263,6 +266,17 @@ function place(s: GameState, f: OwnFestival, a: Act, o: { stage: number; time: n
   }
 }
 
+/** R31 CAR (car31.excl): liga/desliga a exclusividade de um contrato e lança o custo (ou a multa recebida) no caixa do
+ *  festival. Devolve false quando o artista não está no line-up. */
+export function exclDeal12(s: GameState, fid: string, actId: string, on: boolean, amt: number, key: string, memo: string): boolean {
+  const f = festOf(s, fid);
+  const d = f ? f12(s, f).deals[actId] : undefined;
+  if (!f || !d) return false;
+  d.excl = on;
+  if (amt) pay(s, f, amt, key, memo);
+  return true;
+}
+
 export function drop12(s: GameState, fid: string, actId: string): void {
   const f = festOf(s, fid);
   if (!f) return;
@@ -323,8 +337,8 @@ export function proj12(s: GameState, f: OwnFestival): Proj {
   if (x.ident === 'premium') { dem *= Math.pow(Math.max(0.3, f.price / fair), 0.9); why.push(l('Premium: preço alto não espanta; parece exclusivo.', 'Premium: a high price does not scare; it feels exclusive.')); }
   const cl = clashes12(s, f);
   dem *= cl.dem;
-  const ex = Object.values(x.deals).filter((d) => d.excl && (s.acts[d.actId]?.fame ?? 0) >= 40).length;
-  if (ex) { dem *= 1 + ex * 0.06; why.push(fmtL(l('{n} exclusividade(s) regional(is): +{p}% de procura.', '{n} regional exclusive(s): +{p}% demand.'), { n: ex, p: ex * 6 })); }
+  const exs = Object.values(x.deals).filter((d) => d.excl && (s.acts[d.actId]?.fame ?? 0) >= 40), ex = exs.length;
+  if (ex) { const k = EXCL31.dem?.(s, f, exs) ?? ex * 0.06; dem *= 1 + k; why.push(fmtL(l('{n} exclusividade(s) regional(is): +{p}% de procura.', '{n} regional exclusive(s): +{p}% demand.'), { n: ex, p: Math.round(k * 100) })); }
   if (x.cyc.phase !== 'onsale') { dem *= 0.35; why.push(l('Line-up ainda não anunciado: só o público fiel e os curiosos compram.', 'Line-up not announced yet: only the loyal crowd and the curious buy.')); }
   if (x.cyc.late) why.push(l('Anúncio tardio: pouca gente teve tempo de se planejar (−15%).', 'Late announcement: few people had time to plan (−15%).'));
   if (f.days > 1 && x.cyc.passes) { dem *= 1.15; why.push(l('Passes de um dia: mais gente casual entra (+15%), ticket médio menor.', 'Day passes: more casual buyers (+15%), lower average ticket.')); }
