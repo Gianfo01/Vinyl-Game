@@ -18,6 +18,7 @@ import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from
 import { exploitBlock } from '../../rights';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 import { actsNow27 } from '../../tickcache27';
+import { withTxn } from '../../r31/txn';
 
 // ------------------------------------------------------------------ estado
 
@@ -464,12 +465,12 @@ function commissionsMonth(s: GameState, r: Rng): void {
     const q = clamp(talent * 0.8 + r.normal(10, 10) + (c.kind === 'game' && fam === 'electronic' ? 8 : 0), 5, 100);
     if (q >= c.minQ) {
       c.status = 'done';
-      post(s, `comm:${c.id}`, c.pay, 'publishing', `Encomenda: ${c.client}`);
+      withTxn({ artist: c.actId }, () => post(s, `comm:${c.id}`, c.pay, 'publishing', `Encomenda: ${c.client}`)); // R31 P
       act.fans.casual += Math.round(c.pay / 100);
       notify(s, fmtL(l('{a} entregou a encomenda de {c}. Pagamento recebido.', '{a} delivered the {c} commission. Payment received.'), { a: act.name, c: c.client }), 'good');
     } else {
       c.status = 'failed';
-      post(s, `commhalf:${c.id}`, Math.round(c.pay * 0.25), 'publishing', `Encomenda recusada: ${c.client} (sinal)`);
+      withTxn({ artist: c.actId }, () => post(s, `commhalf:${c.id}`, Math.round(c.pay * 0.25), 'publishing', `Encomenda recusada: ${c.client} (sinal)`)); // R31 P
       notify(s, fmtL(l('{c} não gostou da entrega de {a}. Só o sinal foi pago.', "{c} didn't like {a}'s delivery. Only the deposit was paid."), { a: act.name, c: c.client }), 'bad');
     }
   }

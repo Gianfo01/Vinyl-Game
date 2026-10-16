@@ -55,6 +55,16 @@ export function withTxn<T>(ctx: TxnCtx, fn: () => T): T {
   try { return fn(); } finally { STACK.pop(); }
 }
 const ctxNow = (): TxnCtx => STACK[STACK.length - 1] ?? {};
+/** onda 3 (P): o contexto em vigor (o diário com contexto lê o lançamento/turnê em jogo). */
+export const txnCtxNow = ctxNow;
+
+/** onda 3 (P): o projeto programado (lançamento pendente) virou o lançamento `to` — resultados juntam as linhas. Função
+ *  içada; market.ts chama sem importar os resultados. */
+export type ProjAlias31 = (s: GameState, from: string, to: string) => void;
+export function projAlias31(): ProjAlias31[] {
+  const f = projAlias31 as unknown as { l?: ProjAlias31[] };
+  return (f.l ??= []);
+}
 
 /** Marcas inferidas da chave: um pedaço que é id de ato (artista) ou de lançamento (projeto). */
 export function inferTags(s: GameState, key: string): TxnTags {
@@ -62,6 +72,13 @@ export function inferTags(s: GameState, key: string): TxnTags {
   for (const tok of key.split(':')) {
     if (!out.artist && s.acts[tok]) out.artist = tok;
     else if (!out.project && s.releases[tok]) { out.project = tok; out.release = tok; if (!out.artist && s.releases[tok].actId) out.artist = s.releases[tok].actId; }
+    else if (!out.project && tok.length > 2 && /^(tr|pr)[0-9a-z]+$/.test(tok)) {
+      // onda 3 (P): turnê e lançamento programado também são projeto (gravado no ato: a marca fica na transação)
+      const t = tok.startsWith('tr') ? s.tours?.find((x) => x.id === tok) : undefined;
+      if (t) { out.project = tok; out.tour = tok; out.artist ??= t.actId; continue; }
+      const pr = tok.startsWith('pr') ? s.pendingReleases?.find((x) => x.id === tok) : undefined;
+      if (pr) { out.project = tok; out.artist ??= pr.actId; }
+    }
   }
   return out;
 }
@@ -75,7 +92,8 @@ export function recordTxn(s: GameState, key: string, amount: number, cat: string
   const tags: TxnTags = { artist: c.artist ?? inf.artist, project: c.project ?? inf.project, period: c.period ?? String(s.year) };
   const rel = c.release ?? (c.project ? undefined : inf.release);
   if (rel) tags.release = rel;
-  if (c.tour) tags.tour = c.tour;
+  const tour = c.tour ?? (c.project ? undefined : inf.tour);
+  if (tour) tags.tour = tour;
   const t: Txn = {
     key, w: s.week, amount, cat, cls: clsOf(sect), cash,
     payer: c.payer ?? (amount >= 0 ? 'ext' : 'player'),

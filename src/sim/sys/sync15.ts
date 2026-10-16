@@ -15,6 +15,7 @@ import type { Act, GameState, Song } from '../types';
 import { fmtL, hasTech, money, nextId, notify, playerActs, post, remember } from '../util';
 import { addHype } from './hype12';
 import { opine } from './persona13';
+import { withTxn } from '../r31/txn';
 
 export type Mood15 = 'joy' | 'romance' | 'tension' | 'melancholy' | 'energy';
 export type Medium15 = 'jingle' | 'film' | 'tvad' | 'novela' | 'trailer' | 'game' | 'series' | 'short';
@@ -160,7 +161,7 @@ export function pitch15(s: GameState, briefId: string, songId: string, ask = fal
   const sh = shareOf(s, song);
   const fee = feeOf(s, b, fit);
   const mine = Math.round(fee * (sh.master + sh.pub));
-  post(s, `sync15:${b.id}`, mine, 'sync', `${b.client} — "${song.title}"`);
+  withTxn({ artist: act.id, ...(song.releaseId && s.releases[song.releaseId] ? { project: song.releaseId, release: song.releaseId } : {}) }, () => post(s, `sync15:${b.id}`, mine, 'sync', `${b.client} — "${song.title}"`)); // R31 P
   if (!act.playerBand) act.cash += fee - mine;
   (st.used[song.id] ??= []).push(s.year);
   const M = MEDIA15[b.medium];

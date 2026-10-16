@@ -25,7 +25,7 @@ import type { GameState, MemoryEntry } from '../types';
 import { rememberListeners } from '../util';
 import { playerMem28 } from '../sys/story28';
 import { registerEditable, registerRunnable } from './editor';
-import { txn31, txnObs31, type Txn } from './txn';
+import { projAlias31, txn31, txnCtxNow, txnObs31, type Txn } from './txn';
 
 // ---------------------------------------------------------------- regra de rateio
 
@@ -102,6 +102,8 @@ function projOf(s: GameState, id: string): { n: string; a?: string; k: PKind31 }
   if (r) return { n: r.title, a: r.actId, k: 'rel' };
   const t = s.tours?.find((x) => x.id === id);
   if (t) return { n: t.name, a: t.actId, k: 'tour' };
+  const pr = s.pendingReleases?.find((x) => x.id === id);
+  if (pr) return { n: pr.title, a: pr.actId, k: 'proj' };
   const pj = (s.x4 as unknown as { proj8?: { list: { id: string; title: string; actId: string }[] } }).proj8?.list.find((x) => x.id === id);
   if (pj) return { n: pj.title, a: pj.actId, k: 'proj' };
   return { n: '', k: 'x' };
@@ -200,6 +202,18 @@ export function recordRes31(s: GameState, t: Txn, sect: Sect18): void {
   }
 }
 txnObs31().push(recordRes31);
+projAlias31().push((s, from, to) => {
+  const st = res31(s);
+  const P = st.P[from];
+  if (!P) return;
+  const Q = (st.P[to] ??= { v: [0, 0, 0], n: P.n, k: 'rel', y: P.y, ...(P.a ? { a: P.a } : {}) });
+  Q.k = 'rel';
+  for (const i of [0, 1, 2] as const) Q.v[i] += P.v[i];
+  delete st.P[from];
+  const m = st.cur.p[from];
+  if (m) { const n = (st.cur.p[to] ??= [0, 0]); n[0] += m[0]; n[1] += m[1]; delete st.cur.p[from]; }
+  for (const j of st.j) if (j.p === from) j.p = to;
+});
 registerSimHook('month', 'res31.close', (s) => { const st = res31(s); if (st.cur.m >= 0 && st.cur.m !== s.year * 12 + s.month) closeMonth31(s); });
 
 // ---------------------------------------------------------------- leitura
@@ -308,7 +322,10 @@ function fameNow(s: GameState, actId?: string): number {
 
 rememberListeners().push((s, e) => {
   if (!playerMem28(s, e)) return; // só os fatos seus (o anel "Minha história")
-  const c = CTX[CTX.length - 1];
+  const c0 = CTX[CTX.length - 1];
+  const tc = txnCtxNow();
+  const ref = c0?.ref ?? tc.release ?? tc.tour ?? tc.project;
+  const c = { chance: c0?.chance, ref };
   const st = dctx31(s);
   const v: DCtx31 = [s.player.cash, fameNow(s, e.actId)];
   if (c?.chance !== undefined) v[2] = Math.round(c.chance * 100);
