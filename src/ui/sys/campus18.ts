@@ -1,3 +1,4 @@
+import { artOfPlace31 } from '../pixel/pred31place';
 import { hqFloors27 } from '../../sim/sys/hqrooms27';
 // Rodada 18 (campus18) + Rodada 19 (world19) + Rodada 27 (D2): página "Nosso mundo" — o BAIRRO da sede em pixel
 // art isométrica. R27: painel lateral FIXO (no celular, folha no rodapé): clicar num prédio mostra o que é, custo
@@ -85,7 +86,7 @@ function makeView(s: GameState, year?: number): View {
   const places = lots ? lots.places : [...places27(s, cx.filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1), ...cx.places];
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n })), ...cx.amb];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms.filter((m) => !cx.lmOut.has(m.id)),
-    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: lots ? lots.filler : cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), extra31: cx.extra, minGw: cx.minGw });
+    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: lots ? lots.filler : cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), fillArt: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, artOfPlace31(s, p)])), extra31: cx.extra, minGw: cx.minGw });
   const ov = cityOv31(s, cx, places, scene.sprites.map((x) => ({ id: x.id, kind: x.kind, top: x.box[1] })), t(l('a', 'b')) === 'a');
   // R31 (POL): onde a página vai pôr os ícones (seus prédios, vizinhos, lugares com pino) — as etiquetas do mapa desviam
   const pinned = new Set(places.filter((p) => PINNED27.has(p.k)).map((p) => `fl:${p.id.slice(3)}`));
