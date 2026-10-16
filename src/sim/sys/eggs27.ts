@@ -22,7 +22,7 @@ import { registerPerkSource } from '../perks';
 import { scandal } from '../scandal17';
 import { availableProducers } from '../studio';
 import type { Act, GameState, Offer, Release } from '../types';
-import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
+import { fmtL, money, nextId, playerActs, post, remember } from '../util';
 import { spawnProceduralAct } from '../worldgen';
 import { addLead18, disc18 } from './discover18';
 import { headline19 } from './factlink19';
@@ -134,9 +134,9 @@ export function eggFire27(s: GameState, id: string, o: { text: L; act?: string; 
   const st = eg27(s);
   st.seen[id] ??= s.week;
   const actors = [...(o.act ? [o.act] : []), ...(o.actors ?? []), 'player'];
-  emitFact(s, { kind: 'easter_egg', actors, place: o.place ?? (o.act ? s.acts[o.act]?.city : undefined), severity: o.sev ?? 25, visibility: o.vis ?? 'public', tags: ['egg27', id], text: o.text, src: 'eggs27', data: { egg: id } });
-  remember(s, 'egg27', o.text, { actId: o.act && s.acts[o.act] ? o.act : undefined, important: (o.sev ?? 25) >= 40 });
-  notify(s, o.text, o.tone === 'bad' ? 'bad' : o.tone === 'info' ? 'info' : 'good');
+  emitFact(s, { kind: 'easter_egg', actors, place: o.place ?? (o.act ? s.acts[o.act]?.city : undefined), severity: o.sev ?? 25, visibility: o.vis ?? 'public', tags: ['egg27', id], text: o.text, src: 'eggs27', data: { egg: id },
+    diary: { kind: 'egg27', actId: o.act && s.acts[o.act] ? o.act : undefined, important: (o.sev ?? 25) >= 40 },
+    notify: o.tone === 'bad' ? 'bad' : o.tone === 'info' ? 'info' : 'good' });
   if (o.hl) headline19(s, o.text, 2);
 }
 /** Marca um ovo de interface (busca, gramofone…) sem notícia pública. */

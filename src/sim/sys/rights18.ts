@@ -678,9 +678,7 @@ function npcRerecordYear(s: GameState): void {
     if (rels.length < 2 || shield18(s, aid) || !r.chance(a.trust < 40 ? 0.1 : 0.03)) continue;
     for (const rel of rels) st.rr[rel.id] = 0.6;
     const t = fmtL(l('{a} regrava os discos que gravou com você: {n} masters seus perdem ~40% da demanda (a composição continua pagando os autores).', '{a} re-records the albums made with you: {n} of your masters lose ~40% of demand (the songs keep paying their writers).'), { a: a.name, n: rels.length });
-    emitFact(s, { kind: 'deal', actors: [aid, 'player'], severity: 50, tags: ['rerecord', 'rights', 'bad'], text: t, src: 'rights18' });
-    remember(s, 'rerecord18', t, { actId: aid, important: true });
-    notify(s, t, 'bad');
+    emitFact(s, { kind: 'deal', actors: [aid, 'player'], severity: 50, tags: ['rerecord', 'rights', 'bad'], text: t, src: 'rights18', diary: { kind: 'rerecord18', actId: aid, important: true }, notify: 'bad' });
     logIt(st, s, t);
   }
 }
@@ -705,9 +703,7 @@ function termYear(s: GameState): void {
       for (const id of t.rels) { const rel = s.releases[id]; if (rel && rel.owner === 'player') { rel.owner = 'indie'; n++; } }
       rst(s).reversions.push({ week: s.week, actId: t.act, contractId: '', n });
       const text = fmtL(l('Rescisão de 35 anos: {n} master(s) de {a} voltam ao artista (lei americana de 1976).', '35-year termination: {n} of {a}\'s master(s) return to the artist (1976 US Copyright Act).'), { n, a: a?.name ?? '' });
-      emitFact(s, { kind: 'termination', actors: [t.act, 'player'], severity: 45, tags: ['rights', 'masters'], text, src: 'rights18' });
-      remember(s, 'term18', text, { actId: t.act, important: true });
-      notify(s, text, 'bad');
+      emitFact(s, { kind: 'termination', actors: [t.act, 'player'], severity: 45, tags: ['rights', 'masters'], text, src: 'rights18', diary: { kind: 'term18', actId: t.act, important: true }, notify: 'bad' });
       logIt(st, s, text);
     }
     if (t.st === 'contest' && (t.court ?? 0) <= s.year) {

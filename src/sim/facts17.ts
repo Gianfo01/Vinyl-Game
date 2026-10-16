@@ -52,7 +52,28 @@ export function factSeedKey17(f: Pick<Fact, 'kind' | 'actors' | 'w' | 'text'>): 
   for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
   return `${f.kind}:${f.actors[0] ?? ''}:${f.w}:${(h >>> 0).toString(36)}`;
 }
-export type FactIn = Omit<Fact, 'id' | 'y' | 'm' | 'w' | 'visibility' | 'tags' | 'severity'> & Partial<Pick<Fact, 'visibility' | 'tags' | 'severity'>>;
+/** r31 (W0-FACT): saídas do fato. O diário (`remember`) e o aviso (`notify` → fila de atenção) são OUVINTES do fato:
+ *  quem publica só chama `emitFact(s, { ..., diary, notify })`. Não ficam guardadas no fato (nada no save).
+ *  - `diary: true` → entrada com o texto do fato (tipo = kind do fato, ato = primeiro ator que é ato);
+ *    `diary: L` → outro texto; objeto → controla tipo, texto, ato, pessoa, importância e causas.
+ *  - `notify: true` → aviso 'info' com o texto do fato; `'good'|'bad'|'event'|'info'` → só o tom; objeto → tom,
+ *    texto e campos da fila (`cat`, `prio`, `pendId`, `dest`). */
+export type FactDiary = true | L | { kind?: string; text?: L; actId?: string; pid?: string; important?: boolean; causeIds?: string[] };
+export type FactTone = 'info' | 'good' | 'bad' | 'event';
+export interface FactNotifyOpts { kind?: FactTone; text?: L; cat?: string; prio?: 0 | 1 | 2 | 3; pendId?: string; dest?: { area: string; tab?: string; id?: string }; from?: string }
+export type FactNotify = true | FactTone | FactNotifyOpts;
+export interface FactOut { diary?: FactDiary; notify?: FactNotify }
+export type FactIn = Omit<Fact, 'id' | 'y' | 'm' | 'w' | 'visibility' | 'tags' | 'severity'> & Partial<Pick<Fact, 'visibility' | 'tags' | 'severity'>> & FactOut;
+
+/** Ouvintes centrais das saídas (diário, aviso). Rodam DEPOIS dos ouvintes do fato — mesma ordem de quem chamava
+ *  emitFact → remember → notify em sequência — e fora do limite de profundidade das cadeias. Registrados em util.ts. */
+type FactSink = (s: GameState, f: Fact, o: FactOut, fi: FactIn) => void;
+const SINKS: { id: string; fn: FactSink }[] = [];
+export function registerFactSink(id: string, fn: FactSink): void {
+  const i = SINKS.findIndex((x) => x.id === id);
+  if (i >= 0) SINKS[i] = { id, fn }; else SINKS.push({ id, fn });
+}
+export const factSinks31 = (): string[] => SINKS.map((x) => x.id);
 
 export interface Facts17State { f: Fact[]; seq: number; /** r19: fatos agregados (não guardados) por `kind:ano-mês` */ agg?: Record<string, number>; /** r19: fatos-índice (emitIndexFact) */ ix?: Fact[]; xs?: number }
 declare module './ext4' { interface Ext4 { facts17: Facts17State } }
@@ -89,6 +110,13 @@ const same = (a: Fact, b: Omit<Fact, 'id'>): boolean => a.kind === b.kind && a.w
 /** Publica um fato: guarda no anel e chama os ouvintes. Fatos vindos de pontes (data.bridged) não duplicam
  *  um fato nativo da mesma semana/tipo/protagonista; o nativo substitui o da ponte. */
 export function emitFact(s: GameState, fi: FactIn): Fact {
+  const { diary, notify, ...core } = fi;
+  const f = emitCore(s, core);
+  if (diary !== undefined || notify !== undefined) for (const x of SINKS) x.fn(s, f, { diary, notify }, fi);
+  return f;
+}
+
+function emitCore(s: GameState, fi: FactIn): Fact {
   const st = facts17(s);
   const f0: Omit<Fact, 'id'> = {
     ...fi, y: s.year, m: s.month, w: s.week,
