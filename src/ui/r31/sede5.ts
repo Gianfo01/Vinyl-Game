@@ -92,11 +92,13 @@ export function sedeLay5(plan: Plan27, has: (id: string) => boolean = () => true
   const cursor = new Map<Kind27, number>();
   const hosts = new Map<Kind27, { x: number; y: number; w: number; used: number }[]>();
   const office = cellOf('office') ?? open[0];
-  for (const [id, art, prefs, mount] of SEDE_OBJS5) {
-    if (!object5(id) || !has(id)) continue;
-    const c = prefs.map(cellOf).find((x) => !!x) ?? office;
-    if (!c) continue;
-    room(c).objs.push(id);
+  const home = (prefs: Kind27[]) => prefs.map(cellOf).find((x) => !!x) ?? office;
+  const live = SEDE_OBJS5.filter(([id, , prefs]) => object5(id) && has(id) && home(prefs));
+  for (const [id, , prefs] of live) room(home(prefs)!).objs.push(id);
+  // chão e mesa primeiro, parede depois (a parede procura o espaço livre acima do que está no chão)
+  const rank: Record<Mount5, number> = { floor: 0, desk: 1, spot: 2, list: 3, wall: 4 };
+  for (const [id, art, prefs, mount] of [...live].sort((a, b) => rank[a[3]] - rank[b[3]])) {
+    const c = home(prefs)!;
     const fy = c.y + c.h - 3;
     if (mount === 'list') continue;
     if (mount === 'spot' && BARE5.includes(c.kind)) continue; // sala sem mobília padrão: o ponto não tem o que mostrar (fica na lista)

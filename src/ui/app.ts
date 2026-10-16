@@ -116,7 +116,7 @@ import { PURPOSE27, kpis27 } from './ps/ui27model';
 import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em nomes abre o menu de ações
 // R31 (onda 1, A): menu "mundo primeiro" (entradas ≤ 10 + Lugares + Listas), Hoje, cabeçalho único e topo enxuto
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
-import { NAV5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
+import { NAV5, TRANS5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { chordLabel5 } from './r31/keys5';
 import { shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
@@ -189,6 +189,12 @@ export function boot(el: HTMLElement): void {
   // R31 onda 5 (TEC): ganchos da navegação nova (só usados com exp5.nav ligado)
   NAV5.go = (x) => (shell5On(store.game) ? show5(x.area, x.tab) : open29({ area: x.area, tab: x.tab })); NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings();
   NAV5.paper = () => (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined); // caixa de entrada aberta: as teclas dela ganham
+  // R31 onda 5 (NAV × TRN): as viagens e o abrir/fechar papel da casca passam pelas transições (sem animação, troca direto)
+  TRANS5.run = (x, swap) => {
+    const g = store.game;
+    const card = x.kind === 'travel' && x.to && g ? cardInfo31({ to: x.to, city: t(cityById[ownerCity(g)]?.name) || ownerCity(g), month: g.month, year: g.year, pend: trnPend31(g) }) : undefined;
+    if (!transition31(x.kind, { year: x.year, rect: x.rect, card }, swap)) swap();
+  };
   NAV5.help = (rows) => shortcutsHelp15(rows.map((r) => ({ key: chordLabel5(r.key), label: t(r.label) })));
   document.addEventListener('vtn31-go', (e) => { if (!store.game) return; e.preventDefault(); go((e as CustomEvent<string>).detail); }); // R31 (O): destino do painel rápido/favoritos
   titleScreen(root, startGame);
@@ -610,7 +616,7 @@ function trnNav31() {
 
 export function render(): void {
   if (!store.game) return titleScreen(root, startGame);
-  if (trnGate31(trnNav31(), render)) return; // R31 onda 5 (TRN): a página nova entra com a cortina fechada / o zoom cheio
+  if (!shell5On(store.game) && trnGate31(trnNav31(), render)) return; // R31 onda 5 (TRN): a página nova entra com a cortina fechada / o zoom cheio
   const t0 = performance.now();
   renderApp();
   perfNote('render', performance.now() - t0);

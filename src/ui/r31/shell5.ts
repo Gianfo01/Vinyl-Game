@@ -69,14 +69,20 @@ export function show5(area: string, tab?: [string, string], objId?: string): voi
   const o = (objId ? object5(objId) : undefined) ?? objectFor5(area, tab);
   if (o && isPlace5(o) && !objId) { travel5go(regionOf5(o.place)); return; }
   const id = o?.id ?? `page:${area}`;
-  TRANS5.run({ kind: 'open', obj: id, year: s.year, rect: rectOf5(id) }, () => {
+  const rect = clickRect5; clickRect5 = undefined;
+  const swap = () => {
     SH5.paper = { obj: id, marker: { area, tab } };
     SH5.pause = false; SH5.help = false;
     if (tab) setTab(tab[0], tab[1]);
     store.area = area as typeof store.area;
     redraw();
-  });
+  };
+  // clique num objeto da cena: zoom no objeto e o papel sobe; tecla, bolso e "ir até lá" abrem direto (EXP-11)
+  if (rect) TRANS5.run({ kind: 'open', obj: id, year: s.year, rect }, swap); else swap();
 }
+let clickRect5: TransRect | undefined;
+/** Clique num objeto desenhado: guarda o retângulo para o zoom da transição. */
+export function clickOpen5(id: string): void { clickRect5 = rectOf5(id); open5(id); }
 const rectOf5 = (id: string): TransRect | undefined => {
   const el = typeof document !== 'undefined' ? document.querySelector<HTMLElement>(`.s5-obj[data-obj="${id}"]`) : null;
   if (!el) return undefined;
@@ -273,7 +279,7 @@ function region5(s: GameState, host: Shell5Host, bangs: Record<string, number>):
   const r = SH5.region;
   if (r === 'sede') {
     return h('div', { class: 'reg5 reg5-sede' },
-      sedeScene5({ s, bangs, open: (id) => open5(id), flash: SH5.flash }),
+      sedeScene5({ s, bangs, open: clickOpen5, flash: SH5.flash }),
       recados5(s));
   }
   const old = () => host.page(travelTarget5(s, r).area);
