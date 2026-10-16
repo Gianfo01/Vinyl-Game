@@ -13,7 +13,8 @@ import type { GameState } from '../../sim/types';
 import { $, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { ic } from '../vis';
-import { drawScene27, paintStudio27, type Who27 } from './scene27';
+import { paintStudio5 } from '../r31/salas5px'; // R31 onda 5 (SALAS): estúdio no corte da sede, técnica atrás do vidro
+import { drawSala5 } from '../r31/salas5ui';
 import { cutscene27 } from './prefs27';
 import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
@@ -33,9 +34,10 @@ export function openRecord27(s: GameState, sessId: string, onEnd?: (played: bool
   const scene = (): HTMLElement => {
     const cv = h('canvas', { class: `a27-scene ${flash ? 'a27-flash' : ''}`, role: 'img', 'aria-label': t(l('Sala de gravação', 'Live room')) }) as HTMLCanvasElement;
     const ms = a.members.map((id) => s.persons[id]).filter(Boolean).slice(0, 5);
-    const spots: [number, number][] = [[40, 74], [72, 76], [18, 82], [100, 82], [56, 88]];
-    const who: Who27[] = ms.map((p, i) => ({ p, x: spots[i][0], y: spots[i][1], pose: p.role === 'vocal' || p.role === 'mc' ? 'stand' : 'play', dir: 'SE' }));
-    drawScene27(cv, paintStudio27(s.year, rc.phase === 'takes'), s.year, who);
+    const eng = s.player.staff.find((m) => /engineer|producer|tecn/i.test(m.role));
+    const sala = paintStudio5(s.year, rc.phase === 'takes', ms.length, { city: s.config.homeCity, month: s.month, eng: !!eng });
+    sala.spots.forEach((sp, i) => { if (i < ms.length) sp.pose = ms[i].role === 'vocal' || ms[i].role === 'mc' ? 'stand' : 'play'; });
+    try { drawSala5(cv, sala, s.year, [...ms, ...(eng ? [{ id: eng.id, role: 'producer', born: s.year - 35 } as const] : [])]); } catch { /* sem canvas */ }
     return cv;
   };
 

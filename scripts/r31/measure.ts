@@ -59,7 +59,10 @@ async function runOne(j: Job): Promise<Res30> {
 
   const t0 = performance.now();
   // mesma configuração do lote balance19 (selo, rock, base padrão do jogo)
-  const s = createGame(defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' }));
+  // R31 onda 4 (BASE-IT): R31_CFG="chave=valor,..." entra na configuração ANTES de criar (interruptores que valem na criação, ex.: base31it=false)
+  const cfgOver: Record<string, unknown> = {};
+  for (const kv of (process.env.R31_CFG ?? '').split(',').filter(Boolean)) { const [k, v] = kv.split('='); cfgOver[k] = v === 'true' ? true : v === 'false' ? false : Number.isFinite(Number(v)) ? Number(v) : v; }
+  const s = createGame(defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste', ...cfgOver }));
   // R31: interruptores para medir ligado/desligado — R31_SW="id=false,outro=3" (aplicado logo depois de criar a partida)
   if (process.env.R31_SW) {
     const { setSw, switchDef } = await import('../../src/sim/r31/switches');

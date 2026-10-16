@@ -12,7 +12,9 @@ import { planAgenda20, commitAgenda20, agName20 } from '../actions20';
 import { modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { ic } from '../vis';
-import { drawScene27, kindColor27, paintTable27, type Who27 } from './scene27';
+import { kindColor27 } from './scene27';
+import { paintCompose5 } from '../r31/salas5px'; // R31 onda 5 (SALAS): a mesa no corte da sede
+import { drawSala5 } from '../r31/salas5ui';
 import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const sign = (n: number) => `${n > 0 ? '+' : ''}${n}`;
@@ -59,9 +61,7 @@ export function openCompose27(s: GameState, actId: string, onEnd?: (played: bool
   const scene = (): HTMLElement => {
     const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Mesa de composição', 'Writing table')) }) as HTMLCanvasElement;
     const played = c.picked.map((x) => x.kind);
-    const spots: [number, number, 'SE' | 'SW'][] = [[62, 64, 'SE'], [138, 64, 'SW'], [100, 56, 'SE']];
-    const who: Who27[] = c.writers.map((w, i) => ({ p: s.persons[w.id] ?? { id: w.id, role: 'vocal', born: s.year - 25 }, x: spots[i][0], y: spots[i][1], pose: 'sit', dir: spots[i][2] }));
-    drawScene27(cv, paintTable27(s.year, played, c.week), s.year, who);
+    try { drawSala5(cv, paintCompose5(s.year, played, c.writers.length, { city: s.config.homeCity, month: s.month }), s.year, c.writers.map((w) => s.persons[w.id] ?? { id: w.id, role: 'vocal', born: s.year - 25 })); } catch { /* sem canvas */ }
     return cv;
   };
 

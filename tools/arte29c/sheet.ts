@@ -138,12 +138,12 @@ if (part === 'art27') {
 }
 
 if (part === 'scene27') {
-  const { paintTable27, paintStudio27 } = await import('../../src/ui/act27/scene27');
-  title('Cenas de criação (act27/scene27: mesa de composição e estúdio) — 4 épocas (×3)');
+  const { paintCompose5, paintStudio5 } = await import('../../src/ui/r31/salas5px'); // R31 onda 5 (SALAS)
+  title('Cenas de criação (r31/salas5px: mesa de composição e estúdio) — 4 épocas (×3)');
   const r = sec('mesa / estúdio');
   for (const y of [1935, 1968, 1990, 2020]) {
-    r.append(cell(cvPx(paintTable27(y, ['hook', 'verse', 'chorus', 'bridge'], 3), 3), `mesa ${y}`));
-    r.append(cell(cvPx(paintStudio27(y, true), 3), `estúdio ${y}`));
+    r.append(cell(cvPx(paintCompose5(y, ['hook', 'lyric', 'harmony', 'rhythm'], 3).back, 3), `mesa ${y}`));
+    r.append(cell(cvPx(paintStudio5(y, true).back, 3), `estúdio ${y}`));
   }
 }
 

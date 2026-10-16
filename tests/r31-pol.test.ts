@@ -28,7 +28,7 @@ const scenes = polScenes31().flatMap((r) => r.build(game));
 describe('R31 POL — acabamento das cenas', () => {
   it('há cenas registradas de todas as frentes', () => {
     const ids = new Set(polScenes31().map((r) => r.id));
-    for (const id of ['loja31', 'casa31', 'mech31', 'mech31empty', 'board27', 'inside31', 'fos31', 'salas31']) { expect(ids.has(id), id).toBe(true); expect(scenes.some((x) => x.id.startsWith(`${id}:`)), `${id} sem exemplos`).toBe(true); }
+    for (const id of ['loja31', 'casa31', 'mech31', 'mech31empty', 'board27', 'inside31', 'fos31', 'salas31', 'salas5']) { expect(ids.has(id), id).toBe(true); expect(scenes.some((x) => x.id.startsWith(`${id}:`)), `${id} sem exemplos`).toBe(true); }
     expect(scenes.length).toBeGreaterThan(20);
   });
   it('toda pessoa tem o pé no chão, numa superfície ou atrás de um móvel da frente', () => {
