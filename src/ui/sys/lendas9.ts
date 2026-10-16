@@ -135,6 +135,8 @@ export function openRelic(s: GameState, id: string): void {
         h('div', { class: 'row wrap' },
           ...[1, 1.2, 1.4, 1.7].map((m) => h('button', { class: 'btn small', onclick: () => res(placeBid(s, rl.id, Math.round(ob * m)), l('Lance registrado.', 'Bid placed.')) }, t(l('Teto {v}', 'Ceiling {v}'), { v: $(Math.round(ob * m)) }))),
           h('button', { class: 'btn small primary', onclick: () => res(buyRelic(s, rl.id), l('Arrematado!', 'Won!')) }, t(l('Arrematar já por {v}', 'Buy now for {v}'), { v: $(relicPrice(s, rl)) }))));
+    } else if (rl.st === 'kept' && rl.meta?.fix) {
+      acts.push(h('p', { class: 'small' }, t(l('Dono: {o}. Relíquia de família: não está à venda por preço nenhum.', 'Owner: {o}. A family heirloom: not for sale at any price.'), { o: ownerName(rl) })));
     } else if (rl.st === 'kept') {
       const ask = relicPrice(s, rl);
       const at = relicAttach(s, rl);
@@ -190,7 +192,7 @@ function tierBlock31(s: GameState, rl: Relic): HTMLElement {
       pill(t(l('Autenticidade: {a}', 'Authenticity: {a}'), { a: t(AUTH[m.auth]) }), m.auth === 'fake' ? 'bad' : m.auth === 'unk' ? '' : 'good'),
       pill(t(l('Importância: {n}', 'Importance: {n}'), { n: Math.round(m.importance) }))),
     h('p', { class: 'small muted' }, t(l('Como chegou a este nível:', 'How it reached this level:'))),
-    h('ul', { class: 'attr-list' }, m.why.map((w) => h('li', null, w.y ? h('small', { class: 'muted' }, `${w.y} · `) : null, t(w.t)))));
+    h('ul', { class: 'small' }, m.why.map((w) => h('li', null, w.y ? `${w.y} · ` : '', t(w.t)))));
 }
 /** R31 G: dar de presente a quem você conhece (a peça já é sua). */
 function giftRow31(s: GameState, rl: Relic, res: (e: L | null, ok: L) => void): HTMLElement | null {

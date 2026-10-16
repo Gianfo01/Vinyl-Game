@@ -200,6 +200,7 @@ export type NegRes = { r: 'accept' | 'counter' | 'refuse'; price: number; msg: L
 export function negotiateRelic(s: GameState, id: string, mult: number): NegRes | L {
   const rl = find(s, id);
   if (!rl || rl.st !== 'kept') return l('O dono atual não está negociando.', 'The current owner is not negotiating.');
+  if (rl.meta?.fix) return l('Relíquia de família: não está à venda por preço nenhum.', 'A family heirloom: not for sale at any price.');
   if (rl.cd && s.week < rl.cd) return l('O dono não quer conversa agora. Tente mais tarde.', 'The owner will not talk right now. Try later.');
   const ask = relicPrice(s, rl);
   const price = Math.round(ask * clamp(mult, 0.5, 2.5));

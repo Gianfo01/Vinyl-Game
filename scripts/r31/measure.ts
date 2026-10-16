@@ -60,6 +60,16 @@ async function runOne(j: Job): Promise<Res30> {
   // mesma configuração do lote balance19 (selo, rock, base padrão do jogo)
   const s = createGame(defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' }));
   const createMs = performance.now() - t0;
+  // R31 onda 3: interruptores pela variável R31_SW ("id=valor,id2=valor") para medir regra ligada/desligada
+  if (process.env.R31_SW) {
+    const { setSw, switchDef } = await import('../../src/sim/r31/switches');
+    for (const kv of process.env.R31_SW.split(',')) {
+      const [id, raw] = kv.split('=');
+      const d = switchDef(id);
+      if (!d) throw new Error(`R31_SW: interruptor desconhecido ${id}`);
+      setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);
+    }
+  }
   const w0 = ownerOf(s).wealth;
   const per: number[] = [], cpu: number[] = [];
   const years: Year30[] = [];
