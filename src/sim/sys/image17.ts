@@ -8,6 +8,7 @@
 // vai ao artista/espólio. Gerador próprio por mês e por pedido.
 
 import { Rng, clamp } from '../../core/rng';
+import { lookK31 } from '../r31/lookhook31'; // R31 · AP: imagem na publicidade
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
@@ -122,7 +123,7 @@ registerSimHook('month', 'image17', (s) => {
     const r = Rng.fromSeed(`${s.config.seed}:img17m:${d.id}:${s.year}:${s.month}`);
     let gross = 0;
     const why: string[] = [];
-    if (d.scopes.includes('ads') && a.fame >= 30 && (d.adsOff ?? 0) < s.week) { gross += money(s, a.fame * a.fame * 0.6); why.push('ads'); }
+    if (d.scopes.includes('ads') && a.fame >= 30 && (d.adsOff ?? 0) < s.week) { gross += Math.round(money(s, a.fame * a.fame * 0.6) * lookK31(s, a, 'ads')); why.push('ads'); } // R31 · AP: rosto da campanha
     if (d.scopes.includes('voice_ai') && s.year >= 2023) { gross += money(s, 25 * Math.pow(Math.max(1, a.fame), 1.25)); why.push('voice'); }
     if (d.scopes.includes('biopic') && !d.done.includes('biopic') && (a.fame >= 60 || (d.estate && a.legend)) && r.chance(0.04)) {
       d.done.push('biopic');

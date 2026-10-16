@@ -28,6 +28,7 @@
 // sistemas com ganchos (crise do ano da bolsa) chega por `registerValueEra31`.
 
 import { clamp } from '../../core/rng';
+import { lookK31 } from './lookhook31'; // R31 · AP: imagem do elenco no valor
 import { formatMoney } from '../../core/money';
 import { FORMATS, type FormatId } from '../../data/rules';
 import { l, type L } from '../../data/world';
@@ -217,7 +218,7 @@ export function actEarning31(s: GameState, a: Act, owner?: string): { e: number;
     if (r && (!owner || r.owner === owner) && s.week - r.week <= 104 && s.week >= r.week) track += Math.max(0, r.revenue) / 2;
   }
   const base = track > 0 ? 0.4 * prior + 0.6 * track : prior;
-  const e = base * stage * mom * cancel;
+  const e = base * stage * mom * cancel * lookK31(s, a, 'value'); // R31 · AP: imagem do artista (o que o mercado vê)
   const why = fmtL(l('fama vista pelo mercado {f}, {y} anos de carreira{t}{c}', 'fame seen by the market {f}, {y} years of career{t}{c}'),
     { f: Math.round(mf), y: yrs, t: track > 0 ? fmtL(l(', discos recentes rendendo {r} por ano', ', recent records earning {r} a year'), { r: mL(track) }) : '', c: cancel < 1 ? l(', cancelado', ', cancelled') : '' });
   return { e, why };
