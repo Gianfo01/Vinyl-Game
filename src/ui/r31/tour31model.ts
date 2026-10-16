@@ -3,7 +3,7 @@
 //   linha da rota      = ordem das datas; ônibus = onde a turnê está (dia N de M);
 //   calendário do mês  = show feito / show a fazer / dia de viagem (pontilhado) / estúdio / CONFLITO (vermelho, "!") /
 //                        "+" = dia livre para marcar (abre o painel rápido de turnê do artista).
-// Lê as turnês do motor (s.tours), as sessões de estúdio e os shows já marcados (clash17.playerShows). Nada é gravado.
+// Lê as turnês do motor (tourList(s)), as sessões de estúdio e os shows já marcados (clash17.playerShows). Nada é gravado.
 // A tabela detalhada (operação da turnê, datas, alteração) continua logo abaixo da cena.
 
 import { cityById, l, type L } from '../../data/world';
@@ -11,7 +11,7 @@ import { playerShows, weekOfDay } from '../../sim/sys/clash17';
 import { playerAct, playerPerson } from '../../sim/sys/life';
 import type { GameState } from '../../sim/types';
 import type { Tour } from '../../sim/xtypes';
-import { cancelTour } from '../../sim/tours';
+import { cancelTour, tourList } from '../../sim/tours';
 import { dateOfDay, dayOfDate, fmtL, playerActs } from '../../sim/util';
 import { MON31, plural31, type Spot31 } from './scene31model';
 
@@ -58,7 +58,7 @@ export const dotR31 = (cap: number): number => (cap >= 15000 ? 7 : cap >= 3000 ?
 /** Turnê mostrada: a escolhida, senão a que está na estrada, senão a próxima marcada, senão a última recente. */
 export function pickTour31(s: GameState, tourId?: string): Tour | undefined {
   const mine = new Set(playerActs(s));
-  const xs = (s.tours ?? []).filter((x) => mine.has(x.actId));
+  const xs = tourList(s).filter((x) => mine.has(x.actId));
   return xs.find((x) => x.id === tourId)
     ?? xs.find((x) => x.status === 'running')
     ?? xs.find((x) => x.status === 'planned')
@@ -69,7 +69,7 @@ const daysIn = (y: number, m: number): number => new Date(Date.UTC(y, m + 1, 0))
 
 export function tour31(s: GameState, o: { tourId?: string; draft?: string[]; month?: { year: number; month: number } } = {}): Tour31 {
   const mine = new Set(playerActs(s));
-  const picks: TourPick31[] = (s.tours ?? []).filter((x) => mine.has(x.actId) && (x.status === 'running' || x.status === 'planned' || (x.status === 'done' && s.day - (x.stops.at(-1)?.day ?? 0) < 120)))
+  const picks: TourPick31[] = tourList(s).filter((x) => mine.has(x.actId) && (x.status === 'running' || x.status === 'planned' || (x.status === 'done' && s.day - (x.stops.at(-1)?.day ?? 0) < 120)))
     .map((x) => ({ id: x.id, name: x.name, actName: s.acts[x.actId]?.name ?? '—', status: x.status }));
   const tr = pickTour31(s, o.tourId);
   const draftIds = !tr ? (o.draft ?? []).filter((id) => !!cityById[id]) : [];

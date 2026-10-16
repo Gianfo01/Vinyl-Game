@@ -1,3 +1,4 @@
+import { addRealVenue, realVenues } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/rng';
 import { defaultConfig } from '../src/sim/bot';
@@ -21,7 +22,7 @@ import { cancelMonth19, cx19, respond19 } from '../src/sim/sys/cancel19';
 import { ins19, insureKey19, keyPerson19, setPlan19 } from '../src/sim/sys/insure19';
 import { cul19, setCulture19 } from '../src/sim/sys/culture19';
 import { nameBrands19, nm19, sellName19, targets19 } from '../src/sim/sys/naming19';
-import { VENUES17, v17, venueOpen } from '../src/sim/sys/venues17';
+import { VENUES17, venueOpen } from '../src/sim/sys/venues17';
 import { BRANDS } from '../src/data/content';
 import { l } from '../src/data/world';
 import type { Act, GameState, Release } from '../src/sim/types';
@@ -110,11 +111,11 @@ describe('r19 T7 — mercado B: cancel19, insure19, culture19, naming19', () => 
     oldRel(s, a, 2015);
     expect(takeAd19(s, a.id, b.id, 'jingle', 200000)).toBeNull();
     const vd = VENUES17.find((d) => venueOpen(s, d) && d.buyable !== false)!;
-    v17(s).own.push({ id: vd.id, rep: 50, policy: 'curated', price: 'mid', cond: 80, maint: true, y: s.year, paid: 0, booked: [], total: 0, actId: a.id } as never);
+    addRealVenue(s, { id: vd.id, rep: 50, policy: 'curated', price: 'mid', cond: 80, maint: true, y: s.year, paid: 0, booked: [], total: 0, actId: a.id } as never);
     const tg = targets19(s).find((x) => x.k === 'v')!;
     expect(sellName19(s, 'v', tg.id, nameBrands19(s)[0].id, 3)).toBeNull();
     expect(kinds(s, 'naming_deal').length).toBe(1);
-    expect(v17(s).own[0].rep).toBeLessThan(50);
+    expect(realVenues(s)[0].rep).toBeLessThan(50);
     const cash0 = s.player.cash;
     scandal(s, a.id, 'conduct', 75);
     const w = cx19(s).w.find((x) => x.act === a.id)!;

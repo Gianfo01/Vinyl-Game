@@ -13,7 +13,7 @@
 import { CITIES, MARKETS, cityById, l, type L } from '../../data/world';
 import { HQ_LEVELS } from '../../data/rules';
 import { t } from '../../i18n/strings';
-import { cityDemand, cancelTour } from '../../sim/tours';
+import { cityDemand, cancelTour, tourList } from '../../sim/tours';
 import { playerShows, type PShow } from '../../sim/sys/clash17';
 import { hardConflictCount20, showConflict20 } from '../../sim/sys/shows20';
 import { DEPTS, buildingPrice, hq6 } from '../../sim/sys/hq6';
@@ -100,7 +100,7 @@ function upcomingSection(s: GameState): HTMLElement {
 /** Turnê dona de uma data (para a sala de controle). */
 function tourOf(s: GameState, x: PShow): Tour | undefined {
   if (x.kind !== 'tour') return undefined;
-  return s.tours.find((tr) => tr.actId === x.actId && tr.name === x.label && (tr.status === 'planned' || tr.status === 'running'));
+  return tourList(s).find((tr) => tr.actId === x.actId && tr.name === x.label && (tr.status === 'planned' || tr.status === 'running'));
 }
 
 /** r20b (Z1): incidentes do show (ao vivo e de público) e as notícias ligadas pelo mesmo id de show. */
@@ -122,7 +122,7 @@ export function showNewsBlock20(s: GameState, key: string): HTMLElement | null {
 export function controlRoom20(s: GameState): HTMLElement | null {
   const all = playerShows(s);
   const x = all.find((y) => y.w >= s.week);
-  const lastTour = [...s.tours].filter((tr) => tr.stops.some((st) => st.status === 'played')).sort((a, b) => (b.stops.filter((st) => st.status === 'played').at(-1)?.day ?? 0) - (a.stops.filter((st) => st.status === 'played').at(-1)?.day ?? 0))[0];
+  const lastTour = [...tourList(s)].filter((tr) => tr.stops.some((st) => st.status === 'played')).sort((a, b) => (b.stops.filter((st) => st.status === 'played').at(-1)?.day ?? 0) - (a.stops.filter((st) => st.status === 'played').at(-1)?.day ?? 0))[0];
   const lastStop = lastTour?.stops.filter((st) => st.status === 'played').at(-1);
   if (!x && !lastStop) return null;
   const body: (HTMLElement | null)[] = [];
@@ -237,7 +237,7 @@ function showsHub20(s: GameState): HTMLElement {
       // r27 (J): uma coluna — conflitos, depois próximas datas e turnês lado a lado, e as tabelas largas por artista embaixo
       // (antes a grade de 2 colunas jogava a tabela de um artista na coluna estreita e cortava as colunas)
       controlRoom20(s), h('div', { class: 'split27' }, upcomingSection(s), activeToursSection(s)), gigsSection20(s)) },
-    { id: 'tours', label: T(l('Turnês', 'Tours')), icon: 'tour-bus', badge: s.tours.filter((x) => x.status === 'running').length || undefined, render: () => toursTab(s) },
+    { id: 'tours', label: T(l('Turnês', 'Tours')), icon: 'tour-bus', badge: tourList(s).filter((x) => x.status === 'running').length || undefined, render: () => toursTab(s) },
     { id: 'ops', label: T(l('Políticas e operação', 'Policies and operation')), icon: 'handshake', render: () => h('div', null,
       intro(l('Regras que valem para todas as datas (cada data pode sobrescrever), notas de palco, ingressos e merch.', 'Rules for every date (each date can override), stage notes, tickets and merch.')),
       ...secs('shows', s, SHOWS_TABS20.ops), merchSection(s), ...leftovers('shows', s, CLAIMED_SHOWS)) },

@@ -8,6 +8,7 @@
 // sazonal com requisito, custo, prazo e consequência, junto com as decisões grandes de intrigue.ts).
 // Conquistas narrativas ("1967: primeiro disco de ouro do selo — 'X' de Y"). Sem sorteio próprio.
 
+import { builtVenue } from './venuestore27';
 import { clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
@@ -21,7 +22,6 @@ import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { releasesOfYear17 } from '../relidx17';
 import { capital } from './capital';
 import { DECISIONS, intrigue } from './intrigue';
-import { liveOf } from './live/state';
 import { ownerOf } from './people/owner';
 import { burn18 } from './policy18';
 import { rule31, setDir31 } from '../deleg31';
@@ -220,12 +220,12 @@ export const PATHS18: PathDef18[] = [
     tiers: [l('Selo de nicho', 'Niche label'), l('Selo cult', 'Cult label'), l('Referência artística', 'Artistic reference')],
     ending: [l('Ninguém lembra do selo.', 'Nobody remembers the label.'), l('Colecionadores ainda procuram seus discos.', 'Collectors still hunt for its records.'), l('Um selo cult: o logotipo na capa já era garantia.', 'A cult label: the logo on the sleeve was a guarantee.'), l('Referência artística: a história da música cita o selo em cada capítulo.', 'Artistic reference: music history cites the label in every chapter.')] },
   { id: 'live', icon: 'stage', name: l('Rede ao vivo', 'Live network'), desc: l('Shows como negócio: palcos, turnês, agenciamento.', 'Shows as a business: stages, tours, booking.'),
-    relevant: (s) => !!liveOf(s).venue || vl(s, 'booking').length > 0 || s.player.stats.headlines > 0,
+    relevant: (s) => !!builtVenue(s) || vl(s, 'booking').length > 0 || s.player.stats.headlines > 0,
     kpis: (s) => {
       const t = s.player.totals, all = Math.max(1, (t.sales ?? 0) + (t.live ?? 0) + (t.publishing ?? 0));
       return [
         K(l('Peso do ao vivo na receita', 'Live share of revenue'), ((t.live ?? 0) / all) * 100, 40, 'pct', l('Shows ÷ (vendas + shows + edição), acumulado.', 'Shows ÷ (sales + shows + publishing), cumulative.')),
-        K(l('Casa de shows própria', 'Own venue'), liveOf(s).venue ? 100 : 0, 100, 'pct', l('Um palco para chamar de seu.', 'A stage to call your own.')),
+        K(l('Casa de shows própria', 'Own venue'), builtVenue(s) ? 100 : 0, 100, 'pct', l('Um palco para chamar de seu.', 'A stage to call your own.')),
         K(l('Shows como atração principal', 'Headline shows'), s.player.stats.headlines, 25, 'num', l('Headlines de festival e turnê.', 'Festival and tour headlines.')),
         K(l('Clientes de agenciamento', 'Booking clients'), vl(s, 'booking').reduce((n, v) => n + (v.clients?.length ?? 0), 0), 5, 'num', l('Atos que sua agência roteia.', 'Acts your agency routes.')),
       ];

@@ -2,6 +2,7 @@
 // reunião negociada, genealogia e dinastias, carreira solo jogável, tributos, Hall da Fama,
 // envelhecimento e morte (GDD §8, §10, §36, §43, §44, §46.5).
 
+import { tourList } from './tours';
 import { ECHOES_CAL19 } from './awardcal19';
 import { dropFromFactions20, exitMember20, fixLeader20 } from './members20';
 import { clamp, type Rng } from '../core/rng';
@@ -133,7 +134,7 @@ function familyMonth(s: GameState, r: Rng): void {
       // agenda própria do parceiro: muda de tempos em tempos e cobra presença
       if (fam.partner) {
         if (r.chance(0.04)) fam.partner.agenda = r.pick(AGENDAS);
-        const away = (s.loadNow[actId] ?? 0) > 75 || s.tours.some((t) => t.actId === actId && t.status === 'running');
+        const away = (s.loadNow[actId] ?? 0) > 75 || tourList(s).some((t) => t.actId === actId && t.status === 'running');
         fam.partner.trust = clamp(fam.partner.trust + (away ? -2 : 0.5), 0, 100);
         fam.partner.wellbeing = clamp(fam.partner.wellbeing + (away ? -1 : 0.3), 0, 100);
         if (fam.partner.trust < 20 && r.chance(0.08)) {

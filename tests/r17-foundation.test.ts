@@ -15,7 +15,7 @@ import { remember } from '../src/sim/util';
 import { createGame } from '../src/sim/worldgen';
 import { chron } from '../src/sim/sys/chron9';
 import { f16 } from '../src/sim/sys/fame16';
-import { intrigue } from '../src/sim/sys/intrigue';
+import { plantSecret } from '../src/sim/sys/intrigue';
 import { _bridge17 } from '../src/sim/sys/bridge17';
 import { SITS, npcChoice, runSituations, sit17 } from '../src/sim/sys/situations17';
 import '../src/sim/sys/sits17';
@@ -89,8 +89,10 @@ describe('r17 fundação', () => {
     expect(useHold(s, g.id, 'call').ok).toBe(false);
     expect(useHold(s, g.id, 'forgive').ok).toBe(true);
     // segredo antigo (intrigue) aparece como hold virtual do jogador
-    intrigue(s).secrets[`act:${a.id}`] = [{ id: `act:${a.id}:affair`, target: { kind: 'act', id: a.id }, kind: 'affair', known: true, exposed: false }];
-    expect(allHolds(s).some((x) => x.src === 'intrigue' && x.target === a.id && x.kind === 'secret')).toBe(true);
+    // UNI-4: o segredo nasce no secrets23; ato fictício (sobre gente real, invenção para no boato e não vira gancho)
+    const fic = Object.values(s.acts).find((x) => !x.catalogNo && x.owner !== 'player' && x.status !== 'retired')!;
+    plantSecret(s, { kind: 'act', id: fic.id }, 'affair', true);
+    expect(allHolds(s).some((x) => x.src === 'intrigue' && x.target === fic.id && x.kind === 'secret')).toBe(true);
   });
 
   it('estresse: curto + longo, porquê e quebra que usa mecânicas existentes', () => {

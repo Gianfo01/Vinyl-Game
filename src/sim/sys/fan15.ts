@@ -3,6 +3,7 @@
 // com consequência visível em superfãs, toxicidade, confiança, imagem, hype e bilheteria. O ritual de fã
 // muda com a época (cartas → rádio → TV → fitas → fóruns → streaming → vídeo curto).
 
+import { tourList } from '../tours';
 import { clamp, Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { emitEvent, type EventDef } from '../events';
@@ -58,7 +59,7 @@ export function fanMonth15(s: GameState): void {
   const opts: string[] = [];
   const v = vaultSong(s, a.id);
   if (v) opts.push('fan15_vault');
-  if (s.year >= 1965 && s.tours.some((t) => t.actId === a.id)) opts.push('fan15_tickets');
+  if (s.year >= 1965 && tourList(s).some((t) => t.actId === a.id)) opts.push('fan15_tickets');
   const riv = rivalFandom(s, a.id);
   if (riv && f.toxicity > 25) opts.push('fan15_war');
   if (!opts.length) return;

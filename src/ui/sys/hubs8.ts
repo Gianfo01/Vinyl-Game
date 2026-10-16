@@ -2,6 +2,7 @@
 // de premiações (indicados, campanhas, convite para tocar, vencedores) e de críticos (região, gosto,
 // notas que deu, relação com o selo).
 
+import { pastOf8 } from '../../sim/sys/feststore';
 import { CRAFT28, CRAFT_MONTH28, CRAFT_START28 } from '../../sim/sys/awards28'; // r28 F8
 import { FESTIVALS } from '../../data/catalog';
 import { COUNTRY_INFO, countryInfoByA3 } from '../../data/countries';
@@ -97,9 +98,8 @@ export function openFestivalPage(fi: number): void {
   if (!f) return;
   let close = () => {};
   const draw = () => {
-    const st = fest8(s);
     const ed = editionOf(s, fi);
-    const past = st.past[fi] ?? [];
+    const past = pastOf8(s, fi);
     const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
     const form = { actId: mine[0]?.id ?? '', tier: 'afternoon' as FestTier, fee: 0 };
     const reply = h('div', { class: 'eval' });

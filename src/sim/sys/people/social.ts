@@ -2,6 +2,7 @@
 // geração e filial/selo; cada grupo tem um líder de vestiário cujo humor contamina os outros.
 // Amizades e rixas entre bandas evoluem todo mês; contratar e dispensar mexe nos grupos.
 
+import { tourList } from '../../tours';
 import type { Rng } from '../../../core/rng';
 import { FAMILIES, familyOf, l, type L } from '../../../data/world';
 import type { Act, GameState } from '../../types';
@@ -135,7 +136,7 @@ export function socialMonth(s: GameState, r: Rng): void {
       const fam = familyOf(a.genre) === familyOf(b.genre);
       if (fam) v += 0.8;
       if (a.city === b.city) v += 0.6;
-      if (s.tours.some((t) => t.status !== 'cancelled' && ((t.actId === a.id && t.partnerActId === b.id) || (t.actId === b.id && t.partnerActId === a.id)))) v += 5;
+      if (tourList(s).some((t) => t.status !== 'cancelled' && ((t.actId === a.id && t.partnerActId === b.id) || (t.actId === b.id && t.partnerActId === a.id)))) v += 5;
       // disputa direta nas paradas
       if (fam && best[a.id] < 30 && best[b.id] < 30) v -= 3;
       v += r.normal(0, 1.2);

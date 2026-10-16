@@ -7,7 +7,7 @@ import { t } from '../../i18n/strings';
 import { readAudience, audience } from '../../sim/sys/audience8';
 import { PHASES, bondBalance, bondText, careerPhase, identity, prefsLines, prefsOf, reactionText } from '../../sim/sys/identity8';
 import { profileById } from '../../sim/sys/identity/data';
-import { PLAYBOOKS, moveText, playbookOf, rivalProfile, rivals8, sceneName } from '../../sim/sys/rivals8';
+import { PLAYBOOKS, moveText, playbookOf, rivalProfile, rivals8, sceneName, movesOf8, techOf8 } from '../../sim/sys/rivals8';
 import { STEP_TXT, fundCost, fundExperimental, stories, storyTitle, type Story } from '../../sim/sys/stories8';
 import { techById } from '../../data/rules';
 import type { Act, GameState } from '../../sim/types';
@@ -124,9 +124,9 @@ function labelPlaybook(s: GameState, id: string): HTMLElement | null {
   if (!lb) return null;
   const pb = PLAYBOOKS[playbookOf(lb)];
   const st = rivals8(s);
-  const moves = (st.log[id] ?? []).slice().reverse();
+  const moves = movesOf8(s, id).slice().reverse();
   const eyes = Object.entries(st.interest).filter(([, v]) => v.lb === id).map(([actId]) => actId).filter((x) => s.acts[x]);
-  const bet = st.tech[id];
+  const bet = techOf8(s, id);
   return h('div', { class: 'playbook8' },
     h('h4', null, t(l('Estratégia reconhecível', 'Recognizable strategy'))),
     h('p', null, pill(t(pb.name), 'gold'), ' ', h('span', { class: 'muted small' }, t(pb.desc))),

@@ -11,7 +11,7 @@ import { VENUE_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { facts17, type Fact } from '../facts17';
 import { KIT0, type Kit18, type KitInfo } from '../tourhook18';
-import { PRODUCTION_COST, TICKET, cityDemand } from '../tours';
+import { PRODUCTION_COST, TICKET, cityDemand, tourList } from '../tours';
 import { legInfo } from '../travelAdapter';
 import { activeMembers } from '../capacity';
 import type { GameState } from '../types';
@@ -34,7 +34,7 @@ export function parseShowKey20(key: string): { tourId: string; day: number } | n
 /** Turnê e data de um id de show (se ainda existirem). */
 export function showOf20(s: GameState, key: string): { tour: Tour; stop: TourStop } | null {
   const k = parseShowKey20(key);
-  const tour = k ? s.tours.find((x) => x.id === k.tourId) : undefined;
+  const tour = k ? tourList(s).find((x) => x.id === k.tourId) : undefined;
   const stop = tour?.stops.find((x) => x.day === k!.day);
   return tour && stop ? { tour, stop } : null;
 }
@@ -116,7 +116,7 @@ function restLogistics(s: GameState, t: Tour, stops: TourStop[], crew: number, k
 
 /** Prévia de uma alteração (não muda nada). */
 export function tourChangeQuote20(s: GameState, tourId: string, ch: TourChange20): TourChangeQuote20 {
-  const t = s.tours.find((x) => x.id === tourId);
+  const t = tourList(s).find((x) => x.id === tourId);
   const kit0: Kit18 = { ...KIT0, ...(t?.kit18 ?? {}) };
   const empty = (why: L): TourChangeQuote20 => ({ ok: false, why, stops: 0, before: 0, after: 0, delta: 0, fee: 0, cash: 0, revBefore: 0, revAfter: 0, kit: kit0, crew: t?.crew ?? 0, parts: [], warn: [] });
   if (!t || (t.status !== 'planned' && t.status !== 'running')) return empty(l('Turnê encerrada ou cancelada: nada a alterar.', 'Tour finished or cancelled: nothing to change.'));
@@ -152,7 +152,7 @@ export function tourChangeQuote20(s: GameState, tourId: string, ch: TourChange20
 export function changeTour20(s: GameState, tourId: string, ch: TourChange20): L | TourChangeQuote20 {
   const q = tourChangeQuote20(s, tourId, ch);
   if (!q.ok) return q.why ?? l('Alteração inválida.', 'Invalid change.');
-  const t = s.tours.find((x) => x.id === tourId)!;
+  const t = tourList(s).find((x) => x.id === tourId)!;
   const fut = futureStops20(s, t);
   const n = t.log.length;
   if (q.cash && !post(s, `tourchg:${t.id}:${n}`, q.cash, 'live_costs', `Alteração ${t.name}`)) return l('Alteração já lançada nesta semana.', 'Change already posted this week.');

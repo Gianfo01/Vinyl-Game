@@ -2,13 +2,14 @@
 // Festivais (aba Seus festivais): conceito, line-up por palco e horário com negociação, ingressos em
 // lotes, financiamento com fluxo de caixa datado e a história das edições com os porquês.
 
+import { ownFests } from '../../sim/sys/feststore';
 import { CITIES, FAMILIES, l, type FamilyId, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
   IDENTS, LENS, SPONS, TECH, TIMES, announce12, ask12, clashes12, drop12, f12, festOf, flow12, found12, loan12, loanSize, lotPrice, move12, muOf, offer12, openEarly12,
   proj12, setCal12, setIdent12, setSales12, stagesOf, structCost, sync12, takeSponsor12, ventureOf, type Ident,
 } from '../../sim/sys/fest12';
-import { guestAccepts, isMine, liveOf, type OwnFestival } from '../../sim/sys/live';
+import { guestAccepts, isMine, type OwnFestival } from '../../sim/sys/live';
 import { foundCost, funds, type Holder, type Venture } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
 import { money, playerActs } from '../../sim/util';
@@ -226,10 +227,9 @@ function foundForm12(s: GameState): HTMLElement {
 
 export function festSection12(s: GameState): HTMLElement {
   sync12(s);
-  const lv = liveOf(s);
   return section(t(l('Festival próprio', 'Your own festival')),
     h('p', { class: 'muted small' }, t(l('O mesmo festival aparece aqui e em Festivais (aba Seus festivais): conceito, financiamento, contratação, vendas, operação e a próxima edição.', 'The same festival appears here and in Festivals (Your festivals tab): concept, financing, booking, sales, operations and the next edition.'))),
-    lv.fests.map((f) => festCard12(s, f)),
+    ownFests(s).map((f) => festCard12(s, f)),
     s.year >= 1950 ? foundForm12(s) : h('p', { class: 'muted small' }, t(l('Festivais ao ar livre só surgem nos anos 1950.', 'Open-air festivals only appear in the 1950s.'))),
   );
 }

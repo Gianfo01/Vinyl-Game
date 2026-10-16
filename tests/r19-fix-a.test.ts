@@ -1,4 +1,5 @@
 // Rodada 19 (onda 5, A): carreiras que sustentam a partida desde o mês 1 e economia interna sem dinheiro criado.
+import { ownFests } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import type { Rng } from '../src/core/rng';
 import { defaultConfig } from '../src/sim/bot';
@@ -12,7 +13,6 @@ import { f12, festOf, proj12, sync12 } from '../src/sim/sys/fest12';
 import { holdsBetween } from '../src/sim/holds17';
 import { bizLabel19, bizProd19, intraPay19, intraTotal19, setHouse19 } from '../src/sim/sys/intra19';
 import { festModel } from '../src/sim/sys/live/festival';
-import { liveOf } from '../src/sim/sys/live/state';
 import { c12, mgRenew12 } from '../src/sim/sys/manager12';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { prodOwn19 } from '../src/sim/sys/studio12';
@@ -40,7 +40,7 @@ describe('r19 A — carreiras sem selo', () => {
     expect(label.player.cash - fest.player.cash).toBe(starterCost19(fest, 'festival'));
     expect(upkeep(fest, v)).toBeLessThan(upkeep(fest, { ...v, id: 'x' }));
     sync12(fest);
-    const f = liveOf(fest).fests[0];
+    const f = ownFests(fest)[0];
     expect(groundOf19(fest, f.id)).toBe(0);
     expect(festModel(fest, f).capacity).toBeLessThanOrEqual(GROUND19[0].cap);
     expect(growGround19(fest, f.id)).toBeTruthy(); // precisa de 1 edição
@@ -48,7 +48,7 @@ describe('r19 A — carreiras sem selo', () => {
 
   it('procura do festival cai abaixo da capacidade com line-up fraco e sobe com line-up forte', () => {
     const s = fest;
-    const f = liveOf(s).fests[0];
+    const f = ownFests(s)[0];
     car19(s).ground[f.id] = 2; // terreno próprio: o teto é o portão
     const x = f12(s, f);
     x.cyc.phase = 'onsale';
@@ -79,7 +79,7 @@ describe('r19 A — carreiras sem selo', () => {
   it('renovação do mandato vira cartão; liberar em bons termos deixa um favor', () => {
     const s = mgr;
     const a = actFor(s, 15);
-    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0 });
     c12(s, a.id);
     expect(mgRenew12.f(s, a.id, 0.5)).toBe(true);
     const d = s.decisions.find((x) => x.eventId === 'c19_mg_renew' && x.ctx.act === a.id)!;
@@ -125,7 +125,7 @@ describe('r19 A — economia interna', () => {
   it('cachê da própria banda no próprio festival é interno (soma do caixa não muda)', async () => {
     const s = game(['festival', 'musician'], 'r19-fa4');
     sync12(s);
-    const f = liveOf(s).fests[0];
+    const f = ownFests(s)[0];
     const band = Object.values(s.acts).find((x) => x.playerBand)!;
     expect(band).toBeTruthy();
     const { ownPaid19 } = await import('../src/sim/sys/fest12');

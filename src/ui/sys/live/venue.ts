@@ -1,5 +1,6 @@
 // Interface: casa de shows própria, residência em cassino e megaeventos beneficentes.
 
+import { builtVenue } from '../../../sim/sys/venuestore27';
 import { lockBtn31 } from '../../r31/lock31';
 import { venueLock31 } from '../../r31/quick31core';
 import { CITIES, l } from '../../../data/world';
@@ -21,7 +22,7 @@ const buy = { kind: 'club' as 'club' | 'theater' | 'arena', city: '', name: '' }
 export function setVenueCity31(cityId: string): void { buy.city = cityId; }
 
 function venueSection(s: GameState): HTMLElement {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   if (!v) {
     buy.city ||= s.config.homeCity;
     const k = venueKind(buy.kind);

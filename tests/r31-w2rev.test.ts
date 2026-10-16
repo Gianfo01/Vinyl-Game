@@ -6,6 +6,7 @@
 //   5. desfazer grava "não repetir" (ato + responsabilidade) e estorna o gasto;
 //   6. rescindir só clássico/360; 7. opção de formação sem casar prefixo; 8. a tela de delegação não grava ao abrir;
 //   9. contraproposta devolve o motivo; 10. proposta recusada pela cena sai das ofertas; 11. textos; 12. um diário só.
+import { ownFests } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
 import { defaultConfig } from '../src/sim/bot';
@@ -17,8 +18,7 @@ import { agendaCount31, anrMonth31, setAgendaMode31 } from '../src/sim/sys/deleg
 import { addOrder, d16, quality, runStaff } from '../src/sim/sys/deleg16';
 import { roleLoads } from '../src/sim/sys/capacity14';
 import { budgetLeft, overCapacity, pace8 } from '../src/sim/sys/pacing8';
-import { c12 } from '../src/sim/sys/tour12';
-import { liveOf } from '../src/sim/sys/live/state';
+import { shows12 } from '../src/sim/sys/tour12';
 import { createFestival } from '../src/sim/sys/live/festival';
 import { myContract31, rescind31, rescindQuote31 } from '../src/sim/r31/rescind31';
 import { rng19 } from '../src/sim/rng19';
@@ -96,7 +96,7 @@ describe('W2-REV · delegação', () => {
       if (ask) { expect(setMode31(s, 'tour', 'partial')).toBeNull(); setDir31(s, 'tour', { ask }); }
       const n0 = f.lineup.length;
       runStaff(s, rng19(s, 'deleg16'), ag);
-      return { s, signed: liveOf(s).fests[0].lineup.length - n0 };
+      return { s, signed: ownFests(s)[0].lineup.length - n0 };
     };
     const free = run(0);
     expect(free.signed).toBeGreaterThan(0);
@@ -158,9 +158,9 @@ describe('W2-REV · delegação', () => {
     const e = autoLog31(s, { r: 'tour', act: act.id }).find((x) => x.undo?.k === 'show');
     expect(e).toBeTruthy();
     expect(undo31(s, e!.id)).toBeNull();
-    const n = c12(s).shows.filter((x) => x.actId === act.id && x.status === 'booked').length;
+    const n = shows12(s).filter((x) => x.actId === act.id && x.status === 'planned').length;
     runStaff(s, rng19(s, 'deleg16'), ag);
-    expect(c12(s).shows.filter((x) => x.actId === act.id && x.status === 'booked').length).toBe(n);
+    expect(shows12(s).filter((x) => x.actId === act.id && x.status === 'planned').length).toBe(n);
     expect(autoLog31(s, { r: 'tour', act: act.id, n: 1 })[0].t.pt).toContain('desfez');
   });
 

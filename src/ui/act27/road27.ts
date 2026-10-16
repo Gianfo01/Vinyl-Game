@@ -10,10 +10,10 @@ import { VENUE_TIERS } from '../../data/rules';
 import { CITIES, cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
-  autoPick27, basePlan27, bookRoute27, ev27, isRoad27, overPolicy27, pendingRoad27, resolveRoad27, road27, roadKindName27, roadSummary27, routeView27,
+  autoPick27, basePlan27, bookRoute27, ev27, isRoad27, overPolicy27, pendingRoad27, resolveRoad27, roadOf27, roadKindName27, roadSummary27, routeView27,
   type RoadEv27, type RoadKind27, type StopView27,
 } from '../../sim/sys/road27';
-import { cityDemand, type TourPlan } from '../../sim/tours';
+import { cityDemand, type TourPlan, tourList } from '../../sim/tours';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { $, N, cityName, modal, rerender, toast } from '../common';
@@ -148,12 +148,12 @@ export function openRoute27(actId0?: string, cities0: string[] = [], o: { classi
 export function openRoad27(tourId: string, onDone?: (played: boolean) => void): void {
   const s = store.game;
   if (!s) { onDone?.(false); return; }
-  const tr = s.tours.find((x) => x.id === tourId);
+  const tr = tourList(s).find((x) => x.id === tourId);
   if (!tr || !isRoad27(s, tourId)) { toast(t(l('Turnê não encontrada.', 'Tour not found.')), 'bad'); onDone?.(false); return; }
   const root = h('div', { class: 'a27 p2b-road' });
   const view = (flash?: { t: L; tone: string }) => {
     const pend = pendingRoad27(s, 35).filter((x) => x.t.id === tourId);
-    const R = road27(s).tours[tourId];
+    const R = roadOf27(s, tourId)!;
     const sum = roadSummary27(s, tourId);
     const next = pend[0];
     const played = tr.stops.filter((x) => x.status === 'played');
@@ -214,4 +214,4 @@ function resolve27(s: GameState, tourId: string, day: number, i: number): { ok: 
 }
 
 /** Linha de entrada no painel de turnês: "Jogar" planejamento no mapa e diário das turnês de estrada. */
-export const roadTours27 = (s: GameState): { id: string; name: string }[] => s.tours.filter((x) => (x.status === 'planned' || x.status === 'running') && isRoad27(s, x.id)).map((x) => ({ id: x.id, name: x.name }));
+export const roadTours27 = (s: GameState): { id: string; name: string }[] => tourList(s).filter((x) => (x.status === 'planned' || x.status === 'running') && isRoad27(s, x.id)).map((x) => ({ id: x.id, name: x.name }));

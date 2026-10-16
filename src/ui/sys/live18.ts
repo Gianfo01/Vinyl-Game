@@ -1,6 +1,7 @@
 // Rodada 18 (live18) — interface: logística da turnê no planejador, post-mortem por show/turnê, políticas da estrada
 // (bem-estar, exclusividade com o gigante, fornecedor de merch), festival (curadoria, vizinhos, experiência) e a aba
 // Fãs no artista (motivos, lealdade × poder de compra × mobilização, facções, equipe de rua).
+import { ownFests } from '../../sim/sys/feststore';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { KIT0, type Kit18 } from '../../sim/tourhook18';
@@ -12,7 +13,6 @@ import {
 } from '../../sim/sys/live18';
 import { FAC18, FAC_NAME18, MOT18, MOT_NAME18, TEAM_FROM18, fan18, factions18, fans18, pp18, relLoad18, setSupplier18, setTeam18, teamCost18 } from '../../sim/fandom19'; // r19: fachada
 import { XP18, buyXp18, curation18, ff18, headDep18, xpCost18 } from '../../sim/sys/fest18';
-import { liveOf } from '../../sim/sys/live/state';
 import { $, N, actLink, cityName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerPageTab, registerSection } from '../registry';
@@ -84,7 +84,7 @@ function policySection(s: GameState): HTMLElement {
 }
 
 function festSection(s: GameState): HTMLElement | null {
-  const fs = liveOf(s).fests;
+  const fs = ownFests(s);
   if (!fs.length) return null;
   return section(t(l('Festival: curadoria, vizinhos e experiência', 'Festival: curation, neighbours and experience')), fs.map((f) => {
     const F = ff18(s, f), d = headDep18(s, f);

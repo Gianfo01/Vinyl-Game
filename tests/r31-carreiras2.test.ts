@@ -23,7 +23,7 @@ import { FEST31, festOf, f12, offer12, proj12, found12 } from '../src/sim/sys/fe
 import { media18 } from '../src/sim/sys/media18';
 import { radio18 } from '../src/sim/sys/radio18';
 import { disc18 } from '../src/sim/sys/discover18';
-import { c12 } from '../src/sim/sys/tour12';
+import { addShow12, c12, shows12 } from '../src/sim/sys/tour12';
 import { foundVenture, routeTour, ventures } from '../src/sim/sys/ventures9';
 import { buyVenue } from '../src/sim/sys/live/venue';
 import { addNight12 } from '../src/sim/sys/venue12';
@@ -131,12 +131,12 @@ describe('R31 CAR2 · 3. agência usa o motor de rotas (tour12)', () => {
     };
     const A = run(true), B = run(false);
     expect(A.r.ok).toBe(true);
-    const shows = c12(A.s).shows.filter((x) => x.actId === A.a.id);
+    const shows = shows12(A.s).filter((x) => x.actId === A.a.id);
     expect(shows.length).toBeGreaterThan(1);
     expect(shows.every((x) => countryOfCity(x.city) === 'DEU' && x.by === 'agent')).toBe(true);
-    expect(c12(B.s).shows.filter((x) => x.actId === B.a.id).length).toBe(0); // desligado: regra antiga (instantânea)
+    expect(shows12(B.s).filter((x) => x.actId === B.a.id).length).toBe(0); // desligado: regra antiga (instantânea)
     months(A.s, 3); months(B.s, 3);
-    const played = c12(A.s).shows.filter((x) => x.actId === A.a.id && x.status === 'played');
+    const played = shows12(A.s).filter((x) => x.actId === A.a.id && x.status === 'done');
     expect(played.length).toBeGreaterThan(0);
     expect(played.every((x) => !!x.res)).toBe(true);
     expect(f16(A.s).d[A.a.id]?.DEU ?? 0).toBeGreaterThan(0);
@@ -254,7 +254,7 @@ describe('R31 CAR2 · 7. exclusividade territorial no festival', () => {
       const fc = festOf(s, fid)!.cityId;
       const city = CITIES.map((c) => c.id).filter((c) => c !== fc && cityDistanceKm(c, fc) <= 1500).sort()[0];
       expect(city).toBeTruthy();
-      c12(s).shows.push({ id: 'shx', actId: a.id, by: 'agent', city, week: s.week + 3, tier: 1, deal: 'guarantee', fee: 1, pct: 0.85, pmult: 1, promo: 1, rate: 0.1, status: 'booked', deposit: 0 });
+      addShow12(s, { id: 'shx', actId: a.id, by: 'agent', city, week: s.week + 3, tier: 1, deal: 'guarantee', fee: 1, pct: 0.85, pmult: 1, promo: 1, rate: 0.1, deposit: 0 }); // UNI-4: show avulso em s.tours
       for (let i = 0; i < 4; i++) advanceMonth(s);
       return { s, fid, a };
     };

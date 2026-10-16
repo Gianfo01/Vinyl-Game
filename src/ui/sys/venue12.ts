@@ -1,9 +1,9 @@
 // Interface do dono de casa de shows (rodada 12): programação fixa por dia da semana, acordos,
 // público frequente, cena local, reformas, equipe, manutenção, vizinhança e metas.
 
+import { builtVenue } from '../../sim/sys/venuestore27';
 import { CITIES, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { liveOf } from '../../sim/sys/live';
 import {
   DAYS, DEALS, GOALS, NIGHTS, UPS, addNight12, bigger12, biggerCost, branch12, branchCost, dropNight12, effCap, localActs, localFee, monthEst12, neighFund12, nightEst, quiet12,
   setDeal12, setGoal12, setMaint12, setStaff12, staffNeed, upCost, upgrade12, v12, type DayK, type DealK, type Goal, type NightK, type UpK,
@@ -24,7 +24,7 @@ const add = { day: 'fri' as DayK, k: 'original' as NightK, deal: 'door' as DealK
 let branchCity = '';
 
 function venue12Section(s: GameState): HTMLElement | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return null;
   const e = monthEst12(s)!;

@@ -11,6 +11,7 @@ import type { GameState, Release, RunConfig, Song } from '../src/sim/types';
 import { createGame, genStaff, spawnProceduralAct } from '../src/sim/worldgen';
 import { chemistry, crew, crewMonth, crewSongDelta, influence, matchPoach, profileOf } from '../src/sim/sys/crew8';
 import { bookRoutedTour, negotiateTour, route, routeLegs, suggestRoute, type DealTerms } from '../src/sim/sys/route8';
+import { cityRels } from '../src/sim/city';
 import {
   acceptAiOffer, ai, aiAppealMult, aiMonth, applyCert, askConsent, certBlocker, checkBlocks, consentChance, lawLevel, lobby, makeOffer, scaleIncome, setUse,
 } from '../src/sim/sys/consent8';
@@ -164,7 +165,7 @@ describe('turnê roteada com promotor', () => {
     const res = bookRoutedTour(s, act.id, cities, terms({ support: 2, intensity: 'rest' }), 10);
     expect('tourId' in res).toBe(true);
     if (!('tourId' in res)) return;
-    expect(route(s).deals[res.tourId]).toBeDefined();
+    expect(s.tours.find((t) => t.id === res.tourId)?.r8).toBeDefined(); // UNI-4: o acordo mora na própria turnê
     invariant(s);
     for (let i = 0; i < 4 && !route(s).reports.length; i++) advanceMonth(s);
     const rep = route(s).reports.find((x) => x.tourId === res.tourId);
@@ -173,7 +174,7 @@ describe('turnê roteada com promotor', () => {
     expect(rep!.shows).toBeGreaterThan(0);
     expect(rep!.attendance).toBeGreaterThan(0);
     for (const k of ['profit', 'labelNet', 'newFans', 'catalogUnits', 'press', 'rel', 'fatigue', 'accidents'] as const) expect(Number.isFinite(rep![k])).toBe(true);
-    expect(Object.keys(route(s).rel).length).toBeGreaterThan(0);
+    expect(Object.keys(cityRels(s)).length).toBeGreaterThan(0); // UNI-4: relação com a praça em city.ts
     invariant(s);
   });
 });

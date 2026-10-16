@@ -13,8 +13,8 @@
 
 import type { L } from '../data/world';
 import { archetypeOf } from './rivals2';
-import { observed18, rm18, type Mind18, type Sign18 } from './sys/rivalmind18';
-import { playbookOf, rivalProfile, rivals8, type Move, type PlaybookId } from './sys/rivals8';
+import { observed18, type Mind18, type Sign18, mindOf18 } from './sys/rivalmind18';
+import { playbookOf, rivalProfile, type Move, type PlaybookId, movesOf8 } from './sys/rivals8';
 import { dealWith, openContests, rivalWho, type Contest } from './sys/rivals12';
 import type { Act, GameState, Label } from './types';
 import { addHeat, coolHeat, heatOf } from './util';
@@ -63,14 +63,14 @@ export interface Intents19 {
 export function intents19(s: GameState, lbId: string): Intents19 | undefined {
   const lb = s.labels[lbId];
   if (!lb) return undefined;
-  const m = rm18(s).m[lbId];
+  const m = mindOf18(s, lbId);
   const obs = m ? observed18(s, lbId) : { signs: [], read: [] };
   const live = <T extends { until: number }>(x?: T): T | undefined => (x && x.until > s.week ? x : undefined);
   const heat = heatOf(s, lbId);
   return {
     lbId, heat, band: heatBand19(heat), playbook: playbookOf(ro(lb)), archetype: archetypeOf(ro(lb)),
     target: live(m?.target), pact: live(m?.pact), signs: obs.signs, read: obs.read,
-    moves: (rivals8(s)?.log[lbId] ?? []).slice(-6), contests: openContests(s).filter((c) => c.lb === lbId), partner: !!dealWith(s, lbId),
+    moves: movesOf8(s, lbId).slice(-6), contests: openContests(s).filter((c) => c.lb === lbId), partner: !!dealWith(s, lbId),
   };
 }
 

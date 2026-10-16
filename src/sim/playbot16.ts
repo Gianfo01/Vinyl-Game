@@ -38,9 +38,9 @@ import { commit13, DEFAULT13 } from './sys/project13';
 import { candidates as syncCands, pitch15, sy15 } from './sys/sync15';
 import { scoutInPerson } from './sys/capacity14';
 import { oh } from './sys/overhead13';
-import { cityDemand, estimateTour, planTour, type TourPlan } from './tours';
+import { cityDemand, estimateTour, planTour, type TourPlan, tourList } from './tours';
 import { botKit18 } from './sys/live18';
-import { labelTourNet16, sizedDraft16, suggestRoute16 } from './route16';
+import { labelTourNet16, sizedDraft16, suggestRoute16 } from './sys/road27';
 import { advanceMonth } from './tick';
 import type { Act, GameState, RunConfig } from './types';
 import { money, playerActs } from './util';
@@ -336,7 +336,7 @@ function road(s: GameState, k: Knobs, prof: Profile): void {
     const act = s.acts[id];
     if (!act || act.fame < 6 || (act.hiatusUntil ?? 0) > s.week) continue;
     if (s.week - (M.tourW[id] ?? -999) < k.tourGap) continue;
-    if (s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running'))) continue;
+    if (tourList(s).some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running'))) continue;
     const recorded = act.songs.map((x) => s.songs[x]).filter((x) => x?.recorded).sort((a, b) => b.q - a.q);
     if (recorded.length < 4 || runway(s) < k.cut * 1.5) continue;
     // a mesma rota sugerida do planejador (botão "Sugerir rota"), só com cidades de procura real

@@ -11,6 +11,7 @@
 //     campanha (o marketing daquele lançamento).
 // Este arquivo é PURO (sem DOM): fontes de ocasiões e o registro. As telas são ligadas em flow27p2.ts.
 
+import { tourList } from '../../sim/tours';
 import { l, type L } from '../../data/world';
 import { negBlocked } from '../../sim/sys/people/negotiation';
 import { agenda27, monthKey27 } from '../../sim/sys/board27';
@@ -194,7 +195,7 @@ registerOccasions27('road', (s, w) => {
 
 registerActivity27({
   id: 'road', kind: 'road', label: l('Diário de estrada', 'Road journal'),
-  when: (s, o) => typeof o.data?.tourId === 'string' && s.tours.some((t) => t.id === o.data!.tourId),
+  when: (s, o) => typeof o.data?.tourId === 'string' && tourList(s).some((t) => t.id === o.data!.tourId),
   important: () => true,
   title: (_s, o) => fmtL(l('Estrada: {t} — {n} evento(s) nas próximas datas', 'Road: {t} — {n} event(s) on the next dates'), { t: String(o.data?.tour ?? '?'), n: Number(o.data?.n ?? 1) }),
   preview: () => l('Jogar: o diário — cartas "mais segura × mais lucrativa" para a van, a fronteira, o promotor, a festa… Rápido: a equipe decide no dia.', 'Play: the journal — "safer × more profitable" cards for the van, the border, the promoter, the party… Quick: the crew decides on the day.'),

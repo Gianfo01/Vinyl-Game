@@ -9,7 +9,7 @@ import { BREAK_NAME, breakRisk } from '../../../sim/sys/people/breakdowns';
 import { MED_ROLES, TREATMENT, buyEarProtection, fireMedic, hireMedic, inEarsAvailable, medCandidates, startTreatment, treatmentCost, type Treatment } from '../../../sim/sys/people/health';
 import { activeRomance, personalAdvance, wealthOf } from '../../../sim/sys/people/life';
 import { ATTR_DESC, ATTR_NAME, HOUSES, availableHouses, buyHouse, invest, ownerAge, ownerCourse, ownerOf, setHeir, setSalary, vacation, withdraw, type OwnerAttr } from '../../../sim/sys/people/owner';
-import { SECRET_NAME, detectiveCost, hireDetective, ownerLabel, pressureCeo } from '../../../sim/sys/people/secrets';
+import { SECRET_NAME, detectiveCost, dossiers, hireDetective, ownerLabel, pressureCeo, secKind, secKnown, secKnownBy, secLeaked, secOwner, secSev, secUsed } from '../../../sim/sys/people/secrets';
 import { LEVEL_NAME, ROLE_PATHS, careerOf, changeRole, promote, promoteReady, trainCost, trainStaff } from '../../../sim/sys/people/staff';
 import { P, healthOf } from '../../../sim/sys/people/state';
 import { PROMISE_INFO, TALK_NAME, canTalk, openPromises, talk, type PromiseKind, type TalkKind } from '../../../sim/sys/people/talks';
@@ -122,8 +122,7 @@ function relationsTab(s: GameState): HTMLElement {
 // ------------------------------------------------------------------ segredos
 
 function secretsTab(s: GameState): HTMLElement {
-  const st = P(s);
-  const known = st.secrets.filter((x) => x.known && !x.leaked);
+  const known = dossiers(s).filter((x) => secKnown(s, x) && !secLeaked(s, x));
   const targets = [
     ...rosterPeople(s).map((p) => ({ value: p.id, label: p.name })),
     ...Object.values(s.labels).filter((lb) => lb.active).slice(0, 12).map((lb) => ({ value: `label:${lb.id}`, label: `${t(l('CEO de', 'CEO of'))} ${lb.name}` })),
@@ -135,9 +134,9 @@ function secretsTab(s: GameState): HTMLElement {
       h('div', { class: 'row wrap' }, select(ui.detective, targets, (v) => { ui.detective = v; }, { 'aria-label': t(l('Investigar', 'Investigate')) }),
         h('button', { class: 'btn', onclick: () => { toast(t(hireDetective(s, rng19(s, 'act'), ui.detective)), 'info'); rerender(); } }, `${t(l('Contratar detetive', 'Hire a detective'))} (${$(detectiveCost(s))})`)),
       known.length ? h('div', { class: 'cards' }, known.map((x) => tile('key', t(ownerLabel(s, x)), [
-        h('small', null, `${t(SECRET_NAME[x.kind])} · ${t(l('gravidade', 'severity'))} ${x.severity}/3 · ${t(l('usado', 'used'))} ${x.used}×`),
-        x.knownBy.length ? h('small', { class: 'muted' }, `${t(l('Também sabem', 'Also known by'))}: ${x.knownBy.map((k) => (k === 'press' ? t(l('imprensa', 'the press')) : s.labels[k]?.name ?? k)).join(', ')}`) : null,
-        x.owner.startsWith('label:') ? h('div', { class: 'row' },
+        h('small', null, `${t(SECRET_NAME[secKind(x)])} · ${t(l('gravidade', 'severity'))} ${secSev(x)}/3 · ${t(l('usado', 'used'))} ${secUsed(s, x)}×`),
+        secKnownBy(s, x).length ? h('small', { class: 'muted' }, `${t(l('Também sabem', 'Also known by'))}: ${secKnownBy(s, x).map((k) => (k === 'press' ? t(l('imprensa', 'the press')) : s.labels[k]?.name ?? k)).join(', ')}`) : null,
+        secOwner(x).startsWith('label:') ? h('div', { class: 'row' },
           h('button', { class: 'btn small', onclick: () => { toast(t(pressureCeo(s, rng19(s, 'act'), x.id, 'back_off')), 'info'); rerender(); } }, t(l('Pressionar: recuar', 'Pressure: back off'))),
           h('button', { class: 'btn small ghost', onclick: () => { toast(t(pressureCeo(s, rng19(s, 'act'), x.id, 'cash')), 'info'); rerender(); } }, t(l('Pressionar: dinheiro', 'Pressure: cash')))) : null,
       ]))) : h('p', { class: 'muted small' }, t(l('Nenhum segredo conhecido.', 'No known secrets.'))),

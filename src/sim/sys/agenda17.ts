@@ -12,6 +12,8 @@
 //   banda de apoio de turnê. Chefe de gabinete (+1 expediente), rede de contatos pessoal e ações do "Você".
 // Aleatoriedade: geradores próprios (semente + mês/trimestre). Publica Fatos 'hire', 'fire', 'agenda'.
 
+import { ownFests } from './feststore';
+import { builtVenue } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { STAFF_ROLES } from '../../data/rules';
 import { REAL_MGRS } from '../../data/managers14';
@@ -30,10 +32,9 @@ import { careerDef, careers, registerLoad } from './careers12';
 import { addHype } from './hype12';
 import { bindAgenda17, energyLeft, maxEnergy, playerAct, playerPerson, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
-import { ventures, type VKind } from './ventures9';
+import { addClientTrust9, ventures, type VKind } from './ventures9';
 import { mgrActive, mgrCap, mgrName, rosterOf } from './managers14';
 import { prodActive, prodName } from './producers15';
-import { liveOf } from './live/state';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { registerDeadline, weekOfMonth19, type Deadline19 } from '../calendar19';
 
@@ -86,7 +87,7 @@ export const officeCap = (s: GameState): number => OFFICE + (ag17(s).chief ? 1 :
 
 /** Pico de calendário da carreira neste mês (+1 bolinha se você não delegou). */
 export function crunch(s: GameState, id: string): L | null {
-  if (id === 'festival' && ventures(s).list.some((v) => v.kind === 'festival' && v.month === s.month && liveOf(s).fests.some((f) => f.id === v.fx && f.lineup.length))) return l('semana do seu festival', 'your festival week');
+  if (id === 'festival' && ventures(s).list.some((v) => v.kind === 'festival' && v.month === s.month && ownFests(s).some((f) => f.id === v.fx && f.lineup.length))) return l('semana do seu festival', 'your festival week');
   if (id === 'musician') { const b = playerAct(s); if (b && s.pendingReleases.some((p) => p.actId === b.id && p.week >= s.week - 1 && p.week < s.week + 5)) return l('lançamento da sua banda', 'your band\'s release'); }
   return null;
 }
@@ -475,7 +476,7 @@ function agendaMonth(s: GameState): void {
   const touched = new Set<string>([...careers(s).active, ...Object.keys(a.heads)]);
   for (const v of vs.list) for (const [c, k] of Object.entries(CAREER_KIND)) if (k === v.kind) touched.add(c);
   if (vs.mg.clients.length) touched.add('manager');
-  if (liveOf(s).venue) touched.add('venue');
+  if (builtVenue(s)) touched.add('venue');
   for (const id of touched) {
     if (id === 'label' || id === 'musician') continue;
     const q = careerQ(s, id), d = q.f - 1;
@@ -485,8 +486,8 @@ function agendaMonth(s: GameState): void {
     const k = CAREER_KIND[id];
     const mine = k ? vs.list.filter((v) => v.kind === k) : [];
     for (const v of mine) v.rep = clamp(v.rep + d * 4 + (slip ? -3 : coup ? 2 : 0), 0, 100);
-    if (id === 'manager') for (const c of vs.mg.clients) c.sat = clamp(c.sat + d * 5 + (slip ? -4 : 0), 0, 100);
-    if (id === 'venue') { const x = (s.x4 as unknown as { venue12?: { v?: { regulars: number } } }).venue12?.v; if (x) x.regulars = clamp(x.regulars + d * 3, 0, 200); }
+    if (id === 'manager') for (const c of vs.mg.clients) addClientTrust9(s, c.actId, d * 5 + (slip ? -4 : 0));
+    if (id === 'venue') { const x = (s.x4 as unknown as { venues27?: { v?: Record<string, { prog?: { regulars: number } }> } }).venues27?.v?.['lv:venue']?.prog; if (x) x.regulars = clamp(x.regulars + d * 3, 0, 200); } // UNI-4: programação na própria casa
     const name = careerDef(id)?.name ?? l(id, id);
     if (!careers(s).active.includes(id) && !hd && (mine.length || id === 'manager' || id === 'venue') && s.month % 3 === 0)
       report(s, fmtL(l('{c}: sem a carreira e sem diretor, ninguém cuida — reputação caindo. Contrate um diretor (Agenda) ou assuma a carreira.', '{c}: no career and no director, nobody minds it — reputation slipping. Hire a director (Agenda) or take up the career.'), { c: name }), 'bad');

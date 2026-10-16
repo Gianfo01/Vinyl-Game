@@ -76,12 +76,12 @@ describe('rivals19', () => {
   it('intenções e retrato não criam memória nem fixam arquétipo', () => {
     const s = game();
     const lb = rival(s);
-    const had = !!(s.x4 as Record<string, any>).rivalmind18?.m?.[lb.id];
+    const had = !!(s.x4 as Record<string, any>).rivals?.lb?.[lb.id]?.mind; // UNI-4: estado único dos rivais
     const arch = lb.archetype;
     const it19 = intents19(s, lb.id)!;
     expect(it19.lbId).toBe(lb.id);
     expect(rivalView19(s, lb.id)!.playbook).toBe(it19.playbook);
-    expect(!!(s.x4 as Record<string, any>).rivalmind18?.m?.[lb.id]).toBe(had);
+    expect(!!(s.x4 as Record<string, any>).rivals?.lb?.[lb.id]?.mind).toBe(had);
     expect(lb.archetype).toBe(arch);
     expect(rivalActs19(s, lb.id).every((a) => a.owner === lb.id)).toBe(true);
   });

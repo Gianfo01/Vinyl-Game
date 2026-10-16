@@ -14,7 +14,7 @@ import { countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
 import { emitFact } from '../facts17';
 import { actTalent } from '../people';
-import { cityDemand, playStop, tourEnd, type StopMods27 } from '../tours';
+import { cityDemand, playStop, tourEnd, type StopMods27, tourList } from '../tours';
 import { climateInfo } from '../travelAdapter';
 import { liveBlocked } from '../culture';
 import type { Act, GameState, Song } from '../types';
@@ -97,7 +97,7 @@ export const showKey27 = (tourId: string, day: number) => `${tourId}:${day}`;
 export function playableShows27(s: GameState, days = 21): { t: Tour; st: TourStop }[] {
   const d0 = today27(s);
   const out: { t: Tour; st: TourStop }[] = [];
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.status !== 'planned' && t.status !== 'running') continue;
     if (!mine27(s.acts[t.actId])) continue;
     const st = t.stops.find((x) => x.status === 'scheduled');
@@ -109,7 +109,7 @@ export function playableShows27(s: GameState, days = 21): { t: Tour; st: TourSto
 /** Por que este show não pode ser jogado agora (ou null). */
 export function showGate27(s: GameState, key: string): L | null {
   const i = key.lastIndexOf(':');
-  const t = s.tours.find((x) => x.id === key.slice(0, i));
+  const t = tourList(s).find((x) => x.id === key.slice(0, i));
   const st = t?.stops.find((x) => x.day === Number(key.slice(i + 1)));
   if (!t || !st) return l('Show não encontrado.', 'Show not found.');
   if (st.status !== 'scheduled') return l('Este show já aconteceu ou foi cancelado.', 'This show already happened or was cancelled.');
@@ -125,7 +125,7 @@ export function showGate27(s: GameState, key: string): L | null {
 export function showCtx27(s: GameState, key: string): Show27 | null {
   if (showGate27(s, key)) return null;
   const i = key.lastIndexOf(':');
-  const t = s.tours.find((x) => x.id === key.slice(0, i))!;
+  const t = tourList(s).find((x) => x.id === key.slice(0, i))!;
   const st = t.stops.find((x) => x.day === Number(key.slice(i + 1)))!;
   const act = s.acts[t.actId];
   const month = dateOfDay(s.config.startYear, st.day).month;
@@ -422,7 +422,7 @@ export function playShow27(s: GameState, key: string, ids: string[], choices: nu
   const run = simulate27(s, c, ids, choices);
   if (run.pending >= 0) return l('Faltam decisões no show.', 'Decisions still pending in the show.');
   const out = outcome27(c, plan, run);
-  const t = s.tours.find((x) => x.id === c.tourId)!;
+  const t = tourList(s).find((x) => x.id === c.tourId)!;
   const st = t.stops.find((x) => x.day === c.day)!;
   const act = s.acts[c.actId];
   const lv = liveOf(s);

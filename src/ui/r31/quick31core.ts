@@ -10,12 +10,13 @@
 //
 // As cenas da onda 2 registram mais ações com registerQuick31 (mesmo formato).
 
+import { tourList } from '../../sim/tours';
+import { builtVenue } from '../../sim/sys/venuestore27';
 import { cityById, CITIES, l, type L } from '../../data/world';
 import { defaultOffer, offerEligible29 } from '../../sim/contracts';
 import { visibleAct } from '../../sim/future';
 import type { Dest } from '../../sim/r31/dest';
 import { cashLock31, lock31, lockOf31, UNLOCK31, type Lock31 } from '../../sim/r31/lock';
-import { liveOf } from '../../sim/sys/live/state';
 import { VENUE_KINDS } from '../../sim/sys/live/venue';
 import { openProjects, projectStage } from '../../sim/sys/project8';
 import { MAX_VENUES27, venueCount27 } from '../../sim/sys/venues17';
@@ -116,13 +117,13 @@ export function releaseLock31(s: GameState, actId: string, projectId?: string): 
 export function tourLock31(s: GameState, a: Act): Lock31 | null {
   if (a.status === 'retired' || a.status === 'split') return lock31(N('O artista encerrou a carreira.', 'The act has ended its career.'), UNLOCK31.ended);
   if (a.status === 'hiatus') return lock31(N('O artista está em pausa.', 'The act is on hiatus.'), UNLOCK31.hiatus);
-  if (s.tours.some((x) => x.actId === a.id && (x.status === 'planned' || x.status === 'running'))) return lock31(N('Já existe uma turnê marcada.', 'A tour is already booked.'), UNLOCK31.tour);
+  if (tourList(s).some((x) => x.actId === a.id && (x.status === 'planned' || x.status === 'running'))) return lock31(N('Já existe uma turnê marcada.', 'A tour is already booked.'), UNLOCK31.tour);
   return null;
 }
 
 /** Casa de shows: mesmas regras de buyVenue (sim/sys/live/venue). */
 export function venueLock31(s: GameState, kind: (typeof VENUE_KINDS)[number]['id'] = 'club'): Lock31 | null {
-  if (liveOf(s).venue) return lock31(N('Você já tem uma casa de shows própria.', 'You already own a venue.'), N('Venda a atual ou compre casas avulsas em Shows › Negócios.', 'Sell the current one or buy standalone venues in Shows › Business.'));
+  if (builtVenue(s)) return lock31(N('Você já tem uma casa de shows própria.', 'You already own a venue.'), N('Venda a atual ou compre casas avulsas em Shows › Negócios.', 'Sell the current one or buy standalone venues in Shows › Business.'));
   if (venueCount27(s) >= MAX_VENUES27) return lock31(N('Quatro casas é o máximo que dá para administrar.', 'Four venues is as many as you can run.'), UNLOCK31.cap);
   const k = VENUE_KINDS.find((x) => x.id === kind)!;
   if (s.year < k.minYear) return lock31(N('Ainda não existem casas desse porte.', 'Venues of that size don\'t exist yet.'), fmtL(N('Disponível a partir de {y}.', 'Available from {y}.'), { y: k.minYear }));

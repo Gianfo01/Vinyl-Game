@@ -1,11 +1,12 @@
 // Notas do show, curva do setlist, ingressos/cambistas e o show ao vivo (mini-jogo) — GDD §9.
 
+import { builtVenue } from '../venuestore27';
 import { Rng, clamp } from '../../../core/rng';
 import { hashString } from '../../../core/rng';
 import { cityById, familyOf, l, type L } from '../../../data/world';
 import { applyMods, queueCutscene, registerMod, registerSimHook } from '../../ext4';
 import { actTalent } from '../../people';
-import { cityDemand } from '../../tours';
+import { cityDemand, tourList } from '../../tours';
 import type { GameState, Song } from '../../types';
 import type { Tour } from '../../xtypes';
 import { fmtL, notify, remember, staffSkill } from '../../util';
@@ -90,7 +91,7 @@ export function curveFor(s: GameState, order: string[]): CurveResult {
 
 /** Aplica a ordem escolhida ao setlist da turnê e guarda a nota (bônus nos próximos shows). */
 export function applySetlistOrder(s: GameState, tourId: string, order: string[]): CurveResult | L {
-  const t = s.tours.find((x) => x.id === tourId);
+  const t = tourList(s).find((x) => x.id === tourId);
   if (!t || (t.status !== 'planned' && t.status !== 'running')) return l('Turnê inválida.', 'Invalid tour.');
   const set = new Set(t.setlist);
   if (order.length !== t.setlist.length || order.some((id) => !set.has(id))) return l('A ordem precisa usar as mesmas músicas.', 'The order must use the same songs.');
@@ -102,7 +103,7 @@ export function applySetlistOrder(s: GameState, tourId: string, order: string[])
 
 function tourCurveBonus(s: GameState, actId: string): number {
   const lv = liveOf(s);
-  const t = s.tours.find((x) => x.actId === actId && (x.status === 'planned' || x.status === 'running'));
+  const t = tourList(s).find((x) => x.actId === actId && (x.status === 'planned' || x.status === 'running'));
   return t ? (lv.curves[t.id]?.bonus ?? 0) : 0;
 }
 
@@ -111,7 +112,7 @@ registerMod('cityDemand', 'live-setlist', (s, value, ctx) => {
   let m = 1;
   const b = tourCurveBonus(s, ctx.act.id);
   if (b > 0) m *= 1 + b * 0.6;
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   if (v && ctx.cityId === v.cityId && isMine(s, ctx.act.id)) m *= 1 + v.acoustics * 0.03;
   return m === 1 ? null : { value: value * m, label: l('Boca a boca do show', 'Show word of mouth') };
 });
@@ -143,7 +144,7 @@ export function showNoteFor(s: GameState, input: { actId: string; tier: number; 
   const q = songs.length ? songs.reduce((t, x) => t + x.q, 0) / songs.length : 35;
   const fill = input.cap ? input.sold / input.cap : 0;
   const fatigue = act ? act.members.reduce((t, id) => t + (s.persons[id]?.fatigue ?? 0), 0) / Math.max(1, act.members.length) : 0;
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const acoustic = v && v.cityId === input.cityId ? v.acoustics * 3 : 0;
   const ex = clamp(22 + input.production * 9 + (q - 50) * 0.4 + tal.stage * 0.2 + fill * 18 + input.bonus * 100 + acoustic - fatigue * 0.12, 0, 100);
   const int = clamp(18 + input.tier * 11 + input.production * 8 + (input.minutes - 30) * 0.3 + (fill > 0.9 ? 8 : 0), 0, 100);
@@ -157,7 +158,7 @@ registerSimHook('show', 'live-notes', (s, _r, arg) => {
   const sh = arg.show;
   if (!sh) return;
   const lv = liveOf(s);
-  const t = s.tours.find((x) => x.id === sh.tourId);
+  const t = tourList(s).find((x) => x.id === sh.tourId);
   const act = s.acts[sh.actId];
   if (!t || !act) return;
   const today = s.day + s.clock.dayInMonth;
@@ -205,7 +206,7 @@ registerSimHook('show', 'live-notes', (s, _r, arg) => {
   list.push(note);
   if (list.length > 40) list.splice(0, list.length - 40);
   // só guarda notas de turnês recentes
-  const keep = new Set(s.tours.map((x) => x.id));
+  const keep = new Set(tourList(s).map((x) => x.id));
   for (const k of Object.keys(lv.notes)) if (!keep.has(k)) delete lv.notes[k];
   for (const k of Object.keys(lv.curves)) if (!keep.has(k)) delete lv.curves[k];
   for (const k of Object.keys(lv.liveQueued)) if (!keep.has(k)) delete lv.liveQueued[k];
@@ -274,13 +275,13 @@ export const INCIDENTS: Incident[] = [
 export function showTour20(s: GameState, actId: string, key?: string): Tour | undefined {
   if (key) {
     const i = key.lastIndexOf(':');
-    const t = s.tours.find((x) => x.id === key.slice(0, i) && x.actId === actId);
+    const t = tourList(s).find((x) => x.id === key.slice(0, i) && x.actId === actId);
     if (t) return t;
   }
-  const cur = s.tours.find((x) => x.actId === actId && x.status === 'running');
+  const cur = tourList(s).find((x) => x.actId === actId && x.status === 'running');
   if (cur) return cur;
   const lastDay = (x: Tour) => Math.max(-1, ...x.stops.filter((y) => y.status === 'played').map((y) => y.day));
-  return s.tours.filter((x) => x.actId === actId && x.status === 'done').sort((a, b) => lastDay(b) - lastDay(a))[0];
+  return tourList(s).filter((x) => x.actId === actId && x.status === 'done').sort((a, b) => lastDay(b) - lastDay(a))[0];
 }
 
 function statSkill(s: GameState, actId: string, stat: IncidentCard['stat'], key?: string): number {
@@ -369,7 +370,7 @@ export function finishLiveShow(s: GameState, key: string, actId: string, sold: n
   // r20b (Z1): o show ao vivo vira fato (com o id do show); noites lendárias ou desastrosas viram notícia (media17)
   const log = (lv.liveLog20?.[key] ?? []).filter(Boolean);
   const i = key.lastIndexOf(':');
-  const tr = s.tours.find((x) => x.id === key.slice(0, i));
+  const tr = tourList(s).find((x) => x.id === key.slice(0, i));
   const city = tr?.stops.find((x) => x.day === Number(key.slice(i + 1)))?.cityId;
   const cityL = city ? cityById[city]?.name ?? l(city, city) : l('?', '?');
   const bad = log.filter((x) => !x.ok).length;

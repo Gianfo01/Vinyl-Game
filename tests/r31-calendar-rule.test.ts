@@ -1,6 +1,8 @@
 // Masters 31 (onda 0, W0-CAL): regra "nada tem data sem estar no calendário". Todo sistema que guarda datas futuras
 // visíveis ao jogador registra um provedor em calendar19 (registerDeadline). Os que ainda não registram ficam numa
 // lista de PENDENTES explícita que só pode diminuir (a onda 31.1, UNI-1, zera). Fonte: docs/r31/unificacao.md B.9.
+import { addShow12 } from '../src/sim/sys/tour12';
+import { w8 } from '../src/sim/sys/feststore';
 import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
@@ -64,9 +66,9 @@ describe('r31 W0-CAL · nada tem data sem estar no calendário', () => {
   it('UNI-1: shows do agente/promotor, passos do lançamento e convites de festival aparecem com a data', () => {
     const s = createGame(defaultConfig('r31cal3', { startYear: 1990 }));
     const act = Object.values(s.acts).find((a) => a.owner === 'player') ?? Object.values(s.acts)[0];
-    const x4 = s.x4 as unknown as { tour12: { shows: unknown[] }; fest8: { invites: unknown[] } };
-    x4.tour12.shows.push({ id: 'shX', actId: act.id, by: 'promoter', city: 'nyc', week: s.week + 5, tier: 1, deal: 'guarantee', fee: 0, pct: 0.85, pmult: 1, promo: 1, rate: 0, status: 'booked', deposit: 0 });
-    x4.fest8.invites.push({ id: 'ivX', fi: 0, actId: act.id, tier: 'opening', fee: 0, expires: s.week + 3 });
+    // UNI-4: o show avulso é uma turnê de 1 data em s.tours; convites do circuito no registro único de festivais
+    addShow12(s, { id: 'shX', actId: act.id, by: 'promoter', city: 'nyc', week: s.week + 5, tier: 1, deal: 'guarantee', fee: 0, pct: 0.85, pmult: 1, promo: 1, rate: 0, deposit: 0 });
+    (w8(s).invites as unknown[]).push({ id: 'ivX', fi: 0, actId: act.id, tier: 'opening', fee: 0, expires: s.week + 3 });
     s.rollouts.push({ id: 'roX', actId: act.id, title: 'Teste', songIds: [], singles: [], presaves: 0, hype: 0, status: 'active', phases: [{ kind: 'album', week: s.week + 8, done: false, budget: 0 }] });
     const ids = calendar19(s, { weeks: 12 }).map((d) => d.id);
     expect(ids).toContain('t12:shX');

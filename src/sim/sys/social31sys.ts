@@ -11,6 +11,7 @@
 // Sorte: só Rng.fromSeed com chave (semente|soc31|ano|mês) — nada do fluxo do motor. O mês social não mexe em nada
 // fora do próprio grafo (os sistemas que leem intimidade e respeito leem daqui).
 
+import { editions8 } from './feststore';
 import { Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerSimHook } from '../ext4';
@@ -23,7 +24,6 @@ import {
 } from '../social31';
 import type { Act, GameState } from '../types';
 import { fmtL } from '../util';
-import { fest8 } from './fests8';
 import { kinOf15 } from './kin15';
 import { leaders } from './leaders10';
 import { registerEditable, registerRunnable } from '../r31/editor';
@@ -217,10 +217,8 @@ const gone = (s: GameState) => (id: string): boolean => {
 
 /** Festivais do mês: quem divide o palco se conhece (cabeças do topo do cartaz e os atos do jogador). */
 function festivalMonth(s: GameState): number {
-  const st = fest8(s);
-  if (!st?.editions) return 0;
   let n = 0;
-  for (const ed of st.editions) {
+  for (const ed of editions8(s)) {
     if (ed.year !== s.year || ed.month !== s.month) continue;
     const top = ed.lineup.slice(0, 4).map((x) => x.actId);
     const mine = ed.lineup.filter((x) => s.acts[x.actId]?.owner === 'player').map((x) => x.actId);

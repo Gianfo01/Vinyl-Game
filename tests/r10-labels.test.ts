@@ -10,7 +10,7 @@ import { EXTRA_LABELS, REAL_EXECS } from '../src/data/labels10';
 import { cityById } from '../src/data/world';
 import { nominal } from '../src/core/money';
 import { leaderOf, leaders } from '../src/sim/sys/leaders10';
-import { PLAYBOOKS, playbookOf, rivals8 } from '../src/sim/sys/rivals8';
+import { PLAYBOOKS, playbookOf, allMoves8 } from '../src/sim/sys/rivals8';
 import { runSimHooks } from '../src/sim/ext4';
 import type { RunConfig } from '../src/sim/types';
 import { rng19 } from '../src/sim/rng19';
@@ -94,7 +94,7 @@ describe('estratégias novas', () => {
     const pbs = new Set(Object.values(s.labels).map((lb) => playbookOf(lb)));
     for (const p of ['viral', 'school', 'royalty', 'conglomerate', 'importer', 'agitator', 'copycat', 'budget']) expect(pbs.has(p as never), p).toBe(true);
     for (let i = 0; i < 30; i++) advanceMonth(s);
-    const kinds = new Set(Object.values(rivals8(s).log).flat().map((m) => m.k));
+    const kinds = new Set(allMoves8(s).flatMap(([, x]) => x).map((m) => m.k));
     const fresh = ['viral_grab', 'viral_drop', 'school_class', 'school_grad', 'royalty_buy', 'royalty_yield', 'media_push', 'media_absorb', 'import_hit', 'import_license',
       'scene_night', 'agitator_sign', 'major_attack', 'copy_clone', 'copy_sign', 'budget_comp', 'budget_sign'];
     expect(fresh.filter((k) => kinds.has(k as never)).length).toBeGreaterThanOrEqual(6);

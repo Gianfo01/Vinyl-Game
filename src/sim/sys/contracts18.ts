@@ -5,6 +5,7 @@
 // dedução de embalagem por época), a prestação de contas (período, atraso, direito de auditoria), compromissos
 // de lançamento e divulgação e as consequências de engavetar. O artista avalia pelo momento, ambição, assessoria
 // (empresário/advogado) e confiança — e as cláusulas continuam pesando nos anos seguintes.
+import { tourList } from '../tours';
 import { clamp, Rng, seedState } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { l, type L } from '../../data/world';
@@ -230,7 +231,7 @@ function actOfKey(s: GameState, key: string): [string | undefined, RKind | undef
   m = /^ro_(video|teaser|presave|deluxe):(\w+)/.exec(key);
   if (m) return [s.rollouts.find((r) => r.id === m![2])?.actId, m[1] === 'video' ? 'video' : 'mkt'];
   m = /^tour:(\w+)/.exec(key);
-  if (m) return [s.tours.find((t) => t.id === m![1])?.actId, 'tour'];
+  if (m) return [tourList(s).find((t) => t.id === m![1])?.actId, 'tour'];
   m = /^(?:out17|fyc):(\w+)/.exec(key);
   if (m) return [s.releases[m[1]]?.actId, 'mkt'];
   m = /^(?:mappromo|hype12):[^:]+:(\w+)/.exec(key);

@@ -1,11 +1,12 @@
 // Rodada 12 — interface do hype: medidor 0–100 com tendência e "por quê" (artista, lançamento, projeto,
 // relíquia, festival), alavancas do jogador na ficha do artista, ranking "Hype" nas paradas e notícias.
 
+import { tourList } from '../../sim/tours';
+import { ownFests } from '../../sim/sys/feststore';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { hy, hypeOf, levers, needQ, pendingExpect, ranking, useLever, type Lever } from '../../sim/sys/hype12';
 import { relics } from '../../sim/sys/relics9';
-import { liveOf } from '../../sim/sys/live/state';
 import type { GameState, Release } from '../../sim/types';
 import { $, actLink, cityName, genreName, pill, rerender, toast } from '../common';
 import { h } from '../dom';
@@ -93,8 +94,8 @@ function label(s: GameState, key: string): HTMLElement | string {
   if (k === 'n') { const p = s.pendingReleases.find((x) => x.actId === id); return h('span', null, p ? `"${p.title}" · ` : '', actLink(s, id)); }
   if (k === 'r') return h('span', null, `"${s.releases[id]?.title ?? '?'}" · `, actLink(s, s.releases[id]?.actId));
   if (k === 'o') { const rl = relics(s).list.find((x) => x.id === id); return rl ? t(rl.n) : '?'; }
-  if (k === 'f') return liveOf(s).fests.find((x) => x.id === id)?.name ?? '?';
-  if (k === 't') { const tr = s.tours.find((x) => x.id === id); return h('span', null, `${tr?.name ?? '?'} · `, actLink(s, tr?.actId)); }
+  if (k === 'f') return ownFests(s).find((x) => x.id === id)?.name ?? '?';
+  if (k === 't') { const tr = tourList(s).find((x) => x.id === id); return h('span', null, `${tr?.name ?? '?'} · `, actLink(s, tr?.actId)); }
   if (k === 'l') return id === 'player' ? s.config.companyName : s.labels[id]?.name ?? '?';
   if (k === 's') return `${genreName(id2)} · ${cityName(id)}`;
   return key;

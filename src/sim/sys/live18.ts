@@ -7,6 +7,7 @@
 // músicas novas crescem testadas ao vivo; experiência alimenta traj18/ability18 pelo gancho 'show'.
 // Cada show e cada turnê guardam um POST-MORTEM (previsto × real com os fatores), lido pelo long18 e pela interface.
 // Segurança de público: incidentes viram processo/escândalo; no modo "vida real exata" tragédias só como crônica real.
+import { cityRelAdd, cityRelEach } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { VENUE_TIERS } from '../../data/rules';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -15,7 +16,7 @@ import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { registerExplain } from '../explain18';
 import { addStress, relieveLong } from '../stress17';
-import { TICKET, cityDemand } from '../tours';
+import { TICKET, cityDemand, tourList } from '../tours';
 import { KIT0, TOUR18, type Kit18, type KitInfo } from '../tourhook18';
 import type { Act, GameState } from '../types';
 import type { Tour, TourStop } from '../xtypes';
@@ -23,7 +24,6 @@ import { fmtL, money, notify, playerActs, post, remember, staffSkill } from '../
 import { histMode } from '../history15';
 import { postAR18 } from './econ18';
 import { mIdx18 } from '../ledger18';
-import { c12 } from './tour12';
 import { fan18, pp18, ticketShock18 } from './fans18';
 import { adjRel18 } from './agency18';
 
@@ -186,7 +186,7 @@ TOUR18.q = (s, t, st) => {
 registerMod('tourRisk', 'live18', (s, v, c) => {
   const a = c.act;
   if (!mine(s, a)) return null;
-  const t = s.tours.find((x) => x.actId === a.id && x.status === 'running');
+  const t = tourList(s).find((x) => x.actId === a.id && x.status === 'running');
   let k = live18(s).well ? 0.85 : 1;
   if (t) { const kt = kitOf18(t); k *= (kt.reh === 2 ? 0.85 : 1) * (kt.gear === 'rent' ? 0.9 : 1) * (kt.move === 'fly' ? 0.95 : kt.move === 'van' ? 1.12 : 1); }
   return Math.abs(k - 1) > 0.01 ? { value: v * k, label: k < 1 ? l('Logística e cuidado com o grupo', 'Logistics and care for the group') : l('Logística precária', 'Shoestring logistics') } : null;
@@ -380,7 +380,7 @@ registerInboxKind('live18', { label: l('Estrada', 'Road'), cat: 'deals', icon: '
 
 export function liveMonth18(s: GameState): void {
   const v = live18(s);
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     const pm = tourPM18(s, t.id);
     if (!pm) continue;
     const act = s.acts[t.actId];
@@ -400,7 +400,7 @@ export function liveMonth18(s: GameState): void {
       } else if (st.note) ps.n.push(fmtL(l('Cancelado ({w}); sem seguro, o prejuízo ficou com você.', 'Cancelled ({w}); uninsured, the loss is yours.'), { w: st.note }));
       else {
         ps.n.push(l('Cancelado por decisão sua: promotores locais lembram disso.', 'Cancelled by your decision: local promoters remember.'));
-        const rel = c12(s).rel; rel[st.cityId] = clamp((rel[st.cityId] ?? 30) - 3, 0, 100);
+        cityRelAdd(s, st.cityId, -3);
       }
     }
     if ((t.status === 'done' || t.status === 'cancelled') && !pm.fin) closeTour(s, t, pm);
@@ -409,7 +409,7 @@ export function liveMonth18(s: GameState): void {
   for (const id of Object.keys(v.band)) {
     const b = v.band[id];
     if (!s.acts[id]) { delete v.band[id]; continue; }
-    if (!s.tours.some((t) => t.actId === id && t.status === 'running')) { b.tight = Math.max(10, b.tight - 2); b.chem *= 0.97; }
+    if (!tourList(s).some((t) => t.actId === id && t.status === 'running')) { b.tight = Math.max(10, b.tight - 2); b.chem *= 0.97; }
   }
   // programa de bem-estar (V3)
   if (v.well) {
@@ -459,7 +459,7 @@ registerSimHook('year', 'live18', (s) => {
 export function setExcl18(s: GameState, on: boolean): L | null {
   const v = live18(s);
   if (on && s.year < GIANT_FROM18) return l('Ainda não existe promotor nacional dominante.', 'No dominant national promoter exists yet.');
-  if (on && !v.excl) { v.excl = s.year; const rel = c12(s).rel; for (const k of Object.keys(rel)) rel[k] = clamp(rel[k] - 10, 0, 100); logIt(s, fmtL(l('Exclusividade com {g}: garantias +15% e bônus anual; promotores locais esfriam.', 'Exclusive with {g}: guarantees +15% and a yearly bonus; local promoters cool off.'), { g: giant18(s)?.name ?? '' })); }
+  if (on && !v.excl) { v.excl = s.year; cityRelEach(s, (v) => v - 10); logIt(s, fmtL(l('Exclusividade com {g}: garantias +15% e bônus anual; promotores locais esfriam.', 'Exclusive with {g}: guarantees +15% and a yearly bonus; local promoters cool off.'), { g: giant18(s)?.name ?? '' })); }
   if (!on) delete v.excl;
   return null;
 }
@@ -506,7 +506,7 @@ registerExplain('live18.band', (s, c) => {
 
 registerAdvisorTip('live18', (s) => {
   const out = [];
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.status !== 'planned') continue;
     const pm = tourPM18(s, t.id), k = kitOf18(t);
     const gross = pm ? pm.shows.reduce((a, x) => a + x.e * (t.stops.find((y) => y.day === x.d)?.price ?? 0), 0) : 0;

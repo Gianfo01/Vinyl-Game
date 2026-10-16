@@ -11,12 +11,13 @@
 //    responder em público ou ignorar.
 // Gerador próprio por mês (semente), sem tocar no RNG do jogo.
 
+import { rivalOf, rivalRec, rivals31, rivalsWith } from './rivalstore';
 import { Rng, clamp } from '../../core/rng';
 import { cityById, genreById, l, type L } from '../../data/world';
 import { signWithRival } from '../contracts';
 import { emitEvent } from '../events';
 import { registerExplain, type WhyPart } from '../explain18';
-import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { registerMod, registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
 import { pushInbox18, registerInboxKind } from '../inbox18';
 import { archetypeOf } from '../rivals2';
@@ -49,18 +50,13 @@ export function temper27(s: GameState, lb: Label): Temper27 {
 export interface Mem27 { w: number; y: number; t: L; d: number }
 export interface Riv27 { g: number; mem: Mem27[]; last: number; agg0?: number; aggUntil?: number }
 export interface Copy27 { id: string; lb: string; src: string; clone: string; rel: string; g: string; w: number; until: number; st: 'open' | 'answered' | 'ignored' | 'won' | 'lost' }
-export interface Rv27State { L: Record<string, Riv27>; au: Record<string, 1>; k: Record<string, 1>; hit: Record<string, 1>; copies: Copy27[]; seq: number }
-declare module '../ext4' { interface Ext4 { rv27: Rv27State } }
-const init = (): Rv27State => ({ L: {}, au: {}, k: {}, hit: {}, copies: [], seq: 0 });
-registerExt4('rv27', init);
-export function rv27(s: GameState): Rv27State {
-  const x = s.x4 as unknown as { rv27?: Rv27State };
-  const st = (x.rv27 ??= init());
-  st.L ??= {}; st.au ??= {}; st.k ??= {}; st.hit ??= {}; st.copies ??= []; st.seq ??= 0;
-  return st;
-}
+/** UNI-4 (B.19): a mágoa de cada selo mora no registro único dos rivais (rivalstore `lb[selo].mem`); aqui as partes do circuito. */
+export interface Rv27State { au: Record<string, 1>; k: Record<string, 1>; hit: Record<string, 1>; copies: Copy27[]; seq: number }
+export const rv27 = (s: GameState): Rv27State => rivals31(s).r27;
+/** Mágoa pessoal de um selo, só leitura. */
+export const memOf27 = (s: GameState, lbId: string): Riv27 | undefined => rivalOf(s, lbId)?.mem;
 export const OFF_RV27: { on?: boolean } = {};
-const riv = (s: GameState, id: string): Riv27 => (rv27(s).L[id] ??= { g: 0, mem: [], last: -999 });
+const riv = (s: GameState, id: string): Riv27 => (rivalRec(s, id).mem ??= { g: 0, mem: [], last: -999 });
 
 /** Mágoa nova com lembrança datada (fato `rival_grudge`, rumor). */
 export function grudge27(s: GameState, lbId: string, d: number, t: L): void {
@@ -113,11 +109,10 @@ function bumpAgg(s: GameState, lb: Label, x: Riv27, d: number): void {
 }
 
 function react(s: GameState, r: Rng): void {
-  const st = rv27(s);
   const mine = actsNow27(s).filter((a) => a.owner === 'player' && !a.playerBand && a.status !== 'retired' && a.status !== 'split');
-  for (const [id, x] of Object.entries(st.L)) {
+  for (const [id, x] of rivalsWith(s, 'mem')) {
     const lb = s.labels[id];
-    if (!lb?.active) { delete st.L[id]; continue; }
+    if (!lb?.active) { delete rivalRec(s, id).mem; continue; }
     const tp = temper27(s, lb);
     x.g = Math.round(x.g * DECAY[tp] * 10) / 10;
     if (x.aggUntil !== undefined && x.aggUntil <= s.week) { if (x.agg0 !== undefined) lb.aggression = x.agg0; delete x.agg0; delete x.aggUntil; }
@@ -164,7 +159,7 @@ function copycats(s: GameState, r: Rng): void {
     const a = s.acts[rel.actId];
     if (!a || !genreById[a.genre] || st.copies.some((c) => c.src === a.id && liveCopy(s, c))) continue;
     const cand = Object.values(s.labels).filter((lb) => lb.active && !lb.parentLabel && lb.cash > money(s, 30000) && lb.roster.length < 60);
-    const lb = r.weighted(cand, (x) => { const tp = temper27(s, x); return (tp === 'copycat' ? 3 : tp === 'vengeful' ? 1 : 0.3) * (1 + (st.L[x.id]?.g ?? 0) / 50); });
+    const lb = r.weighted(cand, (x) => { const tp = temper27(s, x); return (tp === 'copycat' ? 3 : tp === 'vengeful' ? 1 : 0.3) * (1 + (memOf27(s, x.id)?.g ?? 0) / 50); });
     if (!lb || !r.chance(temper27(s, lb) === 'copycat' ? 0.55 : 0.25)) continue;
     makeCopy27(s, r, rel, lb);
   }
@@ -257,7 +252,7 @@ onFact('copycat', (s, f) => { headline19(s, f.text, 3); }, 'rivals27:copy');
 export function rivalMemory27(s: GameState, lbId: string): { temper: Temper27; g: number; mem: Mem27[]; copies: Copy27[] } | null {
   const lb = s.labels[lbId];
   if (!lb) return null;
-  const x = rv27(s).L[lbId];
+  const x = memOf27(s, lbId);
   return { temper: temper27(s, lb), g: Math.round(x?.g ?? 0), mem: x?.mem ?? [], copies: rv27(s).copies.filter((c) => c.lb === lbId) };
 }
 registerExplain('rival27', (s, c) => {

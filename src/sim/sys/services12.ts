@@ -175,7 +175,7 @@ registerServiceEffect('label', (s, r, c, a, p) => {
   if (a.owner || !p?.owner || !s.labels[p.owner]?.active) return fmtL(l('O A&R de {p} assistiu, mas não houve proposta.', '{p}\'s A&R watched, but made no offer.'), { p: c.pname });
   if (!r.chance(0.35 + a.fame / 120 + (p.q - 50) / 300)) return fmtL(l('O A&R de {p} não se convenceu com {a}.', '{p}\'s A&R was not convinced by {a}.'), { p: c.pname, a: a.name });
   // a proposta entra na mesa do empresário (rodada 11) quando o artista é seu cliente
-  const pitches = (s.x4 as unknown as { manager11?: { pitches: { actId: string; w: number; offers: { party: string; advance: number; royalty: number; term: number }[] }[] } }).manager11?.pitches;
+  const pitches = (s.x4 as unknown as { manager12?: { pitches: { actId: string; w: number; offers: { party: string; advance: number; royalty: number; term: number }[] }[] } }).manager12?.pitches; // UNI-4: o manager11 mora no manager12
   const offer = { party: p.owner, advance: Math.round(money(s, expectedAdvance(s, a)) * (0.8 + r.next() * 0.5) / 100) * 100, royalty: Math.round((0.12 + r.next() * 0.08) * 100) / 100, term: 36 };
   const cur = pitches?.find((x) => x.actId === a.id);
   if (cur) cur.offers.push(offer); else pitches?.push({ actId: a.id, w: s.week, offers: [offer] });

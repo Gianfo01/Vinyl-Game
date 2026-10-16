@@ -7,6 +7,7 @@
 // reputação). DJs também pedem para remixar seus fracassos antigos (Caixa rmx19_offer: deixar 50/50, comprar o remix,
 // recusar). Ouve media18: concurso de remix (o DJ vencedor cobra metade) e nº 1 nas pistas (convite de residência).
 
+import { realVenues } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerDeadline } from '../calendar19';
@@ -24,7 +25,7 @@ import { headline19 } from './factlink19';
 import { addHype } from './hype12';
 import { djFee18, djFit18, ensureDjs18, media18, type Dj18 } from './media18';
 import { cnt19, link19, log19, mineA19, mineR19, safe19, usd19, xs19, type Log19 , off19 } from './mkb19';
-import { v17, vdef } from './venues17';
+import { vdef } from './venues17';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
 export const REMIX_FROM19 = 1975;
@@ -137,7 +138,7 @@ export function whiteLabel19(s: GameState, relId: string): L | null {
 registerConseq18('rmx19:white', { now: l('Barato; mede a pista; 15% de chance de vazar.', 'Cheap; tests the floor; 15% chance of a leak.'), later: [{ in: [2, 6], p: 0.25, tone: 'good', hint: l('DJs falam do disco misterioso.', 'DJs talk about the mystery record.'),
   fx: (f) => (f.fame(1), l('O disco sem rótulo vira lenda de pista: "quem é?".', 'The unlabelled record becomes a club legend: "who is it?".')) }] });
 
-export const resOpen19 = (s: GameState): ResV19[] => (Object.keys(RES19) as ResV19[]).filter((k) => s.year >= RES19[k].from && (!RES19[k].to || s.year <= RES19[k].to!) && (k !== 'own' || v17(s).own.length > 0));
+export const resOpen19 = (s: GameState): ResV19[] => (Object.keys(RES19) as ResV19[]).filter((k) => s.year >= RES19[k].from && (!RES19[k].to || s.year <= RES19[k].to!) && (k !== 'own' || realVenues(s).length > 0));
 export const resFee19 = (s: GameState, k: ResV19, a: Act) => money(s, RES19[k].fee * (0.5 + a.fame / 80));
 /** O ato pode ser residente (é DJ/eletrônico ou tem remix/nº 1 nas pistas). */
 export function djAct19(s: GameState, a?: Act): boolean {
@@ -150,7 +151,7 @@ export function residency19(s: GameState, actId: string, k: ResV19, months = 6):
   if (!mineA19(a)) return l('Ato inválido.', 'Invalid act.');
   if (!resOpen19(s).includes(k)) return l('Esse clube não existe nesta época.', 'That club does not exist in this era.');
   if (st.res.some((x) => x.act === actId && x.until > s.week)) return l('O ato já tem residência.', 'The act already has a residency.');
-  const own = k === 'own' ? v17(s).own[0]?.id : undefined;
+  const own = k === 'own' ? realVenues(s)[0]?.id : undefined;
   const x: Res19 = { id: `rs${++st.seq}`, act: actId, v: k, own, from: s.week, until: s.week + Math.round(months * 4.33), fee: resFee19(s, k, a), earned: 0 };
   st.res.push(x); if (st.res.length > 30) st.res.splice(0, st.res.length - 30);
   cnt19(st, 'res');
@@ -224,7 +225,7 @@ export function remixMonth19(s: GameState): void {
     post(s, `res19:${x.id}:${s.year}-${s.month}`, x.fee, 'live', `Residência ${R.name.pt}: ${a.name}`);
     a.fame = clamp(a.fame + R.fame * 0.4, 0, 100);
     for (const p of a.members) if (s.persons[p]?.alive) addStress(s, p, 1.5, l('Noites de residência', 'Residency nights'));
-    if (x.own) { const o = v17(s).own.find((y) => y.id === x.own); if (o) o.rep = clamp(o.rep + 0.5, 0, 100); }
+    if (x.own) { const o = realVenues(s).find((y) => y.id === x.own); if (o) o.rep = clamp(o.rep + 0.5, 0, 100); }
   }
   // DJs pedem fracassos antigos (seus) e remixam os de NPCs
   const djs = ensureDjs18(s);
@@ -272,7 +273,7 @@ onFact('white_label', (s, f) => {
 // residência: casa própria ganha reputação; manchete
 onFact('dj_residency', (s, f) => {
   const own = String(f.data?.own ?? '');
-  if (own) { const o = v17(s).own.find((x) => x.id === own); if (o) { o.rep = clamp(o.rep + 4, 0, 100); link19(s, 'remix', fmtL(l('Noite fixa de DJ na {v}: reputação da casa +4.', 'Fixed DJ night at {v}: venue reputation +4.'), { v: vdef(own)?.name ?? own })); } }
+  if (own) { const o = realVenues(s).find((x) => x.id === own); if (o) { o.rep = clamp(o.rep + 4, 0, 100); link19(s, 'remix', fmtL(l('Noite fixa de DJ na {v}: reputação da casa +4.', 'Fixed DJ night at {v}: venue reputation +4.'), { v: vdef(own)?.name ?? own })); } }
   headline19(s, f.text, 1);
 }, 'remix19:venue');
 // media18: o vencedor do concurso de remix cobra metade; nº 1 nas pistas → convite de residência

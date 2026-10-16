@@ -13,7 +13,7 @@ import { fmtL, money, nextId, post, remember } from '../../util';
 import { P, actOf, clamp01, type NegSession } from './state';
 import { gainXp, ownerBonus } from './owner';
 import { fortuneFactor } from './life';
-import { leakSecret, SECRET_NAME } from './secrets';
+import { dossiers, leakSecret, secKind, secKnown, secLeaked, secOwner, secUsed, SECRET_NAME, useSecret } from './secrets';
 
 export type CardId = 'reputation' | 'vision' | 'promise' | 'bluff' | 'secret' | 'time';
 
@@ -135,7 +135,7 @@ export function propose(s: GameState, offer: NegSession['offer']): NegSession | 
 
 export function knownSecretFor(s: GameState, actId: string) {
   const act = s.acts[actId];
-  return P(s).secrets.find((x) => x.known && !x.leaked && x.used < 2 && act?.members.includes(x.owner));
+  return dossiers(s).find((x) => secKnown(s, x) && !secLeaked(s, x) && secUsed(s, x) < 2 && !!act?.members.includes(secOwner(x)));
 }
 
 export function cardAvailable(s: GameState, n: NegSession, c: CardId): boolean {
@@ -187,11 +187,11 @@ export function playCard(s: GameState, r: Rng, c: CardId): NegSession | null {
     }
     case 'secret': {
       const sec = knownSecretFor(s, n.actId)!;
-      sec.used += 1;
+      useSecret(s, sec);
       n.ask.advance = n.floor.advance;
       n.ask.royalty = n.floor.royalty;
       n.patience += 20;
-      n.log.push(fmtL(l('Você menciona, baixinho, {k}. Eles empalidecem.', 'You quietly mention {k}. They go pale.'), { k: SECRET_NAME[sec.kind] }));
+      n.log.push(fmtL(l('Você menciona, baixinho, {k}. Eles empalidecem.', 'You quietly mention {k}. They go pale.'), { k: SECRET_NAME[secKind(sec)] }));
       if (r.chance(0.25)) {
         act.trust = clamp01(act.trust - 20);
         s.player.reputation.artists = clamp01(s.player.reputation.artists - 5);

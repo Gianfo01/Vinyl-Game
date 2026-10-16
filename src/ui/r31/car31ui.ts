@@ -17,7 +17,7 @@ import { FMT_NAME31, ROTS31, addGrid31, answerJaba31, cands31, cityBoard31, clip
 import { LISTS31, LIST_NAME31, LIST_SIZE31, addList31, answerBoy31, boyCost31, boyWhy31, cands31p, dropList31, farmSeen31, moodOn31, platRo31, platVentures31, purgeFarm31, subsShare31 } from '../../sim/sys/car31plat';
 import { EXCL_KM31, EXCL_WK31, NEW_FAME31, exBlocked31, exclOf31, exclQuote31, setExcl31, setOpener31, stageRo31, venueNow31 } from '../../sim/sys/car31stage';
 import { f12 } from '../../sim/sys/fest12';
-import { liveOf } from '../../sim/sys/live/state';
+import { ownFests } from '../../sim/sys/feststore';
 import { ASK31, ASKS_BASE31, ASKS_MORE31, askFor31, askLock31, askOdds31, moreRo31, setSyn31, setTarget31, synCands31, synSlots31, targetOf31, vehicles31, yearList31, type Ask31k } from '../../sim/sys/car31more';
 import { CARS31, DEF31, activeCars31, progView31, type Car31 } from '../../sim/sys/car31prog';
 import { countryName, countryOfCity } from '../../data/geo';
@@ -158,7 +158,7 @@ function stageView(s: GameState): HTMLElement {
     car31On(s, 'excl') ? exclView(s) : null);
 }
 function exclView(s: GameState): HTMLElement | null {
-  const fests = liveOf(s).fests.filter((f) => Object.keys(f12(s, f).deals).length);
+  const fests = ownFests(s).filter((f) => Object.keys(f12(s, f).deals).length);
   if (!fests.length) return null;
   return section(t(l('Exclusividade nos festivais', 'Festival exclusivity')),
     h('p', { class: 'small muted' }, t(l('Cláusula com raio e prazo: o artista não toca perto do festival antes nem depois da edição. Quanto maior, mais cara e mais festivais rivais ela bloqueia (mais procura). Se ele tocar dentro do raio, a cláusula cai: festival rival paga multa; show marcado por você mesmo só custa reputação.', 'A clause with radius and term: the act does not play near the festival before or after the edition. The wider, the pricier, and the more rival festivals it blocks (more demand). If they play inside the radius, the clause falls: a rival festival pays a penalty; a show you booked yourself only costs reputation.'))),
