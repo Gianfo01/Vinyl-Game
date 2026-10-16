@@ -127,7 +127,7 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   - consistência de paleta e escala;
   - animações pequenas (luz, fumaça, gente andando);
   - a prévia da nova run e a tela inicial (abaixo).
-- **EXP-9 · Nova run (rápida e completa)** — interface · mocks `onda5-mock-novarun-*.png`:
+- **EXP-9 · Nova run (rápida e completa)** — interface · mocks `onda5-mock-novarun-*.png` (aprovados pelo dono, 2026-10-16):
   - **Começo rápido:** uma ficha de inscrição só, com as 7 escolhas principais: quem é você (com editor de personagem:
     boneco do jogo, nome, idade, pele, cabelo, roupa, acessório, sortear; traço de personalidade opcional), cidade,
     carreira (6 + "mais" na completa), ano (régua com as eras), tamanho do começo (iniciante → em crise), dificuldade e duração. Além delas,
@@ -140,7 +140,7 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
       mais uma imagem parada fora do design;
     - o boneco do jogador;
     - o resumo em texto e as etiquetas das regras.
-- **EXP-10 · Tela inicial com arte própria** — arte · mock `onda5-mock-inicio.png`:
+- **EXP-10 · Tela inicial com arte própria** — arte · mock `onda5-mock-inicio.png` (aprovado pelo dono, 2026-10-16):
   - **Cena musical feita com a própria arte do jogo** (bonecos `avatarSprite`, bateria/amplificadores/caixas/plateia de
     `stage31px`, horizonte `renderSky27` da cidade e da época; rascunho em `docs/r31/mocks/onda5/home-src/`) no lugar
     da sede: palco à noite, banda tocando, plateia, fachos de luz, lua de vinil e letreiro. A mesma cena é a prévia da
