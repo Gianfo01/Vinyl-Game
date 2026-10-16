@@ -29,6 +29,7 @@ import { _secrets23, addSecret23, raise23, sec23, secretsOf23, type Sec23 } from
 import { vices } from '../vices';
 import { OFF_AUD27 } from './off';
 import { actsNow27 } from '../../tickcache27';
+import { purse } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { addStaffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
@@ -177,7 +178,7 @@ export const SHARK_EVS27: EventDef[] = [{
         const ln = loanOf(s, String(c.loan)); if (!ln) return;
         const can = ln.k === 'p' ? Math.max(0, ownerOf(s).wealth) * 0.4 : Math.max(0, s.player.cash) * 0.3;
         const pay = Math.round(Math.min(ln.bal(), can));
-        if (pay > 0) { if (ln.k === 'p') ownerOf(s).wealth -= pay; else post(s, `shark27pay:${c.loan}:${s.week}`, -pay, 'loans', 'Pagamento ao agiota (visita)'); ln.set(ln.bal() - pay); }
+        if (pay > 0) { if (ln.k === 'p') purse(s, -pay, 'loan', 'shark27:visit', { ben: 'ext' }); else post(s, `shark27pay:${c.loan}:${s.week}`, -pay, 'loans', 'Pagamento ao agiota (visita)'); ln.set(ln.bal() - pay); }
         ln.clearMiss();
         const x = shark27(s).L[String(c.loan)]; if (x) { x.miss = 0; if (x.o) crime17(s).org[x.o] = clamp((crime17(s).org[x.o] ?? 0) + 4, -100, 100); }
         ownerOf(s).stress = clamp(ownerOf(s).stress + 4, 0, 100);

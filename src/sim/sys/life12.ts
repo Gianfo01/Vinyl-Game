@@ -19,6 +19,9 @@ import { C, EVENTS } from './lifeevents10/data';
 import { ownerOf } from './people/owner';
 import { vices } from './vices';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { sw } from '../r31/switches';
+import { withTxn } from '../r31/txn';
 
 export type RId = 'gym' | 'therapy' | 'family' | 'date' | 'hobby' | 'practice';
 export type RMode = 'off' | 'need' | 'always';
@@ -200,7 +203,7 @@ function applyVision(s: GameState, p: HeirPlan, name: string): void {
   if (p.vision === 'hits') { rep.commercial = clamp(rep.commercial + 6, 0, 100); rep.artistic = clamp(rep.artistic - 6 * mult, 0, 100); hit((a) => a.fame < 30, fmtL(l('{n} assumiu em {y} e só quer hits — nossa vez acabou.', '{n} took over in {y} and only wants hits — our turn is over.'), { n: name, y: s.year }), -0.15); }
   if (p.vision === 'art') { rep.artistic = clamp(rep.artistic + 6, 0, 100); rep.commercial = clamp(rep.commercial - 5 * mult, 0, 100); hit((a) => a.fame >= 45, fmtL(l('{n} assumiu em {y} e torce o nariz para quem vende.', '{n} took over in {y} and sneers at whoever sells.'), { n: name, y: s.year }), -0.12); }
   if (p.vision === 'expand') { post(s, `r12vis:${s.week}`, -money(s, 30000 * mult), 'misc', 'Expansão do herdeiro'); rep.institutional = clamp(rep.institutional + 5, 0, 100); }
-  if (p.vision === 'cashout') { const o = ownerOf(s); const v = money(s, 40000); o.wealth += v; post(s, `r12vis:${s.week}`, -v, 'misc', 'Dividendo do herdeiro'); rep.artists = clamp(rep.artists - 6 * mult, 0, 100); hit(() => true, fmtL(l('{n} assumiu em {y} falando em vender o selo.', '{n} took over in {y} talking about selling the label.'), { n: name, y: s.year }), -0.1); }
+  if (p.vision === 'cashout') { const v = money(s, 40000); if (sw<boolean>(s, 'purse31.draws')) { withTxn({ payer: 'label', owner: 'me', beneficiary: 'me' }, () => post(s, `r12vis:${s.week}`, -v, 'owner_draw', 'Dividendo do herdeiro')); } else post(s, `r12vis:${s.week}`, -v, 'misc', 'Dividendo do herdeiro'); purse(s, v, 'dividend', 'heir:cashout', { payer: 'label' }); rep.artists = clamp(rep.artists - 6 * mult, 0, 100); hit(() => true, fmtL(l('{n} assumiu em {y} falando em vender o selo.', '{n} took over in {y} talking about selling the label.'), { n: name, y: s.year }), -0.1); }
   if (p.stance === 'groomed') rep.artists = clamp(rep.artists + 3, 0, 100);
   const t = fmtL(p.stance === 'refused'
     ? l('{n} assume com a mágoa da conversa de {y0} e aplica "{v}" com força dobrada.', '{n} takes over carrying the grudge from {y0} and applies "{v}" twice as hard.')

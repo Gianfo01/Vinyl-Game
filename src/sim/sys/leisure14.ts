@@ -27,6 +27,7 @@ import { scene12 } from './scenes12';
 import { actsOfPerson17 } from '../actidx17';
 import { relief27 } from '../relief27';
 import { actsNow27 } from '../tickcache27';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { rel0, relAdd, relTouch } from '../opinion';
 import { meNode31, meet31, node31 } from '../social31';
 
@@ -527,7 +528,7 @@ export function goOut14(s: GameState, k: Spot14): { ok: boolean; text: L; met: {
   if (o.wealth < c) return no(l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.'));
   const e = spendEnergy(s, 1);
   if (e) return no(e);
-  o.wealth -= c;
+  purse(s, -c, 'leisure', 'leisure14', { who: o });
   const st = lz14(s);
   st.pl.v[k] = mIdx(s);
   const r = Rng.fromSeed(`lz14p:${s.config.seed}:${mIdx(s)}:${k}:${st.pl.n++}`);

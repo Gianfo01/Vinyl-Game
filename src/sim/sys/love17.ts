@@ -21,6 +21,7 @@ import { comeOut, isQueer, isRealP, marriageLegal, sexOf } from './sex17';
 import { registerSituation } from './situations17';
 import { soul } from './soul9';
 import { actsNow27 } from '../tickcache27';
+import { purse, purseSet } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export interface Affair17 { name: string; pid?: string; since: number; sx: 'm' | 'f'; disc: number; married?: 1; ss?: 1; known?: 1 }
 export interface Pay17 { kind: 'alimony' | 'child'; to: string; amt: number; until: number; kid?: string }
@@ -88,7 +89,7 @@ function payP(s: GameState, real: number): L | null {
   const o = ownerOf(s);
   const c = money(s, real);
   if (o.wealth < c) return l('Patrimônio pessoal insuficiente (sai do seu bolso).', 'Not enough personal wealth (it comes out of your pocket).');
-  o.wealth -= c;
+  purse(s, -c, 'family', 'love17', { who: o });
   return null;
 }
 
@@ -215,7 +216,7 @@ export function divorce17(s: GameState, mode: 'amicable' | 'court', r: Rng): L |
   const w0 = o.wealth;
   const name = pt.name, born = pt.born, aff = pt.affinity;
   breakUp(s); // fecha o relacionamento (laços, ex, estresse) — partilha recalculada abaixo
-  o.wealth = w0 - T.share - T.fees;
+  purseSet(s, w0 - T.share - T.fees, 'legal', 'love17:divorce', { who: o, ben: 'ext' });
   if (T.alimony) L7.pay.push({ kind: 'alimony', to: name, amt: T.alimony, until: s.year + T.years });
   const lost = r.chance(T.custodyRisk);
   for (const k of o.kids) if (s.year - k.born < 18) L7.pay.push({ kind: 'child', to: name, amt: Math.round(T.child * (lost ? 1.5 : 1)), until: k.born + 18, kid: k.name });
@@ -294,9 +295,9 @@ registerSimHook('month', 'love17', (s) => {
   // pensões
   L7.pay = L7.pay.filter((x) => x.until > s.year);
   for (const x of L7.pay) {
-    if (o.wealth >= x.amt) { o.wealth -= x.amt; continue; }
+    if (o.wealth >= x.amt) { purse(s, -x.amt, 'family', 'alimony', { who: o, ben: 'ext' }); continue; }
     // atrasou: o ex guarda mágoa; na terceira, processo e manchete
-    o.wealth = Math.max(0, o.wealth);
+    purseSet(s, Math.max(0, o.wealth), 'family', 'alimony', { who: o });
     const ex = L7.exes.find((e) => e.name === x.to);
     if (ex) ex.aff = clamp(ex.aff - 6, 0, 100);
     if (r.chance(0.25)) {
@@ -405,7 +406,7 @@ registerSituation({
     { id: 'deny', label: l('Negar e brigar na justiça', 'Deny it and fight in court'), hint: l('Custas $5.000; o exame confirma 90% das vezes: escândalo de paternidade (sexo) e pensão mesmo assim.', 'Fees $5,000; the test confirms it 90% of the time: paternity scandal (sex) and support anyway.'),
       apply: (s, c, r) => {
         const L7 = love17(s); const x = L7.sec[Number(c.data.i)]; x.claim = s.year;
-        ownerOf(s).wealth -= money(s, 5000);
+        purse(s, -money(s, 5000), 'legal', 'love17:claim', { ben: 'ext' });
         if (!r.chance(0.9)) return l('O exame deu negativo. Caso encerrado.', 'The test came back negative. Case closed.');
         L7.pay.push({ kind: 'child', to: x.from, amt: Math.round(money(s, 220) + Math.max(0, ownerOf(s).wealth) * 0.0006), until: x.born + 18 });
         const t = fmtL(l('Exame de DNA confirma: {o} é pai/mãe da criança que negou.', 'DNA test confirms: {o} is the parent of the child they denied.'), { o: ownerOf(s).name });
@@ -432,9 +433,9 @@ registerSituation({
   },
   options: [
     { id: 'pay', label: l('Comprar o silêncio', 'Buy their silence'), hint: l('Custa $15.000 (era) do seu bolso; o livro sai sem as bombas.', 'Costs $15,000 (era) from your pocket; the book comes out without the bombshells.'),
-      apply: (s, c) => { ownerOf(s).wealth -= money(s, 15000); const e = love17(s).exes[Number(c.data.i)]; if (e) e.aff = 35; } },
+      apply: (s, c) => { purse(s, -money(s, 15000), 'family', 'love17:ex', { ben: 'ext' }); const e = love17(s).exes[Number(c.data.i)]; if (e) e.aff = 35; } },
     { id: 'sue', label: l('Processar para barrar', 'Sue to block it'), hint: l('Custas $6.000; 40% de liminar. Se perder, o livro vira best-seller.', 'Fees $6,000; 40% injunction. If you lose, the book becomes a best-seller.'),
-      apply: (s, c, r) => { ownerOf(s).wealth -= money(s, 6000); if (r.chance(0.4)) { const e = love17(s).exes[Number(c.data.i)]; if (e) e.aff = 30; return l('Liminar concedida: o livro foi recolhido.', 'Injunction granted: the book was pulled.'); } tellAll(s, Number(c.data.i), 1.3); return l('Liminar negada: o processo virou propaganda.', 'Injunction denied: the lawsuit became publicity.'); } },
+      apply: (s, c, r) => { purse(s, -money(s, 6000), 'legal', 'love17:injunction', { ben: 'ext' }); if (r.chance(0.4)) { const e = love17(s).exes[Number(c.data.i)]; if (e) e.aff = 30; return l('Liminar concedida: o livro foi recolhido.', 'Injunction granted: the book was pulled.'); } tellAll(s, Number(c.data.i), 1.3); return l('Liminar negada: o processo virou propaganda.', 'Injunction denied: the lawsuit became publicity.'); } },
     { id: 'ignore', label: l('Deixar sair', 'Let it come out'), hint: l('Grátis: as revelações viram fatos públicos (traição → escândalo; armário → exposição).', 'Free: the revelations become public facts (affair → scandal; closet → outing).'),
       apply: (s, c) => { tellAll(s, Number(c.data.i), 1); } },
   ],

@@ -48,6 +48,7 @@ import { chartHeaderImg29 } from '../pixel/badge29';
 import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
 import { askConfirm } from '../ask31';
+import { diaryCtxLine31 } from '../r31/results31mini'; // R31 onda 3 (P): diário com contexto
 import { viaScene31 } from '../r31/scene31reg'; // R31 · V: demitir em cena (ou 2 cliques)
 
 // ---------- Paradas ----------
@@ -540,7 +541,7 @@ export function diaryPanel(s: GameState): HTMLElement {
         h('button', { class: 'btn small ghost', onclick: async () => { const txt = landmarks28(s).map((m) => `${m.year}-${String(m.month + 1).padStart(2, '0')} ${t(m.text)}`).join('\n'); const ok = await copyText(`Masters — Run ${s.signature}\n${s.config.companyName}\n\n${txt}`); toast(ok ? t(l('Diário copiado.', 'Diary copied.')) : t(l('Não deu para copiar aqui.', 'Copy is not available here.')), ok ? 'good' : 'bad'); } }, t(l('Copiar diário', 'Copy diary'))),
       ),
       lost.queue + lost.gone ? h('p', { class: 'muted small' }, t(l('Consequências que se perderam no caminho: {n} (fila cheia: {q}; quem estava nelas saiu: {g}). Estão na sua história.', 'Consequences lost along the way: {n} (queue full: {q}; whoever was in them left: {g}). They are in your story.'), { n: lost.queue + lost.gone, q: lost.queue, g: lost.gone })) : null,
-      [...byYear.entries()].map(([y, list]) => h('div', { class: 'year' }, h('h4', null, y), h('ul', null, list.map((m) => h('li', null, h('span', { class: 'muted' }, monthName(m.month) + ' · '), t(m.text), m.actId ? h('span', null, ' ', actLink(s, m.actId)) : null, ' ', replayBtn16(s, m)))))),
+      [...byYear.entries()].map(([y, list]) => h('div', { class: 'year' }, h('h4', null, y), h('ul', null, list.map((m) => h('li', null, h('span', { class: 'muted' }, monthName(m.month) + ' · '), t(m.text), m.actId ? h('span', null, ' ', actLink(s, m.actId)) : null, diaryCtxLine31(s, m) /* R31 P (RN-10): contexto do momento */, ' ', replayBtn16(s, m)))))),
     ),
   );
 }

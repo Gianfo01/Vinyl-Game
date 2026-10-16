@@ -15,6 +15,7 @@ import { takeIdea } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { settleVocals } from './sys/vocals10';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { withTxn } from './r31/txn';
 
 export function songQ(song: Pick<Song, 'melody' | 'lyrics' | 'performance' | 'production' | 'originality'> & { instrumental?: boolean }): number {
   // Qualidade Q (GDD §12): 0,25 melodia + 0,20 letra + 0,25 performance + 0,20 produção + 0,10 originalidade
@@ -257,7 +258,7 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
   };
   // custo pago na programação (cancelar antes do lançamento devolve; GDD §27 "cancelar não cobra")
   const cost = releaseCost(s, p);
-  post(s, `relplan:${pr.id}`, -cost, 'release', `Lançamento ${pr.title}`);
+  withTxn({ artist: pr.actId, project: pr.id }, () => post(s, `relplan:${pr.id}`, -cost, 'release', `Lançamento ${pr.title}`)); // R31 P: marca gravada no ato
   if (labelFunded(s, p.actId)) {
     const c = s.contracts[act.contractId!];
     const press = pressingCost(s, p.formats, p.press);
@@ -274,7 +275,7 @@ export function cancelRelease(s: GameState, id: string): boolean {
   const pr = s.pendingReleases.find((x) => x.id === id);
   if (!pr) return false;
   const cost = (labelFunded(s, pr.actId) ? 0 : pressingCost(s, pr.formats, pr.press)) + pr.marketing.reduce((t, m) => t + m.budget, 0);
-  post(s, `relcancel:${pr.id}`, cost, 'release', `Cancelado ${pr.title}`);
+  withTxn({ artist: pr.actId, project: pr.id }, () => post(s, `relcancel:${pr.id}`, cost, 'release', `Cancelado ${pr.title}`)); // R31 P
   for (const sid of pr.songs) if (s.songs[sid]?.releaseId === pr.id) s.songs[sid].releaseId = undefined;
   s.pendingReleases = s.pendingReleases.filter((x) => x !== pr);
   return true;

@@ -18,6 +18,7 @@ import { cxOf } from './manager11';
 import { ownerOf } from './people/owner';
 import { SVC, isForeign, onServiceOutcome, providerById, registerContactBonus, requestService, signService, type Ask, type SvcKind } from './services12';
 import { dropClient, funds, grossShows, markRefused9, mgCap, mgRepGain9, refusedWait9, ventures, type Client } from './ventures9';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { addLoyaltyAt, forgetOpinion, loyaltyAt, setLoyaltyAt } from '../opinion';
 
 export type Area = 'recordings' | 'shows' | 'endorsements' | 'international';
@@ -95,7 +96,7 @@ function pay(s: GameState, amount: number, key: string, memo: string, c?: Client
   if (!amount) return;
   const mg = ventures(s).mg;
   if (mg.owner === 'label') post(s, `m12:${key}`, amount, 'business', memo);
-  else ownerOf(s).wealth += amount;
+  else purse(s, amount, 'business', 'm12');
   if (c && amount > 0) { c.earned += amount; mg.total += amount; }
 }
 

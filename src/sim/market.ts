@@ -1,3 +1,4 @@
+import { projAlias31, withTxn } from './r31/txn';
 import { POOL19 } from './pool19';
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
@@ -233,7 +234,9 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   const crit = pr.songs.reduce((t, id) => t + (s.songs[id]?.originality ?? 50), 0) / Math.max(1, pr.songs.length);
   const pressBoost = pr.marketing.some((m) => m.channel === 'press') ? 6 : 0;
   s.player.reputation.artistic = clamp(s.player.reputation.artistic + artDelta18(s.player.reputation.artistic, (crit + rel.q - 110 + pressBoost) / 40), 0, 100);
-  remember(s, 'release', fmtL(l('{act} lança "{title}" ({type}).', '{act} releases "{title}" ({type}).'), { act: act.name, title: rel.title, type: rel.type.toUpperCase() }), { actId: act.id });
+  for (const fn of projAlias31()) fn(s, pr.id, rel.id); // R31 P: o lançamento programado vira o lançamento (resultados juntam)
+  withTxn({ artist: act.id, project: rel.id, release: rel.id }, () => // R31 P: o diário guarda o lançamento em jogo
+  remember(s, 'release', fmtL(l('{act} lança "{title}" ({type}).', '{act} releases "{title}" ({type}).'), { act: act.name, title: rel.title, type: rel.type.toUpperCase() }), { actId: act.id }));
   runSimHooks('launch', s, r, { release: rel });
   return rel;
 }

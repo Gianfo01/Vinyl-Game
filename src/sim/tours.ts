@@ -21,6 +21,7 @@ import { take360 } from './sys/deal360_17';
 import { TOUR18, type Kit18 } from './tourhook18';
 import { cashWhy20, freeCash20 } from './oblig20';
 import { DEMO29 } from './demo29hook';
+import { withTxn } from './r31/txn';
 
 export const TICKET = [12, 25, 45, 70, 95];
 /** R31 D: cansaço por dia de viagem pelo meio do trecho (antes, 0,8 para todo meio). */
@@ -179,7 +180,7 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
     id: nextId(s, 'tr'), actId: act.id, name: p.name?.trim() || fmtL(l('Turnê {y}', '{y} Tour'), { y: s.year }).pt, stops: est.stops, setlist: p.setlist, minutes: p.minutes,
     production: p.production, role: p.role, partnerActId: p.partnerActId, crew: p.crew, pay: p.pay, costReserved: est.logistics, revenue: 0, costs: est.logistics, status: 'planned', log: [], accidents: 0,
   };
-  post(s, `tour:${tour.id}`, -est.logistics, 'live_costs', `Logística ${tour.name}`);
+  withTxn({ artist: act.id, project: tour.id, tour: tour.id }, () => post(s, `tour:${tour.id}`, -est.logistics, 'live_costs', `Logística ${tour.name}`)); // R31 P: marca gravada no ato
   s.tours.push(tour);
   if (p.kit) tour.kit18 = { ...p.kit };
   TOUR18.planned?.(s, tour, p.kit, { people: activeMembers(s, act).length + Math.max(1, p.crew), km: est.km, travel: 0, shows: est.stops.length, days: est.days, tiers: est.stops.map((x) => x.tier), gross: est.expectedRevenue, fame: act.fame, members: activeMembers(s, act).length });

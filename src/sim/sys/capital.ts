@@ -16,6 +16,7 @@ import { monthlyCosts } from '../economy';
 import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { value31On } from '../r31/value31';
 
 // ---------------------------------------------------------------- tipos de investidor
@@ -174,7 +175,7 @@ export function injectCapital(s: GameState, realAmount: number): L | null {
   const amt = money(s, realAmount);
   if (amt <= 0) return l('Valor inválido.', 'Invalid amount.');
   if (o.wealth < amt) return l('Seu patrimônio pessoal não cobre esse aporte.', 'Your personal wealth does not cover this.');
-  o.wealth -= amt;
+  purse(s, -amt, 'capital', 'capital:inject', { who: o, ben: 'label' });
   post(s, `inject:${s.week}:${capital(s).log.length}`, amt, 'owner_capital', 'Aporte do dono');
   const c = capital(s);
   if (c.investors.length) {
@@ -194,7 +195,7 @@ export function lendToCompany(s: GameState, realAmount: number): L | null {
   const amt = money(s, realAmount);
   if (amt <= 0) return l('Valor inválido.', 'Invalid amount.');
   if (o.wealth < amt) return l('Seu patrimônio pessoal não cobre esse empréstimo.', 'Your personal wealth does not cover this loan.');
-  o.wealth -= amt;
+  purse(s, -amt, 'capital', 'capital:ownerloan', { who: o, ben: 'label' });
   capital(s).ownerLoan += amt;
   post(s, `ownerloan:${s.week}:${capital(s).log.length}`, amt, 'financing', 'Empréstimo do dono');
   logC(s, fmtL(l('Você emprestou ${v} à empresa (3% do saldo + 1% de juros voltam por mês).', 'You lent ${v} to the company (3% of the balance + 1% interest comes back monthly).'), { v: Math.round(realAmount) }), 'info');
@@ -210,7 +211,7 @@ export function withdrawFromCompany(s: GameState, r: Rng, realAmount: number): L
   const c = capital(s);
   post(s, `withdraw:${s.week}:${c.log.length}`, -amt, 'owner_draw', 'Retirada extraordinária do dono');
   const tax = Math.round(amt * 0.2);
-  o.wealth += amt - tax;
+  purse(s, amt - tax, 'draw', 'capital:withdraw', { who: o, payer: 'label' });
   const v = valuation(s);
   const ratio = amt / Math.max(1, v);
   const notes: L[] = [l('20% ficaram com o fisco.', '20% went to the taxman.')];
@@ -252,7 +253,7 @@ export function payDividend(s: GameState, frac: number): L | null {
   const c = capital(s);
   post(s, `div6:${s.week}`, -total, 'dividends', 'Dividendos');
   const mine = Math.round(total * ownerShare(s) * 0.85);
-  ownerOf(s).wealth += mine;
+  purse(s, mine, 'dividend', 'capital:div', { payer: 'label' });
   c.dividendsYear[s.year] = (c.dividendsYear[s.year] ?? 0) + total;
   modAll(s, l('Dividendos pagos', 'Dividends paid'), (inv) => (inv.kind === 'family' || inv.kind === 'shady' ? 18 : inv.kind === 'vc' || inv.kind === 'tech' ? -4 : 6) * Math.min(2, frac * 10), 1.5);
   if (s.listing.listed) s.listing.price = Math.round(s.listing.price * (1 + frac * 0.2));
@@ -363,7 +364,7 @@ export function buyBack(s: GameState, invId: string, from: 'company' | 'personal
   } else {
     const o = ownerOf(s);
     if (o.wealth < price) return l('Seu patrimônio pessoal não cobre a recompra.', 'Your personal wealth does not cover the buyback.');
-    o.wealth -= price;
+    purse(s, -price, 'capital', 'capital:buyback', { who: o, ben: 'label' });
   }
   c.investors = c.investors.filter((x) => x !== inv);
   logC(s, fmtL(l('Você recomprou os {p}% de {n}.', 'You bought back {n}\'s {p}%.'), { n: inv.name, p: Math.round(inv.share * 100) }), 'good');
@@ -492,13 +493,13 @@ registerSimHook('month', 'capital', (s, r) => {
     const interest = Math.round(c.ownerLoan * 0.01);
     post(s, `ownerloanpay:${s.year}:${s.month}`, -(pay + interest), 'financing', 'Pagamento do empréstimo do dono');
     c.ownerLoan -= pay;
-    o.wealth += pay + interest;
+    purse(s, pay + interest, 'capital', 'capital:loanpay', { who: o, payer: 'label' });
   }
   // cartão corporativo: a empresa paga suas contas; auditoria pode achar
   if (c.companyCard) {
     const living = money(s, 200 + o.kids.length * 120 + 150);
     post(s, `ccard:${s.year}:${s.month}`, -living, 'owner_draw', 'Despesas pessoais no cartão da empresa');
-    o.wealth += living;
+    purse(s, living, 'draw', 'capital:card', { who: o, payer: 'label' });
     c.cardAccrued += living;
     const risk = (c.investors.length ? 0.04 : 0.015) + (s.listing.listed ? 0.04 : 0);
     if (r.chance(risk)) {

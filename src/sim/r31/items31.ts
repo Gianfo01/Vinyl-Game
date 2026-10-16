@@ -29,6 +29,7 @@ import { createObj, itemModel, obj31, offer, registerItemModel, removeObj, takeO
 import { CO31, ME31, lockedRelic31, objectsOn31, relicEvent31, relicMeasure31, syncRelic31, violinOk31 } from './relic31';
 import { registerEditable, registerRunnable } from './editor';
 import { withTxn } from './txn';
+import { purse } from './purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // ---------------------------------------------------------------- catálogo
 
@@ -306,7 +307,7 @@ function pay31(s: GameState, how: 'me' | 'co', price: number, key: string, memo:
   if (how === 'me') {
     const o = ownerOf(s);
     if (o.wealth < price) return l('Patrimônio pessoal insuficiente (sai do seu bolso, não da empresa).', 'Not enough personal wealth (it comes out of your pocket, not the company).');
-    o.wealth -= price;
+    purse(s, -price, gift ? 'gift' : 'goods', gift ? 'items31:gift' : 'items31:buy', { who: o, ben: gift ? `p:${gift}` : 'me' });
     return null;
   }
   if (freeCash20(s) < price) return cashWhy20(s, price, l('Caixa da empresa insuficiente.', 'Not enough company cash.'));

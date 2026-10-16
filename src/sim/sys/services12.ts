@@ -15,6 +15,7 @@ import { fmtL, money, nextId, notify, post } from '../util';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
 import { ventures, type Holder } from './ventures9';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type SvcKind = 'studio' | 'producer' | 'booking' | 'festival' | 'label' | 'media';
 export const SVC: Record<SvcKind, { name: L; verb: L; pays: boolean; base: number; from: number }> = {
@@ -144,7 +145,7 @@ export function payFrom(s: GameState, payer: Payer, a: Act, amount: number, key:
   if (payer === 'label') { if (s.player.cash < amount) return false; post(s, `s12:${key}`, -amount, 'business', memo); return true; }
   const o = ownerOf(s);
   if (o.wealth < amount) return false;
-  o.wealth -= amount;
+  purse(s, -amount, 'business', 'svc:pay', { who: o, ben: a.id });
   return true;
 }
 

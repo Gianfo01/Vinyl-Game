@@ -23,6 +23,7 @@ import { playerFame } from '../love17';
 import { ownerOf } from '../people/owner';
 import { P } from '../people/state';
 import { OFF_AUD27 } from './off';
+import { purse } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { addStaffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
@@ -89,7 +90,7 @@ export function supportBlock27(s: GameState, i: number): L | null {
 export function supportKidCareer27(s: GameState, i: number): L | null {
   const b = supportBlock27(s, i); if (b) return b;
   const v = money(s, KIN_COST27.support), kx = kxAt(s, i), m = memo(s, i), k = kidAt(s, i);
-  ownerOf(s).wealth -= v;
+  purse(s, -v, 'family', 'kin27', { ben: 'ext' });
   m.sup = s.year;
   kx.bond = clamp(kx.bond + 10, 0, 100);
   const a = kx.actId ? s.acts[kx.actId] : undefined;
@@ -114,7 +115,7 @@ export function schoolBlock27(s: GameState, i: number): L | null {
 export function payKidSchool27(s: GameState, i: number, kind: 'college' | 'conservatory'): L | null {
   const b = schoolBlock27(s, i) ?? wealthOk(s, money(s, KIN_COST27[kind])); if (b) return b;
   const k = kidAt(s, i), x = kidOf(s, k), kx = kxAt(s, i), m = memo(s, i);
-  ownerOf(s).wealth -= money(s, KIN_COST27[kind]);
+  purse(s, -money(s, KIN_COST27[kind]), 'family', 'kin27:help', { ben: 'ext' });
   m.sch = kind;
   kx.bond = clamp(kx.bond + 6, 0, 100);
   if (kind === 'college') {

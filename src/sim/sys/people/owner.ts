@@ -13,6 +13,7 @@ import { fmtL, money, notify, post, remember } from '../../util';
 import { P, clamp01, type Owner } from './state';
 import { perk } from '../../perks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
+import { purse, purseSet } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type OwnerAttr = keyof Owner['attrs'];
 
@@ -134,7 +135,7 @@ export function withdraw(s: GameState, amount: number): L | null {
   if (amount <= 0) return l('Valor inválido.', 'Invalid amount.');
   if (freeCash20(s) < amount) return cashWhy20(s, amount, l('A empresa não tem esse caixa.', 'The company does not have that cash.'));
   post(s, `ownerdraw:${s.week}`, -amount, 'owner_draw', 'Retirada do dono');
-  o.wealth += amount;
+  purse(s, amount, 'draw', 'withdraw', { who: o, payer: 'label' });
   s.player.reputation.artists = clamp01(s.player.reputation.artists - Math.min(3, amount / Math.max(1, money(s, 50000))));
   return null;
 }
@@ -145,7 +146,7 @@ export function invest(s: GameState, amount: number): L | null {
   if (amount <= 0) return l('Valor inválido.', 'Invalid amount.');
   if (o.wealth < amount) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
   post(s, `ownerinvest:${s.week}`, amount, 'owner_draw', 'Aporte do dono');
-  o.wealth -= amount;
+  purse(s, -amount, 'capital', 'invest', { who: o, ben: 'label' });
   return null;
 }
 
@@ -158,7 +159,7 @@ export function buyHouse(s: GameState, id: string): L | null {
   const resale = o.house >= 0 ? Math.round(money(s, HOUSES[o.house].price) * 0.7) : 0;
   const price = money(s, def.price);
   if (o.wealth + resale < price) return l('Patrimônio pessoal insuficiente (a casa sai do seu bolso, não da empresa).', 'Not enough personal wealth (the house comes out of your pocket, not the company).');
-  o.wealth += resale - price;
+  purse(s, resale - price, 'home', 'buyHouse', { who: o });
   o.house = idx;
   o.stress = clamp01(o.stress - 10);
   remember(s, 'owner_house', fmtL(l('{o} se muda: {h}.', '{o} moves into: {h}.'), { o: o.name, h: def.name }));
@@ -170,7 +171,7 @@ export function vacation(s: GameState): L | null {
   if (o.vacationUntil && o.vacationUntil > s.week) return l('Já está de férias.', 'Already on vacation.');
   const cost = money(s, 1500 + o.kids.length * 300);
   if (o.wealth < cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  o.wealth -= cost;
+  purse(s, -cost, 'leisure', 'vacation', { who: o });
   o.vacationUntil = s.week + 3;
   o.stress = clamp01(o.stress - 25);
   o.health = clamp01(o.health + 3);
@@ -183,7 +184,7 @@ export function ownerCourse(s: GameState, a: OwnerAttr): L | null {
   const cost = money(s, 2500);
   if (o.wealth < cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
   if (s.flags[`ownercourse:${a}`] && s.week - s.flags[`ownercourse:${a}`] < 26) return l('Um curso por atributo a cada seis meses.', 'One course per attribute every six months.');
-  o.wealth -= cost;
+  purse(s, -cost, 'leisure', 'course', { who: o });
   s.flags[`ownercourse:${a}`] = s.week;
   gainXp(s, a, 25);
   o.stress = clamp01(o.stress + 4);
@@ -222,7 +223,7 @@ export function succession(s: GameState, r: Rng, reason: 'retire' | 'death' | 'h
     next.born = k.born;
     next.since = s.year;
     for (const a of Object.keys(next.attrs) as OwnerAttr[]) next.attrs[a] = Math.round(old.attrs[a] * 0.4 + k.aptitude * 0.4 + next.attrs[a] * 0.2);
-    next.wealth = Math.round(old.wealth * 0.7); // imposto de herança
+    purseSet(s, Math.round(old.wealth * 0.7), 'inherit', 'succession', { who: next }); // imposto de herança
     next.house = old.house;
   } else if (heir?.startsWith('staff:') && s.player.staff.some((x) => x.id === heir.slice(6))) {
     const sf = s.player.staff.find((x) => x.id === heir.slice(6))!;
@@ -231,7 +232,7 @@ export function succession(s: GameState, r: Rng, reason: 'retire' | 'death' | 'h
     const boost = Math.round((sf.skill - 50) / 2);
     const key: OwnerAttr = sf.role === 'anr' || sf.role === 'producer' ? 'ear' : sf.role === 'legal' || sf.role === 'manager' ? 'negotiation' : sf.role === 'publicist' ? 'charisma' : 'management';
     next.attrs[key] = clamp01(next.attrs[key] + 10 + boost, 10, 95);
-    next.wealth = money(s, 5000);
+    purseSet(s, money(s, 5000), 'inherit', 'succession', { who: next });
     s.player.staff = s.player.staff.filter((x) => x !== sf);
   } else {
     // rodada 9: sem ninguém para quem passar o selo, a carreira termina (não há dono aleatório)
@@ -259,11 +260,11 @@ export function ownerMonth(s: GameState, r: Rng, signedBefore: number): void {
     // a retirada só sai se a empresa aguentar seis meses dela
     if (s.player.cash > o.salary * 6) {
       post(s, 'owner_salary', -o.salary, 'owner_draw', 'Retirada do dono');
-      o.wealth += o.salary;
+      purse(s, o.salary, 'salary', 'owner_salary', { who: o, payer: 'label' });
     } else o.stress = clamp01(o.stress + 3);
   }
   const house = o.house >= 0 ? HOUSES[o.house] : undefined;
-  o.wealth -= money(s, 200 + o.kids.length * 120 + (house ? house.price * 0.001 : 150) + (o.spouse ? 100 : 0));
+  purse(s, -(money(s, 200 + o.kids.length * 120 + (house ? house.price * 0.001 : 150) + (o.spouse ? 100 : 0))), 'living', 'living', { who: o });
   // estresse e saúde
   let ds = 0;
   if (s.player.cash < 0) ds += 6;

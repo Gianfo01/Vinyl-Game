@@ -13,6 +13,7 @@ import { backgroundById, life, playerPerson, type BackgroundId } from './life';
 import { ownerOf } from './people/owner';
 import { PLAYER_TRAITS, playerTraitById, styleById, visualById, type OwnerAttrId, type StyleId } from './persona/data';
 import { ORIGIN_OF_BACKGROUND, originById, type OriginId } from './identity/data';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export * from './persona/data';
 
@@ -191,7 +192,7 @@ registerSimHook('month', 'persona', (s, r) => {
   const o = ownerOf(s);
   // renda pessoal (fundo da família, dividendos, frugalidade)
   const w = perkSum(s, 'wealth');
-  if (w) o.wealth += money(s, w);
+  if (w) purse(s, money(s, w), 'income', 'persona:perk', { who: o });
   // moral do elenco
   const m = perkSum(s, 'morale');
   if (m) for (const id of playerActs(s)) for (const pid of s.acts[id]?.members ?? []) { const p = s.persons[pid]; if (p?.alive && !p.isPlayer) p.morale = clamp(p.morale + m, 0, 100); }
@@ -204,8 +205,8 @@ registerSimHook('month', 'persona', (s, r) => {
     if (c === 'drink') { o.stress = clamp(o.stress - 12, 0, 100); o.health = clamp(o.health - 1, 0, 100); if (r.chance(0.02)) { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100); notify(s, l('Fotos suas bêbado(a) numa festa saíram nos jornais.', 'Photos of you drunk at a party made the papers.'), 'bad'); } }
     if (c === 'overwork') { o.stress = clamp(o.stress - 6, 0, 100); const pt = life(s).partner; if (pt) pt.affinity = clamp(pt.affinity - 2, 0, 100); }
     if (c === 'recluse') { o.stress = clamp(o.stress - 10, 0, 100); if (r.chance(0.08)) o.attrs.charisma = Math.max(10, o.attrs.charisma - 1); }
-    if (c === 'meditation') { const cost = money(s, 80); if (o.wealth >= cost) { o.wealth -= cost; o.stress = clamp(o.stress - 8, 0, 100); } }
-    if (c === 'shopping') { o.wealth -= money(s, 400); o.stress = clamp(o.stress - 10, 0, 100); }
+    if (c === 'meditation') { const cost = money(s, 80); if (o.wealth >= cost) { purse(s, -cost, 'health', 'persona:meditation', { who: o }); o.stress = clamp(o.stress - 8, 0, 100); } }
+    if (c === 'shopping') { purse(s, -money(s, 400), 'leisure', 'persona:shopping', { who: o }); o.stress = clamp(o.stress - 10, 0, 100); }
   }
 });
 

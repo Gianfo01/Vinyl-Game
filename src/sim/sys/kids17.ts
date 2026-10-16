@@ -20,6 +20,7 @@ import { love17, playerFame } from './love17';
 import { ownerOf } from './people/owner';
 import { persona } from './persona';
 import { registerSituation } from './situations17';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type Temper17 = 'calm' | 'rebel' | 'artsy' | 'studious' | 'social';
 export const TEMPER17: Record<Temper17, L> = {
@@ -179,7 +180,7 @@ registerSituation({
     { id: 'strict', label: l('Pulso firme (castigo / internato)', 'Firm hand (grounded / boarding school)'), hint: l('Rebeldia −12, notas +8; vínculo −12.', 'Rebellion −12, grades +8; bond −12.'),
       apply: (s, c) => { const i = Number(c.data.i); const k = ownerOf(s).kids[i]; const x = kidOf(s, k); x.reb = clamp(x.reb - 12, 0, 100); x.grade = clamp(x.grade + 8, 0, 100); const kx = life(s).kidsX[i]; if (kx) kx.bond = clamp(kx.bond - 12, 0, 100); note(x, s.year, l('Castigo pesado.', 'Heavy punishment.')); close(s); } },
     { id: 'talk', label: l('Conversar + terapia familiar', 'Talk + family therapy'), hint: l('Custa $800 (era) e 1 de tempo livre: rebeldia −6, vínculo +8, seu estresse −5.', 'Costs $800 (era) and 1 free time: rebellion −6, bond +8, your stress −5.'),
-      apply: (s, c) => { const i = Number(c.data.i); const k = ownerOf(s).kids[i]; const x = kidOf(s, k); ownerOf(s).wealth -= money(s, 800); x.reb = clamp(x.reb - 6, 0, 100); const kx = life(s).kidsX[i]; if (kx) kx.bond = clamp(kx.bond + 8, 0, 100); const pp = playerPerson(s); if (pp) relieveLong(s, pp.id, 5); note(x, s.year, l('Terapia em família.', 'Family therapy.')); close(s); } },
+      apply: (s, c) => { const i = Number(c.data.i); const k = ownerOf(s).kids[i]; const x = kidOf(s, k); purse(s, -money(s, 800), 'family', 'kids17:therapy'); x.reb = clamp(x.reb - 6, 0, 100); const kx = life(s).kidsX[i]; if (kx) kx.bond = clamp(kx.bond + 8, 0, 100); const pp = playerPerson(s); if (pp) relieveLong(s, pp.id, 5); note(x, s.year, l('Terapia em família.', 'Family therapy.')); close(s); } },
     { id: 'free', label: l('Deixar viver a fase', 'Let them live it'), hint: l('Rebeldia +5, vínculo +4. Banda: talento +6. Festa/delegacia: boato se você for famoso(a).', 'Rebellion +5, bond +4. Band: talent +6. Party/arrest: rumor if you are famous.'),
       apply: (s, c) => {
         const i = Number(c.data.i); const k = ownerOf(s).kids[i]; const x = kidOf(s, k); const ev = String(c.data.ev);

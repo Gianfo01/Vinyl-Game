@@ -1,0 +1,13 @@
+/* R31 · onda 3 (P) — resultados por projeto/artista, extrato pessoal e contexto do diário. */
+.res31 td, .res31 th { font-variant-numeric: tabular-nums; }
+.res31 td:not(:first-child), .res31 th:not(:first-child) { text-align: right; white-space: nowrap; }
+.res31 tr.on31 td { background: var(--panel-2, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+.res31 tr.un31 td { border-top: 1px dashed var(--line); }
+.res31 tr.un31 td:nth-child(2) { text-align: left; white-space: normal; }
+.res31 tr.tot31 td { border-top: 2px solid var(--line); }
+.res31 tr.tot31 td:nth-child(2) { text-align: left; white-space: normal; }
+.neg31 { color: var(--bad); }
+.res31-mini { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; }
+.res31-mini .row { gap: 0.9rem; }
+.ctx31 { cursor: help; }
+@media (max-width: 640px) { .res31 { font-size: 0.82rem; } .res31 td:nth-child(3), .res31 th:nth-child(3) { display: none; } }

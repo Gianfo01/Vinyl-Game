@@ -35,6 +35,7 @@ import { addSecret23, raise23, secretsOf23 } from '../secrets23';
 import { vices } from '../vices';
 import { OFF_AUD27 } from './off';
 import { shark27 } from './shark27';
+import { purse } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { addStaffLoyalty, staffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
@@ -115,7 +116,7 @@ export const BURN_EVS27: EventDef[] = [{
     'Months of little sleep, deciding everything, putting out fires. The doctor is blunt: either you stop, or your body stops for you. The staff have noticed.'),
   options: [
     { id: 'rest', label: N('Parar um mês: médico e descanso', 'Stop for a month: doctor and rest'), hint: N('Custa do seu bolso; estresse −45 e desgaste longo −25; o tempo livre do mês acaba.', 'Paid from your pocket; stress −45 and long-term wear −25; this month\'s free time is gone.'),
-      apply: (s) => { ownerOf(s).wealth -= money(s, 2500); relieveMe(s, 45, 25); spendEnergy(s, energyLeft(s)); burn27(s).push = 0; logIt(s, N('Um mês longe de tudo. Você volta outra pessoa.', 'A month away from everything. You come back a different person.')); } },
+      apply: (s) => { purse(s, -money(s, 2500), 'health', 'burnout:break'); relieveMe(s, 45, 25); spendEnergy(s, energyLeft(s)); burn27(s).push = 0; logIt(s, N('Um mês longe de tudo. Você volta outra pessoa.', 'A month away from everything. You come back a different person.')); } },
     { id: 'family', label: N('Se apoiar na família', 'Lean on your family'), hint: N('Estresse −25; vínculo com os filhos +5; sem família por perto, ajuda menos.', 'Stress −25; bond with the kids +5; with no family around, it helps less.'),
       apply: (s) => { const L0 = life(s); const fam = !!L0.partner || ownerOf(s).kids.length > 0; relieveMe(s, fam ? 25 : 10, fam ? 10 : 3); for (const k of Object.values(L0.kidsX)) k.bond = clamp(k.bond + 5, 0, 100); if (L0.partner) L0.partner.affinity = clamp(L0.partner.affinity + 3, 0, 100); burn27(s).push = 0; } },
     { id: 'drink', label: N('Afogar no bar', 'Drown it at the bar'), hint: N('Estresse −30 agora; dependência de bebida +15 e atenção da imprensa.', 'Stress −30 now; drinking dependency +15 and press attention.'),

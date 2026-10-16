@@ -24,6 +24,7 @@ import { ownerOf } from './people/owner';
 import { labelValue } from './stakes8';
 import { rateTilt19 } from '../rates19';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 /** r19 (money19, N1/N5): ganchos da venda de master — direito de preferência e reação do artista. */
 export const SALE19: { rofr?: (s: GameState, rel: Release, price: number) => boolean; sold?: (s: GameState, rel: Release, price: number, rofr: boolean) => void; label?: (s: GameState, lbId: string) => void } = {};
 
@@ -220,7 +221,7 @@ export function sellLabel(s: GameState, bidId: string): L | null {
   s.player.loans = [];
   if (s.creditors) s.creditors.length = 0;
   const net = bidNet(s, b);
-  ownerOf(s).wealth += net.now;
+  purse(s, net.now, 'business', 'sale17:sale');
   if (net.later > 0) st.earn = { left: net.later, next: s.year + 1, lb: lb.id, base: Math.max(1, lb.revenueLastYear), pays: 2 };
   st.nc = { until: s.year + b.nonCompete, markets: [...s.player.territories] };
   if (b.consult) st.consult = { monthly: b.consult, until: s.week + 104 };
@@ -264,7 +265,7 @@ export function refound(s: GameState, name: string, city: string, capital: numbe
   if (capital < minRefound(s)) return l('Capital inicial baixo demais.', 'Starting capital too low.');
   if (o.wealth < need) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
   if (!cityById[city]) return l('Cidade inválida.', 'Invalid city.');
-  o.wealth -= need;
+  purse(s, -need, 'capital', 'sale17:found', { who: o, ben: 'label' });
   if (nb.blocked) { sale17(s).nc = undefined; log(s, l('Você pagou para se livrar da não-concorrência.', 'You paid to escape the non-compete.')); }
   s.config.companyName = name.trim() || `${o.name.split(' ').pop()} Records`;
   s.config.homeCity = city;
@@ -293,7 +294,7 @@ export function buyLabel17(s: GameState, labelId: string): L | null {
   if (o.wealth < price) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
   const nb = refoundBlock(s, lb.city);
   if (nb.blocked) return l('A não-concorrência ainda vale nessa região.', 'The non-compete still applies in that region.');
-  o.wealth -= price;
+  purse(s, -price, 'business', 'sale17:buy', { who: o });
   const cash = Math.max(0, lb.cash);
   transferLabel(s, lb, labelValuation(s, lb), price);
   if (cash) post(s, `sale17:buycash:${lb.id}`, cash, 'acquisitions', `Caixa de ${lb.name}`);
@@ -343,20 +344,20 @@ registerSimHook('month', 'sale17', (s) => {
   const st = sale17(s);
   const o = ownerOf(s);
   // consultoria paga ao ex-dono
-  if (st.consult && st.consult.until > s.week) o.wealth += st.consult.monthly;
+  if (st.consult && st.consult.until > s.week) purse(s, st.consult.monthly, 'income', 'sale17:consult', { who: o });
   // earn-out: em janeiro, metade do restante se o selo vendido manteve ≥ 80% da receita
   if (st.earn && s.month === 0 && s.year >= st.earn.next) {
     const lb = s.labels[st.earn.lb];
     const ratio = lb ? lb.revenueLastYear / st.earn.base : 0;
     const part = Math.round(st.earn.left / st.earn.pays);
     const paid = ratio >= 0.8 ? part : ratio >= 0.5 ? Math.round(part * 0.5) : 0;
-    if (paid) o.wealth += Math.round(paid * (1 - CAP_GAINS));
+    if (paid) purse(s, Math.round(paid * (1 - CAP_GAINS)), 'business', 'sale17:earnout', { who: o });
     log(s, fmtL(paid ? l('Earn-out: o selo vendido manteve {r}% da receita; você recebe {p}.', 'Earn-out: the sold label kept {r}% of revenue; you receive {p}.') : l('Earn-out perdido: o selo vendido caiu para {r}% da receita.', 'Earn-out lost: the sold label fell to {r}% of revenue.'), { r: Math.round(ratio * 100), p: `$${Math.round(paid / 100).toLocaleString('en-US')}` }));
     st.earn.left -= part; st.earn.pays -= 1; st.earn.next += 1;
     if (st.earn.pays <= 0) st.earn = undefined;
   }
   // sem gravadora: o caixa residual não pode afundar você (os outros negócios pagam do bolso)
-  if (!hasLabel(s) && s.player.cash < 0 && o.wealth > 0) { const x = Math.min(o.wealth, -s.player.cash); o.wealth -= x; post(s, `sale17:cover:${s.month}`, x, 'investment', 'Aporte pessoal'); }
+  if (!hasLabel(s) && s.player.cash < 0 && o.wealth > 0) { const x = Math.min(o.wealth, -s.player.cash); purse(s, -x, 'capital', 'sale17:cover', { who: o, ben: 'label' }); post(s, `sale17:cover:${s.month}`, x, 'investment', 'Aporte pessoal'); }
   // lances de fundos por masters antigos (mais fortes na era do streaming)
   st.cat = st.cat.filter((x) => x.expires >= s.week);
   if (hasLabel(s) && st.cat.length < 2) {

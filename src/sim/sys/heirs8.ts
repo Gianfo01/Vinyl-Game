@@ -19,6 +19,7 @@ import { makeOwner, ownerOf, successionGate, type OwnerAttr } from './people/own
 import { P, type Owner } from './people/state';
 import { persona, PLAYER_TRAITS } from './persona';
 import { vices } from './vices';
+import { purseSet } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export interface Relative { name: string; born: number; aptitude: number; rel: 'sibling' | 'parent' | 'cousin'; personId?: string }
 export interface HeirCand { key: string; name: string; born: number; aptitude: number; rel: 'kid' | 'spouse' | 'partner' | 'sibling' | 'parent' | 'cousin' | 'staff' | 'artist'; personId?: string; staffId?: string; actId?: string; /** r27 AUD2: peso extra na ordem (vínculo/caminho do filho, kin27) */ bonus?: number; note?: L }
@@ -239,7 +240,7 @@ export function applyHeir(s: GameState, r: Rng, key: string, reason: 'death' | '
       s.player.staff = s.player.staff.filter((x) => x !== sf);
     }
     if (c.rel === 'artist') { next.attrs.charisma = clamp(next.attrs.charisma + 12, 10, 95); next.attrs.ear = clamp(next.attrs.ear + 6, 10, 95); }
-    next.wealth = pv.wealth;
+    purseSet(s, pv.wealth, 'inherit', 'heirs8', { who: next });
     next.house = fam ? old.house : -1;
     next.retired = [...(old.retired ?? []), { name: old.name, years: `${old.since ?? old.born + 30}–${s.year}` }].slice(-6);
     next.stress = 35;

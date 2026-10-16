@@ -15,6 +15,7 @@ import { persona } from './persona';
 import { playerTraitById } from './persona/data';
 import { addSignal } from '../worldgen';
 import { relief27 } from '../relief27';
+import { purse, drawFor } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // ---------------------------------------------------------------- estado
 
@@ -85,7 +86,7 @@ function payWealth(s: GameState, real: number): L | null {
   const o = ownerOf(s);
   const c = money(s, real);
   if (o.wealth < c) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  o.wealth -= c;
+  purse(s, -c, 'vice', 'vice', { who: o });
   return null;
 }
 
@@ -156,8 +157,8 @@ export function goToRehab(s: GameState): L | null {
   if (v.rehab && v.rehab.until > s.week) return l('Já está internado.', 'Already in rehab.');
   const o = ownerOf(s);
   const cost = rehabCost(s);
-  if (o.wealth >= cost) o.wealth -= cost;
-  else post(s, `rehab:${s.week}`, -cost, 'misc', 'Clínica de reabilitação');
+  if (o.wealth >= cost) purse(s, -cost, 'health', 'rehab', { who: o });
+  else drawFor(s, `rehab:${s.week}`, cost, 'health', 'misc', 'Clínica de reabilitação', l('Reabilitação paga pela empresa', 'Rehab paid by the company'));
   v.rehab = { until: s.week + 6, vice: worst };
   spendEnergy(s, energyLeft(s));
   log(s, fmtL(l('Você se interna para tratar {v}.', 'You check into rehab for {v}.'), { v: VICE_INFO[worst].name }), 'good', true);
@@ -194,7 +195,7 @@ export function takePersonalLoan(s: GameState, lender: LenderId, amount: number)
   const def = LENDERS[lender];
   const loan: PersonalLoan = { id: nextId(s, 'pl'), lender, principal: amount, balance: amount, rate: def.rate, monthly: annuity(amount, def.rate, def.months), missed: 0, since: s.week };
   vices(s).loans.push(loan);
-  ownerOf(s).wealth += amount;
+  purse(s, amount, 'loan', 'ploan:take');
   log(s, fmtL(l('Empréstimo pessoal: {l}.', 'Personal loan: {l}.'), { l: def.name }), lender === 'shark' ? 'bad' : 'info', lender === 'shark');
   return null;
 }
@@ -205,7 +206,7 @@ export function repayPersonalLoan(s: GameState, id: string): L | null {
   if (!loan) return l('Empréstimo não encontrado.', 'Loan not found.');
   const o = ownerOf(s);
   if (o.wealth < loan.balance) return l('Patrimônio insuficiente para quitar.', 'Not enough wealth to pay it off.');
-  o.wealth -= loan.balance;
+  purse(s, -loan.balance, 'loan', 'ploan:payoff', { who: o, ben: 'ext' });
   v.loans = v.loans.filter((x) => x.id !== id);
   log(s, l('Dívida quitada.', 'Debt paid off.'), 'good');
   return null;
@@ -218,7 +219,7 @@ function loansMonth(s: GameState, r: Rng): void {
     const interest = Math.round((loan.balance * loan.rate) / 12);
     const due = Math.min(loan.monthly, loan.balance + interest);
     if (o.wealth >= due) {
-      o.wealth -= due;
+      purse(s, -due, 'loan', 'ploan:due', { who: o, ben: 'ext' });
       loan.balance = Math.max(0, loan.balance + interest - due);
       loan.missed = Math.max(0, loan.missed - 0.5);
     } else {
@@ -353,7 +354,7 @@ export function takeTrip(s: GameState, r: Rng, id: string): L | null {
   if (err) return err;
   const tp = tripById[id];
   spendEnergy(s, 2);
-  ownerOf(s).wealth -= money(s, tp.cost);
+  purse(s, -money(s, tp.cost), 'vice', 'trip');
   const o = ownerOf(s);
   o.stress = clamp(o.stress - tp.stress, 0, 100);
   o.health = clamp(o.health + tp.health, 0, 100);
@@ -385,7 +386,7 @@ function vicesMonth(s: GameState, r: Rng): void {
   const inRehab = !!v.rehab && v.rehab.until > s.week;
   if (v.smoking && !inRehab) {
     const cost = money(s, VICE_INFO.smoke.cost);
-    if (o.wealth >= cost) o.wealth -= cost;
+    if (o.wealth >= cost) purse(s, -cost, 'vice', 'smoke', { who: o });
     o.stress = clamp(o.stress - VICE_INFO.smoke.stress, 0, 100);
     o.health = clamp(o.health - VICE_INFO.smoke.health, 0, 100);
     v.dep.smoke = clamp(v.dep.smoke + VICE_INFO.smoke.dep, 0, 100);
@@ -424,8 +425,8 @@ function vicesMonth(s: GameState, r: Rng): void {
   // saúde no limite: internação
   if (o.health < 15) {
     const cost = money(s, 5000);
-    if (o.wealth >= cost) o.wealth -= cost;
-    else post(s, `hospital:${s.week}`, -cost, 'misc', 'Internação hospitalar');
+    if (o.wealth >= cost) purse(s, -cost, 'health', 'hospital', { who: o });
+    else drawFor(s, `hospital:${s.week}`, cost, 'health', 'misc', 'Internação hospitalar', l('Internação paga pela empresa', 'Hospital stay paid by the company'));
     o.health = 35;
     o.stress = clamp(o.stress + 10, 0, 100);
     const text = l('Internado às pressas: o corpo cobrou a conta. Os médicos mandam desacelerar.', 'Rushed to hospital: your body sent the bill. Doctors say slow down.');

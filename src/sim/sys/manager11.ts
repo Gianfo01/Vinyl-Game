@@ -17,6 +17,7 @@ import { ownerOf } from './people/owner';
 import { liveOf } from './live/state';
 import { funds, grossShows, mgCap, mgChance, mgGross, mgRepGain9, ventures, type Client } from './ventures9';
 import { isActive } from './careers12';
+import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 
 export type Goal = 'deal' | 'tour' | 'fame' | 'image';
 export const GOAL_NAME: Record<Goal, L> = {
@@ -52,7 +53,7 @@ function pay(s: GameState, amount: number, key: string, memo: string, c?: Client
   if (!amount) return;
   const mg = ventures(s).mg;
   if (mg.owner === 'label') post(s, `m11:${key}`, amount, 'business', memo);
-  else ownerOf(s).wealth += amount;
+  else purse(s, amount, 'business', 'm11');
   if (c && amount > 0) { c.earned += amount; mg.total += amount; }
 }
 
