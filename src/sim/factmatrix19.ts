@@ -26,6 +26,7 @@ export const GENERIC19 = ['bridge17:press', 'cine18:mem', 'post18:hall'];
 
 /** Tipos emitidos sem consumidor, com o motivo (revisar a cada rodada). */
 export const WHITELIST19: Record<string, string> = {
+  payola_refused: 'envelope recusado pelo diretor de programação (r31/w31.ts): a consequência (relação da estação) já sai no portão do payDJs; o fato é o registro secreto no diário',
   bail31: 'fiança paga pelo jogador na delegacia (under31): o efeito já sai na própria ação (a pessoa sai da cela, opinião e calor); o fato é o registro público no diário e no noticiário',
   look: 'aparência (look31): ensaio, transformação, corte, ícone, crítico — o efeito já sai na própria escolha (apelo, imagem, humor, opinião); o fato é o registro no diário e na ficha',
   look_rumor: 'boato de procedimento estético (look31): o próprio look31 decide a descoberta pela imprensa (vira secret_exposed); o fato é o registro do boato na ficha',

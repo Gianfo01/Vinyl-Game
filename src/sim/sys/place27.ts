@@ -59,9 +59,12 @@ export interface Place27 {
   /** prédio desenhado com este tipo */ draw: BKind;
   /** venda: vizinho à venda (hood19) ou casa de shows real (venues17) */ sale?: number;
   /** casa de shows real (venues17) */ venue?: string;
+  /** r31 (FOS): a casa da família Fossati (moradia da cidade comum que a família ocupa) */ fam31?: boolean;
   /** veículo de imprensa real (media17) */ outlet?: string;
   /** r31 (S): facção dona da fachada (id do crime17) */ org?: string;
 }
+/** r31 (FOS): a casa da família Fossati na cidade de início (sys/fossati31 preenche): ocupa um prédio de moradia. */
+export const FAMHOME27: { fn?: (s: GameState) => { name: L; what: L; owner: string; now: L; people: Person27[] } | null } = {};
 /** r31 (S): lugares do submundo na cidade (sys/under31 preenche): fachadas das facções do país, delegacia e beco. */
 export interface Under27 { k: 'facade' | 'police' | 'market'; key: string; name: L; what: L; owner: string; people: Person27[]; now: L; org?: string }
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
@@ -283,6 +286,14 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
     const lot = out[i].lot;
     out[i] = { id: `pl:${lot}`, lot, k: u.k, name: u.name, what: u.what, owner: u.owner, ownerK: 'npc', now: u.now, people: u.people, also: [], src: 'fill', draw: DRAW27[u.k], org: u.org };
   }
+  // r31 (FOS): a casa da família Fossati ocupa a moradia mais visível da cidade comum (ou outro prédio comum)
+  const fam = FAMHOME27.fn?.(s);
+  if (fam) {
+    const free = (p: Place27) => p.src === 'fill' && !p.venue && !p.org && FLAVOR27.includes(p.k) && p.k !== 'instruments';
+    const j = out.findIndex((p) => free(p) && p.k === 'apartments');
+    const i = j >= 0 ? j : out.findIndex(free);
+    if (i >= 0) { const lot = out[i].lot; out[i] = { id: `pl:${lot}`, lot, k: 'apartments', name: fam.name, what: fam.what, owner: fam.owner, ownerK: 'npc', now: fam.now, people: fam.people, also: [], src: 'fill', draw: DRAW27.apartments, fam31: true }; }
+  }
   const em = UNDER27.bar?.(s) ?? [];
   const bar = out.find((p) => p.k === 'bar');
   if (bar && em.length) bar.people.push(...em);
@@ -290,7 +301,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   if (CREW27.fn) {
     const copies = new Map<PlaceK27, number>();
     for (const p of out) {
-      if (p.k === 'label' || p.k === 'facade' || p.k === 'police' || p.k === 'market') continue;
+      if (p.k === 'label' || p.k === 'facade' || p.k === 'police' || p.k === 'market' || p.fam31) continue;
       const c = copies.get(p.k) ?? 0;
       copies.set(p.k, c + 1);
       const crew = CREW27.fn(s, p.k, c);
@@ -347,7 +358,7 @@ export const GO27: Partial<Record<PlaceK27, Goto18>> = {
 };
 
 /** Ações do lugar (com bloqueio explicado). `actId` = artista escolhido (padrão: o primeiro do elenco). */
-export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'>, actId?: string): PAct27[] {
+export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & { fam31?: boolean }, actId?: string): PAct27[] {
   const mine = activeMine(s);
   const a = (actId ? mine.find((x) => x.id === actId) : undefined) ?? mine[0];
   const noAct: L | undefined = a ? undefined : l('Você não tem artista ativo no elenco.', 'You have no active act on the roster.');
@@ -399,7 +410,9 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
     }
     default: break;
   }
-  if (p.src === 'fill' && !p.venue && p.k !== 'police' && p.k !== 'facade' && p.k !== 'market') out.push({ id: 'lot', lot: true, label: l('Comprar o imóvel / construir', 'Buy the property / build'), desc: l('Compra o lote e põe uma obra sua no lugar (Nosso mundo).', 'Buys the lot and puts your own works there (Our world).') });
+  // r31 (FOS): a Casa Fossati não se compra; leva à ficha da família (as ações ficam dentro da casa)
+  if (p.fam31) out.push({ id: 'fam31', label: l('Ver a ficha da família', 'See the family sheet'), desc: l('Efro, Lucia, Sonia, Antonella e Gianluca: papéis da época e ações.', 'Efro, Lucia, Sonia, Antonella and Gianluca: roles of the era and actions.'), go: { area: 'world', tab: ['worldHub', 'fossati31'] } });
+  if (p.src === 'fill' && !p.venue && !p.fam31 && p.k !== 'police' && p.k !== 'facade' && p.k !== 'market') out.push({ id: 'lot', lot: true, label: l('Comprar o imóvel / construir', 'Buy the property / build'), desc: l('Compra o lote e põe uma obra sua no lugar (Nosso mundo).', 'Buys the lot and puts your own works there (Our world).') });
   const go = GO27[p.k];
   if (go) out.push({ id: 'go', label: l('Abrir a tela', 'Open the screen'), desc: l('A tela do jogo para este assunto.', 'The game screen for this.'), go });
   return out;

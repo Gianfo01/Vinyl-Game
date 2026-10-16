@@ -607,3 +607,12 @@ Os arquivos abaixo são de outras frentes e **não** foram editados. Expõem reg
 | `egg27:fifth27` | O quinto integrante / The fifth member | Um produtor ou empresário vira parte da banda. |
 | `egg27:amp11` | Um a mais / One louder | Tenha um amplificador que vai até 11. |
 | `egg27:hunter27` | Caçador de ovos / Egg hunter | Ache 10 ovos de Páscoa numa partida. |
+## R31 (onda 4 · N) — mais Edison
+
+| id | Época | Gatilho | Efeito |
+|---|---|---|---|
+| `edison_tone31` | 1915–25 | um show de artista seu (chance 20%) | "Teste de tom": a plateia não sabe se é a banda ou um disco Edison; fama +1 |
+| `edison_cyl31` | até 1930 | qualquer mês (3%) | um senhor de chapéu compra todos os cilindros da loja; um pouco de caixa |
+| `edison_mary31` | qualquer | primeiro clique no fonógrafo da Sede | toca o "Mary had a little lamb" original (1877) |
+| `egg27:edison31` (secreta) | — | os quatro ovos do Edison (com `edison_lamb`) | conquista "O laboratório de Menlo Park" |
+| `egg27:fic31` (secreta) | — | contratar uma banda de filme, série ou desenho | conquista "Saída da tela" |

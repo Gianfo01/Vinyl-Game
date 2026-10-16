@@ -1,0 +1,480 @@
+{
+ "seeds": [
+  "car-m1",
+  "car-m2",
+  "car-m3"
+ ],
+ "rows": [
+  {
+   "item": "trend",
+   "nome": "1. Estúdio → moda do gênero",
+   "seed": "car-m1",
+   "on": {
+    "discos_assinatura": 60,
+    "moda_empurrada": 0.539,
+    "estilos": 69,
+    "moda_media_estilos": 0.826,
+    "moda_soma_sucessos_delta": 2.047
+   },
+   "off": {
+    "discos_assinatura": 0,
+    "moda_empurrada": 0,
+    "estilos": 69,
+    "moda_media_estilos": 0.819,
+    "moda_soma_sucessos_delta": 1.968
+   }
+  },
+  {
+   "item": "trend",
+   "nome": "1. Estúdio → moda do gênero",
+   "seed": "car-m2",
+   "on": {
+    "discos_assinatura": 60,
+    "moda_empurrada": 0.678,
+    "estilos": 57,
+    "moda_media_estilos": 0.866,
+    "moda_soma_sucessos_delta": 1.469
+   },
+   "off": {
+    "discos_assinatura": 0,
+    "moda_empurrada": 0,
+    "estilos": 57,
+    "moda_media_estilos": 0.856,
+    "moda_soma_sucessos_delta": 1.324
+   }
+  },
+  {
+   "item": "trend",
+   "nome": "1. Estúdio → moda do gênero",
+   "seed": "car-m3",
+   "on": {
+    "discos_assinatura": 60,
+    "moda_empurrada": 0.636,
+    "estilos": 73,
+    "moda_media_estilos": 0.831,
+    "moda_soma_sucessos_delta": 1.678
+   },
+   "off": {
+    "discos_assinatura": 0,
+    "moda_empurrada": 0,
+    "estilos": 73,
+    "moda_media_estilos": 0.824,
+    "moda_soma_sucessos_delta": 1.528
+   }
+  },
+  {
+   "item": "clips",
+   "nome": "2. Clipes da TV = media18",
+   "seed": "car-m1",
+   "on": {
+    "audiencia_tv": 25.48,
+    "unidades_clipes": 275863,
+    "semanas_rotacao_pesada": 5
+   },
+   "off": {
+    "audiencia_tv": 25.66,
+    "unidades_clipes": 271017,
+    "semanas_rotacao_pesada": 0
+   }
+  },
+  {
+   "item": "clips",
+   "nome": "2. Clipes da TV = media18",
+   "seed": "car-m2",
+   "on": {
+    "audiencia_tv": 24.69,
+    "unidades_clipes": 198860,
+    "semanas_rotacao_pesada": 5
+   },
+   "off": {
+    "audiencia_tv": 24.92,
+    "unidades_clipes": 183220,
+    "semanas_rotacao_pesada": 0
+   }
+  },
+  {
+   "item": "clips",
+   "nome": "2. Clipes da TV = media18",
+   "seed": "car-m3",
+   "on": {
+    "audiencia_tv": 25.75,
+    "unidades_clipes": 212047,
+    "semanas_rotacao_pesada": 5
+   },
+   "off": {
+    "audiencia_tv": 25.66,
+    "unidades_clipes": 198311,
+    "semanas_rotacao_pesada": 0
+   }
+  },
+  {
+   "item": "agency",
+   "nome": "3. Agência no motor de rotas",
+   "seed": "car-m1",
+   "on": {
+    "shows_no_alvo": 3,
+    "publico_medio_pct": 40,
+    "fama_alvo": 7.1,
+    "caixa_delta": -3730
+   },
+   "off": {
+    "shows_no_alvo": 0,
+    "publico_medio_pct": 0,
+    "fama_alvo": 7.5,
+    "caixa_delta": -4299
+   }
+  },
+  {
+   "item": "agency",
+   "nome": "3. Agência no motor de rotas",
+   "seed": "car-m2",
+   "on": {
+    "shows_no_alvo": 2,
+    "publico_medio_pct": 33.714,
+    "fama_alvo": 5.1,
+    "caixa_delta": -4074
+   },
+   "off": {
+    "shows_no_alvo": 0,
+    "publico_medio_pct": 0,
+    "fama_alvo": 7.5,
+    "caixa_delta": -4504
+   }
+  },
+  {
+   "item": "agency",
+   "nome": "3. Agência no motor de rotas",
+   "seed": "car-m3",
+   "on": {
+    "shows_no_alvo": 3,
+    "publico_medio_pct": 37.333,
+    "fama_alvo": 8.1,
+    "caixa_delta": -3724
+   },
+   "off": {
+    "shows_no_alvo": 0,
+    "publico_medio_pct": 0,
+    "fama_alvo": 8.9,
+    "caixa_delta": -4587
+   }
+  },
+  {
+   "item": "asks",
+   "nome": "4. Empresário: mais pedidos",
+   "seed": "car-m1",
+   "on": {
+    "pedidos": 18,
+    "aceitos": 12,
+    "recusados": 6,
+    "unidades_disco": 18224,
+    "parada_pais": 3217,
+    "fama_local": 21.9
+   },
+   "off": {
+    "pedidos": 6,
+    "aceitos": 4,
+    "recusados": 2,
+    "unidades_disco": 15389,
+    "parada_pais": 2646,
+    "fama_local": 13.1
+   }
+  },
+  {
+   "item": "asks",
+   "nome": "4. Empresário: mais pedidos",
+   "seed": "car-m2",
+   "on": {
+    "pedidos": 18,
+    "aceitos": 13,
+    "recusados": 5,
+    "unidades_disco": 196459,
+    "parada_pais": 23380,
+    "fama_local": 28.2
+   },
+   "off": {
+    "pedidos": 6,
+    "aceitos": 5,
+    "recusados": 1,
+    "unidades_disco": 192898,
+    "parada_pais": 21088,
+    "fama_local": 22
+   }
+  },
+  {
+   "item": "asks",
+   "nome": "4. Empresário: mais pedidos",
+   "seed": "car-m3",
+   "on": {
+    "pedidos": 18,
+    "aceitos": 11,
+    "recusados": 7,
+    "unidades_disco": 11631,
+    "parada_pais": 0,
+    "fama_local": 20.4
+   },
+   "off": {
+    "pedidos": 6,
+    "aceitos": 4,
+    "recusados": 2,
+    "unidades_disco": 11066,
+    "parada_pais": 0,
+    "fama_local": 13.3
+   }
+  },
+  {
+   "item": "outlets",
+   "nome": "5. Crítica por país do veículo",
+   "seed": "car-m1",
+   "on": {
+    "paises": 3,
+    "unidades_fora": 212282,
+    "unidades_total": 1653829
+   },
+   "off": {
+    "paises": 1,
+    "unidades_fora": 0,
+    "unidades_total": 1625416
+   }
+  },
+  {
+   "item": "outlets",
+   "nome": "5. Crítica por país do veículo",
+   "seed": "car-m2",
+   "on": {
+    "paises": 3,
+    "unidades_fora": 331676,
+    "unidades_total": 1928857
+   },
+   "off": {
+    "paises": 1,
+    "unidades_fora": 0,
+    "unidades_total": 1890341
+   }
+  },
+  {
+   "item": "outlets",
+   "nome": "5. Crítica por país do veículo",
+   "seed": "car-m3",
+   "on": {
+    "paises": 3,
+    "unidades_fora": 34811,
+    "unidades_total": 682413
+   },
+   "off": {
+    "paises": 1,
+    "unidades_fora": 0,
+    "unidades_total": 670739
+   }
+  },
+  {
+   "item": "scouts",
+   "nome": "6. Olheiros rivais",
+   "seed": "car-m1",
+   "on": {
+    "revelacoes": 3,
+    "levadas_por_rivais": 3,
+    "contagem_casa": 2
+   },
+   "off": {
+    "revelacoes": 3,
+    "levadas_por_rivais": 1,
+    "contagem_casa": 0
+   }
+  },
+  {
+   "item": "scouts",
+   "nome": "6. Olheiros rivais",
+   "seed": "car-m2",
+   "on": {
+    "revelacoes": 3,
+    "levadas_por_rivais": 3,
+    "contagem_casa": 3
+   },
+   "off": {
+    "revelacoes": 3,
+    "levadas_por_rivais": 0,
+    "contagem_casa": 0
+   }
+  },
+  {
+   "item": "scouts",
+   "nome": "6. Olheiros rivais",
+   "seed": "car-m3",
+   "on": {
+    "revelacoes": 3,
+    "levadas_por_rivais": 3,
+    "contagem_casa": 3
+   },
+   "off": {
+    "revelacoes": 3,
+    "levadas_por_rivais": 1,
+    "contagem_casa": 0
+   }
+  },
+  {
+   "item": "excl",
+   "nome": "7. Exclusividade com raio e prazo",
+   "seed": "car-m1",
+   "on": {
+    "clausulas": 3,
+    "festivais_bloqueados": 0,
+    "bonus_procura_pct": 36.28,
+    "procura": 5636,
+    "custo_clausulas": 10114427,
+    "quebras": 0
+   },
+   "off": {
+    "clausulas": 0,
+    "festivais_bloqueados": 0,
+    "bonus_procura_pct": 18,
+    "procura": 4880,
+    "custo_clausulas": -11461,
+    "quebras": 0
+   }
+  },
+  {
+   "item": "excl",
+   "nome": "7. Exclusividade com raio e prazo",
+   "seed": "car-m2",
+   "on": {
+    "clausulas": 3,
+    "festivais_bloqueados": 1,
+    "bonus_procura_pct": 36.28,
+    "procura": 6003,
+    "custo_clausulas": 3371520,
+    "quebras": 1
+   },
+   "off": {
+    "clausulas": 0,
+    "festivais_bloqueados": 1,
+    "bonus_procura_pct": 18,
+    "procura": 5198,
+    "custo_clausulas": -12312,
+    "quebras": 0
+   }
+  },
+  {
+   "item": "excl",
+   "nome": "7. Exclusividade com raio e prazo",
+   "seed": "car-m3",
+   "on": {
+    "clausulas": 3,
+    "festivais_bloqueados": 1,
+    "bonus_procura_pct": 36.28,
+    "procura": 5843,
+    "custo_clausulas": 10149165,
+    "quebras": 0
+   },
+   "off": {
+    "clausulas": 0,
+    "festivais_bloqueados": 1,
+    "bonus_procura_pct": 18,
+    "procura": 5059,
+    "custo_clausulas": -5680,
+    "quebras": 0
+   }
+  },
+  {
+   "item": "cities",
+   "nome": "8. Rádios NPC com cidade",
+   "seed": "car-m1",
+   "on": {
+    "audiencia": 33.75,
+    "rivais_na_cidade": 1,
+    "alcance_rival_medio": 1.18,
+    "ibope": 1,
+    "de": 9
+   },
+   "off": {
+    "audiencia": 20.86,
+    "rivais_na_cidade": 1,
+    "alcance_rival_medio": 1.36,
+    "ibope": 1,
+    "de": 25
+   }
+  },
+  {
+   "item": "cities",
+   "nome": "8. Rádios NPC com cidade",
+   "seed": "car-m2",
+   "on": {
+    "audiencia": 36.43,
+    "rivais_na_cidade": 1,
+    "alcance_rival_medio": 0.71,
+    "ibope": 1,
+    "de": 9
+   },
+   "off": {
+    "audiencia": 21.51,
+    "rivais_na_cidade": 1,
+    "alcance_rival_medio": 0.89,
+    "ibope": 1,
+    "de": 25
+   }
+  },
+  {
+   "item": "cities",
+   "nome": "8. Rádios NPC com cidade",
+   "seed": "car-m3",
+   "on": {
+    "audiencia": 39.22,
+    "rivais_na_cidade": 1,
+    "alcance_rival_medio": 0.75,
+    "ibope": 1,
+    "de": 9
+   },
+   "off": {
+    "audiencia": 23.54,
+    "rivais_na_cidade": 1,
+    "alcance_rival_medio": 0.93,
+    "ibope": 1,
+    "de": 25
+   }
+  },
+  {
+   "item": "boycott",
+   "nome": "9. Boicote à plataforma",
+   "seed": "car-m1",
+   "on": {
+    "assinantes_mi": 3.339,
+    "artistas_fora": 3,
+    "faixas_no_top": 20
+   },
+   "off": {
+    "assinantes_mi": 4.007,
+    "artistas_fora": 0,
+    "faixas_no_top": 20
+   }
+  },
+  {
+   "item": "boycott",
+   "nome": "9. Boicote à plataforma",
+   "seed": "car-m2",
+   "on": {
+    "assinantes_mi": 3.344,
+    "artistas_fora": 3,
+    "faixas_no_top": 20
+   },
+   "off": {
+    "assinantes_mi": 3.917,
+    "artistas_fora": 0,
+    "faixas_no_top": 20
+   }
+  },
+  {
+   "item": "boycott",
+   "nome": "9. Boicote à plataforma",
+   "seed": "car-m3",
+   "on": {
+    "assinantes_mi": 3.356,
+    "artistas_fora": 4,
+    "faixas_no_top": 20
+   },
+   "off": {
+    "assinantes_mi": 4.299,
+    "artistas_fora": 0,
+    "faixas_no_top": 20
+   }
+  }
+ ]
+}

@@ -109,16 +109,17 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
     // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
     // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
-    expect(AFTER.player.cash).toBe(257209);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(4026815485);
+    // R31 onda 4 (N · bandas de ficção no mundo, de propósito — docs/r31/DECISOES.md e docs/r31/nx.md): ~4 bandas de filmes e séries
+    // (Stillwater, Electric Mayhem…) estreiam nesses 8 meses e mudam a trajetória; com `fic31` desligado voltam 257209 / 4026815485 / 68287867 / 205718420.
+    expect(AFTER.player.cash).toBe(1132370);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4020965551);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(3274579681);
     // R31 onda 4 (I · gente nos lugares, de propósito — docs/r31/DECISOES.md e docs/r31/is.md): donos e equipe dos lugares da
     // cidade são pessoas da base; sem ninguém adequado nasce gente nova (29 pessoas nesta semente em 8 meses), e os sistemas
     // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
     // Com `gente31` desligado volta acts 68287867.
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3963998575);
-    // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/DECISOES.md e docs/r31/vit.md): o conteúdo do mês dos lugares
-    // é sorteado na virada no fluxo rng19 próprio 'vit31' (só rng muda: caixa, turnês e acts iguais). Com `vit31` desligado volta 205718420.
-    expect(hashString(rngSnapshot19(AFTER))).toBe(2894103788);
+    // Junção N + I (integração da onda 4): as duas mudanças juntas dão caixa 1132370 e acts 4020965551 (turnês e rng iguais ao N).
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

@@ -5,7 +5,8 @@ import { l } from '../../data/world';
 import { registerRunnable } from '../../sim/r31/editor';
 import { playerActs } from '../../sim/util';
 import { registerQuick31 } from './quick31core';
-import { sceneLabel31, sceneModel31, sceneTargets31, SCENE_KINDS31, type SceneKind31 } from './scene31core';
+import { sceneLabel31, sceneModel31, sceneTargets31, SCENE_KINDS_ALL31, type SceneKind31 } from './scene31core';
+import './scene31w'; // W (onda 4): lote 2 — registra antes do laço do editor
 
 /** Preenchido pela interface: abre a cena (ou o modo de 2 cliques, conforme a preferência). `force` = sempre a cena. */
 export const sceneHook31: {
@@ -20,7 +21,7 @@ export function viaScene31(kind: SceneKind31, id: string, direct?: () => void): 
 }
 
 // ---------------------------------------------------------------- editor: "Abrir cena: …" (área Cenas)
-for (const kind of SCENE_KINDS31) {
+for (const kind of SCENE_KINDS_ALL31) {
   registerRunnable({
     id: `scene31.${kind}`, area: 'scenes', label: l(`Abrir cena: ${sceneLabel31(kind).pt}`, `Open scene: ${sceneLabel31(kind).en}`),
     help: l('Abre a cena em pixel art (não decide nada: a decisão continua sendo sua, na cena).', 'Opens the pixel-art scene (decides nothing: the decision is still yours, in the scene).'),
@@ -47,3 +48,15 @@ const quick = (id: string, kind: SceneKind31, verb: 'renew' | 'rescind' | 'lineu
 quick('q.renew', 'renew', 'renew', 'quill');
 quick('q.rescind', 'rescind', 'rescind', 'broken-heart');
 quick('q.lineup', 'lineup', 'lineup', 'people');
+
+// W (onda 4): quadro do lançamento no painel rápido do projeto (⚡ / busca "reunião de lançamento")
+registerQuick31({
+  id: 'q.release31', verb: 'open', icon: 'calendar', kinds: ['project'], label: sceneLabel31('release'),
+  applies: (s, t) => !!sceneModel31(s, 'release', { id: t.id }),
+  lock: (s, t) => sceneModel31(s, 'release', { id: t.id })?.choices[0]?.lock ?? null,
+  dest: (s, t) => ({ area: 'creation', actId: openProjectsOf(s, t.id), intent: 'scene31:release' }),
+  run: (_s, t) => sceneHook31.open?.('release', t.id, 'scene'),
+});
+function openProjectsOf(s: Parameters<typeof playerActs>[0], pid: string): string | undefined {
+  return (s.x4 as unknown as { proj8?: { list: { id: string; actId: string }[] } }).proj8?.list.find((p) => p.id === pid)?.actId;
+}

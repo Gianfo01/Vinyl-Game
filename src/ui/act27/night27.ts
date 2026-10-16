@@ -12,6 +12,7 @@ import { h } from '../dom';
 import { store } from '../store';
 import { cutscene27 } from './mode27';
 import './night27.css';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const T = (x: L) => t(x);
 const pips = (n: number, max = 3) => h('span', { class: 'n27m-pips', 'aria-hidden': 'true' }, ...Array.from({ length: max }, (_, i) => h('i', { class: i < n ? 'on' : '' })));
@@ -94,7 +95,7 @@ export function openNight27(): void {
   };
 
   draw();
-  close = modal(fmt(l('Noite de olheiro — {c}', 'Scouting night — {c}'), { c: cityName(plan.city) }), root, { wide: true, onClose: () => rerender() });
+  close = modal(fmt(l('Noite de olheiro — {c}', 'Scouting night — {c}'), { c: cityName(plan.city) }), withCast31(s, plan.venues.flatMap((v) => v.acts.map((x) => (x.known > 0 ? x.actId : null))), root, () => close()), { wide: true, onClose: () => rerender() });
 }
 
 const fmt = (x: L, p: Record<string, string | number>) => t(x).replace(/\{(\w+)\}/g, (_, k) => String(p[k] ?? ''));

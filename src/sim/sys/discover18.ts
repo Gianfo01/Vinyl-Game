@@ -97,6 +97,18 @@ export function addLead18(s: GameState, r: Rng, a: Act, chId: string, deg: numbe
   if (st.leads.length > 40) st.leads.splice(0, st.leads.length - 40);
 }
 
+/** R31 CAR (car31.scouts): olheiros de um selo rival viram a revelação (casa de shows, festival) e entram na mesma
+ *  disputa da descoberta — o selo assina se você não fizer proposta antes do prazo. Devolve o nome do selo. */
+export function scoutRace18(s: GameState, a: Act, lbId: string, weeks: number, why: L): string | undefined {
+  const lb = s.labels[lbId];
+  if (!lb?.active || a.owner || disc18(s).hot[a.id]) return undefined;
+  disc18(s).hot[a.id] = { lb: lb.id, w: s.week + weeks };
+  pushInbox18(s, 'disc18_hot', { from: lb.name, subject: fmtL(l('{l} quer levar {a}', '{l} wants to take {a}'), { l: lb.name, a: a.name }),
+    body: fmtL(l('{w} Os olheiros de {l} já marcaram reunião com {a}. Sem proposta sua em {n} semanas, eles assinam.', '{w} {l}\'s scouts already booked a meeting with {a}. Without an offer from you within {n} weeks, they sign.'), { w: why, l: lb.name, a: a.name, n: weeks }),
+    ref: { act: a.id }, tone: 'bad', actions: [{ id: 'go', label: l('Fazer proposta', 'Make an offer') }, { id: 'no', label: l('Deixar ir', 'Let it go') }], weeks });
+  return lb.name;
+}
+
 function rivalNotice(s: GameState, r: Rng, a: Act, vis: number): string | undefined {
   if (!r.chance(vis * clamp(a.potential / 65, 0.4, 1.4))) return undefined;
   const lbs = Object.values(s.labels).filter((lb) => lb.active && lb.cash > money(s, 20000));

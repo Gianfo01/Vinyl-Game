@@ -1,4 +1,5 @@
 // Mini-helper de DOM sem framework.
+import { disp31 } from '../data/realdisp31';
 
 type Child = Node | string | number | null | undefined | false | Child[];
 type Attrs = Record<string, unknown> & { class?: string; style?: string };
@@ -16,7 +17,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs | 
       else if (k === 'checked' && 'checked' in el) (el as HTMLInputElement).checked = !!v;
       else if (k === 'disabled') (el as HTMLButtonElement).disabled = !!v;
       else if (k === 'selected' && 'selected' in el) (el as HTMLOptionElement).selected = !!v;
-      else el.setAttribute(k, v === true ? '' : String(v));
+      else el.setAttribute(k, v === true ? '' : k === 'title' || k === 'aria-label' ? disp31(String(v)) : String(v));
     }
   }
   append(el, children);
@@ -28,7 +29,7 @@ function append(el: HTMLElement, children: Child[]): void {
     if (c === null || c === undefined || c === false) continue;
     if (Array.isArray(c)) append(el, c);
     else if (c instanceof Node) el.appendChild(c);
-    else el.appendChild(document.createTextNode(String(c)));
+    else el.appendChild(document.createTextNode(disp31(String(c)))); // R31 (X): interruptor "Nomes e obras reais" na exibição
   }
 }
 
