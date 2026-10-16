@@ -4,6 +4,7 @@
 // O negócio inicial de cada carreira é aberto pelo careers19 (def.careers → config.careers.main); aqui só ajustamos
 // o que é próprio do cenário (rádio em vez de fanzine, primeiro cliente etc.) e medimos o estado real da profissão.
 
+import { builtVenue } from './venuestore27';
 import { l } from '../../data/world';
 import { money } from '../util';
 import { registerSimHook } from '../ext4';
@@ -45,7 +46,7 @@ export const SCENARIOS23: Scenario23[] = [
       const a = makeAct(s, r, { genre: 'beat', city: 'liverpool', members: 4, potential: r.int(80, 92), formed: s.year - 2, debutYear: s.year - 1, fame: 14 });
       a.status = 'active';
       a.fans = { casual: 2500, active: 380, core: 80 };
-      ventures(s).mg.clients.push({ actId: a.id, rate: 0.2, since: s.week, sat: 60, earned: 0 });
+      ventures(s).mg.clients.push({ actId: a.id, rate: 0.2, since: s.week, earned: 0 });
     },
     metric: (s) => (C(s).mgrHits23 ?? 0) * 10 + (C(s).mgrFame23 ?? 0), fail: insolvent,
   },
@@ -308,7 +309,7 @@ registerSimHook('month', 'scenario23', (s) => {
       c.mgrFame23 = Math.max(c.mgrFame23 ?? 0, Math.round(a.fame));
     }
   } else if (d.id === 'cbgb_1973') {
-    const h = liveOf(s).venue?.history.at(-1);
+    const h = builtVenue(s)?.history.at(-1);
     const key = h ? h.year * 12 + h.month : -1;
     if (h && key !== c.full23k) { c.full23k = key; if (h.occupancy >= 80) c.full23 = (c.full23 ?? 0) + 1; }
   } else if (d.id === 'memphis_studio_1961') {

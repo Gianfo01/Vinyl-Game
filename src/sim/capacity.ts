@@ -1,6 +1,7 @@
 // Calendário com capacidade de 100% por pessoa (GDD §45.4) e agenda futura (§46.1):
 // reservas até 12 meses à frente, sem custo até começar; conflito explica pessoa, mês e carga.
 
+import { tourList } from './tours';
 import type { Rng } from '../core/rng';
 import { actionMeta } from '../data/actions';
 import { cityById, l, type L } from '../data/world';
@@ -45,7 +46,7 @@ export function agendaLoad(slots: AgendaSlot[]): number {
 /** Dias de turnê de um ato num mês absoluto (shows + viagem). */
 export function tourDaysInMonth(s: GameState, actId: string, idx: number): number {
   let days = 0;
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.actId !== actId && t.partnerActId !== actId) continue;
     if (t.status === 'cancelled' || t.status === 'done') continue;
     for (const st of t.stops) {

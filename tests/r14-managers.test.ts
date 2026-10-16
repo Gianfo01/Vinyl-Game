@@ -58,7 +58,7 @@ describe('r14 empresários', () => {
     const zep = Object.values(s.acts).find((a) => realDataOf(a)?.n === 'Led Zeppelin');
     expect(zep).toBeTruthy();
     expect(repOf(s, zep!.id)?.id).toBe('grant');
-    ventures(s).mg.clients.push({ actId: zep!.id, rate: 0.15, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: zep!.id, rate: 0.15, since: s.week, earned: 0 });
     managersMonth(s, Rng.fromSeed('t'));
     expect(repOf(s, zep!.id)).toBeNull();
     expect(inFeud(s, 'grant')).toBe(true);

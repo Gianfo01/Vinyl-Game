@@ -1,13 +1,15 @@
 // r27 (AUD1) — casas de shows num modelo só (lista, teto e fechamento únicos), festival único (fest12 manda; o negócio
 // de Empreendimentos só espelha) e o bot jogador tocando os negócios (salas da sede, estúdio, editora, casa, festival).
+import { ownFests } from '../src/sim/sys/feststore';
+import { builtVenue, realVenues } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import type { GameState } from '../src/sim/types';
-import { buyVenue, liveOf } from '../src/sim/sys/live';
-import { buyVenue17, marketVenues, v17 } from '../src/sim/sys/venues17';
+import { buyVenue } from '../src/sim/sys/live';
+import { buyVenue17, marketVenues } from '../src/sim/sys/venues17';
 import { MAX_VENUES27, myVenues27, venueCount27 } from '../src/sim/sys/venues27';
 import { addNight12 } from '../src/sim/sys/venue12';
 import { foundVenture, ventures } from '../src/sim/sys/ventures9';
@@ -38,11 +40,11 @@ describe('r27 AUD1 — casas de shows num modelo só', () => {
     const reais = marketVenues(s).filter((d) => d.buyable !== false).slice(0, 3);
     for (const d of reais) expect(buyVenue17(s, d.id)).toBeNull();
     expect(venueCount27(s)).toBe(Math.min(MAX_VENUES27, 1 + reais.length));
-    const extra = marketVenues(s).find((d) => d.buyable !== false && !v17(s).own.some((o) => o.id === d.id));
+    const extra = marketVenues(s).find((d) => d.buyable !== false && !realVenues(s).some((o) => o.id === d.id));
     if (venueCount27(s) >= MAX_VENUES27 && extra) expect(buyVenue17(s, extra.id)).not.toBeNull();
     const keys = myVenues27(s).map((v) => v.key);
     expect(keys).toContain('lv:venue');
-    for (const o of v17(s).own) expect(keys).toContain(`ve:${o.id}`);
+    for (const o of realVenues(s)) expect(keys).toContain(`ve:${o.id}`);
     const w0 = s.week;
     advanceMonth(s);
     const posts = monthPosts(s, w0);
@@ -50,9 +52,9 @@ describe('r27 AUD1 — casas de shows num modelo só', () => {
     expect(posts.filter((x) => x.key.endsWith(':venue27:rev')).length).toBe(1);
     expect(posts.filter((x) => x.key.endsWith(':venue27:cost')).length).toBe(1);
     expect(posts.some((x) => /:(venue:rev|venue:cost|v12:rev|v12:cost)$/.test(x.key))).toBe(false);
-    expect(posts.filter((x) => x.key.includes(':v17m:')).length).toBe(v17(s).own.length);
+    expect(posts.filter((x) => x.key.includes(':v17m:')).length).toBe(realVenues(s).length);
     // o histórico da casa mostra o resultado inteiro
-    const h = liveOf(s).venue!.history.at(-1)!;
+    const h = builtVenue(s)!.history.at(-1)!;
     expect(h.revenue).toBe(posts.find((x) => x.key.endsWith(':venue27:rev'))!.amount);
     for (const v of myVenues27(s)) { expect(Number.isFinite(v.rep) && Number.isFinite(v.cond)).toBe(true); expect(v.last).toBeTruthy(); }
     invariant(s);
@@ -90,7 +92,7 @@ describe('r27 AUD1 — bot nos negócios', () => {
     expect(L.studio).toBeGreaterThan(0);
     expect(L.festival).toBeGreaterThan(0);
     expect(myVenues27(s).length).toBeGreaterThan(0);
-    expect(liveOf(s).fests.length).toBe(1);
+    expect(ownFests(s).length).toBe(1);
     invariant(s);
   });
 

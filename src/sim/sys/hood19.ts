@@ -7,6 +7,7 @@
 // horizonte (data/landmarks19) com atalho para marcar show e prestígio para as suas casas. Determinístico
 // (Rng com semente própria por mês); sem DOM.
 
+import { builtVenue, realVenues } from './venuestore27';
 import { clamp, Rng } from '../../core/rng';
 import { HQ_LEVELS } from '../../data/rules';
 import { hoodAt19, histAge19, histNote19, CLIMATE19, type Hood19 } from '../../data/hood19';
@@ -23,8 +24,7 @@ import type { GameState } from '../types';
 import { fmtL, hasTech, money, playerActs, post } from '../util';
 import { DIST18, LOTS18, buildings18, campus18, freeLots18, log18, lotMult18, styleDef18 } from './campus18';
 import { hq6 } from './hq6';
-import { liveOf } from './live/state';
-import { v17, vdef } from './venues17';
+import { vdef } from './venues17';
 import { LOTGATE19, world19, type Pop19, type PopAct19, type PopRow19 } from './world19';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
@@ -279,8 +279,8 @@ registerSimHook('month', 'hood19', (s) => {
 function actEv19Late(s: GameState, e: Ev19, c: string): void { const keep = e.s; e.s = mIdx(s); actEv19(s, e.id, c); e.s = keep; }
 registerSimHook('year', 'hood19y', (s) => {
   if (!lmNow19(s).some((x) => x.music === 'venue' || x.music === 'stadium')) return;
-  for (const o of v17(s).own) if (vdef(o.id)?.city === s.config.homeCity) o.rep = clamp(o.rep + 0.5, 0, 100);
-  const lv = liveOf(s).venue as { cityId?: string; rep?: number } | null;
+  for (const o of realVenues(s)) if (vdef(o.id)?.city === s.config.homeCity) o.rep = clamp(o.rep + 0.5, 0, 100);
+  const lv = builtVenue(s) as { cityId?: string; rep?: number } | null;
   if (lv && lv.cityId === s.config.homeCity && typeof lv.rep === 'number') lv.rep = clamp(lv.rep + 0.5, 0, 100);
 });
 void campus18;

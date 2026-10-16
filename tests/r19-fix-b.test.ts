@@ -1,5 +1,6 @@
 // Rodada 19 (onda 5, B) — auditoria 8 §3, §4, §5: chance mostrada = chance sorteada; cockpit por profissão;
 // orçamento global de conflitos, aviso antes de avançar e resumo do mês.
+import { ownFests } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
@@ -19,7 +20,6 @@ import { cockpit18 } from '../src/sim/sys/saga18';
 import { mainCareer19 } from '../src/sim/sys/prof19';
 import { quickList19 } from '../src/ui/sys/prof19';
 import { found12, muOf } from '../src/sim/sys/fest12';
-import { liveOf } from '../src/sim/sys/live';
 import { foundCost } from '../src/sim/sys/ventures9';
 import { CONFLICTS19 } from '../src/sim/conflicts19';
 import { autoResolve19, conflicts19, delegateMonth } from '../src/sim/sys/budget19';
@@ -66,7 +66,7 @@ describe('r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorte
     expect(ODDS19['mg.pitch'].chance(s, [a0.id, 0.1])).toBeGreaterThan(ODDS19['mg.pitch'].chance(s, [a0.id, 0.2]));
     // cliente existente: renegociar comissão e mandato
     const c = cands[1];
-    ventures(s).mg.clients.push({ actId: c.id, rate: 0.12, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: c.id, rate: 0.12, since: s.week, earned: 0 });
     check('mg.rate', s, [[c.id, 0.15], [c.id, 0.2], [c.id, 0.25]]); covered.add('mg.rate');
     check('mg.mandate', s, [0.1, 0.15, 0.2].flatMap((rate) => [[c.id, { areas: ['recordings'], rate, excl: false, auto: 1 }], [c.id, { areas: ['recordings', 'shows'], rate, excl: true, auto: 2 }]])); covered.add('mg.mandate');
     // agência de shows e festival próprio
@@ -114,7 +114,7 @@ const mgGame = (seed = 'r19bmg') => {
   return s;
 };
 const addClients = (s: GameState, n: number, crisis = false) => {
-  for (const a of mgCandidates(s).slice(0, n)) ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0, ...(crisis ? { crisis: { k: 'scandal' as const, w: s.week } } : {}) });
+  for (const a of mgCandidates(s).slice(0, n)) ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0, ...(crisis ? { crisis: { k: 'scandal' as const, w: s.week } } : {}) });
 };
 
 describe('r19-fix-b §4: cockpit por profissão', () => {
@@ -127,7 +127,7 @@ describe('r19-fix-b §4: cockpit por profissão', () => {
     const txt = c.now.map((q) => q.t.pt).join(' | ');
     expect(txt).toMatch(/Crise com/);
     expect(txt).toMatch(/Mandato de .* vence em 5 semanas/);
-    expect(c.works.some((q) => /Satisfação média/.test(q.t.pt))).toBe(true);
+    expect(c.works.some((q) => /Confiança média/.test(q.t.pt))).toBe(true); // UNI-4: satisfação do cliente = confiança da ficha
     const q = quickList19(s).map((x) => x[2].pt);
     expect(q).toContain('Clientes'); expect(q).toContain('Prospectar'); expect(q).not.toContain('Contratar');
     expect(mainCareer19(s)).toBe('manager');
@@ -140,7 +140,7 @@ describe('r19-fix-b §4: cockpit por profissão', () => {
     f.player.cash += foundCost(f, 'festival') * 2;
     const fx = found12(f, 'label', { month: (f.month + 3) % 12, ident: 'discovery' });
     expect('pt' in fx ? fx.pt : '').toBe('');
-    const own = liveOf(f).fests[0];
+    const own = ownFests(f)[0];
     own.month = (f.month + 3) % 12; own.nextYear = f.year + (f.month + 3 >= 12 ? 1 : 0);
     expect(muOf(f, own)).toBe(3);
     const c = cockpit18(f);

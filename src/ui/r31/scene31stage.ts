@@ -7,12 +7,13 @@ import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { drawScene27, type Who27 } from '../act27/scene27';
 import { h } from '../dom';
+import { pxEmo31 } from '../pixel/emo31'; // r31 onda 4 (EMO): gesto em pixel art
 import { store } from '../store';
 import type { Cast31, Mood31, SceneModel31 } from './scene31core';
-import { paintRoom31, spots31 } from './scene31px';
+import { MH31, MW31, paintRoom31, spots31 } from './scene31px';
 import './mech31.css';
 
-const W = 200, H = 92;
+const W = MW31, H = MH31;
 
 /** Rótulos curtos nos balões: sempre nos dois primeiros anos da partida; depois, só se a pessoa ligar. */
 export const labels31 = (s: GameState): boolean => (store.prefs.sceneLabels31 ?? 'auto') === 'on' || ((store.prefs.sceneLabels31 ?? 'auto') === 'auto' && s.year - s.config.startYear < 2);
@@ -35,12 +36,15 @@ function bubbleText(c: Cast31, m: Mood31): string {
 export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTMLElement {
   const watchers = m.cast.some((c) => c.side === 'watch');
   const spots = spots31(m.room, m.cast.map((c) => c.side));
-  const cv = h('canvas', { class: 'a27-scene mc31-canvas', role: 'img', 'aria-label': t(m.title) }) as HTMLCanvasElement;
+  const cv = h('canvas', { class: 'a27-scene mc31-canvas', role: 'img', 'aria-label': t(m.title), style: `aspect-ratio:${W} / ${H}` }) as HTMLCanvasElement;
   const who: Who27[] = m.cast.map((c, i) => ({
     p: { id: c.lookId, role: c.role ?? 'producer', look: c.look, born: c.born ?? s.year - 35 },
     x: spots[i].x, y: spots[i].y, pose: spots[i].pose, dir: spots[i].dir,
   }));
-  try { drawScene27(cv, paintRoom31(m.room, s.year, watchers, m.cards ?? 0), s.year, who); } catch { /* canvas indisponível (testes) */ }
+  try {
+    const r = paintRoom31(m.room, s.year, watchers, m.cards ?? 0, { city: s.config.homeCity, month: s.month, seats: spots.filter((x) => x.pose === 'sit') });
+    drawScene27(cv, r.back, s.year, who, r.front);
+  } catch { /* canvas indisponível (testes) */ }
   const showLabels = labels31(s);
   let k = 0;
   const pts = m.cast.map((c, i) => {
@@ -53,7 +57,7 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
       style: `left:${(sp.x / W) * 100}%;top:${Math.max(8, ((sp.y - (sp.pose === 'sit' ? 34 : 40)) / H) * 100 - lift)}%`,
       title: bubbleText(c, md), 'aria-label': bubbleText(c, md), 'data-mc31': c.id,
       onclick: () => o.onPick?.(c),
-    }, h('span', { class: 'mc31-ico', 'aria-hidden': 'true' }, md.icon), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: 'mc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
+    }, h('span', { class: 'mc31-ico', 'aria-hidden': 'true' }, pxEmo31(md.icon, 1, md.label)), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: 'mc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
   });
   return h('div', { class: `mc31-stage${hot31() ? ' mc31-hot' : ''}` }, cv, ...pts);
 }

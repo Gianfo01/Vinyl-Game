@@ -61,6 +61,10 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 > Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
 > cada função é um lugar, um objeto, uma porta ou uma pessoa. As telas atuais ficam por baixo (a camada nova é de navegação);
 > números do jogo não mudam. Foco no PC (celular fica para depois).
+> **Começo antecipado (pedido do dono, 2026-10-16):** enquanto a onda 4 termina, a onda 5 começa só pelo que não esbarra
+> nela: ART5 (objetos e papéis em pixel art, `claude/r31-w5-art`), INI (tela inicial e nova run, `claude/r31-w5-ini`) e
+> TEC (teclas, especificação de cada tela e esqueleto da navegação atrás de `exp5.nav`, `claude/r31-w5-tec`). A sede como
+> centro, a retirada dos menus, a casa como "Você" e o mapa sem lista ficam para depois da build da onda 4 e dos ajustes.
 - **Mocks** em `docs/r31/mocks/onda5/` (sede, fichário, casa, cidade, pausa). Decisão do dono (2026-10-16): a ideia está
   aprovada, mas o acabamento tem que ser polido na implementação:
   - interface toda em pixel art (molduras, botões, etiquetas e o bolso desenhados no estilo do jogo, não "chips" de site);
@@ -117,6 +121,50 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 - **Ficha do personagem fica como está** (decisão do dono, 2026-10-16): só polimento — ícones em pixel art (EMO), retrato
   maior, "o que você sabe" mais claro, aba Coração (AMOR); abre de qualquer lugar (clicar na pessoa numa cena, no cartão do
   fichário ou no mural).
+- **EXP-8 · Polimento geral (pedido do dono, 2026-10-16)** — interface/arte · aceite: passe completo de acabamento em
+  todas as cenas, cenários, objetos, mapas, bonecos e telas, além do POL da onda 4. Inclui:
+  - nada flutuando;
+  - nenhum placeholder;
+  - objetos que parecem o que são;
+  - rótulos sem sobreposição;
+  - cômodos mobiliados por época;
+  - consistência de paleta e escala;
+  - animações pequenas (luz, fumaça, gente andando);
+  - a prévia da nova run e a tela inicial (abaixo).
+- **EXP-9 · Nova run (rápida e completa)** — interface · mocks `onda5-mock-novarun-*.png` (aprovados pelo dono, 2026-10-16):
+  - **Começo rápido:** uma ficha de inscrição só, com as 7 escolhas principais: quem é você (com editor de personagem:
+    boneco do jogo, nome, idade, pele, cabelo, roupa, acessório, sortear; traço de personalidade opcional), cidade,
+    carreira (6 + "mais" na completa), ano (régua com as eras), tamanho do começo (iniciante → em crise), dificuldade e duração. Além delas,
+    dois interruptores (nomes reais; mundo segue a história real) e o botão "Começar". Links para configuração completa,
+    cenários, código de run e carregar.
+  - **Configuração completa:** as 6 etapas (Mundo, Personagem, Carreiras, Gravadoras, Regras e ritmo, Revisão) como
+    marcadores à esquerda; o conteúdo na mesma ficha de papel; anterior/próxima embaixo; teclas { e }.
+  - **Prévia "Sua história" à direita, no mesmo papel:**
+    - a cena é desenhada na hora com a época, a cidade e a carreira escolhidas (`onda5-mock-novarun-previa.png`), e não é
+      mais uma imagem parada fora do design;
+    - o boneco do jogador;
+    - o resumo em texto e as etiquetas das regras.
+- **EXP-10 · Tela inicial com arte própria** — arte · mock `onda5-mock-inicio.png` (aprovado pelo dono, 2026-10-16):
+  - **Cena musical feita com a própria arte do jogo** (bonecos `avatarSprite`, bateria/amplificadores/caixas/plateia de
+    `stage31px`, horizonte `renderSky27` da cidade e da época; rascunho em `docs/r31/mocks/onda5/home-src/`) no lugar
+    da sede: palco à noite, banda tocando, plateia, fachos de luz, lua de vinil e letreiro. A mesma cena é a prévia da
+    nova run.
+  - **Muda conforme a época sorteada ou a última partida:**
+    - 1900: gramofone e piano;
+    - 1960: amplificadores e bateria;
+    - 2025: telão de LED e DJ.
+  - **Menu:** Nova run, Continuar, Carregar, Cenários e Opções, com a dedicatória embaixo.
+- **EXP-11 · Transições entre telas** — arte e interface · mocks `onda5-mock-transicao-{1..5}.png` (aprovado pelo dono, 2026-10-16):
+  - **Viagem (Sede, Casa, Cidade, Mundo):** cortina de palco fecha, cartão do destino com o que espera lá, cortina abre
+    no destino. 0,5 s no total; qualquer tecla ou clique pula.
+  - **Objeto da sede:** sem cortina; zoom em pixel no objeto e o papel sobe (0,3 s). Esc faz o papel descer (0,15 s).
+    Atalhos do bolso abrem direto, sem zoom.
+  - **Mundo:** a rota anda no mapa com o transporte da época (navio/trem até 1949, avião depois), depois cortina com a
+    passagem.
+  - **Virada do mês:** a folha do calendário cai, o mês novo mostra só o que pede você e a sede volta com os "!".
+  - **Por época:** veludo vermelho (1889–1949), veludo vinho (1950–79), lâminas de metal e neon (1980–2009), painel de
+    LED (2010–40). O calendário da virada acompanha: folha de parede, relógio de virar, tela do celular.
+  - **Opção:** transições completas, rápidas ou desligadas. Nunca bloqueiam nem atrasam a simulação.
 - Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
 
 ## Onda 6 (31.6) · fechamento

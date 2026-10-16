@@ -2,6 +2,8 @@
 // Licenças entre regiões, Imagem & voz, Merch, Circuito (festivais/reunião/financiamento coletivo) e a
 // Agenda de shows com concorrência. Cada escolha mostra chance, custo e o porquê.
 
+import { w8 } from '../../sim/sys/feststore';
+import { houses27, realVenues } from '../../sim/sys/venuestore27';
 import { txt19, fmtL19 } from '../../sim/era19';
 import { FESTIVALS } from '../../data/catalog';
 import { CITIES, FAMILIES, cityById, l, type L } from '../../data/world';
@@ -12,7 +14,7 @@ import { ownerOf } from '../../sim/sys/people/owner';
 import { beginSuccession } from '../../sim/sys/heirs8';
 import { CAP_GAINS, bidNet, buyLabel17, buyPrice, buyableLabels, cutList, hasLabel, makeBids, minRefound, refound, refoundBlock, relIncome, sale17, sellLabel, sellMaster17, valuation17, MARKET_NAME } from '../../sim/sys/sale17';
 import { OUTLETS, editable, estimate, feeOf, out17, outletsNow, reachOf, setPreset, toggleOutlet, upfrontOf, type OutId } from '../../sim/sys/outlets17';
-import { POLICY, PRICE, VENUES17, buyVenue17, marketVenues, monthEst17, sellValue, sellVenue17, setVenue17, v17, vdef, venuePrice, type Policy, type PriceK } from '../../sim/sys/venues17';
+import { POLICY, PRICE, VENUES17, buyVenue17, marketVenues, monthEst17, sellValue, sellVenue17, setVenue17, vdef, venuePrice, type Policy, type PriceK } from '../../sim/sys/venues17';
 import { acceptLic, declineLic, estIn, lic17, mkName, pitchOdds17, pitchOut, pitchTargets } from '../../sim/sys/license17';
 import { SCOPES, activeDeal, askImage, endDeal, fairShare, imgChance, img17, isEstate, renegotiate, scopesNow, type Scope } from '../../sim/sys/image17';
 import { SKUS, canSell, demandOf, fightCost, m17, makeBatch, skusNow, toggleFight, toggleLicense, unitCost, type Sku, type Line } from '../../sim/sys/merch17';
@@ -62,7 +64,7 @@ function saleTab(s: GameState): HTMLElement {
       st.cat.length ? h('div', null, st.cat.map((b) => { const r = s.releases[b.relId]; return r ? h('div', { class: 'row wrap' }, `"${r.title}" — ${s.acts[r.actId]?.name ?? ''}: ${b.fund} ${t(l('oferece', 'offers'))} ${$(b.price)} (${t(l('rende ~{v}/ano', 'earns ~{v}/yr'), { v: $(relIncome(s, r.id)) })})`, ' ',
         h('button', { class: 'btn tiny', onclick: () => res(sellMaster17(s, b.id), l('Master vendido. O artista não gostou.', 'Master sold. The artist did not like it.')) }, t(l('Vender', 'Sell')))) : null; })) : h('p', { class: 'muted small' }, t(l('Nenhum lance. Fundos aparecem mais na era do streaming e para discos com 5+ anos.', 'No bids. Funds show up more in the streaming era and for records 5+ years old.'))),
       h('p', { class: 'small muted' }, t(l('Vender o master tira o poder de veto do artista: a confiança cai e fica uma mágoa.', 'Selling the master strips the artist\'s veto: trust drops and a grudge remains.')))),
-    section(t(l('Histórico', 'History')), logList(st.log)));
+    section(t(l('Histórico', 'History')), logList(houses27(s).log)));
 }
 
 function afterSale(s: GameState): HTMLElement {
@@ -117,11 +119,11 @@ function outletsTab(s: GameState): HTMLElement {
 
 let vsel = '';
 function venuesTab(s: GameState): HTMLElement {
-  const st = v17(s);
-  const mk = marketVenues(s).filter((d) => !st.own.some((o) => o.id === d.id));
+  const own = realVenues(s);
+  const mk = marketVenues(s).filter((d) => !own.some((o) => o.id === d.id));
   return h('div', null,
     h('p', { class: 'small muted' }, t(l('Clubes e teatros lendários estão à venda; estádios e arenas públicas não. Escolha a linha de programação e o preço: curadoria constrói nome (e revela talentos), comercial dá caixa e gasta a reputação, aluguel é renda fixa, residência dá público fiel a um ato seu.', 'Legendary clubs and theatres are for sale; stadiums and public arenas are not. Choose the booking policy and price: curated builds a name (and reveals talent), commercial brings cash and burns reputation, rental is fixed income, residency gives one of your acts a loyal crowd.'))),
-    ...st.own.map((o) => {
+    ...own.map((o) => {
       const d = vdef(o.id)!, e = monthEst17(s, o);
       return section(`${d.name} — ${t(cityById[d.city]?.name ?? l(d.city))} (${N(d.cap)})`,
         h('div', { class: 'row wrap' },
@@ -142,7 +144,7 @@ function venuesTab(s: GameState): HTMLElement {
         h('button', { class: 'btn small primary', onclick: () => res(buyVenue17(s, vsel || mk[0]?.id || ''), l('Casa comprada.', 'Venue bought.')) }, t(l('Comprar', 'Buy')))),
       (() => { const d = vdef(vsel || mk[0]?.id || ''); return d ? h('p', { class: 'small muted' }, d.buyable === false ? t(d.note ?? l('', '')) : t(l('Prestígio {p} · alma: {f}{c}', 'Prestige {p} · soul: {f}{c}'), { p: d.prestige, f: famName(d.fam), c: d.to ? t(l(' · na história, fecha em {y}', ' · historically closes in {y}'), { y: d.to }) : '' })) : null; })(),
       h('p', { class: 'small muted' }, t(l('{a} de {n} casas do catálogo existem nesta época.', '{a} of {n} catalog venues exist in this era.'), { a: marketVenues(s).length, n: VENUES17.length }))),
-    section(t(l('Histórico', 'History')), logList(st.log)));
+    section(t(l('Histórico', 'History')), logList(houses27(s).log)));
 }
 
 // ================================================================== licenças
@@ -232,7 +234,7 @@ function circuitTab(s: GameState): HTMLElement {
   const crowdActs = myActs(s).filter((a) => crowdOpen(s, a));
   return h('div', null,
     section(t(l('Guerra de headliners', 'Headliner war')), st.wars.length ? h('div', null, st.wars.map((w) => {
-      const inv = (id: string) => (s.x4 as unknown as { fest8: { invites: { id: string; fi: number }[] } }).fest8.invites.find((x) => x.id === id);
+      const inv = (id: string) => w8(s).invites.find((x) => x.id === id); // UNI-4: convites no registro único de festivais
       const A = inv(w.a), B = inv(w.b);
       return h('div', { class: 'card' }, h('p', null, t(l('{a}: dois festivais querem exclusividade. Aceitar um fecha a porta do outro por 2 anos.', '{a}: two festivals want exclusivity. Taking one shuts the other\'s door for 2 years.'), { a: s.acts[w.act]?.name ?? '' })),
         h('div', { class: 'row wrap' },
@@ -292,7 +294,7 @@ function calArea(s: GameState): HTMLElement {
         npc.length ? ul(npc.map((x) => `${s.acts[x.a]?.name ?? '?'} (${s.labels[s.acts[x.a]?.owner ?? '']?.name ?? t(l('independente', 'independent'))}) — ${t(cityById[x.c]?.name ?? l(x.c))}${x.mv ? ` · ${t(l('mudou a data para não bater com você', 'moved the date to avoid you'))}` : ''}`)) : null,
         fs.length ? ul(fs.map((f) => `★ ${f.name} — ${t(cityById[f.city]?.name ?? l(f.city))}`)) : null);
     }),
-    v17(s).own.length ? section(t(l('Nas suas casas este mês', 'At your venues this month')), ul(v17(s).own.map((o) => `${vdef(o.id)?.name ?? ''} (${t(POLICY[o.policy].name)}): ${o.booked.map((id) => s.acts[id]?.name ?? '').join(', ') || '—'}`))) : null,
+    realVenues(s).length ? section(t(l('Nas suas casas este mês', 'At your venues this month')), ul(realVenues(s).map((o) => `${vdef(o.id)?.name ?? ''} (${t(POLICY[o.policy].name)}): ${o.booked.map((id) => s.acts[id]?.name ?? '').join(', ') || '—'}`))) : null,
     section(t(l('Política de ingressos', 'Ticket policy')), acts.length ? h('div', null, acts.map((id) => { const a = s.acts[id]!; const cur = c.tix[id] ?? 'fair'; return h('div', { class: 'row wrap' }, a.name, ' ',
       select<Tix>(cur, (Object.keys(TIX) as Tix[]).filter((k) => s.year >= TIX[k].from).map((k) => ({ value: k, label: t(TIX[k].name) })), (v) => { setTix(s, id, v); rerender(); }), ' ', h('span', { class: 'small muted' }, t(TIX[cur].desc)),
       c.scalp[id] ? h('span', { class: 'small bad' }, ` · ${t(l('cambistas já lucraram ~{v}', 'scalpers have made ~{v}'), { v: $(c.scalp[id]) })}`) : null); })) : h('p', { class: 'muted small' }, t(l('Sem shows marcados.', 'No shows booked.')))),

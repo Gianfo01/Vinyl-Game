@@ -1,5 +1,6 @@
 // Rodada 18 (campus18): estado → prédios, ciclo de obra (planejado → andaime → aberto) com capex,
 // estilo por época (e por reforma), dano por incêndio, venda e retratos anuais.
+import { addRealVenue, dropRealVenue, realVenues } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
@@ -11,7 +12,6 @@ import { openBranch } from '../src/sim/branches';
 import { CITIES } from '../src/data/world';
 import { buyHouse, ownerOf } from '../src/sim/sys/people/owner';
 import { foundSchool18 } from '../src/sim/sys/school18';
-import { v17 } from '../src/sim/sys/venues17';
 import {
   HOME_LOT18, buildings18, campus18, decode18, encode18, freeLots18, layout18, snapshot18, startProj18, styleOf18, sync18, vehicleOf18,
 } from '../src/sim/sys/campus18';
@@ -102,10 +102,10 @@ describe('campus18', () => {
 
   it('casa de shows vendida vira placa de "vendido" por um tempo', () => {
     const s = rich(1990);
-    v17(s).own.push({ id: 'vanguard', rep: 50, policy: 'curated', price: 'mid', cond: 80, maint: true, y: 1990, paid: 0, booked: [], total: 0 });
+    addRealVenue(s, { id: 'vanguard', rep: 50, policy: 'curated', price: 'mid', cond: 80, maint: true, y: 1990, paid: 0, booked: [], total: 0 });
     sync18(s);
     expect(buildings18(s).some((b) => b.id === 've:vanguard' && b.st === 'open')).toBe(true);
-    v17(s).own = [];
+    for (const o of realVenues(s)) dropRealVenue(s, o.id);
     sync18(s);
     const g = buildings18(s).find((b) => b.id === 've:vanguard');
     expect(g?.st).toBe('sold');

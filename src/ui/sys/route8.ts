@@ -58,7 +58,7 @@ export function routePlannerSection(s: GameState): HTMLElement {
         h('td', null, i + 1),
         h('td', null, h('b', null, cityName(x.cityId)), h('small', { class: 'muted' }, ` ${t(marketById[x.market]?.name)}`)),
         h('td', null, N(x.km)), h('td', null, x.days ? x.days.toFixed(1) : '0'), h('td', null, $(x.cost)), h('td', null, `~${N(x.demand)}`),
-        h('td', { title: t(l('Relação com o promotor local (50 = neutra)', 'Relationship with the local promoter (50 = neutral)')) }, bar(x.rel, 100, x.rel >= 60 ? 'good' : x.rel < 40 ? 'bad' : '')),
+        h('td', { title: t(l('Relação com o promotor local (30 = neutra)', 'Relationship with the local promoter (30 = neutral)')) }, bar(x.rel, 100, x.rel >= 45 ? 'good' : x.rel < 20 ? 'bad' : '')),
         h('td', null, x.newCity ? pill(t(l('cidade nova', 'new city')), 'info') : null, x.newMarket ? pill(t(l('mercado novo', 'new market')), 'good') : null, x.visa ? pill(t(l('visto', 'visa')), 'warn') : null, x.demand < 60 ? pill(t(l('público baixo', 'low audience')), 'bad') : null),
         h('td', { class: 'nowrap' }, h('button', { class: 'link', 'aria-label': '↑', onclick: () => move(i, -1) }, '↑'), ' ', h('button', { class: 'link', 'aria-label': '↓', onclick: () => move(i, 1) }, '↓'), ' ', h('button', { class: 'link', 'aria-label': '✕', onclick: () => { draft.cities.splice(i, 1); rerender(); } }, '✕')),
       ))),

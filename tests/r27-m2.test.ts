@@ -34,9 +34,12 @@ beforeAll(() => {
   // existem — antes dependia da ordem dos imports) e os perks religados, r16pb-7 quebra antes do show; r16pb-4 volta a ter
   // show no 9º mês, mas o ato mais famoso livre fecha com um rival na mesa; r16pb-8 tem show no 9º mês e vira o fixture.
   // R29 (CONECTAR TUDO + DEMO juntos): r16pb-8 (e -7) quebram antes do show; r16pb-3 tem show no 8º mês e vira o fixture.
-  // R31 onda 4 (N: bandas de ficção no mundo): r16pb-3 quebra antes do show; varredura pb-1..12: show no 8º–10º mês em
-  // pb-2, 5, 7, 8, 9, 10, 11, 12; r16pb-11 (o mesmo do r16-playbot) vira o fixture.
-  const s = createGame(defaultConfig('r16pb-11', { startYear: 1975, realNames: true }));
+  // R31 UNI-4 (motores únicos de turnê/casa/festival/rival + segredos num depósito): em r16pb-3 o show mal jogado passa a
+  // render mais fãs que o bem jogado (38 vs 35, show sorteado diferente); varredura -2..-10: -2/-5/-7/-8/-10 passam tudo,
+  // -4/-9 quebram antes do show, -6 repete a falha do -3. r16pb-2 vira o fixture.
+  // Junção final da onda 4 (UNI-4 + N + I + T/H/CAR2): r16pb-2 quebra antes do show; varredura -3..-14: -3/-4/-6/-8/-12/-14
+  // passam os 12; r16pb-3 volta a ser o fixture.
+  const s = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
     const hit = m >= 7 && playableShows27(s, 40).length > 0;
@@ -60,7 +63,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     // Aqui fica o que não pode quebrar: a mesma seed dá exatamente o mesmo mundo, e o bot toca shows pelo playStop.
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBeGreaterThan(0);
-    const again = createGame(defaultConfig('r16pb-11', { startYear: 1975, realNames: true }));
+    const again = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
     for (let m = 0; m < MONTHS && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));
@@ -257,7 +260,12 @@ describe('r27 M2 — negociação jogável', () => {
     const s1 = clone(FIX); s1.player.cash += 50_000_00;
     const act = pickAct(s1);
     const n1 = startNego27(s1, act.id, draft(s1, act.id)) as Nego27;
+    // R31 Z (base nova): o ato escolhido mudou e aceita pouco; a proposta cai até ficar abaixo do mínimo dele
     const low = { ...n1.ours, advance: 0, royalty: 0.05 };
+    // W3-FIX: o mínimo (n.res) é SORTEADO para bater com a chance do modo rápido; com o mundo da onda 3 o sorteio desta
+    // artista caiu em 0,22 (a proposta irrisória marca 0,24 — chance de 6% no modo rápido) e ela assinava. O caso testado é
+    // "prazo ABAIXO do mínimo": fixa o mínimo acima da nota da proposta (folga maior que o empurrão do prazo, 0,05)
+    n1.res = Math.max(n1.res, evaluateOffer(s1, s1.acts[act.id], low).score + 0.1);
     propose27(s1, n1, low, 'deadline');
     expect(n1.status === 'walked' || n1.status === 'sniped').toBe(true);
 

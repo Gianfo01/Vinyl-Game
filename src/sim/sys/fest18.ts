@@ -4,25 +4,23 @@
 // só no app), VIZINHOS E AUTORIDADES pesam (barulho, licença, toque de recolher), a EXPERIÊNCIA conta (acessibilidade,
 // transporte, circulação) e CRESCER traz riscos novos (licença defasada, gargalos, fiéis diluídos). Tudo entra pelos
 // modificadores do ciclo do fest12 (mods/notes), então aparece na nota e no "por quê" da edição.
+import { fests31, ownFests } from './feststore';
 import { clamp } from '../../core/rng';
 import { cityById, familyOf, l, type L } from '../../data/world';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import type { GameState } from '../types';
 import { fmtL, money } from '../util';
 import { festModel } from './live/festival';
-import { liveOf, isMine, type OwnFestival } from './live/state';
+import { isMine, type OwnFestival } from './live/state';
 import { IDENTS, f12, festFee18, festOf, festPay12, muOf, type SpK } from './fest12';
 
 export interface F18 { xp: [number, number, number]; permit: number; neigh: number; cy: number; asked: number; ignored?: number; spd: Record<string, 1>; cap0: number; nh: number }
-export interface Fest18 { f: Record<string, F18> }
-declare module '../ext4' { interface Ext4 { fest18: Fest18 } }
-registerExt4('fest18', () => ({ f: {} }));
-export const fest18 = (s: GameState): Fest18 => { const x = s.x4 as unknown as { fest18?: Fest18 }; return (x.fest18 ??= { f: {} }); };
+// UNI-4 (B.11): estas são REGRAS do festival; o estado (F18) mora no registro único de festivais (parte `x18`).
 export function ff18(s: GameState, f: OwnFestival): F18 {
-  const st = fest18(s);
-  return (st.f[f.id] ??= { xp: [0, 0, 0], permit: Math.max(3000, festModel(s, f).capacity), neigh: 60, cy: 0, asked: 0, spd: {}, cap0: 0, nh: f12(s, f).hist.length });
+  const rec = (fests31(s).f[f.id] ??= { id: f.id, src: 'own', land: f });
+  return (rec.x18 ??= { xp: [0, 0, 0], permit: Math.max(3000, festModel(s, f).capacity), neigh: 60, cy: 0, asked: 0, spd: {}, cap0: 0, nh: f12(s, f).hist.length });
 }
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
 
@@ -119,7 +117,7 @@ function applySp(s: GameState, f: OwnFestival, k: SpK, sid: string): void {
 }
 
 registerSimHook('month', 'fest18', (s) => {
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     const x = f12(s, f), F = ff18(s, f), md = x.cyc.mods;
     const m = festModel(s, f), cap = m.capacity;
     // novo ciclo: experiência e riscos de crescimento entram nos modificadores
@@ -184,7 +182,7 @@ registerSimHook('month', 'fest18', (s) => {
 });
 // cota de descobertas do instituto cultural: confere no mês do festival, antes da 2ª parcela vencer
 registerSimHook('month', 'fest18:indie', (s) => {
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     const x = f12(s, f), F = ff18(s, f);
     if (muOf(s, f) !== 0) continue;
     for (const sp of x.cyc.sponsors) {
@@ -201,7 +199,7 @@ registerSimHook('month', 'fest18:indie', (s) => {
 
 registerAdvisorTip('fest18', (s) => {
   const out = [];
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     if (!f.lineup.length) continue;
     const d = headDep18(s, f);
     if (d.share >= 0.55 && f12(s, f).ident !== 'discovery') out.push({ id: `fest18-head-${f.id}`, level: 'warn' as const, cat: 'opportunity' as const, score: 40, text: fmtL(l('{f} depende demais de {a}.', '{f} depends too much on {a}.'), { f: f.name, a: d.name }), why: [fmtL(l('~{p}% da procura vem do maior nome: se cancelar, o festival afunda.', '~{p}% of demand comes from the top name: if they cancel, the festival sinks.'), { p: Math.round(d.share * 100) })], effect: l('Mais nomes médios ou uma curadoria que o público confie.', 'More mid-size names or a curation people trust.'), goto: { area: 'shows' } });

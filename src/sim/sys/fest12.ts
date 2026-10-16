@@ -7,9 +7,10 @@
 // equipamento, fluxo de público) -> edição -> memória do público (quem vem pelo festival, não pela
 // atração) -> próxima edição. Toda aleatoriedade usa um gerador próprio (semente + festival + mês).
 
+import { addOwnFest, fests31, ownFests } from './feststore';
 import { Rng, clamp, hashString } from '../../core/rng';
 import { familyOf, l, type FamilyId, type L } from '../../data/world';
-import { deferEvents, queueCutscene, registerExt4, registerSimHook } from '../ext4';
+import { deferEvents, queueCutscene, registerSimHook } from '../ext4';
 import { emitEvent, resolveDecision, type EventDef } from '../events';
 import { climateInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
@@ -17,7 +18,7 @@ import { fmtL, money, nextId, notify, remember } from '../util';
 import { monthIndex } from '../capacity';
 import { exclPrem19, identLoss19, rivalFest19 } from '../ctx19';
 import { countTiles, festModel, guestAccepts, guestFee } from './live/festival';
-import { bump, isMine, liveOf, type FestEdition, type FestThought, type FestTile, type OwnFestival } from './live/state';
+import { bump, isMine, type FestEdition, type FestThought, type FestTile, type OwnFestival } from './live/state';
 import { foundVenture, ventures, vpay9, type Holder, type Venture, type Verdict } from './ventures9';
 
 // ---------------------------------------------------------------- tipos
@@ -44,15 +45,7 @@ export interface Cycle {
 }
 export interface Hist { y: number; crowd: number; cap: number; loyal: number; early: number; rating: number; profit: number; head: string; ident: Ident; tag: L; why: L[] }
 export interface F12 { ident: Ident; fam: FamilyId; deals: Record<string, Deal>; cyc: Cycle; loyal: number; hist: Hist[]; commits: Commit[] }
-export interface Fest12State { f: Record<string, F12>; snap: Record<string, { m: number; c: string }> }
-
-declare module '../ext4' { interface Ext4 { fest12: Fest12State } }
-registerExt4('fest12', () => ({ f: {}, snap: {} }));
-export const fest12 = (s: GameState): Fest12State => {
-  const x = s.x4 as unknown as { fest12?: Fest12State };
-  x.fest12 ??= { f: {}, snap: {} };
-  return x.fest12;
-};
+// UNI-4 (B.11): o negócio de cada festival (F12) mora no registro único de festivais (feststore, parte `biz`).
 
 // ---------------------------------------------------------------- dados
 
@@ -81,11 +74,11 @@ const fresh = (year: number): Cycle => ({
   mods: { ex: 0, co: 0, sa: 0, dem: 1, loyal: 1, risk: 0 }, notes: [], hype: 1,
 });
 const own = (s: GameState, k: string) => Rng.fromSeed(`${s.config.seed}:fest12:${k}:${monthIndex(s)}`);
-export const festOf = (s: GameState, fid: string) => liveOf(s).fests.find((x) => x.id === fid);
+export const festOf = (s: GameState, fid: string) => ownFests(s).find((x) => x.id === fid);
 export const ventureOf = (s: GameState, fid: string) => ventures(s).list.find((v) => v.fx === fid);
 export function f12(s: GameState, f: OwnFestival): F12 {
-  const st = fest12(s);
-  return (st.f[f.id] ??= { ident: 'mega', fam: 'rock' as FamilyId, deals: {}, cyc: fresh(f.nextYear), loyal: 0, hist: [], commits: [] });
+  const rec = (fests31(s).f[f.id] ??= { id: f.id, src: 'own', land: f });
+  return (rec.biz ??= { ident: 'mega', fam: 'rock' as FamilyId, deals: {}, cyc: fresh(f.nextYear), loyal: 0, hist: [], commits: [] });
 }
 const holder = (s: GameState, fid: string): Holder => ventureOf(s, fid)?.owner ?? 'label';
 function pay(s: GameState, f: OwnFestival, amt: number, key: string, memo: string): void {
@@ -118,15 +111,14 @@ function mkFest(s: GameState, v: Venture): OwnFestival {
 
 /** Liga cada festival de Empreendimentos a um terreno e cada terreno a um negócio: um só festival. */
 export function sync12(s: GameState): void {
-  const st = fest12(s);
-  const lv = liveOf(s);
+  const st = fests31(s);
   const vs = ventures(s);
   for (const v of vs.list) {
     if (v.kind !== 'festival') continue;
-    let f = v.fx ? lv.fests.find((x) => x.id === v.fx) : undefined;
+    let f = v.fx ? ownFests(s).find((x) => x.id === v.fx) : undefined;
     if (!f) {
       f = mkFest(s, v);
-      lv.fests.push(f);
+      addOwnFest(s, f);
       v.fx = f.id;
       st.snap[v.id] = { m: f.month, c: f.cityId };
       const x = f12(s, f);
@@ -140,7 +132,7 @@ export function sync12(s: GameState): void {
     v.rep = f.rep;
     v.price = money(s, f.price);
   }
-  for (const f of lv.fests) {
+  for (const f of ownFests(s)) {
     // atrações postas pelo editor de terreno ganham palco e horário
     const x = f12(s, f);
     for (const y of f.lineup) { const a = s.acts[y.actId]; const sl = a && !x.deals[a.id] ? freeSlot(s, f, wantTime(a)) : null; if (a && sl) x.deals[a.id] = { actId: a.id, ...sl, len: 60, excl: false, tech: techOf(a), adv: 0 }; }
@@ -842,7 +834,7 @@ export function rights12(s: GameState, o: { att: number; rating: number; top: nu
 
 function festMonth(s: GameState): void {
   sync12(s);
-  for (const f of liveOf(s).fests.slice()) {
+  for (const f of ownFests(s).slice()) {
     const x = f12(s, f);
     if (x.cyc.year !== f.nextYear) x.cyc.year = f.nextYear;
     payCommits(s, f, x);
@@ -867,7 +859,7 @@ function festMonth(s: GameState): void {
 // o festival da semana do evento: decisões de operação aparecem com o festival em andamento
 registerSimHook('week', 'fest12-week', (s) => {
   if (s.week - s.clock.monthStartWeek < 1) return;
-  for (const f of liveOf(s).fests) { const x = f12(s, f); if (muOf(s, f) === 0 && !x.cyc.opsOn) startOps(s, f, x); }
+  for (const f of ownFests(s)) { const x = f12(s, f); if (muOf(s, f) === 0 && !x.cyc.opsOn) startOps(s, f, x); }
 });
 // substitui o gancho antigo do festival de terreno (mesma posição na ordem dos ganchos)
 registerSimHook('month', 'live-festival', (s) => festMonth(s));

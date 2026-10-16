@@ -1,5 +1,6 @@
 // r23: cenários de outras profissões e novos selos — criam o jogo, o setup roda, a meta é número finito e o negócio
 // da profissão já está aberto no início.
+import { builtVenue } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
@@ -21,7 +22,7 @@ const open: Record<string, (s: GameState) => boolean> = {
   media: (s) => ventures(s).list.some((v) => v.kind === 'media'),
   booking: (s) => ventures(s).list.some((v) => v.kind === 'booking'),
   platform: (s) => ventures(s).list.some((v) => v.kind === 'platform'),
-  venue: (s) => !!liveOf(s).venue,
+  venue: (s) => !!builtVenue(s),
   manager: (s) => ventures(s).mg.clients.length > 0,
   musician: (s) => Object.values(s.acts).some((a) => a.playerBand),
   label: () => true,

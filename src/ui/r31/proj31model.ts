@@ -6,6 +6,7 @@
 // As ações da rua são AS MESMAS funções dos botões do projeto (planWriting, recordNow, scheduleProject…): a cena só
 // leva até elas (PROJ_ACTS31; o teste confere). Montar o modelo só lê.
 
+import { tourList } from '../../sim/tours';
 import { CHANNELS, FORMATS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { availableFormats } from '../../sim/production';
@@ -149,7 +150,7 @@ export function proj31(s: GameState, p: MusicProject): Proj31 {
     const nm: L = ph.kind === 'video' ? l('Clipe', 'Music video') : ph.kind === 'single' ? l('Single de trabalho', 'Lead single') : ph.kind === 'presave' ? l('Pré-save', 'Pre-save') : l('Teaser', 'Teaser');
     flags.push({ id: `ro:${ph.kind}:${ph.week}`, kind, stage: ph.week <= (relW ?? ph.week) ? 'radio' : 'store', name: nm, done: ph.done, when: monthOf(s, ph.week), x: 0 });
   }
-  const tr = s.tours.find((x) => x.actId === p.actId && (x.status === 'planned' || x.status === 'running'));
+  const tr = tourList(s).find((x) => x.actId === p.actId && (x.status === 'planned' || x.status === 'running'));
   if (tr) flags.push({ id: 'tour', kind: 'tour', stage: 'store', name: fmtL(l('Turnê em paralelo: {t}', 'Tour in parallel: {t}'), { t: tr.name }), done: false, x: 0 });
   // posição na calçada: à direita da etapa, empilhando para a esquerda
   const used = new Map<StageId31, number>();

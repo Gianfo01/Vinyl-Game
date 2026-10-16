@@ -4,6 +4,8 @@
 // difamar), e decisões grandes com requisitos (escola de música, estúdio lendário, premiação própria,
 // turnê beneficente, retiro criativo, gala da indústria, manifesto, pacto de não agressão).
 
+import { markSecretUse, secretUse } from '../holds17';
+import { addSecret23, know23, ownOf23, sec23, setKnow23, type Kind23, type Sec23 } from './secstore23';
 import { clamp, hashString, type Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { expectedAdvance } from '../contracts';
@@ -37,6 +39,8 @@ export const SECRETS: Record<SecretKind, { name: L; criminal: boolean; on: Targe
   debts: { name: l('Dívidas escondidas', 'Hidden debts'), criminal: false, on: 'label' },
 };
 
+/** Vista de um segredo da Intriga. UNI-4 (B.5): o segredo mora no secrets23 (src 'intrigue'); `known` = você confirmou,
+ *  `exposed` = público, `usedWeek` = último uso do gancho (holds17). */
 export interface Secret { id: string; target: Target; kind: SecretKind; known: boolean; exposed: boolean; usedWeek?: number }
 
 export type SchemeKind = 'dig' | 'befriend' | 'poach' | 'sabotage' | 'smear';
@@ -51,7 +55,6 @@ export const SCHEMES: Record<SchemeKind, { name: L; desc: L; on: TargetKind[]; m
 export interface Scheme { id: string; kind: SchemeKind; target: Target; agents: number; progress: number; start: number }
 
 export interface IntrigueState {
-  secrets: Record<string, Secret[]>;
   schemes: Scheme[];
   decisions: Record<string, number>;
   log: { week: number; text: L; tone: 'good' | 'bad' | 'info' }[];
@@ -64,7 +67,7 @@ declare module '../ext4' {
   }
 }
 
-const fresh = (): IntrigueState => ({ secrets: {}, schemes: [], decisions: {}, log: [], offerHooks: {} });
+const fresh = (): IntrigueState => ({ schemes: [], decisions: {}, log: [], offerHooks: {} });
 registerExt4('intrigue', fresh);
 
 export function intrigue(s: GameState): IntrigueState {
@@ -85,25 +88,43 @@ export function targetName(s: GameState, t: Target): string {
   return t.kind === 'act' ? s.acts[t.id]?.name ?? '?' : s.labels[t.id]?.name ?? '?';
 }
 
-/** Segredos de um alvo, gerados de forma determinística na primeira consulta. */
-export function secretsOf(s: GameState, t: Target): Secret[] {
-  const st = intrigue(s);
-  const k = key(t);
-  if (st.secrets[k]) return st.secrets[k];
-  const h = hashString(`${s.config.seed}|${k}`);
-  const pool = (Object.keys(SECRETS) as SecretKind[]).filter((x) => SECRETS[x].on === t.kind);
-  const out: Secret[] = [];
-  const n = h % 100 < 55 ? (h % 100 < 18 ? 2 : 1) : 0;
-  for (let i = 0; i < n; i++) {
-    const kind = pool[(h >>> (4 + i * 5)) % pool.length];
-    if (!out.some((x) => x.kind === kind)) out.push({ id: `${k}:${kind}`, target: t, kind, known: false, exposed: false });
-  }
-  st.secrets[k] = out;
-  return out;
+const K23: Record<SecretKind, Kind23> = {
+  addiction: 'drugs', affair: 'affair', side_deal: 'side_deal', plagiarism: 'plagiarism', tax: 'tax', fake_bio: 'fake_bio',
+  payola: 'payola', fake_sales: 'fake_sales', unpaid_royalties: 'royalties', ceo_affair: 'affair', debts: 'debt',
+};
+const subj = (t: Target): string => (t.kind === 'act' ? `a:${t.id}` : `lb:${t.id}`);
+function view(s: GameState, sec: Sec23): Secret {
+  const k = know23(s, sec), u = secretUse(s, sec.id);
+  return { id: sec.id, target: { kind: String(sec.data?.tk) as TargetKind, id: String(sec.data?.ti) }, kind: String(sec.data?.ik) as SecretKind, known: k.p >= 3, exposed: k.pr >= 4, ...(u ? { usedWeek: u.w } : {}) };
 }
+/** Planta um segredo da Intriga no depósito único (secrets23). */
+export function plantSecret(s: GameState, t: Target, kind: SecretKind, known = false): Secret {
+  const sec = addSecret23(s, { kind: K23[kind], subject: subj(t), sev: SECRETS[kind].criminal ? 55 : 35, ev: 40, data: { ik: kind, tk: t.kind, ti: t.id } }, 'intrigue');
+  if (known) setKnow23(s, sec, 'player', 3);
+  return view(s, sec);
+}
+const ownSec = (s: GameState, t?: Target): Sec23[] => ownOf23(s, 'intrigue').filter((x) => !t || x.subject === subj(t));
+
+/** Segredos de um alvo, sorteados de forma determinística na primeira vez que o MOTOR pergunta (trama, decisão). */
+export function secretsOf(s: GameState, t: Target): Secret[] {
+  const sd = sec23(s).sd, k = `ig:${key(t)}`;
+  if (!sd[k]) {
+    sd[k] = 1;
+    const h = hashString(`${s.config.seed}|${key(t)}`);
+    const pool = (Object.keys(SECRETS) as SecretKind[]).filter((x) => SECRETS[x].on === t.kind);
+    const n = h % 100 < 55 ? (h % 100 < 18 ? 2 : 1) : 0;
+    const got: SecretKind[] = [];
+    for (let i = 0; i < n; i++) {
+      const kind = pool[(h >>> (4 + i * 5)) % pool.length];
+      if (!got.includes(kind)) { got.push(kind); plantSecret(s, t, kind); }
+    }
+  }
+  return ownSec(s, t).map((x) => view(s, x));
+}
+const markKnown = (s: GameState, id: string): void => { const sec = ownOf23(s, 'intrigue').find((x) => x.id === id); if (sec) setKnow23(s, sec, 'player', 3); };
 
 export function knownSecrets(s: GameState): Secret[] {
-  return Object.values(intrigue(s).secrets).flat().filter((x) => x.known && !x.exposed);
+  return ownSec(s).map((x) => view(s, x)).filter((x) => x.known && !x.exposed);
 }
 
 /** Gancho disponível? Fracos: uma vez. Fortes (crime): a cada 5 anos. */
@@ -185,7 +206,7 @@ function succeed(s: GameState, r: Rng, sc: Scheme): void {
       const hidden = secretsOf(s, sc.target).filter((x) => !x.known);
       if (hidden.length) {
         const sec = r.pick(hidden);
-        sec.known = true;
+        markKnown(s, sec.id);
         logI(s, fmtL(l('Segredo descoberto sobre {t}: {s}.', 'Secret uncovered about {t}: {s}.'), { t: name, s: SECRETS[sec.kind].name }), 'good');
         notify(s, fmtL(l('Seus agentes descobriram: {t} — {s}. Agora você tem um gancho.', 'Your agents found out: {t} — {s}. You now hold a hook.'), { t: name, s: SECRETS[sec.kind].name }), 'good');
       } else logI(s, fmtL(l('{t} está limpo(a). Nada encontrado.', '{t} is clean. Nothing found.'), { t: name }), 'info');
@@ -286,7 +307,7 @@ export function useHook(s: GameState, r: Rng, secretId: string, use: HookUse): L
       }
     }
   }
-  sec.usedWeek = s.week;
+  markSecretUse(s, sec.id);
   logI(s, fmtL(l('Gancho usado em {t}: {u}.', 'Hook used on {t}: {u}.'), { t: name, u: HOOK_USES[use].name }), 'info');
   return null;
 }
@@ -294,8 +315,16 @@ export function useHook(s: GameState, r: Rng, secretId: string, use: HookUse): L
 export function exposeSecret(s: GameState, secretId: string): L | null {
   const sec = knownSecrets(s).find((x) => x.id === secretId);
   if (!sec) return l('Segredo indisponível.', 'Secret unavailable.');
+  const raw = ownOf23(s, 'intrigue').find((x) => x.id === secretId);
+  if (raw) { setKnow23(s, raw, 'press', 4); setKnow23(s, raw, 'player', 4); }
+  exposeFx(s, sec);
+  logI(s, fmtL(l('Você expôs {t}: {s}.', 'You exposed {t}: {s}.'), { t: targetName(s, sec.target), s: SECRETS[sec.kind].name }), 'info');
+  return null;
+}
+/** Quando o segredo vem à tona pela camada única (imprensa, rival, vazamento): os mesmos efeitos de expor. */
+export function exposeIntrigue(s: GameState, raw: Sec23): void { exposeFx(s, view(s, raw)); }
+function exposeFx(s: GameState, sec: Secret): void {
   const name = targetName(s, sec.target);
-  sec.exposed = true;
   if (sec.target.kind === 'act') {
     const a = s.acts[sec.target.id];
     if (a) { a.fame *= 0.85; a.trust = clamp(a.trust - 20, 0, 100); a.momentum = Math.max(0, a.momentum - 15); }
@@ -306,8 +335,6 @@ export function exposeSecret(s: GameState, secretId: string): L | null {
     if (SECRETS[sec.kind].criminal) s.player.reputation.institutional = clamp(s.player.reputation.institutional + 3, 0, 100);
   }
   remember(s, 'exposed', fmtL(l('Vem à tona: {t} — {s}.', 'It comes out: {t} — {s}.'), { t: name, s: SECRETS[sec.kind].name }), { important: true });
-  logI(s, fmtL(l('Você expôs {t}: {s}.', 'You exposed {t}: {s}.'), { t: name, s: SECRETS[sec.kind].name }), 'info');
-  return null;
 }
 
 // ---------------------------------------------------------------- decisões
@@ -342,14 +369,14 @@ export const DECISIONS: DecisionDef[] = [
     apply: (s, r) => {
       for (const p of rosterPersons(s)) { p.inspiration = clamp(p.inspiration + 25, 0, 100); p.morale = clamp(p.morale + 8, 0, 100); }
       ownerOf(s).stress = clamp(ownerOf(s).stress - 15, 0, 100);
-      if (r.chance(0.3)) { const id = r.pick(playerActs(s)); const sec = secretsOf(s, { kind: 'act', id }).find((x) => !x.known); if (sec) { sec.known = true; notify(s, fmtL(l('No retiro, alguém de {a} contou um segredo: {s}.', 'At the retreat, someone from {a} shared a secret: {s}.'), { a: s.acts[id].name, s: SECRETS[sec.kind].name }), 'event'); } }
+      if (r.chance(0.3)) { const id = r.pick(playerActs(s)); const sec = secretsOf(s, { kind: 'act', id }).find((x) => !x.known); if (sec) { markKnown(s, sec.id); notify(s, fmtL(l('No retiro, alguém de {a} contou um segredo: {s}.', 'At the retreat, someone from {a} shared a secret: {s}.'), { a: s.acts[id].name, s: SECRETS[sec.kind].name }), 'event'); } }
     } },
   { id: 'industry_gala', name: l('Gala da indústria', 'Industry gala'), desc: l('Rivalidades −10, contatos novos (+2 sinais) e chance de ouvir um segredo de um rival. Uma vez por ano.', 'Rivalries −10, new contacts (+2 signals) and a chance to overhear a rival\'s secret. Once a year.'), cost: 20000, energy: 1, cooldown: 52,
     req: (s) => s.player.reputation.commercial < 35 ? l('Reputação comercial 35+.', 'Commercial reputation 35+.') : null,
     apply: (s, r) => {
       for (const id of Object.keys(s.rivalries)) s.rivalries[id] = Math.max(0, s.rivalries[id] - 10);
       s.flags.scoutBonusOnce = (s.flags.scoutBonusOnce ?? 0) + 2;
-      if (r.chance(0.35)) { const lb = r.pick(Object.values(s.labels).filter((x) => x.active)); const sec = lb && secretsOf(s, { kind: 'label', id: lb.id }).find((x) => !x.known); if (lb && sec) { sec.known = true; notify(s, fmtL(l('Na gala, alguém bebeu demais e contou: {l} — {s}.', 'At the gala someone drank too much and told you: {l} — {s}.'), { l: lb.name, s: SECRETS[sec.kind].name }), 'event'); } }
+      if (r.chance(0.35)) { const lb = r.pick(Object.values(s.labels).filter((x) => x.active)); const sec = lb && secretsOf(s, { kind: 'label', id: lb.id }).find((x) => !x.known); if (lb && sec) { markKnown(s, sec.id); notify(s, fmtL(l('Na gala, alguém bebeu demais e contou: {l} — {s}.', 'At the gala someone drank too much and told you: {l} — {s}.'), { l: lb.name, s: SECRETS[sec.kind].name }), 'event'); } }
     } },
   { id: 'artistic_manifesto', name: l('Manifesto artístico', 'Artistic manifesto'), desc: l('A arte vem antes: crítica +0,3, confiança +4, apelo −3%. Exclui o pacto comercial.', 'Art comes first: critics +0.3, trust +4, appeal −3%. Excludes the commercial pact.'), cost: 2000, exclusive: 'commercial_pact', req: () => null, apply: () => bumpPerks() },
   { id: 'commercial_pact', name: l('Pacto comercial', 'Commercial pact'), desc: l('Hits primeiro: apelo +5%, vendas +3%, crítica −0,2. Exclui o manifesto artístico.', 'Hits first: appeal +5%, sales +3%, critics −0.2. Excludes the artistic manifesto.'), cost: 2000, exclusive: 'artistic_manifesto', req: () => null, apply: () => bumpPerks() },

@@ -287,7 +287,8 @@ function drawPeople(ctx: CanvasRenderingContext2D, m: FosM31, X: (f: number) => 
 export interface FosDrawOpts31 { name?: string; real?: (id: string) => Appearance | undefined; role?: (p: FosWho31) => string | null | undefined }
 
 /** A casa: corte de interior da época (moldura, parede, luz) com os objetos da família e as pessoas. */
-export function drawFosHome31(canvas: HTMLCanvasElement, m: FosM31, o: FosDrawOpts31 = {}): void {
+/** R31 (POL): pintura PURA da casa (fundo) e onde ficam os pés. */
+export function paintFosHome31(m: FosM31, o: FosDrawOpts31 = {}): { px: Px; fy: number; X: (f: number) => number } {
   const W = m.W, H = m.H, year = m.year;
   const seed = hs(`${m.seed}|fos31home|${m.city}`);
   const c = ctxFor(W, year, seed, false);
@@ -316,19 +317,27 @@ export function drawFosHome31(canvas: HTMLCanvasElement, m: FosM31, o: FosDrawOp
   if (o.name) prim27.sign(g, Math.round(W / 2), top + 2, o.name, Math.min(bw - 20, 200), year >= 1925);
   for (let i = 0; i < 3; i++) prim27.lamp(g, x0 + Math.round((w0 * (i + 0.5)) / 3), y0, fy, 26);
   for (let i = 0; i < 3; i++) { p.rect(x0 + i, y0, 1, RH, withAlpha(OCC, 90 - i * 28)); p.rect(x0 + w0 - 1 - i, y0, 1, RH, withAlpha(OCC, 80 - i * 25)); }
-  canvas.width = W; canvas.height = H;
+  const gg = geom27(W);
+  return { px: p, fy: gg.fy, X: gg.X };
+}
+export function drawFosHome31(canvas: HTMLCanvasElement, m: FosM31, o: FosDrawOpts31 = {}): void {
+  const { px, fy, X } = paintFosHome31(m, o);
+  if (!blitFos(canvas, px)) return;
+  drawPeople(canvas.getContext('2d')!, m, X, fy, o.real, o.role);
+}
+function blitFos(canvas: HTMLCanvasElement, p: Px): boolean {
+  canvas.width = p.w; canvas.height = p.h;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  const img = ctx.createImageData(W, H);
+  if (!ctx) return false;
+  const img = ctx.createImageData(p.w, p.h);
   new Uint32Array(img.data.buffer).set(p.d);
   ctx.putImageData(img, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  const gg = geom27(W);
-  drawPeople(ctx, m, gg.X, gg.fy, o.real, o.role);
+  return true;
 }
 
 /** A praça: céu e vizinhos da época, calçada de pedra portuguesa, os objetos e as pessoas. */
-export function drawFosSquare31(canvas: HTMLCanvasElement, m: FosM31, o: FosDrawOpts31 = {}): void {
+export function paintFosSquare31(m: FosM31, o: FosDrawOpts31 = {}): { px: Px; fy: number; X: (f: number) => number } {
   const W = m.W, H = m.H, year = m.year;
   const seed = hs(`${m.seed}|fos31sq|${m.city}`);
   const c = ctxFor(W, year, seed, false, true);
@@ -350,14 +359,12 @@ export function drawFosSquare31(canvas: HTMLCanvasElement, m: FosM31, o: FosDraw
   p = back; g.p = back;
   p.blit(layer, 0, 0);
   if (o.name) prim27.sign(g, Math.round(W / 2), 8, o.name, Math.min(W - 40, 240), year >= 1925);
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  const img = ctx.createImageData(W, H);
-  new Uint32Array(img.data.buffer).set(p.d);
-  ctx.putImageData(img, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  drawPeople(ctx, m, (f) => Math.round(12 + f * (W - 24)), fy, o.real, o.role);
+  return { px: p, fy, X: (f) => Math.round(12 + f * (W - 24)) };
+}
+export function drawFosSquare31(canvas: HTMLCanvasElement, m: FosM31, o: FosDrawOpts31 = {}): void {
+  const { px, fy, X } = paintFosSquare31(m, o);
+  if (!blitFos(canvas, px)) return;
+  drawPeople(canvas.getContext('2d')!, m, X, fy, o.real, o.role);
 }
 
 export type { Col };

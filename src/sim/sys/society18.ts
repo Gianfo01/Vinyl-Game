@@ -13,6 +13,7 @@
 // nas datas reais): museu/hall da fama e rota turística rendem visitantes; lobby na prefeitura (lei do silêncio, "agente
 // da mudança"); gentrificação ameaça as casas quando a cidade fica cara.
 
+import { realVenues } from './venuestore27';
 import { clamp, Rng } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -30,7 +31,7 @@ import { adjRel18, relOf18 } from './agency18';
 import { nudge16 } from './fame16';
 import { shield18 } from './feud18';
 import { playerPerson } from './life';
-import { v17, vdef } from './venues17';
+import { vdef } from './venues17';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
 
@@ -388,7 +389,7 @@ export function cityScore18(s: GameState, city: string): { v: number; why: [L, n
   if (acts.length) why.push([fmtL(l('{n} atos famosos da cidade', '{n} famous acts from the city'), { n: acts.length }), Math.min(35, acts.length * 4)]);
   const legends = actsNow27(s).filter((a) => a.city === city && (a.awards ?? 0) >= 2).length;
   if (legends) why.push([l('Lendas premiadas', 'Award-winning legends'), Math.min(15, legends * 3)]);
-  const own = v17(s).own.filter((o) => vdef(o.id)?.city === city).length;
+  const own = realVenues(s).filter((o) => vdef(o.id)?.city === city).length;
   if (own) why.push([l('Suas casas de show', 'Your venues'), own * 5]);
   if (st.museum?.city === city) why.push([l('Museu da música', 'Music museum'), 12]);
   if (st.route?.city === city) why.push([l('Rota turística', 'Tourist route'), 5]);
@@ -456,7 +457,7 @@ function cityMonth(s: GameState, r: Rng): void {
   // gentrificação: cidade famosa encarece e ameaça casas próprias
   const city = s.config.homeCity;
   if (s.year >= 1990 && cityScore18(s, city).v >= 35 && r.chance(0.02)) {
-    const o = v17(s).own.find((x) => vdef(x.id)?.city === city);
+    const o = realVenues(s).find((x) => vdef(x.id)?.city === city);
     if (o) pushInbox18(s, 'soc18_rent', { from: l('Proprietário', 'Landlord').pt, subject: fmtL(l('{v}: aluguel vai dobrar', '{v}: rent is doubling'), { v: vdef(o.id)?.name ?? '?' }), body: fmtL(l('O bairro ficou caro. Pagar {c} agora, ou brigar na câmara ({p}% de vencer; melhor com lei pró-casas).', 'The neighbourhood got pricey. Pay {c} now, or fight at the council ({p}% to win; better with the pro-venue ordinance).'), { c: usd(money(s, 20000)), p: Math.round(rentOdds18(s) * 100) }), ref: { v: o.id }, actions: [{ id: 'fight', label: l('Brigar', 'Fight') }, { id: 'pay', label: l('Pagar', 'Pay') }], weeks: 4 });
   }
 }
@@ -465,7 +466,7 @@ registerInboxKind('soc18_rent', { label: l('Cidade', 'City'), cat: 'money', icon
   handle: (s, m, a, r) => {
     if (a === 'pay') { post(s, `soc18rent:${s.week}`, -money(s, 20000), 'misc', 'Reajuste do aluguel'); return l('Pago.', 'Paid.'); }
     if (r.chance(rentOdds18(s))) return l('A câmara protege a casa: aluguel congelado.', 'The council protects the venue: rent frozen.');
-    const o = v17(s).own.find((x) => x.id === String(m.ref?.v)); if (o) o.rep = clamp(o.rep - 10, 0, 100);
+    const o = realVenues(s).find((x) => x.id === String(m.ref?.v)); if (o) o.rep = clamp(o.rep - 10, 0, 100);
     post(s, `soc18rentl:${s.week}`, -money(s, 30000), 'legal', 'Derrota na disputa do aluguel');
     return l('Perdeu: paga mais caro e a casa sofre.', 'Lost: you pay more and the venue suffers.');
   } });

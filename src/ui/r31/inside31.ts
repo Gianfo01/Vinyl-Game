@@ -4,6 +4,7 @@
 // (1 clique depois de entrar); "Abrir a tela" fica para o detalhe. Fachadas levam à sala dos fundos; a facção com
 // convite aberto mostra o baile; a delegacia mostra as celas; o beco, o mercado negro.
 
+import { baucOn31 } from '../../sim/sys/bauc31';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
@@ -11,6 +12,8 @@ import { fmtL, playerActs } from '../../sim/util';
 import { doPlace27, GO27, type PAct27, type Person27 } from '../../sim/sys/place27';
 import { jobLog31, jobOf31, meetHere31, scoutHere31 } from '../../sim/sys/gente31';
 import { where31 } from '../../sim/sys/where31';
+import { homeOf31, resInfo31, TIER31 } from '../../sim/sys/lots31';
+import { met31, meNode31, node31 } from '../../sim/social31';
 import {
   BAILE_WAYS31, CASE_WAYS31, PLEA31, ROOM_ACTS31, bail31, baile31, bailCost31, bailes31, bmLock31, bmRows31, buyBm31, caseWay31, cellLock31, cells31, denounce31,
   detective31, facadeOf31, lawyer31, lawyerCost31, myFile31, police31, room31, rowAct31, visitCell31, type BaileWay31,
@@ -26,10 +29,12 @@ import { go18 } from '../sys/inbox18';
 import { openFicha13 } from '../sys/persona13';
 import { shop31Tab } from './shop31';
 import { lockBtn31, quickBtn31 } from './lock31';
-import { sceneView31 } from './scene31';
+import { moreBtn31, runGo31, sceneView31 } from './scene31';
 import { INSIDE_W31, infoLines31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
 import { artPanelEl31, paintArt31 } from './art31';
 import { askBox31 } from './amor31ui';
+import { paintVit31, vitListEl31, vitPanelEl31 } from './vit31';
+import { fairName31 } from '../../sim/r31/vitrine31';
 import './inside31.css';
 
 /** Painel aberto e sala dos fundos (só na sessão: explorar não muda o mundo). */
@@ -131,6 +136,7 @@ function infoPanel(s: GameState, m: InsideM31, x: InsideT31, key: string): HTMLE
       for (const r of rows) add(h('div', { class: 'in31-act' }, h('b', null, t(r.name)), h('span', { class: 'small' }, ` · ${$v(r.price)}`),
         h('p', { class: 'small muted' }, t(r.note), ' ', t(fmtL(l('Risco de apreensão: {p}%.', 'Seizure risk: {p}%.'), { p: Math.round(r.risk * 100) }))),
         btn(l('Comprar', 'Buy'), bmLock31(s, r), () => result(buyBm31(s, r.id)), true)));
+      if (baucOn31(s)) add(h('div', { class: 'row wrap' }, moreBtn31(l('Sala dos fundos: leilão silencioso', 'Back room: silent auction'), () => runGo31({ area: 'bauc31' })))); // R31 T2
       break;
     }
     case 'baile': {
@@ -139,6 +145,26 @@ function infoPanel(s: GameState, m: InsideM31, x: InsideT31, key: string): HTMLE
       add(h('h4', null, t(fmtL(l('Baile de {o}', '{o} party'), { o: b.o.name }))),
         h('p', { class: 'small' }, t(fmtL(l('Seu artista no palco{a}; o chefe no camarote. Calor da polícia: {h}/100.', 'Your act on stage{a}; the boss in the VIP box. Police heat: {h}/100.'), { a: b.actId && s.acts[b.actId] ? l(` (${s.acts[b.actId].name})`, ` (${s.acts[b.actId].name})`) : l('', ''), h: b.police }))));
       add(h('div', { class: 'row wrap' }, ...(Object.keys(BAILE_WAYS31) as BaileWay31[]).map((w) => h('span', { title: t(BAILE_WAYS31[w].tip) }, btn(BAILE_WAYS31[w].label, null, () => result(baile31(s, b.askId, w)), w === 'play')))));
+      break;
+    }
+    case 'home': { // r31 (LOTE): quem mora aqui e as ações que já existem (conhecer, radar, negociar em particular)
+      const who = x.place?.lot31?.who, r = who ? resInfo31(s, who) : null;
+      if (!r) { add(h('p', { class: 'small muted' }, t(l('Ninguém mora aqui agora.', 'Nobody lives here now.')))); break; }
+      const hm = homeOf31(s, r.who);
+      add(h('h4', null, t(x.place!.name)),
+        li([fmtL(l('{t} — mora aqui desde {y}.', '{t} — has lived here since {y}.'), { t: TIER31[x.place?.lot31?.tier ?? 1], y: s.year - Math.floor((s.week - (hm?.since ?? s.week)) / 52) }),
+          ...m.people.filter((p) => !p.you).map((p) => fmtL(p.away ? l('{n}: fora ({w}).', '{n}: out ({w}).') : l('{n}: em casa.', '{n}: at home.'), { n: p.name, w: p.away ?? l('', '') }))]));
+      const key = r.kind === 'artist' ? `p:${r.pid}` : r.who;
+      const a = r.actId ? s.acts[r.actId] : undefined;
+      const home = m.people.some((p) => !p.you && !p.away);
+      add(h('div', { class: 'row wrap' },
+        r.kind === 'fam' ? btn(l('Ver a família', 'See the family'), null, () => openFicha13('fam:efro'), true)
+          : btn(l('Ver a ficha', 'See the card'), null, () => (r.kind === 'ceo' ? openFicha13(r.who) : r.pid ? inspect.person(r.pid) : undefined), true),
+        r.kind !== 'fam' ? btn(l('Conhecer', 'Meet'), met31(s, meNode31(s), node31(s, key)) ? l('Vocês já se conhecem.', 'You already know each other.') : home ? null : l('Não está em casa agora.', 'Not at home right now.'), () => result(meetHere31(s, key))) : null,
+        a ? btn(l('Pôr no radar', 'Put on the radar'), a.owner === 'player' ? l('Esse artista já é seu.', 'That act is already yours.') : s.knowledge[a.id] ? l('Já está no seu radar.', 'Already on your radar.') : null, () => result(scoutHere31(s, a.id))) : null,
+        a ? quickBtn31({ kind: 'act', id: a.id }, a.name) : null,
+        r.kind === 'ceo' ? btn(l('Negociar em particular', 'Negotiate in private'), null, () => go18({ area: 'labels' })) : null));
+      add(h('p', { class: 'small muted' }, t(l('O que se sabe da pessoa é o que você já sabe (ficha); visitar não revela segredos.', 'What you know about them is what you already know (card); visiting reveals no secrets.'))));
       break;
     }
     default: add(li(infoLines31(s, m, key, x)));
@@ -184,12 +210,14 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
       x = { ...x0, k: 'baile', v, people: [...(a ? a.members.slice(0, 3).map((pid) => ({ name: s.persons[pid]?.name ?? a.name, role: l('Seu artista no palco', 'Your act on stage'), pid, actId: a.id, mine: true })) : []), ...(r ? [{ name: r.boss.name, role: l('No camarote', 'In the VIP box'), key: r.boss.key }] : [])] };
     } else x = { ...x0, v };
   }
+  // r31 (VIT): a feira/sebo/brechó da época, nos fundos da loja de discos
+  if (x0.k === 'records' && ui31.room === `${x0.id}:fair`) x = { ...x0, vit: 'fair', place: undefined, people: [], name: t(fmtL(l('{n} — {f}', '{n} — {f}'), { n: l(x0.name, x0.name), f: fairName31(x0.year) })) };
   const m = insideModel31(s, x);
   const pane = h('div', { class: 'in31-pane', 'aria-live': 'polite' });
   const show = (panel?: string) => {
     ui31.panel = panel;
     if (!panel) { pane.replaceChildren(h('p', { class: 'small muted' }, t(l('Clique numa pessoa ou num objeto.', 'Click a person or an object.')))); return; }
-    const [k, arg = ''] = panel.split(':');
+    const ci = panel.indexOf(':'); const k = ci < 0 ? panel : panel.slice(0, ci), arg = ci < 0 ? '' : panel.slice(ci + 1);
     let el: HTMLElement | null = null;
     if (k === 'who') { const p = m.people[+arg]; if (p) el = whoPanel(s, m, p); }
     else if (k === 'you') el = h('div', { class: 'in31-pn' }, h('p', null, t(m.you.where)), ...m.trail.map((y) => h('p', { class: 'small' }, '★ ', t(y))));
@@ -197,17 +225,19 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     else if (k === 'info') el = infoPanel(s, m, x, arg);
     else if (k === 'go') el = goPanel(s, x, arg, back);
     else if (k === 'art') el = artPanelEl31(s, x, arg, show, back);
-    else if (k === 'room') { ui31.room = arg === 'enter' ? x0.id : undefined; ui31.panel = undefined; rerender(); return; }
-    const head = k === 'who' ? m.people[+arg]?.name ?? '' : t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''));
+    else if (k === 'vit') el = vitPanelEl31(s, arg, show, back);
+    else if (k === 'vitlist') el = vitListEl31(s, x, show, back);
+    else if (k === 'room') { ui31.room = arg === 'enter' ? x0.id : arg === 'fair' ? `${x0.id}:fair` : undefined; ui31.panel = undefined; rerender(); return; }
+    const head = k === 'who' ? m.people[+arg]?.name ?? '' : k === 'vitlist' ? t(l('Vitrine do mês', 'Showcase of the month')) : t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''));
     if (el) pane.replaceChildren(h('div', { class: 'row in31-ph' }, h('b', { class: 'small' }, head),
       h('button', { type: 'button', class: 'icon', 'aria-label': t(l('Fechar', 'Close')), onclick: () => show() }, '✕')), el);
   };
   const panels: Record<string, (arg?: string) => void> = {};
-  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
+  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art', 'vit', 'vitlist']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
   const scene = sceneView31(s, {
     id: `in31-${x.k}`, title: m.title, W: m.W, H: m.H, spots: m.spots, panels,
     paint: (cv) => { drawInterior27(cv, m.room, m.people, { minW: INSIDE_W31, city: x.city, name: x.name, seed: x.seed,
-      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null, extra: paintArt31(m) }); },
+      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null, extra: (g, sd) => { paintArt31(m)(g, sd); paintVit31(m)(g); } }); },
     list: () => h('ul', { class: 'in31-list' }, m.spots.map((sp) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => show(sp.go.panel) }, t(sp.label)), ' ', h('small', { class: 'muted' }, t(sp.tip))))),
     intro: l('Pessoas e objetos são clicáveis: o painel embaixo resolve a ação aqui mesmo.', 'People and objects are clickable: the panel below resolves the action right here.'),
     note: m.note,

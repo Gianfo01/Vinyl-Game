@@ -1,10 +1,11 @@
 // Interface do festival próprio: fundação, editor de terreno (grade), line-up, previsão e o dia do
 // festival em pixel art com pensamentos do público em balões.
 
+import { ownFests } from '../../../sim/sys/feststore';
 import { CITIES, l } from '../../../data/world';
 import { t } from '../../../i18n/strings';
 import {
-  FEST_TILES, MAX_FESTS, addToLineup, canFoundFestival, countTiles, createFestival, festModel, foundCost, guestAccepts, guestFee, isMine, lineupMax, liveOf, placeTile,
+  FEST_TILES, MAX_FESTS, addToLineup, canFoundFestival, countTiles, createFestival, festModel, foundCost, guestAccepts, guestFee, isMine, lineupMax, placeTile,
   removeFromLineup, setFestival, tileDef, type FestEdition, type FestTile, type OwnFestival,
 } from '../../../sim/sys/live';
 import type { GameState } from '../../../sim/types';
@@ -92,11 +93,10 @@ function weatherIcon(e: FestEdition): string {
 }
 
 export function festivalSection(s: GameState): HTMLElement {
-  const lv = liveOf(s);
   return section(t(l('Festival próprio', 'Your own festival')),
     h('p', { class: 'muted small' }, t(l('Monte o terreno como num parque: palcos, acessos, banheiros, comida, camping e segurança. Na data, o público decide.', 'Lay out the grounds like a theme park: stages, gates, toilets, food, camping and security. On the day, the crowd decides.'))),
-    lv.fests.map((f) => festivalCard(s, f)),
-    lv.fests.length < MAX_FESTS ? foundForm(s) : null,
+    ownFests(s).map((f) => festivalCard(s, f)),
+    ownFests(s).length < MAX_FESTS ? foundForm(s) : null,
   );
 }
 
@@ -108,7 +108,7 @@ export function openFestivalEditor(s: GameState, festId: string): void {
   openScene(l('Terreno do festival', 'Festival grounds'), () => {
     const root = h('div', { class: 'lv-editor' });
     const draw = () => {
-      const f = liveOf(s).fests.find((x) => x.id === festId);
+      const f = ownFests(s).find((x) => x.id === festId);
       if (!f) return root.replaceChildren(h('p', null, '—'));
       root.replaceChildren(editorView(s, f, draw));
     };
@@ -248,7 +248,7 @@ export function festivalDayView(s: GameState, f: OwnFestival, e: FestEdition, cl
 registerSection('shows', { id: 'live-festival', order: 40, render: (s) => festivalSection(s) });
 
 registerCutscene('festivalDay', (s, cs, close) => {
-  const f = liveOf(s).fests.find((x) => x.id === cs.data.festId);
+  const f = ownFests(s).find((x) => x.id === cs.data.festId);
   const e = f?.editions.find((x) => x.year === cs.data.year);
   if (!f || !e) return h('p', null, '—');
   return festivalDayView(s, f, e, close);

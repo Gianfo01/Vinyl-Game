@@ -22,11 +22,12 @@ import { countryOfCity } from '../../data/geo';
 import { cityById, familyOf, l, type L, type MarketId } from '../../data/world';
 import { actsOfPerson17 } from '../actidx17';
 import { isDevout, isPolitical, relById, polById, viewsOf } from '../beliefs';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerSimHook } from '../ext4';
 import { emitFact, type Fact } from '../facts17';
 import { histMode } from '../history15';
-import { grantHold, holds17 } from '../holds17';
-import { scandal, type ScandalKind } from '../scandal17';
+import { grantHold, holds17, setSecretSink } from '../holds17';
+import { uni4On } from '../r31/uni4';
+import { scandal } from '../scandal17';
 import { addStress } from '../stress17';
 import type { Act, Decision, GameState } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post } from '../util';
@@ -34,8 +35,8 @@ import { SEC17, a3Of, addHeat, crime17, isReal, orgById, orgs17 } from './crime1
 import { front23, mem23, reveal23 } from './crimemem23';
 import { STREET } from './crimenpc17';
 import { expose19, fk19 } from './fakes19';
-import { leakSecret } from './people/secrets';
-import { P as people } from './people/state';
+import { leakFx } from './people/secrets';
+import { exposeIntrigue } from './intrigue';
 import { comeOut, isQueer, sexOf } from './sex17';
 import { st18 } from './stream18';
 import { registerSituation } from './situations17';
@@ -43,72 +44,9 @@ import { ventures } from './ventures9';
 import { actsNow27 } from '../tickcache27';
 import { rel0 } from '../opinion';
 
-// ================================================================ tipos
-
-export type Lvl23 = 0 | 1 | 2 | 3 | 4;
-export type Kind23 =
-  // assumidos / públicos
-  | 'orient' | 'faith' | 'politics' | 'excon'
-  // sujeitos a boato
-  | 'payola' | 'affair' | 'drugs' | 'ghostwriter' | 'lipsync' | 'plagiarism' | 'tax' | 'child' | 'crime' | 'debt' | 'fake_bio'
-  // escondidos
-  | 'closet' | 'informant' | 'regime' | 'front' | 'shark' | 'illness' | 'bots';
-export type Chan23 = 'investigation' | 'press' | 'leak' | 'informant' | 'proximity' | 'rival' | 'own' | 'self';
-export type Do23 = 'ignore' | 'protect' | 'blackmail' | 'leak' | 'negotiate';
-/** Um vínculo/segredo. `subject`: 'p:<pessoa>' | 'a:<ato>' | 'lb:<selo>' | 's:<funcionário>' | 'player'. */
-export interface Sec23 {
-  id: string; kind: Kind23; subject: string; since: number; sev: number; ev: number;
-  /** pessoa/selo real (regras de história) */ real?: boolean;
-  /** documentado (crônica real): pode passar de boato */ doc?: boolean;
-  /** adaptador de origem */ src: string;
-  data?: Record<string, string | number>;
-  /** o adaptador já sabe o nível de cada observador (ex.: segredo do próprio elenco) */
-  base?: { p?: Lvl23; pr?: Lvl23; r?: Record<string, Lvl23> };
-  end?: number;
-}
-export interface How23 { o: string; lv: Lvl23; ch: Chan23; w: number; t?: L }
-export interface Know23 { p: Lvl23; pr: Lvl23; r: Record<string, Lvl23>; how: How23[]; done?: Do23; card?: 1; prot?: number }
-export interface Inv23 { subj: string; due: number; cost: number }
-export interface Secrets23State { k: Record<string, Know23>; own: Sec23[]; inv: Inv23[]; seq: number; lastCard?: number; n: { found: number; leaked: number; protect: number; blackmail: number } }
-declare module '../ext4' { interface Ext4 { secrets23: Secrets23State } }
-const fresh = (): Secrets23State => ({ k: {}, own: [], inv: [], seq: 0, n: { found: 0, leaked: 0, protect: 0, blackmail: 0 } });
-registerExt4('secrets23', fresh);
-export function sec23(s: GameState): Secrets23State {
-  const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
-  const st = (x.secrets23 ??= fresh()) as Secrets23State;
-  st.k ??= {}; st.own ??= []; st.inv ??= []; st.seq ??= 0; st.n ??= { found: 0, leaked: 0, protect: 0, blackmail: 0 };
-  return st;
-}
-
-export const KIND23: Record<Kind23, { n: L; vis: 'assumed' | 'rumor' | 'hidden'; sc: ScandalKind }> = {
-  orient: { n: l('orientação assumida', 'openly LGBT'), vis: 'assumed', sc: 'sex' },
-  faith: { n: l('religião declarada', 'declared faith'), vis: 'assumed', sc: 'blasphemy' },
-  politics: { n: l('militância política', 'political activism'), vis: 'assumed', sc: 'politics' },
-  excon: { n: l('ex-presidiário(a)', 'ex-convict'), vis: 'assumed', sc: 'crime' },
-  payola: { n: l('jabá pago a rádios', 'radio payola'), vis: 'rumor', sc: 'money' },
-  affair: { n: l('caso extraconjugal', 'an affair'), vis: 'rumor', sc: 'sex' },
-  drugs: { n: l('drogas / dependência', 'drugs / addiction'), vis: 'rumor', sc: 'drugs' },
-  ghostwriter: { n: l('ghostwriter (não escreve as próprias músicas)', 'ghostwriter (does not write own songs)'), vis: 'rumor', sc: 'conduct' },
-  lipsync: { n: l('dublagem / voz de outro', 'lip-sync / someone else\'s voice'), vis: 'rumor', sc: 'conduct' },
-  plagiarism: { n: l('plágio', 'plagiarism'), vis: 'rumor', sc: 'conduct' },
-  tax: { n: l('sonegação', 'tax evasion'), vis: 'rumor', sc: 'money' },
-  child: { n: l('filho fora do casamento', 'a child out of wedlock'), vis: 'rumor', sc: 'sex' },
-  crime: { n: l('ligação com o crime organizado', 'organized-crime ties'), vis: 'rumor', sc: 'crime' },
-  debt: { n: l('dívidas escondidas', 'hidden debts'), vis: 'rumor', sc: 'money' },
-  fake_bio: { n: l('biografia inventada', 'made-up biography'), vis: 'rumor', sc: 'conduct' },
-  closet: { n: l('no armário', 'in the closet'), vis: 'hidden', sc: 'sex' },
-  informant: { n: l('informante da polícia', 'police informant'), vis: 'hidden', sc: 'crime' },
-  regime: { n: l('colaborou com o regime / a censura', 'collaborated with the regime / censors'), vis: 'hidden', sc: 'politics' },
-  front: { n: l('sócio oculto / selo-fachada', 'hidden partner / front label'), vis: 'hidden', sc: 'crime' },
-  shark: { n: l('dívida com agiota', 'loan-shark debt'), vis: 'hidden', sc: 'money' },
-  illness: { n: l('doença escondida', 'hidden illness'), vis: 'hidden', sc: 'conduct' },
-  bots: { n: l('streams falsos (fazenda de bots)', 'fake streams (bot farm)'), vis: 'hidden', sc: 'money' },
-};
-export const LVL23: L[] = [l('desconhecido', 'unknown'), l('suspeita', 'suspicion'), l('boato', 'rumor'), l('confirmado', 'confirmed'), l('público', 'public')];
-export const CHAN23: Record<Chan23, L> = {
-  investigation: l('investigação', 'investigation'), press: l('imprensa', 'press'), leak: l('vazamento', 'leak'), informant: l('informante', 'informant'),
-  proximity: l('proximidade', 'proximity'), rival: l('rival', 'rival'), own: l('é do seu círculo', 'your own circle'), self: l('assumido', 'declared'),
-};
+export * from './secstore23';
+import { setRealOf23, dropSecrets23, KIND23, LVL23, CHAN23, addSecret23, bust23 as bust, cap23, know23, knowW, ownOf23, sec23, setKnow23, ver23, type Chan23, type Do23, type Know23, type Kind23, type Lvl23, type Sec23 } from './secstore23';
+setRealOf23((s, subj) => (subj.startsWith('p:') ? isReal(s, subj.slice(2)) : subj.startsWith('lb:') ? isReal(s, subj.slice(3)) : subj.startsWith('a:') ? !!s.acts[subj.slice(2)]?.catalogNo : false));
 
 // ================================================================ quem é o sujeito
 
@@ -155,12 +93,10 @@ export function registerSecretSource23(src: Source23): void { const i = SOURCES.
 const srcOf = (sec: Sec23): Source23 | undefined => SOURCES.find((x) => x.id === sec.src);
 
 const CACHE = new WeakMap<GameState, { w: number; v: number; m: Map<string, Sec23[]> }>();
-let ver = 0;
-const bust = (): void => { ver++; };
 /** Todos os vínculos de um sujeito (pontes + nativos), já filtrados pelas regras de história. */
 export function secretsOf23(s: GameState, subj: string): Sec23[] {
   let c = CACHE.get(s);
-  if (!c || c.w !== s.week || c.v !== ver) CACHE.set(s, (c = { w: s.week, v: ver, m: new Map() }));
+  if (!c || c.w !== s.week || c.v !== ver23()) CACHE.set(s, (c = { w: s.week, v: ver23(), m: new Map() }));
   const hit = c.m.get(subj);
   if (hit) return hit;
   const strict = histMode(s) === 'strict';
@@ -176,23 +112,6 @@ export const secById23 = (s: GameState, id: string): Sec23 | undefined => {
   const subj = id.slice(id.indexOf('|') + 1);
   return secretsOf23(s, subj).find((x) => x.id === id);
 };
-/** Teto de conhecimento: gente real sem documentação para no boato. */
-export const cap23 = (sec: Sec23): Lvl23 => (sec.real && !sec.doc ? 2 : 4);
-
-export function know23(s: GameState, sec: Sec23): Know23 {
-  const st = sec23(s);
-  let k = st.k[sec.id];
-  const as = KIND23[sec.kind].vis === 'assumed';
-  if (!k) k = { p: 0, pr: 0, r: {}, how: [] };
-  const b = sec.base ?? {};
-  const cp = cap23(sec);
-  const mx = (a: Lvl23, x?: Lvl23): Lvl23 => Math.min(cp, Math.max(a, x ?? 0, as ? 4 : 0)) as Lvl23;
-  const out: Know23 = { ...k, p: mx(k.p, b.p), pr: mx(k.pr, b.pr), r: { ...k.r } };
-  for (const [lb, v] of Object.entries(b.r ?? {})) out.r[lb] = mx(out.r[lb] ?? 0, v);
-  return out;
-}
-const knowW = (s: GameState, sec: Sec23): Know23 => (sec23(s).k[sec.id] ??= { p: 0, pr: 0, r: {}, how: [] });
-
 /** Sobe o que um observador sabe ('player' | 'press' | id de selo). Emite fato. Devolve o novo nível. */
 export function raise23(s: GameState, sec: Sec23, obs: string, to: Lvl23, ch: Chan23, t?: L): Lvl23 {
   const cur = know23(s, sec);
@@ -454,9 +373,11 @@ function discoverMonth(s: GameState, r: Rng): void {
   for (const h of holds17(s).h) if (h.status === 'open' && (h.kind === 'grievance' || h.kind === 'secret')) grudge.set(h.target, (grudge.get(h.target) ?? 0) + 1);
   const rivals = Object.values(s.labels).filter((lb) => lb.active && (s.rivalries[lb.id] ?? 0) > 20);
   const C = crime17(s);
+  const links = uni4On(s);
   for (const subj of tracked(s)) {
     for (const sec of secretsOf23(s, subj)) {
       if (sec.end || KIND23[sec.kind].vis === 'assumed') continue;
+      if (!links && (sec.src === 'intrigue' || sec.src === 'holds')) continue; // uni4.links desligado: ficam com quem descobriu
       const K = know23(s, sec);
       if (K.pr >= 4) continue;
       const mine = mine23(s, subj);
@@ -499,19 +420,12 @@ function discoverMonth(s: GameState, r: Rng): void {
 
 // ================================================================ segredos nativos
 
-/** Cria um segredo nativo (também usado pelas ligações r23: filhos do dono etc.). */
-export function addSecret23(s: GameState, x: Omit<Sec23, 'id' | 'src' | 'since'>): Sec23 {
-  const st = sec23(s);
-  const sec: Sec23 = { ...x, id: `n${++st.seq}|${x.subject}`, src: 'native', since: s.week };
-  st.own.push(sec); bust();
-  return sec;
-}
 function nativeMonth(s: GameState, r: Rng): void {
   const st = sec23(s);
   const strict = histMode(s) === 'strict';
-  const live = st.own.filter((x) => !x.end);
+  const live = st.own.filter((x) => !x.end && x.src === 'native');
   if (live.length > 220) return;
-  const has = (subj: string, kind: Kind23) => st.own.some((x) => x.subject === subj && x.kind === kind && !x.end);
+  const has = (subj: string, kind: Kind23) => st.own.some((x) => x.src === 'native' && x.subject === subj && x.kind === kind && !x.end);
   const add = (x: Omit<Sec23, 'id' | 'src' | 'since'>): Sec23 => addSecret23(s, x);
   // fim natural
   for (const x of live) {
@@ -558,25 +472,47 @@ function nativeMonth(s: GameState, r: Rng): void {
     add({ kind: 'ghostwriter', subject: `a:${a.id}`, sev: 40, ev: 40, real });
   }
 }
-registerSecretSource23({ id: 'native', about: (s, subj) => sec23(s).own.filter((x) => x.subject === subj && !x.end) });
+registerSecretSource23({ id: 'native', about: (s, subj) => sec23(s).own.filter((x) => x.src === 'native' && x.subject === subj && !x.end) });
 
 // ================================================================ pontes com os sistemas existentes
 
-const PS_KIND: Record<string, Kind23> = { affair: 'affair', debt: 'debt', plagiarism: 'plagiarism', child: 'child', tax: 'tax', fake_bio: 'fake_bio', payola: 'payola', addiction: 'drugs' };
-const psSubj = (owner: string): string => (owner === 'owner' ? 'player' : owner.startsWith('label:') ? `lb:${owner.slice(6)}` : `p:${owner}`);
-// people/secrets (dossiês): conhecimento do dono vira a base; a camada devolve o que descobre
-registerSecretSource23({
-  id: 'people',
-  about: (s, subj) => people(s).secrets.filter((x) => psSubj(x.owner) === subj).map((x) => {
-    const r: Record<string, Lvl23> = {};
-    for (const k of x.knownBy) if (k !== 'press') r[k] = 3;
+// UNI-4 (B.5): os dossiês (people/secrets), a Intriga (r6) e os trunfos do livro de obrigações (holds17) GUARDAM aqui
+// (own[], src 'people' | 'intrigue' | 'holds'); cada um com o vazamento do sistema dono.
+const ownSrc = (src: string) => (s: GameState, subj: string): Sec23[] => sec23(s).own.filter((x) => x.src === src && x.subject === subj && !x.end);
+registerSecretSource23({ id: 'people', about: ownSrc('people'), leak: (s, sec, by, mult) => { leakFx(s, sec, by, mult); return true; } });
+registerSecretSource23({ id: 'intrigue', about: ownSrc('intrigue'), leak: (s, sec) => { exposeIntrigue(s, sec); return true; } });
+registerSecretSource23({ id: 'holds', about: ownSrc('holds') });
+
+/** Sujeito do secrets23 a partir de uma chave do livro de obrigações (pessoa, ato, selo, 'player'); outras chaves não têm ficha. */
+export function subjOfKey23(s: GameState, key: string): string | undefined {
+  const k = key.startsWith('p:') ? key.slice(2) : key;
+  if (k === 'player') return 'player';
+  if (s.persons[k]) return s.persons[k].isPlayer ? 'player' : `p:${k}`;
+  if (s.acts[k]) return `a:${k}`;
+  if (s.labels[k]) return `lb:${k}`;
+  return undefined;
+}
+const HOLD_KIND23: Record<string, Kind23> = { crime17: 'crime', links23: 'crime', agency18: 'affair', dmsits18: 'affair', family29: 'affair', sex17: 'closet', fakes19: 'lipsync' };
+const SK_KIND23: Record<string, Kind23> = { addiction: 'drugs', affair: 'affair', debt: 'debt', debts: 'debt', plagiarism: 'plagiarism', child: 'child', tax: 'tax', fake_bio: 'fake_bio', payola: 'payola' };
+// trunfo novo no livro (grantHold kind 'secret' sem ref): o segredo nasce aqui; quem guarda o trunfo sabe dele
+setSecretSink((s, holder, target, x) => {
+  const subj = subjOfKey23(s, target);
+  if (!subj) return undefined;
+  const kind = SK_KIND23[String(x.data?.sk ?? '')] ?? HOLD_KIND23[x.src ?? ''] ?? 'dirt';
+  const st = sec23(s);
+  let sec = st.own.find((y) => y.src === 'holds' && !y.end && y.subject === subj && y.kind === kind && y.data?.hs === (x.src ?? ''));
+  if (!sec) {
     const real = subj.startsWith('p:') ? isReal(s, subj.slice(2)) : subj.startsWith('lb:') ? isReal(s, subj.slice(3)) : false;
-    return { id: `ps:${x.id}|${subj}`, kind: PS_KIND[x.kind] ?? 'debt', subject: subj, since: 0, sev: 20 + x.severity * 20, ev: 50, real, src: 'people', data: { ps: x.id },
-      base: { p: x.leaked ? 4 : x.known || subj === 'player' ? 3 : 0, pr: x.leaked ? 4 : x.knownBy.includes('press') ? 2 : 0, r } } satisfies Sec23;
-  }),
-  write: (s, sec, obs, lv) => { const x = people(s).secrets.find((y) => y.id === sec.data?.ps); if (!x) return; if (obs === 'player' && lv >= 3) x.known = true; if (obs === 'press' && lv >= 2 && !x.knownBy.includes('press')) x.knownBy.push('press'); if (obs !== 'player' && obs !== 'press' && lv >= 2 && !x.knownBy.includes(obs)) x.knownBy.push(obs); },
-  leak: (s, sec, by, mult) => { const x = people(s).secrets.find((y) => y.id === sec.data?.ps); if (!x || x.leaked) return false; leakSecret(s, x, by, mult); return true; },
+    sec = addSecret23(s, { kind, subject: subj, sev: clamp(Math.round(x.strength * 0.8), 10, 80), ev: 40, real, data: { hs: x.src ?? '' } }, 'holds');
+    const hold = ownOf23(s, 'holds');
+    if (hold.length > 160) dropSecrets23(s, (y) => y.src === 'holds' && hold.indexOf(y) < hold.length - 160);
+  }
+  if (holder === 'player') setKnow23(s, sec, 'player', Math.max(know23(s, sec).p, 3) as Lvl23);
+  else if (holder === 'press') setKnow23(s, sec, 'press', Math.max(know23(s, sec).pr, 2) as Lvl23);
+  else if (s.labels[holder]) setKnow23(s, sec, holder, Math.max(know23(s, sec).r[holder] ?? 0, 3) as Lvl23);
+  return sec.id;
 });
+
 // crimemem23: membro de organização (segredo → boato → confirmado já existe lá; a camada só traduz)
 registerSecretSource23({
   id: 'crime23',

@@ -10,6 +10,7 @@
 //  • Relação com a cena local: cada residência aumenta a relação com a cidade; relação alta barateia a próxima e rende
 //    ecos (parceria com músicos locais). Locaute contra o sindicato (union20) esfria todas as cenas.
 // Era: o meio de transporte do texto segue o ano (navio/trem/avião). Determinismo: fluxo rng19 'exch20'.
+import { CITY_REL0, cityRel, cityRelAdd, cityRelEach } from '../city';
 import { clamp } from '../../core/rng';
 import { CITIES, cityById, familyOf, gfName, l, type L } from '../../data/world';
 import { registerConseq18 } from '../decide18';
@@ -29,8 +30,6 @@ export interface Exch20 {
   cur?: Res20;
   /** influência criativa: ato (ou '*' = elenco, produtor) → cena e até quando */
   inf: Record<string, { city: string; genre: string; until: number; k: number }>;
-  /** relação com a cena de cada cidade (0–100) */
-  rel: Record<string, number>;
   /** convite em aberto */
   inv?: { act: string; city: string; genre: string };
   next: number;
@@ -38,15 +37,17 @@ export interface Exch20 {
   log: [number, number, L][];
 }
 declare module '../ext4' { interface Ext4 { exch20: Exch20 } }
-const fresh = (): Exch20 => ({ inf: {}, rel: {}, next: 0, seq: 0, log: [] });
+const fresh = (): Exch20 => ({ inf: {}, next: 0, seq: 0, log: [] });
 registerExt4('exch20', fresh);
 export function exch20(s: GameState): Exch20 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const t = (x.exch20 ??= fresh()) as Exch20;
-  t.inf ??= {}; t.rel ??= {}; t.next ??= 0; t.seq ??= 0; t.log ??= [];
+  t.inf ??= {}; t.next ??= 0; t.seq ??= 0; t.log ??= [];
   return t;
 }
 const rng = (s: GameState) => rng19(s, 'exch20');
+/** Relação com a cena acima do neutro (city.ts, UNI-4): o que antes começava em 0 neste sistema. */
+const sceneRel = (s: GameState, city: string): number => Math.max(0, cityRel(s, city) - CITY_REL0);
 const mine = (a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand) && a.status !== 'retired' && a.status !== 'split' && !a.deceased;
 const usd = (c: number) => l(`US$ ${Math.round(c / 100).toLocaleString('pt-BR')}`, `US$${Math.round(c / 100).toLocaleString('en-US')}`);
 
@@ -61,7 +62,7 @@ export function resCost20(s: GameState, who: ExchWho20, actId: string, city: str
   const a = s.acts[actId];
   const { far } = travel20(s, a?.city ?? city, city);
   const heads = who === 'producer' ? 1 : Math.max(1, a?.members.length ?? 1);
-  const relDisc = 1 - Math.min(0.3, (exch20(s).rel[city] ?? 0) / 300);
+  const relDisc = 1 - Math.min(0.3, sceneRel(s, city) / 300);
   const cost = money(s, ((far ? 1400 : 500) * heads + weeks * 260 * heads) * relDisc);
   const grant = s.year >= 1946 ? Math.round(cost * 0.5) : 0;
   return { cost, grant };
@@ -74,7 +75,7 @@ export function hosts20(s: GameState, a: Act): { city: string; genre: string; sc
     if (c.id === a.city) continue;
     for (const g of c.scenes) {
       if (!genreAvailable20(s, g)) continue;
-      const sc = (s.scenes?.[`${c.id}:${g}`] ?? 0.5) * (familyOf(g) === fam ? 1.4 : 1) * (1 + (exch20(s).rel[c.id] ?? 0) / 200);
+      const sc = (s.scenes?.[`${c.id}:${g}`] ?? 0.5) * (familyOf(g) === fam ? 1.4 : 1) * (1 + sceneRel(s, c.id) / 200);
       out.push({ city: c.id, genre: g, score: sc });
     }
   }
@@ -95,7 +96,7 @@ export function startRes20(s: GameState, who: ExchWho20, actId: string, city: st
   st.cur = { id, who, act: actId, city, genre, from: s.week, until: s.week + weeks, cost, grant };
   st.inf[who === 'producer' ? '*' : actId] = { city, genre, until: s.week + weeks + 26, k: who === 'producer' ? 0.02 : 0.05 };
   if (who === 'act') for (const pid of a.members) { const p = s.persons[pid]; if (p?.alive) p.fatigue = clamp(p.fatigue + 6, 0, 100); }
-  st.rel[city] = clamp((st.rel[city] ?? 0) + (weeks >= 10 ? 14 : 8), 0, 100);
+  cityRelAdd(s, city, weeks >= 10 ? 14 : 8);
   // polinização cruzada: o gênero do ato ganha um pouco de força na cena anfitriã
   const k = `${city}:${a.genre}`;
   if (s.scenes) s.scenes[k] = clamp((s.scenes[k] ?? 0) + 0.05, 0, 3);
@@ -169,7 +170,7 @@ export function answerExch20(s: GameState, act: string): L {
   const st = exch20(s), inv = st.inv;
   st.inv = undefined;
   if (!inv) return l('O convite já passou.', 'The invitation has passed.');
-  if (act === 'decline') { st.rel[inv.city] = clamp((st.rel[inv.city] ?? 0) - 2, 0, 100); return l('Convite recusado.', 'Invitation declined.'); }
+  if (act === 'decline') { cityRelAdd(s, inv.city, -2); return l('Convite recusado.', 'Invitation declined.'); }
   const who: ExchWho20 = act === 'producer' ? 'producer' : 'act';
   return startRes20(s, who, inv.act, inv.city, inv.genre, act === 'act12' ? 12 : 6);
 }
@@ -187,8 +188,8 @@ registerConseq18('ib:exch20:producer', { now: T('O produtor volta com ideias par
 registerConseq18('ib:exch20:decline', { later: [{ in: [2, 8], p: 0.15, tone: 'bad', hint: T('A cena lembra de quem recusou.', 'The scene remembers who said no.'), fx: (f) => { f.rep('artists', -1); return T('O coletivo convida um selo rival no seu lugar.', 'The collective invites a rival label instead.'); } }] });
 
 // consumidores de fatos: o próprio intercâmbio (diário) e o sindicato — locaute esfria todas as cenas
-onFact('scene_residency', (s, f) => { const c = String(f.data?.city ?? ''); if (c) exch20(s).rel[c] = clamp((exch20(s).rel[c] ?? 0) + 1, 0, 100); }, 'exch20:rel');
-onFact('union_clash', (s) => { const st = exch20(s); for (const k of Object.keys(st.rel)) st.rel[k] = clamp(st.rel[k] - 5, 0, 100); }, 'exch20:union');
+onFact('scene_residency', (s, f) => { const c = String(f.data?.city ?? ''); if (c) cityRelAdd(s, c, 1); }, 'exch20:rel');
+onFact('union_clash', (s) => { cityRelEach(s, (v) => v - 5); }, 'exch20:union');
 
 registerExplain('exch20.res', (s, c) => {
   const a = s.acts[String(c.act ?? '')];
@@ -201,7 +202,7 @@ registerExplain('exch20.res', (s, c) => {
     { label: l('Custo (viagem + estadia)', 'Cost (travel + stay)'), value: cost, fmt: 'money' },
     { label: l('Bolsa de intercâmbio (1946+)', 'Exchange grant (1946+)'), value: grant, fmt: 'money', tone: grant ? 'good' : '' },
     { label: l('Qualidade das faixas (gênero da cena ×1,5)', 'Track quality (host genre ×1.5)'), value: who === 'producer' ? 0.02 : 0.05, fmt: 'pct', tone: 'good' },
-    { label: l('Relação com a cena local', 'Relationship with the local scene'), value: exch20(s).rel[city] ?? 0, fmt: 'num' },
+    { label: l('Relação com a cena local', 'Relationship with the local scene'), value: Math.round(cityRel(s, city)), fmt: 'num' },
   ];
   return { title: l('Residência de intercâmbio', 'Exchange residency'), value: cost - grant, fmt: 'money', parts,
     note: l('Fadiga na ida, inspiração na volta; shows fora do mercado anfitrião ficam mais arriscados durante a residência e os do mercado anfitrião vendem um pouco mais. Influência dura a residência + 26 semanas.', 'Fatigue going, inspiration coming back; shows outside the host market get riskier during the residency and host-market shows sell a bit more. Influence lasts the residency + 26 weeks.') };

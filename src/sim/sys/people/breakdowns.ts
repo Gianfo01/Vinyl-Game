@@ -1,3 +1,4 @@
+import { tourList } from '../../tours';
 import { deferEvents } from '../../ext4';
 import { exitMember20 } from '../../members20';
 // Colapsos (RimWorld): abaixo de um limiar de moral, chance de a pessoa surtar. O tipo depende dos
@@ -57,7 +58,7 @@ function sensitiveOff(s: GameState, act: Act): boolean {
 
 function nextStop(s: GameState, act: Act): { tour: (typeof s.tours)[number]; stop: (typeof s.tours)[number]['stops'][number] } | null {
   const now = today(s);
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.actId !== act.id || (t.status !== 'planned' && t.status !== 'running')) continue;
     const st = t.stops.find((x) => x.status === 'scheduled' && x.day >= now && x.day <= now + 30);
     if (st) return { tour: t, stop: st };

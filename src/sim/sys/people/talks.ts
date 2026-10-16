@@ -2,6 +2,7 @@
 // reações dependem de traços, personalidade, humor e de quantas vezes o selo já usou o mesmo
 // argumento. Promessas ficam guardadas com prazo; cumprir ou quebrar mexe na confiança do ato.
 
+import { tourList } from '../../tours';
 import { l, type L } from '../../../data/world';
 import type { GameState, Person } from '../../types';
 import { fmtL, money, nextId, post, remember } from '../../util';
@@ -187,7 +188,7 @@ function fulfilled(s: GameState, pr: PromiseRec): boolean {
     case 'album':
       return act.releases.some((rid) => since(rid) && s.releases[rid].type === 'lp') || s.pendingReleases.some((x) => x.actId === act.id && x.type === 'lp');
     case 'tour':
-      return s.tours.some((t) => (t.actId === act.id || t.partnerActId === act.id) && t.status !== 'cancelled' && t.stops.some((st) => st.day >= pr.madeWeek * 7 - 7));
+      return tourList(s).some((t) => (t.actId === act.id || t.partnerActId === act.id) && t.status !== 'cancelled' && t.stops.some((st) => st.day >= pr.madeWeek * 7 - 7));
     case 'raise': {
       const c = act.contractId ? s.contracts[act.contractId] : undefined;
       return !!c && pr.base !== undefined && c.royalty > pr.base + 0.004;

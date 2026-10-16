@@ -40,7 +40,15 @@ export interface Venture {
   // plataforma
   subs?: number; payout?: number; deals?: string[];
 }
-export interface Client { actId: string; rate: number; since: number; sat: number; earned: number; lastNeg?: number; crisis?: { k: CrisisK; w: number } }
+/** Cliente do empresário (vínculo comercial: comissão, desde, ganhos). UNI-4 (B.15): a satisfação saiu — o que o
+ *  cliente sente por você é a CONFIANÇA da ficha do empresário (manager12 `clients[actId].trust`), lida aqui pela ponte. */
+export interface Client { actId: string; rate: number; since: number; earned: number; lastNeg?: number; crisis?: { k: CrisisK; w: number } }
+/** Ponte para a confiança do cliente (registrada pelo manager12; este módulo não importa o manager12). */
+let trustGet: (s: GameState, actId: string) => number = () => 60;
+let trustAdd: (s: GameState, actId: string, d: number) => void = () => undefined;
+export function setClientTrust9(get: typeof trustGet, add: typeof trustAdd): void { trustGet = get; trustAdd = add; }
+export const clientTrust9 = (s: GameState, actId: string): number => trustGet(s, actId);
+export const addClientTrust9 = (s: GameState, actId: string, d: number): void => trustAdd(s, actId, d);
 export interface NpcVenture { kind: VKind; labelId: string; name: string; city: string; rep: number; y: number }
 export interface VenturesState {
   list: Venture[];
@@ -216,7 +224,7 @@ const activeAct = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.stat
 const ownerLabel = (s: GameState, a: Act) => (a.owner === 'player' ? s.config.companyName : a.owner ? s.labels[a.owner]?.name ?? '—' : null);
 
 // ---------------------------------------------------------------- festival
-// r27 (AUD1): o festival próprio é UM só — o terreno/ciclo do fest12 (live.fests + fest12) é a fonte do calendário,
+// r27 (AUD1): o festival próprio é UM só — o terreno/ciclo do festival (registro único festivals, UNI-4) é a fonte do calendário,
 // do line-up e das edições; aqui fica só o negócio (dono, caixa, equipe, nível). A antiga edição simplificada, o
 // line-up e o mês/ingresso editáveis por esta tela saíram (o fest12 espelha nome, cidade, mês e ingresso aqui).
 
@@ -586,7 +594,7 @@ export function pitchClient(s: GameState, r: Rng, actId: string, rate: number): 
   const wait = refusedWait9(s, actId);
   if (wait) return { ok: false, text: fmtL(l('{a} já disse não há pouco: insistir agora pega mal. Tente de novo em {n} semanas.', '{a} said no recently: pushing now looks bad. Try again in {n} weeks.'), { a: a.name, n: wait }) };
   if (!r.chance(mgChance(s, a, rate))) { markRefused9(s, actId); return { ok: false, text: fmtL(l('{a} agradece, mas não quer você como empresário (volte a tentar em 6 meses).', '{a} thanks you but does not want you as manager (try again in 6 months).'), { a: a.name }) }; }
-  mg.clients.push({ actId, rate, since: s.week, sat: 60, earned: 0 });
+  mg.clients.push({ actId, rate, since: s.week, earned: 0 });
   remember(s, 'manager9', fmtL(l('Você passa a empresariar {a} ({p}% de comissão).', 'You start managing {a} ({p}% commission).'), { a: a.name, p: Math.round(rate * 100) }));
   return { ok: true, text: fmtL(l('{a} topou: você é o novo empresário.', '{a} agreed: you are the new manager.'), { a: a.name }) };
 }
@@ -612,13 +620,13 @@ export function negotiateFor(s: GameState, r: Rng, actId: string): { ok: boolean
   const lb = s.labels[k.party];
   const p = clamp(0.3 + (ownerOf(s).attrs.negotiation - 50) / 200 + a.fame / 300 + mg.rep / 300 - (lb ? (standingOf(s, lb.id).rec - 50) / 400 : 0), 0.05, 0.9);
   if (!r.chance(p)) {
-    c.sat = clamp(c.sat - 6, 0, 100);
+    addClientTrust9(s, c.actId, -(6));
     return { ok: false, text: fmtL(l('{b} não cedeu nada a {a}.', '{b} gave {a} nothing.'), { b: lb?.name ?? '?', a: a.name }) };
   }
   k.royalty = Math.min(0.5, Math.round((k.royalty + 0.03) * 100) / 100);
   const bonus = money(s, 1000 + a.fame * 80);
   a.cash += bonus;
-  c.sat = clamp(c.sat + 15, 0, 100);
+  addClientTrust9(s, c.actId, 15);
   mg.rep = clamp(mg.rep + 3 * mgRepGain9(mg.rep), 0, 100);
   if (lb) standingOf(s, lb.id).trust = clamp(standingOf(s, lb.id).trust - 1, 0, 100);
   return { ok: true, text: fmtL(l('Você arranca de {b} +3 pontos de royalty e um bônus para {a}.', 'You squeeze +3 royalty points and a bonus for {a} out of {b}.'), { b: lb?.name ?? '?', a: a.name }) };
@@ -639,11 +647,11 @@ export function handleCrisis(s: GameState, r: Rng, actId: string, m: CrisisMove)
   const ok = r.chance(clamp((fit ? 0.7 : 0.3) + (ownerOf(s).attrs.charisma - 50) / 250 + mg.rep / 400, 0.1, 0.95));
   c.crisis = undefined;
   if (ok) {
-    c.sat = clamp(c.sat + 10, 0, 100);
+    addClientTrust9(s, c.actId, 10);
     mg.rep = clamp(mg.rep + 2 * mgRepGain9(mg.rep), 0, 100);
     return { ok, text: fmtL(l('Crise de {a} contornada.', '{a}\'s crisis handled.'), { a: a.name }) };
   }
-  c.sat = clamp(c.sat - 8, 0, 100);
+  addClientTrust9(s, c.actId, -(8));
   a.fame = clamp(a.fame - 2, 0, 100);
   return { ok, text: fmtL(l('A crise de {a} deixou marcas.', '{a}\'s crisis left scars.'), { a: a.name }) };
 }
@@ -657,18 +665,18 @@ function managementMonth(s: GameState, r: Rng): void {
     vpay(s, mg.owner, fee, `mg:${a.id}`, `Comissão de empresário ${a.name}`);
     c.earned += Math.round(fee);
     mg.total += Math.round(fee);
-    c.sat = clamp(c.sat + (a.momentum - 50) / 25 - (c.rate - 0.15) * 15 + (mg.rep - 40) / 100 - (c.crisis ? 4 : 0), 0, 100);
+    addClientTrust9(s, c.actId, (a.momentum - 50) / 25 - (c.rate - 0.15) * 15 + (mg.rep - 40) / 100 - (c.crisis ? 4 : 0));
     if (c.crisis && s.week - c.crisis.w > 8) {
       a.fame = clamp(a.fame - 3, 0, 100);
       if (c.crisis.k === 'scandal') scandal(s, a.id, 'conduct', 40);
-      c.sat = clamp(c.sat - 20, 0, 100);
+      addClientTrust9(s, c.actId, -(20));
       notify(s, fmtL(l('Você deixou a crise de {a} sem resposta. O estrago está feito.', 'You left {a}\'s crisis unanswered. The damage is done.'), { a: a.name }), 'bad');
       c.crisis = undefined;
     } else if (!c.crisis && r.chance(crisisP19(s, a).v)) { // r19: temperamento, fama e saúde do artista
       c.crisis = { k: r.pick(['scandal', 'burnout', 'feud', 'legal'] as CrisisK[]), w: s.week };
       notify(s, fmtL(l('Crise com {a}: {k}. Resolva na Gestão de artistas.', 'Crisis with {a}: {k}. Handle it in Artist management.'), { a: a.name, k: CRISIS_NAME[c.crisis.k] }), 'bad');
     }
-    if (c.sat < 25 && r.chance(0.15)) {
+    if (clientTrust9(s, c.actId) < 25 && r.chance(0.15)) {
       dropClient(s, c.actId);
       mg.fired.push({ actId: a.id, y: s.year });
       if (mg.fired.length > 20) mg.fired.shift();
@@ -678,7 +686,7 @@ function managementMonth(s: GameState, r: Rng): void {
       notify(s, t, 'bad');
       continue;
     }
-    if (c.sat > 60) mg.rep = clamp(mg.rep + 0.3 * mgRepGain9(mg.rep), 0, 100); // r19: retorno decrescente perto do topo
+    if (clientTrust9(s, c.actId) > 60) mg.rep = clamp(mg.rep + 0.3 * mgRepGain9(mg.rep), 0, 100); // r19: retorno decrescente perto do topo
   }
 }
 

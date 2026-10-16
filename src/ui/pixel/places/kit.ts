@@ -176,8 +176,8 @@ export function screen(p: Px, x: number, y: number, w: number, h: number, body: 
   for (let j = 1; j < h; j++) {
     if (scan && j % 2 === 0) p.hline(x, x + w - 1, y + j, lv(body, 3.3));
   }
-  // reflexo diagonal
-  for (let i = 0; i < Math.min(w, h) / 2; i++) p.set(x + 2 + i, y + Math.min(h - 1, 2 + Math.floor(i / 2)), withAlpha(C('#fff0d0'), 60));
+  // reflexo: brilho curto no canto de cima à direita (R31 POL: o risco diagonal cortava a 1ª linha de texto dos painéis)
+  for (let i = 0; i < Math.min(5, Math.min(w, h) / 2); i++) p.set(x + w - 3 - i, y + Math.min(h - 1, 1 + Math.floor(i / 2)), withAlpha(C('#fff0d0'), 60));
 }
 
 /** Cone de luz translúcido (quente). */

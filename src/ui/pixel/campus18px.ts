@@ -731,7 +731,8 @@ export interface Extra31 { id: string; lot: { gx: number; gy: number; w: number;
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido; letra cinza quando não cabe no caixa). */
-function saleSign27(sl: Sale27, txt: string): SaleSign27 {
+function saleSign27(sl: Sale27, txt0: string): SaleSign27 {
+  const txt = sl.txt ?? txt0; // r31 (LOTE): "VENDE-SE" no terreno vago, "SEU" no terreno seu
   const l0 = LOTS18[sl.lot];
   const [bx, by] = signAt27(sl.lot);
   const tw = textWidth(txt) + 4, W = tw + 2, H = 19;
@@ -739,7 +740,7 @@ function saleSign27(sl: Sale27, txt: string): SaleSign27 {
   t.line(x0 + 2, H - 1, x0 + 2, H - 10, C('#6a4a2a')); t.line(x0 + tw - 3, H - 1, x0 + tw - 3, H - 10, C('#6a4a2a'));
   t.rect(0, 0, tw + 2, 10, C('#3a2a1a'));
   t.rect(x0, 1, tw, 8, C('#fbf6ea'));
-  t.text(txt, x0 + 2, 2, sl.dis ? C('#6a6470') : C('#c8302c')); // r27 (LOTS): fora do caixa = letra apagada (a placa continua lá)
+  t.text(txt, x0 + 2, 2, sl.own ? C('#2a7a3a') : sl.dis ? C('#6a6470') : C('#c8302c')); // r27 (LOTS): fora do caixa = letra apagada (a placa continua lá)
   t.rect(x0, 8, tw, 1, C(ICON27[sl.kind]?.col ?? '#c8302c'));
   return { lot: sl.lot, c: p.canvas(), x: Math.round(bx - W / 2), y: Math.round(by - H + 1), d: l0.gx + l0.w / 2 + signGy27(sl.lot), base: [Math.round(bx), Math.round(by)] };
 }
@@ -1085,7 +1086,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
     if (a.k === 'shoot') items.push({ d, f: () => { ctx.fillStyle = '#202024'; ctx.fillRect(Math.round(dx + 10), Math.round(dy + 4), 4, 3); ctx.fillRect(Math.round(dx + 11), Math.round(dy + 7), 1, 4); ctx.fillStyle = Math.floor(t * 2) % 2 ? '#fff8d0' : '#f0e0a0'; ctx.fillRect(Math.round(dx + 18), Math.round(dy - 2), 3, 3); ctx.fillRect(Math.round(dx + 19), Math.round(dy + 1), 1, 8); person(ctx, dx + 7, dy + 11, 6, y, 0, undefined, pal); person(ctx, dx + 15, dy + 12, 1, y, 0, undefined, pal); } });
     if (a.k === 'mural') items.push({ d: d + 2, f: () => { const [gx, gy, w, dd] = s.fp; const [ax, ay] = iso(gx + w, gy + dd); for (let i = 0; i < 9; i++) for (let j = 0; j < 7; j++) { ctx.fillStyle = ['#e04848', '#f0c040', '#48b85c', '#4a8ae0', '#8a5ad0'][(i + j * 2) % 5]; ctx.fillRect(Math.round(ax + 2 + i), Math.round(ay - 12 - i / 2 + j), 1, 1); } } });
     if (a.k === 'pilgrim') for (let i = 0; i < 18; i++) items.push({ d, f: () => person(ctx, dx - 20 + (i % 9) * 3, dy + 6 + Math.floor(i / 9) * 4 + (i % 9) * 1.5, i + 4, y, Math.floor(t * 3 + i) % 2, i % 5 === 0 ? '#ffe0f0' : undefined, pal) });
-    if (a.k === 'noise') items.push({ d: d + 3, f: () => { ctx.fillStyle = '#f8f4ec'; const ph = (t * 1.5) % 1; ctx.font = '6px monospace'; ctx.fillText('♪', Math.round(s.top[0] + 4), Math.round(s.top[1] - 4 - ph * 10)); person(ctx, dx + 16, dy + 8, 7, y, 0, '#f04040', pal); } });
+    if (a.k === 'noise') items.push({ d: d + 3, f: () => { ctx.fillStyle = '#f8f4ec'; const ph = (t * 1.5) % 1; noteGlyph(ctx, Math.round(s.top[0] + 4), Math.round(s.top[1] - 9 - ph * 10)); /* r31 EMO: nota em pixels, sem emoji */ person(ctx, dx + 16, dy + 8, 7, y, 0, '#f04040', pal); } });
     if (a.k === 'flood') items.push({ d: d + 1, f: () => { ctx.fillStyle = `rgba(70,120,170,${0.55 + Math.sin(t * 2) * 0.08})`; const [gx, gy, w, dd] = s.fp; ctxPoly(ctx, [iso(gx - 1.2, gy + dd - 0.2), iso(gx + w + 0.4, gy + dd - 0.2), iso(gx + w + 0.4, gy + dd + 1.8), iso(gx - 1.2, gy + dd + 1.8)]); /* R29: sem antialiasing */ } });
   }
   items.sort((a, b) => a.d - b.d);
@@ -1164,3 +1165,8 @@ export function worldCanvas18(b: Bld18, year: number, seed: number, brand = 'REC
   return c;
 }
 export const textW18 = textWidth;
+
+/** r31 onda 4 (EMO): colcheia de 4×5 px desenhada em pixels (antes era o caractere ♪ em fonte de 6 px). */
+function noteGlyph(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillRect(x + 2, y, 1, 4); ctx.fillRect(x + 3, y, 1, 1); ctx.fillRect(x + 4, y + 1, 1, 1); ctx.fillRect(x, y + 3, 2, 2); ctx.fillRect(x + 2, y + 4, 1, 1);
+}

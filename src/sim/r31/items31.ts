@@ -35,7 +35,8 @@ import { purse } from './purse31'; // R31 (P/B.17): dinheiro pessoal com registr
 
 /** Família do instrumento (gosto de quem recebe) */
 export type Fam31 = 'guitar' | 'bass' | 'drums' | 'keys' | 'strings' | 'horns' | 'mic' | 'dj' | 'studio';
-export type ItemCat31 = 'instr' | 'gift' | 'garage';
+/** r31 (VIT): 'disc' = discos de época (caixa de saldos, sebo, feira) — só a vitrine do mês os põe à venda. */
+export type ItemCat31 = 'instr' | 'gift' | 'garage' | 'disc';
 export interface ItemDef31 {
   id: string; cat: ItemCat31; name: L; desc: L; from: number; to?: number;
   /** preço novo em dólares reais */
@@ -92,6 +93,15 @@ export const ITEMS31: ItemDef31[] = [
   I('rare_book', 'gift', 'Livro raro', 'Rare book', 'Primeira edição com dedicatória.', 'First edition with an inscription.', 1880, undefined, 500),
   I('record_box', 'gift', 'Caixa de discos raros', 'Box of rare records', 'Prensagens originais garimpadas.', 'Hand-picked original pressings.', 1905, undefined, 350, 'dj'),
   I('headphones', 'gift', 'Fones de estúdio', 'Studio headphones', 'Para ouvir cada detalhe.', 'To hear every detail.', 1960, undefined, 300, 'studio'),
+  // discos de época (r31 VIT: caixa de saldos da loja de discos, sebo e feira; nunca no estoque da loja de instrumentos)
+  I('disc_cylinder', 'disc', 'Cilindro de cera raro', 'Rare wax cylinder', 'Gravação de fonógrafo que quase ninguém guardou.', 'A phonograph recording almost nobody kept.', 1889, 1935, 60),
+  I('disc_78', 'disc', 'Disco de 78 rotações raro', 'Rare 78 rpm record', 'Goma-laca de prensagem curta, selo de época.', 'Short-run shellac with a period label.', 1900, undefined, 45),
+  I('disc_sheet', 'disc', 'Partitura de sucesso antigo', 'Old hit sheet music', 'Capa ilustrada, vendida em quiosque.', 'Illustrated cover, sold at a kiosk.', 1889, 1960, 15),
+  I('disc_lp_first', 'disc', 'LP de primeira prensagem', 'First-pressing LP', 'Capa original e encarte inteiro.', 'Original sleeve and full insert.', 1950, undefined, 80),
+  I('disc_single_promo', 'disc', 'Compacto promocional de rádio', 'Radio promo single', 'Cópia que só ia para as emissoras.', 'A copy meant only for radio stations.', 1955, undefined, 55),
+  I('disc_tape_demo', 'disc', 'Fita demo rara', 'Rare demo tape', 'Fita cassete gravada em casa, capa xerocada.', 'A home-recorded cassette with a photocopied cover.', 1972, undefined, 30),
+  I('disc_cd_first', 'disc', 'CD de primeira tiragem', 'First-run CD', 'Fabricado no exterior, antes da edição nacional.', 'Made abroad, before the local edition.', 1983, undefined, 40),
+  I('disc_vinyl_reissue', 'disc', 'Vinil raro redescoberto', 'Rediscovered rare vinyl', 'O disco que os colecionadores voltaram a caçar.', 'The record collectors started hunting again.', 2008, undefined, 120),
 ];
 export const itemDef31 = (id: string): ItemDef31 | undefined => ITEMS31.find((x) => x.id === id) ?? GARAGE31().find((x) => x.id === id);
 /** Janela da garagem: carros e motos do catálogo de bens (mesmo modelo, exemplar com história). */
@@ -233,10 +243,14 @@ function syncRelicObjForShop(s: GameState, rl: Relic): void {
   if (r.ok) m.ob = r.v.id;
 }
 
-registerSimHook('newgame', 'items31', (s) => { if (objectsOn31(s)) for (const c of shopCities31(s)) restock31(s, c); });
+/** r31 (VIT): o estoque da loja de instrumentos é UMA das fontes da vitrine do mês (r31/vitrine31): o motor da vitrine
+ *  chama isto na nova partida (`next` falso) e na virada do mês — esta loja não tem mais gancho próprio de estoque. */
+export function restockShops31(s: GameState, next: boolean): void {
+  if (!objectsOn31(s)) return;
+  for (const c of shopCities31(s)) restock31(s, c, next ? nextYm(s) : ymOf(s));
+}
 registerSimHook('month', 'items31', (s) => {
   if (!objectsOn31(s)) return;
-  for (const c of shopCities31(s)) restock31(s, c, nextYm(s));
   const st = items31(s);
   st.gifts = st.gifts.filter(([, w]) => s.week - w < 104);
 });
@@ -261,6 +275,37 @@ export function shopRows31(s: GameState, city: string): ShopRow31[] {
     } else out.push({ offer: id, obj: o.id, price: of.price, def: itemDef31(ro(s)!.d[o.id]?.def ?? ''), x: ro(s)!.d[o.id] });
   }
   return out;
+}
+/** r31 (VIT · vitrine do mês): põe UM exemplar à venda pelo mesmo registro de objetos e ofertas da loja (nenhum
+ *  depósito paralelo). `holder` precisa começar com `shop:` (a compra é a mesma `buyOffer31`). Devolve a oferta. */
+export function stockOne31(s: GameState, holder: Holder, defId: string, o: { made: number; cond: number; prev?: [string, number, number][]; ev?: [number, L][]; mul?: number; origin?: 'used' | 'factory' }): string | null {
+  const d = itemDef31(defId);
+  if (!d || !holder.startsWith('shop:')) return null;
+  const res = createObj(s, { modelId: `it:${d.id}`, origin: o.origin ?? (o.made < s.year ? 'used' : 'factory'), owner: holder });
+  if (!res.ok) return null;
+  items31(s).d[res.v.id] = { def: d.id, made: o.made, cond: o.cond, prev: o.prev ?? [], ev: o.ev ?? [] };
+  const of = offer(s, res.v.id, holder, Math.max(1, Math.round(itemPrice31(s, d, o) * (o.mul ?? 1))));
+  if (!of.ok) { removeObj(s, res.v.id); delete items31(s).d[res.v.id]; return null; }
+  return of.v.id;
+}
+/** r31 (VIT): tira da venda o que sobrou (o exemplar volta ao fornecedor e sai do registro). */
+export function unstock31(s: GameState, offerId: string): void {
+  const of = obj31(s).offers[offerId];
+  if (!of) return;
+  const o = obj31(s).objs[of.objId];
+  if (o && o.owner === of.venue) { removeObj(s, o.id); delete items31(s).d[o.id]; } else withdraw(s, offerId);
+}
+/** r31 (VIT): o modelo existe nesta época? */
+export const available31 = (d: ItemDef31, y: number): boolean => available(d, y);
+/** r31 (VIT): oferta da loja ainda à venda (para a vitrine ler sem copiar). */
+export function offerRow31(s: GameState, offerId: string): ShopRow31 | null {
+  const st = (s as unknown as { x4?: { obj31?: { offers: Record<string, { objId: string; price: number }>; objs: Record<string, { id: string; modelId: string }> } } }).x4?.obj31;
+  const of = st?.offers[offerId];
+  const o = of ? st!.objs[of.objId] : undefined;
+  if (!of || !o) return null;
+  if (o.modelId.startsWith('relic:')) { const rl = (s as unknown as { x4?: { relics9?: { list: Relic[] } } }).x4?.relics9?.list.find((x) => x.id === o.modelId.slice(6)); return rl && rl.st === 'kept' ? { offer: offerId, obj: o.id, price: of.price, relic: rl } : null; }
+  const x = ro(s)?.d[o.id];
+  return { offer: offerId, obj: o.id, price: of.price, def: itemDef31(x?.def ?? ''), x };
 }
 /** Semanas até o estoque trocar (virada do mês). */
 export const weeksToRestock31 = (s: GameState): number => Math.max(1, 4 - ((s.week % 4) || 0));

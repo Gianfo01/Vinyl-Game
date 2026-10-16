@@ -18,6 +18,7 @@
 //
 // Sem sorteio, sem mudar valores: só lê os lançamentos. Estado em `x4.res31` e `x4.dctx31`.
 
+import { tourList } from '../tours';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { group18, type Sect18 } from '../ledger18';
@@ -100,7 +101,7 @@ function dctx31(s: GameState): DCtxSt {
 function projOf(s: GameState, id: string): { n: string; a?: string; k: PKind31 } {
   const r = s.releases[id];
   if (r) return { n: r.title, a: r.actId, k: 'rel' };
-  const t = s.tours?.find((x) => x.id === id);
+  const t = tourList(s).find((x) => x.id === id);
   if (t) return { n: t.name, a: t.actId, k: 'tour' };
   const pr = s.pendingReleases?.find((x) => x.id === id);
   if (pr) return { n: pr.title, a: pr.actId, k: 'proj' };

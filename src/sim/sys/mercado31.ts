@@ -52,6 +52,9 @@ export function langEra31(s: GameState): number {
 /** Desconto máximo para língua estrangeira no país: onde o público prefere o local (Japão, Brasil) pesa mais. */
 const MU = LP.map((x) => 0.3 * clamp((x - 1) / 1.7, 0, 1));
 const SAME_LANG = 0.3;
+/** W3-FIX (desempenho): a língua é falada no país? (por língua, na ordem de COUNTRY_INFO) */
+const SPEAKS = new Map<string, Uint8Array>();
+const speaks31 = (lang: string): Uint8Array => { let x = SPEAKS.get(lang); if (!x) { x = Uint8Array.from(COUNTRY_INFO.map((c) => +c.lang.includes(lang))); SPEAKS.set(lang, x); } return x; };
 
 // ---------------------------------------------------------------- leis e cotas por país
 
@@ -90,7 +93,7 @@ const LAW_LABEL = l('Leis e cotas de rádio nos países', 'Radio laws and quotas
 
 interface ActY { g: Float64Array | null; g0: Float64Array | null; lang: Float64Array | null; law: Float64Array | null }
 interface RelY { m: Float64Array; K: number; loc: number; law: number; dom: number }
-interface Cache31 { week: number; open: boolean; acts: Map<string, ActY>; rels: Map<string, RelY>; no1: Map<string, string[]> | null }
+interface Cache31 { week: number; open: boolean; acts: Map<string, ActY>; rels: Map<string, RelY>; no1: Map<string, string[]> | null; q?: Quota31[] }
 const CACHE = new WeakMap<GameState, Cache31>();
 
 /** Abre o cache da semana (chamado pelo mercado antes de vender) e fecha depois das paradas. */
@@ -108,20 +111,18 @@ function actY(s: GameState, a: Act): ActY {
     const b = new Float64Array(NC), d = new Float64Array(NC);
     baseVec16(s, a, b, d);
     g0 = b; g = d;
-    for (let i = 0; i < NC; i++) { g0[i] = fameF31(b[i]); g[i] = fameF31(d[i]); }
+    for (let i = 0; i < NC; i++) { const x = fameF31(b[i]); g[i] = d[i] === b[i] ? x : fameF31(d[i]); g0[i] = x; }
   }
   if (on31(s, 'y31.lang')) {
-    const e = langEra31(s);
+    const e = langEra31(s), sp = speaks31(lang);
     lg = new Float64Array(NC);
-    for (let i = 0; i < NC; i++) {
-      const c = COUNTRY_INFO[i];
-      lg[i] = c.a3 === home ? 1 : c.lang.includes(lang) ? 1 + SAME_LANG * e : 1 - MU[i] * e;
-    }
+    for (let i = 0; i < NC; i++) lg[i] = COUNTRY_INFO[i].a3 === home ? 1 : sp[i] ? 1 + SAME_LANG * e : 1 - MU[i] * e;
   }
   if (on31(s, 'y31.laws')) {
-    for (const q of QUOTAS31) {
+    // W3-FIX (desempenho): as cotas em vigor saem uma vez por semana de mercado (leis só mudam no fechamento do mês)
+    const qs = c?.open ? (c.q ??= QUOTAS31.filter((q) => IDX[q.a3] !== undefined && q.on(s))) : QUOTAS31.filter((q) => IDX[q.a3] !== undefined && q.on(s));
+    for (const q of qs) {
       const i = IDX[q.a3];
-      if (i === undefined || !q.on(s)) continue;
       const k = q.k(s, a, home, lang, fam);
       if (k === 1) continue;
       law ??= new Float64Array(NC).fill(1);

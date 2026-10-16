@@ -31,6 +31,7 @@ import { know, know3, see } from '../know';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { shiftOpinion } from '../opinion';
 import { registerEditable, registerRunnable } from '../r31/editor';
+import { IMPORT31 } from '../r31/hooks31t2';
 import { noteSale31 } from '../r31/relic31';
 import { registerSwitch, sw } from '../r31/switches';
 import type { GameState } from '../types';
@@ -391,7 +392,7 @@ export function hammer31(s: GameState, sess: Sess31, rid: string, o: { top?: num
     const price = lad.price;
     relicBuyFrom9(s, rl, price, 'leilão');
     row = [rid, s.config.companyName, price, 1];
-    if (foreign) {
+    if (foreign && !IMPORT31.f?.(s, { rid, price, from: sess.city })) { // R31 T2: com a alfândega real, vira carga no porto/aeroporto
       const duty = Math.round(price * dutyRate31(s.year));
       post(s, `auc31duty:${rid}:${s.week}`, -duty, 'acquisitions', `Alfândega: ${rl.n.pt}`);
       st.imports.push({ rid, n: rl.n, from: sess.city, w: s.week, arrive: s.week + shipWeeks31(s.year), duty });
@@ -450,8 +451,9 @@ relicAuctionHook9.f = (s, rl, top, col) => {
   return !!se && !!hammer31(s, se, rl.id, { top, col });
 };
 
-registerSimHook('newgame', 'auction31', (s) => { if (auctionOn31(s)) { ensureSessions31(s); assignLots31(s); } });
-registerSimHook('month', 'auction31', (s) => { if (auctionOn31(s)) { ensureSessions31(s); assignLots31(s); } });
+/** r31 (VIT): os lotes do mês são uma das fontes da vitrine do mês (r31/vitrine31) — o motor da vitrine chama isto na nova
+ *  partida e na virada do mês (a casa de leilões não tem mais gancho próprio de catálogo; o martelo segue no gancho semanal). */
+export function restockAuction31(s: GameState): void { if (auctionOn31(s)) { ensureSessions31(s); assignLots31(s); } }
 registerSimHook('week', 'auction31', (s) => {
   if (!auctionOn31(s) || !peek(s)) return;
   assignLots31(s);

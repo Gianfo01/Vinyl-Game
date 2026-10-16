@@ -2,6 +2,7 @@
 // dentro da partida (briefing, regra 10). As cenas só leem; aqui ficam os números que elas mostram e que dá para
 // ajustar para testar (sempre pelo editor ligado: applyEdit/runEdit marcam a partida e escrevem no diário).
 
+import { tourList } from '../tours';
 import { clamp } from '../../core/rng';
 import { l } from '../../data/world';
 import { openProjects, projectStage, recordNow } from '../sys/project8';
@@ -11,7 +12,7 @@ import { registerEditable, registerRunnable } from './editor';
 
 const openProj = (s: GameState, actId?: string) => (actId ? openProjects(s, actId).find((p) => !p.pendingId && !p.rolloutId && !p.releaseId) : undefined);
 const nextStop = (s: GameState, actId?: string) => {
-  const tr = actId ? s.tours.find((x) => x.actId === actId && (x.status === 'planned' || x.status === 'running')) : undefined;
+  const tr = actId ? tourList(s).find((x) => x.actId === actId && (x.status === 'planned' || x.status === 'running')) : undefined;
   return tr?.stops.find((x) => x.status === 'scheduled');
 };
 

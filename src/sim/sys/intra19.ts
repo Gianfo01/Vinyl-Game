@@ -6,6 +6,7 @@
 // artista sente (holds17: favor ou mágoa). Avisos de conflito de interesse quando dois chapéus seus se encontram.
 // Nada aqui cria dinheiro: a soma de caixa + patrimônio só muda pelo que vai para fora (artista, fornecedor).
 
+import { ownFests } from './feststore';
 import { clamp } from '../../core/rng';
 import { MEDIA } from './ventures9';
 import { l, type L } from '../../data/world';
@@ -17,7 +18,7 @@ import type { GameState } from '../types';
 import { fmtL, money, notify } from '../util';
 import { registerAdvisorTip } from '../inbox18';
 import { guestFee } from './live/festival';
-import { isMine, liveOf, liveShare } from './live/state';
+import { isMine, liveShare } from './live/state';
 import { guestPaid19, houseAsk19, ownPaid19, ventureOf } from './fest12';
 import { prodOwn19 } from './studio12';
 import { pubOwn19, ventures, vpay, type Holder, type Venture } from './ventures9';
@@ -107,7 +108,7 @@ export function conflicts19(s: GameState): { k: string; t: L }[] {
   const vs = ventures(s).list;
   const mg = ventures(s).mg;
   const clients = new Set(mg.clients.map((c) => c.actId));
-  for (const f of liveOf(s).fests) for (const y of f.lineup) {
+  for (const f of ownFests(s)) for (const y of f.lineup) {
     const a = s.acts[y.actId];
     if (!a) continue;
     if (isMine(s, a.id)) out.push({ k: `fest:${f.id}:${a.id}`, t: fmtL(l('{a} (seu selo) toca no {f} (seu festival): você negocia dos dois lados da mesa.', '{a} (your label) plays {f} (your festival): you sit on both sides of the table.'), { a: a.name, f: f.name }) });

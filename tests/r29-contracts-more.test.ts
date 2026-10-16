@@ -17,6 +17,7 @@ import {
   buyoutJV29, deliverMasters29, deliveryLabels29, dissolveJV29, jvSub29, quitManagement29, releaseProduction29, specialDeals29, splitJV29,
 } from '../src/sim/sys/contracts29';
 import { ventures } from '../src/sim/sys/ventures9';
+import { c12 } from '../src/sim/sys/manager12';
 import { careers } from '../src/sim/sys/careers12';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { activeAct } from '../src/sim/sys/ventures12';
@@ -88,7 +89,7 @@ describe('R29 contratos+ — empresariamento', () => {
     expect(cl.rate).toBe(0.2);
     expect(rightsOf(c).master).toBe('artist');
     expect(active29(s, c)).toBe(true);
-    for (let m = 0; m < 12; m++) { const k = ventures(s).mg.clients.find((x) => x.actId === a.id); if (k) k.sat = 90; advanceMonth(s); }
+    for (let m = 0; m < 12; m++) { const k = ventures(s).mg.clients.find((x) => x.actId === a.id); if (k) c12(s, k.actId).trust = 90; advanceMonth(s); } // UNI-4: satisfação = confiança da ficha (manager12)
     expect(c.x29?.ended).toBeUndefined();
     expect(c.x29!.paid!).toBeGreaterThan(0);
     expect(c.x29!.paid).toBe(ventures(s).mg.clients.find((x) => x.actId === a.id)!.earned);
@@ -115,7 +116,7 @@ describe('R29 contratos+ — empresariamento', () => {
     // demissão: a satisfação desaba e o artista demite você (máquina de sempre, ventures9) → o contrato encerra como "fired"
     const e = Object.values(s.acts).filter((x) => x.owner && x.owner !== 'player' && x.id !== a.id && x.id !== b.id && activeAct(x) && x.fame >= 3).sort((p, q) => (p.id < q.id ? -1 : 1))[0];
     const c3 = sign(s, e, 'management', (o) => { o.advance = 0; });
-    for (let m = 0; m < 48 && !c3.x29?.ended; m++) { const k = ventures(s).mg.clients.find((x) => x.actId === e.id); if (k) k.sat = 0; advanceMonth(s); }
+    for (let m = 0; m < 48 && !c3.x29?.ended; m++) { const k = ventures(s).mg.clients.find((x) => x.actId === e.id); if (k) c12(s, k.actId).trust = 0; advanceMonth(s); } // UNI-4: satisfação = confiança da ficha (manager12)
     expect(c3.x29!.ended).toBe('fired');
   });
 

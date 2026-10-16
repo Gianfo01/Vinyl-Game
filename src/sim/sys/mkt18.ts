@@ -20,10 +20,11 @@ import { MEDIA18 } from '../media18hook';
 import type { GameState, Release } from '../types';
 import { fmtL, hasTech } from '../util';
 
-export type Src18 = 'pl' | 'alg' | 'srch' | 'vid' | 'wom' | 'radio' | 'store';
+/** UNI-4 (B.21): 'own' = a sua plataforma (ventures9 kind 'platform') como fonte de descoberta dos seus discos. */
+export type Src18 = 'pl' | 'alg' | 'srch' | 'vid' | 'wom' | 'radio' | 'store' | 'own';
 export const SRC18: Record<Src18, L> = {
   pl: l('Playlists', 'Playlists'), alg: l('Recomendação/algoritmo', 'Recommendation/algorithm'), srch: l('Busca (procurou o nome)', 'Search (looked it up)'),
-  vid: l('Vídeo', 'Video'), wom: l('Indicação/boca a boca', 'Word of mouth'), radio: l('Rádio', 'Radio'), store: l('Loja/vitrine', 'Store/shelf'),
+  vid: l('Vídeo', 'Video'), wom: l('Indicação/boca a boca', 'Word of mouth'), radio: l('Rádio', 'Radio'), store: l('Loja/vitrine', 'Store/shelf'), own: l('Sua plataforma', 'Your platform'),
 };
 
 export interface ChProf18 { conv: number; tix: number; lag: number; src: Partial<Record<Src18, number>>; aud: L; alb?: number; local?: number; sv?: number }

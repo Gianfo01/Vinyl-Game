@@ -12,7 +12,7 @@ import { activeThoughts, addThought, thoughtText } from './thoughts';
 import { startTreatment, type Treatment } from './health';
 import { answerRaise } from './staff';
 import { personalAdvance } from './life';
-import { leakSecret } from './secrets';
+import { delSecKnownBy, dossierById, leakSecret } from './secrets';
 import { talk } from './talks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 import { isSeen18 } from '../../inbox18';
@@ -70,13 +70,13 @@ export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = 
       break;
     }
     case 'secret': {
-      const sec = st.secrets.find((x) => x.id === ref.secret);
+      const sec = dossierById(s, String(ref.secret));
       if (!sec) break;
       if (action === 'pay') {
         const amount = Number(ref.amount);
         if (freeCash20(s) < amount) return cashWhy20(s, amount, l('Caixa insuficiente.', 'Not enough cash.'));
         post(s, `hushpay:${sec.id}`, -amount, 'legal', 'Acordo confidencial');
-        sec.knownBy = sec.knownBy.filter((x) => x !== ref.label);
+        delSecKnownBy(s, sec, String(ref.label));
         out = l('Pago. Por enquanto, silêncio.', 'Paid. Silence, for now.');
       } else {
         const lb = s.labels[String(ref.label)];

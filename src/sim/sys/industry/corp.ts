@@ -3,6 +3,7 @@ import { deferEvents } from '../../ext4';
 // ticketeira, fábrica de instrumentos com endossos, conselho (modo carreira), fusões entre rivais
 // com órgão antitruste, e câmbio/inflação por mercado.
 
+import { SPLIT31 } from '../../r31/hooks31t2';
 import { fxExposure18, fxWhy18 } from '../econ18';
 import { homeMarket } from '../../economy';
 import { clamp, type Rng } from '../../../core/rng';
@@ -348,7 +349,8 @@ const EVENTS_IND: EventDef[] = [
         t.active = false;
         for (const id of t.roster) { const a = s.acts[id]; if (a) a.owner = b.id; b.roster.push(id); }
         t.roster = [];
-        for (const rel of Object.values(s.releases)) if (rel.owner === t.id) rel.owner = 'indie';
+        const rels = Object.values(s.releases).filter((rel) => rel.owner === t.id);
+        if (!SPLIT31.f?.(s, t.id, rels.map((rel) => rel.id))) for (const rel of rels) rel.owner = 'indie'; // R31 T2: proposta fechada
       } },
     ],
   },

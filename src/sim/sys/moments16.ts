@@ -7,7 +7,7 @@ import { cityById, l, type L } from '../../data/world';
 import { queueCutscene, registerExt4, registerSimHook } from '../ext4';
 import type { GameState, MemoryEntry } from '../types';
 import { fmtL, rememberListeners } from '../util';
-import { c12 } from './tour12';
+import { shows12 } from './tour12';
 
 export type Award16 = 'major' | 'regional' | 'national' | 'festival' | 'contest' | 'hall' | 'special';
 export type Press16 = 'tv' | 'radio' | 'magazine' | 'interview';
@@ -137,8 +137,8 @@ registerSimHook('show', 'moments16', (s, _r, a) => {
 registerSimHook('week', 'moments16', (s) => {
   const st = mo16(s);
   const seen = new Set(st.seen);
-  for (const sh of c12(s).shows) {
-    if (sh.status !== 'played' || !sh.res || sh.res.cancelled || seen.has(sh.id) || s.week - sh.week > 6) continue;
+  for (const sh of shows12(s)) {
+    if (sh.status !== 'done' || !sh.res || sh.res.cancelled || seen.has(sh.id) || s.week - sh.week > 6) continue;
     st.seen.push(sh.id);
     onShow(s, sh.actId, sh.city, sh.res.att, sh.res.cap, sh.tier, false);
   }

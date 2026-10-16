@@ -50,6 +50,7 @@ export const UNLOCK31 = {
   wait: l('Espere o intervalo passar: volta sozinho nas próximas semanas.', 'Wait for the interval to pass: it comes back by itself in a few weeks.'),
   fame: l('Ganhe fama: lance discos, faça shows e apareça na mídia.', 'Gain fame: release records, play shows and get media coverage.'),
   release: l('Lance um disco: vale enquanto ele estiver nas lojas.', 'Release a record: it counts while it is in stores.'),
+  date: l('Espere a data: libera sozinho quando ela chegar.', 'Wait for the date: it unlocks by itself when it comes.'),
 } satisfies Record<string, L>;
 
 /** Regras de leitura do motivo → condição (primeira que casar). */
@@ -62,7 +63,9 @@ const RULES: [RegExp, keyof typeof UNLOCK31][] = [
   [/caixa|cash|dinheiro|money|patrimon|wealth/, 'cash'],
   [/compon|escrit|written|write first|nenhuma musica|no written/, 'songs'],
   [/faixa|track/, 'record'],
-  [/agenda|capacidade|capacity|espac|slot/, 'agenda'],
+  // R31 (POL): motivo com data marcada ("abre na estreia, em março de 2027") pede esperar a data — não a dica de agenda
+  [/\b(abre|abrem|libera|opens?|unlocks?) (na|no|em|a partir|in|on|at|from)\b|\bestreia\b|\bpremiere\b|\b(em|in) (janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\b/, 'date'],
+  [/agenda|capacidade|capacity|sem espac|espaco livre|no room|free slot|agenda slot/, 'agenda'],
   [/pausa|hiato|hiatus/, 'hiatus'],
   [/condic|saude|doente|fit\b|health|sick|recuper/, 'health'],
   [/elenco|roster|nao e seu|not your/, 'roster'],

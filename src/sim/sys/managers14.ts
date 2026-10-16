@@ -16,7 +16,7 @@ import { deferEvents, registerExt4, registerOfferMod, registerSimHook } from '..
 import { langForCity, personName } from '../people';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
-import { poachName11 } from './manager11';
+import { poachName11 } from './manager12';
 import { gone16 } from './gone16';
 import { labelNeg, opine, opinionOf, registerPer13 } from './persona13';
 import { ownerOf } from './people/owner';

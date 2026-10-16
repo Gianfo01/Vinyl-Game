@@ -6,7 +6,7 @@ import { advanceMonth } from '../src/sim/tick';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import { addOrder, d16, delegates, handlersOf, log16, matchOffer, ordersOf, quality } from '../src/sim/sys/deleg16';
 import { roleLoads } from '../src/sim/sys/capacity14';
-import { c12 } from '../src/sim/sys/tour12';
+import { shows12 } from '../src/sim/sys/tour12';
 import { rng19 } from '../src/sim/rng19';
 
 const setup = (seed: string) => {
@@ -31,9 +31,9 @@ describe('delegar 16', () => {
     const ag = hire(s, 'booking_agent');
     expect(addOrder(s, ag.id, 'tour', { actId: act.id, per: 2, floor: 0 })).toBeNull();
     expect(addOrder(s, ag.id, 'radio', { actId: act.id })).not.toBeNull(); // função errada
-    const n0 = c12(s).shows.length;
+    const n0 = shows12(s).length;
     advanceMonth(s);
-    expect(c12(s).shows.length).toBeGreaterThan(n0);
+    expect(shows12(s).length).toBeGreaterThan(n0);
     expect(log16(s, { staffId: ag.id }).some((x) => x.x === 'tour' && x.t.pt.length > 10 && x.t.en.length > 10)).toBe(true);
     expect(handlersOf(s, act.id).length).toBe(1);
     expect(quality(s, ag).q).toBeGreaterThan(0);

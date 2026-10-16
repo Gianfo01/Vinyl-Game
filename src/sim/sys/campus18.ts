@@ -11,6 +11,8 @@
 // → danificado (incêndio do crime17/desastre) → fechado/vendido; (5) retrato ANUAL compacto para a linha
 // do tempo (máx. 170 anos).
 
+import { ownFests } from './feststore';
+import { builtVenue, realVenues } from './venuestore27';
 import { clamp, Rng } from '../../core/rng';
 import { HQ_LEVELS, BRANCH_LEVELS } from '../../data/rules';
 import { cityById, l, type L } from '../../data/world';
@@ -22,7 +24,6 @@ import type { GameState } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { hq6 } from './hq6';
 import { hq8 } from './hq8';
-import { liveOf } from './live/state';
 import { HOUSES } from './people/owner';
 import { P } from './people/state';
 import { rel18, WING18 } from './relics18';
@@ -31,7 +32,7 @@ import { OWN18, school18 } from './school18';
 import { sess18 } from './session18';
 import { deals18 } from './deals18';
 import { ventures, type VKind } from './ventures9';
-import { v17, vdef } from './venues17';
+import { vdef } from './venues17';
 import { myVenues27 } from './venues27';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
@@ -320,7 +321,7 @@ export function buildings18(s: GameState): Bld18[] {
       now: v.kind === 'studio' && v.booked?.length ? fmtL(l('{n} reservas de clientes', '{n} client bookings'), { n: v.booked.length }) : v.kind === 'festival' && v.month === s.month ? l('Edição deste mês: palco montado!', 'This month\'s edition: stage is up!') : undefined });
   }
   // casas de shows compradas (venues17)
-  for (const o of v17(s).own) {
+  for (const o of realVenues(s)) {
     const d = vdef(o.id);
     if (!d) continue;
     add({ id: `ve:${o.id}`, kind: 'venue', name: d.name, city: d.city, lvl: sizeByCap(d.cap), since: o.y, sy: st.ren[`ve:${o.id}`] ?? Math.min(o.y, Math.max(d.from, 1889)), worn: o.cond < 40, goto: { area: 'cp17-label', tab: ['cp17-label', 'venues'] },
@@ -328,16 +329,15 @@ export function buildings18(s: GameState): Bld18[] {
       now: o.last ? fmtL(l('Último mês: {n} noites, {a} pessoas', 'Last month: {n} nights, {a} people'), { n: o.last.nights, a: o.last.att }) : undefined, note: o.cond < 40 ? l('Conservação baixa: reboco caindo.', 'Poor condition: plaster falling.') : undefined });
   }
   // casa de shows da carreira (live) e festivais próprios
-  const lv = liveOf(s);
-  if (lv.venue) {
-    const vv = lv.venue;
+  const vv = builtVenue(s);
+  if (vv) {
     const h = vv.history[vv.history.length - 1];
     add({ id: 'lv:venue', kind: 'venue', name: vv.name, city: vv.cityId, lvl: vv.kind === 'club' ? 1 : vv.kind === 'theater' ? 3 : 5, since: vv.boughtYear, goto: { area: 'cp17-venue' },
       kpi: [[l('Tipo', 'Type'), vv.kind === 'club' ? l('clube', 'club') : vv.kind === 'theater' ? l('teatro', 'theatre') : l('arena', 'arena')], [l('Acústica', 'Acoustics'), String(Math.round(vv.acoustics))], [l('Ocupação', 'Occupancy'), h ? `${Math.round(h.occupancy * 100)}%` : '—']],
       now: h ? fmtL(l('Último mês: receita {r}', 'Last month: revenue {r}'), { r: $k(s, h.revenue) }) : undefined });
   }
   const vfx = new Set(ventures(s).list.map((v) => v.fx).filter(Boolean));
-  for (const f of lv.fests) {
+  for (const f of ownFests(s)) {
     if (vfx.has(f.id)) continue;
     const e = f.editions[f.editions.length - 1] as { crowd?: number } | undefined;
     add({ id: `fe:${f.id}`, kind: 'fest', name: f.name, city: f.cityId, lvl: clamp(1 + Math.floor((f.w * f.h) / 60), 1, 5), since: f.founded, goto: { area: 'festivals' },
@@ -472,8 +472,10 @@ export const PROJ18: Record<Exclude<PKind, 'reno'>, PDef18> = {
 export const renoCost18 = (s: GameState, b: Bld18): number => money(s, (b.kind === 'hq' ? HQ_LEVELS[s.player.hq].upgradeCost * 0.25 + 6000 : 8000 + b.lvl * 9000) * (campus18(s).dmg[b.id] ? 1.3 : 1));
 export const renoMonths18 = (b: Bld18): number => clamp(2 + b.lvl, 3, 8);
 export const lotMult18 = (n: number): number => LOTS18[n]?.pm ?? 1;
+/** r31 (LOTE): obra em terreno que já é seu sai sem a compra do terreno (sys/lots31 registra; sem ciclo de imports). */
+export const LAND18: { mult?: (s: GameState, lot: number) => number } = {};
 export function projCost18(s: GameState, k: PKind, lot: number, q: number, target?: Bld18): number {
-  const base = k === 'reno' ? (target ? renoCost18(s, target) : 0) : money(s, PROJ18[k].cost) * lotMult18(lot);
+  const base = k === 'reno' ? (target ? renoCost18(s, target) : 0) : money(s, PROJ18[k].cost) * lotMult18(lot) * (LAND18.mult?.(s, lot) ?? 1);
   return Math.round(base * CONTRACTORS18[q].cost);
 }
 
@@ -630,7 +632,7 @@ export function ambient18(s: GameState): { k: Amb18; at: string; why: L }[] {
   for (const id of Object.keys(campus18(s).dmg)) out.push({ k: 'smoke', at: id, why: campus18(s).dmg[id].why });
   // r19 (world19): dia de festival = multidão no terreno
   for (const v of ventures(s).list) if (v.kind === 'festival' && v.month === s.month) out.push({ k: 'crowd', at: `v:${v.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: v.name }) });
-  for (const f of liveOf(s).fests) if (f.month === s.month) out.push({ k: 'crowd', at: `fe:${f.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: f.name }) });
+  for (const f of ownFests(s)) if (f.month === s.month) out.push({ k: 'crowd', at: `fe:${f.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: f.name }) });
   return out;
 }
 

@@ -34,6 +34,7 @@ describe('r13 persona unificada', () => {
       expect(['m', 'f', 'x']).toContain(P.sex);
     }
     const s2 = createGame(defaultConfig('r13-p', { startYear: 1975 }));
+    advanceMonth(s2); // UNI-4: a ficha agora acompanha as habilidades (chave do cache completa): mesmo ponto do jogo
     expect(per13(s2, `p:${pid}`)!.attrs).toEqual(per13(s, `p:${pid}`)!.attrs);
     // aptidão e ouvido entram no desempenho efetivo da equipe
     const st = s.player.staff.find((x) => x.id === 'stx')!;

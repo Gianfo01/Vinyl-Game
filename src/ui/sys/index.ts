@@ -100,6 +100,9 @@ import './deleg31';
 // R31 onda 4 (T): casa de leilões e aeroporto em cena.
 import '../r31/auction31';
 import '../r31/airport31';
+import '../r31/sealed31ui'; // R31 (T2): sala de abertura dos envelopes
+import '../r31/bauc31ui'; // R31 (T2): leilão silencioso do beco
+import '../r31/customs31ui'; // R31 (T2): alfândega em cena
 // Rodada 16: momentos ilustrados (cena só quando algo acontece; "ver cena" no diário).
 import './moments16';
 import './layout16';

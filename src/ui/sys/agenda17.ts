@@ -3,6 +3,7 @@
 // relatórios de delegação, painel do Você, candidatos com negociação, freelancers por ação, músicos de estúdio)
 // e blocos pequenos para Equipe (Pessoas) e Novo Jogo.
 
+import { builtVenue } from '../../sim/sys/venuestore27';
 import './agenda17.css';
 import { l, type L } from '../../data/world';
 import { STAFF_ROLES } from '../../data/rules';
@@ -14,7 +15,6 @@ import { careerDef, careers } from '../../sim/sys/careers12';
 import { energyLeft, maxEnergy, playerPerson } from '../../sim/sys/life';
 import { ownerOf } from '../../sim/sys/people/owner';
 import { ventures } from '../../sim/sys/ventures9';
-import { liveOf } from '../../sim/sys/live/state';
 import {
   CAREER_KIND, FL, INV_DESC, INV_NAME, OFFICE, PAYOLA_ERA, SECTORS, acceptChance, ag17, balls, bookCrew, careerBalls, crewById, careerQ, chiefCands, crewFee, crewFit, crewName, crewsNow, crunch,
   fireHead, freelancers, headCands, hireableActs, hireFreelancer, invOf, mentorStaff, negotiate, netOf, network, officeCap, overbooked, overflow, restDay, setInv, setSpendTag, staffCands, vacation,
@@ -57,7 +57,8 @@ function intercept(e: MouseEvent): void {
   const b = (e.target as Element | null)?.closest?.('button') as HTMLButtonElement | null;
   if (!b || b.disabled || !store.game) return;
   const raw = (b.textContent ?? '').trim();
-  const n = (raw.match(/⏱/g) ?? []).length;
+  // r31 EMO: o ⏱ chega à tela como ícone em pixel art (<img data-emo="clock">) — conta os dois
+  const n = (raw.match(/⏱/g) ?? []).length + b.querySelectorAll('img.pxe[data-emo="clock"]').length;
   const clean = raw.replace(/⏱/g, '').replace(/\s+/g, ' ').trim().slice(0, 70);
   setSpendTag(clean ? l(clean, clean) : null);
   setTimeout(() => setSpendTag(null), 0);
@@ -105,7 +106,7 @@ function careerRows(s: GameState): HTMLElement {
   const vs = ventures(s);
   const extra = Object.entries(CAREER_KIND).filter(([c, k]) => !st.active.includes(c) && vs.list.some((v) => v.kind === k)).map(([c]) => c);
   if (!st.active.includes('manager') && vs.mg.clients.length) extra.push('manager');
-  if (!st.active.includes('venue') && liveOf(s).venue) extra.push('venue');
+  if (!st.active.includes('venue') && builtVenue(s)) extra.push('venue');
   for (const k of Object.keys(a.heads)) if (!st.active.includes(k) && !extra.includes(k)) extra.push(k);
   const cb = careerBalls(s);
   const row = (id: string, on: boolean) => {

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Press+Start+2P&family=Special+Elite&display=swap');
+:root{--bg:#0b1420;--line:#2b4260;--ink:#e9e2d0;--mute:#9aa8b8;--gold:#f0c060}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
+kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
+.px{image-rendering:pixelated}
+.bg{position:absolute;inset:0;background:url(home-real-1962.png) center/cover;image-rendering:pixelated;filter:brightness(.3)}
+.logo{position:absolute;left:40px;top:26px;font-family:'Press Start 2P';font-size:22px;color:var(--gold);text-shadow:3px 3px 0 #000}
+.logo span{display:block;font-size:9px;color:var(--mute);margin-top:8px;letter-spacing:.1em}
+.toggle{position:absolute;right:40px;top:30px;display:flex;border:2px solid #0a121a;border-radius:6px;overflow:hidden}
+.toggle span{padding:9px 16px;font-size:16px;font-weight:700;background:#1c3048;color:#cfd8e2}
+.toggle span.on{background:var(--gold);color:#1a1214}
+/* ficha (prancheta) */
+.clip{position:absolute;background:#efe6cf;border:4px solid #6a4a2a;border-radius:8px;box-shadow:0 14px 40px #000c;color:#2a2018}
+.clip:before{content:'';position:absolute;left:50%;top:-18px;width:150px;height:30px;margin-left:-75px;background:linear-gradient(#c9ccd2,#8a8e96);border:3px solid #3a3c42;border-radius:6px}
+.clip h2{font-family:'Press Start 2P';font-size:14px;color:#5a3a1e;margin:0}
+.lab{font-family:'Press Start 2P';font-size:8px;color:#8a6a44;margin:0 0 7px;display:flex;justify-content:space-between}
+.lab i{font-style:normal;font-family:'Barlow Semi Condensed';font-size:13px;color:#8a7458;letter-spacing:0}
+.field{background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:7px 10px;font-size:17px;display:flex;align-items:center;justify-content:space-between}
+.field small{color:#8a7458;font-size:13px}
+.careers{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.car{background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:6px 2px;text-align:center;font-size:13px;font-weight:600}
+.car img{width:28px;height:28px;image-rendering:pixelated;display:block;margin:0 auto 3px}
+.car.on{background:#f0c060;border-color:#5a3a1e;box-shadow:inset 0 -3px 0 #b08a30}
+.steps{display:flex;gap:0;border:2px solid #a88a60;border-radius:4px;overflow:hidden}
+.steps span{flex:1;text-align:center;padding:7px 2px;font-size:14px;background:#fffaf0;border-right:1px solid #d6c39e}
+.steps span:last-child{border-right:none}
+.steps span.on{background:#f0c060;font-weight:700}
+.steps span.red{color:#b0281c}
+.slider{position:relative;height:30px;margin:4px 6px 2px}
+.slider .track{position:absolute;left:0;right:0;top:12px;height:6px;background:repeating-linear-gradient(90deg,#a88a60 0 2px,#e4d6b4 2px 12%);border:2px solid #a88a60}
+.slider .knob{position:absolute;top:2px;width:22px;height:26px;background:#c0392b;border:3px solid #1a1214;border-radius:3px}
+.eras{display:flex;justify-content:space-between;font-size:12px;color:#8a7458;padding:0 2px}
+.row{display:grid;gap:10px}
+.sw{display:flex;align-items:center;gap:8px;font-size:15px}
+.sw b{width:38px;height:20px;border:2px solid #5a3a1e;border-radius:10px;background:#d6c39e;position:relative;display:inline-block}
+.sw b:after{content:'';position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:#fff;border:1px solid #5a3a1e}
+.sw b.on{background:#48b85c}.sw b.on:after{left:19px}
+.go{display:block;text-align:center;background:var(--gold);color:#1a1214;font-family:'Press Start 2P';font-size:13px;padding:15px;border:3px solid #1a1214;border-radius:6px;box-shadow:inset 0 -4px 0 #b08a30}
+.links{display:flex;gap:16px;justify-content:center;font-size:15px;color:#5a3a1e;font-weight:700}
+/* prévia */
+.preview{position:absolute;background:#efe6cf;color:#2a2018;border:4px solid #6a4a2a;border-radius:8px;box-shadow:0 14px 40px #000c;padding:14px}
+.preview img.scene{width:100%;image-rendering:pixelated;border:3px solid #0a121a;display:block}
+.preview h3{font-family:'Press Start 2P';font-size:11px;color:#5a3a1e;margin:12px 0 8px}
+.preview p{margin:4px 0;font-size:16px;line-height:1.35}
+.preview .muted{color:#8a7458;font-size:14px}
+.char{display:flex;gap:12px;align-items:center;background:#fffaf0;border:2px solid #a88a60;border-radius:6px;padding:8px}
+.char img{height:70px;image-rendering:pixelated;background:#2a3a52;border:2px solid #0a121a}
+.tagp{display:inline-block;border:1px solid #a88a60;background:#fffaf0;border-radius:4px;padding:2px 7px;font-size:13px;margin:2px 4px 2px 0;color:#5a3a1e}
+/* completo */
+.rail{position:absolute;left:40px;top:110px;width:230px;display:flex;flex-direction:column;gap:6px}
+.st{background:#1c3048;border:2px solid #0a121a;border-radius:6px;padding:9px 12px;box-shadow:inset 0 0 0 2px #3f5f84}
+.st b{display:block;font-family:'Press Start 2P';font-size:9px;color:#cfd8e2;margin-bottom:4px}
+.st small{color:var(--mute);font-size:13px}
+.st.on{background:#4a3a10;box-shadow:inset 0 0 0 2px var(--gold)}.st.on b{color:var(--gold)}
+.st.done b:after{content:' ✓';color:#48b85c}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cd{background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:8px 10px;font-size:13.5px;line-height:1.3;min-height:104px}
+.cd b{display:block;font-size:15px;margin-bottom:3px}
+.cd.on{background:#fff0c8;border-color:#5a3a1e;box-shadow:inset 0 0 0 2px #f0c060}
+.cd .mt{display:block;margin-top:5px;font-size:12px;color:#8a7458}
+.opt{display:flex;gap:8px}
+.opt span{flex:1;background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:8px 10px;font-size:14px}
+.opt span b{display:block;font-size:15px}
+.opt span.on{background:#fff0c8;border-color:#5a3a1e;box-shadow:inset 0 0 0 2px #f0c060}
+details{font-size:14px;color:#5a3a1e;font-weight:700}
+</style></head><body>
+<div class="bg"></div>
+<div class="logo">MASTERS<span>1889 – 2040 · UM MUNDO VIVE DE MÚSICA</span></div>
+<div id="app"></div>
+<script src="title.js"></script>
+<script>
+const v=new URLSearchParams(location.search).get('v')||'rapido';
+const tog=(on)=>`<div class="toggle"><span class="${on=='r'?'on':''}">Começo rápido</span><span class="${on=='c'?'on':''}">Configuração completa</span></div>`;
+const PREV=(w)=>`<div class="preview" style="${w}"><img class="scene" src="home-real-1962.png"><div class="muted" style="font-size:12px;margin-top:4px">a prévia muda na hora com a época, a cidade e a carreira</div>
+ <h3>SUA HISTÓRIA</h3>
+ <div class="char"><img src="av-gian.png"><div><b style="font-size:17px">Gian Fossa</b><br><span class="muted">dono de selo · 28 anos · Londres</span><br><span class="muted">carisma alto · ouvido bom</span></div></div>
+ <p style="margin-top:10px">Londres, <b>1962</b>: o beat está nascendo nos porões. Você abre um <b>selo iniciante</b> com caixa curto e nenhum nome no elenco.</p>
+ <p class="muted">25 anos de jogo · fim em 1986 com a sua história e pontuação</p>
+ <div style="margin-top:6px"><span class="tagp">Nomes reais</span><span class="tagp">Mundo da história real</span><span class="tagp">Equilibrada</span><span class="tagp">32 gravadoras</span></div>
+ <p class="muted" style="margin-top:8px">Começo sorteado: "A crítica gostou de você"</p></div>`;
+const V={
+rapido:()=>tog('r')+`<div class="clip" style="left:60px;top:110px;width:760px;height:760px;padding:30px 30px 20px">
+ <h2>FICHA DE INSCRIÇÃO</h2><div style="font-size:15px;color:#6d5a44;margin:6px 0 12px">As escolhas principais. O resto vem pronto e pode ser mudado na configuração completa.</div>
+ <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+  <div><div class="lab">1 · QUEM É VOCÊ <i>editor de personagem</i></div>
+   <div style="display:flex;gap:10px;background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:8px">
+    <div style="width:84px;background:#2a3a52;border:2px solid #1a1214;display:flex;align-items:flex-end;justify-content:center;height:112px"><img src="av-gian.png" style="height:104px;image-rendering:pixelated"></div>
+    <div style="flex:1;font-size:14px;display:grid;grid-template-columns:62px 1fr;gap:3px 6px;align-items:center">
+     <span style="color:#8a7458">Nome</span><span style="border-bottom:1px solid #a88a60;font-size:16px">Gian Fossa</span>
+     <span style="color:#8a7458">Idade</span><span>◂ 28 ▸</span>
+     <span style="color:#8a7458">Pele</span><span>◂ tom 2 ▸</span>
+     <span style="color:#8a7458">Cabelo</span><span>◂ curto castanho ▸</span>
+     <span style="color:#8a7458">Roupa</span><span>◂ paletó escuro ▸</span>
+     <span style="color:#8a7458">Acessório</span><span>◂ chapéu ▸</span>
+     <span></span><span style="font-weight:700;color:#5a3a1e">⟳ sortear · mais opções ▸</span></div></div></div>
+  <div><div class="lab">2 · ONDE <i>cidade inicial</i></div><div class="field"><span>Londres · Reino Unido</span><small>▾</small></div>
+   <div class="lab" style="margin-top:12px">TRAÇO DE PERSONALIDADE <i>opcional</i></div><div class="steps"><span class="on">Carismático</span><span>Ouvido bom</span><span>Negociador</span></div>
+   <div style="font-size:13px;color:#8a7458;margin-top:6px">Histórico, atributos e família ficam na configuração completa.</div></div></div>
+ <div style="margin-bottom:14px"><div class="lab">3 · O QUE VOCÊ FAZ <i>+ 6 carreiras na completa</i></div>
+  <div class="careers">${[['gravadora','Gravadora'],['artista','Artista / banda'],['empresario','Empresário'],['estudio','Estúdio'],['festival','Festival'],['agencia','Agência de shows']].map(([k,t],i)=>`<div class="car ${i==0?'on':''}"><img src="ic-${k}.png">${t}</div>`).join('')}</div></div>
+ <div style="margin-bottom:14px"><div class="lab">4 · QUANDO <i>ano de início: 1962</i></div>
+  <div class="slider"><div class="track"></div><div class="knob" style="left:39%"></div></div>
+  <div class="eras"><span>1889 cilindro</span><span>1920 rádio</span><span>1950 rock</span><span>1962 beat</span><span>1980 MTV</span><span>2000 internet</span><span>2025 IA</span></div></div>
+ <div style="margin-bottom:14px"><div class="lab">5 · TAMANHO DO COMEÇO</div>
+  <div class="steps"><span class="on">Iniciante</span><span>Emergente</span><span>Médio</span><span>Estabelecido</span><span>Líder</span><span class="red">Em crise</span></div></div>
+ <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+  <div><div class="lab">6 · DIFICULDADE</div><div class="steps"><span>Tranquila</span><span class="on">Equilibrada</span><span>Dura</span></div></div>
+  <div><div class="lab">7 · DURAÇÃO</div><div class="steps"><span class="on">25 anos</span><span>Até 2040</span><span>Sem fim</span></div></div></div>
+ <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+  <div class="sw"><b class="on"></b>Nomes reais (artistas, gravadoras, obras)</div>
+  <div class="sw"><b class="on"></b>Mundo segue a história real</div></div>
+ <div class="go">▶ COMEÇAR MINHA HISTÓRIA</div>
+ <div class="links" style="margin-top:14px"><span>Configuração completa →</span><span>Cenários históricos</span><span>Usar código de run</span><span>Carregar partida</span></div>
+</div>`+PREV('left:850px;top:110px;width:540px'),
+completo:()=>tog('c')+`<div class="rail">
+ ${[['1 · MUNDO','História real · nomes reais',0,1],['2 · PERSONAGEM','Gian Fossa · 28 anos',0,1],['3 · CARREIRAS','Gravadora · selo iniciante',1,0],['4 · GRAVADORAS','32 · pela história',0,0],['5 · REGRAS E RITMO','Equilibrada · 25 anos',0,0],['6 · REVISÃO','código da run',0,0]].map(([b,s,on,d])=>`<div class="st ${on?'on':''} ${d?'done':''}"><b>${b}</b><small>${s}</small></div>`).join('')}
+ <div style="font-size:13px;color:#9aa8b8;margin-top:6px"><kbd>{</kbd> <kbd>}</kbd> etapa anterior / próxima</div></div>
+ <div class="clip" style="left:290px;top:110px;width:760px;height:760px;padding:26px 26px 18px">
+ <h2>3 · CARREIRAS</h2><div style="font-size:15px;color:#6d5a44;margin:6px 0 14px">Carreira principal, carreiras ao mesmo tempo e como você começa.</div>
+ <div class="lab">CARREIRA PRINCIPAL <i>12 carreiras</i></div>
+ <div class="careers" style="margin-bottom:6px">${[['gravadora','Gravadora'],['artista','Artista / banda'],['empresario','Empresário'],['estudio','Estúdio'],['festival','Festival'],['agencia','Agência']].map(([k,t],i)=>`<div class="car ${i==0?'on':''}"><img src="ic-${k}.png">${t}</div>`).join('')}</div>
+ <div style="font-size:13px;color:#8a7458;margin-bottom:12px">+ Casa de shows · Rádio/TV · Editora · Plataforma · Imprensa · Produtor (6 mais)</div>
+ <div class="lab">PONTO DE PARTIDA</div>
+ <div class="cards" style="margin-bottom:8px">${[['Iniciante','Caixa curto, ninguém no elenco: você monta tudo.','caixa $2.000',1],['Emergente','Caixa médio e um primeiro nome no elenco.','caixa $8.000'],['Porte médio','Dois nomes, equipe pequena, segundo mercado.','caixa $25.000'],['Hipster','Pequeno e respeitado: crítica adora, rádio ignora.','prestígio alto'],['Estabelecido','Três nomes, catálogo, três mercados.','custos fixos altos'],['Top 5','Elenco grande, sede cheia, rivais de olho.','caixa $1,2 mi'],['Líder do mercado','O maior de todos; todos querem o trono.','caixa $9 mi'],['Em crise','Nome grande, dívida grande, banco cobrando.','dívida $3 mi']].map(([b,t,m,on])=>`<div class="cd ${on?'on':''}"><b>${b}</b>${t}<span class="mt">${m}</span></div>`).join('')}</div>
+ <details style="margin-bottom:12px">▸ Ajuste fino do começo (caixa, sede, elenco, equipe…)</details>
+ <div class="lab">COMO COMEÇAR</div>
+ <div class="opt" style="margin-bottom:12px"><span class="on"><b>Fundar um selo novo</b>do zero, com o ponto de partida escolhido</span><span><b>Assumir uma gravadora existente</b>elenco, contratos, catálogo e dívidas passam a ser seus</span></div>
+ <div class="lab">CARREIRAS AO MESMO TEMPO <i>cada uma usa horários da sua agenda</i></div>
+ <div class="opt"><span class="on"><b>Só a principal</b>5 horários pessoais livres</span><span><b>+ 1 carreira</b>ex.: músico da sua banda</span><span><b>+ 2 carreiras</b>agenda apertada</span></div>
+ <div style="display:flex;justify-content:space-between;margin-top:16px"><span class="go" style="background:#e4d6b4;padding:12px 16px;font-size:11px">◂ PERSONAGEM</span><span class="go" style="padding:12px 16px;font-size:11px">GRAVADORAS ▸</span></div>
+ </div>`+PREV('left:1070px;top:110px;width:330px;font-size:14px')
+};
+document.getElementById('app').innerHTML=V[v]();
+
+</script></body></html>

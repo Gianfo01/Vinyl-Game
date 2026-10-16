@@ -11,6 +11,7 @@
 // `post` em `withTxn({ artist, project, payer… }, () => post(...))`. Sem contexto, a marca é inferida da chave do
 // lançamento (pedaços separados por ':' que sejam id de ato ou de lançamento); o resto fica como não alocado.
 
+import { tourList } from '../tours';
 import { postObs18, type Sect18 } from '../ledger18';
 import { registerExt4 } from '../ext4';
 import type { GameState } from '../types';
@@ -74,7 +75,7 @@ export function inferTags(s: GameState, key: string): TxnTags {
     else if (!out.project && s.releases[tok]) { out.project = tok; out.release = tok; if (!out.artist && s.releases[tok].actId) out.artist = s.releases[tok].actId; }
     else if (!out.project && tok.length > 2 && /^(tr|pr)[0-9a-z]+$/.test(tok)) {
       // onda 3 (P): turnê e lançamento programado também são projeto (gravado no ato: a marca fica na transação)
-      const t = tok.startsWith('tr') ? s.tours?.find((x) => x.id === tok) : undefined;
+      const t = tok.startsWith('tr') ? tourList(s).find((x) => x.id === tok) : undefined;
       if (t) { out.project = tok; out.tour = tok; out.artist ??= t.actId; continue; }
       const pr = tok.startsWith('pr') ? s.pendingReleases?.find((x) => x.id === tok) : undefined;
       if (pr) { out.project = tok; out.artist ??= pr.actId; }

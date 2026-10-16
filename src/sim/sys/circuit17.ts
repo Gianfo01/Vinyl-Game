@@ -9,6 +9,7 @@
 //   cláusula de pessoa-chave na venda do selo (sale17).
 // Geradores próprios por mês.
 
+import { editions8, fests31, worldKey, worldRec } from './feststore';
 import { Rng, clamp } from '../../core/rng';
 import { FESTIVALS } from '../../data/catalog';
 import { familyOf, l, type L } from '../../data/world';
@@ -24,9 +25,10 @@ import { cashWhy20, freeCash20 } from '../oblig20';
 export interface War17 { id: string; act: string; a: string; b: string; fa: number; fb: number; until: number; ia?: number; ib?: number }
 export interface Reunion17 { id: string; act: string; cost: number; p: number; est: number; until: number }
 export interface Crowd17 { act: string; goal: number; raised: number; start: number; due: number; hold?: string; done?: 'ok' | 'broken' }
-export interface C17 { wars: War17[]; snub: Record<number, number>; reunions: Reunion17[]; reunited: Record<string, number>; crowd: Crowd17[]; log: { y: number; t: L }[] }
+/** UNI-4 (B.11): a mágoa do festival que perdeu a guerra (até que ano) mora no registro do festival (feststore `snub`). */
+export interface C17 { wars: War17[]; reunions: Reunion17[]; reunited: Record<string, number>; crowd: Crowd17[]; log: { y: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { circ17: C17 } }
-const fresh = (): C17 => ({ wars: [], snub: {}, reunions: [], reunited: {}, crowd: [], log: [] });
+const fresh = (): C17 => ({ wars: [], reunions: [], reunited: {}, crowd: [], log: [] });
 registerExt4('circ17', fresh);
 export const c17 = (s: GameState): C17 => { const x = s.x4 as unknown as { circ17?: C17 }; return (x.circ17 ??= fresh()); };
 const log = (s: GameState, t: L) => { const st = c17(s); st.log.unshift({ y: s.year, t }); if (st.log.length > 30) st.log.pop(); };
@@ -42,7 +44,7 @@ export function pickWar(s: GameState, id: string, side: 'a' | 'b'): L | null {
   const e = acceptInvite(s, inv);
   if (e) return e;
   declineInvite(s, other);
-  if (otherFi !== undefined) st.snub[otherFi] = s.year + 2;
+  if (otherFi !== undefined) worldRec(s, otherFi).snub = s.year + 2;
   st.wars = st.wars.filter((x) => x !== w);
   const a = s.acts[w.act];
   const t = fmtL(l('{a} fecha exclusividade de headliner; {o} fica de fora e guarda mágoa.', '{a} signs an exclusive headline slot; {o} is left out and holds a grudge.'), { a: a?.name ?? '', o: otherFi !== undefined ? FESTIVALS[otherFi]?.name ?? '' : '' });
@@ -50,8 +52,8 @@ export function pickWar(s: GameState, id: string, side: 'a' | 'b'): L | null {
   emitFact(s, { kind: 'deal', actors: [w.act, 'player'], severity: 45, visibility: 'public', tags: ['deal', 'festival'], text: t, src: 'circuit17' });
   return null;
 }
-const f8in = (s: GameState, fi: number, actId: string) => fest8(s).editions.some((e) => e.fi === fi && !e.done && e.lineup.some((x) => x.actId === actId));
-export const snubbed = (s: GameState, fi: number): boolean => (c17(s).snub[fi] ?? 0) >= s.year;
+const f8in = (s: GameState, fi: number, actId: string) => editions8(s).some((e) => e.fi === fi && !e.done && e.lineup.some((x) => x.actId === actId));
+export const snubbed = (s: GameState, fi: number): boolean => (fests31(s).f[worldKey(fi)]?.snub ?? 0) >= s.year;
 
 function warMonth(s: GameState, r: Rng): void {
   const st = c17(s);
@@ -62,18 +64,18 @@ function warMonth(s: GameState, r: Rng): void {
     if (!inA && !inB) continue;
     declineInvite(s, inA ? w.b : w.a);
     const lost = inA ? w.ib : w.ia;
-    if (lost !== undefined && !(inA && inB)) st.snub[lost] = s.year + 2;
+    if (lost !== undefined && !(inA && inB)) worldRec(s, lost).snub = s.year + 2;
     st.wars = st.wars.filter((x) => x !== w);
   }
   // festival preterido não convida mais seus atos por 2 anos
   const f0 = fest8(s);
   // desempenho: sem festival preterido vigente o filtro não tira nada (a lista de convites é longa)
-  if (Object.values(st.snub).some((y) => y >= s.year)) f0.invites = f0.invites.filter((x) => !(snubbed(s, x.fi) && s.acts[x.actId]?.owner === 'player'));
+  if (Object.values(fests31(s).f).some((x) => (x.snub ?? 0) >= s.year)) f0.invites = f0.invites.filter((x) => !(snubbed(s, x.fi) && s.acts[x.actId]?.owner === 'player'));
   if (s.month !== 2 || st.wars.length) return;
   const star = Object.values(s.acts).filter((a) => a.owner === 'player' && !a.playerBand && a.fame >= 60 && (a.status === 'active' || a.status === 'emerging')).sort((a, b) => b.fame - a.fame)[0];
   if (!star) return;
   const f8 = fest8(s);
-  const eds = f8.editions.filter((e) => !e.done && e.year === s.year && e.month > s.month && !e.lineup.some((x) => x.actId === star.id) && !snubbed(s, e.fi) && FESTIVALS[e.fi]);
+  const eds = editions8(s).filter((e) => !e.done && e.year === s.year && e.month > s.month && !e.lineup.some((x) => x.actId === star.id) && !snubbed(s, e.fi) && FESTIVALS[e.fi]);
   if (eds.length < 2) return;
   const two = eds.map((e) => ({ e, v: FESTIVALS[e.fi].prestige + (FESTIVALS[e.fi].focus.includes(familyOf(star.genre)) ? 20 : 0) + r.next() * 10 })).sort((a, b) => b.v - a.v).slice(0, 2);
   const mk = (fi: number) => { const fee = Math.round(festFee(s, FESTIVALS[fi], star, 'headline') * r.float(1.25, 1.6)); const id = nextId(s, 'fi'); f8.invites.push({ id, fi, actId: star.id, tier: 'headline', fee, expires: s.week + 6 }); return { id, fee }; };

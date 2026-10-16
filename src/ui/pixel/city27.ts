@@ -13,6 +13,8 @@
 //   • vizinhos com nome (gravadoras rivais, rádio, bar com palco): quem são e o que estão fazendo;
 //   • modelo do painel lateral (o que é, custo/mês, receita, quem está lá, 2–3 ações).
 
+import { tourList } from '../../sim/tours';
+import { builtVenue, realVenues } from '../../sim/sys/venuestore27';
 import { CLIMATE19 } from '../../data/hood19';
 import { LANDMARKS19, landmarksAt19, type Landmark19, type LmShape } from '../../data/landmarks19';
 import type { Pop19 } from '../../sim/sys/world19';
@@ -22,15 +24,14 @@ import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import { KIND18, LOTS18, buildings18, campus18, dormPeople, layout18, lotsOpen18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
 import { NB19, live19ev, nb19, type Nb19 } from '../../sim/sys/hood19';
-import { liveOf } from '../../sim/sys/live/state';
 import { rel18 } from '../../sim/sys/relics18';
 import { school18 } from '../../sim/sys/school18';
 import { sess18 } from '../../sim/sys/session18';
 import { ventures } from '../../sim/sys/ventures9';
-import { v17 } from '../../sim/sys/venues17';
 import { bldPop19, lotPop19, upkeep19, type PopAct19 } from '../../sim/sys/world19';
 import { scandal17 } from '../../sim/scandal17';
 import { LMW27B, LMX27B } from './lmdata27';
+import { ownsLot31 } from '../../sim/sys/lots31';
 
 // ---------------------------------------------------------------- utilidades determinísticas
 
@@ -173,8 +174,8 @@ export function bldVis27(s: GameState, bs: Bld18[] = buildings18(s)): Map<string
     } else if (open && b.kind === 'studio' && b.now) { v.lit = true; v.queue = 2; v.queueK = 'musicians'; v.why.push(b.now); }
     // casa de shows: noite de show
     if (open && b.kind === 'venue') {
-      const o = b.id.startsWith('ve:') ? v17(s).own.find((x) => `ve:${x.id}` === b.id) : undefined;
-      const lv = b.id === 'lv:venue' ? liveOf(s).venue : undefined;
+      const o = b.id.startsWith('ve:') ? realVenues(s).find((x) => `ve:${x.id}` === b.id) : undefined;
+      const lv = b.id === 'lv:venue' ? builtVenue(s) : undefined;
       const nights = o?.last?.nights ?? (lv?.history.length ? Math.round((lv.history[lv.history.length - 1].occupancy ?? 0) * 10) : 0);
       if (nights > 0) { v.marquee = true; v.lit = true; v.queueK = 'crowd'; v.queue = Math.min(12, 3 + Math.round(nights / 2)); v.why.push(l('Noite de show: marquise acesa e fila na porta.', 'Show night: marquee lit and a queue at the door.')); }
     }
@@ -205,7 +206,8 @@ export function bldVis27(s: GameState, bs: Bld18[] = buildings18(s)): Map<string
 
 /** r27 (LOTS): `dis` = nenhuma obra cabe no caixa (ou todas já existem): a placa aparece igual, com o preço e o
  *  motivo, e a compra fica bloqueada até dar (antes o lote sumia e virava cidade comum). */
-export interface Sale27 { lot: number; price: number; kind: BKind; opt: string; name: L; dis?: L }
+export interface Sale27 { lot: number; price: number; kind: BKind; opt: string; name: L; dis?: L;
+  /** r31 (LOTE): texto da placa (terreno vago "VENDE-SE", seu "SEU") e terreno já seu */ txt?: string; own?: boolean }
 /** Lotes livres À VENDA com o tipo sugerido (melhor vizinhança, depois o mais barato). Os que cabem no caixa vêm
  *  primeiro; os outros aparecem bloqueados com o motivo. A cidade cresce (sim/sys/campus18 `dist18`) e os vizinhos
  *  deixam 3 lotes livres: sempre há pelo menos 3 placas enquanto houver bairro para abrir. */
@@ -218,7 +220,7 @@ export function forSale27(s: GameState): Sale27[] {
   const busy = new Set(st.proj.map((p) => p.lot));
   const out: Sale27[] = [];
   LOTS18.forEach((_, lot) => {
-    if (lot === 0 || lot >= open || used.has(lot) || nbl.has(lot) || busy.has(lot)) return;
+    if (lot === 0 || lot >= open || used.has(lot) || nbl.has(lot) || busy.has(lot) || ownsLot31(s, lot)) return; // r31 (LOTE): terreno seu não está à venda
     const p = lotPop19(s, lot);
     if (!p || !p.opts.length) return;
     const ok = p.opts.filter((o) => !o.dis);
@@ -278,7 +280,7 @@ export function life27(s: GameState, bs: Bld18[] = buildings18(s)): Life27 {
   const staff = s.player.staff.slice(0, 4);
   staff.forEach((p, i) => { if (dest.length) walkers.push({ who: p.name, k: 'staff', from: 'hq', to: dest[i % dest.length].id }); });
   // ônibus da turnê: turnê rodando (ou que começa em até 2 semanas)
-  const tr = s.tours.find((t) => mineSet.has(t.actId) && (t.status === 'running' || (t.status === 'planned' && (t.stops[0]?.day ?? 1e9) - s.day <= 14)));
+  const tr = tourList(s).find((t) => mineSet.has(t.actId) && (t.status === 'running' || (t.status === 'planned' && (t.stops[0]?.day ?? 1e9) - s.day <= 14)));
   const bus = tr ? { act: s.acts[tr.actId]?.name ?? '?', tour: tr.name } : undefined;
   // fãs: disco seu na parada (mais perto do topo = mais gente)
   let fans = 0, fansWhy: L | undefined;
@@ -367,12 +369,12 @@ export function panel27(s: GameState, id: string, bs: Bld18[] = buildings18(s)):
     }
     if (v) who.push(fmtL(l('{n} funcionário(s)', '{n} staff'), { n: v.staff }).pt);
   } else if (b.id.startsWith('ve:')) {
-    const o = v17(s).own.find((x) => `ve:${x.id}` === b.id);
+    const o = realVenues(s).find((x) => `ve:${x.id}` === b.id);
     if (o?.last) income = Math.max(0, o.last.net);
     if (o?.actId && s.acts[o.actId]) who.push(s.acts[o.actId].name);
     if (o?.last?.att) now.push(fmtL(l('{a} pessoas no último mês', '{a} people last month'), { a: o.last.att }));
   } else if (b.id === 'lv:venue') {
-    const h = liveOf(s).venue?.history.slice(-1)[0];
+    const h = builtVenue(s)?.history.slice(-1)[0];
     if (h) income = h.revenue;
   } else if (b.id === 'c:store') income = storeIncome18(s);
   else if (b.kind === 'museum') income = Math.round(rel18(s).inc / 12);

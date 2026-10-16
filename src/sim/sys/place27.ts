@@ -8,6 +8,8 @@
 //   • placeActs27 / doPlace27 — ações (com custo, motivo de bloqueio e efeito real).
 // Sem sorteio do jogo: nomes, donos e funcionários vêm de hash estável (não mexe na semente).
 
+import { tourList } from '../tours';
+import { realVenues } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { FIRST_NAMES, LAST_NAMES } from '../../data/people';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -26,13 +28,15 @@ import { FMT18, fmtsNow18, lunchPd18, pitchRadio18, radio18, type Fmt18 } from '
 import { bookRoutedTour, type DealTerms } from './route8';
 import { inTown31, playingThisWeek31 } from './where31';
 import { ventures } from './ventures9';
-import { VENUES17, buyVenue17, v17, venueOpen, venuePrice } from './venues17';
+import { VENUES17, buyVenue17, venueOpen, venuePrice } from './venues17';
 
 // ---------------------------------------------------------------- tipos
 
 export type PlaceK27 = 'venue' | 'records' | 'radio' | 'studio' | 'bar' | 'press' | 'rehearsal' | 'label' | 'office' | 'apartments' | 'hotel' | 'instruments'
   // r31 (S): o submundo da cidade — fachada de facção, delegacia (com cadeia) e o mercado negro
-  | 'facade' | 'police' | 'market';
+  | 'facade' | 'police' | 'market'
+  // r31 (LOTE): casa de quem mora na cidade (CEO, artista, família Fossati) e terreno vago (à venda ou seu) — sys/lots31
+  | 'home' | 'vacant';
 /** Os lugares básicos da música (sempre presentes na cidade, conforme a época). */
 export const MUSIC27: PlaceK27[] = ['venue', 'records', 'studio', 'radio', 'bar', 'press'];
 export const RADIO_FROM27 = 1922;
@@ -43,6 +47,7 @@ export interface Person27 {
   /** r31 (I): da equipe do lugar (índice da função: 0 = dono) e se faz bico; ausente = motivo (turnê, prisão) */ staff?: boolean; job?: number; bico?: boolean; away?: L;
   /** r31 (I): o seu personagem (presente onde você está) */ you?: boolean;
   /** r31 (S): preso(a) numa cela da delegacia */ cell?: boolean;
+  /** r31 (VIT): encontro da vitrine do mês (id do item: o clique abre o painel do item) */ vit?: string;
 }
 /** r31 (I): equipe real do lugar (sys/gente31 preenche; sem ele, nomes inventados como antes). */
 export const CREW27: { fn?: (s: GameState, k: PlaceK27, copy: number) => Person27[] | null } = {};
@@ -61,11 +66,19 @@ export interface Place27 {
   /** r31 (FOS): a casa da família Fossati (moradia da cidade comum que a família ocupa) */ fam31?: boolean;
   /** veículo de imprensa real (media17) */ outlet?: string;
   /** r31 (S): facção dona da fachada (id do crime17) */ org?: string;
+  /** r31 (LOTE): casa (quem mora: chave da pessoa, porte 0 apartamento · 1 casa · 2 mansão) ou terreno (seu ou à venda) */
+  lot31?: { k: 'home' | 'sale' | 'own'; who?: string; tier?: number };
 }
 /** r31 (FOS): a casa da família Fossati na cidade de início (sys/fossati31 preenche): ocupa um prédio de moradia. */
 export const FAMHOME27: { fn?: (s: GameState) => { name: L; what: L; owner: string; now: L; people: Person27[] } | null } = {};
 /** r31 (S): lugares do submundo na cidade (sys/under31 preenche): fachadas das facções do país, delegacia e beco. */
 export interface Under27 { k: 'facade' | 'police' | 'market'; key: string; name: L; what: L; owner: string; people: Person27[]; now: L; org?: string }
+/** r31 (LOTE): registro de lotes (sys/lots31) — dá função aos prédios sem função (casas e terrenos) e as ações deles. */
+export const LOTS27: {
+  fn?: (s: GameState, out: Place27[]) => void;
+  acts?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>) => PAct27[];
+  run?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>, id: string) => { ok: boolean; text: L };
+} = {};
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
 
 /** R31 (H): negócio da época num prédio de cidade comum (lojas com ano de abertura e fechamento — sim/r31/city31). */
@@ -115,6 +128,8 @@ export function eraWhat27(k: PlaceK27, year: number, city = ''): L {
     case 'facade': return l('Fachada', 'Front business');
     case 'police': return year < 1930 ? l('Delegacia e cadeia', 'Police station and lockup') : l('Delegacia (com cadeia)', 'Police station (with cells)');
     case 'market': return l('Mercado negro (beco)', 'Black market (alley)');
+    case 'home': return year < 1930 ? l('Moradia', 'Residence') : l('Residência', 'Residence');
+    case 'vacant': return l('Terreno vago', 'Vacant plot');
   }
 }
 
@@ -148,11 +163,12 @@ const ROLE27: Record<PlaceK27, [L, L]> = {
   office: [l('Gerente', 'Manager'), l('Secretária', 'Secretary')], apartments: [l('Síndico', 'Building manager'), l('Porteiro', 'Doorman')],
   hotel: [l('Gerente do hotel', 'Hotel manager'), l('Recepcionista', 'Receptionist')], instruments: [l('Luthier', 'Luthier'), l('Vendedor', 'Salesperson')],
   facade: [l('Gerente', 'Manager'), l('Garçom', 'Waiter')], police: [l('Delegado(a)', 'Police chief'), l('Detetive', 'Detective')], market: [l('Receptador', 'Fence'), l('Olheiro', 'Lookout')],
+  home: [l('Morador(a)', 'Resident'), l('Visita', 'Guest')], vacant: [l('Dono do terreno', 'Plot owner'), l('Corretor(a)', 'Estate agent')],
 };
 /** Tipo de prédio desenhado no mapa para cada lugar. */
 export const DRAW27: Record<PlaceK27, BKind> = {
   venue: 'venue', records: 'store', radio: 'media', studio: 'studio', bar: 'venue', press: 'publisher', rehearsal: 'rehearsal', label: 'branch',
-  office: 'office', apartments: 'home', hotel: 'office', instruments: 'store', facade: 'venue', police: 'office', market: 'store',
+  office: 'office', apartments: 'home', hotel: 'office', instruments: 'store', facade: 'venue', police: 'office', market: 'store', home: 'home', vacant: 'home',
 };
 const NBK27: Record<Nb19['k'], PlaceK27> = { rival: 'label', records: 'records', bar: 'bar', rehearsal: 'rehearsal', radio: 'radio' };
 
@@ -180,7 +196,7 @@ const membersOf = (s: GameState, a: Act, n: number, role: L, mine = false): Pers
   a.members.slice(0, n).map((pid) => ({ name: s.persons[pid]?.name ?? a.name, role, pid, actId: a.id, mine }));
 export const homeShowSoon = (s: GameState, days = 21) => {
   const mine = new Set(playerActs(s));
-  for (const t of s.tours) if (mine.has(t.actId) && (t.status === 'planned' || t.status === 'running')) {
+  for (const t of tourList(s)) if (mine.has(t.actId) && (t.status === 'planned' || t.status === 'running')) {
     const st = t.stops.find((x) => x.cityId === s.config.homeCity && x.day >= s.day && x.day - s.day <= days);
     if (st) return { t, st };
   }
@@ -250,7 +266,7 @@ function placeOfNb(s: GameState, nb: Nb19): Place27 {
 
 const FLAVOR27: PlaceK27[] = ['apartments', 'office', 'hotel', 'instruments', 'apartments', 'office'];
 /** Casas de shows REAIS da cidade (venues17) que ainda não são suas. */
-const realVenues = (s: GameState) => VENUES17.filter((d) => d.city === s.config.homeCity && venueOpen(s, d) && !v17(s).own.some((o) => o.id === d.id)).sort((a, b) => Number(a.cap > 3000) - Number(b.cap > 3000) || b.prestige - a.prestige); // casa de bairro antes do estádio
+const cityRealVenues = (s: GameState) => VENUES17.filter((d) => d.city === s.config.homeCity && venueOpen(s, d) && !realVenues(s).some((o) => o.id === d.id)).sort((a, b) => Number(a.cap > 3000) - Number(b.cap > 3000) || b.prestige - a.prestige); // casa de bairro antes do estádio
 /** Veículo de imprensa real do mercado da sede (jornal/revista), se houver. */
 const realOutlet = (s: GameState) => {
   const mk = cityById[s.config.homeCity]?.market;
@@ -264,7 +280,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   const need = required27(s).filter((k) => !have.has(k));
   // lotes de cidade comum: os mais visíveis recebem os lugares básicos que faltam; o resto vira cidade (apartamentos, escritórios…)
   const lots = [...fillers].sort((a, b) => lotVis(b) - lotVis(a) || a - b);
-  const rv = realVenues(s), out0 = realOutlet(s);
+  const rv = cityRealVenues(s), out0 = realOutlet(s);
   const used = new Set(out.map((p) => p.name.pt));
   lots.forEach((lot, i) => {
     let k: PlaceK27 = need.length ? need.shift()! : FLAVOR27[Math.floor(hash(`${s.config.seed}|fl27|${lot}`) * FLAVOR27.length)] ?? 'office';
@@ -309,6 +325,8 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
       if (!p.venue || crew[0].job === 0) p.owner = crew[0].job === 0 ? crew[0].name : p.owner;
     }
   }
+  // r31 (LOTE): prédio sem função vira casa de quem mora na cidade ou terreno vago (e o terreno comprado é seu)
+  LOTS27.fn?.(s, out);
   return out;
 }
 
@@ -357,7 +375,8 @@ export const GO27: Partial<Record<PlaceK27, Goto18>> = {
 };
 
 /** Ações do lugar (com bloqueio explicado). `actId` = artista escolhido (padrão: o primeiro do elenco). */
-export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & { fam31?: boolean }, actId?: string): PAct27[] {
+export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & Partial<Pick<Place27, 'lot' | 'lot31' | 'fam31'>>, actId?: string): PAct27[] {
+  if (p.k === 'home' || p.k === 'vacant') return LOTS27.acts?.(s, { k: p.k, id: p.id, lot: p.lot ?? +p.id.slice(3), lot31: p.lot31 }) ?? []; // r31 (LOTE)
   const mine = activeMine(s);
   const a = (actId ? mine.find((x) => x.id === actId) : undefined) ?? mine[0];
   const noAct: L | undefined = a ? undefined : l('Você não tem artista ativo no elenco.', 'You have no active act on the roster.');
@@ -370,7 +389,7 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
       const fmt = p.k === 'bar' ? 'small' : 'standard';
       out.push({ id: 'show', act: true, label: p.k === 'bar' ? l('Marcar show no bar', 'Book a bar gig') : l('Marcar show aqui', 'Book a show here'),
         desc: l('Uma data na cidade daqui a 2 semanas (bilheteria, cachê e fãs pelo sistema de turnês).', 'One date in town two weeks from now (door, fee and fans via the touring system).'),
-        dis: noAct ?? (s.tours.some((t) => t.actId === a!.id && (t.status === 'planned' || t.status === 'running')) ? l('Esse artista já tem turnê marcada.', 'That act already has a tour booked.') : undefined) });
+        dis: noAct ?? (tourList(s).some((t) => t.actId === a!.id && (t.status === 'planned' || t.status === 'running')) ? l('Esse artista já tem turnê marcada.', 'That act already has a tour booked.') : undefined) });
       if (p.k === 'bar' && playerPerson(s) && s.config.role === 'artist') out.push({ id: 'play', label: l('Tocar hoje à noite (você)', 'Play tonight (you)'), desc: l('Microfone aberto: cachê, palco e um pouco de fama.', 'Open mic: a fee, stage time and a little fame.') });
       if (p.venue && p.sale !== undefined) out.push({ id: 'buyv', label: l('Comprar a casa', 'Buy the venue'), desc: l('A casa vira sua (receita de bilheteria e bar; manutenção).', 'The venue becomes yours (door and bar income; upkeep).'), cost: p.sale, dis: cash(p.sale) });
       void fmt;
@@ -418,7 +437,13 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
 }
 
 /** Executa a ação do lugar. Devolve o texto do resultado (ok = deu certo). */
-export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src' | 'name'>, id: string, actId?: string): { ok: boolean; text: L } {
+export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src' | 'name'> & Partial<Pick<Place27, 'lot' | 'lot31'>>, id: string, actId?: string): { ok: boolean; text: L } {
+  if ((p.k === 'home' || p.k === 'vacant') && LOTS27.run) { // r31 (LOTE)
+    const a0 = placeActs27(s, p, actId).find((x) => x.id === id);
+    if (!a0) return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
+    if (a0.dis) return { ok: false, text: a0.dis };
+    return LOTS27.run(s, { k: p.k, id: p.id, lot: p.lot ?? +p.id.slice(3), lot31: p.lot31 }, id);
+  }
   const act = placeActs27(s, p, actId).find((x) => x.id === id);
   if (!act) return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
   if (act.dis) return { ok: false, text: act.dis };

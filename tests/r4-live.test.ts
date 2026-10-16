@@ -1,6 +1,7 @@
 // Rodada 4 — sistema "live": notas do show, setlist, show ao vivo, ingressos, festival próprio,
 // casa de shows, residência, megaeventos, cenários, desafio da semana, pacote de universo e conquistas.
 
+import { builtVenue } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig, simulate } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
@@ -169,7 +170,7 @@ describe('casa de shows, residência e megaevento', () => {
     const before = s.player.totals.live ?? 0;
     advanceMonth(s);
     expect((s.player.totals.live ?? 0)).toBeGreaterThan(before);
-    expect(liveOf(s).venue!.history.length).toBe(1);
+    expect(builtVenue(s)!.history.length).toBe(1);
     checkAchievements(s);
     expect(liveOf(s).ach.venue).toBeDefined();
     invariant(s);

@@ -46,7 +46,8 @@ import { withTxn } from '../r31/txn';
 import { dealPremium31, registerStakes31, type Basis31 } from '../r31/value31';
 import { ownerOf } from './people/owner';
 import { radio18, radioWeight18 } from './radio18';
-import { venueBlock17, VENUES17, v17, venueOpen } from './venues17';
+import { venueBlock17, VENUES17, venueOpen } from './venues17';
+import { realVenues } from './venuestore27';
 import type { Holder } from './ventures9';
 
 // ---------------------------------------------------------------- interruptor e tipos
@@ -193,7 +194,7 @@ export function targets31(s: GameState, withMine = false): Target31[] {
     if (f.start > s.year || (f.end && f.end < s.year) || !cityById[f.city]) continue;
     push({ id: `fe:${slug(f.name)}`, kind: 'fest', name: f.name, city: f.city, prestige: f.prestige, cap: f.capacity ?? Math.round(8000 + f.prestige * f.prestige * 6), since: f.start, month: f.month ?? h31(s, f.name) % 12 });
   }
-  const held17 = new Set(v17(s).own.map((o) => o.id));
+  const held17 = new Set(realVenues(s).map((o) => o.id));
   for (const d of VENUES17) {
     if (d.buyable === false || held17.has(d.id) || !venueOpen(s, d) || !cityById[d.city]) continue;
     push({ id: `ve:${d.id}`, kind: 'venue', name: d.name, city: d.city, prestige: d.prestige, cap: d.cap, since: d.from, month: 0 });

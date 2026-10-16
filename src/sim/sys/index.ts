@@ -62,7 +62,6 @@ import './ventures9';
 import './tour12';
 import './studio12';
 // Rodada 11: ofício de empresário (metas, turnês, propostas, imagem, conflitos, rivais) e scouting com névoa.
-import './manager11';
 import './scout11';
 // Rodada 9: mundo vivo — crônica (Lendas), alma das pessoas, relíquias, boatos e jornal, história prévia.
 import './pace9';
@@ -373,6 +372,9 @@ import './fac31'; // R31 (U): facções por país — presença e expansão anua
 import './broker31'; // R31 (U): intermediário das facções de fora
 import './auction31'; // R31 (T): casa de leilões
 import './travel31'; // R31 (T): aeroporto, transporte, cruzeiros e holograma
+import './sealed31'; // R31 (T2): proposta fechada de catálogos e masters (envelope)
+import './customs31'; // R31 (T2): alfândega real (declarar, imposto, liberar, apreensão)
+import './bauc31'; // R31 (T2): leilão silencioso do mercado negro
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também os artistas do mundo (NPC decide; feed, ficha, card, selo)
@@ -397,5 +399,7 @@ import '../r31/learn31'; // R31 onda 4 (R): amostras duráveis dos lançamentos 
 import './extras31'; // R31 onda 4 (N): extras — conquistas novas, ovos do Edison, bandas de ficção no mundo, cultura pop/memes/bolhas, Arara, filme, praça Fossati
 import './gente31'; // R31 onda 4 (I): gente de verdade nos lugares — donos, equipe, músicos fazendo bico (vaga muda de mãos na virada do mês)
 import './under31'; // R31 onda 4 (S): submundo no Nosso mundo — fachadas, sala dos fundos, mural, delegacia, mercado negro, baile
+import '../r31/vitrine31'; // R31 onda 4 (VIT): vitrine do mês — motor único do conteúdo mensal dos lugares (gera o estoque da loja, do beco e dos leilões)
+import './lots31'; // R31 onda 4 (LOTE): registro de lotes da cidade — prédio sem função vira casa (CEO, artista, família Fossati) ou terreno vago à venda
 import './amor31'; // R31 onda 4 (AMOR): chamar qualquer pessoa para sair, ser amante, romance com o mercado (interruptores amor31.*)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

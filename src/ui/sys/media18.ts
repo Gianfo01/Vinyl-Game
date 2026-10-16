@@ -125,6 +125,7 @@ function radioTab(s: GameState): HTMLElement {
     section(t(l('Estações e diretores de programação', 'Stations and program directors')),
       table([t(l('Estação', 'Station')), t(l('Formato', 'Format')), t(l('Diretor', 'PD')), t(l('Relação', 'Relationship')), t(l('Consultor', 'Consultant')), t(l('Chance agora', 'Chance now')), ''], sts.map((x) => {
         const c = x.cons ? CONS18.find((k) => k.id === x.cons) : undefined;
+        if (x.own) return [h('b', null, x.call), t(FMT18[x.fmt].name), x.pd, t(l('sua', 'yours')), '—', t(l('você programa', 'you program it')), t(l('Sua rádio: toca o último disco dos artistas que você escala na programação.', 'Your station: plays the latest record of the acts you schedule.'))];
         return [x.call, t(FMT18[x.fmt].name), `${x.pd}${x.adv > 0.6 ? ` (${t(l('aventureiro', 'adventurous'))})` : ''}`, String(x.rel), c ? h('span', { title: t(c.desc) }, c.name) : '—',
           rel && x.fmt === F.fmt ? why18(s, 'radio.add', { rel: rel.id, st: x.id, how: F.how, edit: F.edit ? 1 : 0 }, pc(addOdds18(s, rel, x, F.how, F.edit).p)) : '—',
           btn(t(l('Jantar', 'Dinner')), () => say(lunchPd18(s, x.id)), { disabled: (x.lunch ?? -99) > s.week - 8 })];

@@ -16,7 +16,7 @@ import { drawLandmark19 } from '../pixel/landmarks19px';
 import { eraOf, paletteOf, type EraId, type Palette } from '../pixel/palette';
 import { C, INK, Px, dith, inked, lv, mix, noise, tint, withAlpha, type Col } from '../pixel/px';
 import { amp31, drumKit31 } from '../pixel/stage31px';
-import { drawText, fitText, textWidth } from '../pixel/font';
+import { abbrText, drawText, fitText, textWidth } from '../pixel/font';
 import type { HqModel25, Room25, Sprite25 } from './hq25model';
 
 // ---------------------------------------------------------------- tipos e tabelas
@@ -658,7 +658,7 @@ function corkBoard(g: Ctx, x: number, y: number, w: number, h: number): void {
 }
 function sign(g: Ctx, x: number, y: number, text: string, maxW: number, lit = true): void {
   const { p, pl } = g;
-  const t = fitText(text, maxW - 6);
+  const t = abbrText(text, maxW - 6) || fitText(text, maxW - 6); // R31 (POL): abrevia sem cortar palavra
   const w = textWidth(t) + 6;
   inked(p, (q) => blk(q, x - (w >> 1), y, w, 9, C('#2a2026'))); // R29: placa com contorno INK
   drawText(p, t, x - (w >> 1) + 3, y + 2, lit ? (pl.year < 1960 ? C('#ffe2a0') : pl.year < 1990 ? C('#ff9a4a') : C('#7af0ff')) : C('#c8c0b0'));
