@@ -371,6 +371,8 @@ import './relics29'; // R29 (relíquias): versões procedurais dos arquétipos d
 import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
 import './fac31'; // R31 (U): facções por país — presença e expansão anual
 import './broker31'; // R31 (U): intermediário das facções de fora
+import './auction31'; // R31 (T): casa de leilões
+import './travel31'; // R31 (T): aeroporto, transporte, cruzeiros e holograma
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também os artistas do mundo (NPC decide; feed, ficha, card, selo)
