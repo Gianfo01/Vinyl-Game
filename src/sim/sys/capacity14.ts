@@ -121,7 +121,8 @@ export interface RoleLoad { role: string; name: L; staff: StaffMember[]; demand:
 
 /** Carga por função. Empresário e Administração dividem as carreiras delegadas com o escritório (você + sede). */
 export function roleLoads(s: GameState): RoleLoad[] {
-  const c = cap14(s);
+  // W2-REV: só leitura (a tela de delegação chamava `cap14`, que cria o estado e zera os contadores do mês)
+  const strain = (s.x4 as unknown as { cap14?: { strain?: Record<string, number> } }).cap14?.strain ?? {};
   const out: RoleLoad[] = [];
   // carreiras delegadas: empresários primeiro, depois administração, depois o escritório (você + sede);
   // o que sobra pesa em quem estiver por último na fila (sobrecarga)
@@ -137,7 +138,7 @@ export function roleLoads(s: GameState): RoleLoad[] {
     if (!w || !staff.length) continue;
     const supply = staff.length * w.per;
     const demand = r.id in careerDemand ? careerDemand[r.id] : w.demand(s);
-    out.push({ role: r.id, name: r.name, staff, demand, supply, load: Math.round((demand / Math.max(1, supply)) * 100), unit: w.unit, strain: c.strain[r.id] ?? 0 });
+    out.push({ role: r.id, name: r.name, staff, demand, supply, load: Math.round((demand / Math.max(1, supply)) * 100), unit: w.unit, strain: strain[r.id] ?? 0 });
   }
   return out;
 }

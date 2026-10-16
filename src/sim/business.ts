@@ -14,6 +14,7 @@ import { unclearedSamples } from './studio';
 import { precAdd18, precMul18 } from './sys/rights18';
 import { allReleases17 } from './relidx17';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { joinDelegated31 } from './deleg31';
 
 // ---------- Avaliações ----------
 
@@ -66,7 +67,7 @@ export function transferLabel(s: GameState, lb: Label, v: { value: number; liabi
     c.party = 'player';
     a.owner = 'player';
     a.trust = clamp(a.trust - 8, 0, 100); // troca de dono gera desconfiança
-    s.delegated[a.id] = true;
+    s.delegated[a.id] = joinDelegated31(s, a);
   }
   lb.roster = [];
   lb.active = false;

@@ -8,6 +8,7 @@ import { rightsOf } from './rights';
 import type { Act, Contract, GameState } from './types';
 import { fmtL, money, notify, playerActs, post, remember } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { joinDelegated31 } from './deleg31';
 
 export function contractOf(s: GameState, act: Act): Contract | undefined {
   return act.contractId ? s.contracts[act.contractId] : undefined;
@@ -90,7 +91,7 @@ export function buyoutContract(s: GameState, r: Rng, actId: string): L | null {
   k.party = 'player';
   act.owner = 'player';
   act.trust = clamp(act.trust + 5, 0, 100);
-  s.delegated[actId] = true;
+  s.delegated[actId] = joinDelegated31(s, act);
   remember(s, 'buyout', fmtL(l('{c} compra o contrato de {a} de {b}.', '{c} buys {a}\'s contract from {b}.'), { c: s.config.companyName, a: act.name, b: lb?.name ?? '' }), { actId, important: true });
   return null;
 }

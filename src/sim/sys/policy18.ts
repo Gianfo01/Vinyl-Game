@@ -14,9 +14,9 @@ import { pushInbox18, registerInboxKind, registerAdvisorTip } from '../inbox18';
 import { registerExplain } from '../explain18';
 import { stressOf } from '../stress17';
 import type { Act, GameState, StaffMember } from '../types';
-import { ASK31, allowOnce31, askFor31, d31, dirOf31, exc31, excs31, goalOf31, logAuto31, modeOf31, onceOk31, rule31, setDir31, staffFor31, tidy31, type Goal31, type Resp31 } from '../deleg31';
+import { ASK31, allowOnce31, usd31, askFor31, d31, dirOf31, exc31, excs31, goalOf31, logAuto31, modeOf31, onceOk31, rule31, setDir31, staffFor31, tidy31, type Goal31, type Resp31 } from '../deleg31';
 import { fmtL, money, playerActs } from '../util';
-import { D16_GATES, D16_PAY, respOf16, type Order16 } from './deleg16';
+import { D16_GATES, D16_PAY, KINDS, respOf16, type Order16, type OrderKind } from './deleg16';
 import { renewChance, renewWithReading } from './explain12';
 import { c12 } from './tour12';
 
@@ -64,6 +64,8 @@ export function tired18(s: GameState, act: Act): { v: number; who: string } {
   return { v, who };
 }
 
+/** Nome da ordem/gasto no texto (nada de chave interna). */
+const kindName18 = (k: OrderKind | 'anr'): L => (k === 'anr' ? l('proposta do A&R', 'A&R offer') : KINDS[k]?.name ?? l('ordem', 'order'));
 /** Portão por ordem (deleg16): objetivo do artista e descanso obrigatório. */
 export function gate18(s: GameState, o: Pick<Order16, 'kind' | 'actId'>): L | null {
   const act = o.actId ? s.acts[o.actId] : undefined;
@@ -71,7 +73,7 @@ export function gate18(s: GameState, o: Pick<Order16, 'kind' | 'actId'>): L | nu
   const g = goalOf18(s, o.actId);
   if (!act || g === 'free' || onceOk(s, `${o.actId}`)) return null;
   const live = o.kind === 'tour' || o.kind === 'fees';
-  if (g === 'rest' && (live || o.kind === 'promo' || o.kind === 'radio')) { exc(s, 'goal', fmtL(l('{a} está em "Descansar": ordem de {k} parada.', '{a} is set to "Rest": {k} order held.'), { a: act.name, k: o.kind }), act.id, undefined, respOf16(o.kind)); return l('Política: o artista está em descanso.', 'Policy: the act is resting.'); }
+  if (g === 'rest' && (live || o.kind === 'promo' || o.kind === 'radio')) { exc(s, 'goal', fmtL(l('{a} está em "Descansar": ordem de {k} parada.', '{a} is set to "Rest": {k} order held.'), { a: act.name, k: kindName18(o.kind) }), act.id, undefined, respOf16(o.kind)); return l('Política: o artista está em descanso.', 'Policy: the act is resting.'); }
   if (g === 'catalog' && o.kind === 'tour') { exc(s, 'goal', fmtL(l('{a} está em "Cuidar do catálogo": turnê delegada não sai.', '{a} is set to "Nurture the catalog": no delegated tour.'), { a: act.name }), act.id, undefined, 'tour'); return l('Política: catálogo, sem turnê.', 'Policy: catalog, no tour.'); }
   if (o.kind === 'tour' && rest > 0) {
     const t = tired18(s, act);
@@ -83,19 +85,20 @@ export function gate18(s: GameState, o: Pick<Order16, 'kind' | 'actId'>): L | nu
   }
   return null;
 }
-/** Portão de gasto (deleg16): teto por ordem e reserva mínima. */
-export function payGate18(s: GameState, o: Pick<Order16, 'kind' | 'actId'>, amt: number): L | null {
+/** Portão de gasto (deleg16 e A&R delegado): teto por gasto e reserva mínima. `cash` = caixa considerado (o A&R usa o
+ *  caixa livre, já descontados os adiantamentos reservados); `quiet` não registra a exceção. */
+export function payGate18(s: GameState, o: { kind: OrderKind | 'anr'; actId?: string }, amt: number, x: { cash?: number; quiet?: boolean } = {}): L | null {
   const g = goalOf18(s, o.actId);
   if (g === 'free' || onceOk(s, `${o.actId ?? ''}`) || onceOk(s, 'all')) return null;
   const cap = rule31(s, 'finance', 'cap') * (g === 'profit' && (o.kind === 'promo' || o.kind === 'radio') ? 0.5 : 1);
   const real = toReal(amt, s.year);
-  if (cap > 0 && real > cap) { exc(s, 'spend', fmtL(l('Gasto de {v} ({k}) acima do teto de {c}: precisa da sua autorização.', 'Spend of {v} ({k}) above the {c} cap: needs your approval.'), { v: `$${Math.round(real)}`, k: o.kind, c: `$${Math.round(cap)}` }), o.actId); return fmtL(l('Política: acima do teto de {c}.', 'Policy: above the {c} cap.'), { c: `$${Math.round(cap)}` }); }
+  if (cap > 0 && real > cap) { if (!x.quiet) exc(s, 'spend', fmtL(l('Gasto de {v} ({k}) acima do teto de {c}: precisa da sua autorização.', 'Spend of {v} ({k}) above the {c} cap: needs your approval.'), { v: usd31(real), k: kindName18(o.kind), c: usd31(cap) }), o.actId); return fmtL(l('Política: acima do teto de {c}.', 'Policy: above the {c} cap.'), { c: usd31(cap) }); }
   const res = reserveCents18(s);
-  if (res > 0 && s.player.cash - amt < res) { exc(s, 'reserve', fmtL(l('Reserva mínima ({m} meses de custo fixo) protegida: {k} não gastou.', 'Minimum reserve ({m} months of fixed costs) protected: {k} did not spend.'), { m: rule31(s, 'finance', 'reserve'), k: o.kind }), o.actId); return l('Política: reserva mínima de caixa.', 'Policy: minimum cash reserve.'); }
+  if (res > 0 && (x.cash ?? s.player.cash) - amt < res) { if (!x.quiet) exc(s, 'reserve', fmtL(l('Reserva mínima ({m} meses de custo fixo) protegida: {k} não gastou.', 'Minimum reserve ({m} months of fixed costs) protected: {k} did not spend.'), { m: rule31(s, 'finance', 'reserve'), k: kindName18(o.kind) }), o.actId); return l('Política: reserva mínima de caixa.', 'Policy: minimum cash reserve.'); }
   return null;
 }
 D16_GATES.push((s, o) => gate18(s, o));
-D16_PAY.push((s, o, amt) => payGate18(s, o, amt));
+D16_PAY.push((s, o, amt, quiet) => payGate18(s, o, amt, { quiet }));
 
 /** Renovação delegada: contratos que vencem em até 9 semanas, dentro das diretrizes (responsabilidade "Renovações"). */
 function renewals(s: GameState): void {
@@ -115,16 +118,16 @@ function renewals(s: GameState): void {
     const bonus = money(s, Math.round(expectedAdvance(s, act) * (D.frac ?? 0.3)));
     if (!st) { exc(s, 'renew', fmtL(l('O contrato de {a} vence em {w} semanas e ninguém da equipe negocia renovações (jurídico, empresário ou A&R).', '{a}\'s contract ends in {w} weeks and no one on staff negotiates renewals (legal, manager or A&R).'), { a: act.name, w: left }), id); continue; }
     if (act.trust < minTrust) { exc(s, 'renew', fmtL(l('{a} vence em {w} semanas, mas a confiança ({t}) está abaixo do mínimo da política ({m}): renovar fica com você.', '{a} ends in {w} weeks, but trust ({t}) is below the policy minimum ({m}): renewing is up to you.'), { a: act.name, w: left, t: Math.round(act.trust), m: minTrust }), id, st); continue; }
-    if (s.player.cash - bonus < reserveCents18(s)) { exc(s, 'renew', fmtL(l('Renovar {a} custaria {b} e furaria a reserva mínima.', 'Renewing {a} would cost {b} and break the minimum reserve.'), { a: act.name, b: `$${Math.round(toReal(bonus, s.year))}` }), id, st); continue; }
+    if (s.player.cash - bonus < reserveCents18(s)) { exc(s, 'renew', fmtL(l('Renovar {a} custaria {b} e furaria a reserva mínima.', 'Renewing {a} would cost {b} and break the minimum reserve.'), { a: act.name, b: usd31(toReal(bonus, s.year)) }), id, st); continue; }
     if (m === 'partial' && (D.ask ?? 0) > 0 && toReal(bonus, s.year) > (D.ask ?? 0)) {
       askFor31(s, { r: 'renew', who: st.id, until: s.week + Math.max(1, left - 1), amt: bonus, act: id, k: 'renew',
-        t: fmtL(l('{n} quer renovar {a} por {m} meses com bônus de {b} (acima do seu limite de {x}).', '{n} wants to renew {a} for {m} months with a {b} bonus (above your {x} limit).'), { n: st.name, a: act.name, m: months, b: `$${Math.round(toReal(bonus, s.year))}`, x: `$${Math.round(D.ask ?? 0)}` }),
+        t: fmtL(l('{n} quer renovar {a} por {m} meses com bônus de {b} (acima do seu limite de {x}).', '{n} wants to renew {a} for {m} months with a {b} bonus (above your {x} limit).'), { n: st.name, a: act.name, m: months, b: usd31(toReal(bonus, s.year)), x: usd31(D.ask ?? 0) }),
         data: { months, bonus } });
       continue;
     }
     const p = renewChance(s, act, bonus);
     if (renewWithReading(s, id, months, bonus)) {
-      const t = fmtL(l('{n} renovou o contrato de {a} por {m} meses dentro da política (bônus {b}, chance {p}%).', '{n} renewed {a}\'s deal for {m} months within policy (bonus {b}, {p}% chance).'), { n: st.name, a: act.name, m: months, b: `$${Math.round(toReal(bonus, s.year))}`, p: Math.round(p * 100) });
+      const t = fmtL(l('{n} renovou o contrato de {a} por {m} meses dentro da política (bônus {b}, chance {p}%).', '{n} renewed {a}\'s deal for {m} months within policy (bonus {b}, {p}% chance).'), { n: st.name, a: act.name, m: months, b: usd31(toReal(bonus, s.year)), p: Math.round(p * 100) });
       logAuto31(s, { r: 'renew', who: st.id, t, tone: 'good', act: id, amt: -bonus, why: fmtL(l('vence em {w} semanas; confiança {c} (mínimo {m})', 'ends in {w} weeks; trust {c} (minimum {m})'), { w: left, c: Math.round(act.trust), m: minTrust }) });
       emitFact(s, { kind: 'deal', actors: [id, 'player'], severity: 15, visibility: 'public', tags: ['good'], text: t, src: 'policy18' });
     } else exc(s, 'renew', fmtL(l('{a} recusou a renovação nas condições da política ({p}% de chance). Ofereça mais você mesmo ou deixe ir.', '{a} declined renewal on policy terms ({p}% chance). Offer more yourself or let go.'), { a: act.name, p: Math.round(p * 100) }), id, st);

@@ -166,7 +166,7 @@ function callRow(s: GameState, c: DeskCall31, close: () => void): HTMLElement {
   }
   if (c.kind === 'offer') {
     return h('li', { class: 'sc31-row' }, head, h('div', { class: 'row wrap' },
-      h('button', { type: 'button', class: 'btn small primary', onclick: () => { DESK_ACTS31.acceptCounter(s, c.ref); done(l('Contraproposta aceita.', 'Counter-offer accepted.'), l('ok', 'ok')); } }, t(l('Aceitar contraproposta', 'Accept counter-offer'))),
+      h('button', { type: 'button', class: 'btn small primary', onclick: () => { const why = DESK_ACTS31.acceptCounter(s, c.ref); if (why) { toast(t(why), 'bad'); rerender(); return; } done(l('Contraproposta aceita.', 'Counter-offer accepted.'), l('ok', 'ok')); } }, t(l('Aceitar contraproposta', 'Accept counter-offer'))),
       h('button', { type: 'button', class: 'btn small ghost', onclick: () => { DESK_ACTS31.withdraw(s, c.ref); done(l('Oferta retirada.', 'Offer withdrawn.')); } }, t(l('Retirar oferta', 'Withdraw offer'))),
       c.actId ? quickBtn31({ kind: 'act', id: c.actId }, s.acts[c.actId]?.name ?? '') : null));
   }
