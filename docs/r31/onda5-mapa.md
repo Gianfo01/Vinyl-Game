@@ -81,14 +81,13 @@ existe linha do tempo nem explicação das épocas na tela (decisão do dono).
 
 ### Mecânicas da correspondência por época (propostas)
 
-Cada meio tem quatro atributos que guiam as regras: **custo**, **velocidade**, **privacidade** e **alcance**.
+**Regra do dono (2026-10-16):** a caixa de entrada é a mesma em qualquer época: tudo chega na hora, nada se perde, nada
+atrasa, mesmos filtros, respostas e teclas. A época muda só a aparência (mocks `onda5-mock-caixa-85/00/25.png`). As ideias
+abaixo são mecânicas à parte, que acontecem fora da caixa (eventos, objetos, escolhas), e nunca mudam o funcionamento dela.
+Atributos que guiam essas mecânicas: **custo**, **privacidade** e **alcance**.
 
 **Cartas (1889–1919, e depois como meio "pessoal")**
-- **Atraso postal:** uma carta leva dias ou semanas conforme a distância (outro continente vai de navio), e a resposta
-  também demora. Os prazos dos pedidos são reais. Mensageiro pago para urgências.
-- **Selo e franquia custam dinheiro;** correio internacional é mais caro.
-- **Carta extraviada** (chance pequena, maior em guerra); **censura em guerra** (1914–18, 1939–45): carta aberta ou
-  riscada, e assunto sensível pode não chegar.
+- **Censura em guerra** (1914–18, 1939–45) como notícia e evento: carta de artista estrangeiro chega riscada (só texto).
 - **Carta de próprio punho** para artista, crítico ou dono de rádio: sobe a relação mais que um recado. Sai uma por mês,
   porque gasta energia.
 - **Sacos de cartas de fãs** medem a fama; responder fãs dá lealdade.
@@ -96,7 +95,6 @@ Cada meio tem quatro atributos que guiam as regras: **custo**, **velocidade**, *
 - **Carta guardada vira prova:** chantagem e trunfo (holds), falsificação no submundo, relíquia ou memórias no futuro.
 
 **Telegrama, telefone fixo e telex (1920–1969)**
-- **Telegrama:** pago por palavra, chega no mesmo dia, resposta curta.
 - **Telefone de mesa:**
   - fechar negócio na hora (negociação mais rápida, sem tempo para pensar);
   - interurbano caro;
@@ -107,7 +105,6 @@ Cada meio tem quatro atributos que guiam as regras: **custo**, **velocidade**, *
 - **Lista telefônica** = o fichário ganha telefones.
 
 **Fax, secretária eletrônica, bip e "tijolão" (1970–1989)**
-- **Secretária eletrônica:** recados que dá para ignorar; fita cheia perde recados.
 - **Fax:**
   - contrato assinado à distância, para fechar acordo em outro país sem viajar;
   - fax enviado ao número errado vaza documento para a imprensa.
@@ -125,17 +122,15 @@ Cada meio tem quatro atributos que guiam as regras: **custo**, **velocidade**, *
 - **Vírus e invasão** (2000+): dados roubados.
 
 **Celular e apps (2010–2040)**
-- **Mensagem instantânea:** esperam resposta rápida; "visualizou e não respondeu" derruba a opinião.
 - **Grupo da banda no app:** o clima da banda fica visível; print vazado vira escândalo.
 - **Redes sociais no bolso:** posts do artista, viral, cancelamento, DMs de fãs, números de streaming em tempo real.
 - **Videochamada:** reunião à distância (sem viajar, mas com menos efeito que ao vivo).
 - **Golpes:** phishing, clonagem e deepfake de voz (2025+).
 - **Assistente de IA (2030+)** tria e responde o rotineiro (liga com a delegação `deleg31`).
-- **"Não perturbe":** menos estresse e mais energia, mas você perde os urgentes.
 
 **Transversais**
-- A chegada de cada meio novo é um evento: o primeiro telefone da sede, o primeiro fax, o primeiro e-mail. Quem adota
-  cedo ganha velocidade; quem demora perde prazos.
+- A chegada de cada meio novo é um evento (o primeiro telefone da sede, o primeiro fax, o primeiro e-mail) e troca a
+  aparência da caixa; não muda prazos.
 - Os meios antigos não somem de vez: carta de próprio punho continua valendo mais em 2030.
 
 ## Botões de viagem (lugares principais)

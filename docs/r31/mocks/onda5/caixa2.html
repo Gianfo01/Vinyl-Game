@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Press+Start+2P&family=Special+Elite&family=VT323&display=swap');
+:root{--bg:#0f1a26;--line:#2b4260;--ink:#e9e2d0;--mute:#9aa8b8;--gold:#f0c060;--pink:#e05a8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
+kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
+.hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;gap:18px;padding:0 18px;background:#0b141e;border-bottom:3px solid var(--pink);z-index:3}
+.hud .logo{font-family:'Press Start 2P';font-size:12px;color:var(--gold)}
+.hud .chip{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:18px}.hud .chip b{color:var(--gold)}
+.hud .sp{flex:1}.hud .k{font-size:15px;color:var(--mute)}
+.adv{background:var(--gold);color:#1a1214;font-weight:700;font-size:18px;padding:9px 16px;border-radius:6px}
+.bgsede{position:absolute;left:100px;top:58px;width:1240px;height:780px;image-rendering:pixelated;filter:brightness(.28)}
+/* barra de baixo: viagem + bolso */
+.bottom{position:absolute;left:0;right:0;bottom:0;height:64px;background:#0b141e;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:3}
+.travel{display:flex;gap:6px;padding-right:14px;margin-right:6px;border-right:2px solid var(--line)}
+.tb{position:relative;width:96px;height:48px;background:#1c3048;border:2px solid #3f5f84;border-bottom-width:4px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;font-weight:700;gap:2px}
+.tb i{font-style:normal;font-family:'Press Start 2P';font-size:7px;color:var(--mute)}
+.tb.on{background:#3a3014;border-color:var(--gold);color:var(--gold)}
+.tb .bang{position:absolute;right:-6px;top:-8px;background:#e04848;color:#fff;font-family:'Press Start 2P';font-size:8px;padding:3px 5px;border-radius:3px}
+.tb .ico{width:22px;height:14px;image-rendering:pixelated}
+.lbl{font-family:'Press Start 2P';font-size:8px;color:var(--mute);margin-right:4px}
+.slot{border:1px solid var(--line);background:#16263a;border-radius:6px;padding:6px 9px;font-size:14px;display:flex;gap:7px;align-items:center}
+.slot.empty{border-style:dashed;color:#5d7088}
+/* moldura comum da caixa (o conteúdo e o layout são iguais em toda época) */
+.frame{position:absolute;left:60px;top:76px;width:1320px;height:744px}
+.title{position:absolute;left:22px;top:14px;font-family:'Press Start 2P';font-size:15px}
+.title span{font-size:9px;margin-left:10px;opacity:.85}
+.close{position:absolute;right:18px;top:12px;font-size:15px}
+.row1{position:absolute;left:22px;top:46px;right:22px;display:flex;gap:8px;align-items:center}
+.btn{border-radius:4px;padding:6px 12px;font-size:15px;font-weight:600}
+.btn i{font-style:normal;border-radius:3px;padding:0 5px;margin-left:6px;font-size:13px}
+.search{flex:1;border-radius:4px;padding:6px 10px;font-size:15px}
+.row2{position:absolute;left:22px;top:88px;display:flex;gap:7px;align-items:center}
+.flt{display:flex;align-items:center;gap:6px;border-radius:14px;padding:3px 10px 3px 4px;font-size:14px}
+.flt b{width:15px;height:15px;border-radius:50%;display:inline-block;border:2px solid #0006}
+.list{position:absolute;left:22px;top:128px;width:520px;display:flex;flex-direction:column;gap:9px}
+.item{position:relative;height:76px;border-radius:3px;padding:8px 12px 8px 64px}
+.item .mark{position:absolute;left:14px;top:18px;width:36px;height:36px;border-radius:50%;border:3px solid #0005}
+.item .from{font-weight:700;font-size:16px}
+.item .subj{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:390px}
+.item .date{position:absolute;right:12px;top:8px;font-size:13px;opacity:.75}
+.item .tag{position:absolute;right:10px;bottom:7px;font-family:'Press Start 2P';font-size:7px;padding:3px 4px;border:2px solid}
+.item .star{position:absolute;right:12px;top:28px;font-size:16px}
+.item.read{opacity:.7}
+.more{font-size:14px;text-align:center}
+.msg{position:absolute;left:575px;top:122px;width:500px;height:590px;padding:24px 28px}
+.msg .head{display:flex;justify-content:space-between;font-size:14px;padding-bottom:8px;margin-bottom:12px;border-bottom:1px dashed #0004}
+.msg h3{font-size:19px;margin:0 0 10px}
+.msg p{font-size:15px;line-height:1.45;margin:0 0 10px}
+.choices{margin-top:12px;display:flex;flex-direction:column;gap:9px}
+.choice{display:flex;align-items:center;gap:10px;font-family:'Barlow Semi Condensed';font-size:16px;border-radius:4px;padding:7px 10px}
+.choice .rs{font-family:'Press Start 2P';font-size:8px;color:#fff;padding:5px 6px;border-radius:3px;white-space:nowrap}
+.choice small{display:block;font-size:13px;opacity:.75}
+.notes{position:absolute;left:1100px;top:132px;width:200px;height:300px;padding:10px;font-size:13.5px}
+.notes h4{font-family:'Press Start 2P';font-size:8px;margin:0 0 8px}
+.notes div{margin-bottom:8px;line-height:1.25}
+.keys{position:absolute;left:1100px;top:452px;width:200px;border-radius:4px;padding:10px;font-size:13.5px;line-height:1.9}
+/* === temas por época (só aparência) === */
+/* 1985: mesa de escritório, fax e papel térmico */
+.e85 .frame{background:repeating-linear-gradient(90deg,#8c8478 0 2px,#958d80 2px 40px);border:4px solid #3a3630;border-radius:8px;box-shadow:0 14px 40px #000c}
+.e85 .title{color:#fff;text-shadow:2px 2px 0 #3a3630}.e85 .close{color:#fff}
+.e85 .btn{background:#d8d2c4;border:2px solid #3a3630;color:#2a2620}.e85 .btn.on{background:#f0c060}.e85 .btn i{background:#c0392b;color:#fff}
+.e85 .search{background:#f4f1e8;border:2px solid #3a3630;color:#7a7468}
+.e85 .flt{background:#f4f1e8;border:2px solid #3a3630;color:#2a2620}
+.e85 .item{background:#f7f6ee;border:1px solid #6a665c;color:#22201c;box-shadow:3px 3px 0 #4a463c;background-image:repeating-linear-gradient(#f7f6ee 0 5px,#eeede4 5px 6px)}
+.e85 .item:before{content:'';position:absolute;left:0;right:0;top:-1px;height:5px;background:radial-gradient(circle at 4px -1px,transparent 4px,#f7f6ee 4px) 0 0/8px 6px}
+.e85 .item.sel{outline:3px solid #f0c060;transform:translateX(10px)}
+.e85 .item .tag{color:#c0392b;border-color:#c0392b}
+.e85 .more{color:#fff}
+.e85 .msg{background:#fbfaf3;border:1px solid #6a665c;box-shadow:6px 8px 0 #0004;font-family:'VT323',monospace;color:#1c1c1c;background-image:repeating-linear-gradient(#fbfaf3 0 23px,#eceae0 23px 24px)}
+.e85 .msg h3{font-family:'VT323';font-size:26px}.e85 .msg p{font-family:'VT323';font-size:20px;line-height:1.15}
+.e85 .choice{background:#fff;border:2px solid #3a3630;color:#1c1c1c}
+.e85 .notes{background:#fff59a;border:2px solid #9a8a30;transform:rotate(-1.5deg);color:#3a3010}
+.e85 .keys{background:#3a3630dd;color:#f4f1e8}
+/* 2000: monitor de tubo bege, programa de e-mail */
+.e00 .frame{background:#d6d0bc;border:4px solid #8f8a76;border-radius:22px;box-shadow:inset 0 0 0 10px #c8c2ac,0 14px 40px #000c}
+.e00 .screen{position:absolute;inset:26px 26px 36px 26px;background:#c0c0c0;border:3px solid #404040;border-radius:10px}
+.e00 .bar{position:absolute;left:26px;right:26px;top:26px;height:30px;background:linear-gradient(90deg,#0a246a,#3a6ea5);border-radius:8px 8px 0 0;color:#fff;font-weight:700;font-size:15px;padding:5px 12px}
+.e00 .title{top:62px;left:44px;font-size:11px;color:#0a246a}.e00 .close{top:30px;right:40px;color:#fff}
+.e00 .row1{top:86px;left:44px;right:44px}.e00 .row2{top:126px;left:44px}
+.e00 .btn{background:#d4d0c8;border:2px outset #fff;color:#000}.e00 .btn.on{border-style:inset;background:#e8e4dc}.e00 .btn i{background:#c00000;color:#fff}
+.e00 .search{background:#fff;border:2px inset #fff;color:#777}
+.e00 .flt{background:#d4d0c8;border:2px outset #fff;color:#000;border-radius:2px}
+.e00 .list{top:162px;left:44px;width:510px;gap:0;background:#fff;border:2px inset #fff}
+.e00 .item{height:64px;background:#fff;border-bottom:1px solid #ddd;color:#000;border-radius:0}
+.e00 .item .mark{width:28px;height:28px;top:16px;border-radius:3px}
+.e00 .item.sel{background:#0a246a;color:#fff}
+.e00 .item .tag{color:#c00000;border-color:#c00000;background:#fff}
+.e00 .more{color:#333;padding:6px}
+.e00 .msg{left:570px;top:162px;width:510px;height:520px;background:#fff;border:2px inset #fff;color:#000;font-family:'Barlow Semi Condensed'}
+.e00 .choice{background:#d4d0c8;border:2px outset #fff;color:#000}
+.e00 .notes{left:1094px;top:162px;width:190px;background:#ffffe1;border:1px solid #000;color:#000}
+.e00 .keys{left:1094px;top:478px;width:190px;background:#d4d0c8;border:2px outset #fff;color:#000}
+.e00 .keys kbd{background:#fff;color:#000;border-color:#777}
+/* 2025: celular deitado na mesa, app de mensagens */
+.e25 .frame{background:#111;border:5px solid #2b2b2f;border-radius:46px;box-shadow:0 14px 40px #000c}
+.e25 .frame:before{content:'';position:absolute;left:50%;top:10px;width:120px;height:16px;margin-left:-60px;background:#000;border-radius:10px}
+.e25 .screen{position:absolute;inset:14px;background:#f2f3f7;border-radius:34px}
+.e25 .title{top:36px;left:44px;color:#111;font-size:13px}.e25 .title span{color:#666}.e25 .close{top:34px;right:44px;color:#111}
+.e25 .row1{top:68px;left:44px;right:44px}.e25 .row2{top:110px;left:44px}
+.e25 .btn{background:#fff;border:1px solid #d5d7de;color:#222;border-radius:18px}.e25 .btn.on{background:#111;color:#fff}.e25 .btn i{background:#ff3b30;color:#fff;border-radius:9px}
+.e25 .search{background:#fff;border:1px solid #d5d7de;border-radius:18px;color:#999}
+.e25 .flt{background:#fff;border:1px solid #d5d7de;color:#222}
+.e25 .list{top:150px;left:44px;width:510px}
+.e25 .item{background:#fff;border-radius:16px;color:#111;box-shadow:0 1px 0 #0001}
+.e25 .item.sel{outline:3px solid #111}
+.e25 .item .tag{color:#ff3b30;border-color:#ff3b30;border-radius:6px}
+.e25 .more{color:#666}
+.e25 .msg{left:575px;top:150px;width:500px;height:560px;background:#fff;border-radius:18px;color:#111}
+.e25 .bubble{background:#e9e9ef;border-radius:16px 16px 16px 4px;padding:10px 12px;margin-bottom:8px}
+.e25 .choice{background:#f2f3f7;border:1px solid #d5d7de;color:#111;border-radius:12px}
+.e25 .notes{left:1094px;top:150px;width:196px;background:#fff;border-radius:16px;color:#111}
+.e25 .keys{left:1094px;top:466px;width:196px;background:#1c1c1e;color:#eee;border-radius:16px}
+</style></head><body>
+<div class="hud"><span class="logo">SELO AGULHA</span><span class="chip" id="date">Set 1962</span><span class="chip">Caixa <b id="cash">$3.447</b></span><span class="chip">★ 38</span>
+<span class="sp"></span><span class="k"><kbd>Ctrl K</kbd> buscar</span><span class="k"><kbd>?</kbd> teclas</span><span class="k"><kbd>Esc</kbd> pausa</span><span class="adv">▶ AVANÇAR MÊS</span></div>
+<img class="bgsede" src="sede.png">
+<div id="app"></div>
+<div class="bottom">
+  <div class="travel">
+    <div class="tb on">Sede<i>⇧1</i></div>
+    <div class="tb">Casa<i>⇧2</i></div>
+    <div class="tb">Cidade<i>⇧3</i><span class="bang">!</span></div>
+    <div class="tb">Mundo<i>⇧4</i><span class="bang">2</span></div>
+  </div>
+  <span class="lbl">BOLSO</span>
+  <span class="slot"><kbd>E</kbd> Caixa de entrada</span><span class="slot"><kbd>Z</kbd> Livro-caixa</span><span class="slot"><kbd>A</kbd> Fichário</span><span class="slot"><kbd>U</kbd> Quadro branco</span><span class="slot empty">+ fixar</span><span class="slot empty">+ fixar</span>
+</div>
+<script>
+const era=new URLSearchParams(location.search).get('era')||'85';
+const C={
+ '85':{date:'Mar 1985',cash:'$188,2 mil',title:'CAIXA DE ENTRADA',sub:'1985 · fax e recados',head:['FAX de: Guilda dos Músicos','12/03/85 14:02'],
+   items:['Guilda dos Músicos de Sessão','Wes Mercer','Festival de Montreux','Melody Maker','Seu analista','Banco Barclays']},
+ '00':{date:'Mar 2000',cash:'$2,4 mi',title:'CAIXA DE ENTRADA',sub:'2000 · e-mail',head:['De: guilda@musicos.org.uk','12/03/2000 14:02'],
+   items:['Guilda dos Músicos de Sessão','Wes Mercer','Festival de Glastonbury','NME Online','Seu analista','Barclays Internet Banking']},
+ '25':{date:'Mar 2025',cash:'$41,7 mi',title:'CAIXA DE ENTRADA',sub:'2025 · celular',head:['Guilda dos Músicos','hoje 14:02'],
+   items:['Guilda dos Músicos de Sessão','Wes Mercer','Primavera Sound','Pitchfork','Seu analista','Banco (app)']},
+}[era];
+document.getElementById('date').textContent=C.date;document.getElementById('cash').textContent=C.cash;
+const subj=['A Guilda apresenta pauta: +8% no piso por faixa gravada','Mercer Recordings está cortejando Silver Avenue','Inscrições abertas: line-up e cachês','Pedido de entrevista com Maria Bastos','Boletim da semana: o que olhar a seguir','Extrato do mês e taxa do empréstimo'];
+const col=['#8e44ad','#8e44ad','#2c7a3c','#2c5aa0','#777','#7a5a2a'];
+const items=C.items.map((f,i)=>`<div class="item ${i==0?'sel':''} ${i>3?'read':''}"><span class="mark" style="background:${col[i]}"></span><div class="from">${f}</div><div class="subj">${subj[i]}</div><span class="date">${['12 mar','11 mar','10 mar','8 mar','7 mar','5 mar'][i]}</span>${i<3?'<span class="tag">PEDE RESPOSTA</span>':''}${i==3?'<span class="star">★</span>':''}</div>`).join('');
+const text=era=='25'
+ ?`<div class="bubble">A Guilda propõe +8% no piso por faixa gravada (ou uma fatia da bilheteria nos shows com nossos músicos).</div><div class="bubble">Sem acordo até o fim do mês, nossos membros não entram em estúdio com o seu selo.</div>`
+ :`<p>A Guilda propõe aumento de 8% no piso pago por faixa gravada (ou uma fatia da bilheteria nos shows em que nossos músicos tocam). Sem acordo até o fim do mês, nossos membros não entram em estúdio com o seu selo.</p><p style="text-align:right">— T. Hargreaves, secretário</p>`;
+document.body.className='e'+era;
+document.getElementById('app').innerHTML=`<div class="frame">${era!='85'?'<div class="screen"></div>':''}${era=='00'?'<div class="bar">Correio · Selo Agulha</div>':''}
+ <div class="title">${C.title} <span>${C.sub} · tecla E</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
+ <div class="row1"><span class="btn on">Entrada <i>29</i></span><span class="btn">Adiadas 4</span><span class="btn">Arquivadas 212</span><span class="search">procurar remetente, assunto ou texto…</span><span class="btn on">Por data</span><span class="btn">Por prioridade</span><span class="btn">Arquivar lidas</span></div>
+ <div class="row2">${[['#fff','Não lidas 32'],['#c0392b','Pedem resposta 3'],['#d4a017','Com estrela'],['#8e44ad','Decisões'],['#2c7a3c','Contratos'],['#2c5aa0','Imprensa'],['#7a5a2a','Finanças'],['#1f8a8a','Mundo'],['#777','Relatórios']].map(([c,t])=>`<span class="flt"><b style="background:${c}"></b>${t}</span>`).join('')}</div>
+ <div class="list">${items}<div class="more">▾ mais 23 · <kbd>J</kbd>/<kbd>K</kbd> próxima/anterior</div></div>
+ <div class="msg"><div class="head"><span>${C.head[0]}</span><span>${C.head[1]}</span></div><h3>Pauta da Guilda: piso por faixa gravada</h3>${text}
+  <div class="choices">
+   <div class="choice"><span class="rs" style="background:#2c7a3c">ACEITAR</span><span>Pagar os 8%<small>custo de gravação +8% · moral da guilda sobe</small></span></div>
+   <div class="choice"><span class="rs" style="background:#2c5aa0">NEGOCIAR</span><span>Oferecer fatia da bilheteria<small>abre a reunião de negociação (cena)</small></span></div>
+   <div class="choice"><span class="rs" style="background:#c0392b">RECUSAR</span><span>Manter o piso<small>risco de boicote no estúdio · provável em 1–2 meses</small></span></div>
+   <div class="choice"><span class="rs" style="background:#777">ADIAR</span><span>Guardar para depois<small>se ignorar, vale a opção padrão ao avançar</small></span></div>
+  </div></div>
+ <div class="notes"><h4>PENDÊNCIAS</h4><div>▼ "Mulher não vende Glam": imagem mais "vendável"</div><div>▼ Convite de TV recusado: pode voltar</div><div>◆ Nova era: clipes só para singles fortes</div></div>
+ <div class="keys"><kbd>J</kbd> <kbd>K</kbd> próxima / anterior<br><kbd>Enter</kbd> abrir<br><kbd>A</kbd> arquivar · <kbd>S</kbd> estrela<br><kbd>1</kbd>–<kbd>4</kbd> responder<br><kbd>Esc</kbd> voltar</div>
+</div>`;
+</script></body></html>
