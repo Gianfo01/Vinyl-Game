@@ -48,6 +48,10 @@ export function cityX31(s: GameState, filler: number[], year = s.year): CityX31 
 
 export interface CityOv31 {
   labels: boolean;
+  /** R31 (POL): zoom atual do mapa (densidade dos rótulos) */
+  zoom?: number;
+  /** R31 (POL): caixas dos ícones que a página põe por cima (as etiquetas desviam) */
+  avoid?: [number, number, number, number][];
   neon: { k: 'none' | 'neon' | 'led'; f: number };
   neons: { sprite: string; k: number }[];
   boardStyle: Board31Style;

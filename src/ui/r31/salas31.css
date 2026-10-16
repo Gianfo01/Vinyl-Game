@@ -12,7 +12,9 @@
 .s31-hot.k-empty { border-style: dashed; border-color: color-mix(in srgb, var(--good) 45%, transparent); }
 .s31-stage.show-all .s31-hot { border-color: color-mix(in srgb, var(--gold) 70%, transparent); border-style: dashed; }
 .s31-lbl { position: absolute; left: 50%; bottom: -2px; transform: translate(-50%, 100%); padding: 1px 5px; font-size: clamp(.56rem, 1.25cqi, .72rem); white-space: nowrap; color: #f4ead8; background: rgba(14, 18, 34, .9); border-radius: 3px; opacity: 0; pointer-events: none; z-index: 3; }
-.s31-hot:hover .s31-lbl, .s31-hot:focus-visible .s31-lbl, .s31-stage.show-all .s31-lbl { opacity: 1; }
+.s31-hot:hover .s31-lbl, .s31-hot:focus-visible .s31-lbl { opacity: 1; }
+.s31-plbl { position: absolute; overflow: hidden; white-space: nowrap; text-align: center; box-sizing: border-box; padding: 0 2px; font: 600 0.64rem/1.2 var(--mono, ui-monospace, monospace); color: #f4ead8; background: rgba(14, 18, 34, .88); border-radius: 3px; pointer-events: none; z-index: 2; }
+.s31-stage:has(.s31-hot:hover) .s31-plbl { opacity: .3; }
 
 /* selos: símbolo + texto (+ barra), nunca só cor */
 .s31-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; font-size: .74rem; line-height: 1.3; border-radius: 3px; background: rgba(14, 18, 34, .9); color: #f4ead8; border-left: 3px solid #8a8fa3; white-space: nowrap; box-shadow: 0 1px 0 rgba(0, 0, 0, .45); }

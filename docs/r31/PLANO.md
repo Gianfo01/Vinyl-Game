@@ -154,7 +154,7 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
     - 1960: amplificadores e bateria;
     - 2025: telão de LED e DJ.
   - **Menu:** Nova run, Continuar, Carregar, Cenários e Opções, com a dedicatória embaixo.
-- **EXP-11 · Transições entre telas** — arte e interface · mocks `onda5-mock-transicao-{1..5}.png` (proposta, aguardando o dono):
+- **EXP-11 · Transições entre telas** — arte e interface · mocks `onda5-mock-transicao-{1..5}.png` (aprovado pelo dono, 2026-10-16):
   - **Viagem (Sede, Casa, Cidade, Mundo):** cortina de palco fecha, cartão do destino com o que espera lá, cortina abre
     no destino. 0,5 s no total; qualquer tecla ou clique pula.
   - **Objeto da sede:** sem cortina; zoom em pixel no objeto e o papel sobe (0,3 s). Esc faz o papel descer (0,15 s).
