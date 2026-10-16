@@ -48,3 +48,15 @@ const quick = (id: string, kind: SceneKind31, verb: 'renew' | 'rescind' | 'lineu
 quick('q.renew', 'renew', 'renew', 'quill');
 quick('q.rescind', 'rescind', 'rescind', 'broken-heart');
 quick('q.lineup', 'lineup', 'lineup', 'people');
+
+// W (onda 4): quadro do lançamento no painel rápido do projeto (⚡ / busca "reunião de lançamento")
+registerQuick31({
+  id: 'q.release31', verb: 'open', icon: 'calendar', kinds: ['project'], label: sceneLabel31('release'),
+  applies: (s, t) => !!sceneModel31(s, 'release', { id: t.id }),
+  lock: (s, t) => sceneModel31(s, 'release', { id: t.id })?.choices[0]?.lock ?? null,
+  dest: (s, t) => ({ area: 'creation', actId: openProjectsOf(s, t.id), intent: 'scene31:release' }),
+  run: (_s, t) => sceneHook31.open?.('release', t.id, 'scene'),
+});
+function openProjectsOf(s: Parameters<typeof playerActs>[0], pid: string): string | undefined {
+  return (s.x4 as unknown as { proj8?: { list: { id: string; actId: string }[] } }).proj8?.list.find((p) => p.id === pid)?.actId;
+}
