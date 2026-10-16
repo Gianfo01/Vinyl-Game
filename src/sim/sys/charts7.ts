@@ -20,7 +20,7 @@ import { fmtL, hasTech, recordAward, remember } from '../util';
 import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 import { allReleases17 } from '../relidx17';
 import { DEMO29 } from '../demo29hook';
-import { Y31 } from '../r31/market31';
+import { CAR31, Y31 } from '../r31/market31';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -113,8 +113,9 @@ export function baseWeights7(s: GameState, rel: Release, out: number[]): number 
 function countryWeights(s: GameState, rel: Release, out: number[]): number {
   const sum = countryWeights0(s, rel, out);
   const act = s.acts[rel.actId];
-  if (!Y31.weights || !act || sum <= 0) return sum;
-  Y31.weights(s, rel, act, out);
+  if ((!Y31.weights && !CAR31.weights) || !act || sum <= 0) return sum;
+  Y31.weights?.(s, rel, act, out);
+  CAR31.weights?.(s, rel, out); // R31 CAR: execuções das carreiras puxam para o país da execução
   let t = 0;
   for (let i = 0; i < out.length; i++) t += out[i];
   return t;

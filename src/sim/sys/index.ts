@@ -383,4 +383,10 @@ import './mercado31'; // R31 onda 3 (D/Y): mercado e paradas por país — fama 
 import './value31run'; // R31 onda 3 (E · Bolsa): editor do modelo único de valor (sim/r31/value31.ts); sem ganchos
 import '../r31/index'; // R31 onda 0 (W0-CON/W0-ROLE): contratos compartilhados — pendência, destino, papéis, objeto, transação atribuída, interruptores
 import './social31sys'; // R31 onda 3 (F): grafo social de todos com todos — como se conheceram, mês social (sim/social31.ts)
+import './car31'; // R31 onda 3 (CAR): função única de execução (música × lugar × peso) → paradas por país e fama local
+import './car31media'; // R31 onda 3 (CAR): rádio/TV/revista com grade, audiência, ibope, jabá e diretor de programação
+import './car31plat'; // R31 onda 3 (CAR): plataforma — playlists com vagas, assinantes por país, exigências das gravadoras, fazendas
+import './car31stage'; // R31 onda 3 (CAR): casa de shows (abertura, prestígio, noite lendária) e festival (cartaz, revelação)
+import './car31more'; // R31 onda 3 (CAR): estúdio, editora, agenciamento, empresário, crítico e trilhas ligados ao mundo
+import './car31prog'; // R31 onda 3 (CAR): degraus, objetivos e desafio de fim de jogo das 12 carreiras
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
