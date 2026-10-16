@@ -11,6 +11,8 @@ registerPendingSource('attn', (s: GameState): Pending[] => {
   const out: Pending[] = [];
   for (const x of attn(s).q) {
     if (!x.pendId || x.done || seen.has(x.pendId)) continue;
+    // carta com resposta: a dona é a caixa (provedor 'inbox', mesmo id `msg:<id>`, com prazo e estado de resposta)
+    if (x.pendId.startsWith('msg:')) continue;
     seen.add(x.pendId);
     out.push({
       // o pendId já é o id da pendência (ex.: 'dec:d12' vindo de um fato), então o mesmo assunto não duplica

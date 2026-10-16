@@ -8,13 +8,14 @@
 import { GENRES, l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import {
-  applyEdit, edit31, editables, editorOn31, genres31, isEdited31, registerRunnable, relicName31, runEdit, runnables, searchActs31,
+  applyEdit, edit31, editAreaLabel31, editables, editorOn31, EDITOR_PREF31, genres31, isEdited31, registerRunnable, relicName31, runEdit, runnables, searchActs31,
   searchPeople31, setEditorOn, targetName, type EditArea, type EditTarget, type Editable, type Runnable, type EditVal,
 } from '../sim/r31/editor';
 import { relics, RELIC_ST } from '../sim/sys/relics9';
 import { advanceMonth } from '../sim/tick';
 import type { GameState } from '../sim/types';
 import { fmtL } from '../sim/util';
+import { formatMoney } from '../core/money';
 import { rerender, toast } from './common';
 import { h } from './dom';
 import { registerArea, registerSection } from './registry';
@@ -30,10 +31,12 @@ export function editorMode31(): boolean { try { return localStorage.getItem(MODE
 export function setEditorMode31(on: boolean): void {
   try { if (on) localStorage.setItem(MODE_KEY, '1'); else localStorage.removeItem(MODE_KEY); } catch { /* sem armazenamento: só nesta sessão */ }
   MODE.on = on;
+  EDITOR_PREF31.on = on; // vale para qualquer partida (aberta ou carregada depois), não só para a aberta
   if (store.game) setEditorOn(store.game, on);
 }
-const MODE = { on: false };
-const modeOn = (): boolean => MODE.on || editorMode31();
+const MODE = { on: editorMode31() };
+EDITOR_PREF31.on = MODE.on;
+const modeOn = (): boolean => MODE.on;
 
 /** Abre o editor (liga o modo se preciso). */
 export function openEditor31(): void {
@@ -50,8 +53,15 @@ export function editorModeSetting31(): HTMLElement {
     ' ', t(l('Modo editor (testes): mostra o item "Editor" no menu (Ctrl+Shift+E). A partida editada fica marcada e não conta para conquistas.', 'Editor mode (testing): shows the "Editor" menu item (Ctrl+Shift+E). An edited game is flagged and does not count for achievements.')));
 }
 
+/** Atalho ignorado com campo de texto em foco ou com painel/diálogo aberto (ask31, modais). */
+function busyForShortcut(): boolean {
+  const a = document.activeElement as HTMLElement | null;
+  if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return true;
+  return !!document.querySelector('.ask31-panel, dialog[open], [role="dialog"][aria-modal="true"]:not([hidden])');
+}
 if (typeof window !== 'undefined') window.addEventListener('keydown', (e: KeyboardEvent) => {
   if (!(e.ctrlKey || e.metaKey) || !e.shiftKey || e.key.toLowerCase() !== 'e' || !store.game) return;
+  if (busyForShortcut()) return;
   e.preventDefault();
   if (store.area === EDITOR_AREA31) { store.area = 'desk'; rerender(); return; }
   openEditor31();
@@ -68,7 +78,7 @@ const AREAS: { id: EditArea; label: L }[] = [
 const UI = { tab: 'money' as string, q: '', person: '' as string, act: '' as string, label: '' as string, genre: '' as string };
 
 const done = (r: { ok: boolean; text: L }) => { toast(t(r.text), r.ok ? 'good' : 'bad'); if (r.ok) rerender(); };
-const money = (c: number) => `$ ${Math.round(c / 100).toLocaleString(store.prefs.lang === 'en' ? 'en-US' : 'pt-BR')}`;
+const money = (c: number) => formatMoney(c, store.prefs.lang === 'en' ? 'en-US' : 'pt-BR');
 
 function editRow(s: GameState, e: Editable, target?: string): HTMLElement | null {
   if (e.when && !e.when(s, target)) return null;
@@ -161,22 +171,26 @@ function logView(s: GameState): HTMLElement {
 }
 
 function page(s: GameState): HTMLElement {
-  if (modeOn() && !editorOn31(s)) setEditorOn(s, true);
+  // nada de escrita no render: `on` é sincronizado ao carregar/criar a partida e ao ligar o modo (clique)
+  if (!editorOn31(s)) return h('div', { class: 'page ed31', 'data-area': EDITOR_AREA31 }, h('h2', null, t(l('Editor (testes)', 'Editor (testing)'))),
+    h('p', { class: 'muted' }, t(l('O editor está desligado nesta partida.', 'The editor is off in this game.'))),
+    h('button', { type: 'button', class: 'btn primary', onclick: () => openEditor31() }, t(l('Ligar o editor nesta partida', 'Turn the editor on in this game'))));
   const extra = [...new Set([...editables().map((e) => e.area), ...runnables().map((r) => r.area ?? 'tools')])].filter((a) => !AREAS.some((x) => x.id === a));
-  const tabs = [...AREAS.slice(0, -1), ...extra.map((a) => ({ id: a, label: l(a, a) })), AREAS[AREAS.length - 1]];
+  const tabs = [...AREAS.slice(0, -1), ...extra.map((a, i) => ({ id: a, label: editAreaLabel31(a) ?? (extra.length > 1 ? fmtL(l('Outros sistemas {n}', 'Other systems {n}'), { n: i + 1 }) : l('Outros sistemas', 'Other systems')) })), AREAS[AREAS.length - 1]];
   const body = UI.tab === 'people' ? pickPeople(s) : UI.tab === 'companies' ? pickLabel(s) : UI.tab === 'items' ? pickRelic(s) : UI.tab === 'world' ? pickGenre(s) : UI.tab === 'log' ? logView(s)
     : h('div', null, ...block(s, UI.tab, null));
   return h('div', { class: 'page ed31', 'data-area': EDITOR_AREA31 },
     h('header', { class: 'ed31-head' },
       h('h2', null, t(l('Editor (testes)', 'Editor (testing)'))),
       isEdited31(s) ? h('span', { class: 'pill bad ed31-flag' }, t(l('Partida editada', 'Edited game'))) : h('span', { class: 'pill' }, t(l('Ainda não editada', 'Not edited yet'))),
-      s.config.base31 ? h('span', { class: 'pill' }, fmtL(l('Base: {n}', 'Database: {n}'), { n: s.config.base31.name }).pt) : null,
+      s.config.base31 ? h('span', { class: 'pill' }, t(fmtL(l('Base: {n}', 'Database: {n}'), { n: s.config.base31.name }))) : null,
       h('small', { class: 'muted' }, t(l('Cada alteração entra no diário e marca a partida: ela deixa de contar para conquistas e recordes.', 'Every change goes into the diary and flags the game: it no longer counts for achievements and records.')))),
     h('div', { class: 'tabs ed31-tabs', role: 'tablist' }, tabs.map((x) => h('button', { type: 'button', role: 'tab', 'aria-selected': UI.tab === x.id ? 'true' : 'false', class: UI.tab === x.id ? 'on' : '', onclick: () => { UI.tab = x.id; rerender(); } }, t(x.label)))),
     h('section', { class: 'card ed31-body' }, body));
 }
 
-registerArea({ id: EDITOR_AREA31, label: l('Editor', 'Editor'), icon: 'gear', key: '', render: page, visible: () => modeOn() });
+registerArea({ id: 'editor31', // = EDITOR_AREA31 (literal: a varredura de ajuda do r18-tutorial lê o id)
+   label: l('Editor', 'Editor'), icon: 'gear', key: '', render: page, visible: () => modeOn() });
 
 // selo visível de partida editada (no topo do Hoje/Mesa)
 registerSection('desk', { id: 'edited31', order: 1, when: (s) => isEdited31(s), render: (s) => (isEdited31(s)

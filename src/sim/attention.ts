@@ -98,6 +98,8 @@ export const ATTN = {
   sceneAdvance: 2, sceneMonth: 3,
   /** dicas de 1ª vez por mês (e nenhuma no avanço em que uma cena abriu) */
   tipsMonth: 3,
+  /** no corte da fila, aviso não visto mais velho que isto (semanas) sai como se tivesse sido visto */
+  staleWeeks: 52,
 };
 /** Compatibilidade de nome (W0-AT): o teto mensal de avisos de baixa prioridade. */
 export const ATTN_BUDGET = ATTN.notes;
@@ -136,7 +138,7 @@ export function pushAttn(s: GameState, it: AttnIn): AttnItem {
   else if (!rest.pendId && rest.cat !== 'scene' && !isHead(rest) && takeAttnBudget(s, rest.prio, low)) item.fold = 1;
   st.q.push(item);
   if (item.fold && item.cat !== 'scene') addToBulletin(s, item);
-  if (st.q.length > ATTN_CAP) prune(st);
+  if (st.q.length > ATTN_CAP) prune(s, st);
   for (const f of LISTEN) f(s, item);
   return item;
 }
@@ -174,9 +176,15 @@ function addToBulletin(s: GameState, item: AttnItem): void {
     title: { pt: 'Boletim da semana (1 item)', en: 'Weekly bulletin (1 item)' }, body: line });
 }
 
-function prune(st: AttnState): void {
+function prune(s: GameState, st: AttnState): void {
+  // cena já aberta (ou que saiu de s.cutscenes) não pede mais atenção: resolvida, sai entre os primeiros
+  const cs = new Map((s.cutscenes ?? []).map((c) => [c.id, c]));
+  for (const x of st.q) if (x.scene && !x.done) { const c = cs.get(x.scene); if (!c || c.seen) { x.done = 1; x.seen = true; } }
   // sai primeiro o resolvido, depois o dobrado, o visto, o mais antigo; importantes e pendências abertas ficam por último
-  const score = (x: AttnItem): number => (x.done ? 0 : x.fold ? 1 : x.seen ? 2 : x.pendId ? 5 : x.prio >= 2 ? 4 : 3);
+  // aviso não visto há mais de `ATTN.staleWeeks` (sem pendência) vale como visto: num jogo sem ninguém lendo (robô), os
+  // alertas antigos não expulsam os recentes nem as cartas
+  const old = s.week - ATTN.staleWeeks;
+  const score = (x: AttnItem): number => (x.done ? 0 : x.fold ? 1 : x.seen ? 2 : x.pendId ? 5 : x.at < old ? 2 : x.prio >= 2 ? 4 : 3);
   while (st.q.length > ATTN_CAP) {
     let k = 0;
     for (let i = 1; i < st.q.length; i++) if (score(st.q[i]) < score(st.q[k])) k = i;
@@ -239,6 +247,10 @@ CS_PUSH31.f = (s, cs) => {
   const title: L = !t ? { pt: cs.kind, en: cs.kind } : typeof t === 'string' ? { pt: t, en: t } : t;
   pushAttn(s, { cat: 'scene', prio: k === 'always' ? 3 : k === 'milestone' ? 2 : 0, title, scene: cs.id, at: cs.week });
 };
+/** A cena foi aberta/concluída (ou pulada): o item dela está visto e resolvido — não ocupa a fila nem conta. */
+export function sceneAttnDone(s: GameState, csId: string): void {
+  for (const x of attn(s).q) if (x.scene === csId && !x.done) { x.done = 1; x.seen = true; }
+}
 /** A cena não interrompeu (rotina, orçamento ou repetida): fica vista, marcada para rever e vai para o álbum. */
 export function quietScene(s: GameState, cs: Cutscene): void {
   cs.seen = true;

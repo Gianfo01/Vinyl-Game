@@ -180,6 +180,8 @@ export function inboxItems(s: GameState): InboxItem[] {
   const st = P(s);
   const byId = new Map(st.inbox.map((m) => [m.id, m]));
   const items: InboxItem[] = [];
+  const inQ = new Set<string>();
+  for (const x of attn(s).q) if (x.msg) inQ.add(x.msg);
   for (const x of attn(s).q) {
     if (x.cat === 'scene' || (x.fold && x.bw === undefined)) continue;
     if (x.msg) {
@@ -196,6 +198,8 @@ export function inboxItems(s: GameState): InboxItem[] {
       items.push({ key: x.id, week: x.at, year, medium: mediumFor(year, n === 'bad'), from: s.config.companyName, subject: n === 'bad' ? l('Alerta', 'Alert') : n === 'good' ? l('Boa notícia', 'Good news') : l('Aviso', 'Notice'), body: x.title, tone: n, unread: !x.seen, source: 'notification' });
     }
   }
+  // carta que está na caixa mas cujo item saiu da fila (corte do teto) continua na caixa
+  for (const m of st.inbox) if (!inQ.has(m.id)) items.push({ key: m.id, week: m.week, year: m.year, medium: msgMedium(m), from: m.from, subject: m.subject, body: m.body, tone: m.tone ?? 'info', unread: !m.read, source: 'msg', msg: m });
   for (const d of s.decisions) {
     items.push({ key: d.id, week: d.week, year: s.year, medium: mediumFor(s.year, true), from: l('Mesa de decisões', 'Decision desk').pt, subject: d.title, body: d.text, tone: 'event', unread: !isSeen18(s, d.id), source: 'decision', decisionId: d.id });
   }
@@ -207,12 +211,16 @@ export function unreadCount(s: GameState): number {
   const st = P(s);
   const open = new Set(st.inbox.filter((m) => !m.read && !m.resolved).map((m) => m.id));
   let n = s.decisions.length;
+  const inQ = new Set<string>();
   for (const x of attn(s).q) {
+    if (x.msg) inQ.add(x.msg);
     if (x.cat === 'scene' || x.done) continue;
     if (x.msg) { if (open.has(x.msg)) { n++; open.delete(x.msg); } }
     else if (x.bw !== undefined) { if (!x.seen) n++; }
     else if (x.tone && !x.fold && !x.seen && x.tone !== 'info') n++;
   }
+  // cartas abertas cujo item saiu da fila: contam pelo que está na caixa (no prazo)
+  for (const m of st.inbox) if (open.has(m.id) && !inQ.has(m.id) && (m.expires === undefined || m.expires >= s.week)) n++;
   return n;
 }
 

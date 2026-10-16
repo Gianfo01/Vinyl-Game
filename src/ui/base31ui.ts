@@ -7,7 +7,7 @@
 import { CITIES, GENRES, l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import {
-  baseCode31, baseJson31, emptyBase31, importBase31, mergeBases31, nextActNo31, origActs31, origCity31, origLabels31, origRelics31,
+  baseCode31, baseJson31, cleanBase31, emptyBase31, importBase31, mergeBases31, nextActNo31, origActs31, origCity31, origLabels31, origRelics31,
   resolvedActs31, resolvedLabels31, resolvedRelics31, summarizeBase31, validateBase31, type BaseData31,
 } from '../sim/r31/base31';
 import { RELIC_KIND } from '../sim/sys/relics9';
@@ -22,7 +22,18 @@ const SEL_KEY = 'masters31.baseSel';
 
 export interface SavedBase31 { name: string; data: BaseData31; at: number }
 export function savedBases31(): SavedBase31[] {
-  try { const v = JSON.parse(localStorage.getItem(LIST_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x) => x?.data && x?.name) : []; } catch { return []; }
+  // o que está no navegador também é entrada não confiável: só bases que passam pela limpeza (cópia canônica)
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(LIST_KEY) ?? '[]');
+    if (!Array.isArray(v)) return [];
+    const out: SavedBase31[] = [];
+    for (const x of v as { name?: unknown; data?: unknown; at?: unknown }[]) {
+      if (!x || typeof x.name !== 'string' || !x.name) continue;
+      const cl = cleanBase31(x.data), c = cl.errors.length ? undefined : cl.base;
+      if (c) out.push({ name: x.name, data: c, at: typeof x.at === 'number' ? x.at : 0 });
+    }
+    return out;
+  } catch { return []; }
 }
 function storeBases(list: SavedBase31[]): boolean { try { localStorage.setItem(LIST_KEY, JSON.stringify(list)); return true; } catch { return false; } }
 export function selectedBase31(): SavedBase31 | undefined { try { const n = localStorage.getItem(SEL_KEY); return n ? savedBases31().find((b) => b.name === n) : undefined; } catch { return undefined; } }
@@ -90,7 +101,8 @@ export function baseEditorScreen31(root: HTMLElement, back: () => void): void {
   const paste = h('textarea', { rows: 3, placeholder: t(l('Cole aqui um código M31B1:… ou o conteúdo de um arquivo .json de base', 'Paste an M31B1:… code or a database .json file here')), 'aria-label': t(l('Importar base', 'Import database')) }) as HTMLTextAreaElement;
   const preview = h('div', { class: 'b31-preview' });
   const read = (text: string) => {
-    const r = importBase31(text);
+    let r: ReturnType<typeof importBase31>;
+    try { r = importBase31(text); } catch { r = { ok: false, errors: [l('A base não pôde ser lida (formato inesperado).', 'The database could not be read (unexpected format).')] }; }
     if (!r.ok) { preview.replaceChildren(errBox(r.errors) ?? h('span')); return; }
     const b = r.base!;
     const exists = list.some((x) => x.name === b.name);

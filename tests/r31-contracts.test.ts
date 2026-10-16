@@ -69,8 +69,10 @@ describe('pendência única', () => {
     const list = pendingList(g);
     expect(JSON.stringify(g)).toBe(before); // provedores só leem
     const ids = list.map((p) => p.id);
-    expect(ids).toEqual(expect.arrayContaining(['dec:dT1', `ib:${m.id}`, 'offer:oT1']));
-    expect(ids.some((i) => i.startsWith('ib:') && i !== `ib:${m.id}` && list.find((p) => p.id === i)!.title.pt === 'Só aviso')).toBe(false);
+    expect(ids).toEqual(expect.arrayContaining(['dec:dT1', `msg:${m.id}`, 'offer:oT1']));
+    expect(ids.some((i) => i.startsWith('msg:') && i !== `msg:${m.id}` && list.find((p) => p.id === i)!.title.pt === 'Só aviso')).toBe(false);
+    // W1-REV2: carta com resposta conta uma vez (caixa 'inbox' e fila 'attn' davam ib:<id> e msg:<id>)
+    expect(list.filter((p) => p.title.pt === 'Responder')).toHaveLength(1);
     expect(new Set(ids).size).toBe(ids.length);
     const n = pendingCount(g);
     // outra fonte devolvendo a mesma decisão (visto de outro lugar) não conta de novo; vira atalho
@@ -95,7 +97,7 @@ describe('pendência única', () => {
     g.decisions = g.decisions.filter((d) => d.id !== 'dT1');
     m.resolved = 'ok';
     expect(pendingList(g).map((p) => p.id)).not.toContain('dec:dT1');
-    expect(pendingList(g).map((p) => p.id)).not.toContain(`ib:${m.id}`);
+    expect(pendingList(g).map((p) => p.id)).not.toContain(`msg:${m.id}`);
   });
   it('todo dono de pendência é um destino válido', () => {
     for (const p of pendingList(s)) expect(resolveDest(s, p.owner).dropped).not.toContain('area');

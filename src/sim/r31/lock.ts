@@ -8,6 +8,7 @@
 //   lockOf31(motivo)                  // completa a condição pelo tipo do motivo (caixa, agenda, contrato…)
 //   cashLock31(s, custo)              // trava de caixa livre (null quando o caixa livre cobre)
 
+import { formatMoney } from '../../core/money';
 import { l, type L } from '../../data/world';
 import { cashWhy20, freeCash20, otherReserves20, reservedAdvances20 } from '../oblig20';
 import type { GameState } from '../types';
@@ -21,7 +22,8 @@ export interface Lock31 {
 
 export const lock31 = (why: L, unlock: L): Lock31 => ({ why, unlock });
 
-const usd = (c: number, lang: 'pt' | 'en' = 'en'): string => `$${Math.round(Math.max(0, c) / 100).toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US')}`;
+/** Dinheiro pelo formatador do jogo (`formatMoney`), no idioma de cada lado do texto. */
+const usd = (c: number, lang: 'pt' | 'en' = 'en'): string => formatMoney(Math.max(0, c), lang === 'pt' ? 'pt-BR' : 'en-US');
 const fold = (x: string): string => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /** Condições comuns (uma frase curta cada). */

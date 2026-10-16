@@ -8,8 +8,9 @@ import { defaultConfig } from '../src/sim/bot';
 import { l } from '../src/data/world';
 import {
   ATTN, ATTN_BUDGET, ATTN_CAP, attn, attnQueue, attnSeq, bulletinOf, foldedSince, notes, onAttnPush, pendingCount, pushAttn, quietScene, resolveAttn,
-  sceneAlbum, type AttnItem,
+  sceneAlbum, sceneAttnDone, type AttnItem,
 } from '../src/sim/attention';
+import { pendingList } from '../src/sim/r31/pending';
 import { notify } from '../src/sim/util';
 import { pushInbox18 } from '../src/sim/inbox18';
 import { queueCutscene } from '../src/sim/ext4';
@@ -164,4 +165,60 @@ describe('r31 UNI-1 · uma fila, um orçamento, uma caixa', () => {
     const b = run('r16pb-10');
     expect(b.sig).toBe(a.sig);
   }, 600_000);
+});
+
+describe('r31 W1-REV2 · cenas, caixa e teto da fila', () => {
+  it('cena aberta/concluída: o item fica visto e resolvido; cena que saiu de s.cutscenes é resolvida no corte', () => {
+    const s = game();
+    const cs = queueCutscene(s, 'moment16', { title: l('Cena aberta', 'Opened scene') });
+    const it = attn(s).q.find((x) => x.scene === cs.id)!;
+    expect(it.done).toBeUndefined();
+    sceneAttnDone(s, cs.id);
+    expect(it.done).toBe(1);
+    expect(it.seen).toBe(true);
+    // cena vista (sem passar pela interface) também sai como resolvida quando a fila enche
+    const cs2 = queueCutscene(s, 'moment16', { title: l('Cena vista', 'Seen scene') });
+    cs2.seen = true;
+    const it2 = attn(s).q.find((x) => x.scene === cs2.id)!;
+    for (let i = 0; i < ATTN_CAP + 5; i++) pushAttn(s, { cat: 'bad', prio: 2, title: l(`alerta ${i}`, `alert ${i}`), tone: 'bad' });
+    expect(it2.done).toBe(1);
+    expect(attn(s).q.includes(it2)).toBe(false);
+  });
+
+  it('carta na caixa cujo item saiu da fila continua listada e contada; carta com resposta conta 1 vez em pendingList', () => {
+    const s = game();
+    const m = addMsg(s, { from: 'X', subject: l('Responda já', 'Answer now'), body: l('', ''), kind: 'deal', actions: [{ id: 'ok', label: l('Ok', 'Ok') }], expires: s.week + 4 });
+    expect(pendingList(s).filter((p) => p.title.pt === 'Responda já')).toHaveLength(1);
+    const u0 = unreadCount(s);
+    attn(s).q = attn(s).q.filter((x) => x.msg !== m.id); // corte do teto levou o item
+    expect(inboxItems(s).some((x) => x.key === m.id)).toBe(true);
+    expect(unreadCount(s)).toBe(u0);
+    expect(pendingList(s).filter((p) => p.title.pt === 'Responda já')).toHaveLength(1);
+  });
+
+  it('120 meses de playbot: nenhuma carta sem resposta some da caixa; nenhum aviso importante recente sai da fila', () => {
+    const s = createGame(defaultConfig('r16pb-10', { startYear: 1975, realNames: true }));
+    const high: AttnItem[] = [];
+    const off = onAttnPush((g, x) => { if (g === s && x.prio >= 2 && x.cat !== 'scene') high.push(x); });
+    let lostHigh = 0, lostLetters = 0, overScenes = 0;
+    try {
+      for (let m = 0; m < 120 && !s.ended; m++) {
+        playMonth(s, 'balanced');
+        advanceMonth(s);
+        const q = new Set(attn(s).q);
+        // "recente" = dentro da janela em que um aviso não visto ainda pede atenção (ATTN.staleWeeks)
+        for (const x of high) if (!x.done && x.at >= s.week - ATTN.staleWeeks && !q.has(x)) lostHigh++;
+        const keys = new Set(inboxItems(s).map((x) => x.key));
+        for (const mm of P(s).inbox) if (mm.actions?.length && !mm.resolved && (mm.expires === undefined || mm.expires >= s.week) && !keys.has(mm.id)) lostLetters++;
+        // cenas abertas: só as que ainda esperam em s.cutscenes (as vistas/descartadas viram resolvidas no corte)
+        const live = new Set((s.cutscenes ?? []).filter((c) => !c.seen).map((c) => c.id));
+        // nenhuma cena ocupa mais de um item vivo, e só as que ainda esperam ocupam
+        overScenes = Math.max(overScenes, attn(s).q.filter((x) => x.scene && !x.done && live.has(x.scene)).length - live.size);
+      }
+    } finally { off(); }
+    expect(lostLetters).toBe(0);
+    expect(lostHigh).toBe(0);
+    expect(overScenes).toBeLessThanOrEqual(0);
+    expect(attn(s).q.length).toBeLessThanOrEqual(ATTN_CAP);
+  }, 900_000);
 });

@@ -7,7 +7,7 @@
 //   registerCutscene('awards', (s, cs, close) => ...);   // abre sozinha quando a simulação enfileira
 //   openScene(l('Título', 'Title'), (close) => elemento);  // tela cheia para mini-jogos e locais
 
-import { quietScene } from '../sim/attention';
+import { quietScene, sceneAttnDone } from '../sim/attention';
 import type { L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { Cutscene } from '../sim/ext4';
@@ -213,6 +213,7 @@ export function showPendingCutscene(s: GameState, rerender: () => void, skip: bo
   }
   const cs = pending[0];
   cs.seen = true;
+  sceneAttnDone(s, cs.id); // r31: abriu = visto e resolvido na fila única
   for (const f of ON_SCENE_SHOW28) { try { f(s, cs); } catch { /* vinheta nunca derruba a cena */ } }
   let closeFn: () => void = () => {};
   closeFn = openScene((cs.data.title as L | string | undefined) ?? '', (close) => CUTSCENES[cs.kind](s, cs, close), {
@@ -227,6 +228,7 @@ export function openCutscene(s: GameState, cs: Cutscene, rerender: () => void): 
   const fn = CUTSCENES[cs.kind];
   if (!fn) return false;
   cs.seen = true;
+  sceneAttnDone(s, cs.id);
   for (const f of ON_SCENE_SHOW28) { try { f(s, cs); } catch { /* idem */ } }
   openScene((cs.data.title as L | string | undefined) ?? '', (close) => fn(s, cs, close), { onClose: () => { sceneDone(s, cs); rerender(); } });
   return true;
@@ -237,7 +239,7 @@ export const ON_SCENE_SHOW28: ((s: GameState, cs: Cutscene) => void)[] = [];
 
 /** r19 (cenas): chamados quando uma cena é fechada ou pulada (ex.: anunciar o resultado guardado da cerimônia). */
 export const ON_SCENE_DONE: ((s: GameState, cs: Cutscene) => void)[] = [];
-function sceneDone(s: GameState, cs: Cutscene): void { for (const f of ON_SCENE_DONE) f(s, cs); }
+function sceneDone(s: GameState, cs: Cutscene): void { sceneAttnDone(s, cs.id); for (const f of ON_SCENE_DONE) f(s, cs); } // r31: item da cena na fila única fica resolvido
 
 /** r18 decide18: chamados depois de cada avanço de tempo (resumo do mês, etc.). */
 export const AFTER_ADVANCE: ((s: GameState) => void)[] = [];

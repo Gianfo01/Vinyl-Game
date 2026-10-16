@@ -140,7 +140,9 @@ describe('R31 A · contadores = pendências únicas', () => {
     expect(b.entry.buscar).toBeUndefined();
   });
   it('a fila de avisos entra na pendência única; resolvida, sai do número', () => {
-    expect(attnPendingCount(g)).toBe(2);
+    // UNI-1: a carta com resposta também é item da fila (`msg:<id>`); em pendingList ela conta uma vez (dona: caixa)
+    expect(attnPendingCount(g)).toBe(3);
+    expect(pendingList(g).filter((p) => p.id.startsWith('msg:'))).toHaveLength(1);
     const n = pendingCount(g);
     resolveAttn(g, 'cash<0');
     expect(pendingCount(g)).toBe(n - 1);
