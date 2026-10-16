@@ -13,6 +13,8 @@ import { ICON27, cityLook27, env27, era27, hqExt27, type BVis27, type CityLook27
 import type { Landmark19 } from '../../data/landmarks19';
 import { drawLmIso27, outlineOuter } from './lmiso27';
 import { dusk27, paintSky27, skyCols27 } from './skyline27';
+import { ARTK31, NBART31, artOfKind31, type Art31 } from './pred31';
+import { drawArt31, shape31, type Shape31 } from './pred31px';
 import { isRiver31, terrainAt31, type At31, type Geo31 } from '../../data/geo31';
 
 /** Grade e canvas do CENTRO (o mapa original, 300×226). Com mais bairros a cena usa `geo18` (ver Scene18.geo). */
@@ -189,7 +191,7 @@ function accessories(t: T, L: T, b: Bld18, st: Style18, gx: number, gy: number, 
   const [cx, cy] = roofTop(gx, gy, w, d, H);
   const m = MAT[st];
   if (st === 'victorian' || st === 'brick') {
-    for (let i = 0; i < Math.min(3, w); i++) { const [x, y] = iso(gx + 0.6 + i * 1.3, gy + 0.5); t.rect(x, y - H - 5, 2, 5, C('#6a3a2a')); t.rect(x, y - H - 6, 2, 1, C('#3a3030')); }
+    for (let i = 0; i < 3 && 0.6 + i * 1.3 < w - 0.4; i++) { const [x, y] = iso(gx + 0.6 + i * 1.3, gy + 0.5); /* R31 (PRED): chaminé só em cima do telhado */ t.rect(x, y - H - 5, 2, 5, C('#6a3a2a')); t.rect(x, y - H - 6, 2, 1, C('#3a3030')); }
     if (st === 'brick' && H > 14) tank27(t, cx + 5, cy);
   } else if (st === 'deco' && H > 18) {
     t.line(cx, cy - 4, cx, cy - 4 - Math.min(16, H / 3), m.trim);
@@ -236,7 +238,8 @@ export interface Sprite18 { id: string; c: HTMLCanvasElement; lc: HTMLCanvasElem
   filler?: boolean; /** r27: janelas acesas também de dia (sessão, show) */ lit?: boolean; /** r27: topo da chaminé (fábrica) */ chim?: [number, number]; vis?: BVis27;
   /** r27 (I2): altura (px) para a sombra projetada; sede vista de fora */ h?: number; hq?: HqExt27 }
 /** r27: extras do desenho (estado visual, neve, cores da cidade, letreiro da época). I2: andares abertos da sede (I1). */
-export interface Spr27 { vis?: BVis27; snow?: boolean; wall?: Col; roof?: Col; sign?: Era27['sign']; filler?: boolean; floorsOpen?: number }
+export interface Spr27 { vis?: BVis27; snow?: boolean; wall?: Col; roof?: Col; sign?: Era27['sign']; filler?: boolean; floorsOpen?: number;
+  /** R31 (PRED): tipo de arte do prédio (mais fino que o BKind: loja de discos ≠ padaria ≠ fliperama); padrão = o do BKind */ art?: Art31 }
 
 function fp(b: Bld18, lw: number, ld: number): { w: number; d: number; H: number } {
   const L = b.lvl;
@@ -254,7 +257,11 @@ function fp(b: Bld18, lw: number, ld: number): { w: number; d: number; H: number
 export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: number; d: number }, year: number, seed: number, brand = 'REC', x27: Spr27 = {}): Sprite18 {
   // r27 (I2): a sede segue a casca do interior (garagem → campus), com andares contados e fachada da época
   const hx = b.kind === 'hq' ? hqExt27({ level: b.lvl - 1, year: b.sy || year, building: b.st === 'renovating' || b.st === 'building', style: b.style, floorsOpen: x27.floorsOpen }) : undefined;
-  const { w, d, H } = hx ? { w: hx.w, d: hx.d, H: hx.H } : fp(b, lot.w, lot.d);
+  // R31 (PRED): cada tipo de prédio tem arte própria — `art` escolhe a carcaça (kk) e a silhueta (shape31)
+  const art: Art31 = x27.art ?? artOfKind31(b.kind);
+  const kk: BKind = x27.art ? ARTK31[art] : b.kind;
+  const shp: Shape31 | undefined = hx || kk === 'fest' || kk === 'park' || kk === 'sign' ? undefined : shape31(art, fp({ ...b, kind: kk }, lot.w, lot.d), lot.w, lot.d);
+  const { w, d, H } = hx ? { w: hx.w, d: hx.d, H: hx.H } : shp ?? fp(b, lot.w, lot.d);
   const gx = lot.gx + (lot.w - w) / 2, gy = lot.gy + (lot.d - d) / 2;
   const [Nx] = iso(gx, gy + d), [Ex] = iso(gx + w, gy), [, Ny] = iso(gx, gy), [, Sy] = iso(gx + w, gy + d);
   const x0 = Math.floor(Math.min(Nx, iso(lot.gx, lot.gy + lot.d)[0])) - 10, x1 = Math.ceil(Math.max(Ex, iso(lot.gx + lot.w, lot.gy)[0])) + 10;
@@ -268,11 +275,15 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
   const o: BoxO = { st, seed, lit, raw: building, burnt: b.st === 'damaged', boarded: b.st === 'sold' || b.st === 'closed', worn: b.worn, snow: x27.snow };
   let chim: [number, number] | undefined;
   // r19: cor do tipo de negócio na fachada e no telhado (leitura rápida: estúdio vermelho, editora roxa…)
-  if (ACCENT[b.kind] && st !== 'glass' && st !== 'neon' && !hx) { o.wall = mix(MAT[st].wall, ACCENT[b.kind]!, 0.22); o.roof = mix(MAT[st].roof, ACCENT[b.kind]!, 0.45); }
-  if (b.kind === 'venue') o.roof = mix(MAT[st].roof, C('#a03030'), 0.4);
-  if (b.kind === 'plant') o.roof = mix(MAT[st].roof, C('#606870'), 0.5);
-  if (b.kind === 'museum') { o.wall = mix(MAT[st].wall, C('#f0ead8'), 0.5); o.roof = C('#c8bfa8'); }
+  if (ACCENT[kk] && st !== 'glass' && st !== 'neon' && !hx) { o.wall = mix(MAT[st].wall, ACCENT[kk]!, 0.22); o.roof = mix(MAT[st].roof, ACCENT[kk]!, 0.45); }
+  if (kk === 'venue') o.roof = mix(MAT[st].roof, C('#a03030'), 0.4);
+  if (kk === 'plant') o.roof = mix(MAT[st].roof, C('#606870'), 0.5);
+  if (kk === 'museum') { o.wall = mix(MAT[st].wall, C('#f0ead8'), 0.5); o.roof = C('#c8bfa8'); }
   if (x27.wall !== undefined) o.wall = x27.wall;
+  if (shp?.tint) o.wall = mix(o.wall ?? MAT[st].wall, shp.tint[0], st === 'glass' || st === 'neon' ? shp.tint[1] * 0.6 : shp.tint[1]);
+  if (shp?.roof !== undefined && x27.roof === undefined) o.roof = mix(o.roof ?? MAT[st].roof, shp.roof, 0.6);
+  if (shp?.worn) o.worn = true;
+  if (shp?.noWin) o.noWin = true;
   if (x27.roof !== undefined) o.roof = x27.roof;
   const [Wx, Wy] = iso(gx, gy + d), [Sx, Sy2] = iso(gx + w, gy + d);
   const door: [number, number] = [(Wx + Sx) / 2, (Wy + Sy2) / 2 + 2];
@@ -318,7 +329,7 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
     }
     if (hx) {
       hqBody27(t, L, hx, gx, gy, w, d, o, b.sy || year, brand);
-    } else if (b.kind === 'home') {
+    } else if (kk === 'home') {
       box(t, L, gx, gy, w, d, HH, 0, { ...o, lit: o.lit * 0.6 });
       if (!building) { const [ax, ay] = iso(gx, gy + d / 2), [bx, by] = iso(gx + w, gy + d / 2), [wx, wy] = iso(gx, gy + d), [sx, sy] = iso(gx + w, gy + d), [nx, ny] = iso(gx, gy), [ex, ey] = iso(gx + w, gy);
         const rc = st === 'midcentury' || st === 'glass' || st === 'eco' ? MAT[st].roof : C('#8a3a2a');
@@ -329,27 +340,18 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
       box(t, L, gx, gy, w, d, HH, 0, o);
     }
     if (!building && !hx && b.st !== 'sold' && b.st !== 'closed') {
-      if (b.kind === 'venue') { // marquise com lâmpadas (r27: acesa só em noite de show)
-        const mq = x27.vis ? x27.vis.marquee : true;
-        for (let u = 2; u < Sx - Wx - 2; u += 2) { t.set(Wx + u, Wy + u / 2 - 7, mq ? C('#fff0b0') : C('#8a8070')); if (mq) L.set(Wx + u, Wy + u / 2 - 7, (u / 2) % 2 ? LIT : C('#ff8040')); }
-        t.line(Wx + 1, Wy - 8, Sx - 1, Sy2 - 8, C('#b03030'));
-        t.rect(Wx + 2, Wy - H - 8, 3, 9, C('#c03030')); if (mq) L.rect(Wx + 2, Wy - H - 7, 3, 7, withAlpha(C('#ff5050'), 220));
-        if (mq) { const pw = Math.min(14, Sx - Wx - 6); for (let u = 0; u < pw; u++) { const yy = Wy + (u + 3) / 2 - 12; t.set(Wx + 3 + u, yy, C('#fff4c0')); t.set(Wx + 3 + u, yy + 1, C('#fff4c0')); L.set(Wx + 3 + u, yy, C('#fff8d0')); L.set(Wx + 3 + u, yy + 1, u % 3 ? C('#ff60a0') : C('#fff8d0')); } }
-      }
-      if (b.kind === 'plant') { // telhado em dente de serra + chaminé
+      if (kk === 'plant') { // telhado em dente de serra + chaminé
         for (let i = 0; i < Math.floor(w); i++) { const [x, y] = iso(gx + i + 0.5, gy + d / 2); t.poly([[x - 4, y - H], [x + 4, y - H], [x - 4, y - H - 5]], C('#7a7e86')); t.line(x - 4, y - H - 5, x + 4, y - H, C('#a8c0d8')); }
         const [x, y] = iso(gx + 0.4, gy + 0.4); t.rect(x - 1, y - H - 18, 3, 18, C('#8a4630')); t.rect(x - 1, y - H - 19, 3, 1, C('#3a3030')); chim = [x + 0.5, y - H - 19];
       }
-      if (b.kind === 'museum') { for (let u = 2; u < Sx - Wx - 1; u += 3) t.line(Wx + u, Wy + u / 2 - 1, Wx + u, Wy + u / 2 - 9, C('#f0ece0')); t.poly([[Wx, Wy - 9], [Sx, Sy2 - 9], [(Wx + Sx) / 2, (Wy + Sy2) / 2 - 15]], C('#e8e0d0')); }
-      if (b.kind === 'school') { const [x, y] = roofTop(gx, gy, w, d, H); t.rect(x - 2, y - 7, 5, 7, MAT[st].wall); t.poly([[x - 3, y - 7], [x + 3, y - 7], [x, y - 11]], C('#5a4a46')); t.disc(x + 0.5, y - 4.5, 1.2, C('#f8f4ec')); }
-      if (b.kind === 'media') { const [x, y] = roofTop(gx, gy, w, d, H); for (let i = 0; i < 24; i++) t.set(x, y - i, Math.floor(i / 4) % 2 ? C('#e04040') : C('#f0f0f0')); t.line(x - 4, y, x, y - 18, C('#8a8a90')); t.line(x + 4, y, x, y - 18, C('#8a8a90')); L.set(x, y - 24, C('#ff3030')); if (year >= 1965) { t.rect(x + 6, y - 6, 2, 5, C('#d8dce0')); t.rect(x + 5, y - 5, 1, 3, C('#d8dce0')); t.set(x + 8, y - 4, C('#606468')); t.line(x + 6, y - 1, x + 6, y, C('#8a8a90')); } }
-      if (b.kind === 'platform') { for (let u = 3; u < Sx - Wx - 2; u += 2) L.set(Wx + u, Wy + u / 2 - 4, (u % 3) ? C('#40f0ff') : C('#80ff80')); }
-      if (b.kind === 'store') { for (let u = 1; u < Sx - Wx - 1; u++) { t.set(Wx + u, Wy + u / 2 - 7, Math.floor(u / 2) % 2 ? C('#e04848') : C('#f8f4ec')); t.set(Wx + u, Wy + u / 2 - 6, Math.floor(u / 2) % 2 ? C('#b03030') : C('#d8d4cc')); } }
-      if (b.kind === 'dorm') { for (let z = 8; z < H - 2; z += 7) t.line(Wx + 1, Wy - z, Sx - 1, Sy2 - z, shade(MAT[st].trim, -0.2)); }
-      if (b.kind === 'rehearsal') { t.rect(door[0] + 1, door[1] - 17, 1, 5, C('#f0c040')); t.disc(door[0], door[1] - 12, 1.3, C('#f0c040')); t.rect(door[0] + 2, door[1] - 17, 2, 1, C('#f0c040')); }
-      if (ACCENT[b.kind] && b.kind !== 'store' && !x27.filler) { t.rect(door[0] - 3, door[1] - 9, 6, 2, KCOL(b.kind)); }
-      if (x27.sign && H > 6) eraSign27(t, L, x27.sign, gx, gy, w, d, H, seed);
-      if (b.kind !== 'home' && b.kind !== 'store') accessories(t, L, b, st, gx, gy, w, d, H, seed);
+      if (art === 'school') { const [x, y] = roofTop(gx, gy, w, d, H); t.rect(x - 2, y - 7, 5, 7, MAT[st].wall); t.poly([[x - 3, y - 7], [x + 3, y - 7], [x, y - 11]], C('#5a4a46')); t.disc(x + 0.5, y - 4.5, 1.2, C('#f8f4ec')); }
+      if (art === 'dorm') { for (let z = 8; z < H - 2; z += 7) t.line(Wx + 1, Wy - z, Sx - 1, Sy2 - z, shade(MAT[st].trim, -0.2)); }
+      if (art === 'rehearsal') { t.rect(door[0] + 1, door[1] - 17, 1, 5, C('#f0c040')); t.disc(door[0], door[1] - 12, 1.3, C('#f0c040')); t.rect(door[0] + 2, door[1] - 17, 2, 1, C('#f0c040')); }
+      if (ACCENT[kk] && kk !== 'store' && !x27.filler) { t.rect(door[0] - 3, door[1] - 9, 6, 2, KCOL(kk)); }
+      if (x27.sign && H > 6 && !shp?.ownSign) eraSign27(t, L, x27.sign, gx, gy, w, d, H, seed);
+      if (kk !== 'home' && kk !== 'store' && !shp?.roofOwn) accessories(t, L, b, st, gx, gy, w, d, H, seed);
+      // R31 (PRED): os detalhes próprios do tipo (vitrine, toldo, letreiro, torre, veículo…)
+      drawArt31(art, { t, L, iso, gx, gy, w, d, H, year, seed, st, wall: o.wall ?? MAT[st].wall, trim: MAT[st].trim, roof: o.roof ?? MAT[st].roof, brand: x27.filler ? undefined : C('#c08a2a'), marquee: x27.vis ? x27.vis.marquee : true });
     }
     outlineOuter(p, OUTL27); // r27 (I2): contorno seletivo de 1 px (só por fora)
     if (hx) hqPost27(t, L, hx, gx, gy, w, d);
@@ -368,7 +370,7 @@ export function buildingSprite18(b: Bld18, lot: { gx: number; gy: number; w: num
       t.rect(door[0] - 9, door[1] - 12, 19, 7, C('#f8f4ec')); t.text(b.st === 'sold' ? 'SOLD' : 'SHUT', door[0] - 7, door[1] - 11, C('#c03030'));
     }
   }
-  return { id: b.id, kind: b.kind, st: b.st, fp: [gx, gy, w, d], c: p.canvas(), lc: lp.canvas(), x: x0, y: y0, depth: gx + w / 2 + gy + d / 2, box: [Math.min(Wx, Nx), Ny - H - (b.kind === 'media' ? 24 : 6), Math.max(Ex, Sx), Math.max(Sy, Sy2)], door, top: roofTop(gx, gy, w, d, H),
+  return { id: b.id, kind: b.kind, st: b.st, fp: [gx, gy, w, d], c: p.canvas(), lc: lp.canvas(), x: x0, y: y0, depth: gx + w / 2 + gy + d / 2, box: [Math.min(Wx, Nx), Ny - H - (shp?.top ?? (b.kind === 'media' ? 24 : 6)), Math.max(Ex, Sx), Math.max(Sy, Sy2)], door, top: roofTop(gx, gy, w, d, H),
     filler: x27.filler, lit: !!x27.vis?.lit, chim, vis: x27.vis, h: H, hq: hx };
 }
 
@@ -921,11 +923,11 @@ export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
 export interface Nbr19 { lot: number; k: string; name: string }
 const NBK: Record<string, BKind> = { rival: 'branch', records: 'store', bar: 'venue', rehearsal: 'rehearsal', radio: 'media' };
 /** r27: extras da cena (estado dos prédios, lotes à venda, cidade comum, vida na rua). */
-export interface SceneX27 { /** r27 (LOTS): bairros abertos (índice em DIST18); sem isso, o menor que cabe nos lotes desenhados */ dist?: number; /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind>;
+export interface SceneX27 { /** r27 (LOTS): bairros abertos (índice em DIST18); sem isso, o menor que cabe nos lotes desenhados */ dist?: number; /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind>; /** R31 (PRED): tipo de arte de cada lote de cidade comum */ fillArt?: Map<number, Art31>;
   /** R31 (H): prédios extras de cidade comum fora de LOTS18 ou com tipo próprio (lugares reais nos terrenos reservados, festival) — sprites `fl:<id>` */ extra31?: Extra31[];
   /** R31 (H): largura mínima da grade (terrenos reservados dos lugares reais) */ minGw?: number }
 /** R31 (H): prédio extra (lugar real, festival num terreno). */
-export interface Extra31 { id: string; lot: { gx: number; gy: number; w: number; d: number }; kind: BKind; lvl: number; style?: Style18; sign?: boolean }
+export interface Extra31 { id: string; lot: { gx: number; gy: number; w: number; d: number }; kind: BKind; lvl: number; style?: Style18; sign?: boolean; /** R31 (PRED) */ art?: Art31 }
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido; letra cinza quando não cabe no caixa). */
@@ -1020,7 +1022,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     const L0 = LOTS18[nb.lot];
     const sy = Math.max(1889, env.year - 15 - Math.floor(noise(nb.lot, 5, seed) * 30));
     const sp = buildingSprite18({ id: `nb:${nb.lot}`, kind: NBK[nb.k] ?? 'store', name: nb.name, city: '', zone: 'campus', lvl: nb.k === 'rival' ? 3 : 1, st: 'open', since: sy, sy }, { gx: L0.gx + L0.w * 0.15, gy: L0.gy + L0.d * 0.15, w: L0.w * 0.7, d: L0.d * 0.7 }, env.year, seed + nb.lot * 17, '',
-      { snow: env.snow, sign: nb.k === 'rival' || nb.k === 'bar' || nb.k === 'radio' ? era.sign : undefined });
+      { snow: env.snow, sign: nb.k === 'rival' || nb.k === 'bar' || nb.k === 'radio' ? era.sign : undefined, art: (NBART31 as Record<string, Art31>)[nb.k] });
     sp.nb = true;
     sprites.push(sp);
     used.add(nb.lot);
@@ -1035,7 +1037,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     const wall = C(look.wall[Math.floor(noise(lot, 2, seed) * look.wall.length) % look.wall.length]);
     const kind: BKind = x.fillKind?.get(lot) ?? (look.k === 'brick' && lvl <= 1 ? 'home' : 'office'); // r27 (CITY2): o lugar do lote (loja, rádio, casa de shows…)
     const sp = buildingSprite18({ id: `fl:${lot}`, kind, name: '', city: '', zone: 'campus', lvl, st: 'open', since: env.year, sy: env.year, style }, { gx: L0.gx + 0.35, gy: L0.gy + 0.35, w: L0.w - 0.7, d: L0.d - 0.7 }, env.year, seed + lot * 29, '',
-      { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: x.fillKind?.has(lot) && kind !== 'home' && kind !== 'office' ? era.sign : noise(lot, 7, seed) < 0.35 ? era.sign : undefined });
+      { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: x.fillKind?.has(lot) && kind !== 'home' && kind !== 'office' ? era.sign : noise(lot, 7, seed) < 0.35 ? era.sign : undefined, art: x.fillArt?.get(lot) });
     sprites.push(sp);
     used.add(lot);
   }
@@ -1045,7 +1047,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
     const r = noise(e.lot.gx * 7 + e.lot.gy, 13, seed);
     const style: Style18 = e.style ?? styleOf18(Math.max(1889, env.year - 8 - Math.floor(r * 20)));
     const sp = buildingSprite18({ id: `fl:${e.id}`, kind: e.kind, name: '', city: '', zone: 'campus', lvl: e.lvl, st: 'open', since: env.year, sy: env.year, style },
-      e.kind === 'fest' ? e.lot : { gx: e.lot.gx + 0.3, gy: e.lot.gy + 0.3, w: e.lot.w - 0.6, d: e.lot.d - 0.6 }, env.year, seed + Math.round(e.lot.gx * 13 + e.lot.gy * 31), '', { filler: true, snow: env.snow, sign: e.sign ? era.sign : undefined });
+      e.kind === 'fest' ? e.lot : { gx: e.lot.gx + 0.3, gy: e.lot.gy + 0.3, w: e.lot.w - 0.6, d: e.lot.d - 0.6 }, env.year, seed + Math.round(e.lot.gx * 13 + e.lot.gy * 31), '', { filler: true, snow: env.snow, sign: e.sign ? era.sign : undefined, art: e.art });
     sprites.push(sp);
   }
   // R31 (GEO): a cidade continua fora da grade (outra margem do rio, subúrbio) com os mesmos prédios de cidade comum
@@ -1389,3 +1391,12 @@ export const textW18 = textWidth;
 function noteGlyph(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   ctx.fillRect(x + 2, y, 1, 4); ctx.fillRect(x + 3, y, 1, 1); ctx.fillRect(x + 4, y + 1, 1, 1); ctx.fillRect(x, y + 3, 2, 2); ctx.fillRect(x + 2, y + 4, 1, 1);
 }
+
+/** R31 (PRED): um tipo de arte num lote padrão de 3,3 × 3,3, no estilo da época (galeria e teste r31-pred). */
+export function artSprite31(art: Art31, year: number, seed: number, lvl = 2, style?: Style18): Sprite18 {
+  G = geo18(GW, GH);
+  const kind = ARTK31[art], own = !['records', 'instruments', 'bar', 'press', 'hotel', 'facade', 'police', 'alley', 'tv', 'theatre', 'arena', 'apart', 'mansion'].includes(art) && kind === artOfKindInv31(art);
+  return buildingSprite18({ id: `art:${art}`, kind, name: '', city: '', zone: 'campus', lvl, st: 'open', since: year, sy: year, style: style ?? styleOf18(year) },
+    { gx: 4, gy: 4, w: 3.3, d: 3.3 }, year, seed, 'REC', { art, filler: !own, sign: era27(year).sign });
+}
+const artOfKindInv31 = (a: Art31): BKind => (artOfKind31(ARTK31[a]) === a ? ARTK31[a] : ('' as BKind));
