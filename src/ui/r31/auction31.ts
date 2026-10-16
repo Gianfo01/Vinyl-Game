@@ -58,10 +58,12 @@ function paintRoom(p: Px, m: Auc31, pal: Palette): void {
   curtain(p, 26, 0, 14, 80, m.room === 'app' ? C('#5a6a8a') : C('#8a1e2a'));
   // luz: lustre no salão, refletores no auditório, faixa de LED depois
   if (m.room === 'salon') {
-    p.vline(160, 0, 4, pal.gold);
-    ellipseV(p, 160, 8, 16, 4, pal.gold);
-    for (let i = -14; i <= 14; i += 4) { discV(p, 160 + i, 13, 1, C('#fff4c8'), { ink: false }); p.put(160 + i, 15, C('#ffe080')); }
-    beam(p, 160, 14, 90, 30, C('#fff0c0'), 16);
+    for (const cx of [66]) { // à esquerda do telão (no centro ficaria escondido)
+      p.vline(cx, 0, 8, pal.gold);
+      ellipseV(p, cx, 13, 12, 4, pal.gold);
+      for (let i = -10; i <= 10; i += 4) { discV(p, cx + i, 18, 1, C('#fff4c8'), { ink: false }); p.put(cx + i, 20, C('#ffe080')); }
+      beam(p, cx, 20, 88, 22, C('#fff0c0'), 16);
+    }
   } else if (m.room === 'hall') lightRig(p, 1, pal, 5, 50, 230);
   else for (let x = 46; x < 236; x += 2) p.put(x, 1, (x >> 1) % 3 ? C('#80e0ff') : C('#ffffff'));
 }
@@ -91,9 +93,9 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
   p.rect(241, 17, 56, 58, C('#f2ead6'));
   drawText(p, fitText(t(l('CATÁLOGO', 'CATALOGUE')), 52), 243, 19, C('#5a3a20'));
   m.picks.slice(0, 3).forEach((x, i) => {
-    box(p, 243, 28 + i * 15, 52, 12, C('#e6d8b8'), 0, lv(C('#e6d8b8'), 1.4));
+    box(p, 243, 28 + i * 15, 52, 13, C('#e6d8b8'), 0, lv(C('#e6d8b8'), 1.4));
     drawText(p, fitText(t(HOUSE31[x.house].name).toUpperCase(), 48), 245, 30 + i * 15, C('#3a2a1a'));
-    drawText(p, `${x.lots.length} - ${Math.max(0, x.w - s.week)}S`, 245, 35 + i * 15, C('#8a5a30'));
+    drawText(p, `${x.lots.length} - ${Math.max(0, x.w - s.week)}S`, 245, 36 + i * 15, C('#8a5a30'));
   });
   // palco com o púlpito e o pedestal
   stagePlatform(p, 26, 98, 200, 8, pal.wood, pal.woodDark);
