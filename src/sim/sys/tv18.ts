@@ -22,6 +22,7 @@ import { spawnProceduralAct } from '../worldgen';
 import { addLead18 } from './discover18';
 import { actOfPerson17 } from './love17';
 import { cashWhy20 } from '../oblig20';
+import { estimate } from '../scouting';
 
 export interface Fr18 { id: string; real: string; alt: L; from: number; to: number; mk: MarketId[]; power: number; desc: L }
 export const FR18: Fr18[] = [
@@ -234,7 +235,7 @@ registerExplain('tv18.vote', (s, c) => {
   const se = tv18(s).cur, x = se?.cont.find((k) => k.a === c.act), a = x && s.acts[x.a];
   if (!se || !x || !a) return null;
   return { title: l('Força no voto', 'Voting strength'), value: Math.round(voteScore18(s, se, x)), fmt: 'num', parts: [
-    { label: l('Fama × 1,2', 'Fame × 1.2'), value: Math.round(a.fame * 1.2), fmt: 'num' }, { label: l('Carisma (potencial ÷ 2)', 'Charisma (potential ÷ 2)'), value: Math.round(a.potential * 0.5), fmt: 'num', note: l('Estimado: o público vê o que o olheiro não vê.', 'Estimated: the public sees what scouts do not.') },
+    { label: l('Fama × 1,2', 'Fame × 1.2'), value: Math.round(a.fame * 1.2), fmt: 'num' }, { label: l('Carisma (potencial ÷ 2)', 'Charisma (potential ÷ 2)'), value: charisma31(s, a), fmt: 'num', note: l('O que você estima: o potencial exato não aparece nem para o dono.', 'Your estimate: the exact potential is hidden even from the owner.') }, // r31 F
     { label: l('Campanha, histórias e sorte do mês', 'Campaigns, storylines and luck of the month'), value: Math.round(x.v), fmt: 'signed' }], note: l('Os dois piores saem a cada mês ao vivo; 3 chegam à final.', 'The two lowest leave each live month; 3 reach the final.') };
 });
 registerAdvisorTip('tv18', (s) => {
@@ -242,3 +243,9 @@ registerAdvisorTip('tv18', (s) => {
   if (!se || !f || se.stage !== 'casting' || se.partner) return [];
   return [{ id: `tv18-partner-${se.id}`, level: 'info', cat: 'opportunity', score: 35 + f.power * 10, text: fmtL(l('{f} procura selo parceiro.', '{f} is looking for a partner label.'), { f: frName18(s, f) }), effect: l('Leva o vencedor num contrato 360; fama de TV esfria sem hit.', 'Takes the winner on a 360 deal; TV fame cools without a hit.'), goto: { area: 'talent18', tab: ['talent18', 'tv'] } }];
 });
+
+/** r31 F: o carisma no "por quê" do voto sai da SUA estimativa do potencial (faixa), nunca do valor real. */
+function charisma31(s: GameState, a: Act): number | string {
+  const e = estimate(s, a.id, 'potential');
+  return e ? `${Math.round(e.lo / 2)}–${Math.round(e.hi / 2)}` : '?';
+}

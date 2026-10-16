@@ -2,6 +2,7 @@
 // histórico e linha do tempo), escolha de segurança para atos do seu elenco e o quadro "O que se sabe"
 // (exposição pública × olheiros × relacionamento) usado pelas fichas para esconder dados com "?".
 
+import { seen } from '../../sim/know';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import {
@@ -82,7 +83,7 @@ function actFame(s: GameState, a: Act, redraw: () => void): HTMLElement {
     h('p', null, pub || k.pub >= 1 ? tierPill(a.fame) : hid('fame'), ' ', h('span', { class: 'small muted' }, pub || k.pub >= 1 ? t(FTIERS[ti].desc) : t(HINT15))),
     pub ? section(t(l('Efeitos da fama agora', 'Fame effects right now')), h('ul', { class: 'small' },
       h('li', null, t(l('Cachê de shows: ×{m}', 'Show fees: ×{m}'), { m: feeMult(a).toFixed(2) })),
-      h('li', null, t(l('Royalty que considera justo: {w}', 'Royalty they consider fair: {w}'), { w: pct(wantRoyalty(a)) }), ti >= 2 ? h('span', { class: 'muted' }, ` · ${t(l('pesa nas propostas', 'weighs on offers'))}`) : null),
+      seen(s, a.id, 'wantRoyalty') ? h('li', null, t(l('Royalty que considera justo: {w}', 'Royalty they consider fair: {w}'), { w: pct(wantRoyalty(a)) }), ti >= 2 ? h('span', { class: 'muted' }, ` · ${t(l('pesa nas propostas', 'weighs on offers'))}`) : null) : null, // r31 F #16: dado de negociação privado (grau 4 ou convivência), não fama
       h('li', null, t(l('Imprensa: {c}', 'Press: {c}'), { c: ti >= 2 ? t(l('~{p}% de chance por mês de virar pauta (momento e hype)', '~{p}% chance a month to make the news (momentum and hype)'), { p: 3 * ti }) : t(l('quase ninguém cobre', 'hardly anyone covers them')) })),
       h('li', null, t(l('Escândalos: impacto ×{k}', 'Scandals: impact ×{k}'), { k: scandalAmp(a).toFixed(1) })),
       ti >= 3 ? h('li', null, t(l('Paparazzi: +{p} de estresse/mês nos integrantes · tumulto de fãs {m}/mês', 'Paparazzi: +{p} stress/month on members · fan mob {m}/month'), { p: papStress(s, a).toFixed(1), m: pct(mobChance(s, a)) })) : null,

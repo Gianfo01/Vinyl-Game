@@ -85,6 +85,8 @@ export interface Know {
 export const KNOW_REVEAL31: { f?: (s: GameState) => boolean } = {};
 
 const mineAct = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
+/** Cliente de empresariamento da sua agência também é seu (o mesmo que a página de conhecidos já tratava como seu). */
+export const isClient31 = (s: GameState, actId: string): boolean => !!((s.x4 as unknown as { ventures9?: { mg?: { clients?: { actId: string }[] } } }).ventures9?.mg?.clients ?? []).some((c) => c.actId === actId);
 
 /**
  * Degrau de fama e fama de pessoa vêm de sys/fame15, que os registra ao carregar. know.ts NÃO importa fame15 (nem
@@ -184,7 +186,7 @@ function raw(s: GameState, id: string, obs: string): Omit<Know, 'width'> {
   if (a) {
     const tier = fameTier(a.fame);
     if (obs !== 'player') return other(s, id, obs, tier, exposure(a.fame), a);
-    if (mineAct(a)) return full(tier);
+    if (mineAct(a) || isClient31(s, a.id)) return full(tier);
     const deg = s.knowledge[id]?.degree ?? 0;
     const rel = a.members.reduce((m, pid) => Math.max(m, relDeg(s, pid)), 0);
     const exp = exposure(fameAt(s, a, '@me')); // exposição vista do país do jogador
@@ -196,7 +198,7 @@ function raw(s: GameState, id: string, obs: string): Omit<Know, 'width'> {
   const pf = FF().person(s, id);
   const tier = fameTier(pf);
   if (obs !== 'player') return other(s, id, obs, tier, exposure(pf), acts[0]);
-  if (p.isPlayer || acts.some(mineAct)) return full(tier);
+  if (p.isPlayer || acts.some((x) => mineAct(x) || isClient31(s, x.id))) return full(tier);
   const deg = acts.reduce((m, x) => Math.max(m, s.knowledge[x.id]?.degree ?? 0), 0);
   const rel = relDeg(s, id);
   const ma = acts.slice().sort((x, y) => y.fame - x.fame)[0];

@@ -28,6 +28,7 @@ import { why18 } from '../explain18';
 import { registerArea } from '../registry';
 import { setTab, tabs } from '../vis';
 import { store } from '../store';
+import { fameText } from '../../sim/sys/fame15';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null | string, ok?: L) => { if (r) toast(T(r), 'info'); else if (ok) toast(T(ok), 'good'); rerender(); };
@@ -56,14 +57,16 @@ function discTab(s: GameState): HTMLElement {
         muted(c.desc), muted(fmtLs(l('Você aprende: {w}', 'You learn: {w}'), { w: t(c.sees) })),
         btn(l('Ir atrás', 'Go looking'), () => { const r = dig18(s, c.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); })))),
     section(t(l('Ir a um show e ver quem abre', 'Go to a show and watch the opener')),
-      ...(showsNow18(s).length ? showsNow18(s).map((a) => row(actLink(s, a.id), pill(`${Math.round(a.fame)}★`), btn(l('Ir ao show (1●)', 'Go to the show (1●)'), () => { const r = watchShow18(s, a.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); }))) : [muted(l('Nenhum cabeça de cartaz no seu mercado agora.', 'No headliners in your market right now.'))])),
+      ...(showsNow18(s).length ? showsNow18(s).map((a) => row(actLink(s, a.id), pill(`${fameText(s, a.id)}★`), // r31 F: fama pela regra única
+ btn(l('Ir ao show (1●)', 'Go to the show (1●)'), () => { const r = watchShow18(s, a.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); }))) : [muted(l('Nenhum cabeça de cartaz no seu mercado agora.', 'No headliners in your market right now.'))])),
     hot.length ? section(t(l('Disputas com rivais', 'Bidding against rivals')), ...hot.map(([id, x]) => row(actLink(s, id), pill(s.labels[x.lb]?.name ?? '?', 'bad'), pill(fmtLs(l('{w} sem.', '{w} wk'), { w: Math.max(0, x.w - s.week) }), 'warn'), muted(l('Faça a proposta na ficha do artista antes do prazo.', 'Make the offer on the artist page before the deadline.'))))) : null,
     section(t(l('Seus achados', 'Your finds')),
       leads.length ? h('table', { class: 'table small' }, h('tr', null, ...[l('Artista', 'Artist'), l('Canal', 'Channel'), l('Agora / potencial', 'Now / potential'), l('Situação', 'Status'), l('Nota', 'Note')].map((x) => h('th', null, t(x)))),
         ...leads.map((x) => { const a = s.acts[x.a]; return a ? h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, t(chName(x.ch))), h('td', { title: t(estTxt18(s, a)) }, abilityCell18(s, a) ?? '?'),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? pill(s.labels[a.owner]?.name ?? '?', 'bad') : st.hot[a.id] ? pill(t(l('disputado', 'contested')), 'warn') : pill(t(l('livre', 'free')))), h('td', { class: 'muted' }, t(x.note))) : null; }))
         : muted(l('Ninguém ainda. Use um canal acima, vá a um show ou ouça as demos da Caixa.', 'Nobody yet. Use a channel above, go to a show or listen to the Inbox demos.'))),
-    gone.length ? section(t(l('Os que escaparam', 'The ones that got away')), ...gone.map((a) => row(actLink(s, a.id), pill(`${Math.round(a.fame)}★`), pill(s.labels[a.owner ?? '']?.name ?? '?'), st.passed[a.id] !== undefined ? pill(t(l('você recusou a demo', 'you passed on the demo')), 'bad') : null))) : null);
+    gone.length ? section(t(l('Os que escaparam', 'The ones that got away')), ...gone.map((a) => row(actLink(s, a.id), pill(`${fameText(s, a.id)}★`), // r31 F: fama pela regra única
+ pill(s.labels[a.owner ?? '']?.name ?? '?'), st.passed[a.id] !== undefined ? pill(t(l('você recusou a demo', 'you passed on the demo')), 'bad') : null))) : null);
 }
 function fmtLs(x: L, p: Record<string, string | number>): string { return t(x).replace(/\{(\w+)\}/g, (_, k) => String(p[k] ?? '')); }
 
