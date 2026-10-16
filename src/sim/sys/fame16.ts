@@ -56,7 +56,10 @@ export const SRC16: { bit: number; name: L }[] = [
   { bit: 32, name: l('transbordo de vizinhos/idioma', 'spillover from neighbours/language') },
   { bit: 64, name: l('hit mundial', 'global hit') },
   { bit: 128, name: l('cena do gênero na cidade', 'genre scene in town') },
+  { bit: 256, name: l('mídia e palcos (rádio, playlist, casa, festival)', 'media and stages (radio, playlist, venue, festival)') },
 ];
+/** R31 CAR (sys/car31.ts): execuções das carreiras viram alvo de fama local (`add(país, pontos)`) e candidatos do mês. */
+export const FAME16X: { add?: (s: GameState, a: Act, add: (a3: string, v: number) => void) => void; cand?: (s: GameState) => string[] } = {};
 const CAP = 12;
 
 // ---------------------------------------------------------------- geografia (cache)
@@ -268,6 +271,8 @@ function targets(s: GameState, a: Act, cp: Map<string, number> | undefined): { t
   for (const [a3, v] of shows) add(a3, Math.min(12, v), 4);
   // divulgação dirigida (mapx8)
   for (const p of mapx(s).promos) if (p.actId === a.id && p.until > s.week) { const a3 = countryOfCity(p.city); if (a3) add(a3, 5, 8); }
+  // R31 CAR: rádio, TV, playlist, casa, festival e crítica (execuções das suas carreiras)
+  FAME16X.add?.(s, a, (a3, v) => add(a3, v, 256));
   // rede da cena do seu selo (scenes12): mídia e casas da cidade empurram os seus atos do mesmo gênero
   if (mineAct(a)) for (const n of Object.values(scene12(s).nets)) {
     if (familyOf(n.genre) !== familyOf(a.genre)) continue;
@@ -305,6 +310,7 @@ export function fame16Month(s: GameState): void {
   const cp = chartPts(s);
   const cand = new Set<string>([...cp.keys(), ...Object.keys(st.d)]);
   for (const a of actsNow27(s)) if (live(a) && (mineAct(a) || a.fame >= 25)) cand.add(a.id);
+  for (const id of FAME16X.cand?.(s) ?? []) cand.add(id);
   playedIx = buildPlayedIx(s);
   sceneMax = new Map();
   try { for (const id of cand) {

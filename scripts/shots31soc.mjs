@@ -1,0 +1,74 @@
+// R31 · onda 3 (SOC) — capturas de Sócios e compras: aba em Negócios, ficha de um negócio com sócio (voto, acordo,
+// pedido do sócio, resultado do mês), painel rápido da cidade e ficha da empresa (aba Negócios e sócios).
+// Começa pela tela inicial como o jogador: NOVA RUN → COMEÇAR MINHA HISTÓRIA; depois compra e avança pela simulação.
+// Uso: npx vite --host 127.0.0.1 --port 5871 &   node scripts/shots31soc.mjs [pasta] [porta]
+import { createRequire } from 'node:module';
+import { mkdirSync } from 'node:fs';
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PLAYWRIGHT_PATH ?? '/opt/node-tools/node_modules/playwright');
+const out = process.argv[2] ?? 'docs/r31/shots';
+const port = process.argv[3] ?? '5871';
+mkdirSync(out, { recursive: true });
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const p = await b.newPage({ viewport: { width: 1360, height: 900 }, locale: 'pt-BR' });
+p.on('pageerror', (e) => console.error('PAGEERR', e.message));
+await p.goto(`http://127.0.0.1:${port}/`); await p.waitForTimeout(3500);
+p.setDefaultTimeout(20000);
+await p.getByText('NOVA RUN', { exact: false }).first().click(); await p.waitForTimeout(1500);
+await p.getByText('COMEÇAR MINHA HISTÓRIA', { exact: false }).first().click(); await p.waitForTimeout(4000);
+for (let i = 0; i < 60 && !(await p.evaluate(async () => !!(await import('/src/ui/store.ts')).store.game)); i++) await p.waitForTimeout(1000);
+p.setDefaultTimeout(60000);
+const info = await p.evaluate(async () => {
+  const st = await import('/src/ui/store.ts');
+  const tick = await import('/src/sim/tick.ts');
+  const off = await import('/src/ui/tutoff19.ts');
+  const soc = await import('/src/sim/sys/socio31.ts');
+  const op = await import('/src/sim/opinion.ts');
+  const g = st.store.game;
+  g.tutorial = { step: 99, done: true, seen: [] };
+  off.setTutorials19(st.store.prefs, false);
+  g.player.cash += 400000000;
+  const ts = soc.targets31(g).filter((t) => !t.never).sort((a, b) => b.prestige - a.prestige);
+  const t1 = ts.find((t) => t.kind === 'fest' && !t.legend) ?? ts[0];
+  const t2 = ts.find((t) => t.kind !== t1.kind && !t.legend) ?? ts[1];
+  op.setOpinion(g, t1.owner.k, 50); op.setOpinion(g, t2.owner.k, 50);
+  const e1 = soc.buy31(g, t1.id, 3500, 'label');
+  const e2 = soc.buy31(g, t2.id, 5100, 'label');
+  const lb = Object.values(g.labels).find((x) => x.active && x.leaderId);
+  if (lb) op.setOpinion(g, `l:${lb.leaderId}`, 40);
+  const jv = lb ? soc.createJoint31(g, { kind: 'venue', name: 'Casa da Ponte', pk: 'label', lb: lb.id, me: 5000, rules: { prog: 'p' }, exit: 'first' }) : null;
+  for (let i = 0; i < 7; i++) tick.advanceMonth(g);
+  const b1 = soc.socio31(g).b[t1.id];
+  if (b1 && !b1.ask && b1.p[0]) b1.ask = { k: 'vote', due: g.week + 3, from: b1.p[0].k, topic: 'prog', v: 2 };
+  window.__g = g;
+  return { t1: t1.id, t1n: t1.name, t2: t2.id, city: t1.city, e1, e2, jv, year: g.year };
+});
+console.log('jogo', JSON.stringify(info));
+const shot = async (name) => { await p.waitForTimeout(900); await p.screenshot({ path: `${out}/onda3-soc-${name}.png` }); console.log('captura', name); };
+const clean = () => p.evaluate(() => document.querySelectorAll('.overlay, .modal-bg, .modal').forEach((e) => e.remove()));
+await clean();
+await p.evaluate(async () => {
+  const st = await import('/src/ui/store.ts');
+  const c = await import('/src/ui/common.ts');
+  const vis = await import('/src/ui/vis.ts');
+  st.store.area = 'business';
+  vis.setTab('business-business', 'soc31');
+  c.rerender();
+});
+await shot('negocios');
+await p.evaluate(() => { const e = [...document.querySelectorAll('h2,h3,h4,summary')].find((x) => /Criar em conjunto/.test(x.textContent ?? '')); e?.scrollIntoView({ block: 'start' }); });
+await shot('criar-conjunto');
+await p.evaluate(async (id) => { const u = await import('/src/ui/r31/socio31ui.ts'); u.openBiz31(window.__g, id); }, info.t1);
+await shot('ficha-negocio');
+await p.evaluate(() => { const m = [...document.querySelectorAll('h4')].find((x) => /Acordo/.test(x.textContent ?? '')); m?.scrollIntoView({ block: 'start' }); });
+await shot('ficha-acordo');
+await clean();
+await p.evaluate(async (city) => { const q = await import('/src/ui/r31/quick31.ts'); q.openQuick31(window.__g, { kind: 'city', id: city }, 'q.soc31'); }, info.city);
+await shot('painel-rapido');
+await clean();
+await p.evaluate(async (city) => { const u = await import('/src/ui/r31/socio31ui.ts'); u.openCitySoc31(window.__g, city); }, info.city);
+await shot('cidade');
+await clean();
+await p.evaluate(async () => { const d = await import('/src/ui/sys/dossier13.ts'); d.openLabelDossier('player', 'x-soc31'); });
+await shot('ficha-empresa');
+await b.close();

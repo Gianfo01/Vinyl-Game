@@ -1,0 +1,625 @@
+{
+ "months": 6,
+ "seeds": [
+  "car-m1",
+  "car-m2",
+  "car-m3"
+ ],
+ "rows": [
+  {
+   "caso": "radio1960",
+   "nome": "Rádio 1960",
+   "seed": "car-m1",
+   "pais": {
+    "audiencia": 27.4,
+    "ibope": 1,
+    "rivais": 7
+   },
+   "paradaPais": {
+    "on": 23138,
+    "off": 19636,
+    "k": 1.178
+   },
+   "top40pais": {
+    "on": 149,
+    "off": 140
+   },
+   "vendas": {
+    "on": 451699,
+    "off": 447715,
+    "k": 1.009
+   },
+   "famaLocal": {
+    "on": 85.2,
+    "off": 51.5
+   },
+   "medidor": {
+    "y": 1960,
+    "own": 0,
+    "oth": 3372,
+    "n": 308
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1960",
+   "nome": "Rádio 1960",
+   "seed": "car-m2",
+   "pais": {
+    "audiencia": 27,
+    "ibope": 1,
+    "rivais": 7
+   },
+   "paradaPais": {
+    "on": 29833,
+    "off": 26675,
+    "k": 1.118
+   },
+   "top40pais": {
+    "on": 134,
+    "off": 122
+   },
+   "vendas": {
+    "on": 316158,
+    "off": 313115,
+    "k": 1.01
+   },
+   "famaLocal": {
+    "on": 105.7,
+    "off": 65.9
+   },
+   "medidor": {
+    "y": 1960,
+    "own": 0,
+    "oth": 2459,
+    "n": 308
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1960",
+   "nome": "Rádio 1960",
+   "seed": "car-m3",
+   "pais": {
+    "audiencia": 29.3,
+    "ibope": 1,
+    "rivais": 7
+   },
+   "paradaPais": {
+    "on": 57473,
+    "off": 51195,
+    "k": 1.123
+   },
+   "top40pais": {
+    "on": 163,
+    "off": 161
+   },
+   "vendas": {
+    "on": 580595,
+    "off": 574500,
+    "k": 1.011
+   },
+   "famaLocal": {
+    "on": 98.7,
+    "off": 62
+   },
+   "medidor": {
+    "y": 1960,
+    "own": 0,
+    "oth": 5151,
+    "n": 308
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1978",
+   "nome": "Rádio 1978",
+   "seed": "car-m1",
+   "pais": {
+    "audiencia": 21.1,
+    "ibope": 1,
+    "rivais": 25
+   },
+   "paradaPais": {
+    "on": 273092,
+    "off": 253065,
+    "k": 1.079
+   },
+   "top40pais": {
+    "on": 164,
+    "off": 158
+   },
+   "vendas": {
+    "on": 1324505,
+    "off": 1317695,
+    "k": 1.005
+   },
+   "famaLocal": {
+    "on": 89.8,
+    "off": 67.3
+   },
+   "medidor": {
+    "y": 1978,
+    "own": 0,
+    "oth": 5878,
+    "n": 294
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1978",
+   "nome": "Rádio 1978",
+   "seed": "car-m2",
+   "pais": {
+    "audiencia": 21.3,
+    "ibope": 1,
+    "rivais": 25
+   },
+   "paradaPais": {
+    "on": 1383963,
+    "off": 1307090,
+    "k": 1.059
+   },
+   "top40pais": {
+    "on": 234,
+    "off": 229
+   },
+   "vendas": {
+    "on": 2926981,
+    "off": 2922274,
+    "k": 1.002
+   },
+   "famaLocal": {
+    "on": 100.6,
+    "off": 48.6
+   },
+   "medidor": {
+    "y": 1978,
+    "own": 0,
+    "oth": 14292,
+    "n": 294
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1978",
+   "nome": "Rádio 1978",
+   "seed": "car-m3",
+   "pais": {
+    "audiencia": 21.3,
+    "ibope": 1,
+    "rivais": 25
+   },
+   "paradaPais": {
+    "on": 727686,
+    "off": 687183,
+    "k": 1.059
+   },
+   "top40pais": {
+    "on": 206,
+    "off": 203
+   },
+   "vendas": {
+    "on": 2466250,
+    "off": 2458781,
+    "k": 1.003
+   },
+   "famaLocal": {
+    "on": 107.8,
+    "off": 50
+   },
+   "medidor": {
+    "y": 1978,
+    "own": 0,
+    "oth": 11093,
+    "n": 294
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1995",
+   "nome": "Rádio 1995",
+   "seed": "car-m1",
+   "pais": {
+    "audiencia": 17.8,
+    "ibope": 1,
+    "rivais": 25
+   },
+   "paradaPais": {
+    "on": 794535,
+    "off": 759865,
+    "k": 1.046
+   },
+   "top40pais": {
+    "on": 165,
+    "off": 164
+   },
+   "vendas": {
+    "on": 5823851,
+    "off": 5810201,
+    "k": 1.002
+   },
+   "famaLocal": {
+    "on": 74.7,
+    "off": 44.3
+   },
+   "medidor": {
+    "y": 1995,
+    "own": 0,
+    "oth": 13058,
+    "n": 294
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1995",
+   "nome": "Rádio 1995",
+   "seed": "car-m2",
+   "pais": {
+    "audiencia": 20.9,
+    "ibope": 1,
+    "rivais": 25
+   },
+   "paradaPais": {
+    "on": 1308183,
+    "off": 1239360,
+    "k": 1.056
+   },
+   "top40pais": {
+    "on": 193,
+    "off": 191
+   },
+   "vendas": {
+    "on": 5598389,
+    "off": 5574748,
+    "k": 1.004
+   },
+   "famaLocal": {
+    "on": 69.4,
+    "off": 42.1
+   },
+   "medidor": {
+    "y": 1995,
+    "own": 0,
+    "oth": 18691,
+    "n": 294
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "radio1995",
+   "nome": "Rádio 1995",
+   "seed": "car-m3",
+   "pais": {
+    "audiencia": 17.4,
+    "ibope": 1,
+    "rivais": 25
+   },
+   "paradaPais": {
+    "on": 1472866,
+    "off": 1407356,
+    "k": 1.047
+   },
+   "top40pais": {
+    "on": 229,
+    "off": 227
+   },
+   "vendas": {
+    "on": 4982662,
+    "off": 4967100,
+    "k": 1.003
+   },
+   "famaLocal": {
+    "on": 88.5,
+    "off": 46.5
+   },
+   "medidor": {
+    "y": 1995,
+    "own": 0,
+    "oth": 13370,
+    "n": 294
+   },
+   "execucoes": 14
+  },
+  {
+   "caso": "tv1985",
+   "nome": "TV 1985",
+   "seed": "car-m1",
+   "pais": {
+    "audiencia": 39.5
+   },
+   "paradaPais": {
+    "on": 134294,
+    "off": 108176,
+    "k": 1.241
+   },
+   "top40pais": {
+    "on": 87,
+    "off": 76
+   },
+   "vendas": {
+    "on": 1281798,
+    "off": 1266143,
+    "k": 1.012
+   },
+   "famaLocal": {
+    "on": 69.7,
+    "off": 20.1
+   },
+   "medidor": {
+    "y": 1985,
+    "own": 0,
+    "oth": 14475,
+    "n": 168
+   },
+   "execucoes": 8
+  },
+  {
+   "caso": "tv1985",
+   "nome": "TV 1985",
+   "seed": "car-m2",
+   "pais": {
+    "audiencia": 39.5
+   },
+   "paradaPais": {
+    "on": 630752,
+    "off": 540664,
+    "k": 1.167
+   },
+   "top40pais": {
+    "on": 115,
+    "off": 107
+   },
+   "vendas": {
+    "on": 2598760,
+    "off": 2567292,
+    "k": 1.012
+   },
+   "famaLocal": {
+    "on": 68,
+    "off": 16.4
+   },
+   "medidor": {
+    "y": 1985,
+    "own": 0,
+    "oth": 26568,
+    "n": 168
+   },
+   "execucoes": 8
+  },
+  {
+   "caso": "tv1985",
+   "nome": "TV 1985",
+   "seed": "car-m3",
+   "pais": {
+    "audiencia": 39.1
+   },
+   "paradaPais": {
+    "on": 178695,
+    "off": 136934,
+    "k": 1.305
+   },
+   "top40pais": {
+    "on": 105,
+    "off": 85
+   },
+   "vendas": {
+    "on": 1758766,
+    "off": 1739680,
+    "k": 1.011
+   },
+   "famaLocal": {
+    "on": 75.9,
+    "off": 4.6
+   },
+   "medidor": {
+    "y": 1985,
+    "own": 0,
+    "oth": 21158,
+    "n": 168
+   },
+   "execucoes": 8
+  },
+  {
+   "caso": "plat2016",
+   "nome": "Plataforma 2016",
+   "seed": "car-m1",
+   "pais": {
+    "assinantes_mi": 5.5
+   },
+   "paradaPais": {
+    "on": 551664,
+    "off": 303289,
+    "k": 1.819
+   },
+   "top40pais": {
+    "on": 180,
+    "off": 139
+   },
+   "vendas": {
+    "on": 3378306,
+    "off": 3215443,
+    "k": 1.051
+   },
+   "famaLocal": {
+    "on": 191.8,
+    "off": 27.3
+   },
+   "medidor": {
+    "y": 2016,
+    "own": 0,
+    "oth": 427669,
+    "n": 630
+   },
+   "execucoes": 280
+  },
+  {
+   "caso": "plat2016",
+   "nome": "Plataforma 2016",
+   "seed": "car-m2",
+   "pais": {
+    "assinantes_mi": 5.5
+   },
+   "paradaPais": {
+    "on": 281135,
+    "off": 163843,
+    "k": 1.716
+   },
+   "top40pais": {
+    "on": 160,
+    "off": 138
+   },
+   "vendas": {
+    "on": 3365087,
+    "off": 3242975,
+    "k": 1.038
+   },
+   "famaLocal": {
+    "on": 199.7,
+    "off": 25.5
+   },
+   "medidor": {
+    "y": 2016,
+    "own": 0,
+    "oth": 409424,
+    "n": 630
+   },
+   "execucoes": 280
+  },
+  {
+   "caso": "plat2016",
+   "nome": "Plataforma 2016",
+   "seed": "car-m3",
+   "pais": {
+    "assinantes_mi": 5.5
+   },
+   "paradaPais": {
+    "on": 193431,
+    "off": 123783,
+    "k": 1.563
+   },
+   "top40pais": {
+    "on": 156,
+    "off": 129
+   },
+   "vendas": {
+    "on": 1904846,
+    "off": 1811418,
+    "k": 1.052
+   },
+   "famaLocal": {
+    "on": 187.6,
+    "off": 10.6
+   },
+   "medidor": {
+    "y": 2016,
+    "own": 0,
+    "oth": 349586,
+    "n": 630
+   },
+   "execucoes": 280
+  },
+  {
+   "caso": "venue1975",
+   "nome": "Casa de shows 1975",
+   "seed": "car-m1",
+   "pais": {
+    "prestigio": 24.2,
+    "noites_lendarias": 1
+   },
+   "paradaPais": {
+    "on": 12104,
+    "off": 11695,
+    "k": 1.035
+   },
+   "top40pais": {
+    "on": 35,
+    "off": 30
+   },
+   "vendas": {
+    "on": 246350,
+    "off": 246195,
+    "k": 1.001
+   },
+   "famaLocal": {
+    "on": 52.7,
+    "off": 35.3
+   },
+   "medidor": {
+    "y": 1975,
+    "own": 0,
+    "oth": 79,
+    "n": 4
+   },
+   "execucoes": 4
+  },
+  {
+   "caso": "venue1975",
+   "nome": "Casa de shows 1975",
+   "seed": "car-m2",
+   "pais": {
+    "prestigio": 24.2,
+    "noites_lendarias": 2
+   },
+   "paradaPais": {
+    "on": 16273,
+    "off": 16218,
+    "k": 1.003
+   },
+   "top40pais": {
+    "on": 20,
+    "off": 20
+   },
+   "vendas": {
+    "on": 395063,
+    "off": 394551,
+    "k": 1.001
+   },
+   "famaLocal": {
+    "on": 31.1,
+    "off": 19.1
+   },
+   "medidor": {
+    "y": 1975,
+    "own": 0,
+    "oth": 318,
+    "n": 8
+   },
+   "execucoes": 4
+  },
+  {
+   "caso": "venue1975",
+   "nome": "Casa de shows 1975",
+   "seed": "car-m3",
+   "pais": {
+    "prestigio": 24.2,
+    "noites_lendarias": 2
+   },
+   "paradaPais": {
+    "on": 4579,
+    "off": 4579,
+    "k": 1
+   },
+   "top40pais": {
+    "on": 14,
+    "off": 14
+   },
+   "vendas": {
+    "on": 254809,
+    "off": 254753,
+    "k": 1
+   },
+   "famaLocal": {
+    "on": 45.4,
+    "off": 13.7
+   },
+   "medidor": {
+    "y": 1975,
+    "own": 0,
+    "oth": 14103,
+    "n": 4
+   },
+   "execucoes": 6
+  }
+ ]
+}

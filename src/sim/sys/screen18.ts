@@ -50,6 +50,8 @@ export interface Comm18 {
   ap?: Ap18; who?: string; prog: number; due: number; q?: number; prem?: number; box?: number; ost?: 'label' | 'license' | 'none';
   nom?: 1; won?: 1; fyc?: number; cop?: number; run?: number; crit?: number; sued?: 1; why?: L[];
 }
+/** R31 CAR (sys/car31more.ts): na estreia, a música do filme vende pela bilheteria (ato de quem compôs). */
+export const SCREEN31: { prem?: (s: GameState, c: Comm18, act: import('../types').Act | undefined) => void } = {};
 export interface Screen18 { rep: number; list: Comm18[]; seq: number; dirs: Record<string, number>; earned: number; wins: number; noms: number; ost: { id: string; until: number; v: number }[]; log: { y: number; t: L }[] }
 declare module '../ext4' { interface Ext4 { screen18: Screen18 } }
 registerExt4('screen18', () => ({ rep: 0, list: [], seq: 0, dirs: {}, earned: 0, wins: 0, noms: 0, ost: [], log: [] }));
@@ -181,6 +183,7 @@ function premiere(s: GameState, r: Rng, c: Comm18): void {
   const who = c.who ? s.persons[c.who] : undefined;
   const act = who && playerActs(s).map((id) => s.acts[id]).find((a) => a?.members.includes(who.id));
   if (act && c.box > 0.7) act.fame = clamp(act.fame + c.box * 2, 0, 100);
+  SCREEN31.prem?.(s, c, who ? Object.values(s.acts).find((a) => a.members.includes(who.id) && a.status !== 'retired' && a.status !== 'split') : undefined);
   if (c.ap === 'temp' && r.chance(0.12)) {
     c.sued = 1;
     const v = Math.round(c.fee * 0.4);
