@@ -198,7 +198,7 @@ function objBtn(pl: Plan27, it: Item5, n: number, year: number, k: number, on: (
 }
 
 /** Selo da sala: nome, quantos objetos e "!"; abre a lista da sala (tudo da sala, inclusive o que não coube no desenho). */
-function roomChip(pl: Plan27, r: Room5, bangs: Record<string, number>, on: (id: string) => void): HTMLElement {
+function roomChip(pl: Plan27, r: Room5, bangs: Record<string, number>, on: (id: string) => void, flash?: string): HTMLElement {
   const n = r.objs.reduce((a, id) => a + (bangs[id] ?? 0), 0);
   const name = tl5(ROOM_L5[r.kind] ?? l('Sala', 'Room'));
   const list = h('div', { class: 's5-pop', role: 'menu', hidden: true },
@@ -206,8 +206,9 @@ function roomChip(pl: Plan27, r: Room5, bangs: Record<string, number>, on: (id: 
     ...r.objs.map((id) => h('button', { type: 'button', role: 'menuitem', class: 's5-pop-i', onclick: () => on(id) },
       h('span', null, txt5(tl5(object5(id)!.label))), bangs[id] ? raw5('i', 'bg5', String(bangs[id])) : null, kbd5(keyOf5(id)))),
     h('small', null, t(l('Clique num objeto ou use a tecla.', 'Click an object or use its key.'))));
-  const btn = h('button', { type: 'button', class: 's5-room', 'aria-haspopup': 'menu', 'data-room': r.kind,
-    onclick: (e: Event) => { e.stopPropagation(); const was = !list.hidden; document.querySelectorAll<HTMLElement>('.s5-pop').forEach((x) => { x.hidden = true; }); list.hidden = was; } },
+  const lit = !!flash && r.objs.includes(flash);
+  const btn = h('button', { type: 'button', class: `s5-room${lit ? ' flash' : ''}`, 'aria-haspopup': 'menu', 'data-room': r.kind,
+    onclick: (e: Event) => { e.stopPropagation(); const was = !list.hidden; document.querySelectorAll<HTMLElement>('.s5-pop').forEach((x) => { x.hidden = true; }); list.hidden = was; if (!was) { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); list.classList.toggle('up', r.top > (window.innerHeight || 800) * 0.4); list.classList.toggle('left', r.left > (window.innerWidth || 1280) * 0.6); (list.querySelector('button') as HTMLElement | null)?.focus(); } } },
     name, n ? raw5('i', 'bg5', String(n)) : null);
   return h('div', { class: 's5-roomw', style: `left:${pct(r.cell.x + 3, pl.W)};top:${pct(r.cell.y + 3, pl.H)}` }, btn, list);
 }
@@ -281,7 +282,7 @@ export function sedeScene5(o: SedeIn5): HTMLElement {
     stage.style.height = `${Math.round(d.plan.H * k)}px`;
     layer.replaceChildren(
       ...lay.items.map((it) => objBtn(d.plan, it, o.bangs[it.id] ?? 0, s.year, Math.ceil(k), o.open, o.flash === it.id)),
-      ...lay.rooms.map((r) => roomChip(d.plan, r, o.bangs, o.open)),
+      ...lay.rooms.map((r) => roomChip(d.plan, r, o.bangs, o.open, lay.items.some((x) => x.id === o.flash) ? undefined : o.flash)),
       ...lockChips(s, d.plan, m.units));
   };
   const size = () => ({ w: wrap.clientWidth || Math.max(640, (window.innerWidth || 1280) - 40), h: wrap.clientHeight || Math.max(360, (window.innerHeight || 800) - 170) });

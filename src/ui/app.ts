@@ -118,7 +118,7 @@ import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em n
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
 import { NAV5, TRANS5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { chordLabel5 } from './r31/keys5';
-import { shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
+import { help5, shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
 import { settingsTrn31, transition31, trnBack31, trnGate31 } from './r31/trn31'; // R31 onda 5 (TRN): transições entre telas
@@ -775,6 +775,7 @@ function settings(): void {
       h('button', { class: 'btn small ghost', onclick: () => { close(); openCampaign29(); } }, '⚑ ', t(l('Campanha', 'Campaign'))),
       h('button', { class: 'btn small ghost', onclick: () => { close(); openIndex29(); } }, '☰ ', t(l('Índice de todas as páginas', 'Index of every page'))),
       h('button', { class: 'btn small ghost', onclick: () => { close(); go('tut18'); } }, '? ', t(l('Ajuda', 'Help'))),
+      shell5On(store.game) ? h('button', { class: 'btn small ghost', onclick: () => { close(); help5(); } }, t(l('Teclas (trocar)', 'Keys (rebind)'))) : null, // R31 onda 5 (NAV): teclas configuráveis
       themeButton(() => render())),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: fullMenu31(), onchange: (e: Event) => { setFullMenu31((e.target as HTMLInputElement).checked); render(); } }),
       ' ', t(l('Menu completo: mostrar também a árvore com todas as páginas no menu lateral', 'Full menu: also show the tree with every page in the side menu'))),
