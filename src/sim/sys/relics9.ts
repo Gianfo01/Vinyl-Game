@@ -232,6 +232,11 @@ export function acceptCounter(s: GameState, id: string): L | null {
   buyFrom(s, rl, rl.ctr.p, 'compra');
   return null;
 }
+/** R31 · onda 4 (T): o arremate da casa de leilões usa a MESMA compra (mesmo lançamento, mesma lista de donos). */
+export const relicBuyFrom9 = (s: GameState, rl: Relic, price: number, how: string): void => buyFrom(s, rl, price, how);
+/** R31 · onda 4 (T · casa de leilões): quando devolve true, o lote está num pregão marcado e o martelo é da casa
+ *  (sys/auction31) — o destino aleatório daqui não resolve o leilão. */
+export const relicAuctionHook9: { f: (s: GameState, rl: Relic) => boolean } = { f: () => false };
 function buyFrom(s: GameState, rl: Relic, price: number, how: string): void {
   post(s, `relicbuy:${rl.id}`, -price, 'acquisitions', `Relíquia: ${rl.n.pt}`);
   rl.st = 'player';
@@ -340,6 +345,7 @@ const fate = (s: GameState, r: Rng, rl: Relic): void => {
   const owner = rl.p ? s.persons[rl.p] : undefined;
   const col = () => `${r.pick(COLLECTORS)} (${r.pick(['colecionador', 'museu privado', 'fã'])})`;
   if (rl.st === 'auction') {
+    if (relicAuctionHook9.f(s, rl)) return;
     if (rl.au !== undefined && s.week < rl.au) return;
     const top = Math.round(rl.v * r.float(1, 1.4) * relicHook.f(s, rl));
     const bid = rl.bid;
