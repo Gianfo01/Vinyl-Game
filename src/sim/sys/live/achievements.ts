@@ -72,6 +72,9 @@ export const achById = Object.fromEntries(ACHIEVEMENTS.map((x) => [x.id, x])) as
 
 /** Verifica conquistas; devolve as novas. */
 export function checkAchievements(s: GameState): string[] {
+  // R31 (N): partida editada (editor dentro da partida ou base editada) não conta para conquistas — mesma leitura de
+  // isEdited31 (sim/r31/editor.ts), sem importar o editor aqui (ordem de carga)
+  if ((s as unknown as { x4?: { edit31?: { edited?: boolean } } }).x4?.edit31?.edited || s.config.base31) return [];
   const lv = liveOf(s);
   const out: string[] = [];
   for (const a of ACHIEVEMENTS) {

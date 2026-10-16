@@ -106,7 +106,14 @@ function projOf(s: GameState, id: string): { n: string; a?: string; k: PKind31 }
   if (pr) return { n: pr.title, a: pr.actId, k: 'proj' };
   const pj = (s.x4 as unknown as { proj8?: { list: { id: string; title: string; actId: string }[] } }).proj8?.list.find((x) => x.id === id);
   if (pj) return { n: pj.title, a: pj.actId, k: 'proj' };
+  for (const f of projName31()) { const n = f(s, id); if (n) return { n, k: 'x' }; }
   return { n: '', k: 'x' };
+}
+/** Nomes de projetos de outros sistemas (SOC: 'soc:<negócio>' → nome do festival/casa/rádio/estúdio). Função içada. */
+export type ProjName31 = (s: GameState, id: string) => string | undefined;
+export function projName31(): ProjName31[] {
+  const f = projName31 as unknown as { l?: ProjName31[] };
+  return (f.l ??= []);
 }
 
 // ---------------------------------------------------------------- registro (ouvinte da transação)

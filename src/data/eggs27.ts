@@ -298,6 +298,19 @@ export const EGGS27: EggMeta27[] = [
     P('Ter um lançamento de city pop de 1976–89 no catálogo a partir de 2017.', 'Have a 1976–89 city pop release in the catalog from 2017.'),
     P('O algoritmo recomenda a faixa a milhões: revival mundial.', 'The algorithm recommends the track to millions: a worldwide revival.'),
     P('"Plastic Love" (Mariya Takeuchi, 1984) viraliza no YouTube a partir de 2017.', '"Plastic Love" (Mariya Takeuchi, 1984) goes viral on YouTube from 2017.')),
+  // ------------------------------------------------------------ R31 (N): mais Edison
+  E('edison_tone31', 'sim', '1915–25', P('Qualquer palco', 'Any stage'), P('Teste de tom', 'Tone test'),
+    P('Fazer um show entre 1915 e 1925.', 'Play a show between 1915 and 1925.'),
+    P('No escuro, a plateia não sabe se é a sua banda ou um disco de Edison: fama e conversa na cidade.', 'In the dark, the audience cannot tell your band from an Edison record: fame and talk around town.'),
+    P('1915–25: os "Tone Tests" da Edison comparavam ao vivo um cantor e o disco Diamond Disc, com as luzes apagadas.', '1915–25: Edison\'s "Tone Tests" compared a live singer with a Diamond Disc record, with the lights off.')),
+  E('edison_cyl31', 'sim', 'até 1931', P('Sua loja', 'Your shop'), P('O último freguês dos cilindros', 'The last cylinder customer'),
+    P('Antes de 1931, um visitante raro aparece na loja.', 'Before 1931, a rare visitor turns up at the shop.'),
+    P('Um senhor de chapéu compra todos os cilindros de cera da prateleira: um pouco de caixa e uma história.', 'A gentleman in a hat buys every wax cylinder on the shelf: a little cash and a story.'),
+    P('A Edison fabricou cilindros até 1929 e encerrou o negócio de discos em 1929–31.', 'Edison made cylinders until 1929 and closed the record business in 1929–31.')),
+  E('edison_mary31', 'ui', 'qualquer época', P('Sede', 'HQ'), P('Mary, a original', 'The original Mary'),
+    P('Clicar no fonógrafo da Sede.', 'Click the HQ phonograph.'),
+    P('O fonógrafo toca, chiando, a gravação original de "Mary had a little lamb".', 'The phonograph plays, crackling, the original "Mary had a little lamb" recording.'),
+    P('1877: Edison grava a cantiga infantil na folha de estanho — as primeiras palavras gravadas e reproduzidas.', '1877: Edison records the nursery rhyme on tinfoil — the first words recorded and played back.'), 'edison31'),
 ];
 
 /** Conquistas secretas (entram em ACHIEVEMENTS como escondidas). */
@@ -313,6 +326,8 @@ export const FEATS27: { id: string; icon: string; name: L; desc: L }[] = [
   { id: 'fifth27', icon: 'fans', name: l('O quinto integrante', 'The fifth member'), desc: l('Um produtor ou empresário vira parte da banda.', 'A producer or manager becomes part of the band.') },
   { id: 'amp11', icon: 'fire', name: l('Um a mais', 'One louder'), desc: l('Tenha um amplificador que vai até 11.', 'Own an amp that goes to 11.') },
   { id: 'hunter27', icon: 'trophy', name: l('Caçador de ovos', 'Egg hunter'), desc: l('Ache 10 ovos de Páscoa numa partida.', 'Find 10 Easter eggs in one run.') },
+  { id: 'edison31', icon: 'gold-disc', name: l('O laboratório de Menlo Park', 'The Menlo Park lab'), desc: l('Ache todos os ovos do Edison.', 'Find all the Edison eggs.') },
+  { id: 'fic31', icon: 'star', name: l('Saída da tela', 'Straight off the screen'), desc: l('Contrate uma banda de filme, série ou desenho.', 'Sign a band from a film, series or cartoon.') },
 ];
 
 export const eggMeta27 = Object.fromEntries(EGGS27.map((e) => [e.id, e])) as Record<string, EggMeta27>;

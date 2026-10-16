@@ -35,6 +35,7 @@ import { quickCharBlock29 } from './char29'; // r29: "Seu personagem" (nome, ida
 import { charLine29, isArtist29 } from './char29model';
 import { clampAge29 } from '../../sim/char29data';
 import { askFile, askText } from '../ask31'; // r31 (B): perguntas dentro do jogo
+import { dedication31, openCredits31 } from '../r31/credits31'; // R31 (N): dedicatória e créditos
 import { baseEditorScreen31, baseLabel31 } from '../base31ui'; // R31 (EDT): editor de base
 
 /** r27: arte da tela inicial e da Nova run = a sede em pixel art do próprio jogo (hqpx27), não ilustração externa. */
@@ -133,6 +134,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
       h('h1', { class: 'h27-logo' }, t(S.gameTitle).toUpperCase()),
       h('p', { class: 'h27-sub' }, t(l('Toda lenda começa\ncom uma escolha.', 'Every legend starts\nwith a choice.'))),
       h('p', { class: 'h27-desc' }, t(l('Descubra talentos. Produza discos. Ocupe os palcos.\nConstrua uma história que continue a tocar.', 'Discover talent. Make records. Take the stage.\nBuild a story that keeps on playing.'))),
+      dedication31(), // R31 (N): dedicatória na abertura (homenagem à família Fossati)
       cont,
       h('div', { class: 'h27-actions' },
         h('button', { type: 'button', class: 'h27-btn h27-primary', onclick: () => quickRunScreen27(root, onStart) }, h('span', { class: 'h27-disc', 'aria-hidden': 'true' }), t(S.newGame).toUpperCase()),
@@ -145,7 +147,8 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
         link(`${t(l('Editor de base', 'Database editor'))} · ${baseLabel31()}`, () => { baseEditorScreen31(root, redraw); top27(); }, { 'data-link': 'base31' }), // R31 (EDT)
         link(t(l('Usar código de run', 'Use a run code')), runCode),
         link(t(l('Importar arquivo', 'Import file')), () => void importFile()),
-        link(t(l('Colar save', 'Paste save')), () => void pasteSave()))),
+        link(t(l('Colar save', 'Paste save')), () => void pasteSave()),
+        link(t(l('Créditos', 'Credits')), openCredits31, { 'data-link': 'credits31' }))), // R31 (N)
     h('div', { class: 'h27-foot' }, h('span', null, 'PIXEL STUDIO EDITION'), h('span', null, t(l('1889 — 2040 E ALÉM · SIMULAÇÃO HISTÓRICA & SANDBOX', '1889 — 2040 AND BEYOND · HISTORICAL SIMULATION & SANDBOX')))));
 
   // ---- perfis e saves

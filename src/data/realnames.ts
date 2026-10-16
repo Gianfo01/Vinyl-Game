@@ -8,6 +8,7 @@
 // criação do jogo (gancho 'newgame' em sim/sys/realnames.ts).
 
 import { FESTIVALS, MEDIA } from './catalog';
+import { disp31 } from './realdisp31';
 
 export interface RealAct { name: string; members?: string[] }
 
@@ -225,6 +226,7 @@ export function realNamesActive(): boolean {
 
 /** Filtro aplicado ao texto final mostrado na tela. */
 export function realText(s: string): string {
-  if (!rx || !s) return s;
-  return s.replace(rx, (m0) => map[m0] ?? m0);
+  if (!s) return s;
+  // R31 (X): depois do filtro antigo, a troca do interruptor "Nomes e obras reais" (src/data/realdisp31.ts)
+  return disp31(rx ? s.replace(rx, (m0) => map[m0] ?? m0) : s);
 }

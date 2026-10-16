@@ -8,7 +8,8 @@
 import type { PlaceK27, Person27 } from '../../sim/sys/place27';
 import { avatarSprite, lookOf, type Pose } from './avatar';
 import { paletteOf } from './palette';
-import { C, INK, Px, lv, mix, noise, tint, withAlpha, type Col } from './px';
+import { C, INK, Px, inked, lv, mix, noise, tint, withAlpha, type Col } from './px';
+import { bars31, crowd31, speaker31 } from './stage31px';
 import { eraOf } from './palette';
 import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 
@@ -16,11 +17,15 @@ import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx
 
 export type Media27 = 'sheets' | 'shellac' | 'lp' | 'cds' | 'vinyl';
 export type PropT27 = 'stage' | 'crowd' | 'counter' | 'bottles' | 'bins' | 'racks' | 'listen' | 'booth' | 'console' | 'glass' | 'drums' | 'amp' | 'mic' | 'piano' | 'guitar'
-  | 'typewriters' | 'screens' | 'presses' | 'cork' | 'filing' | 'tables' | 'jukebox' | 'foam' | 'couch' | 'tv' | 'plant' | 'window' | 'keys' | 'guitars' | 'poster' | 'gold' | 'reel' | 'onair' | 'desk';
+  | 'typewriters' | 'screens' | 'presses' | 'cork' | 'filing' | 'tables' | 'jukebox' | 'foam' | 'couch' | 'tv' | 'plant' | 'window' | 'keys' | 'guitars' | 'poster' | 'gold' | 'reel' | 'onair' | 'desk'
+  // r31 (I/S): interiores do submundo e da delegacia
+  | 'cells' | 'crates' | 'safe' | 'roulette' | 'speakers' | 'door';
 export interface Prop27 { t: PropT27; x: number; w?: number; media?: Media27; n?: number }
 export type Zone27 = 'stage' | 'floor' | 'booth' | 'live' | 'counter' | 'desk';
 export interface ISpot27 { x: number; z: Zone27; pose: Pose; dir: 'SE' | 'SW' }
-export interface Interior27 { k: PlaceK27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean }
+/** r31 (S): salas que não são lugares do mapa (fundos da fachada, baile) */
+export type IKind27 = PlaceK27 | 'backroom' | 'baile';
+export interface Interior27 { k: IKind27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean; /** r31: fachada (restaurante, boate…) */ v?: string }
 
 export const INTERIOR_KINDS27: PlaceK27[] = ['venue', 'records', 'radio', 'studio', 'bar', 'press', 'rehearsal', 'label', 'office', 'apartments', 'hotel', 'instruments'];
 
@@ -28,7 +33,7 @@ const mediaOf = (y: number): Media27 => (y < 1920 ? 'sheets' : y < 1950 ? 'shell
 const sp = (x: number, z: Zone27, pose: Pose = 'stand', dir: 'SE' | 'SW' = 'SE'): ISpot27 => ({ x, z, pose, dir });
 
 /** O que há dentro de cada tipo de lugar, por época (frações da largura da sala). */
-export function interior27(k: PlaceK27, year: number, n = 4): Interior27 {
+export function interior27(k: IKind27, year: number, n = 4, v?: string): Interior27 {
   const props: Prop27[] = [];
   let spots: ISpot27[] = [];
   let floor: Interior27['floor'] = 'lobby', dim = false;
@@ -97,11 +102,67 @@ export function interior27(k: PlaceK27, year: number, n = 4): Interior27 {
       P('guitars', 0.04, 0.36, { n: 5 }); P('piano', 0.44); P('drums', 0.58); P('amp', 0.68); P('counter', 0.78, 0.18);
       spots = [sp(0.86, 'counter', 'stand', 'SW'), sp(0.3, 'floor', 'play'), sp(0.5, 'floor'), sp(0.66, 'floor', 'stand', 'SW')];
       break;
+    // r31 (S): fachada da facção (restaurante, boate, galpão, cassino, barracão, escritório) — a porta dos fundos leva à sala
+    case 'facade':
+      dim = v !== 'office' && v !== 'restaurant'; floor = v === 'warehouse' ? 'studio' : v === 'office' ? 'office' : 'lounge';
+      if (v === 'warehouse') { P('crates', 0.04, 0.5, { n: 4 }); P('crates', 0.58, 0.22, { n: 2 }); }
+      else if (v === 'casino') { P('roulette', 0.08, 0.26); P('tables', 0.38, 0.3, { n: 2 }); P('bottles', 0.72, 0.16); P('counter', 0.7, 0.18); }
+      else if (v === 'office') { P('window', 0.1, 0.2); P('desk', 0.08, 0.22); P('filing', 0.4); P('plant', 0.5); P('couch', 0.56, 0.2); }
+      else if (v === 'club' || v === 'barracao') { P('counter', 0.03, 0.24); P('bottles', 0.04, 0.22); P('speakers', 0.36, 0.06); P('stage', 0.42, 0.3); P('speakers', 0.66, 0.06); }
+      else { P('counter', 0.03, 0.22); P('bottles', 0.04, 0.2); P('tables', 0.3, 0.46, { n: 3 }); P('poster', 0.32, 0.05); }
+      P('door', 0.86, 0.08);
+      spots = [sp(0.14, 'counter'), sp(0.5, 'floor', 'sit'), sp(0.62, 'floor', 'stand', 'SW'), sp(0.78, 'floor', 'stand', 'SW'), sp(0.36, 'floor')];
+      break;
+    case 'backroom':
+      floor = 'office'; dim = true;
+      P('safe', 0.05); P('poster', 0.2, 0.05); P('desk', 0.36, 0.3); P('bottles', 0.74, 0.14); P('couch', 0.72, 0.18); P('door', 0.92, 0.06);
+      spots = [sp(0.5, 'desk', 'sit', 'SW'), sp(0.68, 'floor', 'stand', 'SW'), sp(0.32, 'floor', 'stand'), sp(0.82, 'floor', 'stand', 'SW'), sp(0.2, 'floor')];
+      break;
+    case 'baile':
+      dim = true; floor = 'lounge';
+      P('speakers', 0.04, 0.06); P('stage', 0.12, 0.5); P('mic', 0.3); P('speakers', 0.58, 0.06); P('counter', 0.74, 0.22); P('crowd', 0.1, 0.56, { n: 12 });
+      spots = [sp(0.26, 'stage', 'play'), sp(0.36, 'stage', 'play'), sp(0.46, 'stage', 'play', 'SW'), sp(0.82, 'counter', 'stand', 'SW'), sp(0.72, 'floor', 'stand', 'SW'), sp(0.9, 'floor')];
+      break;
+    case 'police':
+      floor = 'office';
+      P('window', 0.06, 0.12); P('desk', 0.04, 0.2); P('filing', 0.28); P('cork', 0.34, 0.12); P('cells', 0.52, 0.46, { n: 3 });
+      spots = [sp(0.12, 'desk', 'sit'), sp(0.3, 'floor', 'stand', 'SW'), sp(0.58, 'booth', 'stand'), sp(0.74, 'booth', 'stand', 'SW'), sp(0.9, 'booth', 'sit', 'SW'), sp(0.44, 'floor')];
+      break;
+    case 'market':
+      floor = 'studio'; dim = true;
+      P('crates', 0.04, 0.3, { n: 3 }); P('bins', 0.38, 0.26, { media: mediaOf(year), n: 2 }); P('guitars', 0.68, 0.24, { n: 3 }); P('door', 0.94, 0.05);
+      spots = [sp(0.56, 'counter', 'stand', 'SW'), sp(0.22, 'floor'), sp(0.84, 'floor', 'stand', 'SW'), sp(0.66, 'floor')];
+      break;
   }
   // pelo menos 4 lugares (n pessoas): completa com plateia/visita espalhada
   let i = 0;
   while (spots.length < Math.max(4, Math.min(n, 8))) { spots.push(sp(0.15 + ((i * 0.23) % 0.7), 'floor', 'stand', i % 2 ? 'SW' : 'SE')); i++; }
   return { k, year, props, spots, floor, dim };
+}
+
+// ---------------------------------------------------------------- pessoas e geometria (puro: a cena e os pontos clicáveis usam o mesmo cálculo)
+
+/** Onde cada pessoa fica: você na porta; artistas no palco/sala de gravação/cabine; equipe no balcão/mesa; o resto no salão. */
+export function placePeople27(m: Interior27, people: Person27[]): [Person27, ISpot27][] {
+  const you = people.filter((x) => x.you), cell = people.filter((x) => x.cell && !x.you), perf = people.filter((x) => !!x.actId && !x.you && !x.staff && !x.cell), rest = people.filter((x) => (!x.actId || x.staff) && !x.you && !x.cell);
+  const free = [...m.spots];
+  let extra = 0;
+  // sem lugar livre na zona certa: um lugar a mais no salão (a equipe nunca sobe ao palco nem entra na cela)
+  const more = (): ISpot27 => sp(0.16 + ((extra++ * 0.17) % 0.6), 'floor', 'stand', extra % 2 ? 'SW' : 'SE');
+  const take = (zs: Zone27[], any = true): ISpot27 | undefined => { for (const z of zs) { const i = free.findIndex((s0) => s0.z === z); if (i >= 0) return free.splice(i, 1)[0]; } return any ? free.shift() : more(); };
+  const placed: [Person27, ISpot27][] = [];
+  for (const x of you) placed.push([x, sp(m.k === 'police' || m.k === 'backroom' ? 0.24 : 0.06, 'floor', 'stand', 'SE')]);
+  for (const x of cell) placed.push([x, take(['booth'], false) ?? more()]);
+  for (const x of perf) { const s0 = take(['stage', 'live', 'booth', 'floor']); if (s0) placed.push([x, s0]); }
+  const restZ: Zone27[] = m.k === 'police' ? ['desk', 'counter', 'floor'] : ['counter', 'desk', 'booth', 'floor'];
+  for (const x of rest) placed.push([x, take(restZ, false) ?? more()]);
+  return placed.sort((a, b) => a[1].x - b[1].x);
+}
+export const liftOf27 = (m: Interior27, s0: ISpot27): number => (s0.z === 'stage' ? (m.k === 'bar' || m.k === 'baile' ? 5 : 9) : 0);
+/** Geometria do corte (pixels lógicos) para largura W: sala, chão e a caixa de um adereço. */
+export function geom27(W: number): { W: number; H: number; x0: number; w0: number; y0: number; fy: number; X: (f: number) => number; Wd: (f?: number) => number } {
+  const H = 150, gy = H - STREET, bx = 12, bw = W - 24, y0 = gy - FOUND - RH, x0 = bx + OW, w0 = bw - 2 * OW;
+  return { W, H, x0, w0, y0, fy: y0 + RH - 3, X: (f) => Math.round(x0 + f * w0), Wd: (f = 0.1) => Math.max(6, Math.round(f * w0)) };
 }
 
 // ---------------------------------------------------------------- pintura
@@ -110,15 +171,29 @@ const RH = 92, STREET = 16, FOUND = 4, OW = 6;
 /** Oclusão nos cantos: o tom mais fundo da rampa, puxado para o roxo (igual à sede). */
 const OCC = C('#2a1634');
 export interface IDrawn27 { W: number; H: number; hits: { x: number; y: number; w: number; h: number; who: Person27 }[] }
-export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined }
+export interface IDrawOpts27 { minW?: number; city?: string; name?: string; seed?: string; look?: (p: Person27) => ReturnType<typeof lookOf>; role?: (p: Person27) => string | null | undefined;
+  /** r31 (ART2): adereços extras pintados na mesma camada (mesmo contorno), antes das pessoas */ extra?: (g: Ctx27, seed: number) => void }
 
 const hs = (str: string): number => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619) >>> 0; return x; };
 const FLOORK: Record<Interior27['floor'], 'studio' | 'lounge' | 'lobby' | 'office'> = { studio: 'studio', lounge: 'lounge', lobby: 'lobby', office: 'office' };
 
 /** Fachada da época (moldura do corte). */
-function facadeCol(year: number, k: PlaceK27): Col {
+function facadeCol(year: number, k: IKind27): Col {
   if (k === 'apartments' && year < 1930) return C('#8a5a44');
   return year < 1920 ? C('#874430') : year < 1946 ? C('#dccaa0') : year < 1968 ? C('#e0dccf') : year < 1990 ? C('#9a968e') : year < 2020 ? C('#8a9aa8') : C('#e8e6dc');
+}
+
+/** Põe um buffer Px (com transparência) por cima do que já está no canvas. */
+function pxOnCtx(ctx: CanvasRenderingContext2D, q: Px): void {
+  if (typeof document === 'undefined') return;
+  const cv = document.createElement('canvas');
+  cv.width = q.w; cv.height = q.h;
+  const c2 = cv.getContext('2d');
+  if (!c2) return;
+  const img = c2.createImageData(q.w, q.h);
+  new Uint32Array(img.data.buffer).set(q.d);
+  c2.putImageData(img, 0, 0);
+  ctx.drawImage(cv, 0, 0);
 }
 
 export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people: Person27[], o: IDrawOpts27 = {}): IDrawn27 {
@@ -230,8 +305,59 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       case 'keys': { blk(p, x, y0 + 14, w, 18, pal.woodDark); for (let r = 0; r < 3; r++) for (let xx = x + 2; xx < x + w - 2; xx += 4) p.rect(xx, y0 + 16 + r * 6, 1, 3, C('#d8b040')); break; }
       case 'poster': prim27.poster(g, x, y0 + 12, w, Math.round(w * 1.4), hs(`${seed}|${pr.x}`) % 6); break;
       case 'gold': { const n = pr.n ?? 3; for (let i = 0; i < n; i++) prim27.goldDisc(g, x + i * 14, y0 + 14, i === 0); break; }
+      // r31 (S): celas com grade, caixotes do porto, cofre, roleta, caixas de som do baile, porta dos fundos
+      case 'cells': {
+        const n = pr.n ?? 3, cw = Math.floor(w / n);
+        for (let i = 0; i < n; i++) {
+          const cx = x + i * cw;
+          blk(p, cx, y0 + 6, cw - 2, fy - y0 - 6, C('#4a4a50'));
+          p.rect(cx + 2, y0 + 8, cw - 6, fy - y0 - 10, C('#2a2a30'));
+          for (let yy = y0 + 12; yy < fy - 8; yy += 6) p.hline(cx + 2, cx + cw - 5, yy, C('#262630')); // juntas do bloco
+          const cot = Math.min(16, cw - 8);
+          blk(p, cx + 3, fy - 6, cot, 4, C('#7a6a5a')); p.rect(cx + 4, fy - 7, cot - 5, 2, C('#4a5a3a')); p.rect(cx + cot - 1, fy - 8, 3, 2, C('#d8d0bc')); // catre, cobertor, travesseiro
+        }
+        break;
+      }
+      case 'crates': { // caixotes de porto: tábuas com fio de luz, sarrafos nas pontas, estêncil
+        const n = pr.n ?? 3; const cw = Math.max(10, Math.floor(w / n) - 2);
+        const crate = (cx: number, cy: number, ww: number, hh: number, wood: Col) => {
+          blk(p, cx, cy, ww, hh, wood);
+          for (let yy = cy + 4; yy < cy + hh - 1; yy += 4) { p.hline(cx + 1, cx + ww - 2, yy, lv(wood, 1.8)); p.hline(cx + 1, cx + ww - 2, yy + 1, lv(wood, 3.6)); }
+          p.vline(cx + 1, cy + 1, cy + hh - 2, lv(wood, 4)); p.vline(cx + 2, cy + 1, cy + hh - 2, lv(wood, 2.4));
+          p.vline(cx + ww - 3, cy + 1, cy + hh - 2, lv(wood, 3.4)); p.vline(cx + ww - 2, cy + 1, cy + hh - 2, lv(wood, 1.8));
+          if (ww >= 12 && hh >= 10) p.rect(cx + (ww >> 1) - 2, cy + (hh >> 1) - 1, 4, 2, lv(wood, 1)); // estêncil
+        };
+        for (let i = 0; i < n; i++) { const cx = x + i * (cw + 2), hh = 12 + ((i * 7 + seed) % 3) * 4; crate(cx, fy - hh, cw, hh, C('#8a6a3a')); if (i % 2 === 0) crate(cx + 2, fy - hh - 9, cw - 4, 9, C('#9a7a46')); }
+        break;
+      }
+      case 'safe': { // cofre: porta embutida, dobradiças, segredo com marcas e manopla de 3 raios, pés
+        const st = C('#4a4e56');
+        blk(p, x, fy - 24, 18, 22, st);
+        p.rect(x + 2, fy - 22, 14, 18, lv(st, 2.4)); p.hline(x + 2, x + 15, fy - 22, lv(st, 1.6)); p.hline(x + 2, x + 15, fy - 5, lv(st, 3.8)); p.vline(x + 2, fy - 21, fy - 6, lv(st, 1.8));
+        p.rect(x + 3, fy - 21, 12, 16, st);
+        p.rect(x + 1, fy - 19, 1, 3, lv(st, 4.4)); p.rect(x + 1, fy - 10, 1, 3, lv(st, 4.4)); // dobradiças
+        p.disc(x + 9, fy - 15, 3.5, (xx, yy) => (xx + yy < x + 9 + fy - 15 - 2 ? C('#e8e8e0') : xx + yy > x + 9 + fy - 15 + 2 ? C('#8a8a84') : C('#c8c8c0')));
+        p.put(x + 9, fy - 19, INK); p.put(x + 8, fy - 15, INK);
+        p.hline(x + 7, x + 11, fy - 9, lv(st, 4.4)); p.vline(x + 9, fy - 11, fy - 8, lv(st, 4.4)); // manopla
+        p.rect(x + 1, fy - 2, 3, 2, lv(st, 1.6)); p.rect(x + 14, fy - 2, 3, 2, lv(st, 1.6)); // pés
+        break;
+      }
+      case 'roulette': { // mesa de feltro com borda de madeira; roda com casas vermelhas/pretas e cubo de latão; fichas
+        const felt = C('#1e5a2a'), wood = C('#5a2a1a');
+        blk(p, x, fy - 12, w, 3, wood); p.rect(x + 1, fy - 11, w - 2, 1, lv(felt, 3.4));
+        p.rect(x + 2, fy - 9, 2, 9, lv(wood, 2.4)); p.rect(x + w - 4, fy - 9, 2, 9, lv(wood, 2));
+        const cx = x + 10, cy = fy - 14;
+        p.ellipse(cx, cy, 8, 3, lv(wood, 3.6)); p.hline(cx - 7, cx + 6, cy - 3, lv(wood, 4.6));
+        p.ellipse(cx, cy, 6, 2, (xx) => ((xx - cx + 20) % 2 ? C('#c8302c') : C('#1a1a1e')));
+        p.rect(cx - 1, cy - 1, 2, 1, C('#e8c050')); p.put(cx - 1, cy - 2, lv(C('#e8c050'), 4.6));
+        for (let i = 0; i < 3; i++) { const fx0 = x + w - 12 + i * 3, ch = [C('#e8e0c8'), C('#c8302c'), C('#2a5ab0')][i]; for (let k = 0; k < 2 + i; k++) p.hline(fx0, fx0 + 1, fy - 13 - k, k % 2 ? lv(ch, 2.4) : ch); }
+        break;
+      }
+      case 'speakers': speaker31(p, x, fy, Math.max(10, w), 30); break;
+      case 'door': prim27.door(g, x, fy, Math.max(10, w), fy - y0 - 30); break;
     }
   }
+  o.extra?.(g, seed);
   layer.outline(INK);
   p = back; g.p = back;
   p.blit(layer, 0, 0);
@@ -255,17 +381,9 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
     new Uint32Array(img.data.buffer).set(p.d);
     ctx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    // pessoas: artistas no palco/sala de gravação/cabine; equipe no balcão/mesa; o resto no salão
-    const perf = people.filter((x) => !!x.actId), rest = people.filter((x) => !x.actId);
-    const free = [...m.spots];
-    // prioridade por zona: artista no palco/sala de gravação; dono no balcão/mesa; o 2º da casa na cabine (locutor)
-    const take = (zs: Zone27[]) => { for (const z of zs) { const i = free.findIndex((s0) => s0.z === z); if (i >= 0) return free.splice(i, 1)[0]; } return free.shift(); };
-    const placed: [Person27, ISpot27][] = [];
-    for (const x of perf) { const s0 = take(['stage', 'live', 'booth', 'floor']); if (s0) placed.push([x, s0]); }
-    for (const x of rest) { const s0 = take(['counter', 'desk', 'booth', 'floor', 'live', 'stage']); if (s0) placed.push([x, s0]); }
-    placed.sort((a, b) => a[1].x - b[1].x);
+    const placed = placePeople27(m, people);
     for (const [who, s0] of placed) {
-      const lift = s0.z === 'stage' ? (m.k === 'bar' ? 5 : 9) : 0;
+      const lift = liftOf27(m, s0);
       const fx = X(s0.x), fyy = fy - lift;
       const look = o.look ? o.look(who) : lookOf({ id: who.pid ?? `npc:${who.name}` });
       const role = (o.role?.(who) ?? null) as Parameters<typeof avatarSprite>[1]['role'];
@@ -274,20 +392,17 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(fx - 6, fyy, 12, 1);
       ctx.drawImage(a.c, fx - a.ax, fyy - a.ay + 1);
       hits.push({ x: fx - 7, y: fyy - 31, w: 14, h: 32, who });
+      if (who.you) { ctx.fillStyle = '#ffe070'; ctx.fillRect(fx - 1, fyy - 38, 3, 3); ctx.fillStyle = '#1a1214'; ctx.fillRect(fx, fyy - 37, 1, 1); } // marcador de você
     }
-    // plateia de costas, em frente ao palco (silhuetas na luz do palco; alguns braços para cima)
-    if (crowd && perf.length) { // casa vazia (ninguém no palco) = sem plateia
-      const n = crowd.n ?? 12, cx0 = X(crowd.x), cw = Wd(crowd.w);
-      const cols = year < 1946 ? ['#3a2a24', '#4a3a30', '#2a2a30', '#5a4a3a'] : year < 1968 ? ['#2c3a5e', '#5a2a2a', '#2a2a30', '#4a4a3a'] : year < 1990 ? ['#2a2a30', '#3a2a4a', '#1e2a3a', '#4a2a2a'] : ['#20222a', '#2a3040', '#3a2a3a', '#1e2420'];
-      for (let i = 0; i < n; i++) {
-        const row = i % 2, cx = cx0 + Math.round((cw * (i + 0.5)) / n) + (row ? 3 : 0), by = fy + 2 - row * 2;
-        const hh = 15 + ((seed >> (i % 16)) & 3);
-        ctx.fillStyle = cols[(i + row) % cols.length]; ctx.fillRect(cx - 4, by - hh, 9, hh);
-        ctx.fillStyle = row ? '#1a1414' : '#2a1e1a'; ctx.fillRect(cx - 2, by - hh - 6, 6, 6);
-        if (((seed >> (i % 11)) & 7) === 0) { ctx.fillStyle = cols[(i + row) % cols.length]; ctx.fillRect(cx + 4, by - hh - 9, 2, 9); }
-        ctx.fillStyle = 'rgba(255,220,160,0.18)'; ctx.fillRect(cx - 2, by - hh - 6, 6, 1);
-      }
+    // na frente dos bonecos (mesmo acabamento dos adereços): a grade das celas e a plateia de costas
+    const front = new Px(W, H);
+    for (const pr of m.props) if (pr.t === 'cells') {
+      const n = pr.n ?? 3, cw = Math.floor(Wd(pr.w) / n), x1 = X(pr.x);
+      for (let i = 0; i < n; i++) bars31(front, x1 + i * cw, y0 + 6, cw - 2, fy);
     }
+    // plateia de costas, em frente ao palco (casa vazia — ninguém no palco — fica sem plateia)
+    if (crowd && placed.some(([x]) => !!x.actId && !x.staff && !x.you)) inked(front, (q) => crowd31(q, X(crowd!.x), Wd(crowd!.w), crowd!.n ?? 12, fy, year, seed));
+    pxOnCtx(ctx, front);
   }
   return { W, H, hits };
 }

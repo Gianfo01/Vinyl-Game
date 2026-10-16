@@ -222,7 +222,7 @@ export function drawJalopy(c: CanvasRenderingContext2D, x: number, y: number, t 
 
 /** Hora do jogo no mapa (mesmo ciclo de campus18px.nightOf: fase 0 = meio-dia). */
 export const hourOf27 = (t: number): number => (12 + ((t / 48) % 1) * 24) % 24;
-export interface CityEgg27 { id: string; w: number; h: number; title: L; draw: (c: CanvasRenderingContext2D, x: number, y: number, t: number) => void; onClick?: (g: GameState) => L | null }
+export interface CityEgg27 { id: string; w: number; h: number; /** R31 (N): deslocamento a partir da porta da sede */ dx?: number; dy?: number; title: L; draw: (c: CanvasRenderingContext2D, x: number, y: number, t: number) => void; onClick?: (g: GameState) => L | null }
 /** Ovos do mapa: cada função devolve um sprite (ou nada) para o instante `t` (mesmo `t` do drawFrame18). */
 export const cityEggs27: ((g: GameState, o: { t: number; night: number; city: string }) => CityEgg27 | null)[] = [
   (g, o) => {

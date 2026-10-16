@@ -15,6 +15,7 @@ import { h } from '../dom';
 import { ic } from '../vis';
 import { drawScene27, paintStudio27, type Who27 } from './scene27';
 import { cutscene27 } from './prefs27';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 /** Abre a gravação jogável de uma sessão em andamento. Entrada única: os dias de estúdio oferecidos no avanço
  *  (flow27.ts); o que não for jogado segue no modo de sempre. `onEnd(jogou)` avisa quando a janela fecha. */
@@ -27,7 +28,7 @@ export function openRecord27(s: GameState, sessId: string, onEnd?: (played: bool
   let flash = false;
   const root = h('div', { class: 'a27 a27-record' });
   const put = (...xs: (Node | null)[]) => root.replaceChildren(...xs.filter((x): x is Node => !!x));
-  const close = modal(t(l('Estúdio', 'Studio')) + ` — ${a.name}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); onEnd?.(rc.takes.length > 0 || rc.results.length > 0); rerender(); } });
+  const close = modal(t(l('Estúdio', 'Studio')) + ` — ${a.name}`, withCast31(s, [rc.actId], root, () => close()), { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); onEnd?.(rc.takes.length > 0 || rc.results.length > 0); rerender(); } });
 
   const scene = (): HTMLElement => {
     const cv = h('canvas', { class: `a27-scene ${flash ? 'a27-flash' : ''}`, role: 'img', 'aria-label': t(l('Sala de gravação', 'Live room')) }) as HTMLCanvasElement;

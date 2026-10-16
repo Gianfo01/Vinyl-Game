@@ -1,4 +1,5 @@
 import { projAlias31, withTxn } from './r31/txn';
+import { NPCREL31 } from './r31/npcrel31';
 import { POOL19 } from './pool19';
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
@@ -263,6 +264,7 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
   };
   if (type !== 'single') rel.title = `${rel.title}${type === 'lp' ? '' : ' EP'}`;
   rel.appeal = computeAppeal(s, r, rel, act).appeal;
+  NPCREL31.f?.(s, rel);
   for (const id of songIds) if (s.songs[id]) s.songs[id].releaseId = rel.id;
   // terceiros: só a faixa principal fica guardada (save leve)
   for (const id of songIds.slice(1)) delete s.songs[id];

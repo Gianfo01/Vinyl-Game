@@ -12,7 +12,7 @@ import { drawText } from '../pixel/font';
 import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { prim27, type Cell27, type Ctx27, type Plan27 } from '../ps/hqpx27';
 import type { Appearance } from '../../sim/types';
-import { TIER_W31, TIER_X31, type Fig31, type Hot31, type Prop31, type SalaM31 } from './salas31model';
+import { SALA_ART31, TIER_W31, TIER_X31, type Fig31, type Hot31, type Prop31, type SalaM31 } from './salas31model';
 
 // ---------------------------------------------------------------- geometria (pura)
 
@@ -69,6 +69,8 @@ const BOX: Partial<Record<Prop31, [number, number]>> = {
 const WALL: Partial<Record<Prop31, number>> = { onair: 6, cork: 30, clipboard: 30, flyer: 24, whiteboard: 20, clients: 22, routemap: 18, schedule: 22, screen: 14, portraits: 10 };
 
 function hitOf(m: SalaM31, L: Lay31, h: Hot31): Rect31 {
+  const ex = SALA_ART31.hit?.(m, L, h); // r31 ART2: objetos novos (props31)
+  if (ex) return pad(ex, 3);
   const floor = h.pp?.n !== undefined && m.id === 'team' ? h.pp.n : 0;
   const fy = L.fy(floor);
   const x = L.X(h.x), w = L.Wd(h.w);
@@ -133,6 +135,7 @@ export function paintSala31(m: SalaM31, L: Lay31): Px {
   g.p = q;
   for (const d of m.deco) prop(g, m, L, d.prop, d.x, d.w ?? 0.08, 0, d.pp);
   for (const h of m.hots) if (h.prop) prop(g, m, L, h.prop, h.x, h.w, m.id === 'team' ? h.pp?.n ?? 0 : 0, h.pp, h);
+  SALA_ART31.paint?.(g, m, L); // r31 ART2: objetos novos na mesma camada (mesmo contorno)
   q.outline(INK);
   g.p = p;
   p.blit(q, 0, 0);
@@ -188,13 +191,7 @@ function prop(g: Ctx27, m: SalaM31, L: Lay31, k: Prop31, f: number, fw: number, 
       drawText(p, era < 1950 ? 'REC' : 'ON AIR', x + 2, y0 + 8, on ? C('#ffe0d0') : C('#8a6a6a'));
       break;
     }
-    case 'door': {
-      blk(p, x, fy - 32, 14, 32, pal.woodDark);
-      for (const [py, ph] of [[fy - 29, 10], [fy - 16, 12]] as const) { p.rect(x + 2, py, 10, ph, lv(pal.woodDark, 2.4)); p.hline(x + 2, x + 11, py + ph - 1, lv(pal.woodDark, 3.8)); }
-      p.rect(x + 3, fy - 27, 8, 6, pal.paper); for (let i = 0; i < 3; i++) p.hline(x + 4, x + 9 - i, fy - 26 + i * 2, INK); // horário na porta
-      p.put(x + 11, fy - 15, pal.gold);
-      break;
-    }
+    case 'door': prim27.door(g, x, fy, 14, 32, true); break; // a mesma porta dos interiores, com o horário colado
     case 'couch': prim27.couch(g, x, fy, Math.max(30, w), pal.fabric); break;
     case 'poster': prim27.poster(g, x, y0 + 12, 12, 17, hs(`${f}`) % 6); break;
     case 'gold': for (let i = 0; i < (pp?.n ?? 2); i++) prim27.goldDisc(g, x + i * 12, y0 + 14, i === 1); break;

@@ -1,7 +1,7 @@
 // R31 (C) — base dos estilos da interface por era: a parte SEM DOM (testável).
 // Mapa ano → estilo, resolução da preferência ("automático pela era" ou fixo), quando avisar a troca e a lista dos
 // pares de tokens texto/fundo que precisam passar AA (tests/r31-contrast.test.ts). Só apresentação: nada do jogo muda.
-// Por enquanto só o estilo de hoje ('estudio') está pronto; os 9 por época chegam na onda 4 (basta marcar ready).
+// Onda 4 (M): os 9 estilos por época estão prontos (ui/skins31.css); 'estudio' é o visual de hoje.
 
 import { l, type L } from '../data/world';
 
@@ -9,20 +9,21 @@ export type SkinId31 = 'gazeta' | 'deco' | 'jukebox' | 'hifi' | 'fosforo' | 'jan
 /** 'auto' = muda sozinho com a época (padrão); um id = fixo. */
 export type SkinPref31 = 'auto' | SkinId31;
 
-export interface Skin31 { id: SkinId31; name: L; from: number; to: number; ready: boolean }
+/** `sw`: amostra nas Opções [faixa de cima, metade esquerda, metade direita] — as cores-marca do estilo (só enfeite). */
+export interface Skin31 { id: SkinId31; name: L; from: number; to: number; ready: boolean; sw: [string, string, string] }
 
 /** Os 9 estilos por época (anos inclusivos) + o de hoje. Ordem = ordem nas Opções. */
 export const SKINS31: Skin31[] = [
-  { id: 'gazeta', name: l('Gazeta', 'Gazette'), from: 1889, to: 1919, ready: false },
-  { id: 'deco', name: l('Déco Rádio', 'Deco Radio'), from: 1920, to: 1945, ready: false },
-  { id: 'jukebox', name: l('Jukebox', 'Jukebox'), from: 1946, to: 1964, ready: false },
-  { id: 'hifi', name: l('Hi-Fi', 'Hi-Fi'), from: 1965, to: 1979, ready: false },
-  { id: 'fosforo', name: l('Fósforo', 'Phosphor'), from: 1980, to: 1989, ready: false },
-  { id: 'janelas', name: l('Janelas 95', 'Windows 95'), from: 1990, to: 1999, ready: false },
-  { id: 'portal', name: l('Portal 2000', 'Portal 2000'), from: 2000, to: 2007, ready: false },
-  { id: 'plano', name: l('Plano', 'Flat'), from: 2008, to: 2019, ready: false },
-  { id: 'vidro', name: l('Vidro', 'Glass'), from: 2020, to: 2040, ready: false },
-  { id: 'estudio', name: l('Estúdio (o de hoje)', 'Studio (today\'s look)'), from: 0, to: 0, ready: true },
+  { id: 'gazeta', name: l('Gazeta', 'Gazette'), from: 1889, to: 1919, ready: true, sw: ['#1e1912', '#efe7d4', '#7d2214'] },
+  { id: 'deco', name: l('Déco Rádio', 'Deco Radio'), from: 1920, to: 1945, ready: true, sw: ['#0e0c08', '#dcb664', '#221d13'] },
+  { id: 'jukebox', name: l('Jukebox', 'Jukebox'), from: 1946, to: 1964, ready: true, sw: ['#b80f2a', '#0f6f68', '#ffd84a'] },
+  { id: 'hifi', name: l('Hi-Fi', 'Hi-Fi'), from: 1965, to: 1979, ready: true, sw: ['#cfcac0', '#33200f', '#f2a33c'] },
+  { id: 'fosforo', name: l('Fósforo', 'Phosphor'), from: 1980, to: 1989, ready: true, sw: ['#1d6b2b', '#020b04', '#5cff76'] },
+  { id: 'janelas', name: l('Janelas 95', 'Windows 95'), from: 1990, to: 1999, ready: true, sw: ['#000080', '#c0c0c0', '#008080'] },
+  { id: 'portal', name: l('Portal 2000', 'Portal 2000'), from: 2000, to: 2007, ready: true, sw: ['#1f56b8', '#ffffff', '#e86a00'] },
+  { id: 'plano', name: l('Plano', 'Flat'), from: 2008, to: 2019, ready: true, sw: ['#00796b', '#f5f5f5', '#c63c10'] },
+  { id: 'vidro', name: l('Vidro', 'Glass'), from: 2020, to: 2040, ready: true, sw: ['#2a2450', '#0c0a18', '#8ef0ff'] },
+  { id: 'estudio', name: l('Estúdio (o de hoje)', 'Studio (today\'s look)'), from: 0, to: 0, ready: true, sw: ['#0f1d2a', '#edbc65', '#172b3c'] },
 ];
 const BY_ID = new Map(SKINS31.map((s) => [s.id, s]));
 export const skin31 = (id: SkinId31): Skin31 => BY_ID.get(id) ?? BY_ID.get('estudio')!;
@@ -60,10 +61,17 @@ export function skinNoticeText31(next: SkinId31): L {
     `New era: the interface switched to the ${s.name.en} style${yrs}. You can lock a style in Options.`);
 }
 
+/** Ação do aviso: voltar ao estilo anterior (fica fixo). */
+export function skinBack31(prev: SkinId31): L {
+  const s = skin31(prev);
+  return l(`Voltar ao ${s.name.pt}`, `Back to ${s.name.en}`);
+}
+
 // ---------------------------------------------------------------- contraste: pares que precisam passar AA
 /** Cor de um par: um token (`--ink`) ou uma mistura como o color-mix do CSS (p = 0..1 do primeiro). */
 export type Ink31 = string | { mix: [string, number, string] };
-export interface Pair31 { fg: Ink31; bg: Ink31; what: string; min?: number }
+/** `only`: o par só existe no Estúdio ('estudio') ou só nos estilos por época ('skins'); sem ele vale para todos. */
+export interface Pair31 { fg: Ink31; bg: Ink31; what: string; min?: number; only?: 'estudio' | 'skins' }
 
 /** Pares texto/fundo dos componentes principais (todos os temas e modos; min padrão 4,5). */
 export const PAIRS31: Pair31[] = [
@@ -104,7 +112,15 @@ export const PAIRS31: Pair31[] = [
   { fg: '--nav-muted', bg: '--nav-bg', what: 'menu: utilitários' },
   { fg: '--nav-ink', bg: '--nav-hover', what: 'menu: item sob o mouse' },
   { fg: '--nav-on-ink', bg: '--nav-on', what: 'menu: item aberto preenchido' },
-  { fg: '--nav-on', bg: { mix: ['--nav-on', 0.16, '--nav-bg'] }, what: 'menu: seção aberta' },
+  { fg: '--nav-on', bg: { mix: ['--nav-on', 0.16, '--nav-bg'] }, what: 'menu: seção aberta', only: 'estudio' },
+  { fg: '--nav-sel-ink', bg: '--nav-sel-bg', what: 'menu: seção aberta (estilo da época)', only: 'skins' },
+  { fg: '--top-ink', bg: '--top-bg', what: 'barra do topo', only: 'skins' },
+  { fg: '--top-muted', bg: '--top-bg', what: 'barra do topo: apoio', only: 'skins' },
+  { fg: '--sk-pri-ink', bg: '--sk-pri-bg', what: 'botão principal (estilo da época)', only: 'skins' },
+  { fg: '--muted', bg: '--panel-2', what: 'botão desabilitado (cinza sobre painel-2)', only: 'skins' },
+  { fg: '--warn', bg: '--bg', what: 'motivo do bloqueio na página' },
+  { fg: '--focus', bg: '--bg', what: 'anel de foco na página', min: 3, only: 'skins' },
+  { fg: '--focus', bg: '--panel', what: 'anel de foco no painel', min: 3, only: 'skins' },
   { fg: '--ink', bg: { mix: ['--panel-2', 0.8, '--accent'] }, what: 'botão sob o mouse' },
   { fg: '--brand-cream', bg: '--brand-night', what: 'tela inicial: título' },
   { fg: '--brand-mist', bg: '--brand-night', what: 'tela inicial: descrição' },

@@ -61,6 +61,7 @@ export const STREAMS19: Record<string, string> = {
   r21: 'funções múltiplas por pessoa: quem abre selo, empresaria ou cria festival (roles21)',
   fac31: 'facções por país: crescimento, expansão para países vizinhos e guerras (uma vez por ano) (sys/fac31 expandYear31)',
   broker31: 'intermediário das facções de fora: prazo, traição, entrega (só quando o jogador contrata) (sys/broker31)',
+  socio31: 'sócios e compras: sorte do mês de cada negócio seu (festival, casa, rádio, estúdio) e o que o sócio NPC faz (propor, pedir saída, brigar) — só com participação (sys/socio31)',
   bolsa31: 'bolsa: humor do mercado (desvio pequeno e com memória do preço sobre o valor de cada empresa listada) (r31/value31 stepPrice31)',
   // r31 (W0-RNG): chaves que substituíram o fluxo único antigo (rngOf / s.rng)
   world: 'geração do mundo inicial: datas das tecnologias, gêneros, gravadoras, artistas e pessoas (worldgen)',
