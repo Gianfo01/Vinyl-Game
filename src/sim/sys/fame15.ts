@@ -18,7 +18,7 @@ import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
-import { band, bandText, know } from '../know';
+import { band, bandText, know, registerKnowFame } from '../know';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
   { min: 0, name: l('Desconhecido', 'Unknown'), desc: l('Só amigos e a cena mais próxima sabem quem é.', 'Only friends and the nearest scene know them.') },
@@ -89,6 +89,7 @@ export function personFame(s: GameState, pid: string): { v: number; parts: { t: 
   return { v: Math.round(clamp(base + stage + po, 0, 100) * 10) / 10, parts };
 }
 const pf = (s: GameState, pid: string) => personFame(s, pid).v;
+registerKnowFame({ tier: (v) => fameTier(v), person: pf }); // r31: know.ts lê a fama por aqui (sem importar este sistema)
 
 /** Fama de qualquer id (ato ou pessoa). */
 export const fameOf = (s: GameState, id: string): number => (s.acts[id] ? s.acts[id].fame : pf(s, id));

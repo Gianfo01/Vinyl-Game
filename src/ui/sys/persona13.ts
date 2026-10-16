@@ -51,7 +51,7 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
   const pid = P.kind === 'person' ? P.key.slice(2) : '';
   const kl = pid ? knownLevel(s, pid) : null;
   // r31 (W0-KN): largura e faixa vêm do sim (know.ts); a faixa nunca é centrada no valor real
-  const w13 = kl?.mine ? 0 : attrWidth(s, P.key, P.kind);
+  const w13 = kl?.mine ? 0 : attrWidth(s, P.key, P.kind, Math.abs(op ?? 0) >= 15 || led.w.length > 0);
   const sh = (v: number, f: string): string => bandText(band(s, P.key, `attrs.${f}`, v, w13));
   const seeTraits = !pid || !!kl?.mine || canSee(s, pid, 'traits') || (!kl && w13 <= 6);
   const seeViews = !pid || canSee(s, pid, 'life');

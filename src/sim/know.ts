@@ -12,11 +12,9 @@
 import { clamp, hashString } from '../core/rng';
 import { actsOfPerson17 } from './actidx17';
 import { fameAt } from './famehook16';
-import { opinionOf, opinionWhy } from './opinion';
 import { perk } from './perks';
 import type { Act, GameState, Person } from './types';
 import { staffSkill } from './util';
-import { fameTier, personFame } from './sys/fame15';
 
 export type KnowField = 'fame' | 'talent' | 'skill' | 'potential' | 'attrs';
 export type KnowAxis = 'pub' | 'priv';
@@ -68,6 +66,16 @@ export interface Know {
 }
 
 const mineAct = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
+
+/**
+ * Degrau de fama e fama de pessoa vêm de sys/fame15, que os registra ao carregar. know.ts NÃO importa fame15 (nem
+ * outro sistema com ganchos): importar muda a ordem de avaliação dos módulos, e com ela a ordem dos ganchos
+ * registrados — o que muda o mundo. Função içada de propósito (fame15 chama durante o carregamento).
+ */
+export interface KnowFame { tier: (fame: number) => number; person: (s: GameState, pid: string) => number }
+export function registerKnowFame(f: KnowFame): void { (registerKnowFame as unknown as { f?: KnowFame }).f = f; }
+const FF = (): KnowFame => (registerKnowFame as unknown as { f?: KnowFame }).f ?? { tier: () => 0, person: () => 0 };
+const fameTier = (v: number): number => FF().tier(v);
 const exposure = (fame: number): number => fameTier(fame);
 
 /** Intimidade (0–4) do jogador com a pessoa, pela relação nos dois sentidos. */
@@ -107,7 +115,7 @@ function raw(s: GameState, id: string, obs: string): Omit<Know, 'width'> {
   const p = s.persons[id];
   if (!p) return none(0, 0);
   const acts = actsOfPerson17(s, id);
-  const pf = personFame(s, id).v;
+  const pf = FF().person(s, id);
   const tier = fameTier(pf);
   if (obs !== 'player') return none(tier, exposure(pf));
   if (p.isPlayer || acts.some(mineAct)) return full(tier);
@@ -138,27 +146,32 @@ export function knowSkew(s: GameState, id: string, field: string, w: number, obs
   const h = hashString(`${s.config.seed}|know31|${obs}|${id}|${field}`);
   const u = (h % 10007) / 10007;
   const sign = (h >>> 20) & 1 ? 1 : -1;
-  return sign * Math.max(1, w * (0.12 + 0.28 * u));
+  return sign * Math.max(1, w * (0.05 + 0.2 * u));
 }
 
 export interface Band { lo: number; hi: number; mid: number; exact: boolean }
 
 /**
  * Faixa mostrada de um valor real `v` (0..100) com largura `w`: null quando oculto, exata quando w = 0. O meio da
- * faixa nunca é o valor real. `bias` = viés do olheiro (s.knowledge[].bias), somado ao desvio.
+ * faixa nunca é o valor real. `bias` = viés do olheiro (s.knowledge[].bias): quando existe, é o desvio; senão (ou se
+ * for menor que 1 ponto) entra o desvio fixo do par (semente, observador, alvo, campo).
  */
 export function band(s: GameState, id: string, field: string, v: number, w: number, o: { obs?: string; bias?: number } = {}): Band | null {
   if (w >= KNOW_HIDDEN) return null;
   if (w <= 0) { const r = Math.round(v); return { lo: r, hi: r, mid: r, exact: true }; }
   const sk = knowSkew(s, id, field, w, o.obs);
-  let off = sk + (o.bias ?? 0) * (w / 30);
+  // com viés do olheiro, o desvio é o próprio viés; o desvio fixo só entra quando o viés é pequeno demais (|<1|)
+  let off = (o.bias ?? 0) * (w / 30);
   if (Math.abs(off) < 1) off = sk;
-  // a janela inteira cabe em 0..100 (sem cortar a borda, que recentralizaria no valor real)
+  // o palpite (mid) é o valor real deslocado; perto da borda o deslocamento vira para dentro
+  let m = v + off;
+  if (m < 0 || m > 100) m = v - off;
+  m = clamp(m, 0, 100);
+  // a janela inteira cabe em 0..100 (cortar a borda recentralizaria a faixa no valor real)
   const half = Math.min(w, 100) / 2;
-  const place = (d: number): number => clamp(v + d, half, 100 - half);
-  let c = place(off);
-  if (Math.abs(c - v) < 1) c = place(-off);
-  return { lo: Math.round(c - half), hi: Math.round(c + half), mid: Math.round(c), exact: false };
+  let c = clamp(m, half, 100 - half);
+  if (Math.abs(c - v) < 1) c = clamp(v - (m - v), half, 100 - half);
+  return { lo: Math.round(c - half), hi: Math.round(c + half), mid: Math.round(m), exact: false };
 }
 
 /** Texto curto de uma faixa: "?" (oculto), "42" (exato) ou "35–49". */
@@ -166,10 +179,11 @@ export const bandText = (b: Band | null): string => (!b ? '?' : b.exact ? String
 
 /**
  * Largura das faixas da ficha unificada (persona13) para qualquer chave de pessoa: você, sua equipe e o que é
- * seu = exato; pessoas (p:) pelo grau privado; gente da indústria sem olheiro = estranho ou já houve contato.
+ * seu = exato; pessoas (p:) pelo grau privado; gente da indústria sem olheiro = estranho ou já houve contato
+ * (`met`: opinião marcante ou algum gesto registrado — ver opinion.ts).
  */
-export function attrWidth(s: GameState, key: string, kind: string): number {
+export function attrWidth(s: GameState, key: string, kind: string, met: boolean): number {
   if (kind === 'player' || kind === 'staff') return 0;
   if (key.startsWith('p:')) return know(s, key.slice(2)).width('attrs');
-  return Math.abs(opinionOf(s, key)) >= 15 || opinionWhy(s, key).length > 0 ? KNOW_INDUSTRY.acquainted : KNOW_INDUSTRY.stranger;
+  return met ? KNOW_INDUSTRY.acquainted : KNOW_INDUSTRY.stranger;
 }

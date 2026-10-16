@@ -93,13 +93,10 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R29 conectar tudo, rodada 11 (docs/connect29.md §11: público/sede/família/notoriedade, conn29b): o embalo pelo público
     // jovem e a mistura por idade mudam caixa, acts e rng (tours igual). Antes: 215781 / 1382068899 / 1494032110 / 3946783658.
   // R29: conectar tudo rodada 11 (conn29b) junto com facções × mundo: re-medido.
-    // R31 W0-KN (de propósito — docs/r31/DECISOES.md): estimate() passa por src/sim/know.ts; a faixa nunca é centrada no
-    // valor real (desvio determinístico) e a intimidade conta no grau privado. O playbot escolhe talentos pelo meio da faixa
-    // (bot.ts/playbot16), então caixa, tours, acts e rng mudam. Antes: 1034775 / 2631883956 / 829002627 / 1362224447.
-    expect(AFTER.player.cash).toBe(643875);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2127307384);
-    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1500677605);
+    expect(AFTER.player.cash).toBe(1034775);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(2631883956);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(829002627);
+    expect(hashString(JSON.stringify(AFTER.rng))).toBe(1362224447);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

@@ -76,7 +76,8 @@ const NATIVE: Record<string, Native> = {
   },
   s: {
     // lealdade 0..100 ⇄ opinião −100..100: lealdade = 50 + op/2
-    get: (s, id) => { const st = s.player.staff.find((x) => x.id === id); return st ? (careerOf(s, st).loyalty - 50) * 2 : undefined; },
+    // leitura sem criar a ficha (quem só lê não muda o estado): sem ficha, a lealdade inicial (60)
+    get: (s, id) => { const st = s.player.staff.find((x) => x.id === id); return st ? ((P(s).career[st.id]?.loyalty ?? 60) - 50) * 2 : undefined; },
     set: (s, id, v) => { const st = s.player.staff.find((x) => x.id === id); if (!st) return false; careerOf(s, st).loyalty = clamp(50 + v / 2, 0, 100); return true; },
   },
   p: {
