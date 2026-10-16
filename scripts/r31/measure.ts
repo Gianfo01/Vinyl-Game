@@ -254,7 +254,7 @@ function writeMd(path: string, doc: { meta: Record<string, unknown> & { seeds: s
     '```sh',
     'npx tsx scripts/r31/measure.ts --out docs/r31/base31 --label "versão 31"          # mesma grade, outra saída',
     'npx tsx scripts/r31/measure.ts --out /tmp/rep --compare docs/r31/base30.json      # confere reprodutibilidade',
-    'npx vite --port 5331 &  node scripts/r31/measure-ui.mjs 5331 docs/r31/base30        # tempos e cliques da interface',
+    'node scripts/r31/measure-ui.mjs 5331 docs/r31/base30   # interface (sobe e derruba o vite sozinho)',
     '```', '');
   // preserva a seção da interface (escrita pelo measure-ui.mjs)
   let ui = '';

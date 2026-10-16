@@ -40,7 +40,7 @@ if (!(await up())) {
 }
 function stopVite() { if (vite) { try { process.kill(-vite.pid, 'SIGTERM'); } catch { /* já saiu */ } vite = null; } }
 process.on('exit', stopVite);
-process.on('SIGINT', () => { stopVite(); process.exit(130); });
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => { stopVite(); process.exit(130); });
 
 const b = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const errors = [];
@@ -241,7 +241,7 @@ try {
         const M = window.__m31;
         const re = src ? new RegExp(src, flags) : null;
         let el = null;
-        const lbl = (x) => (x.querySelector('.lbl')?.textContent ?? x.textContent ?? '').trim().slice(0, 40);
+        const lbl = (x) => (x.querySelector('.lbl')?.textContent ?? x.textContent ?? '').trim().replace(/\s*\d+$/, '').slice(0, 40); // sem o contador do selo
         if (kind === 'sec') {
           el = [...document.querySelectorAll('nav .tree27-sec[data-sec25] .nav-head')].find((x) => x.querySelector('.lbl')?.textContent.trim() === src);
           if (el?.classList.contains('on')) return { skip: true }; // já está nesta seção (ex.: Cockpit)
@@ -270,7 +270,7 @@ try {
         el.click(); await M.frames();
         return { ok: true, label };
       }, [kind, arg instanceof RegExp ? arg.source : arg, arg instanceof RegExp ? arg.flags : '']);
-      if (r.skip) { path.push(`(${arg instanceof RegExp ? arg.source : arg ?? kind}: já aberto)`); clicks += r.extra ?? 0; continue; }
+      if (r.skip) { path.push(`(${arg instanceof RegExp ? arg.source.replace(/[\^$]/g, '') : arg ?? kind}: já aberto)`); clicks += r.extra ?? 0; continue; }
       if (!r.ok) { fail = `passo não achado: ${kind} ${arg ?? ''}`; break; }
       clicks += 1 + (r.extra ?? 0);
       path.push(r.label);

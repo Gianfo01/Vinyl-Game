@@ -1,0 +1,1700 @@
+{
+ "meta": {
+  "generatedBy": "scripts/r31/measure-ui.mjs",
+  "when": "2026-10-16T01:31:39.400Z",
+  "viewport": "1360×900",
+  "browser": "Chromium (Playwright)",
+  "months": 12,
+  "game": {
+   "year": 1962,
+   "month": 0,
+   "role": "label",
+   "seed": "jukebox-38sb",
+   "view": null
+  },
+  "after": {
+   "year": 1963,
+   "month": 0,
+   "acts": 3
+  },
+  "bootMs": 11170,
+  "newGameMs": 1125
+ },
+ "menuNew": {
+  "sections": [
+   {
+    "sec": "Cockpit",
+    "first": 51,
+    "warm": 35,
+    "nodes": 114,
+    "hash": "#/cockpit/ck20=panel"
+   },
+   {
+    "sec": "Sede",
+    "first": 117,
+    "warm": 86,
+    "nodes": 223,
+    "hash": "#/sede25"
+   },
+   {
+    "sec": "Pessoas",
+    "first": 63,
+    "warm": 67,
+    "nodes": 73,
+    "hash": "#/artists"
+   },
+   {
+    "sec": "Projetos",
+    "first": 65,
+    "warm": 71,
+    "nodes": 138,
+    "hash": "#/project"
+   },
+   {
+    "sec": "Ao vivo",
+    "first": 64,
+    "warm": 50,
+    "nodes": 115,
+    "hash": "#/shows/showsHub=agenda"
+   },
+   {
+    "sec": "Mundo",
+    "first": 50,
+    "warm": 53,
+    "nodes": 189,
+    "hash": "#/mundo27"
+   },
+   {
+    "sec": "Gestão",
+    "first": 52,
+    "warm": 67,
+    "nodes": 751,
+    "hash": "#/cp17-label/cp17-label=identity"
+   },
+   {
+    "sec": "Você",
+    "first": 59,
+    "warm": 50,
+    "nodes": 214,
+    "hash": "#/you/life-you=me"
+   }
+  ],
+  "pages": [
+   {
+    "sec": "Sede",
+    "page": "Sua sede",
+    "id": "sede25",
+    "first": 134,
+    "warm": 93,
+    "nodes": 223,
+    "hash": "#/sede25"
+   },
+   {
+    "sec": "Sede",
+    "page": "Sede",
+    "id": "hq",
+    "first": 117,
+    "warm": 54,
+    "nodes": 130,
+    "hash": "#/hq/hqHub=ops"
+   },
+   {
+    "sec": "Sede",
+    "page": "Nosso mundo",
+    "id": "campus18",
+    "first": 337,
+    "warm": 234,
+    "nodes": 345,
+    "hash": "#/campus18"
+   },
+   {
+    "sec": "Sede",
+    "page": "Central",
+    "id": "plan",
+    "first": 76,
+    "warm": 63,
+    "nodes": 86,
+    "hash": "#/plan"
+   },
+   {
+    "sec": "Sede",
+    "page": "Metas",
+    "id": "goals",
+    "first": 28,
+    "warm": 78,
+    "nodes": 63,
+    "hash": "#/goals/lv-goals=run"
+   },
+   {
+    "sec": "Sede",
+    "page": "Diário da run",
+    "id": "diary",
+    "first": 32,
+    "warm": 44,
+    "nodes": 74,
+    "hash": "#/diary"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Artistas",
+    "id": "artists",
+    "first": 65,
+    "warm": 38,
+    "nodes": 73,
+    "hash": "#/artists"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Pessoas",
+    "id": "people",
+    "first": 63,
+    "warm": 40,
+    "nodes": 87,
+    "hash": "#/people/people=roster"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Mercado de contratos",
+    "id": "contracts19",
+    "first": 76,
+    "warm": 86,
+    "nodes": 208,
+    "hash": "#/contracts19/contracts19=win"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Talentos",
+    "id": "market",
+    "first": 87,
+    "warm": 73,
+    "nodes": 526,
+    "hash": "#/market/marketHub=search"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Artistas conhecidos",
+    "id": "knownacts27",
+    "first": 193,
+    "warm": 110,
+    "nodes": 941,
+    "hash": "#/knownacts27/knownacts27=all"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Todos os artistas",
+    "id": "directory",
+    "first": 123,
+    "warm": 67,
+    "nodes": 915,
+    "hash": "#/directory"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Talentos e formação",
+    "id": "talent18",
+    "first": 50,
+    "warm": 52,
+    "nodes": 148,
+    "hash": "#/talent18/talent18=disc"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Gestão de artistas",
+    "id": "management",
+    "first": 55,
+    "warm": 60,
+    "nodes": 95,
+    "hash": "#/management/management9=roster"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Empresários",
+    "id": "managers14",
+    "first": 156,
+    "warm": 75,
+    "nodes": 503,
+    "hash": "#/managers14"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Produtores",
+    "id": "producers15",
+    "first": 141,
+    "warm": 78,
+    "nodes": 600,
+    "hash": "#/producers15"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Projeto musical",
+    "id": "project",
+    "first": 60,
+    "warm": 44,
+    "nodes": 138,
+    "hash": "#/project"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Composição",
+    "id": "creation",
+    "first": 128,
+    "warm": 46,
+    "nodes": 118,
+    "hash": "#/creation"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Mercado de canções",
+    "id": "songmkt27",
+    "first": 72,
+    "warm": 57,
+    "nodes": 64,
+    "hash": "#/songmkt27"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Estúdio",
+    "id": "studio",
+    "first": 47,
+    "warm": 72,
+    "nodes": 118,
+    "hash": "#/studio"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Lançamentos",
+    "id": "releases",
+    "first": 53,
+    "warm": 65,
+    "nodes": 118,
+    "hash": "#/releases"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Catálogo",
+    "id": "catalog",
+    "first": 65,
+    "warm": 68,
+    "nodes": 139,
+    "hash": "#/catalog/catalogHub=list"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Tributos e covers",
+    "id": "tribute19",
+    "first": 39,
+    "warm": 71,
+    "nodes": 88,
+    "hash": "#/tribute19/tribute19=trib"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Remix, anúncios e trilhas",
+    "id": "media19",
+    "first": 97,
+    "warm": 133,
+    "nodes": 64,
+    "hash": "#/media19/media19=remix"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Estúdio e produtor",
+    "id": "studio12",
+    "first": 47,
+    "warm": 48,
+    "nodes": 70,
+    "hash": "#/studio12/studio12=studio"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Editora",
+    "id": "publishing16",
+    "first": 64,
+    "warm": 89,
+    "nodes": 344,
+    "hash": "#/publishing16"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Shows",
+    "id": "shows",
+    "first": 45,
+    "warm": 46,
+    "nodes": 115,
+    "hash": "#/shows/showsHub=agenda"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Agenda de shows",
+    "id": "cal17",
+    "first": 80,
+    "warm": 52,
+    "nodes": 112,
+    "hash": "#/cal17"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Agente e promotor",
+    "id": "tour12",
+    "first": 45,
+    "warm": 61,
+    "nodes": 111,
+    "hash": "#/tour12"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Palco e temporada",
+    "id": "live19",
+    "first": 49,
+    "warm": 40,
+    "nodes": 97,
+    "hash": "#/live19/live19=tickets"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Festivais",
+    "id": "festivals",
+    "first": 65,
+    "warm": 52,
+    "nodes": 268,
+    "hash": "#/festivals/festivals16=circuit"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Premiações",
+    "id": "awards",
+    "first": 52,
+    "warm": 50,
+    "nodes": 95,
+    "hash": "#/awards"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Este mês no mundo",
+    "id": "mundo27",
+    "first": 39,
+    "warm": 34,
+    "nodes": 189,
+    "hash": "#/mundo27"
+   },
+   {
+    "sec": "Mundo",
+    "page": "O que sabemos",
+    "id": "known27",
+    "first": 37,
+    "warm": 54,
+    "nodes": 100,
+    "hash": "#/known27"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Notícias e boatos",
+    "id": "news17",
+    "first": 49,
+    "warm": 51,
+    "nodes": 69,
+    "hash": "#/news17"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Paradas",
+    "id": "charts",
+    "first": 75,
+    "warm": 91,
+    "nodes": 1155,
+    "hash": "#/charts/chartsHub=global"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Gravadoras",
+    "id": "labels",
+    "first": 62,
+    "warm": 67,
+    "nodes": 444,
+    "hash": "#/labels/labels9=rank"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Indústria",
+    "id": "industry",
+    "first": 106,
+    "warm": 76,
+    "nodes": 391,
+    "hash": "#/industry/industry=supply"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mercados",
+    "id": "regions18",
+    "first": 78,
+    "warm": 95,
+    "nodes": 536,
+    "hash": "#/regions18/regions18=ov"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mercado: certificados e cenas",
+    "id": "market19a",
+    "first": 66,
+    "warm": 65,
+    "nodes": 87,
+    "hash": "#/market19a/market19a=cert"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mídia",
+    "id": "media",
+    "first": 82,
+    "warm": 69,
+    "nodes": 718,
+    "hash": "#/media/mediaHub=press"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Críticos",
+    "id": "critics",
+    "first": 91,
+    "warm": 58,
+    "nodes": 441,
+    "hash": "#/critics"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Imprensa e fanzines",
+    "id": "zines19",
+    "first": 68,
+    "warm": 76,
+    "nodes": 77,
+    "hash": "#/zines19/zines19=z"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Veículos de mídia",
+    "id": "outlets16",
+    "first": 72,
+    "warm": 48,
+    "nodes": 357,
+    "hash": "#/outlets16"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mundo",
+    "id": "world",
+    "first": 127,
+    "warm": 104,
+    "nodes": 669,
+    "hash": "#/world/worldHub=map27"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mundo vivo",
+    "id": "world17",
+    "first": 42,
+    "warm": 52,
+    "nodes": 79,
+    "hash": "#/world17"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Regiões e política",
+    "id": "regions19",
+    "first": 51,
+    "warm": 48,
+    "nodes": 81,
+    "hash": "#/regions19/regions19=ind"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Depois do palco",
+    "id": "after18",
+    "first": 37,
+    "warm": 36,
+    "nodes": 61,
+    "hash": "#/after18"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Crime",
+    "id": "crime",
+    "first": 106,
+    "warm": 122,
+    "nodes": 1012,
+    "hash": "#/crime/crime17=orgs"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Fraudes e sósias",
+    "id": "fakes19",
+    "first": 53,
+    "warm": 46,
+    "nodes": 91,
+    "hash": "#/fakes19/fakes19=l"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Lendas",
+    "id": "lendas",
+    "first": 51,
+    "warm": 45,
+    "nodes": 190,
+    "hash": "#/lendas/lendas9=pan"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Relações e movimentos",
+    "id": "movements",
+    "first": 42,
+    "warm": 36,
+    "nodes": 60,
+    "hash": "#/movements"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Sociedade",
+    "id": "society18",
+    "first": 38,
+    "warm": 63,
+    "nodes": 103,
+    "hash": "#/society18/society18=awards"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Diário do Mestre",
+    "id": "dm18",
+    "first": 35,
+    "warm": 38,
+    "nodes": 88,
+    "hash": "#/dm18"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Gravadora",
+    "id": "cp17-label",
+    "first": 50,
+    "warm": 55,
+    "nodes": 751,
+    "hash": "#/cp17-label/cp17-label=identity"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Finanças",
+    "id": "finance",
+    "first": 68,
+    "warm": 49,
+    "nodes": 185,
+    "hash": "#/finance/business-finance=pos20"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Negócios",
+    "id": "business",
+    "first": 75,
+    "warm": 73,
+    "nodes": 217,
+    "hash": "#/business/business-business=grupo19"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Cadeia física & acordos",
+    "id": "supply18",
+    "first": 89,
+    "warm": 54,
+    "nodes": 175,
+    "hash": "#/supply18/supply18=press"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Agenda e contratações",
+    "id": "agenda17",
+    "first": 59,
+    "warm": 63,
+    "nodes": 195,
+    "hash": "#/agenda17/agenda17=agenda"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Equipe e ritmo",
+    "id": "team",
+    "first": 52,
+    "warm": 67,
+    "nodes": 127,
+    "hash": "#/team"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Empresa",
+    "id": "company",
+    "first": 57,
+    "warm": 58,
+    "nodes": 135,
+    "hash": "#/company"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Crises, seguros e cultura",
+    "id": "firm19",
+    "first": 86,
+    "warm": 36,
+    "nodes": 66,
+    "hash": "#/firm19/firm19=cancel"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Rumo do selo",
+    "id": "long18",
+    "first": 54,
+    "warm": 67,
+    "nodes": 222,
+    "hash": "#/long18/long18=paths"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Calendário",
+    "id": "calendar19",
+    "first": 145,
+    "warm": 73,
+    "nodes": 262,
+    "hash": "#/calendar19"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Direitos",
+    "id": "rights18",
+    "first": 76,
+    "warm": 64,
+    "nodes": 191,
+    "hash": "#/rights18/rights18=sum"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Carreiras",
+    "id": "careers",
+    "first": 117,
+    "warm": 73,
+    "nodes": 159,
+    "hash": "#/careers"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Empreendimentos",
+    "id": "ventures",
+    "first": 55,
+    "warm": 127,
+    "nodes": 352,
+    "hash": "#/ventures"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Sociedades",
+    "id": "shared18",
+    "first": 32,
+    "warm": 58,
+    "nodes": 67,
+    "hash": "#/shared18/shared18=ven"
+   },
+   {
+    "sec": "Você",
+    "page": "Você",
+    "id": "you",
+    "first": 59,
+    "warm": 57,
+    "nodes": 214,
+    "hash": "#/you/life-you=me"
+   },
+   {
+    "sec": "Você",
+    "page": "Vida pessoal",
+    "id": "personal",
+    "first": 104,
+    "warm": 51,
+    "nodes": 105,
+    "hash": "#/personal/life-personal=love"
+   },
+   {
+    "sec": "Você",
+    "page": "Patrimônio e investimentos",
+    "id": "wealth",
+    "first": 62,
+    "warm": 50,
+    "nodes": 191,
+    "hash": "#/wealth/life-wealth=wealth"
+   },
+   {
+    "sec": "Você",
+    "page": "Noite e encontros",
+    "id": "night14",
+    "first": 55,
+    "warm": 91,
+    "nodes": 107,
+    "hash": "#/night14"
+   },
+   {
+    "sec": "Você",
+    "page": "Álbum de cenas",
+    "id": "scenes17",
+    "first": 37,
+    "warm": 48,
+    "nodes": 68,
+    "hash": "#/scenes17"
+   },
+   {
+    "sec": "Você",
+    "page": "Ajuda e tutorial",
+    "id": "tut18",
+    "first": 81,
+    "warm": 63,
+    "nodes": 818,
+    "hash": "#/tut18"
+   }
+  ]
+ },
+ "menu12": {
+  "sections": [
+   {
+    "sec": "Cockpit",
+    "first": 91,
+    "warm": 35,
+    "nodes": 249,
+    "hash": "#/cockpit/ck20=panel"
+   },
+   {
+    "sec": "Sede",
+    "first": 105,
+    "warm": 136,
+    "nodes": 280,
+    "hash": "#/sede25"
+   },
+   {
+    "sec": "Pessoas",
+    "first": 112,
+    "warm": 87,
+    "nodes": 433,
+    "hash": "#/artists"
+   },
+   {
+    "sec": "Projetos",
+    "first": 139,
+    "warm": 95,
+    "nodes": 446,
+    "hash": "#/project"
+   },
+   {
+    "sec": "Ao vivo",
+    "first": 110,
+    "warm": 61,
+    "nodes": 420,
+    "hash": "#/shows/showsHub=agenda"
+   },
+   {
+    "sec": "Mundo",
+    "first": 57,
+    "warm": 68,
+    "nodes": 204,
+    "hash": "#/mundo27"
+   },
+   {
+    "sec": "Gestão",
+    "first": 56,
+    "warm": 50,
+    "nodes": 371,
+    "hash": "#/cp17-label/cp17-label=identity"
+   },
+   {
+    "sec": "Você",
+    "first": 67,
+    "warm": 57,
+    "nodes": 228,
+    "hash": "#/you/life-you=me"
+   }
+  ],
+  "pages": [
+   {
+    "sec": "Sede",
+    "page": "Sua sede",
+    "id": "sede25",
+    "first": 86,
+    "warm": 83,
+    "nodes": 280,
+    "hash": "#/sede25"
+   },
+   {
+    "sec": "Sede",
+    "page": "Sede",
+    "id": "hq",
+    "first": 92,
+    "warm": 56,
+    "nodes": 158,
+    "hash": "#/hq/hqHub=ops"
+   },
+   {
+    "sec": "Sede",
+    "page": "Nosso mundo",
+    "id": "campus18",
+    "first": 346,
+    "warm": 191,
+    "nodes": 356,
+    "hash": "#/campus18"
+   },
+   {
+    "sec": "Sede",
+    "page": "Central",
+    "id": "plan",
+    "first": 161,
+    "warm": 37,
+    "nodes": 486,
+    "hash": "#/plan"
+   },
+   {
+    "sec": "Sede",
+    "page": "Metas",
+    "id": "goals",
+    "first": 27,
+    "warm": 36,
+    "nodes": 65,
+    "hash": "#/goals/lv-goals=run"
+   },
+   {
+    "sec": "Sede",
+    "page": "Diário da run",
+    "id": "diary",
+    "first": 61,
+    "warm": 60,
+    "nodes": 353,
+    "hash": "#/diary"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Artistas",
+    "id": "artists",
+    "first": 69,
+    "warm": 69,
+    "nodes": 433,
+    "hash": "#/artists"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Pessoas",
+    "id": "people",
+    "first": 106,
+    "warm": 111,
+    "nodes": 694,
+    "hash": "#/people/people=roster"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Dinâmica",
+    "id": "dyn18",
+    "first": 144,
+    "warm": 75,
+    "nodes": 147,
+    "hash": "#/dyn18/dyn18=roster"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Mercado de contratos",
+    "id": "contracts19",
+    "first": 68,
+    "warm": 59,
+    "nodes": 226,
+    "hash": "#/contracts19/contracts19=win"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Talentos",
+    "id": "market",
+    "first": 83,
+    "warm": 68,
+    "nodes": 584,
+    "hash": "#/market/marketHub=search"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Artistas conhecidos",
+    "id": "knownacts27",
+    "first": 112,
+    "warm": 105,
+    "nodes": 952,
+    "hash": "#/knownacts27/knownacts27=all"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Todos os artistas",
+    "id": "directory",
+    "first": 103,
+    "warm": 94,
+    "nodes": 915,
+    "hash": "#/directory"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Talentos e formação",
+    "id": "talent18",
+    "first": 95,
+    "warm": 53,
+    "nodes": 327,
+    "hash": "#/talent18/talent18=disc"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Gestão de artistas",
+    "id": "management",
+    "first": 75,
+    "warm": 59,
+    "nodes": 95,
+    "hash": "#/management/management9=roster"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Empresários",
+    "id": "managers14",
+    "first": 80,
+    "warm": 63,
+    "nodes": 591,
+    "hash": "#/managers14"
+   },
+   {
+    "sec": "Pessoas",
+    "page": "Produtores",
+    "id": "producers15",
+    "first": 66,
+    "warm": 94,
+    "nodes": 624,
+    "hash": "#/producers15"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Projeto musical",
+    "id": "project",
+    "first": 68,
+    "warm": 66,
+    "nodes": 446,
+    "hash": "#/project"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Composição",
+    "id": "creation",
+    "first": 167,
+    "warm": 157,
+    "nodes": 1210,
+    "hash": "#/creation/creation-write=repertoire"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Mercado de canções",
+    "id": "songmkt27",
+    "first": 75,
+    "warm": 66,
+    "nodes": 283,
+    "hash": "#/songmkt27/songmkt27=buy"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Estúdio",
+    "id": "studio",
+    "first": 146,
+    "warm": 149,
+    "nodes": 1699,
+    "hash": "#/studio/creation-studio=session"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Lançamentos",
+    "id": "releases",
+    "first": 85,
+    "warm": 55,
+    "nodes": 312,
+    "hash": "#/releases/creation-release=launch"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Catálogo",
+    "id": "catalog",
+    "first": 102,
+    "warm": 123,
+    "nodes": 236,
+    "hash": "#/catalog/catalogHub=list"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Tributos e covers",
+    "id": "tribute19",
+    "first": 63,
+    "warm": 57,
+    "nodes": 253,
+    "hash": "#/tribute19/tribute19=trib"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Remix, anúncios e trilhas",
+    "id": "media19",
+    "first": 44,
+    "warm": 71,
+    "nodes": 64,
+    "hash": "#/media19/media19=remix"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Estúdio e produtor",
+    "id": "studio12",
+    "first": 69,
+    "warm": 64,
+    "nodes": 70,
+    "hash": "#/studio12/studio12=studio"
+   },
+   {
+    "sec": "Projetos",
+    "page": "Editora",
+    "id": "publishing16",
+    "first": 52,
+    "warm": 55,
+    "nodes": 344,
+    "hash": "#/publishing16"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Shows",
+    "id": "shows",
+    "first": 200,
+    "warm": 61,
+    "nodes": 420,
+    "hash": "#/shows/showsHub=agenda"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Agenda de shows",
+    "id": "cal17",
+    "first": 68,
+    "warm": 53,
+    "nodes": 99,
+    "hash": "#/cal17"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Agente e promotor",
+    "id": "tour12",
+    "first": 61,
+    "warm": 50,
+    "nodes": 112,
+    "hash": "#/tour12"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Palco e temporada",
+    "id": "live19",
+    "first": 52,
+    "warm": 55,
+    "nodes": 104,
+    "hash": "#/live19/live19=tickets"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Festivais",
+    "id": "festivals",
+    "first": 123,
+    "warm": 60,
+    "nodes": 306,
+    "hash": "#/festivals/festivals16=circuit"
+   },
+   {
+    "sec": "Ao vivo",
+    "page": "Premiações",
+    "id": "awards",
+    "first": 41,
+    "warm": 55,
+    "nodes": 95,
+    "hash": "#/awards"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Este mês no mundo",
+    "id": "mundo27",
+    "first": 56,
+    "warm": 54,
+    "nodes": 204,
+    "hash": "#/mundo27"
+   },
+   {
+    "sec": "Mundo",
+    "page": "O que sabemos",
+    "id": "known27",
+    "first": 68,
+    "warm": 61,
+    "nodes": 182,
+    "hash": "#/known27"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Notícias e boatos",
+    "id": "news17",
+    "first": 67,
+    "warm": 43,
+    "nodes": 398,
+    "hash": "#/news17"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Paradas",
+    "id": "charts",
+    "first": 139,
+    "warm": 138,
+    "nodes": 1409,
+    "hash": "#/charts/chartsHub=global"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Gravadoras",
+    "id": "labels",
+    "first": 71,
+    "warm": 72,
+    "nodes": 455,
+    "hash": "#/labels/labels9=rank"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Indústria",
+    "id": "industry",
+    "first": 61,
+    "warm": 54,
+    "nodes": 391,
+    "hash": "#/industry/industry=supply"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mercados",
+    "id": "regions18",
+    "first": 88,
+    "warm": 80,
+    "nodes": 587,
+    "hash": "#/regions18/regions18=ov"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mercado: certificados e cenas",
+    "id": "market19a",
+    "first": 48,
+    "warm": 54,
+    "nodes": 94,
+    "hash": "#/market19a/market19a=cert"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mídia",
+    "id": "media",
+    "first": 95,
+    "warm": 85,
+    "nodes": 959,
+    "hash": "#/media/mediaHub=press"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Críticos",
+    "id": "critics",
+    "first": 103,
+    "warm": 75,
+    "nodes": 429,
+    "hash": "#/critics"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Imprensa e fanzines",
+    "id": "zines19",
+    "first": 47,
+    "warm": 74,
+    "nodes": 77,
+    "hash": "#/zines19/zines19=z"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Veículos de mídia",
+    "id": "outlets16",
+    "first": 65,
+    "warm": 65,
+    "nodes": 361,
+    "hash": "#/outlets16"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mundo",
+    "id": "world",
+    "first": 751,
+    "warm": 108,
+    "nodes": 669,
+    "hash": "#/world/worldHub=map27"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Mundo vivo",
+    "id": "world17",
+    "first": 42,
+    "warm": 58,
+    "nodes": 216,
+    "hash": "#/world17"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Regiões e política",
+    "id": "regions19",
+    "first": 39,
+    "warm": 45,
+    "nodes": 81,
+    "hash": "#/regions19/regions19=ind"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Depois do palco",
+    "id": "after18",
+    "first": 32,
+    "warm": 45,
+    "nodes": 116,
+    "hash": "#/after18"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Crime",
+    "id": "crime",
+    "first": 155,
+    "warm": 145,
+    "nodes": 1131,
+    "hash": "#/crime/crime17=orgs"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Fraudes e sósias",
+    "id": "fakes19",
+    "first": 40,
+    "warm": 50,
+    "nodes": 103,
+    "hash": "#/fakes19/fakes19=l"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Lendas",
+    "id": "lendas",
+    "first": 67,
+    "warm": 51,
+    "nodes": 247,
+    "hash": "#/lendas/lendas9=pan"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Relações e movimentos",
+    "id": "movements",
+    "first": 35,
+    "warm": 35,
+    "nodes": 93,
+    "hash": "#/movements"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Sociedade",
+    "id": "society18",
+    "first": 41,
+    "warm": 53,
+    "nodes": 104,
+    "hash": "#/society18/society18=awards"
+   },
+   {
+    "sec": "Mundo",
+    "page": "Diário do Mestre",
+    "id": "dm18",
+    "first": 74,
+    "warm": 55,
+    "nodes": 296,
+    "hash": "#/dm18"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Gravadora",
+    "id": "cp17-label",
+    "first": 72,
+    "warm": 58,
+    "nodes": 371,
+    "hash": "#/cp17-label/cp17-label=identity"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Finanças",
+    "id": "finance",
+    "first": 80,
+    "warm": 59,
+    "nodes": 228,
+    "hash": "#/finance/business-finance=pos20"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Negócios",
+    "id": "business",
+    "first": 115,
+    "warm": 66,
+    "nodes": 219,
+    "hash": "#/business/business-business=grupo19"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Cadeia física & acordos",
+    "id": "supply18",
+    "first": 49,
+    "warm": 91,
+    "nodes": 183,
+    "hash": "#/supply18/supply18=press"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Agenda e contratações",
+    "id": "agenda17",
+    "first": 59,
+    "warm": 55,
+    "nodes": 196,
+    "hash": "#/agenda17/agenda17=agenda"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Equipe e ritmo",
+    "id": "team",
+    "first": 131,
+    "warm": 82,
+    "nodes": 335,
+    "hash": "#/team"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Empresa",
+    "id": "company",
+    "first": 81,
+    "warm": 83,
+    "nodes": 463,
+    "hash": "#/company"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Crises, seguros e cultura",
+    "id": "firm19",
+    "first": 52,
+    "warm": 47,
+    "nodes": 66,
+    "hash": "#/firm19/firm19=cancel"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Rumo do selo",
+    "id": "long18",
+    "first": 60,
+    "warm": 68,
+    "nodes": 249,
+    "hash": "#/long18/long18=paths"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Calendário",
+    "id": "calendar19",
+    "first": 115,
+    "warm": 115,
+    "nodes": 627,
+    "hash": "#/calendar19"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Direitos",
+    "id": "rights18",
+    "first": 61,
+    "warm": 67,
+    "nodes": 192,
+    "hash": "#/rights18/rights18=sum"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Carreiras",
+    "id": "careers",
+    "first": 63,
+    "warm": 82,
+    "nodes": 160,
+    "hash": "#/careers"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Empreendimentos",
+    "id": "ventures",
+    "first": 76,
+    "warm": 66,
+    "nodes": 360,
+    "hash": "#/ventures"
+   },
+   {
+    "sec": "Gestão",
+    "page": "Sociedades",
+    "id": "shared18",
+    "first": 31,
+    "warm": 40,
+    "nodes": 67,
+    "hash": "#/shared18/shared18=ven"
+   },
+   {
+    "sec": "Você",
+    "page": "Você",
+    "id": "you",
+    "first": 73,
+    "warm": 52,
+    "nodes": 228,
+    "hash": "#/you/life-you=me"
+   },
+   {
+    "sec": "Você",
+    "page": "Vida pessoal",
+    "id": "personal",
+    "first": 57,
+    "warm": 45,
+    "nodes": 140,
+    "hash": "#/personal/life-personal=love"
+   },
+   {
+    "sec": "Você",
+    "page": "Patrimônio e investimentos",
+    "id": "wealth",
+    "first": 63,
+    "warm": 65,
+    "nodes": 227,
+    "hash": "#/wealth/life-wealth=wealth"
+   },
+   {
+    "sec": "Você",
+    "page": "Noite e encontros",
+    "id": "night14",
+    "first": 88,
+    "warm": 59,
+    "nodes": 189,
+    "hash": "#/night14"
+   },
+   {
+    "sec": "Você",
+    "page": "Álbum de cenas",
+    "id": "scenes17",
+    "first": 47,
+    "warm": 52,
+    "nodes": 118,
+    "hash": "#/scenes17"
+   },
+   {
+    "sec": "Você",
+    "page": "Ajuda e tutorial",
+    "id": "tut18",
+    "first": 81,
+    "warm": 50,
+    "nodes": 800,
+    "hash": "#/tut18"
+   }
+  ]
+ },
+ "weeks": [
+  {
+   "ms": 337.59999999962747,
+   "clicks": 2,
+   "moved": true,
+   "from": "1963-0-52-365",
+   "to": "1963-0-53-365",
+   "note": "Antes de virar o mês✕Atividade 1 de 1 deste avançoimportante🎮 Reunião de direto"
+  },
+  {
+   "ms": 249.70000000018626,
+   "clicks": 1,
+   "moved": true,
+   "from": "1963-0-53-365",
+   "to": "1963-0-54-365",
+   "note": ""
+  },
+  {
+   "ms": 276.6000000005588,
+   "clicks": 1,
+   "moved": true,
+   "from": "1963-0-54-365",
+   "to": "1963-0-55-365",
+   "note": ""
+  },
+  {
+   "ms": 205.1000000005588,
+   "clicks": 1,
+   "moved": true,
+   "from": "1963-0-55-365",
+   "to": "1963-0-56-365",
+   "note": ""
+  }
+ ],
+ "months": [
+  {
+   "ms": 770.0999999996275,
+   "clicks": 1,
+   "moved": true,
+   "from": "1963-0-56-365",
+   "to": "1963-1-56-396",
+   "note": ""
+  },
+  {
+   "ms": 945.7000000001863,
+   "clicks": 2,
+   "moved": true,
+   "from": "1963-1-56-396",
+   "to": "1963-2-60-424",
+   "note": "Antes de avançar✕3 cartão(ões) vão valer a resposta padrão se você avançar agora"
+  },
+  {
+   "ms": 827.0999999996275,
+   "clicks": 3,
+   "moved": true,
+   "from": "1963-2-60-424",
+   "to": "1963-3-65-455",
+   "note": "Antes de avançar✕2 cartão(ões) vão valer a resposta padrão se você avançar agora"
+  }
+ ],
+ "saves": [
+  {
+   "ms": 382.6000000005588,
+   "ok": true,
+   "stringifyMs": 148.20000000018626,
+   "packMs": 231.59999999962747,
+   "writeMs": 1.800000000745058,
+   "bytes": 5510484,
+   "packed": 1170259,
+   "ts": 1792114281374
+  },
+  {
+   "ms": 282.70000000018626,
+   "ok": true,
+   "stringifyMs": 99,
+   "packMs": 181.6000000005588,
+   "writeMs": 1.199999999254942,
+   "bytes": 5510484,
+   "packed": 1170259,
+   "ts": 1792114282303
+  },
+  {
+   "ms": 396.59999999962747,
+   "ok": true,
+   "stringifyMs": 197.40000000037253,
+   "packMs": 194.69999999925494,
+   "writeMs": 3.5,
+   "bytes": 5510484,
+   "packed": 1170259,
+   "ts": 1792114283443
+  }
+ ],
+ "tasks": [
+  {
+   "id": "artista",
+   "task": "Abrir a ficha de um artista seu",
+   "clicks": 3,
+   "ok": true,
+   "ms": 1174,
+   "path": "Pessoas → (Artistas: já aberto) → Los Cometas → Abrir ficha completa",
+   "fail": ""
+  },
+  {
+   "id": "paradas",
+   "task": "Abrir as paradas",
+   "clicks": 3,
+   "ok": true,
+   "ms": 823,
+   "path": "Mundo → Paradas e mercado (hub) › Paradas",
+   "fail": ""
+  },
+  {
+   "id": "datas",
+   "task": "Marcar datas de shows (4 datas avulsas)",
+   "clicks": 2,
+   "ok": true,
+   "ms": 686,
+   "path": "Ao vivo → (Shows: já aberto) → (^Agenda$: já aberto) → Agendar 4 datas",
+   "fail": ""
+  },
+  {
+   "id": "turne",
+   "task": "Abrir o planejador de turnê (1ª etapa)",
+   "clicks": 2,
+   "ok": true,
+   "ms": 964,
+   "path": "Ao vivo → (Shows: já aberto) → Turnês",
+   "fail": ""
+  },
+  {
+   "id": "estudio",
+   "task": "Abrir o estúdio",
+   "clicks": 2,
+   "ok": true,
+   "ms": 756,
+   "path": "Projetos → Estúdio",
+   "fail": ""
+  },
+  {
+   "id": "disco",
+   "task": "Abrir o projeto musical (fazer um disco)",
+   "clicks": 1,
+   "ok": true,
+   "ms": 350,
+   "path": "Projetos",
+   "fail": ""
+  },
+  {
+   "id": "financas",
+   "task": "Ver as finanças",
+   "clicks": 3,
+   "ok": true,
+   "ms": 811,
+   "path": "Gestão → Dinheiro (hub) › Finanças",
+   "fail": ""
+  },
+  {
+   "id": "caixa",
+   "task": "Abrir a caixa de entrada",
+   "clicks": 1,
+   "ok": true,
+   "ms": 416,
+   "path": "(Cockpit: já aberto) → Caixa de entrada108",
+   "fail": ""
+  },
+  {
+   "id": "mundo",
+   "task": "Ver o mundo (mapa)",
+   "clicks": 3,
+   "ok": true,
+   "ms": 835,
+   "path": "Mundo → Mapa e política (hub) › Mundo",
+   "fail": ""
+  },
+  {
+   "id": "talentos",
+   "task": "Procurar talentos",
+   "clicks": 3,
+   "ok": true,
+   "ms": 852,
+   "path": "Pessoas → Descobrir talentos (hub) › Talentos",
+   "fail": ""
+  },
+  {
+   "id": "calendario",
+   "task": "Ver o calendário",
+   "clicks": 3,
+   "ok": true,
+   "ms": 802,
+   "path": "Gestão → Rumo e direitos (hub) › Calendário",
+   "fail": ""
+  },
+  {
+   "id": "noticias",
+   "task": "Ler notícias e boatos",
+   "clicks": 2,
+   "ok": true,
+   "ms": 644,
+   "path": "Mundo → Notícias e boatos",
+   "fail": ""
+  },
+  {
+   "id": "salvar",
+   "task": "Salvar o jogo com nome (Arquivo)",
+   "clicks": 3,
+   "ok": true,
+   "ms": 787,
+   "path": "Arquivo → Salvar como novo… → OK na janela do nome",
+   "fail": ""
+  }
+ ],
+ "errors": []
+}
