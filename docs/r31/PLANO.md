@@ -81,6 +81,31 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 ## Onda 6 (31.6) · fechamento
 > **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a próxima. Juntar tudo, gerar a build `Masters_31_onda4.html`
 > com tudo, enviar ao dono e esperar os pedidos de ajuste. Depois vem a onda 5 (jogo explorável); o fechamento (antiga onda 5)
-> virou onda 6 e fica para o final.
-- Metas e fim de jogo num motor só; robôs das 12 carreiras; balanço com tudo ligado; salvar/carregar; desempenho contra a
-  v30; acessibilidade; regressão completa.
+> virou onda 6 e fica para o final. Ajustada em 2026-10-16 para cobrir o que entrou na onda 4 e a nova onda 5.
+- **FIM-1 · Metas e fim de jogo num motor só** (B.10) — inclui o que entrou depois do plano: carreiras que mudam o mundo
+  (CAR/CAR2), sócios e compras (SOC), facções por país (U), resultados e aprendizados (R), família Fossati (só homenagem:
+  nunca vira meta de perder). O fim de cada carreira aparece na sede (onda 5), não numa tela solta.
+- **FIM-2 · Robôs das 12 carreiras** — primeiros 30 minutos e fim de jogo de cada uma, jogando pela navegação nova
+  (objeto ou tecla da onda 5, nunca aba ou lista). Os robôs passam a usar também jabá, compras com antitruste, leilões,
+  lotes/casas do mapa (LOTE) e vitrine do mês (VIT), para o balanço medir essas regras de verdade (hoje os robôs não as usam).
+- **FIM-3 · Balanço com tudo ligado** — várias sementes e épocas; regra de ≈1× (começar em qualquer época dá resultado
+  parecido). Para cada interruptor das ondas 3–4 (`car31.*`, `soc31.*`, `u31.*`, `under31.*`, `gente31.*`, `fam31.*`,
+  `w31.*` jabá/antitruste, `bal31.mercy`, vitrine, lotes, `realNames`, `extras31`): medir ligado × desligado, decidir o
+  padrão e se continua interruptor (editor) ou vira regra fixa. Trocar os números esperados dos testes de semente uma vez só.
+- **FIM-4 · Limpeza** — apagar módulos órfãos: abas antigas e modos lista que a onda 5 tirou (`ui/sys/hubs20.ts` modo lista,
+  navegação por abas), telas antigas que as cenas substituíram (lançamento, banco, compra, jabá), restos do atlas de
+  equipamentos (`gear21.png` na sede isométrica antiga e na miniatura — ver `docs/r31/art-auditoria.md`), testes temporários.
+- **FIM-5 · Suíte verde de verdade** — nenhuma falha "conhecida" sobrando (inclui o desempenho do r14-db, hoje ~2 000 ms/mês
+  contra 1 500); testes de fumaça e robô clicando em objetos/teclas; teste adiado não conta como pronto.
+- **FIM-6 · Salvar e carregar** — partidas novas sem perder nada, incluindo o estado novo (vitrine, lotes e casas, resultados
+  e aprendizados, família, sócios, facções); medir o tamanho do save antes/depois. Saves antigos podem ser descartados.
+- **FIM-7 · Desempenho contra a v30** — abrir cena, virar semana/mês (vitrine e praça mudam na virada), vendas por país,
+  cidade com quase todo prédio sendo negócio/lote/casa, sede que cresce, salvar; empresa grande e partida longa.
+- **FIM-8 · Acessibilidade (PC)** — todas as funções por teclado (teclas da onda 5, configuráveis, lista no "?"); zoom;
+  movimento reduzido; nada só por cor; nada só ao passar o mouse (tecla para mostrar o nome de todos os prédios/objetos e as
+  teclas na tela). Celular e toque continuam fora, salvo pedido do dono.
+- **FIM-9 · Textos, ajuda e editor** — tutorial, ajuda e glossário falando de objetos, portas e teclas (não de abas); o
+  pouco texto que sobrou revisado; tudo que é novo registrado no editor (interruptores, lotes, vitrine, cidade da casa Fossati).
+- **FIM-10 · Arte final** — passada de consistência em todas as cenas, incluindo os objetos novos da sede (onda 5) e os
+  assets interativos (ART2); pendências opcionais da família (olhos verdes, blusa de bolinhas) só se o dono pedir.
+- **FIM-11 · Rodada de uso real do dono** — build `Masters_31.html`, fumaça, revisor; ajustes; só então a versão está pronta.
