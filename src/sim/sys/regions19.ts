@@ -12,6 +12,7 @@
 //       AHRA, cópia privada, ECAD, Japão, prazo de 70 anos, MMA), Rouanet, abertura Coreia×Japão, Indonésia 1959, IA/voz.
 // Modo exato: gente real não funda comuna nem sofre batida inventada; candidatos são sempre fictícios.
 
+import { on31 } from '../r31/market31';
 import { clamp, Rng } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { cityById, familyOf, l, type L } from '../../data/world';
@@ -354,6 +355,7 @@ export const lawOn19 = (s: GameState, id: string): boolean => w4(s).ms[`law_${id
 /** Efeito de apelo das leis para um lançamento (fator, rótulo). */
 export function lawAppeal19(s: GameState, rel: Release, a: Act): [number, L][] {
   const out: [number, L][] = [];
+  if (on31(s, 'y31.laws')) return out; // R31 Y: estas leis valem só no país da lei (sys/mercado31, QUOTAS31)
   const a3 = a3Of(a), lang = actLang18(a), t = rel.territories, fam = familyOf(a.genre);
   if (lawOn19(s, 'toubon') && t.includes('eu')) out.push(lang === 'fr' ? [1.06, l('Cota de canções em francês (Toubon)', 'French-song quota (Toubon)')] : a3 === 'FRA' ? [1, l('', '')] : [0.98, l('Cota francesa tira espaço do resto', 'French quota squeezes others')]);
   if (lawOn19(s, 'cancon') && t.includes('na') && a3 === 'CAN') out.push([1.08, l('CanCon: 30% de música canadense no rádio', 'CanCon: 30% Canadian music on radio')]);

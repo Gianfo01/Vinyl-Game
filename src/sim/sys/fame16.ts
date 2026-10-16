@@ -24,6 +24,8 @@ import { addHype } from './hype12';
 import { mapx } from './mapx8';
 import { scene12 } from './scenes12';
 import { actsNow27 } from '../tickcache27';
+import { on31 } from '../r31/market31';
+import { reachHook17 } from './reachhook17';
 
 // ---------------------------------------------------------------- estado
 
@@ -85,19 +87,61 @@ export const myA3 = (s: GameState): string | null => countryOfCity(s.config.home
 export const reach16 = (a: Act): number => clamp((a.fame - 18) / 62, 0, 1);
 
 export interface Base16 { v: number; why: L; aff: number }
+/** R31 Y (y31.fame): teto da fama fora de casa pela relação com o país — mesmo mercado e idioma chega quase ao global;
+ *  sem nada em comum, mesmo o astro fica em ~55% (exceção: alcance mundial próprio, como hit viral ou carreira global). */
+const CEIL31 = { both: 0.92, market: 0.8, lang: 0.72, none: 0.55 };
+/** Peso da fama global num país estrangeiro (fração), a mesma conta em base16 e em baseVec16. */
+function wAbroad16(s: GameState, a: Act, sameM: boolean, sameL: boolean): number {
+  const w0 = sameM ? (sameL ? 0.6 : 0.4) : sameL ? 0.32 : 0.12;
+  if (!on31(s, 'y31.fame')) return w0 + (1 - w0) * reach16(a) * 0.92;
+  const c = Math.max(sameM ? (sameL ? CEIL31.both : CEIL31.market) : sameL ? CEIL31.lang : CEIL31.none, Math.min(0.97, reachHook17.f(s, a)));
+  return w0 + (Math.max(w0, c) - w0) * reach16(a);
+}
+const homeFame16 = (a: Act): number => clamp(a.fame * 1.1 + (a.fame > 4 ? 3 : 0), 0, 100);
 /** Fama de base num país (sem atividade local): origem, mercado/idioma, alcance e gosto pelo gênero. */
 export function base16(s: GameState, a: Act, a3: string): Base16 {
   const home = homeA3(a);
-  if (a3 === home) return { v: clamp(a.fame * 1.1 + (a.fame > 4 ? 3 : 0), 0, 100), why: l('país de origem', 'home country'), aff: 1 };
+  if (a3 === home) return { v: homeFame16(a), why: l('país de origem', 'home country'), aff: 1 };
   const hc = cityById[a.city];
   const sameM = !!hc && mkOf(a3) === hc.market;
   const sameL = !!hc && langsOf(a3).includes(hc.lang);
-  let w = sameM ? (sameL ? 0.6 : 0.4) : sameL ? 0.32 : 0.12;
-  w += (1 - w) * reach16(a) * 0.92;
+  const w = wAbroad16(s, a, sameM, sameL);
   const info = countryInfoByA3[a3];
   const aff = info ? 0.75 + 0.25 * countryTaste(info, familyOf(a.genre), s.year) : 1;
   const why = sameM && sameL ? l('mesmo mercado e idioma', 'same market and language') : sameM ? l('mesmo mercado', 'same market') : sameL ? l('mesmo idioma', 'same language') : l('só o alcance internacional', 'international reach only');
   return { v: clamp(a.fame * w * aff, 0, 100), why, aff };
+}
+
+// gosto por (ano, família) para os países com ficha — calculado uma vez (desempenho; a mesma conta de base16)
+let TASTE16: { y: number; m: Map<string, Float64Array> } | null = null;
+function tastes16(year: number, fam: string): Float64Array {
+  if (!TASTE16 || TASTE16.y !== year) TASTE16 = { y: year, m: new Map() };
+  let v = TASTE16.m.get(fam);
+  if (!v) { v = Float64Array.from(COUNTRY_INFO.map((c) => countryTaste(c, fam as never, year))); TASTE16.m.set(fam, v); }
+  return v;
+}
+/** R31 Y: base16 e fameIn de todos os países com ficha de uma vez (mesma ordem de COUNTRY_INFO). `out` = sem desvio;
+ *  `withDev` = com o desvio local (o país, ou o balde da região). Mesmos números de base16/fameIn, sem arredondar. */
+export function baseVec16(s: GameState, a: Act, out: Float64Array, withDev: Float64Array): void {
+  const home = homeA3(a), hc = cityById[a.city];
+  const tas = tastes16(s.year, familyOf(a.genre));
+  const d = f16(s).d[a.id];
+  const wcache: Record<string, number> = {};
+  for (let i = 0; i < COUNTRY_INFO.length; i++) {
+    const c = COUNTRY_INFO[i];
+    let v: number;
+    if (c.a3 === home) v = homeFame16(a);
+    else {
+      const sameM = !!hc && c.market === hc.market;
+      const sameL = !!hc && langsOf(c.a3).includes(hc.lang);
+      const k = `${+sameM}${+sameL}`;
+      const w = (wcache[k] ??= wAbroad16(s, a, sameM, sameL));
+      v = clamp(a.fame * w * (0.75 + 0.25 * tas[i]), 0, 100);
+    }
+    out[i] = v;
+    const dv = d ? d[c.a3] ?? d[`r:${c.market}`] ?? 0 : 0;
+    withDev[i] = clamp(v + dv, 0, 100);
+  }
 }
 
 /** Fama do ato no país (0–100): base + desvio local (ou o balde da região, se o país não está entre os 12). */

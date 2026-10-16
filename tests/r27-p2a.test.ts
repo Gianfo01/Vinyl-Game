@@ -98,9 +98,13 @@ beforeAll(() => {
   // Antes: 1034775 / 2631883956 / 829002627 / 1362224447.
   // R31 (E · Bolsa, de propósito — docs/r31/DECISOES.md): selos rivais com preço pelo valor único (r31/value31) mudam as
   // participações e compras de NPCs (acts); o humor do mercado ganhou fluxo próprio 'bolsa31' (rng muda só por ele). Antes: acts 3472429155 / rng 3703770621.
-  expect(s.player.cash).toBe(178753);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1746594873);
-  expect(hashString(rngSnapshot19(s))).toBe(3786914192);
+  // R31 onda 3 (D/Y, de propósito — docs/r31/DECISOES.md e docs/r31/dy.md): sem a penalização pós-1990 do jogador, pressão
+  // de mercado igual para todos, previsão pela conta real, demanda e paradas por país (fama local, língua, leis no país,
+  // dominó, teto de fama fora de casa, mercado reservado) e transporte por trecho: caixa, acts e rng mudam e o bot passa a
+  // marcar turnê nesses 8 meses. Antes (com a Bolsa E): 178753 / 1382068899 / 1746594873 / 3786914192.
+  expect(s.player.cash).toBe(581243);
+  expect(hashString(JSON.stringify(s.acts))).toBe(4153284673);
+  expect(hashString(rngSnapshot19(s))).toBe(754530152);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

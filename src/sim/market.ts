@@ -24,6 +24,7 @@ import { songProfile } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
 import { artistRate, dealOfRelease, hasGuest, rightsOf } from './rights';
 import { noteRelease17 } from './relidx17';
+import { FC_ID31, FORECAST31, PRESSURE_LABEL31, Y31, commodOn31, marketPressure31, on31 } from './r31/market31';
 import { allReleases17 } from './relidx17';
 
 const POOL: [number, number][] = [
@@ -56,6 +57,7 @@ export function weeklyPool(s: GameState, year = s.year): number {
   if (hasMutator(s, 'fragile_market')) v *= 0.75;
   if (s.economy.recession) v *= 0.85;
   v *= s.flags.geoDemand ?? 1; // guerras, crises e pandemias (culture.ts)
+  v *= marketPressure31(s, year); // R31 D: pressão de mercado da era digital, igual para todos (no lugar da penalização só do jogador)
   if (year === s.year && POOL19.f) v *= POOL19.f(s); // r19 (live19): curva sazonal do mês (Natal, janeiro) — fora dos tetos dos mods
   return v;
 }
@@ -121,10 +123,14 @@ function eraTypeFit(year: number, type: Release['type']): number {
 
 const t0 = (x: { pt: string }) => x.pt;
 
-export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { appeal: number; factors: AutopsyFactor[] } {
-  // ferramentas digitais baratas: a partir dos anos 90 todo mundo grava bem, e a qualidade técnica
-  // do jogador conta menos contra a concorrência (sem isso, começar tarde era fácil demais)
-  const commod = rel.owner === 'player' || act.playerBand ? Math.max(0, Math.min(15, (s.year - 1990) * 0.75)) : 0;
+/** Acaso médio do lançamento (lognormal σ 0,33) e ruído semanal médio (σ 0,12): a previsão usa a média, não um sorteio. */
+export const LUCK_MEAN31 = Math.exp(0.33 ** 2 / 2);
+export const NOISE_MEAN31 = Math.exp(0.12 ** 2 / 2);
+
+export function computeAppeal(s: GameState, r: Rng | null, rel: Release, act: Act, opt: { luck?: number } = {}): { appeal: number; factors: AutopsyFactor[] } {
+  // (antes da R31) ferramentas digitais baratas: a partir dos anos 90 a qualidade do JOGADOR contava menos. Os rivais
+  // já ganham o mesmo com a produção da época; com d31.pressure a penalização sai e a pressão vira mercado (weeklyPool).
+  const commod = commodOn31(s) && (rel.owner === 'player' || act.playerBand) ? Math.max(0, Math.min(15, (s.year - 1990) * 0.75)) : 0;
   const qF = Math.pow(Math.max(5, rel.q - commod) / 55, 2.4);
   // convexo: estrelas concentram atenção; desconhecidos disputam a cauda
   const fameF = 0.12 + Math.pow(act.fame / 40, 1.6) + Math.log10(1 + act.fans.core) / 14;
@@ -133,7 +139,7 @@ export function computeAppeal(s: GameState, r: Rng, rel: Release, act: Act): { a
   const era = eraTypeFit(s.year, rel.type);
   const design = rel.owner === 'player' && staffCount(s, 'designer') ? 1.05 : 1;
   const mom = 0.8 + act.momentum / 250;
-  const luck = Math.exp(rng19(s, 'launch').normal(0, 0.33));
+  const luck = opt.luck ?? Math.exp(rng19(s, 'launch').normal(0, 0.33)); // previsão: média, sem sortear
   const nostalgia = rel.reissueOf ? (hasMutator(s, 'strong_nostalgia') ? 0.6 : 0.35) : rel.kind === 'compilation' ? 0.45 + act.fame / 250 : rel.kind === 'demo' ? 0.35 : rel.kind === 'live' ? 0.55 + act.fame / 300 : 1;
   // gancho: singles vivem do refrão (perfil comercial da faixa principal)
   const lead = s.songs[rel.songs[0]];
@@ -204,8 +210,12 @@ export function launchPending(s: GameState, r: Rng, pr: PendingRelease): Release
   rel.appeal = appeal * rel.hypeBoost;
   if (rel.hypeBoost > 1.02) factors.push({ key: 'hype', label: l('Rollout e superfãs', 'Rollout and superfans'), value: rel.hypeBoost, confidence: 'medium' });
   rel.autopsy = [...factors, { key: 'marketing', label: l('Marketing (E)', 'Marketing (E)'), value: 1 + 2.5 * rel.marketingE, confidence: rel.marketingE > 0.3 ? 'high' : 'low' }];
+  // R31 D/Y: o que mexe no mercado inteiro (pressão da era) e na demanda por país (fama local, leis, dominó) também aparece
+  const press = marketPressure31(s);
+  if (press < 0.995) rel.autopsy.push({ key: 'pressure31', label: PRESSURE_LABEL31, value: press, confidence: 'high' });
+  if (Y31.why) for (const w of Y31.why(s, rel, act)) if (Math.abs(w.k - 1) > 0.01) rel.autopsy.push({ key: `y31:${w.label.pt}`, label: w.label, value: w.k, confidence: 'medium' });
   // rodada 8: guarda a previsão de 10 semanas no momento do lançamento (para comparar depois)
-  if (owner === 'player' || act.playerBand) rel.fc = forecastUnits(s, act, rel.type, rel.q, rel.marketing, rel.territories).mid;
+  if (owner === 'player' || act.playerBand) rel.fc = forecastUnits(s, act, rel.type, rel.q, rel.marketing, rel.territories, { songs: pr.songs, hype: pr.hype, kind: pr.kind, reissueOf: pr.reissueOf, owner }).mid;
   s.releases[rel.id] = rel;
   noteRelease17(s, rel);
   act.releases.push(rel.id);
@@ -294,20 +304,38 @@ function digitalFormats(s: GameState): FormatId[] {
   return out;
 }
 
+/** Foco promocional: quantos lançamentos recentes do mesmo dono a equipe sustenta. */
+function focusCap(s: GameState, owner: string): number {
+  if (owner === 'player') return 2 + s.player.hq + staffCount(s, 'publicist') * 2 + staffCount(s, 'admin');
+  const fam = s.labels[owner]?.family;
+  return fam === 'A' ? 8 : fam === 'C' ? 6 : 4;
+}
+
+/** Calor de um lançamento numa idade (semanas). `noise` = ruído semanal (sorteado no mercado; a média na previsão);
+ *  `term` = termo de marketing do media18 quando ligado. A MESMA conta serve às vendas e à previsão (R31 D). */
+function heatOf(s: GameState, rel: Release, act: Act, age: number, noise: number, term: number | null | undefined): number {
+  let h = rel.appeal * decay(rel.type, age) * (term ?? (1 + 2.5 * rel.marketingE * Math.exp(-age / 9) + 0.3 * rel.marketingE));
+  h *= 0.85 + act.momentum / 300;
+  if (Y31.demand) h *= Y31.demand(s, rel, act); // R31 Y: fama no país, leis do país e efeito dominó mexem na demanda
+  h *= noise;
+  if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
+  if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
+  // mercado fragmentado (anos 90 em diante): muitos canais e nichos, nenhum hit leva tanto quanto antes
+  if (h > 1) h = Math.pow(h, 1 - fragmentation(s.year));
+  return h;
+}
+
 /** Processa uma semana: unidades, receita, estoque, paradas e fama. */
 export function marketWeek(s: GameState, r: Rng): void {
   r = rng19(s, 'market'); // r19: ruído das paradas no fluxo próprio
+  Y31.begin?.(s); // R31 Y: vetores por país da semana (fechados no fim das paradas)
   const pool = weeklyPool(s);
   s.stats.weeklyPool = pool;
   const live = allReleases17(s).filter((x) => x.live);
+  Y31.normalize?.(s, live); // R31 Y: a demanda por país redistribui entre os lançamentos (fama → vendas → fama sem bola de neve)
   // foco promocional: lançamentos recentes do mesmo dono disputam a mesma equipe
   const recentByOwner: Record<string, number> = {};
   for (const rel of live) if (s.week - rel.week < 12) recentByOwner[rel.owner] = (recentByOwner[rel.owner] ?? 0) + 1;
-  const focusCap = (owner: string) => {
-    if (owner === 'player') return 2 + s.player.hq + staffCount(s, 'publicist') * 2 + staffCount(s, 'admin');
-    const fam = s.labels[owner]?.family;
-    return fam === 'A' ? 8 : fam === 'C' ? 6 : 4;
-  };
   const heats: [Release, number][] = [];
   let H = 0;
   for (const rel of live) {
@@ -321,15 +349,9 @@ export function marketWeek(s: GameState, r: Rng): void {
       rel.live = false;
       continue;
     }
-    let h = rel.appeal * decay(rel.type, age) * (MEDIA18.term?.(s, rel, age) ?? (1 + 2.5 * rel.marketingE * Math.exp(-age / 9) + 0.3 * rel.marketingE));
-    h *= 0.85 + act.momentum / 300;
-    h *= Math.exp(r.normal(0, 0.12)); // variação semanal: paradas se mexem
-    if (age > 52) h = Math.max(h, rel.appeal * 0.012 * (1 + act.fame / 40)); // cauda de catálogo
-    if (hasMutator(s, 'no_stars')) h = Math.pow(h, 0.85);
-    // mercado fragmentado (anos 90 em diante): muitos canais e nichos, nenhum hit leva tanto quanto antes
-    if (h > 1) h = Math.pow(h, 1 - fragmentation(s.year));
+    let h = heatOf(s, rel, act, age, Math.exp(r.normal(0, 0.12)), MEDIA18.term?.(s, rel, age)); // variação semanal: paradas se mexem
     const n = recentByOwner[rel.owner] ?? 0;
-    const cap = focusCap(rel.owner);
+    const cap = focusCap(s, rel.owner);
     if (age < 12 && n > cap) h *= Math.sqrt(cap / n);
     heats.push([rel, h]);
   }
@@ -359,10 +381,12 @@ export function marketWeek(s: GameState, r: Rng): void {
   const tot = pre.reduce((t, u) => t + u, 0) + pool * B / (H + B);
   const Sp = heats.reduce((t, e, i) => t + (mine(e[0]) ? pre[i] : 0), 0) / Math.max(1, tot);
   const k = Sp > scaleShare(s.year) ? Math.pow(scaleShare(s.year) / Sp, 0.7) : 1;
+  s.stats.lastK31 = k; // R31 D: a previsão usa o mesmo fator de escala da semana
   for (let i = 0; i < heats.length; i++) {
     const [rel] = heats[i];
     let units = Math.round(pre[i] * (mine(rel) ? k : 1));
     if (units <= 0) continue;
+    if (rel.fc !== undefined && s.week - rel.week < 10) rel.dem10 = (rel.dem10 ?? 0) + units; // R31 D: procura × previsão
     // estoque: demanda física só vira venda com estoque
     const physUnits = Math.round(units * physShareRel18(s, rel));
     let physSold = physUnits;
@@ -566,8 +590,18 @@ function rankChart(s: GameState, entries: ChartEntry[], which: 'singles' | 'albu
   s.charts[which] = top;
 }
 
-/** Previsão de unidades nas primeiras 10 semanas, com intervalo (analista estreita; difícil alarga). */
-export function forecastUnits(s: GameState, act: Act, type: Release['type'], q: number, marketing: { channel: string; budget: number }[], territories: MarketId[]): { lo: number; mid: number; hi: number } {
+export interface ForecastExtra31 { songs?: string[]; hype?: number; kind?: Release['kind']; reissueOf?: string; owner?: string }
+
+/** Previsão de unidades nas primeiras 10 semanas, com intervalo (analista estreita; difícil alarga).
+ *  R31 D (d31.forecast): a MESMA conta do mercado — apelo de computeAppeal (acaso médio, sem sortear), calor de heatOf
+ *  (ruído médio), foco promocional, fragmentação, teto por lançamento, modificadores de unidades, fator de escala do
+ *  selo e a pressão de mercado (pelo tamanho da semana). Não sorteia nem grava nada (explorar não muda o mundo). */
+export function forecastUnits(s: GameState, act: Act, type: Release['type'], q: number, marketing: { channel: string; budget: number }[], territories: MarketId[], extra: ForecastExtra31 = {}): { lo: number; mid: number; hi: number } {
+  const width = (staffCount(s, 'analyst') ? 0.35 : 0.6) * (s.config.difficulty === 'hard' ? 1.3 : s.config.difficulty === 'easy' ? 0.8 : 1);
+  if (on31(s, 'd31.forecast')) {
+    const total = forecast31(s, act, type, q, marketing, territories, extra);
+    return { lo: Math.round(total * (1 - width * 0.6)), mid: Math.round(total), hi: Math.round(total * (1 + width)) };
+  }
   const qF = Math.pow(Math.max(5, q) / 55, 2.4);
   const fameF = 0.12 + Math.pow(act.fame / 40, 1.6) + Math.log10(1 + act.fans.core) / 14;
   const appeal = qF * fameF * (s.genrePop[act.genre] ?? 0.6) * coverage(territories, act.genre, s.year, act.positioning) * eraTypeFit(s.year, type) * (0.8 + act.momentum / 250);
@@ -579,8 +613,43 @@ export function forecastUnits(s: GameState, act: Act, type: Release['type'], q: 
     const h = appeal * decay(type, age) * (MEDIA18.fterm?.(s, marketing, E, age, type, q) ?? (1 + 2.5 * E * Math.exp(-age / 9) + 0.3 * E));
     total += (pool * h) / (H + MARKET_TAIL + h);
   }
-  const width = (staffCount(s, 'analyst') ? 0.35 : 0.6) * (s.config.difficulty === 'hard' ? 1.3 : s.config.difficulty === 'easy' ? 0.8 : 1);
   return { lo: Math.round(total * (1 - width * 0.6)), mid: Math.round(total), hi: Math.round(total * (1 + width)) };
+}
+
+function forecast31(s: GameState, act: Act, type: Release['type'], q: number, marketing: { channel: string; budget: number }[], territories: MarketId[], x: ForecastExtra31): number {
+  const owner = x.owner ?? 'player';
+  const E = Math.min(0.95, marketingE(s, marketing, 'player', act.id) + (owner !== 'player' ? 0.25 : 0));
+  // lançamento de mentira (não entra no estado): os mesmos campos que launchPending monta
+  const rel: Release = {
+    id: FC_ID31, actId: act.id, owner, prov: 'sim', type, title: '', songs: x.songs ?? [], week: s.week, year: s.year, q, appeal: 0,
+    formats: [], stock: 0, pressed: 0, marketing, marketingE: E, territories, weekly: [], totalUnits: 0, revenue: 0, peak: 999,
+    weeksOnChart: 0, lastPos: 0, coverSeed: 0, shortage: 0, reissueOf: x.reissueOf, live: false,
+  };
+  rel.kind = x.kind;
+  // o lançamento aquece o momento do ato (launchPending): a previsão já conta com esse momento, como as vendas
+  const a: Act = { ...act, momentum: clamp(act.momentum + 12 + E * 15, 0, 100) };
+  rel.hypeBoost = (1 + (x.hype ?? 0)) * superfanDebut(s, act);
+  rel.appeal = computeAppeal(s, null, rel, a, { luck: LUCK_MEAN31 }).appeal * rel.hypeBoost;
+  for (const f of FORECAST31.appeal) rel.appeal *= f(s, rel);
+  const pool = weeklyPool(s);
+  const H = s.stats.lastH ?? 80;
+  const B = MARKET_TAIL * (s.year < 1950 ? 0.6 : 1);
+  const cap = pool * maxShare(s.year);
+  const mine = owner === 'player' || !!act.playerBand;
+  const k = mine ? s.stats.lastK31 ?? 1 : 1;
+  // foco promocional: o próprio lançamento entra na conta dos recentes do dono
+  let n = 1;
+  for (const r of allReleases17(s)) if (r.live && r.owner === owner && s.week - r.week < 12) n++;
+  const fc = focusCap(s, owner);
+  let total = 0;
+  for (let age = 0; age < 10; age++) {
+    let h = heatOf(s, rel, a, age, NOISE_MEAN31, MEDIA18.fterm?.(s, marketing, E, age, type, q));
+    if (n > fc) h *= Math.sqrt(fc / n);
+    rel.week = s.week - age; // os modificadores leem a idade pela semana do lançamento
+    const u = Math.min(cap, applyMods(s, 'chartUnits', (pool * h) / (H + h + B), { release: rel }).value);
+    total += u * k;
+  }
+  return total;
 }
 
 export function chartName(which: 'singles' | 'albums', year = 9999, real = false): string {

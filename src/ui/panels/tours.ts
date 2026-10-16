@@ -7,7 +7,10 @@ import { cashLock31 } from '../../sim/r31/lock';
 import { VENUE_TIERS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { cancelTour, estimateTour, planTour, type TourEstimate, type TourPlan } from '../../sim/tours';
+import { cancelTour, estimateTour, legOptions31, planTour, type TourEstimate, type TourPlan } from '../../sim/tours';
+import { on31 } from '../../sim/r31/market31';
+import { activeMembers } from '../../sim/capacity';
+import type { TransportMode } from '../../sim/travel';
 import { draftConflicts20 } from '../../sim/sys/shows20';
 import { produceMerch } from '../../sim/brands';
 import type { GameState } from '../../sim/types';
@@ -33,6 +36,33 @@ import { a29 } from '../art29ui'; // r29 (arte)
 import { merchImg29, vehicleImg29 } from '../pixel/things29';
 
 const draft: Omit<TourPlan, 'cities' | 'actId'> & { actId?: string } = { startInDays: 21, priceMult: 1, minutes: 60, setlist: [], production: 1, role: 'headline', crew: 4, pay: 'door' };
+/** R31 D: transporte escolhido por trecho ("de>para" → meio); trecho sem escolha = automático pela época. */
+const legPick31: Record<string, TransportMode> = {};
+const legModes31 = (s: GameState, actId: string, stops: string[]): (TransportMode | undefined)[] => {
+  let prev = s.location[actId] ?? s.acts[actId]?.city ?? '';
+  return stops.map((c) => { const k = `${prev}>${c}`; prev = c; return legPick31[k]; });
+};
+/** R31 D: escolha do transporte de cada trecho (opções reais da época; custo × tempo × cansaço). */
+function legChooser31(s: GameState, actId: string, stops: string[], crew: number): HTMLElement | null {
+  if (!on31(s, 'd31.transport') || !stops.length) return null;
+  const act = s.acts[actId];
+  const people = activeMembers(s, act).length + Math.max(1, crew);
+  let prev = s.location[actId] ?? act.city;
+  const rows: HTMLElement[] = [];
+  for (const c of stops) {
+    const from = prev, k = `${from}>${c}`;
+    prev = c;
+    const ops = legOptions31(s, from, c, people);
+    if (ops.length < 2) continue;
+    const cur = legPick31[k] ?? ops[0].mode;
+    rows.push(h('label', null, `${cityName(from)} → ${cityName(c)}`, select(cur, ops.map((o) => ({ value: o.mode, label: `${t(o.name)}${o.auto ? ` (${t(l('automático', 'automatic'))})` : ''} · ${o.days}d · ${$(o.cost)} · ${t(l('cansaço', 'fatigue'))} +${String(o.fatigue).replace('.', t(l(',', '.')))}` })), (v) => { if (v === ops[0].mode) delete legPick31[k]; else legPick31[k] = v; rerender(); })));
+  }
+  if (!rows.length) return null;
+  return h('details', { class: 'legs31' }, h('summary', null, ic('globe'), ' ', t(l('Transporte por trecho (padrão: automático pela época)', 'Transport per leg (default: automatic by era)'))),
+    h('p', { class: 'small muted' }, t(l('Navio é lento, barato e cansa pouco; trem é o meio-termo; avião é rápido e caro. As datas da turnê mudam com a escolha.', 'Ships are slow, cheap and restful; trains are the middle ground; planes are fast and pricey. Tour dates shift with the choice.'))),
+    h('div', { class: 'form' }, ...rows));
+}
+
 /** R31 (O): o painel rápido abre o planejador já no artista escolhido. */
 export function setTourAct31(actId: string): void { draft.actId = actId; }
 
@@ -65,7 +95,7 @@ export function tourDraftEstimate20(s: GameState, stops: string[]): { est: TourE
   const ids = playerActs(s);
   if (!ids.length) return { est: null, actId: null };
   const actId = draft.actId && ids.includes(draft.actId) ? draft.actId : ids[0];
-  const plan: TourPlan = { ...draft, actId, cities: stops, kit: kitDraft18() };
+  const plan: TourPlan = { ...draft, actId, cities: stops, kit: kitDraft18(), legModes: legModes31(s, actId, stops) };
   return { est: stops.length ? estimateTour(s, plan) : null, actId };
 }
 
@@ -78,7 +108,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
   const need = Math.ceil(draft.minutes / 4);
   draft.setlist = recorded.slice(0, need).map((x) => x.id);
   const others = Object.values(s.acts).filter((x) => visibleAct(s, x) && x.id !== act.id && x.status === 'active' && Math.abs(x.fame - act.fame) < 30).sort((a, b) => b.fame - a.fame).slice(0, 20);
-  const plan: TourPlan = { ...draft, actId: act.id, cities: stops, kit: kitDraft18() };
+  const plan: TourPlan = { ...draft, actId: act.id, cities: stops, kit: kitDraft18(), legModes: legModes31(s, act.id, stops) };
   const est = stops.length ? estimateTour(s, plan) : null;
   const all = step === undefined;
   const on = (k: number) => all || step === k;
@@ -97,6 +127,7 @@ export function tourPlannerSection(s: GameState, stops: string[], setStops?: (id
   return section(t(l('Planejar turnê', 'Plan a tour')),
     form.some(Boolean) ? h('div', { class: 'form grid2' }, ...form) : null,
     on(2) ? kitForm18(s, plan, est) : null,
+    on(2) ? legChooser31(s, act.id, stops, draft.crew) : null,
     on(1) ? h('p', { class: 'small' }, ic('disc'), ' ', t(l('Setlist: {n} gravações próprias ({q} necessárias){c}.', 'Setlist: {n} own recordings ({q} needed){c}.'), { n: draft.setlist.length, q: need, c: draft.setlist.length < need ? t(l(' — o resto vira covers, com penalidade', ' — the rest will be covers, with a penalty')) : '' })) : null,
     !stops.length && on(0) ? h('p', { class: 'muted small' }, t(all ? l('Monte a rota clicando nas cidades do mapa acima.', 'Build the route by clicking cities on the map above.') : l('Monte a rota clicando nas cidades do mapa ou na lista de cidades.', 'Build the route by clicking cities on the map or in the city list.'))) : null,
     setStops && on(0) ? routeHintRow(s, act.id, setStops) : null,
