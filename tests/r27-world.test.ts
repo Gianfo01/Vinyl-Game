@@ -10,7 +10,7 @@ import { CATALOG_ADJ } from '../src/sim/rights';
 import { scandal } from '../src/sim/scandal17';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { sc27, scenes27Month, rideMult27, PH27 } from '../src/sim/sys/scenes27';
-import { copyAnswer27, makeCopy27, rivalMemory27, rivals27Month, rv27, temper27 } from '../src/sim/sys/rivals27';
+import { copyAnswer27, makeCopy27, rivalMemory27, rivals27Month, temper27, memOf27 } from '../src/sim/sys/rivals27';
 import { cityEcon27 } from '../src/sim/sys/cities27';
 import { h27, hist27Month, hist27Mult } from '../src/sim/sys/hist27';
 import { cq27, legendMult27 } from '../src/sim/sys/conseq27';
@@ -96,7 +96,7 @@ describe('r27 rivais — personalidade, memória e imitadores', () => {
     rivals27Month(s);
     expect(rivalMemory27(s, lb.id)!.mem[0].t.pt).toContain(b.name);
     expect(recentFacts(s, { kind: 'rival_grudge', months: 2 }).length).toBeGreaterThan(0);
-    const x = rv27(s).L[lb.id];
+    const x = memOf27(s, lb.id)!;
     x.g = 90;
     for (let i = 0; i < 30 && !x.mem.some((y) => y.d === 0); i++) { x.g = 90; step(s); rivals27Month(s); }
     expect(x.mem.some((y) => y.d === 0)).toBe(true);

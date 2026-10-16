@@ -75,9 +75,9 @@ export const TRACKS18: Track18[] = [
   ] },
   { id: 'venue', name: l('Casa de shows', 'Venue owner'), intro: l('Programação, bar e público fiel.', 'Programming, bar and regulars.'), objs: [
     o('page', 'Abrir sua casa e programação', 'Open your venue and programming', 'cp17-venue'),
-    o('own', 'Ter uma casa de shows', 'Own a venue', 'cp17-venue', (s) => !!x4(s).venue12?.v || (x4(s).venues17?.own ?? []).length > 0),
-    o('nights', 'Fechar 3 meses de programação', 'Run 3 months of programming', 'cp17-venue', (s) => (x4(s).venue12?.v?.hist ?? []).length >= 3),
-    o('black', 'Ter um mês no azul', 'Have a month in the black', 'cp17-venue', (s) => (x4(s).venue12?.v?.hist ?? []).some((h: X4) => h.net > 0)),
+    o('own', 'Ter uma casa de shows', 'Own a venue', 'cp17-venue', (s) => Object.keys(x4(s).venues27?.v ?? {}).length > 0),
+    o('nights', 'Fechar 3 meses de programação', 'Run 3 months of programming', 'cp17-venue', (s) => (x4(s).venues27?.v?.['lv:venue']?.prog?.hist ?? []).length >= 3),
+    o('black', 'Ter um mês no azul', 'Have a month in the black', 'cp17-venue', (s) => (x4(s).venues27?.v?.['lv:venue']?.prog?.hist ?? []).some((h: X4) => h.net > 0)),
   ] },
   { id: 'studio', name: l('Estúdio e produtor', 'Studio & producer'), intro: l('Horas vendidas, discos produzidos e assinatura sonora.', 'Hours sold, records produced and a sonic signature.'), objs: [
     o('page', 'Abrir estúdio e produção', 'Open studio and production', 'cp17-studio'),

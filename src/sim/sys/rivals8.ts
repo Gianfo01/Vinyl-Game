@@ -8,12 +8,13 @@
 // produtor, antecipar um lançamento, oferecer contrato mais atraente, abandonar um mercado — para o
 // jogador aprender a reconhecer e antecipar cada um.
 
+import { rivalOf, rivalRec, rivals31, rivalsWith } from './rivalstore';
 import { clamp, hashString, type Rng } from '../../core/rng';
 import { techById } from '../../data/rules';
 import { cityById, familyOf, genreById, l, marketById, type FamilyId, type L, type MarketId } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { emitEvent, type EventDef } from '../events';
-import { deferEvents, registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
+import { deferEvents, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import { launchNpcRelease } from '../market';
 import { unreleasedRecorded } from '../production';
 import type { Act, GameState, Label, Release } from '../types';
@@ -35,22 +36,25 @@ export type MoveKind = 'buyout' | 'buy_offer' | 'scene_sign' | 'interest' | 'cat
 
 export interface Move { w: number; k: MoveKind; a?: string; x?: string }
 
+/** UNI-4 (B.19): as jogadas e a aposta tecnológica de cada selo moram no registro único dos rivais (rivalstore
+ *  `lb[selo].moves` / `.tech`); aqui ficam as partes do circuito. */
 export interface Rivals8State {
-  log: Record<string, Move[]>;
   /** interesse declarado: ato → selo e semana */
   interest: Record<string, { lb: string; w: number }>;
   /** cena dominada por selo ("cidade:gênero") */
   scene: Record<string, string>;
-  /** aposta tecnológica por selo */
-  tech: Record<string, { id: string; until: number }>;
   /** lançamentos do jogador já disputados (id pendente → 1) */
   clash: Record<string, 1>;
   lastClash: number;
 }
 
-declare module '../ext4' { interface Ext4 { rivals8: Rivals8State } }
-registerExt4('rivals8', () => ({ log: {}, interest: {}, scene: {}, tech: {}, clash: {}, lastClash: -999 }));
-export const rivals8 = (s: GameState): Rivals8State => (s as unknown as { x4: { rivals8: Rivals8State } }).x4.rivals8;
+export const rivals8 = (s: GameState): Rivals8State => rivals31(s).r8;
+/** Últimas jogadas de um selo (só leitura). */
+export const movesOf8 = (s: GameState, lbId: string): Move[] => rivalOf(s, lbId)?.moves ?? [];
+/** Todas as jogadas registradas, por selo (só leitura). */
+export const allMoves8 = (s: GameState): [string, Move[]][] => rivalsWith(s, 'moves');
+/** Aposta tecnológica de um selo (só leitura). */
+export const techOf8 = (s: GameState, lbId: string): { id: string; until: number } | undefined => rivalOf(s, lbId)?.tech;
 
 export const PLAYBOOKS: Record<PlaybookId, { name: L; desc: L; tells: L[]; leader: L; profiles: ProfileId[] }> = {
   vulture: {
@@ -282,9 +286,8 @@ export function moveText(m: Move): L {
 
 export function logMove(s: GameState, lb: Label, m: Omit<Move, 'w'>): void {
   if (skipBlockedLog(s, lb.id, m.a)) return;
-  const st = rivals8(s);
   const mv: Move = { w: s.week, ...m };
-  const list = (st.log[lb.id] ??= []);
+  const list = (rivalRec(s, lb.id).moves ??= []);
   list.push(mv);
   if (list.length > 8) list.splice(0, list.length - 8);
   if (s.rivalReport) {
@@ -407,13 +410,13 @@ function catalogKeeper(s: GameState, r: Rng, lb: Label): void {
 }
 
 function techBettor(s: GameState, r: Rng, lb: Label): void {
-  const st = rivals8(s);
-  const bet = st.tech[lb.id];
-  if (bet && bet.until < s.year) delete st.tech[lb.id];
-  if (!st.tech[lb.id]) {
+  const R = rivalRec(s, lb.id);
+  const bet = R.tech;
+  if (bet && bet.until < s.year) delete R.tech;
+  if (!R.tech) {
     const fresh = Object.entries(s.techDates).find(([, y]) => y === s.year || y === s.year - 1);
     if (fresh && r.chance(0.35) && lb.cash > money(s, 200000)) {
-      st.tech[lb.id] = { id: fresh[0], until: s.year + 3 };
+      R.tech = { id: fresh[0], until: s.year + 3 };
       lb.cash -= money(s, 30000);
       logMove(s, lb, { k: 'tech_bet', x: fresh[0] });
     }
@@ -504,7 +507,7 @@ deferEvents(BUYOUT_EVENTS);
 registerMod('appeal', 'rivals8', (s, v, c) => {
   const rel = c.release;
   if (!rel || rel.owner === 'player') return null;
-  const bet = rivals8(s).tech[rel.owner];
+  const bet = techOf8(s, rel.owner);
   return bet && bet.until >= s.year ? { value: v * 1.12, label: l('Aposta tecnológica do selo', 'Label\'s tech bet') } : null;
 });
 
@@ -837,7 +840,7 @@ registerSimHook('month', 'rivals8', (s, r) => {
   }
   resolveInterest(s, r);
   const st = rivals8(s);
-  for (const id of Object.keys(st.log)) if (!s.labels[id]?.active) delete st.log[id];
+  for (const [id] of allMoves8(s)) if (!s.labels[id]?.active) delete rivalRec(s, id).moves;
   for (const id of Object.keys(st.scene)) if (!s.labels[id]?.active) delete st.scene[id];
   for (const id of Object.keys(st.clash)) if (!s.pendingReleases.some((p) => p.id === id)) delete st.clash[id];
 });
