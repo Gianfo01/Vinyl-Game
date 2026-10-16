@@ -32,6 +32,7 @@ import { quickRows31, registerQuick31 } from './quick31core';
 import { salaHook31 } from './salahook31';
 import { AREA_SALA31, CAREERS31, ROOMS31, ROOM_SALA31, RUN31, SALA_NAME31, activeCareers31, auditSala31, salaModel31, SALAS31, type Btn31, type Chip31, type Do31, type Hot31, type SalaId31, type SalaM31 } from './salas31model';
 import { drawSala31, youSprite31, type Rect31 } from './salas31px';
+import './salaart31'; // r31 ART2: objetos novos das salas (registra pontos, área e pintura)
 import './salas31.css';
 
 export const SALA_AREA31 = 'sala31';

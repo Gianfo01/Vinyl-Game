@@ -21,6 +21,7 @@ import { paintCrisis27, put27 } from './px27b';
 import { drawScene27, type Who27 } from './scene27';
 import './act27.css';
 import './p2b27.css';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 function warRoom(s: GameState, threat: () => number): HTMLCanvasElement {
   const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Sala de crise', 'Crisis room')) }) as HTMLCanvasElement;
@@ -100,7 +101,7 @@ export function openCrisisRoom27(id: string, onDone?: (played: boolean) => void)
     (root.querySelector('.p2b-opt:not([disabled])') as HTMLElement | null)?.focus();
   };
   view();
-  const close = modal(t(l('Sala de crise — {k}', 'Crisis room — {k}'), { k: t(CRISIS_NAME27[cc.k]) }), root, { wide: true, onClose: () => { onDone?.(true); rerender(); } });
+  const close = modal(t(l('Sala de crise — {k}', 'Crisis room — {k}'), { k: t(CRISIS_NAME27[cc.k]) }), withCast31(s, [cc.ref.pid, cc.ref.act], root, () => close()), { wide: true, onClose: () => { onDone?.(true); rerender(); } });
 }
 
 /** Seção com as crises na mesa e as abertas (Cockpit / Políticas). */

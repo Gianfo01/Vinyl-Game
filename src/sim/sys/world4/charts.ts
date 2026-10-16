@@ -41,6 +41,9 @@ export function payolaCost(s: GameState, tier: number): number {
   return money(s, PAYOLA_TIERS[tier].real * PAYOLA_ERA_INFO[payolaEra(s)].cost);
 }
 
+/** R31 onda 4 (W): portões do envelope (devolvem o motivo quando o diretor não aceita; a consequência fica com o portão). */
+export const PAYOLA_GATE31: ((s: GameState, tier: number) => L | null)[] = [];
+
 /** Pagar DJs/programadores/curadores. Uma vez por semana. */
 export function payDJs(s: GameState, tier: number): L | null {
   const w = w4(s);
@@ -50,6 +53,8 @@ export function payDJs(s: GameState, tier: number): L | null {
   if (w.payola.lastWeek === s.week) return l('Já houve pagamento nesta semana.', 'Already paid this week.');
   const cost = payolaCost(s, tier);
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
+  // R31 onda 4 (W): o diretor que recebe o envelope pode recusar ou denunciar (r31/w31.ts, interruptor w31.jaba)
+  for (const g of PAYOLA_GATE31) { const no = g(s, tier); if (no) return no; }
   post(s, `w4payola:${tier}`, -cost, 'w4_payola', 'Divulgação (?)');
   const era = payolaEra(s);
   w.payola.level = clamp(w.payola.level + t.level, 0, 0.45);

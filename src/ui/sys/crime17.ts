@@ -29,6 +29,7 @@ import { rivalsExtra } from '../panels/discovery';
 import { cityName, monthName, pill, rerender, section, toast } from '../common';
 import { bar, h, select } from '../dom';
 import { registerArea } from '../registry';
+import { underCityTab31 } from '../r31/under31ui';
 import { chips, setTab, stat, tabs } from '../vis';
 import { intriguePanel } from './intrigue';
 import { emblemImg28, orgEmblemKind28 } from '../pixel/emblem28';
@@ -338,6 +339,7 @@ function crimeArea(s: GameState): HTMLElement {
   const st = crime17(s);
   const charged = myCases(s).filter((c) => c.stage === 'charged').length;
   return h('div', { class: 'hub' }, tabs('crime17', [
+    { id: 'city31', label: t(l('Na sua cidade', 'In your city')), icon: 'pin', render: () => underCityTab31(s) }, // R31 onda 4 (S): fachadas, delegacia, beco, mural
     { id: 'orgs', label: t(l('Organizações', 'Organizations')), icon: 'handshake', render: () => orgsTab(s) },
     { id: 'plans', label: t(l('Planos/Ações', 'Plans/Actions')), icon: 'skull', badge: st.warn.length || undefined, render: () => plansTab(s) },
     { id: 'broker', label: t(l('Intermediário', 'Broker')), icon: 'globe', render: () => brokerTab31(s) },

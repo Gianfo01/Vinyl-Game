@@ -1,0 +1,9 @@
+/* R31 · onda 4 (FOS) — casa da família Fossati e praça da homenagem em cena (usa o estilo dos interiores). */
+.fos31 .fos31-talk { font-style: italic; color: #ffe9b0; }
+.fos31 .fos31-plaque { margin: 0; padding: 0.4rem 0.55rem; border: 1px solid #c8902c; border-radius: 4px; background: rgba(200, 144, 44, 0.15); color: #f8e8c0; font-size: 0.9rem; }
+.fos31-doors { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin: 0.3rem 0 0.5rem; }
+.fos31 .fos31-f { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.fos31 .fos31-b { display: flex; justify-content: flex-start; }
+.fos31 .fos31-b .btn { width: auto; }
+.fos31 .in31-pn .fos31-f { flex-direction: row; align-self: flex-start; justify-content: flex-start; }
+.fos31 .in31-pn .fos31-f select { width: auto; }

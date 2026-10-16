@@ -23,6 +23,7 @@ import { cutscene27, playBtn27 } from './mode27';
 import { paintCork27 } from './p2apx27';
 import './p2a27.css';
 import { askConfirm } from '../ask31';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const SVG = 'http://www.w3.org/2000/svg';
@@ -138,5 +139,5 @@ export function openFavors27(focus?: string, o: { gesture?: Gesture27 | 'ask'; c
       : t(l('{g} com {n}: escolha a conversa (pela personalidade) e clique em {g} ao lado — a gentileza vira crédito: a pessoa passa a te dever.', '{g} with {n}: pick the talk (by personality) and click {g} on the side — the kindness becomes credit: they now owe you.'), { g: T(GEST[g].n), n: who })),
     o.classic ? h('button', { class: 'btn small ghost', 'data-fl27': 'quick', onclick: () => { closeFn(); o.classic?.(); } },
       g === 'ask' ? t(l('Resolver rápido: pedir o favor de sempre', 'Resolve quickly: ask the usual favor')) : t(l('Resolver rápido: o {g} de sempre', 'Resolve quickly: the usual {g}'), { g: T(GEST[g].n).toLowerCase() })) : null) : null;
-  closeFn = modal(t(l('Rede de favores', 'Favor network')), lead ? h('div', null, lead, root) : root, { wide: true, onClose: () => rerender() });
+  closeFn = modal(t(l('Rede de favores', 'Favor network')), withCast31(s, [focus], lead ? h('div', null, lead, root) : root, () => closeFn()), { wide: true, onClose: () => rerender() });
 }
