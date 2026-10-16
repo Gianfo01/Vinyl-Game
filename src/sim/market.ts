@@ -1,4 +1,5 @@
 import { projAlias31, withTxn } from './r31/txn';
+import { NPCREL31 } from './r31/npcrel31';
 import { POOL19 } from './pool19';
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
 // paradas WorldSound 100 / Albums e autópsia (GDD §7, §13, §14, §16, §24).
@@ -249,9 +250,6 @@ function contractScope(ts: MarketId[], c: { party: string; territories?: MarketI
 }
 
 /** Lançamento de rivais e independentes (mesmos validadores e economia). */
-/** R31 CAR (sys/car31more.ts): o disco do selo NPC também passa pelo estúdio/editora do jogador (o gancho 'launch' só
- *  roda para lançamentos do jogador). Sem estúdio ou editora do jogador, não faz nada. */
-export const NPCREL31: { f?: (s: GameState, rel: Release) => void } = {};
 export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, songIds: string[], type: Release['type'], budgetReal: number): Release {
   const lb = s.labels[owner];
   const channels = CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear) && isUnlocked(s, c.id));

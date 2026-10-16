@@ -30,7 +30,7 @@ import { fmtL, money } from '../util';
 import { boost31, car31On, careerSw31, exec31, registerExec31, touch31 } from './car31';
 import { fameIn } from './fame16';
 import { SCREEN31 } from './screen18';
-import { NPCREL31 } from '../market';
+import { NPCREL31 } from '../r31/npcrel31';
 import { ROUTE31, vpay, type Venture } from './ventures9';
 
 export interface Pledge31 { act: string; vid: string; t: string; u: number; k: number }
