@@ -12,6 +12,8 @@ import type { Tour, TourStop } from './xtypes';
 import { dateOfDay, fmtL, hasTech, money, nextId, notify, post, remember, staffSkill } from './util';
 import { activeMembers, checkCapacity, fitOverAgenda, monthIndex } from './capacity';
 import { legInfo, climateInfo } from './travelAdapter';
+import { FATIGUE_PER_DAY31, MODE_NAME31, sameLandmass, transportOptions, cityDistanceKm, type TransportMode } from './travel';
+import { on31 } from './r31/market31';
 import { clubBonus, liveBlocked } from './culture';
 import { branchCityBonus } from './branches';
 import { applyMods, runSimHooks } from './ext4';
@@ -21,6 +23,9 @@ import { cashWhy20, freeCash20 } from './oblig20';
 import { DEMO29 } from './demo29hook';
 
 export const TICKET = [12, 25, 45, 70, 95];
+/** R31 D: cansaço por dia de viagem pelo meio do trecho (antes, 0,8 para todo meio). */
+export const travelFatigue31 = (s: GameState, st: TourStop): number =>
+  on31(s, 'd31.transport') && st.mode && st.mode in FATIGUE_PER_DAY31 ? FATIGUE_PER_DAY31[st.mode as TransportMode] : 0.8;
 export const PRODUCTION_COST = [0, 400, 1500, 6000]; // por show
 const PRODUCTION_BONUS = [0, 0.06, 0.14, 0.25];
 
@@ -42,6 +47,8 @@ export interface TourPlan {
   restEvery?: number;
   /** r18: logística (transporte, hospedagem, seguro…); ausente = padrão */
   kit?: Kit18;
+  /** R31 D: transporte escolhido para o trecho que chega a cada cidade (mesma ordem de `cities`); vazio = automático */
+  legModes?: (TransportMode | undefined)[];
 }
 
 /** Público potencial numa cidade: fãs locais + regionais, saturação de visitas recentes. */
@@ -64,6 +71,17 @@ export function autoTier(s: GameState, act: Act, demand: number): number {
   let t = 0;
   for (const v of VENUE_TIERS) if (demand >= v.cap[0] * 0.6 && act.fame + staffSkill(s, 'booking') / 12 >= v.fameMin) t = v.id;
   return t;
+}
+
+/** R31 D: opções reais de transporte para um trecho (a 1ª é a automática da época): dias, custo da equipe e cansaço. */
+export interface LegOption31 { mode: TransportMode; auto: boolean; days: number; cost: number; fatigue: number; name: L }
+export function legOptions31(s: GameState, from: string, to: string, people: number): LegOption31[] {
+  if (!from || !to || from === to) return [];
+  const km = Math.round(cityDistanceKm(from, to));
+  return transportOptions(s.year, km, sameLandmass(from, to)).map((o, i) => {
+    const leg = legInfo(s, from, to, people, o.mode);
+    return { mode: o.mode, auto: i === 0, days: leg.days, cost: leg.cost, fatigue: Math.round(leg.days * FATIGUE_PER_DAY31[o.mode] * 10) / 10, name: MODE_NAME31[o.mode] };
+  });
 }
 
 export interface TourEstimate {
@@ -93,7 +111,7 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
   const crew = Math.max(1, p.crew);
   const people = activeMembers(s, act).length + crew;
   p.cities.forEach((cityId, i) => {
-    const leg = legInfo(s, prev, cityId, people);
+    const leg = legInfo(s, prev, cityId, people, on31(s, 'd31.transport') ? p.legModes?.[i] : undefined);
     km += leg.km;
     travel += leg.cost;
     day += Math.round(leg.days); // datas em dias inteiros (viagens de meio dia não podem pular o show)
@@ -118,7 +136,7 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
     revenue += Math.round(sold * price * clash);
     merch += Math.round(sold * money(s, 3 + tier) * 0.6);
     tiers.push(tier);
-    stops.push({ cityId, day, tier, price, capacity, sold: 0, merch: 0, status: 'scheduled', travelDays: leg.days, visa: !!leg.visa?.needed });
+    stops.push({ cityId, day, tier, price, capacity, sold: 0, merch: 0, status: 'scheduled', travelDays: leg.days, visa: !!leg.visa?.needed, mode: leg.mode !== 'none' ? leg.mode : undefined });
     prev = cityId;
     day += 1;
   });
@@ -339,7 +357,7 @@ export function playStop(s: GameState, r: Rng, t: Tour, st: TourStop, day: numbe
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p?.alive) continue;
-      p.fatigue = clamp(p.fatigue + 2.5 + st.travelDays * 0.8 - t.crew * 0.15 + (m?.fatigue ?? 0), 0, 100);
+      p.fatigue = clamp(p.fatigue + 2.5 + st.travelDays * travelFatigue31(s, st) - t.crew * 0.15 + (m?.fatigue ?? 0), 0, 100);
       p.skills.stage = Math.min(p.potential + 4, p.skills.stage + 0.08);
       p.morale = clamp(p.morale + (sold > st.capacity * 0.8 ? 1.5 : -0.5) + (m?.morale ?? 0), 0, 100);
     }

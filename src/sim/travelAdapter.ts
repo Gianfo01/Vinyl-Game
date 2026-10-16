@@ -2,7 +2,7 @@
 // vistos, transporte por era, clima) e converte para centavos da era.
 
 import { type L } from '../data/world';
-import { climateAt, travelLeg } from './travel';
+import { climateAt, travelLeg, type TransportMode } from './travel';
 import type { GameState } from './types';
 import { money } from './util';
 
@@ -15,9 +15,9 @@ export interface LegInfo {
   borderNote?: L;
 }
 
-export function legInfo(s: GameState, from: string, to: string, people: number): LegInfo {
+export function legInfo(s: GameState, from: string, to: string, people: number, mode?: TransportMode): LegInfo {
   if (!from || !to || from === to) return { km: 0, days: 0, cost: 0, mode: 'none' };
-  const leg = travelLeg(from, to, s.year, people, s.config.homeCity);
+  const leg = travelLeg(from, to, s.year, people, s.config.homeCity, mode);
   return {
     km: leg.km,
     days: leg.days,

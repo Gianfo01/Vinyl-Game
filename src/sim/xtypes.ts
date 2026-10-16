@@ -248,6 +248,8 @@ export interface TourStop {
   note?: L;
   travelDays: number;
   visa?: boolean;
+  /** R31 D: meio de transporte do trecho que chega aqui */
+  mode?: string;
 }
 
 export interface Tour {
