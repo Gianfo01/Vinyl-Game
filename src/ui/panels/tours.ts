@@ -60,7 +60,7 @@ function legChooser31(s: GameState, actId: string, stops: string[], crew: number
   if (!rows.length) return null;
   return h('details', { class: 'legs31' }, h('summary', null, ic('globe'), ' ', t(l('Transporte por trecho (padrão: automático pela época)', 'Transport per leg (default: automatic by era)'))),
     h('p', { class: 'small muted' }, t(l('Navio é lento, barato e cansa pouco; trem é o meio-termo; avião é rápido e caro. As datas da turnê mudam com a escolha.', 'Ships are slow, cheap and restful; trains are the middle ground; planes are fast and pricey. Tour dates shift with the choice.'))),
-    h('div', { class: 'form grid2' }, ...rows));
+    h('div', { class: 'form' }, ...rows));
 }
 
 /** R31 (O): o painel rápido abre o planejador já no artista escolhido. */
