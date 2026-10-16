@@ -17,8 +17,9 @@ import { card27, kpiRow27, statusChip27 } from '../ps/ui27';
 import { store } from '../store';
 import { occMark27 } from './flow27';
 import { cutscene27, reduced27 } from './mode27';
-import { paintCrisis27, put27 } from './px27b';
-import { drawScene27, type Who27 } from './scene27';
+import { put27 } from './px27b';
+import { paintCrisis5 } from '../r31/salas5px'; // R31 onda 5 (SALAS): sala de crise no corte da sede
+import { drawSala5 } from '../r31/salas5ui';
 import './act27.css';
 import './p2b27.css';
 import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
@@ -27,7 +28,7 @@ function warRoom(s: GameState, threat: () => number): HTMLCanvasElement {
   const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Sala de crise', 'Crisis room')) }) as HTMLCanvasElement;
   const staff = s.player.staff.slice(0, 3);
   let f = 0;
-  const paint = () => drawScene27(cv, paintCrisis27(s.year, threat(), f), s.year, staff.map((m, i): Who27 => ({ p: { id: m.id, role: 'producer', born: s.year - 35 }, x: 60 + i * 40, y: 74, pose: 'stand', dir: i % 2 ? 'SW' : 'SE' })));
+  const paint = () => { try { drawSala5(cv, paintCrisis5(s.year, threat(), f, staff.length, { city: s.config.homeCity, month: s.month }), s.year, staff.map((m) => ({ id: m.id, role: 'producer', born: s.year - 35 }))); } catch { /* sem canvas */ } };
   paint();
   if (!reduced27()) { const tick = () => { if (!cv.isConnected && f > 2) return; f += 1; if (f % 6 === 0) paint(); requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
   return cv;
