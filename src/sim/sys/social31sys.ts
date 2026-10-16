@@ -195,6 +195,15 @@ onFact('contract_rescind', (s, f) => {
   for (const m of nodesOf(s, act)) shiftTie31(s, me, m, { i: -5, tBack: f.tags.includes('leak') ? -20 : -12 }, 'hire');
 }, 'social31:rescind');
 
+// Presente (objetos G, items31): quem recebe passa a conhecer você (se ainda não conhecia) e se aproxima.
+onFact('gift', (s, f) => {
+  const to = f.actors.find((x) => x !== 'player');
+  if (!to || !f.actors.includes('player')) return;
+  const me = meNode31(s);
+  meet31(s, me, node31(s, to), 'other', { i: 12 });
+  shiftTie31(s, me, node31(s, to), { i: 3, tBack: 2 });
+}, 'social31:gift');
+
 // ---------------------------------------------------------------- o mês social
 
 const gone = (s: GameState) => (id: string): boolean => {

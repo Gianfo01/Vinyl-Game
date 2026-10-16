@@ -27,7 +27,6 @@ export const GENERIC19 = ['bridge17:press', 'cine18:mem', 'post18:hall'];
 /** Tipos emitidos sem consumidor, com o motivo (revisar a cada rodada). */
 export const WHITELIST19: Record<string, string> = {
   editor: 'edição pelo editor de testes (r31/editor.ts): o fato é só registro — o diário o recebe pelo ouvinte central (diary) e a partida fica marcada em edit31; nenhum sistema deve reagir a uma edição',
-  contract_rescind: 'rescisão pelo jogador (r31/rescind31.ts): diário e aviso pelos ouvintes centrais (diary/notify); opinião, reputação e jurídico já aplicados na própria regra; aparece em factsAbout — sem reação sistêmica pretendida',
   fans_region: 'notícia pública (terr20): mercado fora da região de origem passou de 25% dos fãs; registro na crônica/noticiário e factsAbout, sem reação sistêmica pretendida',
   memory: 'ponte genérica de remember(): o conteúdo já é consumido pelo tipo de origem (tags mem:*), não pelo rótulo',
   agenda: 'registro da agenda (agenda17) para a linha do tempo/porquê; só leitura na interface (factsAbout)',
