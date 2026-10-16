@@ -53,8 +53,34 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   VIT (vitrine do mês: interiores dinâmicos no estilo da loja de instrumentos, motor único) · LOTE (≥ 90% dos prédios do
   mapa são negócio, lote comprável ou casa de CEO/artista da cidade).
 
-## Onda 5 (31.5) · fechamento
-> **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a onda 5. Juntar tudo, gerar a build `Masters_31_onda4.html`
-> com tudo, enviar ao dono e esperar os pedidos de ajuste. A onda 5 fica para o final, depois dos ajustes.
+## Onda 5 (31.5) · jogo explorável (pedido do dono, 2026-10-16)
+> Entra depois dos ajustes da build `Masters_31_onda4.html`. Objetivo: menos telas soltas e menos texto, no estilo Punch Club —
+> cada função é um lugar, um objeto, uma porta ou uma pessoa. As telas atuais ficam por baixo (a camada nova é de navegação);
+> números do jogo não mudam. Foco no PC (celular fica para depois).
+- **EXP-1 · Sede como centro** — interface · aceite: as abas do topo somem; cada função abre por um objeto da sede.
+  Mapa inicial: porta da rua → cidade (meu mundo); mapa-múndi → outros países/aeroporto; mural de cortiça → artistas
+  conhecidos/elenco; arquivo de aço → contratos e catálogo; mesa com livro-caixa → Finanças; caderno na estante →
+  Aprendizados; cofre → caixa e dívidas; telefone → agente/empresário/pedidos; secretária eletrônica (pisca) → avisos do mês;
+  jornal → notícias e fatos; rádio/TV → paradas e mídia; calendário → agenda; estante de troféus → conquistas;
+  porta-retrato → casa Fossati; porta interna → estúdio; quadro branco → reunião de lançamento; janela → clima da época e
+  tendências. Funcionários parados na sede (A&R, assessoria, contador…) abrem o assunto deles (1–2 falas + "ver números").
+  Salvar, configurações e ajuda num menu de pausa (Esc / engrenagem).
+- **EXP-2 · Teclas de atalho** — interface · aceite: toda função da sede e do mapa tem tecla (ex.: M mapa, F finanças,
+  A artistas, C contratos, G agenda, N notícias, T telefone, P paradas, Esc pausa, ? lista das teclas); o objeto mostra a
+  tecla ao passar o mouse; teclas configuráveis; o "?" é ajuda, não volta a ser lista de navegação.
+- **EXP-3 · Mapa sem lista** — interface · aceite: sai o modo "ver como lista" de todos os lugares (e o modo lista da sede,
+  `ui/sys/hubs20.ts`); cidade navegável com nome ao passar o mouse, "!" em prédios com novidade, placas por tipo
+  (lojas, shows, lotes à venda) que destacam os prédios, "ir até lá" a partir da agenda e dos avisos; viagem pela
+  estação/ponto (outra cidade) e aeroporto (outro país). Andar e explorar não passam tempo.
+- **EXP-4 · Papéis em vez de telas de texto** — interface · aceite: Finanças, contratos e paradas abrem como documento por
+  cima da cena (fechar volta à mesma cena); texto corrido vira falas curtas.
+- **EXP-5 · Sede que cresce** — interface/dados · aceite: garagem → escritório → prédio, por época e tamanho; cada objeto
+  aparece quando a função é liberada, substituindo parte do tutorial em texto.
+- Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
+
+## Onda 6 (31.6) · fechamento
+> **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a próxima. Juntar tudo, gerar a build `Masters_31_onda4.html`
+> com tudo, enviar ao dono e esperar os pedidos de ajuste. Depois vem a onda 5 (jogo explorável); o fechamento (antiga onda 5)
+> virou onda 6 e fica para o final.
 - Metas e fim de jogo num motor só; robôs das 12 carreiras; balanço com tudo ligado; salvar/carregar; desempenho contra a
   v30; acessibilidade; regressão completa.
