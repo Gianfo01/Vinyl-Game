@@ -388,9 +388,9 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   // r27 (CITY2): entrar num lugar — aproxima no prédio e abre o corte por dentro; "Voltar à cidade" afasta
   const insideOf = (id: string): InsideT27 | null => {
     const plc = v.places.find((x) => x.id === id);
-    if (plc) return { id, k: plc.k, name: t(plc.name), what: t(plc.what), people: plc.people, year: v.year, city: s.config.homeCity, seed: s.config.seed };
+    if (plc) return { id, k: plc.k, name: t(plc.name), what: t(plc.what), people: plc.people, year: v.year, city: s.config.homeCity, seed: s.config.seed, place: plc, org: plc.org };
     const b = v.bs.find((x) => x.id === id), o = b ? ownPlace27(s, b) : null;
-    return b && o ? { id, k: o.k, name: o.name, what: t(KIND18[b.kind].name), people: o.people, year: v.year, city: s.config.homeCity, seed: s.config.seed } : null;
+    return b && o ? { id, k: o.k, name: o.name, what: t(KIND18[b.kind].name), people: o.people, year: v.year, city: s.config.homeCity, seed: s.config.seed, own: true } : null;
   };
   let inBox: HTMLElement | null = null;
   const leaveInside = () => { ui.inside = undefined; inBox?.remove(); inBox = null; (layer.querySelector(`[data-id="${CSS.escape(ui.pop ?? '')}"]`) as HTMLElement | null)?.focus({ preventScroll: true }); };
