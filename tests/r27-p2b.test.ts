@@ -109,6 +109,7 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
     // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
     // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
+    console.log("GOLD", AFTER.player.cash, hashString(JSON.stringify(AFTER.tours)), hashString(JSON.stringify(AFTER.acts)), hashString(rngSnapshot19(AFTER)));
     expect(AFTER.player.cash).toBe(257209);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(4026815485);
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(68287867);

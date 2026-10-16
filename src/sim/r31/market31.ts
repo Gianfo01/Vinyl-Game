@@ -47,12 +47,16 @@ registerSwitch({ id: 'y31.reserve', def: true, scope: 'game',
 // R31 onda 3 (bal · equilíbrio da onda junta): tiragem sugerida pela mesma previsão do lançamento (com a verba, o hype e
 // o tipo do plano) e para a vida do disco, não só as 10 primeiras semanas. Medido: com a sugestão antiga (sem verba,
 // 10 semanas) o robô prensava ~1/3 da procura e perdia por falta de estoque quase 2× o que vendia (docs/r31/bal.md).
-registerSwitch({ id: 'bal31.press', def: true, scope: 'game',
+registerSwitch({ id: 'bal31.press', def: false, scope: 'game',
   desc: l('Tiragem sugerida: usa a previsão com a verba e o hype do plano e cobre a vida do disco (não só as 10 primeiras semanas).',
     'Suggested run: uses the forecast with the plan\'s budget and hype and covers the record\'s life (not just the first 10 weeks).') });
 registerSwitch({ id: 'bal31.pressLife', def: 1.3, scope: 'game',
   desc: l('Tiragem sugerida: procura da vida do disco ÷ procura das 10 primeiras semanas (1 = só as 10 semanas).',
     'Suggested run: lifetime demand ÷ first-10-weeks demand (1 = first 10 weeks only).') });
+
+registerSwitch({ id: 'bal31.hold', def: false, scope: 'game',
+  desc: l('Lançamento delegado: sem caixa para metade da tiragem sugerida, o disco espera (não sai com 200 cópias), até um ano e meio sem lançar.',
+    'Delegated release: without cash for half the suggested run, the record waits (it does not ship with 200 copies), up to a year and a half without releasing.') });
 
 export const on31 = (s: GameState, id: string): boolean => !!sw<boolean>(s, id);
 

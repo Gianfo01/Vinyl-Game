@@ -15,6 +15,7 @@ import { EXTRA_ACTIONS } from '../data/actions';
 import { activeMembers, agendaLoad, monthIndex, personLoad, planSlots, slotLoad } from './capacity';
 import { runExtraAction } from './actions2';
 import { registerExt4, registerSimHook } from './ext4';
+import { on31 } from './r31/market31';
 
 /** Química com o público, fixa por ato: 0,4–1,6 (média 1). */
 export const clickK18 = (s: GameState, act: Act): number => 0.4 + (hashString(`${s.config.seed}|click|${act.id}`) % 1000) / 1000 * 1.2;
@@ -300,6 +301,9 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
   const want = suggestedPress(s, act, type, 50, { marketing: budget > 0 && main ? [{ channel: main.id, budget }] : [], extra: { songs } });
   const press = labelFunded(s, act.id) ? want : Math.min(want, affordable);
   if (s.player.cash < money(s, 1500)) return;
+  // R31 onda 3 (bal31.hold): sem caixa para metade da tiragem sugerida, segura o disco (a gravação não se perde) em vez
+  // de queimá-lo com 200 cópias e milhares perdidas por falta de estoque — salvo se o ato está há 78+ semanas sem lançar.
+  if (!labelFunded(s, act.id) && on31(s, 'bal31.hold') && press < want * 0.5 && since < 78) return;
   const cashBefore = s.player.cash;
   const res = scheduleRelease(s, r, {
     actId: act.id,
