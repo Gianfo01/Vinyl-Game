@@ -198,6 +198,7 @@ function customsPanel(s: GameState): void {
       x.arrive > s.week ? T(l('libera em {n} semana(s)', 'clears in {n} week(s)'), { n: x.arrive - s.week }) : T(l('liberada', 'cleared'))))) : h('p', { class: 'muted' }, T(l('Nada passando pela alfândega agora.', 'Nothing going through customs right now.'))),
     h('p', { class: 'small' }, T(l('Peça arrematada em leilão fora do país paga imposto de importação e chega depois. Carga do mercado negro arrisca apreensão e escândalo na inspeção.', 'A piece won at an auction abroad pays import duty and arrives later. Black-market cargo risks seizure and scandal at inspection.'))),
     h('div', { class: 'row wrap' },
+      moreBtn31(l('Balcão da alfândega (cargas paradas)', 'Customs desk (held cargo)'), () => { close(); runGo31({ area: 'customs31' }); }), // R31 T2
       moreBtn31(l('Casa de leilões', 'Auction house'), () => { close(); runGo31({ area: 'auction31' }); }),
       moreBtn31(l('Exportar discos (licenciamento nos mercados)', 'Export records (licensing in the markets)'), () => { close(); runGo31({ area: 'regions18' }); }))));
 }
