@@ -121,8 +121,8 @@ import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find
 import { regionCmds5 } from './r31/map5ui'; // R31 onda 5 (MAPA): busca aponta prédio/país no mapa (só com exp5.nav)
 import { NAV5, TRANS5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { chordLabel5 } from './r31/keys5';
-import './r31/elenco5'; // R31 onda 5 (ELENCO): mural, quadro, agenda, fichário, contratação e chefe como papéis (só com exp5.nav ligado)
 import { help5, shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
+import './r31/elenco5'; // R31 onda 5 (ELENCO): mural, quadro, agenda, fichário, contratação e chefe como papéis (só com exp5.nav ligado)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
 import { settingsTrn31, transition31, trnBack31, trnGate31 } from './r31/trn31'; // R31 onda 5 (TRN): transições entre telas
@@ -689,7 +689,7 @@ function renderShell5(g: NonNullable<typeof store.game>): void {
       const r = resolve17(store.area, groups());
       if (r.tab) setTab(r.tab[0], r.tab[1]);
       store.area = r.area;
-      return withPlayerActsCache(g, () => { const b = panel(); enhanceSelects27(b); return b; });
+      return withPlayerActsCache(g, () => { const b = panel0(); enhanceSelects27(b); return b; }); // página de hoje pura: o que é da CASA/ELENCO entra pelos registros da casca
     },
     label: areaLabel, has: (a) => areaExists(a),
     advance: () => doAdvance('month'), advMore: () => advMenu31(g), search: palette, options: settings,
