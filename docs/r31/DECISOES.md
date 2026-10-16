@@ -259,3 +259,29 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - 2026-10-16 · 31.4 EMO · EMOJI → PIXEL ART SÓ NA EXIBIÇÃO: o código (interface e motor) continua escrevendo o emoji como marcador semântico; `ui/pixel/emo31.ts` é a fonte única do mapa emoji → ícone (+ rótulo bilíngue para alt/aria-label) e a troca acontece em `dom.ts h()`, num MutationObserver de rede de segurança (`installEmo31`), no gancho do canvas e no CSS (`--pxi-*`). Assim fatos/avisos/conquistas do motor também saem em pixel sem o motor saber de imagem · antes: emoji colorido do sistema (e tabela de reserva em vis.ts) · motivo: pedido do dono (consistência visual) com uma troca só e um teste (`r31-emo`) que barra pictograma fora do mapa
 - 2026-10-16 · 31.4 EMO · Ficam como texto: setas de navegação, triângulos ▶◀▾▲▼, marcadores ●○■◆, ♀♂⚲☰ (lista `EMO31_KEEP`, igual à do teste); onde não cabe imagem (title, option, SVG) emoji colorido vira palavra ou some, marca monocromática (★ ✓ ✕ ♪) fica · — · goldens iguais (nada no motor)
 - 2026-10-16 · Teste · r14-db: limite de desempenho recalibrado de 1 500 para 3 000 ms/mês (decisão do dono). Medido neste hardware: v30 ≈ 1 570, R31 com as ondas 3–4 ≈ 2 130 ms/mês (UNI-4 +~5%); margem para máquina carregada. Desempenho de verdade fica para a onda 6 (FIM-7, contra a v30).
+
+## Onda 4 · GEO — geografia real da cidade no mapa (só aparência)
+- **Fonte única:** `src/data/geo31.ts` (tabela `GEO31`, ~150 cidades: todas de BAY27/TOWERS27/BRICK27/STONE27 e as jogáveis
+  do mundo). Por cidade: de que lado do mapa fica a água (mar, baía, rio, estreito, lago, lagoa), a margem (praia com
+  calçadão, cais, costão), se o rio tem cidade na outra margem, e de que lado ficam os morros (com ou sem favela).
+  Cidade fora da tabela = terra em volta (campo e subúrbio).
+- **Lados do mapa:** grade +gx = leste, +gy = sul. n = fundo à direita, w = fundo à esquerda, e = frente à direita,
+  s = frente à esquerda. O horizonte (skyline27) mostra água e morros só na metade do lado certo (esquerda = oeste,
+  direita = norte, divisa no canto norte do mapa).
+- **Água sempre fora da grade.** Os lotes (LOTS18) não mudaram de lugar; em todos os tamanhos de mapa (20×16 → 44×32) nenhum
+  lote cai em água/praia/cais (teste `r31-geo`). Rio "cortando a cidade" = rio colado na borda com a outra margem habitada
+  (mesmos prédios de cidade comum, não clicáveis) e pontes onde as ruas cruzam; o rio cresce para fora junto com os bairros.
+- **Ilha só onde é ilha:** Honolulu, Hong Kong (ilha) e Singapura (`ISLANDS31`); o teste trava as outras.
+- **Ruas fora da grade:** continuam pelo campo, morro e outra margem; viram ponte sobre rio/estreito de até 8 células; acabam no
+  calçadão/cais em mar e baía. Carros não entram no mar.
+- **Morros:** com amplitude ≥ 0,6 viram mata (ou favela em degraus, Rio/Salvador/Caracas/Medellín/Porto Príncipe, desde 1940)
+  no chão daquele lado; mais baixos ficam só no horizonte. Preferência por morros no fundo (n/w).
+- **Marcos:** cada marco pede água (pontes, Opera House, Estátua da Liberdade, bondinho do Pão de Açúcar, Torre de Belém),
+  morro (Cristo) ou terra firme; vão para o candidato do fundo mais próximo do bastidor antigo que combina. Em lado de rio o
+  marco de terra vai para a outra margem; marco de terra sem lugar em terra firme fica fora (não vira ilha).
+- **Prédios do jogador e da cidade (regra registrada, sem mudar dados):** sede, estúdio, lojas, casas de show e festival
+  continuam nos lotes de sempre (posição é dado de jogo). O que é coerente por construção: tudo fica em terra; os bairros do
+  porto (lotes 31–42, leste/sudeste) encostam na borda leste — nas cidades com água a leste (Rio, Nova York, Barcelona,
+  Istambul, Miami, Xangai…) o cais fica de fato junto da água. Mudar lotes de lugar por cidade (ex.: porto sempre colado
+  à água, casas de show perto da praia) mexeria em LOTS18 → fica como pergunta ao dono.
+- Goldens r27-p2a, r27-p2b, r27-m3, r16-playbot sem mudança (só desenho).
