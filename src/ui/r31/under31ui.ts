@@ -7,7 +7,7 @@ import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
 import { registerRunnable } from '../../sim/r31/editor';
-import { FACADE31, bailes31, cells31, cityName31, countryOf31, facadeOf31, localOrgs31, mural31, police31, underPlaces31, type EdgeK31, type MEdge31, type MNode31 } from '../../sim/sys/under31';
+import { FACADE31, bailes31, cells31, cityName31, countryOf31, facadeOf31, underOrgs31, mural31, police31, underPlaces31, type EdgeK31, type MEdge31, type MNode31 } from '../../sim/sys/under31';
 import { h } from '../dom';
 import { store } from '../store';
 import { rerender } from '../common';
@@ -106,7 +106,7 @@ const open31: { id?: string } = {};
 export function underCityTab31(s: GameState): HTMLElement {
   const places = underPlaces31(s);
   const pol = police31(s);
-  const { here, via } = localOrgs31(s);
+  const { here, via } = underOrgs31(s);
   const cur = places.find((p) => p.key === open31.id);
   const card = (p: (typeof places)[number]) => h('li', { class: 'in31-act' },
     h('b', null, t(p.name)), h('small', { class: 'muted' }, ` · ${t(p.what)}`), h('p', { class: 'small' }, t(p.now)),

@@ -13,6 +13,8 @@ import { formatMoney } from '../../core/money';
 import { countryName, countryOfCity } from '../../data/geo';
 import { DOC17, ORGS17, type OrgDef17, type Racket17 } from '../../data/orgs17';
 import { CYBER29, STREET29 } from '../../data/cyber29'; // r29: crime digital e facções das cenas (só pelo mob29)
+import { allFac31 } from '../../data/fac31'; // r31 (U): facções por país (fora da lista padrão)
+import { u31On } from '../r31/u31sw';
 import { cityById, l, type L } from '../../data/world';
 import { personDies } from '../dynasty';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -106,12 +108,25 @@ export const crng = (s: GameState, tag: string): Rng => new Rng(seedState(`crime
 export interface Org17 extends OrgDef17 { key: string; a3: string }
 /** Organizações da época. `all` = todas (inclusive fora da época e o crime digital); `cyber` = inclui o crime digital
  *  (data/cyber29, só pelo mob29: a lista padrão continua a de sempre, então os NPCs e o mundo não mudam). */
+const ORGS_MEMO = new WeakMap<GameState, Map<string, Org17[]>>();
 export function orgs17(s: GameState, all = false, cyber = false): Org17[] {
   const home = s.config.homeCity;
-  return (all || cyber ? [...ORGS17, ...CYBER29, ...STREET29] : ORGS17).filter((o) => all || (o.from <= s.year && s.year <= o.to)).map((o) => {
-    const city = o.city || home;
-    return { ...o, city, key: `o:${o.id}`, a3: countryOfCity(city) ?? 'USA' };
-  });
+  // r31 (U): as facções por país entram na lista completa (orgById) e, com o interruptor, na lista do jogador.
+  // Memória por partida (a lista completa passou de ~30 para ~200): devolve cópia rasa (quem ordena não estraga).
+  const u = !all && cyber && u31On(s);
+  const k = `${all ? 1 : 0}${cyber ? 1 : 0}${u ? 1 : 0}|${all ? 0 : s.year}|${home}|${ORGS17.length}`;
+  let m = ORGS_MEMO.get(s);
+  if (!m) { m = new Map(); ORGS_MEMO.set(s, m); }
+  let out = m.get(k);
+  if (!out) {
+    if (m.size > 24) m.clear();
+    out = (all ? [...ORGS17, ...CYBER29, ...STREET29, ...allFac31()] : cyber ? [...ORGS17, ...CYBER29, ...STREET29, ...(u ? allFac31() : [])] : ORGS17).filter((o) => all || (o.from <= s.year && s.year <= o.to)).map((o) => {
+      const city = o.city || home;
+      return { ...o, city, key: `o:${o.id}`, a3: countryOfCity(city) ?? 'USA' };
+    });
+    m.set(k, out);
+  }
+  return out.slice();
 }
 export const orgById = (s: GameState, id: string): Org17 | undefined => orgs17(s, true).find((o) => o.id === id || o.key === id);
 export const hasRacket = (o: OrgDef17, r: Racket17): boolean => o.rackets.includes(r);

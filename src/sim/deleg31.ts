@@ -27,7 +27,7 @@ import { fmtL } from './util';
 
 // ---------------------------------------------------------------- tipos
 
-export type Resp31 = 'anr' | 'renew' | 'exec' | 'agenda' | 'marketing' | 'tour' | 'fest' | 'studio' | 'mandates' | 'finance' | 'rest' | 'press' | 'legal' | 'people';
+export type Resp31 = 'anr' | 'renew' | 'exec' | 'agenda' | 'marketing' | 'tour' | 'fest' | 'studio' | 'mandates' | 'finance' | 'rest' | 'press' | 'legal' | 'people' | 'radio';
 export type Mode31 = 'me' | 'staff' | 'partial' | 'rule';
 export type Dept31 = 'cast' | 'music' | 'release' | 'stage' | 'money' | 'people';
 export type Goal31 = 'grow' | 'profit' | 'rest' | 'catalog' | 'free';
@@ -169,6 +169,8 @@ export const RESP31: RespDef31[] = [
     ['promoter'], ['me', 'staff', 'partial'], 'staff', ['budget', 'ask']),
   R('tour', 'stage', l('Turnês e cachês', 'Tours and fees'), l('Agentes de shows marcam datas, negociam cachês e preenchem os seus festivais pelas ordens permanentes.', 'Booking agents book dates, negotiate fees and fill your festivals through standing orders.'),
     ['booking_agent'], ['me', 'staff', 'partial'], 'staff', ['budget', 'ask']),
+  R('radio', 'release', l('Programação da sua rádio/TV/revista', 'Your radio/TV/magazine programming'), l('O diretor de programação monta a grade da semana: troca o que cansou e preenche vagas vazias, com a fração de apostas em artistas novos da diretriz (R31 CAR).', 'The programme director builds the weekly grid: swaps what burned out and fills empty slots, with the directive\'s share of bets on new acts (R31 CAR).'),
+    ['promoter', 'anr'], ['me', 'rule', 'staff'], 'me', ['frac', 'minQ'], { frac: 0.2, minQ: 0 }),
   R('rest', 'stage', l('Descanso do elenco', 'Roster rest'), l('Regra fixa: a turnê delegada para quando alguém da banda passa do limite de estresse/cansaço ou de shows no trimestre.', 'Fixed rule: delegated touring stops when a band member passes the stress/fatigue limit or the quarterly show count.'),
     [], ['rule'], 'rule', ['rest', 'maxShows'], { rest: 0, maxShows: 0 }),
   R('fest', 'stage', l('Festival próprio', 'Own festival'), l('Aceita patrocínios que cabem em 90% da projeção e fecha headliner a 5 meses da edição, dentro do teto do caixa.', 'Accepts sponsorships that fit 90% of the projection and books a headliner 5 months out, within the cash cap.'),

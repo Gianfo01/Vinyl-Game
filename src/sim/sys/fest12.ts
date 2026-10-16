@@ -22,6 +22,11 @@ import { foundVenture, ventures, vpay9, type Holder, type Venture, type Verdict 
 
 // ---------------------------------------------------------------- tipos
 
+/** R31 CAR (sys/car31stage.ts): depois de cada edição, quem tocou ganha fama na cidade pela posição no cartaz e pela
+ *  nota; a revelação ganha um empurrão curto nas paradas. `time`: horário no cartaz (0 tarde … 3 headliner). */
+export interface FestOut31 { acts: string[]; time: Record<string, number>; att: number; cap: number; rating: number; ex: number; verdict: Verdict; disaster: boolean }
+export const FEST31: { after?: (s: GameState, f: OwnFestival, o: FestOut31) => void } = {};
+
 export type Ident = 'discovery' | 'genre' | 'family' | 'premium' | 'mega';
 export type OpK = 'storm' | 'rain' | 'delay' | 'gear' | 'crowd';
 export type SpK = 'beer' | 'bank' | 'kids' | 'luxury' | 'indie' | 'tech';
@@ -795,6 +800,7 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   remember(s, 'own_festival', text, { important: !!disaster || verdict === 'legend' || cult || x.hist.length === 1 });
   notify(s, text, disaster || verdict === 'flop' ? 'bad' : 'good');
   queueCutscene(s, 'festivalDay', { title: fmtL(l('{f} {y}', '{f} {y}'), { f: f.name, y: x.cyc.year }), festId: f.id, year: x.cyc.year });
+  FEST31.after?.(s, f, { acts: acts.map((a) => a.id), time: Object.fromEntries(acts.map((a) => [a.id, x.deals[a.id]?.time ?? 0])), att, cap: p.cap, rating, ex, verdict, disaster: !!disaster });
   reset(s, f, x);
   return h;
 }

@@ -369,6 +369,8 @@ import './member29'; // R29 (integrante): oferta a um integrante específico (so
 import './featp29'; // R29 (feat de pessoa): o feat negociado aceita integrante/pessoa específica (e várias) — gancho novo, no fim
 import './relics29'; // R29 (relíquias): versões procedurais dos arquétipos do catálogo real, para qualquer artista (docs/reliquias29.md)
 import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
+import './fac31'; // R31 (U): facções por país — presença e expansão anual
+import './broker31'; // R31 (U): intermediário das facções de fora
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também os artistas do mundo (NPC decide; feed, ficha, card, selo)
@@ -381,6 +383,13 @@ import './mercado31'; // R31 onda 3 (D/Y): mercado e paradas por país — fama 
 import './value31run'; // R31 onda 3 (E · Bolsa): editor do modelo único de valor (sim/r31/value31.ts); sem ganchos
 import '../r31/index'; // R31 onda 0 (W0-CON/W0-ROLE): contratos compartilhados — pendência, destino, papéis, objeto, transação atribuída, interruptores
 import './social31sys'; // R31 onda 3 (F): grafo social de todos com todos — como se conheceram, mês social (sim/social31.ts)
+import './car31'; // R31 onda 3 (CAR): função única de execução (música × lugar × peso) → paradas por país e fama local
+import './car31media'; // R31 onda 3 (CAR): rádio/TV/revista com grade, audiência, ibope, jabá e diretor de programação
+import './car31plat'; // R31 onda 3 (CAR): plataforma — playlists com vagas, assinantes por país, exigências das gravadoras, fazendas
+import './car31stage'; // R31 onda 3 (CAR): casa de shows (abertura, prestígio, noite lendária) e festival (cartaz, revelação)
+import './car31more'; // R31 onda 3 (CAR): estúdio, editora, agenciamento, empresário, crítico e trilhas ligados ao mundo
+import './car31prog'; // R31 onda 3 (CAR): degraus, objetivos e desafio de fim de jogo das 12 carreiras
+import './socio31'; // R31 onda 3 (SOC): sócios e compras — festivais, casas, rádios e estúdios existentes; criar em conjunto; voto e dividendos
 import './gente31'; // R31 onda 4 (I): gente de verdade nos lugares — donos, equipe, músicos fazendo bico (vaga muda de mãos na virada do mês)
 import './under31'; // R31 onda 4 (S): submundo no Nosso mundo — fachadas, sala dos fundos, mural, delegacia, mercado negro, baile
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

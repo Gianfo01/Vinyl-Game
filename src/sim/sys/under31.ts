@@ -46,6 +46,7 @@ import { relics } from './relics9';
 import { asks29, delay29, doMob29, favorRows29, fulfill29, meter29, peek29, refuse29, type FavorRow29, type Meter29 } from './mob29';
 import { UNDER27, npcName27, type Person27, type Under27 } from './place27';
 import { actOfPid31 } from './where31';
+import { facOn31, localOrgs31 as countryOrgs31, wars31 } from './fac31';
 
 // ---------------------------------------------------------------- interruptor e estado
 
@@ -92,11 +93,13 @@ const peek = (s: GameState): Under31St | undefined => (s.x4 as unknown as { unde
 export const homeA3 = (s: GameState): string => a3Of(s, s.config.homeCity);
 const down = (s: GameState, o: Org17): boolean => ((s.x4 as unknown as { crime17?: { down?: Record<string, number> } }).crime17?.down?.[o.id] ?? 0) > s.week;
 
-/** Facções do país da sede nesta época: as da cidade têm fachada (até 3, as mais fortes); as de outra cidade do país, um emissário. */
-export function localOrgs31(s: GameState): { here: Org17[]; via: Org17[] } {
+/** Facções do país da sede nesta época (fonte única: fac31.localOrgs31 com o interruptor `u31`; inclui as de fora com
+ *  operação aberta no país): as sediadas na cidade têm fachada (até 3, as mais fortes); as outras, um emissário no bar. */
+export function underOrgs31(s: GameState): { here: Org17[]; via: Org17[] } {
   const a3 = homeA3(s);
-  const all = orgs17(s, false, true).filter((o) => o.kind !== 'cyber' && o.a3 === a3 && !down(s, o)).sort((a, b) => b.power - a.power || (a.id < b.id ? -1 : 1));
-  const inCity = all.filter((o) => o.city === s.config.homeCity);
+  const all = facOn31(s) ? countryOrgs31(s, a3)
+    : orgs17(s, false, true).filter((o) => o.kind !== 'cyber' && o.a3 === a3 && !down(s, o)).sort((a, b) => b.power - a.power || (a.id < b.id ? -1 : 1));
+  const inCity = all.filter((o) => o.city === s.config.homeCity && o.a3 === a3);
   const here = inCity.slice(0, UNDER31.facades);
   return { here, via: all.filter((o) => !here.includes(o)) };
 }
@@ -187,7 +190,7 @@ export type EdgeK31 = 'war' | 'tie' | 'genre' | 'debt' | 'owed' | 'ask';
 export interface MEdge31 { a: string; b: string; k: EdgeK31; story: L }
 /** Facções do país e as de fora já contatadas; fios com a história. Só lê. */
 export function mural31(s: GameState): { nodes: MNode31[]; edges: MEdge31[] } {
-  const { here, via } = localOrgs31(s);
+  const { here, via } = underOrgs31(s);
   const orgs = [...here, ...via, ...contacted31(s)];
   const ids = new Set(orgs.map((o) => o.id));
   const nodes: MNode31[] = orgs.map((o) => ({ id: `o:${o.id}`, k: 'org', name: o.name, key: o.key, local: o.a3 === homeA3(s) }));
@@ -212,6 +215,11 @@ export function mural31(s: GameState): { nodes: MNode31[]; edges: MEdge31[] } {
     if (!ox || !oy || ox === oy || !ids.has(ox) || !ids.has(oy)) continue;
     if (edges.some((e) => e.k === 'war' && ((e.a === `o:${ox}` && e.b === `o:${oy}`) || (e.a === `o:${oy}` && e.b === `o:${ox}`)))) continue;
     edges.push({ a: `o:${ox}`, b: `o:${oy}`, k: 'war', story: fmtL(l('Guerra: a rixa entre {x} e {y} arrastou {o} e {p}.', 'War: the feud between {x} and {y} dragged in {o} and {p}.'), { x: s.acts[x]?.name ?? '?', y: s.acts[y]?.name ?? '?', o: orgById(s, ox)!.name, p: orgById(s, oy)!.name }) });
+  }
+  // guerras abertas entre facções (fac31: operação num país com facção local forte)
+  for (const w of wars31(s)) {
+    if (!ids.has(w.a) || !ids.has(w.b) || edges.some((e) => e.k === 'war' && [e.a, e.b].includes(`o:${w.a}`) && [e.a, e.b].includes(`o:${w.b}`))) continue;
+    edges.push({ a: `o:${w.a}`, b: `o:${w.b}`, k: 'war', story: fmtL(l('Guerra aberta: {x} entrou no território de {y}.', 'Open war: {x} moved into {y}\'s territory.'), { x: orgById(s, w.a)?.name ?? w.a, y: orgById(s, w.b)?.name ?? w.b }) });
   }
   // facção × gênero/cena (aff29)
   for (const o of orgs) for (const af of orgAff29(s, o.id).slice(0, 2)) {
@@ -518,7 +526,7 @@ export function underPlaces31(s: GameState): Under27[] {
     owner: pol.agency.pt, now: cells.length ? fmtL(l('{n} preso(s) nas celas. {t}', '{n} in the cells. {t}'), { n: cells.length, t: pol.text }) : pol.text,
     people: [{ name: npcName27(s, `chief31|${homeA3(s)}`), role: l('Delegado(a)', 'Police chief') }, { name: detective31(s), role: l('Detetive', 'Detective') },
       ...cells.slice(0, 3).map((c) => ({ name: c.name, role: fmtL(l('Preso(a) · {n} sem.', 'Prisoner · {n} wk'), { n: c.weeks }), pid: c.pid, cell: true }))] });
-  for (const o of localOrgs31(s).here) {
+  for (const o of underOrgs31(s).here) {
     const k = facadeOf31(s, o);
     const lts = room31(s, o.id)?.lts ?? [];
     out.push({ k: 'facade', key: `fac:${o.id}`, org: o.id, name: facadeName31(s, o), what: fmtL(l('{f} · fachada de {o}', '{f} · front for {o}'), { f: FACADE31[k].front, o: o.name }), owner: o.name.pt,
@@ -531,6 +539,6 @@ export function underPlaces31(s: GameState): Under27[] {
   return out;
 }
 /** O emissário de cada facção do país com base em outra cidade (no bar). */
-export const emissaries31 = (s: GameState): Person27[] => localOrgs31(s).via.slice(0, 2).map((o) => ({ name: npcName27(s, `emis31|${o.id}`), role: fmtL(l('Emissário(a) de {o}', 'Envoy of {o}'), { o: o.name }), key: o.key }));
+export const emissaries31 = (s: GameState): Person27[] => underOrgs31(s).via.slice(0, 2).map((o) => ({ name: npcName27(s, `emis31|${o.id}`), role: fmtL(l('Emissário(a) de {o}', 'Envoy of {o}'), { o: o.name }), key: o.key }));
 UNDER27.fn = underPlaces31;
 UNDER27.bar = emissaries31;

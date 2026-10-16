@@ -39,7 +39,7 @@ const info = await p.evaluate(async () => {
   if (other) cr.jailPerson(g, other.members[0], 'BRA', 5, { pt: 'Porte de drogas', en: 'Drug possession' });
   const mine = util.playerActs(g);
   if (mine[0]) cr.jailPerson(g, g.acts[mine[0]].members[0], 'BRA', 2, { pt: 'Briga num bar', en: 'Bar fight' });
-  const o = un.localOrgs31(g).here.find((x) => un.facadeOf31(g, x) === 'barracao' || un.facadeOf31(g, x) === 'club') ?? un.localOrgs31(g).here[0];
+  const o = un.underOrgs31(g).here.find((x) => un.facadeOf31(g, x) === 'barracao' || un.facadeOf31(g, x) === 'club') ?? un.underOrgs31(g).here[0];
   if (o && mine[0]) mob._mob29.ask29(g, cr.orgById(g, o.id), 'baile', undefined, mine[0]);
   return { year: g.year, org: o?.id };
 });

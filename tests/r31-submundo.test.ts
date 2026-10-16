@@ -14,7 +14,7 @@ import { places27 } from '../src/sim/sys/place27';
 import { crime17, jailPerson, orgById } from '../src/sim/sys/crime17';
 import { _mob29, asks29 } from '../src/sim/sys/mob29';
 import {
-  bail31, baile31, bailes31, bmMonth31, bmRows31, buyBm31, cellLock31, cells31, emissaries31, localOrgs31, mural31, police31, restockBm31, room31,
+  bail31, baile31, bailes31, bmMonth31, bmRows31, buyBm31, cellLock31, cells31, emissaries31, underOrgs31, mural31, police31, restockBm31, room31,
   under31, underPlaces31, visitCell31,
 } from '../src/sim/sys/under31';
 import { auditInside31, insideModel31 } from '../src/ui/r31/inside31model';
@@ -25,10 +25,10 @@ const LOTS = Array.from({ length: 16 }, (_, i) => 40 + i);
 describe('r31 S: só as facções do país da sede têm fachada', () => {
   it('Rio 1985: facções brasileiras com fachada; nenhuma de fora; as demais do país viram emissário', () => {
     const s = game('s-rio', 1985, 'rio');
-    const { here, via } = localOrgs31(s);
+    const { here, via } = underOrgs31(s);
     expect(here.length).toBeGreaterThanOrEqual(1);
     expect(here.length).toBeLessThanOrEqual(3);
-    for (const o of [...here, ...via]) expect(o.a3).toBe('BRA');
+    for (const o of here) expect(o.a3).toBe('BRA');
     expect(here.some((o) => o.id === 'cv' || o.id === 'bicho')).toBe(true);
     const ps = underPlaces31(s);
     expect(ps.filter((p) => p.k === 'facade').length).toBe(here.length);
@@ -38,10 +38,10 @@ describe('r31 S: só as facções do país da sede têm fachada', () => {
   });
   it('mudar a sede de país muda quem aparece', () => {
     const s = game('s-move', 1985, 'rio');
-    const a = localOrgs31(s).here.map((o) => o.id);
+    const a = underOrgs31(s).here.map((o) => o.id);
     s.config.homeCity = 'new_york';
-    const b = [...localOrgs31(s).here, ...localOrgs31(s).via];
-    expect(b.every((o) => o.a3 === 'USA')).toBe(true);
+    const b = [...underOrgs31(s).here, ...underOrgs31(s).via];
+    expect(underOrgs31(s).here.every((o) => o.a3 === 'USA')).toBe(true); // de fora só como contato (operação aberta no país)
     expect(b.map((o) => o.id)).not.toEqual(a);
   });
   it('no mapa: delegacia, beco e fachadas ocupam prédios da cidade comum', () => {
@@ -64,7 +64,7 @@ describe('r31 S: polícia, sala dos fundos e baile', () => {
   });
   it('sala dos fundos: chefe com ficha, pedido na mesa; baile com as três saídas (sair antes = recusar)', () => {
     const s = game('s-room', 1985, 'rio');
-    const o = localOrgs31(s).here[0];
+    const o = underOrgs31(s).here[0];
     const r0 = room31(s, o.id)!;
     expect(r0.boss.key).toBe(`o:${o.id}`);
     const act = playerActs(s)[0];
@@ -78,7 +78,7 @@ describe('r31 S: polícia, sala dos fundos e baile', () => {
   });
   it('mural: facções do país, você e os fios de laço de rua', () => {
     const s = game('s-mural', 1985, 'rio');
-    const o = localOrgs31(s).here[0];
+    const o = underOrgs31(s).here[0];
     const a = Object.values(s.acts).find((x) => x.owner !== 'player' && x.status !== 'retired' && x.status !== 'split')!;
     crime17(s).ties[a.id] = o.id;
     const m = mural31(s);
@@ -140,7 +140,7 @@ describe('r31 S: explorar não muda o mundo', () => {
     const s = game('s-pure', 1985, 'rio');
     places27(s, LOTS);
     const before = JSON.stringify(s);
-    const o = localOrgs31(s).here[0];
+    const o = underOrgs31(s).here[0];
     underPlaces31(s); mural31(s); cells31(s); bmRows31(s); police31(s); room31(s, o.id); bailes31(s);
     for (const k of ['facade', 'backroom', 'baile', 'police', 'market'] as const) {
       const m = insideModel31(s, { id: `t:${k}`, k, name: k, people: [{ name: 'X', role: { pt: 'x', en: 'x' } }], year: s.year, city: s.config.homeCity, seed: s.config.seed, org: o.id, v: 'club' });
