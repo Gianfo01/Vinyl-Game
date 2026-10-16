@@ -82,7 +82,7 @@ if (want('clique')) {
   await shot('papel-mesa');
   await key('}'); await shot('papel-marcador2');
   await key('Escape');
-  await p.locator('.r5-i').first().click(); await shot('ir-ate-la');
+  await p.locator('.rc5-i').first().click(); await shot('ir-ate-la');
   await key('Escape'); await shot('flash');
 }
 await b.close();

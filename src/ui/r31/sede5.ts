@@ -177,7 +177,7 @@ export const txt5 = (x: string): Text => document.createTextNode(x);
 /** Texto curto sem `disp31` (números e teclas). */
 export const raw5 = <K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, txt: string): HTMLElementTagNameMap[K] => { const e = h(tag, { class: cls }); e.textContent = txt; return e; };
 /** Tecla desenhada. Texto direto (sem `disp31`: o interruptor de nomes reais troca textos curtos como "5"). */
-export const kbd5 = (k: string): HTMLElement | null => { if (!k) return null; const e = h('kbd', { class: 'k5' }); e.textContent = k; return e; };
+export const kbd5 = (k: string): HTMLElement | null => { if (!k) return null; const e = h('kbd', { class: 'kb5' }); e.textContent = k; return e; };
 
 /** Botão de um objeto: arte parada/novidade e acesa por cima (CSS troca no hover/foco), rótulo pequeno com a tecla. */
 function objBtn(pl: Plan27, it: Item5, n: number, year: number, k: number, on: (id: string) => void, flash: boolean): HTMLElement {

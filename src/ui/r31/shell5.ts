@@ -263,19 +263,19 @@ function recados5(s: GameState): HTMLElement {
   const sec = object5('secretaria');
   const form = sec?.forms?.find((f) => s.year >= f.era[0] && s.year <= f.era[1]);
   const head = form ? tl5(form.label) : t(l('Recados', 'Messages'));
-  return h('aside', { class: 'r5', 'aria-label': head },
-    h('button', { type: 'button', class: 'r5-h', onclick: () => open5('secretaria'), title: `${head} (${chordLabel5(key5('obj:secretaria')?.chord ?? '')})` }, t(l('Recados', 'Messages')), h('small', null, ` · ${head}`)),
+  return h('aside', { class: 'rc5', 'aria-label': head },
+    h('button', { type: 'button', class: 'rc5-h', onclick: () => open5('secretaria'), title: `${head} (${chordLabel5(key5('obj:secretaria')?.chord ?? '')})` }, t(l('Recados', 'Messages')), h('small', null, ` · ${head}`)),
     xs.length ? h('ul', null, ...xs.map((p) => {
       const g = resolveGoto5(s, p);
       const who = p.personId ? s.persons[p.personId] : undefined;
       const act = p.actId ? s.acts[p.actId] : undefined;
       const face = who ? portraitCanvas(who, s, 1) : act ? portraitCanvas({ id: p.actId! }, s, 1) : null;
-      if (face) face.className = 'px r5-face';
+      if (face) face.className = 'px rc5-face';
       const name = who?.name ?? act?.name;
       const dest = g?.obj ? tl5(object5(g.obj)!.label) : g ? HOST?.label(g.open.area) ?? '' : '';
-      return h('li', null, h('button', { type: 'button', class: 'r5-i', onclick: () => { SH5.flash = g?.obj; goto5(s, p as GotoIn5); } },
+      return h('li', null, h('button', { type: 'button', class: 'rc5-i', onclick: () => { SH5.flash = g?.obj; goto5(s, p as GotoIn5); } },
         face, h('span', null, name ? h('b', null, `${name}: `) : null, t(p.title), h('small', null, h('em', null, t(l('ir até lá', 'go there'))), txt5(` → ${dest}`)))));
-    })) : h('p', { class: 'r5-none' }, t(l('Nenhum recado. O mês está em dia.', 'No messages. The month is up to date.'))));
+    })) : h('p', { class: 'rc5-none' }, t(l('Nenhum recado. O mês está em dia.', 'No messages. The month is up to date.'))));
 }
 
 // ---------------------------------------------------------------- cena da região
