@@ -12,6 +12,7 @@ import { C, INK, Px, inked, lv, mix, noise, tint, withAlpha, type Col } from './
 import { bars31, crowd31, inst31, instSpec31, speaker31 } from './stage31px';
 import { eraOf } from './palette';
 import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx27';
+import { view31, window31 } from './window31';
 
 // ---------------------------------------------------------------- modelo (puro)
 
@@ -25,7 +26,7 @@ export type Zone27 = 'stage' | 'floor' | 'booth' | 'live' | 'counter' | 'desk';
 export interface ISpot27 { x: number; z: Zone27; pose: Pose; dir: 'SE' | 'SW' }
 /** r31 (S): salas que não são lugares do mapa (fundos da fachada, baile) */
 export type IKind27 = PlaceK27 | 'backroom' | 'baile';
-export interface Interior27 { k: IKind27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean; /** r31: fachada (restaurante, boate…) */ v?: string }
+export interface Interior27 { k: IKind27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean; /** r31: fachada (restaurante, boate…) */ v?: string; /** r31 (AMOR): onde fica o seu personagem (padrão: na porta) */ youAt?: ISpot27 }
 
 export const INTERIOR_KINDS27: PlaceK27[] = ['venue', 'records', 'radio', 'studio', 'bar', 'press', 'rehearsal', 'label', 'office', 'apartments', 'hotel', 'instruments'];
 
@@ -165,7 +166,7 @@ export function placePeople27(m: Interior27, people: Person27[]): [Person27, ISp
   const more = (): ISpot27 => sp(0.16 + ((extra++ * 0.17) % 0.6), 'floor', 'stand', extra % 2 ? 'SW' : 'SE');
   const take = (zs: Zone27[], any = true): ISpot27 | undefined => { for (const z of zs) { const i = free.findIndex((s0) => s0.z === z); if (i >= 0) return free.splice(i, 1)[0]; } return any ? free.shift() : more(); };
   const placed: [Person27, ISpot27][] = [];
-  for (const x of you) placed.push([x, sp(m.k === 'police' || m.k === 'backroom' ? 0.24 : 0.06, 'floor', 'stand', 'SE')]);
+  for (const x of you) placed.push([x, m.youAt ?? sp(m.k === 'police' || m.k === 'backroom' ? 0.24 : 0.06, 'floor', 'stand', 'SE')]);
   for (const x of cell) placed.push([x, take(['booth'], false) ?? more()]);
   for (const x of perf) { const s0 = take(['stage', 'live', 'booth', 'floor']); if (s0) placed.push([x, s0]); }
   const restZ: Zone27[] = m.k === 'police' ? ['desk', 'counter', 'floor'] : ['counter', 'desk', 'booth', 'floor'];
@@ -356,7 +357,7 @@ export function paintInterior27(m: Interior27, people: Person27[], o: IDrawOpts2
       case 'couch': prim27.couch(g, x, fy, w, pal.fabric); break;
       case 'tv': prim27.tv(g, x, fy); break;
       case 'plant': prim27.plant(g, x, fy, true); break;
-      case 'window': prim27.backWindow(g, x, y0 + 12, w, 30, year < 1930); break;
+      case 'window': window31(p, x, y0 + 12, w, 30, g.pl.city || view31.city, year, view31.month); break; // R31 (POL2): a cidade e a época reais, não silhuetas genéricas
       case 'keys': { blk(p, x, y0 + 14, w, 18, pal.woodDark); for (let r = 0; r < 3; r++) for (let xx = x + 2; xx < x + w - 2; xx += 4) p.rect(xx, y0 + 16 + r * 6, 1, 3, C('#d8b040')); break; }
       case 'poster': prim27.poster(g, x, y0 + 12, w, Math.round(w * 1.4), hs(`${seed}|${pr.x}`) % 6); break;
       case 'gold': { const n = pr.n ?? 3; for (let i = 0; i < n; i++) prim27.goldDisc(g, x + i * 14, y0 + 14, i === 0); break; }

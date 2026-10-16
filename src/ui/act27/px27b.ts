@@ -1,9 +1,8 @@
 // r27 (P2B) — cenas em pixel art das mecânicas da fase 2: a estrada (van, céu conforme o evento, cidade no
-// horizonte), a sala de crise (relógio na parede, telefones, luz de alerta pela ameaça) e a sala da diretoria
-// (mesa comprida, cadeiras, os diretores sentados). Mesmo estilo da Sede (hqpx27/scene27): paleta da era,
+// horizonte) e a sala de crise (relógio na parede, telefones, luz de alerta pela ameaça); a sala da diretoria
+// está em r31/scene31px.paintDirectors31. Mesmo estilo da Sede (hqpx27/scene27): paleta da era,
 // contorno, pontilhado; os bonecos são os avatares reais (drawScene27). Funções paint* são PURAS (só Px).
 
-import { cityView31, view31 } from '../pixel/window31';
 import { paletteOf } from '../pixel/palette';
 import { C, Px, dith, mix, noise, shade } from '../pixel/px';
 import { H27, W27 } from './scene27';
@@ -83,29 +82,7 @@ export function paintCrisis27(year: number, threat: number, frame = 0): Px {
   return p;
 }
 
-/** Sala da diretoria: janela panorâmica, quadro com o logo, mesa comprida e cadeiras (os bonecos vêm por cima). */
-export function paintBoard27(year: number, n: number): Px {
-  const pal = paletteOf(year);
-  const p = new Px(W27, H27);
-  const fl = pal.floors.office;
-  p.fill((x, y) => (y < 58 ? shade(pal.wall, -0.05 - y / 900) : ((x >> 3) + (y >> 2)) % 2 ? fl.a : fl.b));
-  p.hline(0, W27 - 1, 57, pal.trim);
-  // janela panorâmica com a cidade
-  // R31 (POL): a vista vem da cidade e da época (skyline27), não de prédios cinza chapados
-  p.rect(20, 6, 160, 30, pal.outline); p.blit(cityView31(view31.city, year, view31.month, 158, 28), 21, 7);
-  for (let x = 60; x < 180; x += 40) p.vline(x, 7, 34, pal.outline);
-  // quadro com disco de ouro
-  p.rect(92, 40, 16, 14, pal.outline); p.rect(93, 41, 14, 12, pal.woodDark); p.disc(100, 47, 4, pal.gold); p.put(100, 47, pal.outline);
-  // mesa comprida (vista de frente, levemente de cima)
-  p.ellipse(100, 72, 78, 10, pal.outline); p.ellipse(100, 71, 76, 9, pal.woodDark); p.ellipse(100, 70, 74, 7, shade(pal.wood, 0.05));
-  for (let i = 0; i < Math.max(1, n); i++) { const x = 40 + Math.round((i * 120) / Math.max(1, n - 1 || 1)); p.rect(x - 2, 66, 5, 3, pal.paper); }
-  // cadeiras atrás da mesa
-  for (let i = 0; i < Math.max(1, n); i++) { const x = 40 + Math.round((i * 120) / Math.max(1, n - 1 || 1)); p.rect(x - 5, 50, 10, 10, pal.outline); p.rect(x - 4, 51, 8, 8, pal.fabric); }
-  return p;
-}
-
-/** posição x do lugar i na mesa (para os bonecos) */
-export const seatX27 = (i: number, n: number): number => 40 + Math.round((i * 120) / Math.max(1, n - 1 || 1));
+// (a sala da diretoria saiu para scene31px.paintDirectors31 — R31 POL2)
 
 /** replaceChildren que aceita null/false (partes opcionais da tela). */
 export const put27 = (el: HTMLElement, ...k: (Node | string | null | undefined | false)[]): void => el.replaceChildren(...k.filter((x): x is Node | string => !!x));

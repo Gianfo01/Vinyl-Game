@@ -150,6 +150,31 @@ describe('H · festival, outdoors, neon e veículos', () => {
     expect(new Set(bb.map((b) => b.relId)).size).toBe(bb.length);
     expect(billboards31(game(1895))).toEqual([]);
   });
+  it('POL2: outdoors misturam paradas, artista em alta, lançamentos e turnê — todo outdoor aponta para algo que existe', () => {
+    const kinds = new Set<string>();
+    for (const [year, city] of [[1935, 'london'], [1975, 'rio'], [2015, 'new_york']] as const) {
+      const g = game(year, city, `pol2-${year}`);
+      for (let i = 0; i < 8; i++) advanceMonth(g);
+      const a = Object.values(g.acts).find((x) => x.fame >= 20 && Object.values(g.releases).some((r) => r.actId === x.id));
+      if (a) g.tours.push({ id: 'pol2t', actId: a.id, name: 'x', stops: [{ cityId: city, day: g.day + 5, tier: 1, price: 0, capacity: 1, sold: 0, merch: 0, status: 'scheduled', travelDays: 0 }], setlist: [], minutes: 60, production: 0, role: 'headline', crew: 0, pay: 'door', costReserved: 0, revenue: 0, costs: 0, status: 'planned', log: [], accidents: 0 } as never);
+      const bb = billboards31(g);
+      expect(bb.length).toBeGreaterThan(0);
+      expect(bb.length).toBeLessThanOrEqual(4);
+      expect(new Set(bb.map((b) => b.relId)).size).toBe(bb.length);
+      for (const b of bb) {
+        kinds.add(b.kind ?? '');
+        const r = g.releases[b.relId];
+        expect(r, b.relId).toBeDefined();
+        expect(g.acts[r.actId]).toBeDefined();
+        expect(b.act).toBe(g.acts[r.actId].name);
+        if (b.kind === 'hot' || b.kind === 'tour') { expect(g.acts[b.actId!], `${b.kind} sem ato`).toBeDefined(); expect(r.actId).toBe(b.actId); }
+        if (b.kind === 'tour') expect(g.tours.some((t) => t.actId === b.actId && t.stops.some((st) => st.cityId === city && st.status === 'scheduled'))).toBe(true);
+      }
+      expect(JSON.stringify(billboards31(g))).toBe(JSON.stringify(bb)); // só lê o estado: igual a cada chamada
+    }
+    expect(kinds.has('chart')).toBe(true);
+    expect(kinds.has('hot') || kinds.has('tour')).toBe(true);
+  });
   it('neon: começa nos anos 20, auge 1930–60, volta nos 80, LED depois de 2000', () => {
     expect(neon31(1910).f).toBe(0);
     expect(neon31(1945).f).toBe(1);
