@@ -13,6 +13,7 @@
 //  region   fandom19 (fãs por região) → demanda de ingressos (cityDemand) e renda dos circuitos18; base nova numa
 //           região vira fato fan_region (I12/I23).
 
+import { ownFests } from './feststore';
 import { clamp } from '../../core/rng';
 import { CIRCS18, subById18 } from '../../data/regions18';
 import { countryOfCity } from '../../data/geo';
@@ -37,7 +38,6 @@ import { ff18 } from './fest18';
 import { headline19 } from './factlink19';
 import { addHype } from './hype12';
 import { LINK18_PARTS, LINKS18, lk18 } from './links18';
-import { liveOf } from './live/state';
 import { live18, safetyNorm18 } from './live18';
 import { opine } from './persona13';
 import { actOfP18, back18, estate18, post18, STANCE18, type PK18 } from './post18';
@@ -269,7 +269,7 @@ export function tragedyOdds19(s: GameState, att: number, cap: number, permit: nu
 }
 function festMonth(s: GameState): void {
   const st = l19a(s);
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     const n = f.editions.length;
     const prev = st.fe[f.id];
     st.fe[f.id] = n;
@@ -310,7 +310,7 @@ onFact('crowd_incident', (s, f) => {
   }
 }, 'links19a:crowd');
 LINK18_PARTS.crowd = (s) => {
-  const f = liveOf(s).fests[0];
+  const f = ownFests(s)[0];
   if (!f) return [{ label: N('Sem festival próprio.', 'No own festival.') }];
   const ed = f.editions[f.editions.length - 1];
   const o = tragedyOdds19(s, ed?.attendance ?? 0, ed?.capacity ?? 1, ff18(s, f).permit, ed?.safety ?? 60);

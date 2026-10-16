@@ -7,6 +7,7 @@
 // manutenção mensal visível; (5) apelidos e venda; (6) modelos PUROS dos popups (prédio e lote) para a UI
 // desenhar sobre o mapa — sem DOM. Determinístico (sem sorteio); saves antigos ganham o estado vazio.
 
+import { ownFests } from './feststore';
 import { realVenues } from './venuestore27';
 import { clamp } from '../../core/rng';
 import { BRANCH_LEVELS, HQ_LEVELS } from '../../data/rules';
@@ -24,7 +25,6 @@ import {
   renoMonths18, storeIncome18, storeUpkeep18, styleDef18, styleName18, styleOf18, stylesAt18, type BKind, type Bld18, type PKind, type Place19, type Style18,
 } from './campus18';
 import { hq6 } from './hq6';
-import { liveOf } from './live/state';
 import { school18 } from './school18';
 import { MAX_LEVEL, VKINDS, foundCost, kindsAvailable, foundVenture, sellVenture, upgradeCost as vUpCost, upgradeVenture, upkeep as vUpkeep, valuation, ventures, type VKind } from './ventures9';
 import { sellValue, sellVenue17, vdef } from './venues17';
@@ -182,7 +182,7 @@ export function synAt19(s: GameState, k: BKind, lot: number, bs = buildings18(s)
 function bump(s: GameState, id: string, d: number): void {
   if (id.startsWith('v:')) { const v = ventures(s).list.find((x) => `v:${x.id}` === id); if (v) v.rep = clamp(v.rep + d, 0, 100); }
   else if (id.startsWith('ve:')) { const o = realVenues(s).find((x) => `ve:${x.id}` === id); if (o) o.rep = clamp(o.rep + d, 0, 100); }
-  else if (id.startsWith('fe:')) { const f = liveOf(s).fests.find((x) => `fe:${x.id}` === id); if (f) f.rep = clamp(f.rep + d, 0, 100); }
+  else if (id.startsWith('fe:')) { const f = ownFests(s).find((x) => `fe:${x.id}` === id); if (f) f.rep = clamp(f.rep + d, 0, 100); }
   else if (id === 'school') { const o = school18(s).own; if (o) o.prest = clamp(o.prest + d, 0, 100); }
 }
 

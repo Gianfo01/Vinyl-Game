@@ -1,5 +1,6 @@
 // r27 (AUD1) — casas de shows num modelo só (lista, teto e fechamento únicos), festival único (fest12 manda; o negócio
 // de Empreendimentos só espelha) e o bot jogador tocando os negócios (salas da sede, estúdio, editora, casa, festival).
+import { ownFests } from '../src/sim/sys/feststore';
 import { builtVenue, realVenues } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
@@ -7,7 +8,7 @@ import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
 import type { GameState } from '../src/sim/types';
-import { buyVenue, liveOf } from '../src/sim/sys/live';
+import { buyVenue } from '../src/sim/sys/live';
 import { buyVenue17, marketVenues } from '../src/sim/sys/venues17';
 import { MAX_VENUES27, myVenues27, venueCount27 } from '../src/sim/sys/venues27';
 import { addNight12 } from '../src/sim/sys/venue12';
@@ -91,7 +92,7 @@ describe('r27 AUD1 — bot nos negócios', () => {
     expect(L.studio).toBeGreaterThan(0);
     expect(L.festival).toBeGreaterThan(0);
     expect(myVenues27(s).length).toBeGreaterThan(0);
-    expect(liveOf(s).fests.length).toBe(1);
+    expect(ownFests(s).length).toBe(1);
     invariant(s);
   });
 

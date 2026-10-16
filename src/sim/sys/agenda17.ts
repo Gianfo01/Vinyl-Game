@@ -12,6 +12,7 @@
 //   banda de apoio de turnê. Chefe de gabinete (+1 expediente), rede de contatos pessoal e ações do "Você".
 // Aleatoriedade: geradores próprios (semente + mês/trimestre). Publica Fatos 'hire', 'fire', 'agenda'.
 
+import { ownFests } from './feststore';
 import { builtVenue } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { STAFF_ROLES } from '../../data/rules';
@@ -34,7 +35,6 @@ import { ownerOf } from './people/owner';
 import { addClientTrust9, ventures, type VKind } from './ventures9';
 import { mgrActive, mgrCap, mgrName, rosterOf } from './managers14';
 import { prodActive, prodName } from './producers15';
-import { liveOf } from './live/state';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { registerDeadline, weekOfMonth19, type Deadline19 } from '../calendar19';
 
@@ -87,7 +87,7 @@ export const officeCap = (s: GameState): number => OFFICE + (ag17(s).chief ? 1 :
 
 /** Pico de calendário da carreira neste mês (+1 bolinha se você não delegou). */
 export function crunch(s: GameState, id: string): L | null {
-  if (id === 'festival' && ventures(s).list.some((v) => v.kind === 'festival' && v.month === s.month && liveOf(s).fests.some((f) => f.id === v.fx && f.lineup.length))) return l('semana do seu festival', 'your festival week');
+  if (id === 'festival' && ventures(s).list.some((v) => v.kind === 'festival' && v.month === s.month && ownFests(s).some((f) => f.id === v.fx && f.lineup.length))) return l('semana do seu festival', 'your festival week');
   if (id === 'musician') { const b = playerAct(s); if (b && s.pendingReleases.some((p) => p.actId === b.id && p.week >= s.week - 1 && p.week < s.week + 5)) return l('lançamento da sua banda', 'your band\'s release'); }
   return null;
 }

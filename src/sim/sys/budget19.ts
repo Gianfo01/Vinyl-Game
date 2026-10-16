@@ -5,6 +5,7 @@
 // - autoResolve19: quais cartões vão valer o padrão ao avançar (o diálogo da UI lista e pergunta).
 // - Delegação por carreira: renovação de mandato, patrocínio e headliner do festival, sessões do estúdio (r31 Q:
 //   configuradas na delegação única, sim/deleg31.ts). A regra age sozinha e só sobe exceções (fato `deleg_exc` → Caixa).
+import { ownFests } from './feststore';
 import { l, type L } from '../../data/world';
 import { CONFLICTS19 } from '../conflicts19';
 import { registerExplain, type WhyPart } from '../explain18';
@@ -19,7 +20,6 @@ import { pending18 } from './decide18';
 import { dm18 } from './dm18';
 import { activeFeuds18 } from './feud18';
 import { ask12, f12, muOf, offer12, proj12, takeSponsor12 } from './fest12';
-import { liveOf } from './live';
 import { c12, negotiateMandate } from './manager12';
 import { dirOf31, exc31, logAuto31, modeOf31, rule31, type Resp31 } from '../deleg31';
 import { festivalQ19, managerQ19 } from './prof19';
@@ -33,7 +33,7 @@ export interface Conf19 { n: number; cap: number; parts: [L, number][] }
 const memo = new WeakMap<GameState, { k: string; v: Conf19 }>();
 export function conflicts19(s: GameState): Conf19 {
   const mg = ventures(s).mg.clients;
-  const k = `${s.week}|${s.decisions.length}|${mg.length}|${mg.filter((c) => c.crisis).length}|${liveOf(s).fests.length}|${dm18(s).th.length}|${activeFeuds18(s).length}`;
+  const k = `${s.week}|${s.decisions.length}|${mg.length}|${mg.filter((c) => c.crisis).length}|${ownFests(s).length}|${dm18(s).th.length}|${activeFeuds18(s).length}`;
   const c = memo.get(s);
   if (c && c.k === k) return c.v;
   const mine = new Set(playerActs(s));
@@ -44,7 +44,7 @@ export function conflicts19(s: GameState): Conf19 {
   add(l('Rixas dos seus artistas', 'Your acts\' feuds'), activeFeuds18(s).filter((f) => mine.has(f.a) || mine.has(f.b)).length);
   add(l('Consequências ruins chegando (½ cada)', 'Bad consequences coming (½ each)'), pending18(s).filter((x) => x.tone === 'bad' && x.from - s.week <= 8).length * 0.5);
   if (mg.length) { const q = managerQ19(s); add(l('Crises e mandatos de clientes', 'Client crises and mandates'), q.now.length + q.threats.length * 0.5); }
-  if (liveOf(s).fests.length) { const q = festivalQ19(s); add(l('Apertos do festival', 'Festival squeezes'), q.now.length + q.threats.length * 0.5); }
+  if (ownFests(s).length) { const q = festivalQ19(s); add(l('Apertos do festival', 'Festival squeezes'), q.now.length + q.threats.length * 0.5); }
   const extra = Math.max(0, careers(s).active.length - 1);
   const v: Conf19 = { n: parts.reduce((t, p) => t + p[1], 0), cap: 8 + Math.min(2, extra), parts };
   memo.set(s, { k, v });
@@ -114,7 +114,7 @@ export function delegateMonth(s: GameState): void {
     }
   }
   const fest = modeOf31(s, 'fest') === 'rule' ? dirOf31(s, 'fest') : null;
-  if (fest) for (const f of liveOf(s).fests) {
+  if (fest) for (const f of ownFests(s)) {
     const x = f12(s, f), mu = muOf(s, f), fcap = fest.frac ?? 0.25;
     if (fest.sponsor) for (const o of [...x.cyc.offers]) {
       const p = proj12(s, f), safe = Math.min(p.demand, p.cap) * 0.9;

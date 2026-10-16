@@ -167,7 +167,7 @@ function stateOf(kind: SceneKind27, s: GameState): St {
         mem.slice(0, 3).forEach((pid, i) => base.figs.push({ fx: 0.4 + i * 0.1, dy: -16, pose: 'play', dir: 'SE', pid, seed: `show-${i}` }));
         if (!mem.length) base.figs.push({ fx: 0.5, dy: -16, pose: 'play', dir: 'SE', seed: 'show-x' });
       } else {
-        const own = !!(x4(s).fest12 as { fests?: unknown[] } | undefined)?.fests?.length;
+        const own = Object.values((x4(s).festivals as { f?: Record<string, { land?: unknown }> } | undefined)?.f ?? {}).some((x) => !!x.land); // UNI-4: registro único de festivais
         base.state += own ? '-own' : '';
         base.n.own = own ? 1 : 0;
       }

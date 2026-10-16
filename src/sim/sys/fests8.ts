@@ -4,10 +4,11 @@
 // na hora: aceita, contraproposta de faixa/cachê ou recusa) e os festivais também convidam por conta
 // própria. Na data, quem toca ganha cachê, fama e fãs — os artistas de outros selos também.
 
+import { clearEditions8, editions8, fests31, pastOf8, w8, worldKey, worldRec } from './feststore';
 import { clamp, hashString, type Rng } from '../../core/rng';
 import { FESTIVALS, type Festival } from '../../data/catalog';
 import { cityById, familyOf, l, type L } from '../../data/world';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
 import { DEMO29 } from '../demo29hook';
@@ -21,18 +22,10 @@ export interface FestSlot { actId: string; tier: FestTier; fee: number }
 export interface FestEdition8 { fi: number; year: number; month: number; lineup: FestSlot[]; done: boolean; crowd?: number }
 export interface FestPast { year: number; head: string[]; crowd: number; mine: string[] }
 export interface FestInvite8 { id: string; fi: number; actId: string; tier: FestTier; fee: number; expires: number }
-export interface Fest8State {
-  year: number;
-  editions: FestEdition8[];
-  past: Record<number, FestPast[]>;
-  invites: FestInvite8[];
-  /** recusas recentes: "fi:actId" -> semana em que pode tentar de novo */
-  cooldown: Record<string, number>;
-}
-
-declare module '../ext4' { interface Ext4 { fest8: Fest8State } }
-registerExt4('fest8', () => ({ year: 0, editions: [], past: {}, invites: [], cooldown: {} }));
-export const fest8 = (s: GameState): Fest8State => (s as unknown as { x4: { fest8: Fest8State } }).x4.fest8;
+/** UNI-4 (B.11): edição do ano e histórico de cada festival do mundo moram no registro único de festivais
+ *  (feststore: `ed`, `past`); aqui ficam só as regras. `fest8` = estado do circuito (ano montado, convites, recusas). */
+export type Fest8State = ReturnType<typeof w8>;
+export const fest8 = (s: GameState): Fest8State => w8(s);
 
 export function festActive(f: Festival, year: number): boolean {
   return f.start <= year && (f.end === undefined || f.end >= year);
@@ -63,8 +56,7 @@ export function festFee(s: GameState, f: Festival, act: Act, tier: FestTier): nu
 /** Faixa que o festival oferece a este ato (ou null): fama, rede, booking e histórico com o festival. */
 export function festTierFor(s: GameState, f: Festival, fi: number, act: Act): FestTier | null {
   if (!fits(f, act)) return null;
-  const st = fest8(s);
-  const returning = (st.past[fi] ?? []).some((p) => p.mine.includes(act.name)) ? 6 : 0;
+  const returning = pastOf8(s, fi).some((p) => p.mine.includes(act.name)) ? 6 : 0;
   const score = act.fame + act.networking * 0.4 + (act.owner === 'player' || act.playerBand ? staffSkill(s, 'booking') / 8 : 0) + returning + (f.scouting && act.fame < 30 ? 25 : 0);
   if (score >= f.prestige + 5) return 'headline';
   if (score >= f.prestige - 25) return 'afternoon';
@@ -77,7 +69,7 @@ export function festTierFor(s: GameState, f: Festival, fi: number, act: Act): Fe
 function buildYear(s: GameState, r: Rng): void {
   const st = fest8(s);
   st.year = s.year;
-  st.editions = [];
+  clearEditions8(s);
   st.invites = st.invites.filter((x) => x.expires > s.week);
   const mine = new Set(playerActs(s));
   const pool = Object.values(s.acts)
@@ -103,13 +95,13 @@ function buildYear(s: GameState, r: Rng): void {
         lineup.push({ actId: a.id, tier, fee: festFee(s, f, a, tier) });
       }
     }
-    st.editions.push({ fi, year: s.year, month, lineup, done: month < s.month });
+    worldRec(s, fi).ed = { fi, year: s.year, month, lineup, done: month < s.month };
   });
 }
 
 /** Edição deste ano de um festival (se houver). */
 export function editionOf(s: GameState, fi: number): FestEdition8 | undefined {
-  return fest8(s).editions.find((e) => e.fi === fi);
+  return fests31(s).f[worldKey(fi)]?.ed;
 }
 
 // ---------------------------------------------------------------- negociação
@@ -213,7 +205,7 @@ function invites(s: GameState, r: Rng): void {
   st.invites = st.invites.filter((x) => x.expires > s.week);
   if (st.invites.length >= 6) return;
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
-  for (const ed of st.editions) {
+  for (const ed of editions8(s)) {
     if (ed.done || ed.month - s.month < 1 || ed.month - s.month > 4) continue;
     const f = FESTIVALS[ed.fi];
     for (const a of mine) {
@@ -228,9 +220,8 @@ function invites(s: GameState, r: Rng): void {
 }
 
 function runEditions(s: GameState, r: Rng): void {
-  const st = fest8(s);
   const mine = new Set(playerActs(s));
-  for (const ed of st.editions) {
+  for (const ed of editions8(s)) {
     if (ed.done || ed.month !== s.month) continue;
     ed.done = true;
     const f = FESTIVALS[ed.fi];
@@ -255,7 +246,7 @@ function runEditions(s: GameState, r: Rng): void {
         for (const id of act.members) { const p = s.persons[id]; if (p?.alive) p.morale = clamp(p.morale + 3 * w, 0, 100); }
       } else act.cash += slot.fee;
     }
-    const past = (st.past[ed.fi] ??= []);
+    const past = (worldRec(s, ed.fi).past ??= []);
     past.unshift({ year: s.year, head: heads.map((a) => a.name).slice(0, 3), crowd, mine: playedMine });
     if (past.length > 8) past.length = 8;
     if (playedMine.length) {
@@ -271,7 +262,7 @@ registerDeadline('fests8', (s, from, to) => {
   const st = (s.x4 as unknown as { fest8?: Fest8State }).fest8;
   if (!st) return [];
   const mine = new Set(playerActs(s)), out: Deadline19[] = [];
-  for (const ed of st.editions) {
+  for (const ed of editions8(s)) {
     const f = FESTIVALS[ed.fi];
     if (!f || ed.done) continue;
     const w = weekOfMonth19(s, ed.year, ed.month);

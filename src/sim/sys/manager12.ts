@@ -6,6 +6,7 @@
 // na memória (turnê internacional × promessa à família), agência grande com agentes contratados que
 // podem sair levando estrelas, sucessão e desenvolvimento de talentos. Gerador próprio (semente+ano+mês).
 
+import { ownFests } from './feststore';
 import { Rng, clamp } from '../../core/rng';
 import { GENRES, l, type L } from '../../data/world';
 import { issueP19, renewP19 } from '../ctx19';
@@ -20,7 +21,6 @@ import { dropClient, funds, grossShows, markRefused9, mgCap, mgChance, mgGross, 
 import { acceptOffer, defaultOffer, expectedAdvance, signWithRival } from '../contracts';
 import { tourCancelP19 } from '../ctx19';
 import { scandal } from '../scandal17';
-import { liveOf } from './live/state';
 import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { addLoyaltyAt, forgetOpinion, loyaltyAt, setLoyaltyAt } from '../opinion';
 
@@ -795,7 +795,7 @@ export function conflictsOf(s: GameState, actId: string): L[] {
   for (const v of ventures(s).list) {
     if (v.kind === 'booking' && v.clients?.some((k) => k.actId === actId)) out.push(fmtL(l('Agenciado também pela sua agência {n} (comissão dupla).', 'Also booked by your agency {n} (double commission).'), { n: v.name }));
     if (v.kind === 'media' && v.favored === actId) out.push(fmtL(l('Favorecido pelo seu veículo {n}.', 'Favored by your outlet {n}.'), { n: v.name }));
-    if (v.kind === 'festival' && liveOf(s).fests.some((f) => f.id === v.fx && f.lineup.some((x) => x.actId === actId))) out.push(fmtL(l('No line-up do seu festival {n}: você paga o cachê e cobra comissão.', 'On your festival {n}: you pay the fee and take a commission.'), { n: v.name }));
+    if (v.kind === 'festival' && ownFests(s).some((f) => f.id === v.fx && f.lineup.some((x) => x.actId === actId))) out.push(fmtL(l('No line-up do seu festival {n}: você paga o cachê e cobra comissão.', 'On your festival {n}: you pay the fee and take a commission.'), { n: v.name }));
   }
   return out;
 }

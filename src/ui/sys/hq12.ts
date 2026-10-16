@@ -4,6 +4,7 @@
 // se trabalha ou se está sobrecarregada (balão + dica com o porquê); as salas dizem quanto da sede está
 // em uso e o que a próxima ampliação traz. Tudo pelos ganchos da sede (ui/hq.ts), sem desenho novo.
 
+import { editions8 } from '../../sim/sys/feststore';
 import { HQ_LEVELS, staffRoleById } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -13,7 +14,6 @@ import { PRODUCERS } from '../../sim/studio';
 import { hq8 } from '../../sim/sys/hq8';
 import { overCapacity, teamCapacity } from '../../sim/sys/pacing8';
 import { openContests, rivals12, rivalWho } from '../../sim/sys/rivals12';
-import { fest8 } from '../../sim/sys/fests8';
 import type { GameState, Release } from '../../sim/types';
 import { playerActs } from '../../sim/util';
 import { $, actLink, modal, pill, releaseLink, rerender, section } from '../common';
@@ -134,7 +134,7 @@ function staffTip(s: GameState, id: string): string[] {
   if (over) out.push(`⚠ ${fx(l('Sobrecarregada: {n} carreira(s) ficam no mínimo. Contrate empresário ou administração, ou amplie a sede.', 'Overloaded: {n} career(s) get minimum care. Hire a manager or admin, or upgrade the HQ.'), { n: over })}`);
   const sess = s.sessions.filter((x) => !x.done);
   if ((st.role === 'producer' || st.role === 'engineer') && sess.length) out.push(`● ${fx(l('Na mesa: {a}', 'At the desk: {a}'), { a: sess.map((x) => s.acts[x.actId]?.name ?? '').join(', ') })}`);
-  if (st.role === 'booking') out.push(fx(l('Festivais fechados este ano: {n}', 'Festivals booked this year: {n}'), { n: fest8(s).editions.reduce((n, e) => n + e.lineup.filter((x) => playerActs(s).includes(x.actId)).length, 0) }));
+  if (st.role === 'booking') out.push(fx(l('Festivais fechados este ano: {n}', 'Festivals booked this year: {n}'), { n: editions8(s).reduce((n, e) => n + e.lineup.filter((x) => playerActs(s).includes(x.actId)).length, 0) }));
   if (st.role === 'publicist') out.push(fx(l('Lançamentos na agenda: {n}', 'Releases scheduled: {n}'), { n: s.pendingReleases.length }));
   if (st.role === 'anr') out.push(fx(l('Ofertas em negociação: {n}', 'Offers in negotiation: {n}'), { n: s.offers.filter((o) => o.status === 'pending' || o.status === 'counter').length }));
   return out;

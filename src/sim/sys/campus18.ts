@@ -11,6 +11,7 @@
 // → danificado (incêndio do crime17/desastre) → fechado/vendido; (5) retrato ANUAL compacto para a linha
 // do tempo (máx. 170 anos).
 
+import { ownFests } from './feststore';
 import { builtVenue, realVenues } from './venuestore27';
 import { clamp, Rng } from '../../core/rng';
 import { HQ_LEVELS, BRANCH_LEVELS } from '../../data/rules';
@@ -23,7 +24,6 @@ import type { GameState } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { hq6 } from './hq6';
 import { hq8 } from './hq8';
-import { liveOf } from './live/state';
 import { HOUSES } from './people/owner';
 import { P } from './people/state';
 import { rel18, WING18 } from './relics18';
@@ -292,7 +292,6 @@ export function buildings18(s: GameState): Bld18[] {
       now: o.last ? fmtL(l('Último mês: {n} noites, {a} pessoas', 'Last month: {n} nights, {a} people'), { n: o.last.nights, a: o.last.att }) : undefined, note: o.cond < 40 ? l('Conservação baixa: reboco caindo.', 'Poor condition: plaster falling.') : undefined });
   }
   // casa de shows da carreira (live) e festivais próprios
-  const lv = liveOf(s);
   const vv = builtVenue(s);
   if (vv) {
     const h = vv.history[vv.history.length - 1];
@@ -301,7 +300,7 @@ export function buildings18(s: GameState): Bld18[] {
       now: h ? fmtL(l('Último mês: receita {r}', 'Last month: revenue {r}'), { r: $k(s, h.revenue) }) : undefined });
   }
   const vfx = new Set(ventures(s).list.map((v) => v.fx).filter(Boolean));
-  for (const f of lv.fests) {
+  for (const f of ownFests(s)) {
     if (vfx.has(f.id)) continue;
     const e = f.editions[f.editions.length - 1] as { crowd?: number } | undefined;
     add({ id: `fe:${f.id}`, kind: 'fest', name: f.name, city: f.cityId, lvl: clamp(1 + Math.floor((f.w * f.h) / 60), 1, 5), since: f.founded, goto: { area: 'festivals' },
@@ -593,7 +592,7 @@ export function ambient18(s: GameState): { k: Amb18; at: string; why: L }[] {
   for (const id of Object.keys(campus18(s).dmg)) out.push({ k: 'smoke', at: id, why: campus18(s).dmg[id].why });
   // r19 (world19): dia de festival = multidão no terreno
   for (const v of ventures(s).list) if (v.kind === 'festival' && v.month === s.month) out.push({ k: 'crowd', at: `v:${v.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: v.name }) });
-  for (const f of liveOf(s).fests) if (f.month === s.month) out.push({ k: 'crowd', at: `fe:${f.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: f.name }) });
+  for (const f of ownFests(s)) if (f.month === s.month) out.push({ k: 'crowd', at: `fe:${f.id}`, why: fmtL(l('{n}: dia de festival, o terreno lotado.', '{n}: festival day, the grounds are packed.'), { n: f.name }) });
   return out;
 }
 

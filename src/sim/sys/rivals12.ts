@@ -10,6 +10,7 @@
 // mínimo garantido) e ao mesmo tempo disputar artistas — cada confronto com o parceiro sobe a tensão,
 // e a 100 ele rompe o acordo. Usa o manual (rivals8), o líder (leaders10) e o prestígio (standing9).
 
+import { editions8 } from './feststore';
 import { clamp, Rng } from '../../core/rng';
 import { FESTIVALS } from '../../data/catalog';
 import { cityById, familyOf, l, marketById, type L, type MarketId } from '../../data/world';
@@ -23,7 +24,7 @@ import { PRODUCERS } from '../studio';
 import type { GameState, Label } from '../types';
 import { addHeat, coolHeat, fmtL, heatOf, money, notify, playerActs, post } from '../util';
 import { chron } from './chron9';
-import { editionOf, fest8, TIER_ORDER } from './fests8';
+import { editionOf, TIER_ORDER } from './fests8';
 import { leaderOf } from './leaders10';
 import { logMove, moveText as moveTxt, playbookOf, rivals8, type PlaybookId } from './rivals8';
 import { standingOf, standingScore } from './standing9';
@@ -348,7 +349,7 @@ function festSlot(s: GameState): void {
   if (s.week < (st.cd.fest ?? 0)) return;
   const r = rngFor(s, 'fest');
   const mine = new Set(playerActs(s));
-  for (const ed of fest8(s).editions) {
+  for (const ed of editions8(s)) {
     if (ed.done || ed.month <= s.month + 0 || ed.year !== s.year) continue;
     const slot = ed.lineup.find((x) => mine.has(x.actId) && x.tier !== 'opening');
     if (!slot || !r.chance(0.25)) continue;

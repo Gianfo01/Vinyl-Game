@@ -1,5 +1,6 @@
 // Rodada 25 — economia do festival nos cenários de profissão (woodstock_1969): um produtor cauteloso sobrevive e a
 // edição boa dá lucro (direitos de mídia pagos depois); estrelas caras num terreno de 1.500 pessoas ainda quebram.
+import { ownFests } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
@@ -17,7 +18,7 @@ const start = (seed: string): GameState => {
 
 /** Monta o line-up 3–6 meses antes: até 4 atrações, só o que cabe no orçamento (fração do caixa). */
 function book(s: GameState, share: number, perAct: boolean): void {
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     const x = f12(s, f);
     for (const o of x.cyc.offers.slice()) takeSponsor12(s, f.id, o.id, true);
     const mu = muOf(s, f);
@@ -65,7 +66,7 @@ describe('r25 economia do festival', () => {
       advanceMonth(s);
       minCash = Math.min(minCash, s.player.cash);
     }
-    const f = liveOf(s).fests[0];
+    const f = ownFests(s)[0];
     const h = f12(s, f).hist;
     expect(s.ended).toBeFalsy();
     expect(h.length).toBe(2);
@@ -81,7 +82,7 @@ describe('r25 economia do festival', () => {
   it('estrelas caras num terreno pequeno ainda quebram o caixa', () => {
     const s = start('r25-reckless');
     for (let i = 0; i < 12 && !s.ended && !(liveOf(s).counters.festEditions ?? 0); i++) { book(s, 3, false); advanceMonth(s); }
-    const h = f12(s, liveOf(s).fests[0]).hist;
+    const h = f12(s, ownFests(s)[0]).hist;
     expect(h.length).toBe(1);
     expect(h[0].profit).toBeLessThan(0);
     expect(s.player.cash).toBeLessThan(0);

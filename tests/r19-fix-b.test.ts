@@ -1,5 +1,6 @@
 // Rodada 19 (onda 5, B) — auditoria 8 §3, §4, §5: chance mostrada = chance sorteada; cockpit por profissão;
 // orçamento global de conflitos, aviso antes de avançar e resumo do mês.
+import { ownFests } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
@@ -19,7 +20,6 @@ import { cockpit18 } from '../src/sim/sys/saga18';
 import { mainCareer19 } from '../src/sim/sys/prof19';
 import { quickList19 } from '../src/ui/sys/prof19';
 import { found12, muOf } from '../src/sim/sys/fest12';
-import { liveOf } from '../src/sim/sys/live';
 import { foundCost } from '../src/sim/sys/ventures9';
 import { CONFLICTS19 } from '../src/sim/conflicts19';
 import { autoResolve19, conflicts19, delegateMonth } from '../src/sim/sys/budget19';
@@ -140,7 +140,7 @@ describe('r19-fix-b §4: cockpit por profissão', () => {
     f.player.cash += foundCost(f, 'festival') * 2;
     const fx = found12(f, 'label', { month: (f.month + 3) % 12, ident: 'discovery' });
     expect('pt' in fx ? fx.pt : '').toBe('');
-    const own = liveOf(f).fests[0];
+    const own = ownFests(f)[0];
     own.month = (f.month + 3) % 12; own.nextYear = f.year + (f.month + 3 >= 12 ? 1 : 0);
     expect(muOf(f, own)).toBe(3);
     const c = cockpit18(f);

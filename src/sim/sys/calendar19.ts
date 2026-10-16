@@ -4,6 +4,7 @@
 // da fábrica (supply18), turnês e festivais próprios, obras (campus18), tribunal (crime17), empréstimos e prêmios.
 // Escreve: dica do Conselheiro (semana apertada), estresse do dono (fato 'crunch' com ouvinte) e "por quê" (cal19.week).
 
+import { ownFests } from './feststore';
 import { formatMoney } from '../../core/money';
 import { l, type L } from '../../data/world';
 import { CRITICS_CAL19, ECHOES_CAL19, INDUSTRY_CAL19, LIVE_CAL19, type Cal19 } from '../awardcal19';
@@ -22,7 +23,6 @@ import { clausesOf } from './contracts18';
 import { crime17 } from './crime17';
 import { pending18 } from './decide18';
 import { playerPerson } from './life';
-import { liveOf } from './live/state';
 import { P } from './people/state';
 import { sup18 } from './supply18';
 import { releasesNow27 } from '../tickcache27';
@@ -105,7 +105,7 @@ registerDeadline('live', (s) => {
     const w0 = Math.floor(next[0].day / 7), w1 = Math.floor(next[next.length - 1].day / 7);
     out.push({ id: `tour:${t.id}`, w: w1, w0: w0 < w1 ? w0 : undefined, kind: 'tour', t: fmtL(N('Turnê "{n}" ({k} datas)', 'Tour "{n}" ({k} dates)'), { n: t.name, k: next.length }), tone: 'info', goto: { area: 'shows' } });
   }
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     const w = weekOfMonth19(s, Math.max(s.year, f.nextYear), f.month);
     if (w >= s.week) out.push({ id: `fest:${f.id}:${w}`, w, kind: 'festival', t: fmtL(N('Festival {n}', '{n} festival'), { n: f.name }), d: fmtL(N('{k} artista(s) no line-up.', '{k} act(s) on the bill.'), { k: f.lineup.length }), tone: f.lineup.length ? 'info' : 'bad', act: !f.lineup.length, goto: { area: 'shows' } });
   }
@@ -170,7 +170,7 @@ registerDeadline('fest12', (s) => {
   const st = (s.x4 as unknown as { fest12?: { f?: Record<string, { commits?: Commit31[] }> } }).fest12?.f;
   if (!st) return [];
   const out: Deadline19[] = [];
-  for (const f of liveOf(s).fests) for (const c of st[f.id]?.commits ?? []) {
+  for (const f of ownFests(s)) for (const c of st[f.id]?.commits ?? []) {
     if (c.done) continue;
     const w = weekOfMonth19(s, Math.floor(c.due / 12), c.due % 12);
     if (w < s.week) continue;

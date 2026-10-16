@@ -6,6 +6,7 @@
 //   5. desfazer grava "não repetir" (ato + responsabilidade) e estorna o gasto;
 //   6. rescindir só clássico/360; 7. opção de formação sem casar prefixo; 8. a tela de delegação não grava ao abrir;
 //   9. contraproposta devolve o motivo; 10. proposta recusada pela cena sai das ofertas; 11. textos; 12. um diário só.
+import { ownFests } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
 import { defaultConfig } from '../src/sim/bot';
@@ -18,7 +19,6 @@ import { addOrder, d16, quality, runStaff } from '../src/sim/sys/deleg16';
 import { roleLoads } from '../src/sim/sys/capacity14';
 import { budgetLeft, overCapacity, pace8 } from '../src/sim/sys/pacing8';
 import { c12 } from '../src/sim/sys/tour12';
-import { liveOf } from '../src/sim/sys/live/state';
 import { createFestival } from '../src/sim/sys/live/festival';
 import { myContract31, rescind31, rescindQuote31 } from '../src/sim/r31/rescind31';
 import { rng19 } from '../src/sim/rng19';
@@ -96,7 +96,7 @@ describe('W2-REV · delegação', () => {
       if (ask) { expect(setMode31(s, 'tour', 'partial')).toBeNull(); setDir31(s, 'tour', { ask }); }
       const n0 = f.lineup.length;
       runStaff(s, rng19(s, 'deleg16'), ag);
-      return { s, signed: liveOf(s).fests[0].lineup.length - n0 };
+      return { s, signed: ownFests(s)[0].lineup.length - n0 };
     };
     const free = run(0);
     expect(free.signed).toBeGreaterThan(0);
@@ -229,7 +229,7 @@ describe('W2-REV · contratos', () => {
 
   it('proposta padrão pela cena: recusada sai das ofertas, como no formulário', () => {
     let seen = 0;
-    for (const seed of ['w2rev-n1', 'w2rev-n2', 'w2rev-n3']) {
+    for (const seed of ['w2rev-n1', 'w2rev-n2', 'w2rev-n3', 'w2rev-n4', 'w2rev-n5', 'w2rev-n6']) { // UNI-4: mundo novo (registros únicos) — mais sementes para achar uma recusa
       const s0 = game(seed);
       scoutSome(s0, 40);
       for (const t of sceneTargets31(s0, 'nego').slice(0, 25)) {

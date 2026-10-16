@@ -8,6 +8,7 @@
 //   hora: conquista (paths18 ach), memória, fato `milestone` (lido pelo epitáfio/linha do tempo) e aviso.
 // Sem sorteio.
 
+import { ownFests } from './feststore';
 import { builtVenue } from './venuestore27';
 import { clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
@@ -18,7 +19,6 @@ import type { GameState } from '../types';
 import { fmtL, notify, playerActs, remember } from '../util';
 import { capital } from './capital';
 import { careers } from './careers12';
-import { liveOf } from './live/state';
 import { agentLoyalty, c12, mgr12 } from './manager12';
 import { ownerOf } from './people/owner';
 import { PATHS18, pa18, pathDef18, type Kpi18, type PathDef18 } from './paths18';
@@ -145,7 +145,7 @@ export const PATHS19: PathDef18[] = [
     relevant: (s) => !careers(s).active.includes('label'),
     kpis: (s) => {
       const debt = s.player.loans.length + capital(s).investors.length;
-      const best = Math.max(0, ventures(s).mg.rep, pr18(s).cred, ...ventures(s).list.filter((v) => v.owner).map((v) => v.rep), ...liveOf(s).fests.map((f) => f.rep));
+      const best = Math.max(0, ventures(s).mg.rep, pr18(s).cred, ...ventures(s).list.filter((v) => v.owner).map((v) => v.rep), ...ownFests(s).map((f) => f.rep));
       return [
         K(l('Patrimônio pessoal', 'Personal wealth'), toReal(ownerOf(s).wealth, s.year), 500_000, 'usd', l('Seu dinheiro, em US$ de hoje.', 'Your money, in today\'s US$.')),
         K(l('Independência (sem dívida/sócio)', 'Independence (no debt/partner)'), clamp(100 - debt * 25, 0, 100), 100, 'pct', l('Cada empréstimo ou investidor tira 25 pontos.', 'Each loan or investor costs 25 points.')),
@@ -162,15 +162,15 @@ for (const p of PATHS19) if (!PATHS18.some((x) => x.id === p.id)) PATHS18.push(p
 
 export interface Classic19 { id: string; career: string; test: (s: GameState) => string | null }
 const has = (s: GameState, id: string) => pa18(s).ach.some((a) => a.id === id);
-const fname = (s: GameState) => liveOf(s).fests[0]?.name ?? vl(s, 'festival')[0]?.name ?? '';
+const fname = (s: GameState) => ownFests(s)[0]?.name ?? vl(s, 'festival')[0]?.name ?? '';
 export const CLASSICS19: Classic19[] = [
   { id: 'c19:first_client', career: 'manager', test: (s) => { const c = ventures(s).mg.clients[0]; return c ? s.acts[c.actId]?.name ?? null : null; } },
   { id: 'c19:first_renewal', career: 'manager', test: (s) => ((mgr12(s).ren ?? [0, 0])[0] > 0 ? '' : null) },
   { id: 'c19:first_discovery', career: 'manager', test: (s) => (mgr12(s).devHits > 0 ? '' : null) },
   { id: 'c19:client_5y', career: 'manager', test: (s) => { const c = ventures(s).mg.clients.find((x) => s.week - x.since >= 260); return c ? s.acts[c.actId]?.name ?? null : null; } },
-  { id: 'c19:first_edition', career: 'festival', test: (s) => (liveOf(s).fests.some((f) => f.editions.length) || vl(s, 'festival').some((v) => v.editions?.length) ? fname(s) : null) },
-  { id: 'c19:sold_out', career: 'festival', test: (s) => { const f = liveOf(s).fests.find((x) => x.editions.some((e) => e.capacity > 0 && e.attendance >= e.capacity * 0.97)); return f ? f.name : vl(s, 'festival').some((v) => v.editions?.some((e) => e.verdict === 'legend')) ? fname(s) : null; } },
-  { id: 'c19:fest_profit', career: 'festival', test: (s) => (liveOf(s).fests.some((f) => f.editions.some((e) => e.revenue > e.costs)) || vl(s, 'festival').some((v) => v.editions?.some((e) => e.profit > 0)) ? fname(s) : null) },
+  { id: 'c19:first_edition', career: 'festival', test: (s) => (ownFests(s).some((f) => f.editions.length) || vl(s, 'festival').some((v) => v.editions?.length) ? fname(s) : null) },
+  { id: 'c19:sold_out', career: 'festival', test: (s) => { const f = ownFests(s).find((x) => x.editions.some((e) => e.capacity > 0 && e.attendance >= e.capacity * 0.97)); return f ? f.name : vl(s, 'festival').some((v) => v.editions?.some((e) => e.verdict === 'legend')) ? fname(s) : null; } },
+  { id: 'c19:fest_profit', career: 'festival', test: (s) => (ownFests(s).some((f) => f.editions.some((e) => e.revenue > e.costs)) || vl(s, 'festival').some((v) => v.editions?.some((e) => e.profit > 0)) ? fname(s) : null) },
   { id: 'c19:first_placement', career: 'publisher', test: (s) => (vl(s, 'publisher').some((v) => (v12(s).pub[v.id]?.placed ?? 0) > 0) ? '' : null) },
   { id: 'c19:first_rerecord', career: 'publisher', test: (s) => { const v = vl(s, 'publisher').find((x) => (v12(s).pub[x.id]?.revived ?? 0) > 0); return v ? v.name : null; } },
   { id: 'c19:first_standard', career: 'publisher', test: (s) => { for (const v of vl(s, 'publisher')) { const c = v.cat?.find((x) => (x.x?.lives ?? 1) >= 5); if (c) return c.title; } return null; } },

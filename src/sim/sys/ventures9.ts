@@ -224,7 +224,7 @@ const activeAct = (a?: Act): a is Act => !!a && a.status !== 'retired' && a.stat
 const ownerLabel = (s: GameState, a: Act) => (a.owner === 'player' ? s.config.companyName : a.owner ? s.labels[a.owner]?.name ?? '—' : null);
 
 // ---------------------------------------------------------------- festival
-// r27 (AUD1): o festival próprio é UM só — o terreno/ciclo do fest12 (live.fests + fest12) é a fonte do calendário,
+// r27 (AUD1): o festival próprio é UM só — o terreno/ciclo do festival (registro único festivals, UNI-4) é a fonte do calendário,
 // do line-up e das edições; aqui fica só o negócio (dono, caixa, equipe, nível). A antiga edição simplificada, o
 // line-up e o mês/ingresso editáveis por esta tela saíram (o fest12 espelha nome, cidade, mês e ingresso aqui).
 

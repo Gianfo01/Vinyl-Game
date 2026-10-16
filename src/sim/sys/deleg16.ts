@@ -4,6 +4,7 @@
 // o profissional erra (dupla marcação, casa grande demais, campanha jogada fora) e pode ser roubado por selos rivais.
 // Aleatoriedade: gerador próprio (semente + ano + mês).
 
+import { ownFests } from './feststore';
 import { cityRelAdd } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { CITIES, cityById, l, type L, type MarketId } from '../../data/world';
@@ -16,7 +17,6 @@ import { per13, staffAdj13 } from './persona13';
 import { c12, cancelShow, clientsOf, defaultStop, hasAgency, localDraw, npcOffer, rel, suggestTier, tierCap, tiersOpen, validate, type Show } from './tour12';
 import { ask12, offer12, stagesOf, f12, wantTime } from './fest12';
 import { addHype } from './hype12';
-import { liveOf } from './live/state';
 import { notoTier } from './notoriety14';
 import { UNDO31, addSpent31, autoLog31, blocked31, cents31, logAuto31, modeOf31, spendGate31, type Log31, type Resp31 } from '../deleg31';
 
@@ -84,7 +84,7 @@ export function addOrder(s: GameState, staffId: string, kind: OrderKind, o: Part
   const needAct = kind !== 'fees' && kind !== 'festival' && kind !== 'promo';
   if (needAct && !o.actId) return l('Escolha o ato.', 'Pick the act.');
   if (kind === 'tour' && o.actId && !eligibleActs(s).some((a) => a.id === o.actId)) return l('Ato fora do seu elenco/agência.', 'Act is not on your roster/agency.');
-  if (kind === 'festival' && !liveOf(s).fests.length) return l('Você não tem festival próprio para preencher.', 'You have no festival of your own to fill.');
+  if (kind === 'festival' && !ownFests(s).length) return l('Você não tem festival próprio para preencher.', 'You have no festival of your own to fill.');
   if (ordersOf(s, staffId).length >= ORDER_CAP + 2) return l('Ordens demais para uma pessoa: remova alguma.', 'Too many orders for one person: remove one.');
   const d = d16(s);
   d.orders.push({ id: nextId(s, 'od'), staffId, kind, actId: o.actId, market: o.market ?? '', tier: o.tier ?? -1, floor: Math.max(0, o.floor ?? 0), budget: Math.max(0, o.budget ?? 0), per: clamp(o.per ?? 1, 1, 3), on: true, since: s.week });
@@ -237,7 +237,7 @@ function runFees(c: Ctx): void {
 
 function runFestival(c: Ctx): void {
   const { s, r, o, q } = c;
-  const fests = liveOf(s).fests.filter((f) => (f.nextYear * 12 + f.month) - (s.year * 12 + s.month) <= 12);
+  const fests = ownFests(s).filter((f) => (f.nextYear * 12 + f.month) - (s.year * 12 + s.month) <= 12);
   if (!fests.length) return say(c, l('Sem festival próprio com edição nos próximos 12 meses.', 'No own festival with an edition in the next 12 months.'));
   const f = fests.sort((a, b) => (a.nextYear * 12 + a.month) - (b.nextYear * 12 + b.month))[0];
   const x = f12(s, f), cap = o.budget;

@@ -1,12 +1,13 @@
 // Rodada 12 — dono de festival (festival unificado, ciclo de edição, cancelamento) e dono de casa de shows.
 
+import { ownFests } from '../src/sim/sys/feststore';
 import { builtVenue } from '../src/sim/sys/venuestore27';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { acceptOffer, defaultOffer } from '../src/sim/contracts';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
-import { buyVenue, createFestival, liveOf, placeTile } from '../src/sim/sys/live';
+import { buyVenue, createFestival, placeTile } from '../src/sim/sys/live';
 import { foundVenture, ventures } from '../src/sim/sys/ventures9';
 import { announce12, ask12, cancelChoice, clashes12, f12, festOf, found12, offer12, openEarly12, proj12, sync12, ventureOf } from '../src/sim/sys/fest12';
 import { addNight12, corp, dropNight12, nightEst, v12 } from '../src/sim/sys/venue12';
@@ -35,7 +36,7 @@ describe('festival unificado', () => {
     sync12(s);
     const fx = ventures(s).list.filter((v) => v.kind === 'festival');
     expect(fx.length).toBe(2);
-    expect(liveOf(s).fests.length).toBe(2);
+    expect(ownFests(s).length).toBe(2);
     for (const v of fx) expect(festOf(s, v.fx!)?.name).toBe(v.name);
     invariant(s);
   });

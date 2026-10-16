@@ -1,5 +1,7 @@
 // Rodada 27 — ovos de Páscoa: cada gatilho dispara no estado montado (e só nele), determinismo, raridade numa
 // partida normal do bot, cobertura do catálogo e os ovos de interface (busca, Konami, desfazer 1959).
+import { worldRec } from '../src/sim/sys/feststore';
+import { addOwnFest } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/rng';
 import { EGGS27, FEATS27 } from '../src/data/eggs27';
@@ -11,9 +13,7 @@ import { simulatePlayer } from '../src/sim/playbot16';
 import { P } from '../src/sim/sys/people/state';
 import { RULES27, eg27, eggMonth27, eggRun27, eggTest27, found27, streetBusker27, type Show27 } from '../src/sim/sys/eggs27';
 import { disc18 } from '../src/sim/sys/discover18';
-import { fest8 } from '../src/sim/sys/fests8';
 import { fk19 } from '../src/sim/sys/fakes19';
-import { liveOf } from '../src/sim/sys/live/state';
 import { soc18 } from '../src/sim/sys/society18';
 import { ACHIEVEMENTS } from '../src/sim/sys/live/achievements';
 import { advanceMonth } from '../src/sim/tick';
@@ -55,7 +55,7 @@ const SETUP: Record<string, (s: GameState) => Show27 | void> = {
   decca_1962: (s) => { when(s, 1962); const a = act(s, { genre: 'beat', city: 'liverpool', members: 4, owner: null }); disc18(s).passed[a.id] = s.week; },
   decca_audition: (s) => { when(s, 1962); s.config.homeCity = 'london'; },
   rooftop_1969: (s) => { when(s, 1969, 0); act(s, { genre: 'pop_rock', city: 'london', members: 4 }); },
-  dawn_set: (s) => { when(s, 1969, 8); const a = act(s, { genre: 'hard_rock', city: 'seattle' }); fest8(s).editions.push({ fi: FESTIVALS.findIndex((f) => f.name === 'Timberfield Rock'), year: 1969, month: 7, lineup: [{ actId: a.id, tier: 'headline', fee: 0 }], done: true }); },
+  dawn_set: (s) => { when(s, 1969, 8); const a = act(s, { genre: 'hard_rock', city: 'seattle' }); (() => { const fi = FESTIVALS.findIndex((f) => f.name === 'Timberfield Rock'); worldRec(s, fi).ed = { fi, year: 1969, month: 7, lineup: [{ actId: a.id, tier: 'headline', fee: 0 }], done: true }; })(); },
   lipsync_skip: (s) => { when(s, 1990); const a = act(s, { genre: 'dance_pop', city: 'berlin', members: 2, fame: 50 }); fk19(s).lip.push({ act: a.id, since: s.week, risk: 30, by: 'player', mimes: 0 }); },
   amp11: (s) => { when(s, 1985); act(s, { genre: 'heavy_metal', city: 'birmingham' }); },
   stonehenge: (s) => { when(s, 1985); const a = act(s, { genre: 'heavy_metal', city: 'birmingham' }); eg27(s).amp[a.id] = 1; return show(a); },
@@ -83,7 +83,7 @@ const SETUP: Record<string, (s: GameState) => Show27 | void> = {
   scrambled_eggs: (s) => { when(s, 1966); const a = act(s, { genre: 'pop_rock', city: 'london' }); s.persons[a.members[0]].skills.comp = 80; },
   newport_1965: (s) => { when(s, 1965, 6); act(s, { genre: 'folk', city: 'new_york', fame: 30, members: 1 }); },
   chacrinha: (s) => { when(s, 1970); act(s, { genre: 'samba', city: 'rio', fame: 30 }); },
-  glastonbury_milk: (s) => { when(s, 1971); liveOf(s).fests.push({ id: 'fz', name: 'Fest', cityId: 'bristol', editions: [{ year: 1970 }] } as never); },
+  glastonbury_milk: (s) => { when(s, 1971); addOwnFest(s, { id: 'fz', name: 'Fest', cityId: 'bristol', editions: [{ year: 1970 }] } as never); },
   clube_esquina: (s) => { when(s, 1972); act(s, { genre: 'mpb', city: 'bh' }); },
   ziggy_1973: (s) => { when(s, 1973); act(s, { genre: 'glam', city: 'london' }); },
   bronx_1973: (s) => { when(s, 1973, 7); act(s, { genre: 'funk', city: 'new_york' }); },

@@ -1,10 +1,10 @@
 // Rodada 19 (onda 5, B.4 — auditoria 8 §4): atalhos do Cockpit e bloco de "humor" guiados pelas carreiras ativas.
 // O empresário vê Clientes/Prospectar/Crises; o festival, Line-up/Ingressos/Fluxo de caixa; o selo, os atalhos clássicos.
+import { ownFests } from '../../sim/sys/feststore';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { careers } from '../../sim/sys/careers12';
 import { f12 } from '../../sim/sys/fest12';
-import { liveOf } from '../../sim/sys/live';
 import { c12 } from '../../sim/sys/manager12';
 import { mainCareer19 } from '../../sim/sys/prof19';
 import { ventures } from '../../sim/sys/ventures9';
@@ -64,7 +64,7 @@ export function moodBlock19(s: GameState): { title: L; el: HTMLElement; hot: boo
         h('span', { class: 'hm18-emo' }, face(v)), h('small', null, s.acts[c.actId]?.name ?? '?'), h('i', { class: 'hm18-bar' }, h('i', { style: `width:${Math.max(4, Math.min(100, v))}%` })))))) };
   }
   if (main === 'festival') {
-    const fs = liveOf(s).fests;
+    const fs = ownFests(s);
     if (!fs.length) return null;
     const rows = fs.map((f) => { const x = f12(s, f), last = x.hist[x.hist.length - 1]; return { f, last, sold: Math.round(x.cyc.sold + x.cyc.early) }; });
     return { title: l('Último público', 'Last crowd'), hot: rows.some((r) => r.last && r.last.crowd < r.last.cap * 0.5), el: h('section', { class: 'card hm18-mood' },
