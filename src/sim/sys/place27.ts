@@ -402,6 +402,8 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
     }
     default: break;
   }
+  // r31 (FOS): a Casa Fossati não se compra; leva à ficha da família (as ações ficam dentro da casa)
+  if (p.fam31) out.push({ id: 'fam31', label: l('Ver a ficha da família', 'See the family sheet'), desc: l('Efro, Lucia, Sonia, Antonella e Gianluca: papéis da época e ações.', 'Efro, Lucia, Sonia, Antonella and Gianluca: roles of the era and actions.'), go: { area: 'world', tab: ['worldHub', 'fossati31'] } });
   if (p.src === 'fill' && !p.venue && !p.fam31 && p.k !== 'police' && p.k !== 'facade' && p.k !== 'market') out.push({ id: 'lot', lot: true, label: l('Comprar o imóvel / construir', 'Buy the property / build'), desc: l('Compra o lote e põe uma obra sua no lugar (Nosso mundo).', 'Buys the lot and puts your own works there (Our world).') });
   const go = GO27[p.k];
   if (go) out.push({ id: 'go', label: l('Abrir a tela', 'Open the screen'), desc: l('A tela do jogo para este assunto.', 'The game screen for this.'), go });
