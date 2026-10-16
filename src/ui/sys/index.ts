@@ -97,6 +97,9 @@ import './deep15';
 import './deleg16';
 // R31 onda 2 (Q): tela de delegação estilo FM (quem decide o quê, diretrizes, registro de automação, visão agregada).
 import './deleg31';
+// R31 onda 4 (T): casa de leilões e aeroporto em cena.
+import '../r31/auction31';
+import '../r31/airport31';
 // Rodada 16: momentos ilustrados (cena só quando algo acontece; "ver cena" no diário).
 import './moments16';
 import './layout16';

@@ -158,7 +158,7 @@ const CACHE = new WeakMap<GameState, Ledger31>();
 /** Toda decisão de carreira que muda uma grade/lista/escalação chama isto (o livro é refeito na próxima leitura). */
 export function touch31(s: GameState): void { REV.set(s, (REV.get(s) ?? 0) + 1); }
 
-const SW_KEYS = ['media', 'plat', 'stage', 'press', 'others', 'conflict'];
+const SW_KEYS = ['media', 'plat', 'stage', 'press', 'others', 'conflict', 'outlets', 'clips', 'cities', 'boycott'];
 export function ledger31(s: GameState): Ledger31 {
   const rev = REV.get(s) ?? 0;
   const key = SW_KEYS.map((k) => String(sw(s, `car31.${k}`))).join('|'); // trocar interruptor refaz o livro
@@ -264,11 +264,15 @@ export const idx31 = (a3: string): number | undefined => IDX[a3];
 
 // ---------------------------------------------------------------- editor (regra 10): os interruptores car31.*
 
-for (const d of switchDefs()) {
-  if (!d.id.startsWith('car31.')) continue;
-  const num = typeof d.def === 'number';
+function editSw31(id: string, desc: L, num: boolean): void {
   registerEditable({
-    id: `sw.${d.id}`, area: 'careers', label: d.desc, kind: num ? 'number' : 'bool', min: num ? 0 : undefined, max: num ? 1 : undefined, step: num ? 0.05 : undefined,
-    get: (s) => sw(s, d.id), set: (s, v) => { setSw(s, d.id, num ? Number(v) : !!v); touch31(s); },
+    id: `sw.${id}`, area: 'careers', label: desc, kind: num ? 'number' : 'bool', min: num ? 0 : undefined, max: num ? 1 : undefined, step: num ? 0.05 : undefined,
+    get: (s) => sw(s, id), set: (s, v) => { setSw(s, id, num ? Number(v) : !!v); touch31(s); },
   });
+}
+for (const d of switchDefs()) if (d.id.startsWith('car31.')) editSw31(d.id, d.desc, typeof d.def === 'number');
+/** Interruptor novo de carreira (rodadas seguintes): registra a regra e a entrada no editor de uma vez. */
+export function careerSw31(id: string, desc: L): void {
+  registerSwitch({ id: `car31.${id}`, def: true, scope: 'game', desc });
+  editSw31(`car31.${id}`, desc, false);
 }

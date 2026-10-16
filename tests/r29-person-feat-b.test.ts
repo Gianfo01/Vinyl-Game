@@ -41,7 +41,9 @@ describe('R29 B — o mundo convida pessoas', () => {
   });
 
   it('10 anos de bot: feats de pessoa do mundo acontecem, com pares plausíveis e crédito certo; ficha e crônica mostram', async () => {
-    const s = createGame(defaultConfig('r29pfb-run', { startYear: 1994, role: 'hybrid' }));
+    // R31 onda 4 (N: bandas de ficção no mundo): na semente r29pfb-run o bot quebra em 1999 e a partida termina (20 feats);
+    // r29pfb-b e r29pfb-c dão o mesmo com e sem as bandas (208/206, 225/227) — troca de semente, não de regra.
+    const s = createGame(defaultConfig('r29pfb-b', { startYear: 1994, role: 'hybrid' }));
     for (let i = 0; i < 120 && !s.ended; i++) { botMonth(s); advanceMonth(s); await new Promise((r) => setImmediate(r)); }
     const st = npcStats29(s);
     expect(st.n).toBeGreaterThan(40);
