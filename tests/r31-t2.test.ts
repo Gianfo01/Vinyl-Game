@@ -197,7 +197,7 @@ describe('r31 T2 · leilão silencioso do mercado negro', () => {
   const withStolen = (s: GameState) => { const rl = addRelic(s, 'guitar', { pt: 'Guitarra roubada', en: 'Stolen guitar' }, undefined, undefined, 80000, 1965); rl.st = 'stolen'; return rl; };
 
   it('folha determinística por semente e mês; só na virada do mês', () => {
-    const run = () => { const s = mk('t2-bauc-det', 1990); withStolen(s); delete s.x4.bauc31; newSheet31(s); return JSON.stringify(sheet31(s)?.lots.map((x) => [x.k, x.open, x.max, x.fakeP, x.lines])); };
+    const run = () => { const s = mk('t2-bauc-det', 1990); withStolen(s); delete (s.x4 as { bauc31?: unknown }).bauc31; newSheet31(s); return JSON.stringify(sheet31(s)?.lots.map((x) => [x.k, x.open, x.max, x.fakeP, x.lines])); };
     expect(run()).toBe(run());
   });
 
@@ -205,7 +205,7 @@ describe('r31 T2 · leilão silencioso do mercado negro', () => {
     const s = mk('t2-bauc-bid', 1990);
     rich(s);
     withStolen(s);
-    delete s.x4.bauc31;
+    delete (s.x4 as { bauc31?: unknown }).bauc31;
     const sh = newSheet31(s)!;
     expect(sh.lots.length).toBeGreaterThan(0);
     const lot = sh.lots[0];
@@ -230,14 +230,14 @@ describe('r31 T2 · leilão silencioso do mercado negro', () => {
   it('explorar não muda o mundo; interruptor desligado não abre folha', () => {
     const s = mk('t2-bauc-look', 1990);
     withStolen(s);
-    delete s.x4.bauc31;
+    delete (s.x4 as { bauc31?: unknown }).bauc31;
     newSheet31(s);
     const snap = JSON.stringify([s.x4.bauc31, relics(s).list.length]);
     for (const lot of sheet31(s)!.lots) { visibleLines31(s, lot); top31(s, lot); fakeOdds31(s, lot); }
     expect(JSON.stringify([s.x4.bauc31, relics(s).list.length])).toBe(snap);
     const o = mk('t2-bauc-off', 1990);
     setSw(o, 't31.blackAuction', false);
-    delete o.x4.bauc31;
+    delete (o.x4 as { bauc31?: unknown }).bauc31;
     advanceMonth(o);
     expect(bauc31(o).sheets.length).toBe(0);
   });

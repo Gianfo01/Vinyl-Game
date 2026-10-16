@@ -193,8 +193,8 @@ function eligible(s: GameState, t: Pick<Tender31, 'from' | 'ask'>): { who: strin
     if (lb.cash * 0.6 < t.ask) continue;
     out.push({ who: lb.id, name: lb.name, kind: 'label', strat: lb.strategy, cash: lb.cash });
   }
-  out.sort((a, b) => (a.who < b.who ? -1 : 1));
-  return out;
+  out.sort((a, b) => b.cash - a.cash || (a.who < b.who ? -1 : 1));
+  return out.slice(0, 5); // os cinco com mais caixa disputam (mesa de abertura com lugar para todos)
 }
 /** Quem está na mesa (sem valores): no leilão do money19, quem já pôs envelope; nos demais, quem costuma disputar. */
 export function parties31(s: GameState, t: Tender31): Party31[] {
