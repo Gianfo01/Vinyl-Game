@@ -79,7 +79,7 @@ describe('r19 A — carreiras sem selo', () => {
   it('renovação do mandato vira cartão; liberar em bons termos deixa um favor', () => {
     const s = mgr;
     const a = actFor(s, 15);
-    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0 });
     c12(s, a.id);
     expect(mgRenew12.f(s, a.id, 0.5)).toBe(true);
     const d = s.decisions.find((x) => x.eventId === 'c19_mg_renew' && x.ctx.act === a.id)!;

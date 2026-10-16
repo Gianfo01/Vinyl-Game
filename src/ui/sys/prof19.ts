@@ -57,7 +57,7 @@ export function moodBlock19(s: GameState): { title: L; el: HTMLElement; hot: boo
   if (main === 'manager') {
     const cl = ventures(s).mg.clients.slice(0, 8);
     if (!cl.length) return null;
-    const vs = cl.map((c) => ({ c, v: Math.round((c.sat + c12(s, c.actId).trust) / 2) }));
+    const vs = cl.map((c) => ({ c, v: Math.round(c12(s, c.actId).trust) }));
     return { title: l('Humor dos clientes', 'Client mood'), hot: vs.some((x) => x.v < 35 || !!x.c.crisis), el: h('section', { class: 'card hm18-mood' },
       h('div', { class: 'ck14-head' }, h('h3', null, ic('fans'), ' ', t(l('Humor dos clientes', 'Client mood')))),
       h('div', { class: 'hm18-faces' }, vs.map(({ c, v }) => h('button', { ...ent27('act', c.actId), class: `hm18-face ${v < 35 || c.crisis ? 'hot' : ''}`, title: `${s.acts[c.actId]?.name ?? ''}: ${t(l('(satisfação + confiança)/2', '(satisfaction + trust)/2'))} = ${v}`, onclick: () => inspect.act(c.actId) },

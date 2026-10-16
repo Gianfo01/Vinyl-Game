@@ -45,7 +45,7 @@ export const SCENARIOS23: Scenario23[] = [
       const a = makeAct(s, r, { genre: 'beat', city: 'liverpool', members: 4, potential: r.int(80, 92), formed: s.year - 2, debutYear: s.year - 1, fame: 14 });
       a.status = 'active';
       a.fans = { casual: 2500, active: 380, core: 80 };
-      ventures(s).mg.clients.push({ actId: a.id, rate: 0.2, since: s.week, sat: 60, earned: 0 });
+      ventures(s).mg.clients.push({ actId: a.id, rate: 0.2, since: s.week, earned: 0 });
     },
     metric: (s) => (C(s).mgrHits23 ?? 0) * 10 + (C(s).mgrFame23 ?? 0), fail: insolvent,
   },

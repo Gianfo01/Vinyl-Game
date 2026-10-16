@@ -8,7 +8,7 @@ import type { GameState } from '../types';
 import { fmtL } from '../util';
 import { a18, counter18, counterOdds18, type Ask18 } from './artist18';
 import { pitchAct, pitchOdds8, type FestTier } from './fests8';
-import { poachChance, poachClient, rateChance, renegotiateRate } from './manager11';
+import { poachChance, poachClient, rateChance, renegotiateRate } from './manager12';
 import { mandateChance, negotiateMandate } from './manager12';
 import { admChance18, takeAdm18, r18 } from './rights18';
 import { lic17, pitchOdds17, pitchOut } from './license17';

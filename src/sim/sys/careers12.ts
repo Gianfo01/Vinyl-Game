@@ -14,7 +14,7 @@ import type { SkillId } from '../../data/people';
 import { playerPerson } from './life';
 import { ownerOf } from './people/owner';
 import { standingOf } from './standing9';
-import { ventures } from './ventures9';
+import { addClientTrust9, ventures } from './ventures9';
 import { liveOf } from './live';
 import { actsNow27, releasesNow27 } from '../tickcache27';
 import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
@@ -207,7 +207,7 @@ export function dropCareer(s: GameState, id: string): { ok: boolean; text: L } {
   st.active = st.active.filter((x) => x !== id);
   const d = careerDef(id)!;
   // largar o ofício não fecha os negócios, mas quem dependia de você nota
-  if (id === 'manager') for (const c of ventures(s).mg.clients) c.sat = clamp(c.sat - 10, 0, 100);
+  if (id === 'manager') for (const c of ventures(s).mg.clients) addClientTrust9(s, c.actId, -10);
   const t = fmtL(l('Você deixa a carreira de {c} em segundo plano.', 'You put your {c} career on the back burner.'), { c: d.name });
   log(s, t);
   return { ok: true, text: id === 'manager' ? fmtL(l('{t} Seus agenciados se sentem abandonados (−10 de satisfação).', '{t} Your clients feel abandoned (−10 satisfaction).'), { t }) : t };

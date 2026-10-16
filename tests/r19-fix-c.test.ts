@@ -85,7 +85,7 @@ describe('r19 fix C — regras de contexto (§2)', () => {
   it('plano: sem plano −2, plano respeitado perdoa (0), plano quebrado −5', () => {
     const s = createGame(defaultConfig('r19-fc-4'));
     const a = Object.values(s.acts).find((x) => x.members.length && x.status !== 'retired' && !x.playerBand)!;
-    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 70, earned: 0 });
+    ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0 });
     const x = c12(s, a.id);
     const run = (plan: 'none' | 'ok' | 'broken') => {
       x.trust = 50; x.issue = { w: s.week, t: { pt: 'p', en: 'p' } };
@@ -149,7 +149,7 @@ describe('r19 fix C — vitórias pequenas (§6)', () => {
     const s = createGame(defaultConfig('r19-fc-6'));
     for (const id of ['mentor', 'house', 'outlet', 'nichepub', 'platform', 'free']) expect(PATHS18.some((p) => p.id === id)).toBe(true);
     const acts = Object.values(s.acts).filter((x) => x.members.length && x.status !== 'retired' && !x.playerBand).slice(0, 4);
-    for (const a of acts) { ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week - 52 * 20, sat: 80, earned: 0 }); c12(s, a.id).trust = 85; }
+    for (const a of acts) { ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week - 52 * 20, earned: 0 }); c12(s, a.id).trust = 85; }
     mgr12(s).ren = [8, 0];
     ventures(s).mg.rep = 70;
     const r = mgRel19(s);

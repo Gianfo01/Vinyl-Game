@@ -30,7 +30,7 @@ import { careerDef, careers, registerLoad } from './careers12';
 import { addHype } from './hype12';
 import { bindAgenda17, energyLeft, maxEnergy, playerAct, playerPerson, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
-import { ventures, type VKind } from './ventures9';
+import { addClientTrust9, ventures, type VKind } from './ventures9';
 import { mgrActive, mgrCap, mgrName, rosterOf } from './managers14';
 import { prodActive, prodName } from './producers15';
 import { liveOf } from './live/state';
@@ -485,7 +485,7 @@ function agendaMonth(s: GameState): void {
     const k = CAREER_KIND[id];
     const mine = k ? vs.list.filter((v) => v.kind === k) : [];
     for (const v of mine) v.rep = clamp(v.rep + d * 4 + (slip ? -3 : coup ? 2 : 0), 0, 100);
-    if (id === 'manager') for (const c of vs.mg.clients) c.sat = clamp(c.sat + d * 5 + (slip ? -4 : 0), 0, 100);
+    if (id === 'manager') for (const c of vs.mg.clients) addClientTrust9(s, c.actId, d * 5 + (slip ? -4 : 0));
     if (id === 'venue') { const x = (s.x4 as unknown as { venue12?: { v?: { regulars: number } } }).venue12?.v; if (x) x.regulars = clamp(x.regulars + d * 3, 0, 200); }
     const name = careerDef(id)?.name ?? l(id, id);
     if (!careers(s).active.includes(id) && !hd && (mine.length || id === 'manager' || id === 'venue') && s.month % 3 === 0)

@@ -66,7 +66,7 @@ describe('r19-fix-b §3: a chance mostrada segue os termos e é a mesma do sorte
     expect(ODDS19['mg.pitch'].chance(s, [a0.id, 0.1])).toBeGreaterThan(ODDS19['mg.pitch'].chance(s, [a0.id, 0.2]));
     // cliente existente: renegociar comissão e mandato
     const c = cands[1];
-    ventures(s).mg.clients.push({ actId: c.id, rate: 0.12, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: c.id, rate: 0.12, since: s.week, earned: 0 });
     check('mg.rate', s, [[c.id, 0.15], [c.id, 0.2], [c.id, 0.25]]); covered.add('mg.rate');
     check('mg.mandate', s, [0.1, 0.15, 0.2].flatMap((rate) => [[c.id, { areas: ['recordings'], rate, excl: false, auto: 1 }], [c.id, { areas: ['recordings', 'shows'], rate, excl: true, auto: 2 }]])); covered.add('mg.mandate');
     // agência de shows e festival próprio
@@ -114,7 +114,7 @@ const mgGame = (seed = 'r19bmg') => {
   return s;
 };
 const addClients = (s: GameState, n: number, crisis = false) => {
-  for (const a of mgCandidates(s).slice(0, n)) ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, sat: 60, earned: 0, ...(crisis ? { crisis: { k: 'scandal' as const, w: s.week } } : {}) });
+  for (const a of mgCandidates(s).slice(0, n)) ventures(s).mg.clients.push({ actId: a.id, rate: 0.15, since: s.week, earned: 0, ...(crisis ? { crisis: { k: 'scandal' as const, w: s.week } } : {}) });
 };
 
 describe('r19-fix-b §4: cockpit por profissão', () => {
@@ -127,7 +127,7 @@ describe('r19-fix-b §4: cockpit por profissão', () => {
     const txt = c.now.map((q) => q.t.pt).join(' | ');
     expect(txt).toMatch(/Crise com/);
     expect(txt).toMatch(/Mandato de .* vence em 5 semanas/);
-    expect(c.works.some((q) => /Satisfação média/.test(q.t.pt))).toBe(true);
+    expect(c.works.some((q) => /Confiança média/.test(q.t.pt))).toBe(true); // UNI-4: satisfação do cliente = confiança da ficha
     const q = quickList19(s).map((x) => x[2].pt);
     expect(q).toContain('Clientes'); expect(q).toContain('Prospectar'); expect(q).not.toContain('Contratar');
     expect(mainCareer19(s)).toBe('manager');

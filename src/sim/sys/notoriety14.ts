@@ -11,7 +11,7 @@ import type { GameState } from '../types';
 import { fmtL, money, notify } from '../util';
 import { careers } from './careers12';
 import { liveOf } from './live';
-import { mgCap, ventures } from './ventures9';
+import { addClientTrust9, mgCap, ventures } from './ventures9';
 import { actsNow27 } from '../tickcache27';
 
 export const TIERS: { min: number; name: L; desc: L }[] = [
@@ -96,7 +96,7 @@ export function notoMonth(s: GameState): void {
     const pool = actsNow27(s).filter((a) => a.status !== 'retired' && a.status !== 'split' && !a.playerBand && !taken.has(a.id) && a.fame >= 4 && a.fame <= 25 + mgT * 12).sort((a, b) => b.momentum - a.momentum).slice(0, 6);
     if (pool.length) {
       const a = r.pick(pool);
-      mg.clients.push({ actId: a.id, rate: 0.12, since: s.week, sat: 62, earned: 0 });
+      mg.clients.push({ actId: a.id, rate: 0.12, since: s.week, earned: 0 }); addClientTrust9(s, a.id, 1); // UNI-4: satisfação inicial (62) vira confiança
       const t = fmtL(l('{a} procura você por conta do seu nome (notoriedade como empresário) e assina por 12%.', '{a} approaches you because of your name (manager notoriety) and signs at 12%.'), { a: a.name });
       push(s, 'manager', 0, t); notify(s, t, 'good');
     }
