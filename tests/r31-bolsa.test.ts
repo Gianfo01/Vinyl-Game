@@ -161,6 +161,18 @@ describe('r31 E · valor por empresa', () => {
     }
   });
 
+  it('motivo da queda nas notícias: a parte que mais mudou (dívida)', () => {
+    const { s, lb } = world();
+    const sh = 100_000;
+    const p0 = Math.round(companyValue31(s, lb.id).total / sh);
+    stepPrice31(s, lb.id, p0, sh);
+    s.labels[lb.id].debt = (s.labels[lb.id].debt ?? 0) + Math.round(companyValue31(s, lb.id).total * 0.5);
+    const st = stepPrice31(s, lb.id, p0, sh);
+    expect(st.chg).toBeLessThan(-0.02);
+    expect(st.why?.pt).toMatch(/caiu .*dívida maior/);
+    expect(st.why?.en).toMatch(/fell .*higher debt/);
+  });
+
   it('desligado volta ao modelo antigo (o valor não é usado no IPO)', () => {
     const { s } = world();
     setSw(s, SW_VALUE31, false);
