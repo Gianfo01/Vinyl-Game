@@ -13,6 +13,7 @@ import { advanceUntil, digestEnd, digestStart, type Digest } from '../sim/sys/pa
 import { openUntilConfig, showDigest, stopSummary } from './sys/pacing8';
 import { playerActs } from '../sim/util';
 import { $, dateLabel, inspect, kv, modal, toast } from './common';
+import { applySkin31, settingsSkin31 } from './skin31'; // r31 (C)
 import { bar, h, select } from './dom';
 import { registerInspect } from './ficha';
 import { titleScreen } from './newgame';
@@ -537,8 +538,7 @@ function renderApp(): void {
   { const r = resolve17(store.area, groups()); if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; } // r17: telas absorvidas → página da carreira
   if (store17.recent[0] !== store.area) { store17.recent = pushRecent17(store17.recent, store.area); save17(); }
   applyRealNames(!!g.config.realNames);
-  if (store.prefs.eraSkin !== false) document.documentElement.dataset.era = String(Math.floor(g.year / 10) * 10);
-  else delete document.documentElement.dataset.era;
+  applySkin31(g.year, g.signature); // r31 (C): estilo da interface por era (data-era-skin, data-era) e aviso de troca
   // rodada 15: rolagem lembrada por área (mesma área mantém; área nova volta onde estava ou abre no topo)
   const old = document.querySelector('main');
   if (old && shownArea) scroll15.save(shownArea, old.scrollTop);
@@ -654,7 +654,7 @@ function settings(): void {
     alertsSettings29(), // r29 REORG (M44): alertas por categoria (preferência, fora do save)
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
-    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.eraSkin !== false, onchange: (e: Event) => { p.eraSkin = (e.target as HTMLInputElement).checked; savePrefs(); render(); } }), t(l('Interface com o visual da época', 'Era-themed interface'))),
+    settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),
     h('hr'),

@@ -6,6 +6,7 @@ import { registerMovementGenres } from '../sim/culture';
 
 import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
+import { resolveSkin31, skinPref31, type SkinPref31 } from './skin31model';
 import { MIN_SAVE_VERSION, SAVE_VERSION } from '../sim/worldgen';
 import { decodeSave20, encodeSave20, inflate20, MAX_FILE23, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
 import { errName20, noteCost20, retry20, setHealth20 } from './savehealth20';
@@ -37,8 +38,12 @@ export interface Prefs {
   cut27?: 'all' | 'major' | 'off';
   /** r28 (F4): som opt-in (prévias no "Ouvir" e vinhetas nos marcos) — desligado por padrão */
   audio28?: boolean;
-  /** pele da interface por era */
+  /** pele da interface por era (antigo; lido só para migrar ao skin31) */
   eraSkin?: boolean;
+  /** r31 (C): estilo da interface — 'auto' (muda com a época, padrão) ou um estilo fixo */
+  skin31?: SkinPref31;
+  /** r31 (C): avisar quando a época trocar o estilo (padrão ligado) */
+  skinNotice31?: boolean;
   /** r19 (B.5): perguntar antes de avançar quando há cartões que vão valer o padrão (false = não perguntar) */
   ask19?: boolean;
   /** r18 tutorial18: tours vistos, dicas vistas, visitas, trilhas concluídas e o que está desligado */
@@ -93,6 +98,7 @@ export function applyPrefs(): void {
   root.classList.toggle('contrast', p.contrast);
   root.classList.toggle('reduced-motion', p.reducedMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   root.setAttribute('data-cb', p.colorblind ?? 'none');
+  root.setAttribute('data-era-skin', resolveSkin31(skinPref31(p), store.game?.year ?? NaN)); // r31 (C): estilo efetivo
   // r25: o atributo sempre diz o tema resolvido ('auto' segue o sistema), para o CSS ter uma única fonte
   let th = p.theme;
   if (th !== 'light' && th !== 'dark') { try { th = window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch { th = 'dark'; } }
