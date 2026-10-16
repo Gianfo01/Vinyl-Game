@@ -45,8 +45,50 @@ export interface Relic {
   rr?: string;
   /** rodada 17: comprador real do próximo leilão histórico */
   rb?: string;
+  /** R31 onda 3 (G · UNI-3/B.18): TODOS os dados extras da peça num lugar só (antes: x4.relics18.m e x4.relics29.m) */
+  meta?: RelicMeta;
 }
-export interface Relics9State { list: Relic[] }
+
+/** Acontecimento de história (onda 3 · G): cada um tem identificador e conta UMA vez; repetir o mesmo tipo rende cada
+ *  vez menos (r31/relic31.ts). */
+export type RelicEvK = 'n1' | 'gold' | 'show' | 'cover' | 'legend' | 'hof' | 'young' | 'broke' | 'stolen' | 'recov' | 'record' | 'scandal' | 'museum' | 'last' | 'gift' | 'mine';
+export interface RelicEv { id: string; k: RelicEvK; y: number }
+/** Metadados da peça — a definição única. */
+export interface RelicMeta {
+  /** relics18: origem (show, hit, award…), valor de origem (US$ reais), história, último legado, certificado, peça real em
+   *  história alternativa, exposições itinerantes */
+  o?: string; b?: number; st?: L; lg?: number; auth?: 1; alt?: string; tour?: number;
+  /** relics29: arquétipo procedural compacto "arq|estado|proc|cidade|casa|flags" */
+  q?: string;
+  /** onda 3 · G: acontecimentos guardados (os derivados — lenda, morte, idade… — são lidos na hora) */
+  ev?: RelicEv[];
+  /** maior preço de venda limpa já registrado (US$ reais) — base do "recorde" */
+  hi?: number;
+  /** último estado visto pela sincronização (para detectar roubo, reaparecimento, museu) */
+  ps?: RelicStatus;
+  /** com você: 'me' = sua (dinheiro pessoal, patrimônio) · 'co' = da empresa (acervo do selo) */
+  po?: 'me' | 'co';
+  /** já passou pelas suas mãos (nunca é descartada pelo teto) */
+  mine?: 1;
+  /** peça fixa: 'efro' (violino do Efro) — regras próprias */
+  fix?: 'efro';
+  /** objeto individual no registro r31/object (quando a peça já entrou em oferta, mudou de mãos ou é sua) */
+  ob?: string;
+  /** dono atual como "lugar" (p:<pessoa>…) e o tamanho da lista de donos quando foi gravado */
+  oh?: [string, number];
+}
+export const relMeta = (rl: Relic): RelicMeta => (rl.meta ??= {});
+/** Peça arquivada (compacta): fora da lista viva, sem perder nome, ano, valor e último dono. */
+export interface ArcRelic { id: string; n: L; k: RelicKind; y: number; v: number; a?: string; o: string; st: RelicStatus; ay: number; mine?: 1 }
+export interface Relics9State {
+  list: Relic[];
+  /** arquivo compacto (teto ARC_CAP9; acima disso, as mais antigas que não são suas viram contagem por ato em `arcN`) */
+  arc: ArcRelic[];
+  /** contagem por ato ('' = sem ato): [quantas, valor somado em US$ reais] */
+  arcN: Record<string, [number, number]>;
+  /** peças nascidas na partida (conferência: nascidas = vivas + arquivadas + contadas) */
+  born: number;
+}
 /** Rodada 12 (hype12): multiplicador de preço pelo hype da peça. */
 export const relicHook: { f: (s: GameState, rl: Relic) => number } = { f: () => 1 };
 /** R29 (relics29): peças que a poda do teto de 90 não tira (as procedurais, que já têm teto e poda próprios). */
@@ -59,12 +101,41 @@ export const isRelicFixed9 = (rl: Pick<Relic, 'id' | 'rr'>): boolean => relicFix
 /** R29 (relics29): avisa quando a poda do teto tira uma peça da lista (o relics29 limpa o registro compacto na hora). */
 export const relicGone9: { f: (s: GameState, rl: Relic) => void } = { f: () => {} };
 declare module '../ext4' { interface Ext4 { relics9: Relics9State } }
-registerExt4('relics9', () => ({ list: [] }));
+const fresh9 = (): Relics9State => ({ list: [], arc: [], arcN: {}, born: 0 });
+registerExt4('relics9', fresh9);
 export function relics(s: GameState): Relics9State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
-  const st = (x.relics9 ??= { list: [] }) as Relics9State;
-  st.list ??= [];
+  const st = (x.relics9 ??= fresh9()) as Relics9State;
+  st.list ??= []; st.arc ??= []; st.arcN ??= {}; st.born ??= 0;
   return st;
+}
+/** Teto da lista viva (r18) e do arquivo compacto. */
+export const LIVE_CAP9 = 90;
+export const ARC_CAP9 = 400;
+/** A peça tem trajetória sua (comprou, ganhou, deu, emprestou): nunca é descartada nem vira só contagem. */
+export const myTrail9 = (s: GameState, rl: Relic): boolean => rl.st === 'player' || !!rl.meta?.mine || rl.own.some((o) => o[0] === s.config.companyName);
+/** Como entrou na lista de donos: entradas que são acontecimento (roubo, reaparecimento) não trocam o dono. */
+export const OWN_EVENT9 = new Set(['roubada', 'reapareceu']);
+/** Donos de verdade (sem as linhas de roubo/reaparecimento). */
+export const realOwners9 = (rl: Relic): [string, number, string][] => rl.own.filter((o) => !OWN_EVENT9.has(o[2]));
+/** Arquiva a peça: sai da lista viva, fica no arquivo compacto (com nome, ano, valor, último dono). Nunca descarta. */
+export function archiveRelic9(s: GameState, rl: Relic): ArcRelic {
+  const st = relics(s);
+  const i = st.list.indexOf(rl);
+  if (i >= 0) st.list.splice(i, 1);
+  const mine = myTrail9(s, rl);
+  const e: ArcRelic = { id: rl.id, n: rl.n, k: rl.k, y: rl.y, v: rl.v, ...(rl.a ? { a: rl.a } : {}), o: ownerName(rl), st: rl.st, ay: s.year, ...(mine ? { mine: 1 as const } : {}) };
+  st.arc.push(e);
+  relicGone9.f(s, rl);
+  // compacta: acima do teto, as mais antigas que não passaram por você viram contagem por ato
+  while (st.arc.length > ARC_CAP9) {
+    const j = st.arc.findIndex((x) => !x.mine);
+    if (j < 0) break;
+    const [x] = st.arc.splice(j, 1);
+    const c = (st.arcN[x.a ?? ''] ??= [0, 0]);
+    c[0]++; c[1] += x.v;
+  }
+  return e;
 }
 
 export const RELIC_KIND: Record<RelicKind, L> = {
@@ -85,10 +156,12 @@ export function addRelic(s: GameState, k: RelicKind, n: L, actId: string | undef
   const owner = (pid && nameOf(s, pid)) || (actId && nameOf(s, actId)) || '?';
   const rl: Relic = { id: id ?? nextId(s, 'rl'), k, n, a: actId, p: pid, y, own: [[owner, y, 'origem']], st: 'kept', v: Math.round(v) };
   st.list.push(rl);
-  if (st.list.length > 90) { // r18: mais fontes de peças — descarta perdida, senão a de menor valor fora do seu acervo
-    let i = st.list.findIndex((x) => x.st === 'lost' && !x.rr);
-    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'player' && x.st !== 'auction' && !x.rr && !isRelicFixed9(x) && !relicKeep9.f(s, x) && (i < 0 || x.v < st.list[i].v)) i = j; }
-    if (i >= 0) relicGone9.f(s, st.list.splice(i, 1)[0]);
+  st.born++;
+  if (st.list.length > LIVE_CAP9) { // r18: mais fontes de peças — arquiva (R31 G: nunca descarta) a perdida, senão a de menor valor fora do seu acervo
+    const keep = (x: Relic) => !!x.rr || !!x.meta?.fix || isRelicFixed9(x) || myTrail9(s, x);
+    let i = st.list.findIndex((x) => x.st === 'lost' && !keep(x));
+    if (i < 0) for (let j = 0; j < st.list.length - 1; j++) { const x = st.list[j]; if (x.st !== 'auction' && !keep(x) && !relicKeep9.f(s, x) && (i < 0 || x.v < st.list[i].v)) i = j; }
+    if (i >= 0) archiveRelic9(s, st.list[i]);
   }
   return rl;
 }
@@ -122,7 +195,7 @@ const find = (s: GameState, id: string) => relics(s).list.find((x) => x.id === i
 export function relicAttach(s: GameState, rl: Relic): number {
   const o = ownerName(rl);
   const p = rl.p ? s.persons[rl.p] : undefined;
-  let x = rl.own.length === 1 && p?.alive ? 0.75 : /herdeiros/.test(o) ? 0.25 : /fã/.test(o) ? 0.4 : /colecionador|museu privado/.test(o) ? 0.5 : 0.45;
+  let x = realOwners9(rl).length === 1 && p?.alive ? 0.75 : /herdeiros/.test(o) ? 0.25 : /fã/.test(o) ? 0.4 : /colecionador|museu privado/.test(o) ? 0.5 : 0.45;
   if (rl.k === 'trophy' || rl.k === 'lyrics') x += 0.08;
   return clamp(x, 0.05, 0.95);
 }
@@ -132,6 +205,7 @@ export type NegRes = { r: 'accept' | 'counter' | 'refuse'; price: number; msg: L
 export function negotiateRelic(s: GameState, id: string, mult: number): NegRes | L {
   const rl = find(s, id);
   if (!rl || rl.st !== 'kept') return l('O dono atual não está negociando.', 'The current owner is not negotiating.');
+  if (rl.meta?.fix) return l('Relíquia de família: não está à venda por preço nenhum.', 'A family heirloom: not for sale at any price.');
   if (isRelicFixed9(rl)) return l('Esta peça não está à venda, a preço nenhum.', 'This piece is not for sale at any price.');
   if (rl.cd && s.week < rl.cd) return l('O dono não quer conversa agora. Tente mais tarde.', 'The owner will not talk right now. Try later.');
   const ask = relicPrice(s, rl);
@@ -298,7 +372,7 @@ const fate = (s: GameState, r: Rng, rl: Relic): void => {
   if (roll < auc) {
     rl.st = 'auction';
     rl.au = s.week + 13;
-    if (owner && !owner.alive && rl.own.length === 1) rl.own.push([`herdeiros de ${owner.name}`, s.year, 'herança']);
+    if (owner && !owner.alive && realOwners9(rl).length === 1) rl.own.push([`herdeiros de ${owner.name}`, s.year, 'herança']);
     chron(s, { k: 'relic', i: rl.v > 80000 ? 3 : 2, a: rl.a ? [rl.a] : [], t: fmtL(l('Vai a leilão: {n} (lance inicial ${v}).', 'Up for auction: {n} (opening bid ${v}).'), { n: rl.n, v: Math.round(money(s, rl.v)).toLocaleString('en-US') }) });
     if (rl.a && s.acts[rl.a]) notify(s, fmtL(l('Leilão: {n}. Veja Lendas → Relíquias.', 'Auction: {n}. See Legends → Relics.'), { n: rl.n }), 'info');
   } else if (roll < auc + 0.02) {
@@ -323,7 +397,7 @@ registerSimHook('month', 'relics9', (s, r) => {
   }
 });
 registerSimHook('year', 'relics9', (s, r) => {
-  for (const rl of relics(s).list) if (rl.st !== 'auction' && !rl.rr && !isRelicFixed9(rl)) fate(s, r, rl); // r17: relíquias reais seguem a história (sim/relics17)
+  for (const rl of relics(s).list) if (rl.st !== 'auction' && !rl.rr && !rl.meta?.fix && !isRelicFixed9(rl)) fate(s, r, rl); // r17: relíquias reais seguem a história (sim/relics17)
   // peças expostas na sede (suas ou emprestadas de museu) rendem prestígio
   const shown = relics(s).list.filter((x) => (x.st === 'player' && x.ex && !x.ln) || x.brw).length;
   if (shown) s.player.reputation.artistic = clamp(s.player.reputation.artistic + Math.min(3, shown), 0, 100);

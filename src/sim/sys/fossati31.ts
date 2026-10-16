@@ -7,9 +7,8 @@
 //    épocas anteriores, já fechado). Aposentadoria (só a Sonia, em SONIA_RETIRE31) muda o papel, não a identidade.
 //  - presentes em qualquer ano de início, sem chegada; idade fixa (identidade é dado constante: nunca envelhecem nem
 //    morrem — não estão em `s.persons`, onde o envelhecimento e as mortes acontecem).
-//  - o violino do Efro: relíquia Mítica em toda partida (relics9 'fossati_violin' + instância única no modelo de
-//    objetos 'fam31:violin'). Fora do comércio (relicFixed9): nunca vai a leilão nem a rival. Roubado, sempre volta:
-//    roubo muda quem está com ele, não o dono, e em até RETURN_W31 semanas ele é recuperado.
+//  - o violino do Efro: mora na frente G (r31/relic31.ts, id fixo `rl_efro_violin`, `meta.fix = 'efro'`): Mítico em toda
+//    partida, nunca à venda nem para rival, roubado volta no mesmo mês. Aqui só o lemos (ficha da família).
 //  - efeitos pequenos, opcionais e medidos, atrás do interruptor 'fam31' (ações do jogador; nada acontece sozinho):
 //    almoço da Lucia (estresse −6, moral +3 dos seus artistas, a cada 13 semanas), lasanha (opinião +4), promoção com a
 //    Sonia (impulso +4, fama +1), imprensa/teatro com a Antonella até 1996 (fama +1, impulso +2) e escola de idiomas
@@ -21,7 +20,7 @@
 
 import { formatMoney } from '../../core/money';
 import { clamp } from '../../core/rng';
-import { FAMILY31, FAM_CITY31, FAM_ERAS31, FAM_SINCE31, SONIA_RETIRE31, famErasAt31, famKey31, type FamEra31, type FamId31, type FamMember31 } from '../../data/fossati31';
+import { FAMILY31, FAM_CITY31, FAM_ERAS31, SONIA_RETIRE31, famErasAt31, famKey31, type FamEra31, type FamId31, type FamMember31 } from '../../data/fossati31';
 import { RELICS31, RELIC_FIX31, RELIC_NOSALE31, RELIC_TIER31 } from '../../data/relics31';
 import { cityById, CITIES, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -30,14 +29,13 @@ import { opine } from '../opinion';
 import { RELICS17, RELIC_OWNID17 } from '../relics17';
 import { registerBaseSection31, type BaseData31 } from '../r31/base31';
 import { registerEditable, registerRunnable } from '../r31/editor';
-import { createObj, obj31, recover as objRecover, registerItemModel, steal as objSteal } from '../r31/object';
 import { addRole, endRole, retire, rolesOf, type Role } from '../r31/role';
 import { registerSwitch, sw } from '../r31/switches';
 import type { GameState } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
-import { crime17 } from './crime17';
 import { pressDefect31 } from './industry/supply';
-import { addRelic, relicFixed9, relics, type Relic } from './relics9';
+import { relicFixed9, relics, type Relic } from './relics9';
+import { EFRO_VIOLIN_ID, ensureEfroViolin31 } from '../r31/relic31';
 
 // ---------------------------------------------------------------- base nova: relíquias
 
@@ -71,10 +69,6 @@ export interface Fam31St {
   mm?: number;
   /** línguas aprendidas na escola da Antonella, por ato */
   langs: Record<string, string[]>;
-  /** semana em que o violino sumiu (roubo) */
-  vStolenW?: number;
-  /** instância do violino no modelo de objetos */
-  vObj?: string;
   /** membros da família que você já conheceu (por uma ação com eles) */
   met: FamId31[];
   /** conquista "Famiglia" (semana) */
@@ -146,53 +140,9 @@ export function famRoleLabel31(s: GameState, id: FamId31): L {
   return e.label;
 }
 
-// ---------------------------------------------------------------- o violino do Efro
+// ---------------------------------------------------------------- o violino do Efro (dono: frente G, r31/relic31.ts)
 
-export const VIOLIN31 = 'fossati_violin';
-export const RETURN_W31 = 8;
-registerItemModel({ id: 'fam31:violin', kind: 'violin', unique: true });
-export const violin31 = (s: GameState): Relic | undefined => relics(s).list.find((x) => x.id === VIOLIN31);
-
-function ensureViolin(s: GameState): Relic {
-  let rl = violin31(s);
-  if (!rl) {
-    rl = addRelic(s, 'prop', l('O violino de Efro Fossati', 'Efro Fossati\'s violin'), undefined, undefined, 40000, FAM_SINCE31, VIOLIN31);
-    rl.own[0][0] = 'Efro Fossati';
-  }
-  const st = fam31(s);
-  if (!st.vObj || !obj31(s).objs[st.vObj]) {
-    const o = createObj(s, { modelId: 'fam31:violin', origin: 'heir', owner: famKey31('efro') });
-    if (o.ok) st.vObj = o.v.id;
-  }
-  return rl;
-}
-
-/** Verificação mensal: roubado volta em até RETURN_W31 semanas; qualquer outro destino (leilão, museu, perda, seu acervo
- *  por algum caminho antigo) é desfeito na hora — a peça é do Efro e fica com ele. */
-function watchViolin(s: GameState): void {
-  const rl = ensureViolin(s);
-  const st = fam31(s);
-  if (rl.st === 'kept') { st.vStolenW = undefined; return; }
-  if (rl.st === 'stolen') {
-    if (st.vStolenW === undefined) {
-      st.vStolenW = s.week;
-      if (st.vObj) objSteal(s, st.vObj, 'world');
-      return;
-    }
-    if (s.week - st.vStolenW < RETURN_W31) return;
-  }
-  // volta para o Efro
-  const c = crime17(s);
-  c.stash = c.stash.filter((x) => x !== rl.id);
-  c.market = c.market.filter((x) => x.rl !== rl.id);
-  delete c.hot[rl.id];
-  const wasStolen = rl.st === 'stolen';
-  rl.st = 'kept'; rl.au = undefined; rl.bid = undefined; rl.ctr = undefined; rl.ln = undefined; rl.ex = undefined;
-  st.vStolenW = undefined;
-  if (st.vObj) objRecover(s, st.vObj);
-  if (wasStolen) emitFact(s, { kind: 'relic', actors: [famKey31('efro')], place: famCity31(), severity: 30, visibility: 'public', tags: ['relic', 'found', 'good'], src: 'fam31',
-    text: l('O violino de Efro Fossati reaparece e volta para as mãos dele.', 'Efro Fossati\'s violin turns up and goes back to him.'), data: { relic: VIOLIN31 } });
-}
+export const violin31 = (s: GameState): Relic | undefined => relics(s).list.find((x) => x.id === EFRO_VIOLIN_ID);
 
 // ---------------------------------------------------------------- ações do jogador (efeitos pequenos e opcionais)
 
@@ -359,9 +309,8 @@ export function tennisClub31(s: GameState): FamRes31 {
 
 // ---------------------------------------------------------------- ganchos
 
-registerSimHook('newgame', 'fam31', (s) => { syncFam31(s); ensureViolin(s); });
+registerSimHook('newgame', 'fam31', (s) => { syncFam31(s); ensureEfroViolin31(s); });
 registerSimHook('year', 'fam31', (s) => { syncFam31(s); });
-registerSimHook('month', 'fam31', (s) => { watchViolin(s); });
 
 // ---------------------------------------------------------------- editor (regra 10)
 
@@ -375,12 +324,6 @@ registerEditable({
 registerRunnable({
   id: 'fam31.sync', area: 'people', label: l('Família Fossati: refazer os papéis pela época', 'Fossati family: redo the roles for the era'),
   run: (s) => { syncFam31(s); return l('Papéis da família conferidos.', 'Family roles checked.'); },
-});
-registerRunnable({
-  id: 'fam31.violin', area: 'items', label: l('Família Fossati: devolver o violino ao Efro agora', 'Fossati family: give the violin back to Efro now'),
-  when: (s) => violin31(s)?.st !== 'kept',
-  run: (s) => { const st = fam31(s); if (violin31(s)?.st === 'stolen') st.vStolenW = s.week - RETURN_W31; watchViolin(s); return l('O violino voltou para o Efro.', 'The violin is back with Efro.'); },
-  raw: true,
 });
 registerRunnable({
   id: 'fam31.cooldowns', area: 'people', label: l('Família Fossati: liberar as ações já usadas', 'Fossati family: reset the used actions'),

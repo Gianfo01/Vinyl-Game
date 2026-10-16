@@ -18,8 +18,8 @@ export type RelicEv17 = 'gone' | 'found' | 'auction' | 'museum' | 'exhibit';
 /** [ano, mês 0-11, tipo, valor real em US$ (leilão) ou 0, comprador/local, texto PT, texto EN] */
 export type RelicStep17 = [number, number, RelicEv17, number, string, string, string];
 export interface RelicDef17 { id: string; name: L; owner: string; year: number; month: number; kind: RelicKind; value: number; story: L; location: L; steps?: RelicStep17[] }
-/** Forma enxuta pedida pelo crime17 (mercado negro): um item real ativo na partida. */
-export interface Relic { id: string; name: L; ownerActId?: string; year: number; kind: RelicKind; value: number; story: L; location: L }
+// R31 G (UNI-3/B.18): a segunda definição de relíquia ("forma enxuta" para o crime17) saiu — toda peça é a `Relic` de
+// relics9 (com `rl.meta`), e a real liga ao catálogo por `rl.rr`.
 
 const R = (id: string, pt: string, en: string, owner: string, year: number, month: number, kind: RelicKind, value: number, sp: string, se: string, lp: string, le: string, steps?: RelicStep17[]): RelicDef17 =>
   ({ id, name: l(pt, en), owner, year, month, kind, value, story: l(sp, se), location: l(lp, le), steps });
@@ -188,15 +188,9 @@ const reached = (s: GameState, y: number, m: number) => s.year > y || (s.year ==
 /** Peça do relics9 que corresponde à relíquia real (se já apareceu). */
 export const relic9Of17 = (s: GameState, id: string): Relic9 | undefined => relics(s).list.find((x) => x.rr === id);
 
-/** Relíquias reais já existentes nesta partida (forma enxuta para crime/mercado negro e interface). */
-export function realRelics17(s: GameState): Relic[] {
-  const out: Relic[] = [];
-  for (const d of RELICS17) {
-    const rl = relic9Of17(s, d.id);
-    if (!rl) continue;
-    out.push({ id: d.id, name: d.name, ownerActId: rl.a, year: d.year, kind: d.kind, value: rl.v, story: d.story, location: whereNow17(s, d, rl) });
-  }
-  return out;
+/** Relíquias reais já existentes nesta partida (as próprias peças; a ficha do catálogo sai de `relicDef17(rl.rr)`). */
+export function realRelics17(s: GameState): Relic9[] {
+  return relics(s).list.filter((x) => !!x.rr);
 }
 
 /** Onde está agora — nunca revela o futuro: o local final só aparece quando a história real já chegou lá. */

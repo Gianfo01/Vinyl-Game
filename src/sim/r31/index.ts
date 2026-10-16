@@ -14,3 +14,5 @@ import './lock';
 import './tags';
 import './mine'; // R31 · O: favoritos e metas pessoais (my31)
 import './scenesj31'; // R31 onda 2 (J): editáveis/executáveis das cenas (projeto, turnê)
+import './relic31'; // R31 onda 3 (G): relíquia com definição única, níveis pela história, objeto individual, violino do Efro
+import './items31'; // R31 onda 3 (G): itens com história, loja com estoque mensal, comprar para você/empresa/presente

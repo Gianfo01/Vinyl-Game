@@ -1,8 +1,8 @@
 // R31 · onda 3 (Z) — RELÍQUIAS REAIS NOVAS (docs/r31/artistas-reliquias.md, B2) no formato atual do catálogo real
-// (`RelicDef17`, sim/relics17.ts). O agente G (objetos) migra relíquias para o modelo de objetos (sim/r31/object.ts):
-// enquanto o formato não muda, estas entram no RELICS17 como as demais (editor de base incluso) e o NÍVEL fica aqui em
-// `RELIC_TIER31` (o jogo ainda não tem sistema de níveis — G/onda 4 lê daqui). Peças "fora do comércio" (museu nacional,
-// nunca à venda) estão em `RELIC_NOSALE31`: ninguém negocia, compra nem leva a leilão.
+// (`RelicDef17`, sim/relics17.ts). No formato da frente G (r31/relic31.ts) a peça em jogo é a `Relic` do relics9 com
+// `rl.meta` e liga ao catálogo por `rl.rr`: estas entram no RELICS17 como as demais (editor de base incluso) e ganham
+// nível, medidas e objeto individual pelo G (o nível sai da história; `RELIC_TIER31` é a sugestão da curadoria, para
+// conferir). Peças de museu nacional (nunca à venda, nem antes de entrar no museu) estão em `RELIC_NOSALE31`.
 // Ids próprios no relics9 (`rr_<id>`): não mexem no contador global de ids (os valores de referência ficam estáveis).
 // Curadoria (apelidos, anos, cidade, língua, fontes, campos a confirmar) em src/data/cur31.ts.
 // Correções nas peças que já existiam: `tg12345_desk` e `prince_cloud` (fixRelics31, aplicada em sim/sys/fossati31.ts).
@@ -143,7 +143,7 @@ export const RELICS31: RelicDef17[] = [
 
 /** Nível sugerido (régua da artistas-reliquias.md): Mítica = peça de museu nacional, nunca à venda. */
 export const RELIC_TIER31: Record<string, RelicTier31> = {
-  messiah_strad: 'mitica', beethoven_broadwood: 'mitica', mozart_walter: 'mitica', fossati_violin: 'mitica',
+  messiah_strad: 'mitica', beethoven_broadwood: 'mitica', mozart_walter: 'mitica', rl_efro_violin: 'mitica',
   lady_blunt: 'lendaria', vieuxtemps_guarneri: 'lendaria', joachim_ma_strad: 'lendaria', duport_cello: 'lendaria', davidov_cello: 'lendaria',
   lennon_help_framus: 'lendaria', marilyn_dress: 'lendaria', elvis_lisa_marie: 'lendaria', emi_redd51: 'lendaria', jobim_piano: 'lendaria',
   pixinguinha_sax: 'lendaria', joao_gilberto_violao: 'lendaria',
@@ -152,8 +152,9 @@ export const RELIC_TIER31: Record<string, RelicTier31> = {
   mj_fedora: 'notavel', chiquinha_piano: 'notavel', chico_science_hat: 'notavel', jackson_pandeiro: 'notavel',
 };
 
-/** Fora do comércio: museu nacional (nunca à venda) e o violino da família Fossati. */
-export const RELIC_NOSALE31: string[] = ['messiah_strad', 'beethoven_broadwood', 'mozart_walter', 'fossati_violin'];
+/** Fora do comércio em qualquer época: museu nacional que nunca vende (antes mesmo de entrar no museu). O violino da família
+ *  Fossati tem regra própria na frente G (`meta.fix = 'efro'`, r31/relic31.ts). */
+export const RELIC_NOSALE31: string[] = ['messiah_strad', 'beethoven_broadwood', 'mozart_walter'];
 
 /** Correções nas peças que já existiam (texto; a peça continua a mesma). */
 export const RELIC_FIX31: Record<string, { name?: ReturnType<typeof l>; story?: ReturnType<typeof l> }> = {

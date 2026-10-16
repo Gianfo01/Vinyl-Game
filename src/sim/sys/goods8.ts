@@ -225,7 +225,11 @@ export const FOUNDATION: Record<FoundationFocus, { name: L; desc: L }> = {
 // ---------------------------------------------------------------- estado
 
 /** `let`: alugado a terceiros (rende aluguel, mas você deixa de usar); `vac`: meses vagos restantes; `rented`: aluguel acumulado. */
-export interface Owned { uid: string; id: string; week: number; paid: number; value: number; unpaid?: number; let?: boolean; vac?: number; rented?: number; since?: number }
+export interface Owned { uid: string; id: string; week: number; paid: number; value: number; unpaid?: number; let?: boolean; vac?: number; rented?: number; since?: number;
+  /** R31 G: objeto individual (r31/object) quando o bem veio da loja com história própria */
+  ob?: string }
+/** R31 G: aviso de que um bem saiu (venda, retomada, roubo) — r31/items31 atualiza o objeto individual. */
+export const goodGone8: { f: (s: GameState, o: Owned, how: 'sold' | 'repo' | 'stolen') => void } = { f: () => {} };
 export interface Goods8State {
   seq: number;
   owned: Owned[];
@@ -319,6 +323,18 @@ export function buyGood(s: GameState, id: string): L | null {
   return null;
 }
 
+/** R31 G: entra um bem comprado fora do catálogo (loja da cidade, com história própria). Mesmo teto de 24 bens. */
+export function addOwned8(s: GameState, id: string, price: number, ob?: string): L | null {
+  const st = goods(s);
+  if (!goodById[id]) return l('Item desconhecido.', 'Unknown item.');
+  if (st.owned.length >= 24) return l('Bens demais para cuidar: venda algo antes.', 'Too many things to look after: sell something first.');
+  st.seq += 1;
+  st.owned.push({ uid: `g${st.seq}`, id, week: s.week, paid: price, value: price, ...(ob ? { ob } : {}) });
+  bumpPerks();
+  glog(s, fmtL(l('Comprou: {n}.', 'Bought: {n}.'), { n: goodById[id].name }), 'good', price >= money(s, 100000));
+  return null;
+}
+
 /** Valor de venda: o valor atual menos 6% de corretagem/comissão. */
 export function saleValue(o: Owned): number {
   return Math.round(o.value * 0.94);
@@ -331,6 +347,7 @@ export function sellGood(s: GameState, uid: string): L | null {
   const v = saleValue(o);
   ownerOf(s).wealth += v;
   st.owned = st.owned.filter((x) => x !== o);
+  goodGone8.f(s, o, 'sold');
   bumpPerks();
   const d = goodById[o.id];
   glog(s, fmtL(l('Vendeu {n}: {g}.', 'Sold {n}: {g}.'), { n: d?.name ?? l(o.id), g: v >= o.paid ? l('lucro', 'profit') : l('prejuízo', 'loss') }), v >= o.paid ? 'good' : 'info');
@@ -698,6 +715,7 @@ export function goodsMonth(s: GameState, r: Rng): void {
         const v = Math.round(it.value * 0.6);
         o.wealth += v;
         st.owned = st.owned.filter((x) => x !== it);
+        goodGone8.f(s, it, 'repo');
         const text = fmtL(l('Sem pagar a manutenção, {n} foi tomado e leiloado.', 'With upkeep unpaid, {n} was repossessed and auctioned.'), { n: d.name });
         notify(s, text, 'bad');
         glog(s, text, 'bad', true);
@@ -800,6 +818,7 @@ function events(s: GameState, r: Rng): void {
   const loot = st.owned.filter((x) => goodById[x.id]?.stealable).sort((a, b) => b.value - a.value)[0];
   if (loot && st.staff.bodyguard === undefined && r.chance(0.012 + life(s).fame / 4000)) {
     st.owned = st.owned.filter((x) => x !== loot);
+    goodGone8.f(s, loot, 'stolen');
     bumpPerks();
     o.stress = clamp(o.stress + 8, 0, 100);
     const text = fmtL(l('Assalto! Levaram {n}. Um segurança teria ajudado.', 'Robbery! They took {n}. A bodyguard would have helped.'), { n: goodById[loot.id].name });
