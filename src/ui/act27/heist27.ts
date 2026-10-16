@@ -15,8 +15,9 @@ import {
 import type { GameState } from '../../sim/types';
 import { modal, rerender, toast } from '../common';
 import { h, select } from '../dom';
-import { avatarSprite, lookOf, portraitCanvas } from '../pixel/avatar';
-import { C, Px, dith, mix, shade, withAlpha, type Col } from '../pixel/px';
+import { portraitCanvas } from '../pixel/avatar';
+import { paintHeist5 } from '../r31/salas5px';
+import { drawSala5 } from '../r31/salas5ui';
 import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
@@ -80,78 +81,20 @@ function draw(ui: UI27): void {
 
 // ---------------------------------------------------------------- quadro em pixel art
 
-const PAL = { wall: C('#1a2134'), wall2: C('#222b44'), cork: C('#8a5a32'), cork2: C('#a06c3e'), frame: C('#5a3a20'), paper: C('#efe6cf'), pin: C('#d03a2c'), str: C('#c8302a'), lamp: C('#e8c45a'), floor: C('#141a29'), ink: C('#2a2a30') };
-
-/** Pura: pinta o quadro (sem DOM). `n` cartões presos, `tk` tipo do alvo, `risk` 0..1 (luz da luminária). */
-export function boardPx27(tk: string, n: number, risk: number, stage: number): Px {
-  const W = 192, H = 72;
-  const p = new Px(W, H);
-  p.fill((x, y) => (dith(x, y, 0.5) && y % 6 < 3 ? PAL.wall2 : PAL.wall));
-  p.rect(0, 60, W, 12, PAL.floor);
-  // cortiça
-  p.rect(10, 6, 118, 50, PAL.frame);
-  p.fill((x, y) => ((x * 7 + y * 13) % 11 < 2 ? PAL.cork2 : PAL.cork), 12, 8, 114, 46);
-  // foto do alvo
-  const tx = 56, ty = 14;
-  p.rect(tx, ty, 26, 30, PAL.paper);
-  p.rect(tx + 2, ty + 2, 22, 20, C('#3a4660'));
-  targetIcon(p, tk, tx + 13, ty + 12);
-  p.disc(tx + 13, ty, 1, PAL.pin);
-  // cartões da equipe + barbante
-  const spots: [number, number][] = [[20, 12], [98, 12], [20, 36], [98, 36]];
-  for (let i = 0; i < Math.min(n, 3); i++) {
-    const [x, y] = spots[i];
-    p.line(x + 7, y + 1, tx + 13, ty, PAL.str);
-    p.rect(x, y, 14, 12, PAL.paper);
-    p.rect(x + 3, y + 2, 8, 5, C('#c9b48e'));
-    p.hline(x + 2, x + 11, y + 9, C('#9a8e76'));
-    p.disc(x + 7, y + 1, 1, PAL.pin);
-  }
-  // etapas (3 bilhetes) no canto
-  for (let i = 0; i < 3; i++) { const x = 20 + i * 12, y = 50; p.rect(x, y, 9, 4, i < stage ? C('#7fc27a') : i === stage ? PAL.lamp : C('#6a6050')); }
-  // luminária e cone de luz (mais forte com mais risco)
-  p.rect(150, 0, 2, 14, C('#555a66'));
-  p.poly([[143, 14], [159, 14], [155, 9], [147, 9]], C('#3b4252'));
-  const a = Math.round(40 + risk * 90);
-  p.poly([[145, 15], [157, 15], [178, 60], [124, 60]], (x, y) => (dith(x, y, 0.5) ? withAlpha(mix(PAL.lamp, C('#d0402c'), risk), a) : withAlpha(PAL.lamp, Math.round(a / 2))));
-  // mesa
-  p.rect(132, 52, 54, 4, C('#4a3324'));
-  p.rect(136, 56, 3, 6, shade(C('#4a3324'), 0.7));
-  p.rect(178, 56, 3, 6, shade(C('#4a3324'), 0.7));
-  p.rect(150, 48, 10, 4, PAL.paper); // planta do lugar
-  p.rect(165, 47, 6, 5, C('#2e3a54')); // telefone
-  return p;
-}
-function targetIcon(p: Px, tk: string, cx: number, cy: number): void {
-  const g = C('#d8b040'), w = C('#e8e2d0'), k: Col = C('#14161c');
-  if (tk === 'act') { p.disc(cx, cy, 8, k); p.ring(cx, cy, 6, C('#2a2c34')); p.disc(cx, cy, 2, C('#c0302a')); return; } // disco
-  if (tk === 'own_act') { p.line(cx - 8, cy + 6, cx - 2, cy, g); p.line(cx - 2, cy, cx + 2, cy + 3, g); p.line(cx + 2, cy + 3, cx + 8, cy - 6, g); p.rect(cx + 6, cy - 7, 3, 3, g); return; } // parada
-  if (tk === 'label') { p.rect(cx - 7, cy - 7, 14, 16, C('#6a7690')); for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) p.rect(cx - 5 + i * 4, cy - 5 + j * 4, 2, 2, w); return; } // prédio
-  if (tk === 'relic') { p.ellipse(cx, cy + 4, 5, 4, C('#a0522d')); p.rect(cx - 1, cy - 9, 2, 10, C('#5a3a20')); p.rect(cx - 2, cy - 10, 4, 2, g); return; } // guitarra
-  if (tk === 'case') { p.rect(cx - 6, cy - 7, 12, 15, w); for (let j = 0; j < 4; j++) p.hline(cx - 4, cx + 3, cy - 4 + j * 3, C('#8a8a90')); return; } // dossiê
-  p.disc(cx, cy - 3, 4, C('#2a2c34')); p.ellipse(cx, cy + 7, 7, 4, C('#2a2c34')); // pessoa
-}
+// R31 · onda 5 (SALAS): a sala dos fundos no corte da sede (r31/salas5px.paintHeist5) — tijolo, cortiça com o alvo e o
+// barbante, luminária sobre a mesa com a planta do lugar; a equipe de pé no chão, na frente do quadro.
 
 function boardEl(ui: UI27, pool: Crew27[], pp: number, q: number): HTMLElement {
   const d = crimeById(ui.plan.cid)!;
   const stg = ui.stage === 'prep' ? 0 : ui.stage === 'exec' ? 1 : 2 + (ui.stage === 'done' ? 1 : 0);
-  const px = boardPx27(d.tk, ui.plan.crew.length, q, stg);
   const cv = document.createElement('canvas');
-  cv.width = px.w; cv.height = px.h;
-  const g = cv.getContext('2d');
-  if (g) {
-    g.imageSmoothingEnabled = false;
-    g.drawImage(px.canvas(), 0, 0);
-    // a equipe de pé na frente do quadro (bonecos reais)
-    const crew = ui.plan.crew.map((k) => pool.find((x) => x.key === k)).filter((c): c is Crew27 => !!c);
-    const people = [ui.plan.ctx.actor === 'player' ? null : ui.plan.ctx.actor, ...crew.map((c) => c.key)];
-    people.forEach((k, i) => {
-      const id = k === null ? `player:${ui.s.config.seed}` : k.startsWith('p:') ? k.slice(2) : k;
-      const pr = k && k.startsWith('p:') ? ui.s.persons[k.slice(2)] : k && ui.s.persons[k] ? ui.s.persons[k] : undefined;
-      const sp = avatarSprite(lookOf(pr ?? { id }), { year: ui.s.year, pose: 'stand', dir: i % 2 ? 'SW' : 'SE' });
-      g.drawImage(sp.c, 134 + i * 14 - sp.ax, 68 - sp.ay);
-    });
-  }
+  // a equipe de pé na frente do quadro (bonecos reais): você (ou o artista) e quem foi escalado
+  const crew = ui.plan.crew.map((k) => pool.find((x) => x.key === k)).filter((c): c is Crew27 => !!c);
+  const people = [ui.plan.ctx.actor === 'player' ? null : ui.plan.ctx.actor, ...crew.map((c) => c.key)].map((k) => {
+    const id = k === null ? `player:${ui.s.config.seed}` : k.startsWith('p:') ? k.slice(2) : k;
+    return (k && k.startsWith('p:') ? ui.s.persons[k.slice(2)] : k && ui.s.persons[k] ? ui.s.persons[k] : undefined) ?? { id, role: 'producer' as const, born: ui.s.year - 30 };
+  });
+  try { drawSala5(cv, paintHeist5(ui.s.year, d.tk, ui.plan.crew.length, q, stg, { city: ui.s.config.homeCity, month: ui.s.month }), ui.s.year, people); } catch { /* sem canvas */ }
   return h('figure', { class: 'hz27-board', 'aria-hidden': 'true' }, cv, meterEl(pp, q));
 }
 

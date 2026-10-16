@@ -3,3 +3,4 @@ import './shop31px';
 import './scene31px';
 import './pol31inside';
 import './pol31state';
+import './salas5px';

@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#12141c"><div id="r"></div>
+<script type="module">
+const q = new URLSearchParams(location.search);
+await import('./' + (q.get('m') || 'antes') + '.ts');
+const f = window.salas5[q.get('s')];
+const cv = f(+q.get('y'));
+cv.style.width = (cv.width * 3) + 'px'; cv.style.imageRendering = 'pixelated'; cv.id = 'cv';
+document.getElementById('r').append(cv); document.title = 'ok';
+</script>

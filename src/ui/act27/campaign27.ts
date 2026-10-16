@@ -15,8 +15,8 @@ import { $, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { cutscene27, playBtn27 } from './mode27';
 import { openInterview27 } from './interview27';
-import { drawScene27 } from './scene27';
-import { paintWarRoom27 } from './p2apx27';
+import { paintWar5 } from '../r31/salas5px'; // R31 onda 5 (SALAS): sala de guerra no corte da sede, com a equipe à mesa
+import { drawSala5 } from '../r31/salas5ui';
 import { store } from '../store';
 import './p2a27.css';
 
@@ -56,7 +56,8 @@ export function openCampaign27(tg: Target27, o: { onDone?: (played: boolean) => 
     const meter = campMeter27(s, cp);
     // sala de guerra
     const cv = h('canvas', { class: 'p2a-scene', role: 'img', 'aria-label': t(l('Sala de guerra da campanha', 'Campaign war room')) }) as HTMLCanvasElement;
-    try { drawScene27(cv, paintWarRoom27(s.year, Object.keys(cp.plan), nowI, total, cp.launchW - cp.w0, meter.hype), s.year, []); } catch { /* sem canvas */ }
+    const team = s.player.staff.slice(0, 3);
+    try { drawSala5(cv, paintWar5(s.year, { on: Object.keys(cp.plan), week: nowI, weeks: total, launchAt: cp.launchW - cp.w0, hype: meter.hype, n: team.length }, { city: s.config.homeCity, month: s.month }), s.year, team.map((m) => ({ id: m.id, role: 'producer', born: s.year - 35 }))); } catch { /* sem canvas */ }
     if (cp.relId && !launchedSeen) { launchedSeen = true; cutscene27('camp27:launch', { title: cp.title, actId: cp.actId }); }
     // linha do tempo
     const weeks = h('div', { class: 'cp27-weeks', role: 'list', 'aria-label': t(l('Semanas da campanha', 'Campaign weeks')) },
