@@ -108,6 +108,7 @@ import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em n
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
+import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
 registerPortrait((p, size) => {
@@ -707,6 +708,7 @@ function settings(): void {
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo
+    settingsLook31(), // R31 (AP): Pressão estética: normal / suave / desligada
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),
     h('hr'),

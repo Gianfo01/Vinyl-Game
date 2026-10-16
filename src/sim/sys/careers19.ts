@@ -11,6 +11,7 @@
 // Gerador próprio (semente + chave + mês): nada desloca o fluxo principal.
 
 import { Rng, clamp } from '../../core/rng';
+import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: imagem nas marcas
 import { MARKETS, cityById, familyOf, l, type L } from '../../data/world';
 import { deferEvents, registerSimHook } from '../ext4';
 import { emitEvent, type EventDef } from '../events';
@@ -328,7 +329,9 @@ export function endorseOdds19(s: GameState, a: Act): { brand: string; chance: nu
   if (mk) why.push(fmtL(l('Mercado {m}: verba ×{k}.', '{m} market: budget ×{k}.'), { m: mk.name, k: big.toFixed(2) }));
   why.push(fmtL(l('Fama {f} e embalo {m}.', 'Fame {f} and momentum {m}.'), { f: Math.round(a.fame), m: Math.round(a.momentum) }));
   const mgRep = ventures(s).mg.rep;
-  const chance = clamp(0.2 + a.fame / 140 + (a.momentum - 50) / 250 + fit + mgRep / 500 + (big - 1) * 0.1, 0.06, 0.85);
+  const lk31 = LOOKH31.act?.(s, a, 'brand', b?.image); // R31 · AP: marca casada com a imagem do artista
+  if (lk31?.why) why.push(lk31.why);
+  const chance = clamp((lk31 ? (lk31.k - 1) * 0.6 : 0) + 0.2 + a.fame / 140 + (a.momentum - 50) / 250 + fit + mgRep / 500 + (big - 1) * 0.1, 0.06, 0.85);
   const mult = clamp(Math.sqrt((b?.budget ?? 15000) / 18000) * big, 0.5, 1.6);
   return { brand: b?.name ?? l('uma marca local', 'a local brand').pt, chance, mult, why };
 }

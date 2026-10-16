@@ -7,6 +7,7 @@
 // barateia. Gerador próprio por mês.
 
 import { Rng, clamp } from '../../core/rng';
+import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: imagem no merch
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { emitFact, onFact, type Fact } from '../facts17';
@@ -60,6 +61,8 @@ export function demandOf(s: GameState, ln: Line): { units: number; why: [L, numb
   if (a.momentum > 60) { m *= 1.25; why.push([l('Artista em alta', 'Act on a roll'), 1.25]); }
   const bo = m17(s).boost?.[a.id];
   if (bo && bo.until >= s.week) { m *= bo.k; why.push([bo.why, bo.k]); }
+  const lk31 = LOOKH31.act?.(s, a, 'merch'); // R31 · AP: rosto que vende camiseta e capa
+  if (lk31) { m *= lk31.k; if (lk31.why) why.push([lk31.why, lk31.k]); }
   if (ln.age > 12) { m *= 0.6; why.push([l('Coleção velha', 'Stale collection'), 0.6]); }
   const boot = a.fame >= 60 && !m17(s).fight[a.id] ? 0.8 : 1;
   if (boot < 1) why.push([l('Camisetas piratas na porta do show', 'Bootleg tees outside the venue'), boot]);
