@@ -566,3 +566,13 @@ export function stepPrice31(s: GameState, id: string, p: number, shares: number)
 export const valueWhy31 = (s: GameState, id: string): L | undefined => val31(s).why[id];
 /** Texto de dinheiro bilíngue (ficha). */
 export const money31 = mL;
+
+// ---------------------------------------------------------------- terreno (onda 4 · LOTE)
+
+/** Valor de um TERRENO vago da cidade-sede (sys/lots31): base em dólar real × área (16 células = 1) × lote (esquina,
+ *  avenida: `pm`) × bairro na época (`rent` do hood19: barato e artístico → caro e arrumado). Puro; o bem comprado entra
+ *  em `assets` pelo valor pago (terreno não deprecia). */
+export const LAND31 = { base: 12000 };
+export function landValue31(s: GameState, x: { area: number; pm: number; rent: number }): number {
+  return Math.max(100, Math.round(money(s, LAND31.base * (x.area / 16) * x.pm * x.rent) / 100) * 100);
+}

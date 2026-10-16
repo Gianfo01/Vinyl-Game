@@ -4,7 +4,7 @@
 //   · outdoors no alto dos prédios com as capas dos nº 1 (painel pintado → neon → luminoso → LED);
 //   · cartaz do festival do mês ao lado do terreno;
 //   · neon nas fachadas (começa nos anos 20, auge 1930–60, volta nos 80, depois LED), brilhando mais à noite.
-import { drawText, textWidth } from '../pixel/font';
+import { abbrText, drawText, textWidth } from '../pixel/font';
 import type { Scene18, Sprite18 } from '../pixel/campus18px';
 import type { CityOv31 } from './city31model';
 
@@ -19,7 +19,8 @@ function tag(ctx: CanvasRenderingContext2D, x: number, y: number, txt: string, b
   drawText(ctx, txt, x0 + 2, y0 + 1, fg);
   return [x0, w];
 }
-const up = (s: string) => s.toUpperCase().slice(0, 18);
+// R31 (POL): abrevia sem cortar palavra no meio ("LOJA DE INSTRUMENT" → "LOJA INSTR.")
+const up = (s: string) => abbrText(s, 70) || abbrText(s, 120);
 
 /** Desenha a camada; devolve as caixas clicáveis dos outdoors (para a página ligar à ficha da obra). */
 export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityOv31, t: number, night: number): { relId: string; box: [number, number, number, number] }[] {
@@ -50,6 +51,7 @@ export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityO
     const sp = byId.get(b.sprite);
     if (!sp) return;
     const bw = 24, bh = 15, x0 = Math.round(sp.top[0] - bw / 2), y0 = Math.round(Math.min(sp.top[1], sp.box[1] + 4) - bh - 10);
+    if ((sc.signs ?? []).some((sg) => x0 < sg.x + sg.c.width + 2 && sg.x - 2 < x0 + bw && y0 < sg.y + 11 && sg.y - 13 < y0 + bh + 8)) return; // R31 (POL): outdoor não cobre placa À venda
     ctx.fillStyle = '#4a4048'; ctx.fillRect(x0 + 4, y0 + bh, 1, 8); ctx.fillRect(x0 + bw - 5, y0 + bh, 1, 8);
     const st = ov.boardStyle;
     const frame = st === 'painted' ? '#e8dcc0' : st === 'neon' ? '#2a1a2a' : st === 'backlit' ? '#f4f4f8' : '#101418';
@@ -67,26 +69,39 @@ export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityO
     }
     hits.push({ relId: b.relId, box: [x0 - 1, y0 - 1, x0 + bw + 1, y0 + bh + 1] });
   });
-  // etiquetas: lojas da época (com abriu/fechou) e letreiros dos lugares reais — sem empilhar: a que não cabe sai
+  // etiquetas: lojas da época (com abriu/fechou) e letreiros dos lugares reais — R31 (POL), regras de densidade:
+  //   · nada se sobrepõe: nem etiqueta com etiqueta, nem com as placas "À venda" (e o preço em cima delas), outdoors
+  //     ou o cartaz do festival; a marca ABRIU/VAI FECHAR conta junto com o nome (as duas caixas são conferidas);
+  //   · quantidade pelo zoom: de longe só as notícias (abriu/vai fechar) e poucos nomes; aproximando aparecem mais;
+  //     o resto continua no passar do mouse/clique (o ponto clicável de cada prédio tem o nome inteiro);
+  //   · nome comprido é abreviado na fronteira da palavra, nunca cortado no meio.
   if (ov.labels) {
+    const z = ov.zoom ?? 1;
+    const lim = z < 1.5 ? { mark: 5, real: 5, plain: 4 } : z < 2.2 ? { mark: 9, real: 10, plain: 9 } : { mark: 99, real: 99, plain: 99 };
     const placed: [number, number, number, number][] = [];
-    const free = (x: number, y: number, w: number) => !placed.some(([a, b, c, d]) => x < c && a < x + w && y < d && b < y + 9);
-    let plain = 0;
+    for (const sg of sc.signs ?? []) placed.push([sg.x - 2, sg.y - 13, sg.x + sg.c.width + 2, sg.y + 11]);
+    for (const hb of hits) placed.push(hb.box);
+    for (const a of ov.avoid ?? []) placed.push(a); // ícones dos pinos (a página põe por cima do mapa)
+    if (ov.fest) { const sp = byId.get(ov.fest.sprite); if (sp) placed.push([sp.top[0] + 4, sp.top[1] - 36, sp.top[0] + 70, sp.top[1] + 2]); }
+    const free = (x: number, y: number, w: number, hh = 9) => !placed.some(([a, b, c, d]) => x < c + 1 && a < x + w + 1 && y < d && b < y + hh);
+    const n = { mark: 0, real: 0, plain: 0 };
     const order = [...ov.tags].sort((a, b) => Number(!!b.mark) - Number(!!a.mark) || Number(!!b.real) - Number(!!a.real));
     for (const g of order) {
       const sp = byId.get(g.sprite);
       if (!sp) continue;
-      if (!g.mark && !g.real && plain >= 10) continue;
+      const kind = g.mark ? 'mark' : g.real ? 'real' : 'plain';
+      if (n[kind] >= lim[kind]) continue;
       const txt = up(g.text), w = textWidth(txt) + 6;
+      const mtxt = g.mark ? g.markTxt : '', mw = mtxt ? textWidth(mtxt) + 6 : 0;
       let y = Math.round(Math.min(sp.top[1], sp.box[1] + 6)) - 6;
-      const x = Math.round(sp.top[0] - w / 2);
+      const x = Math.round(sp.top[0] - w / 2), mx = Math.round(sp.top[0] - mw / 2);
       let ok = false;
-      for (let k = 0; k < 3 && !ok; k++) { if (free(x, y - (g.mark ? 9 : 0), w)) ok = true; else y -= 9; }
+      for (let k = 0; k < 3 && !ok; k++) { if (free(x, y, w) && (!mtxt || free(mx, y - 9, mw))) ok = true; else y -= 9; }
       if (!ok) continue;
       tag(ctx, sp.top[0], y, txt, g.real ? '#203048' : '#fbf6ea', g.real ? '#ffe080' : INK);
       placed.push([x, y, x + w, y + 9]);
-      if (g.mark) { const [mx, mw] = tag(ctx, sp.top[0], y - 9, g.markTxt, g.mark === 'open' ? '#2f8a4c' : '#c8302c', '#ffffff'); placed.push([mx, y - 9, mx + mw, y]); }
-      if (!g.mark && !g.real) plain++;
+      if (mtxt) { const [mx0, mw0] = tag(ctx, sp.top[0], y - 9, mtxt, g.mark === 'open' ? '#2f8a4c' : '#c8302c', '#ffffff'); placed.push([mx0 - 1, y - 9, mx0 + mw0 + 1, y]); }
+      n[kind]++;
     }
   }
   // festival: cartaz do line-up ao lado do terreno

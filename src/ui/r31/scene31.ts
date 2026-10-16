@@ -17,7 +17,7 @@ import { store } from '../store';
 import { setTab } from '../vis';
 import { goToHub } from '../sys/project12';
 import { quickHook31 } from './lock31';
-import { ALERT31, badgeSym31, labelsDefault31, type Go31s, type Spot31 } from './scene31model';
+import { ALERT31, badgeSym31, labelsDefault31, placeLabels31, type Go31s, type Spot31 } from './scene31model';
 import './scene31.css';
 
 const lsGet = (k: string): string | null => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -95,8 +95,8 @@ function spotEl(o: SceneOpts31, sp: Spot31, labels: boolean): HTMLElement {
     oncontextmenu: (e: Event) => { e.preventDefault(); e.stopPropagation(); if (sp.quick) quickHook31.open?.(sp.quick); else runGo31(sp.go, o.panels as Record<string, () => void>); },
   },
   b ? h('span', { class: `sc31-badge lvl-${b.level}`, 'aria-hidden': 'true' }, badgeSym31(b) ? h('i', null, badgeSym31(b)) : null, badgeSym31(b) && btxt ? ' ' : '', btxt) : null,
-  labels && !sp.quiet ? h('span', { class: 'sc31-label', 'aria-hidden': 'true' }, t(sp.label)) : null,
-  h('span', { class: 'sc31-tip', 'aria-hidden': 'true' }, t(sp.tip)));
+  h('span', { class: 'sc31-tip', 'aria-hidden': 'true' }, h('b', null, t(sp.label)), ' — ', t(sp.tip)));
+  void labels;
   return btn;
 }
 
@@ -119,8 +119,25 @@ export function sceneView31(s: GameState, o: SceneOpts31): HTMLElement {
     if (mode === 'list') { root.replaceChildren(bar, o.list()); return; }
     const cv = h('canvas', { class: 'sc31-cv px', 'aria-hidden': 'true' }) as HTMLCanvasElement;
     try { o.paint(cv); } catch (e) { console.error('cena', o.id, e); }
+    // R31 (POL): rótulos numa camada própria, posicionados sem colisão e abreviados sem cortar palavra (placeLabels31);
+    // o que não couber some do desenho e continua no passar do mouse, no foco e na lista de pontos
+    const lab = h('div', { class: 'sc31-labels', 'aria-hidden': 'true' });
+    const relabel = (px: number): void => {
+      if (!labels) { lab.replaceChildren(); return; }
+      const sc = Math.max(1, px / o.W);
+      lab.replaceChildren(...placeLabels31(o.spots, o.W, o.H, sc, (sp) => t(sp.label)).map((b) => h('span', {
+        class: 'sc31-label', title: b.text !== b.full ? b.full : undefined,
+        style: `left:${pct(b.x, o.W)};top:${pct(b.y, o.H)};width:${pct(b.w, o.W)}`,
+      }, b.text)));
+    };
     const stage = h('div', { class: `sc31-stage${all ? ' show-all' : ''}`, style: `aspect-ratio:${o.W} / ${o.H}` }, cv,
-      h('div', { class: 'sc31-layer' }, o.spots.map((sp) => spotEl(o, sp, labels))));
+      h('div', { class: 'sc31-layer' }, o.spots.map((sp) => spotEl(o, sp, labels))), lab);
+    relabel(Math.min(960, o.W * 4));
+    if (typeof ResizeObserver === 'function') {
+      let last = 0;
+      const ro = new ResizeObserver((es) => { const wd = Math.round(es[0]?.contentRect.width ?? 0); if (!stage.isConnected && last) { ro.disconnect(); return; } if (wd > 0 && Math.abs(wd - last) > 8) { last = wd; relabel(wd); } });
+      ro.observe(stage);
+    }
     const intro = !seen ? h('div', { class: 'sc31-intro', role: 'note' },
       h('p', null, h('b', null, t(o.title)), ' — ', t(o.intro)),
       h('ul', null, [...new Map(o.spots.filter((x) => !x.id.includes(':')).map((x) => [x.id, x])).values()].map((x) => h('li', null, h('b', null, t(x.label)), ': ', t(x.tip)))),

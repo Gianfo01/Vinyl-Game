@@ -31,6 +31,7 @@ import { ventures } from '../../sim/sys/ventures9';
 import { bldPop19, lotPop19, upkeep19, type PopAct19 } from '../../sim/sys/world19';
 import { scandal17 } from '../../sim/scandal17';
 import { LMW27B, LMX27B } from './lmdata27';
+import { ownsLot31 } from '../../sim/sys/lots31';
 
 // ---------------------------------------------------------------- utilidades determinísticas
 
@@ -205,7 +206,8 @@ export function bldVis27(s: GameState, bs: Bld18[] = buildings18(s)): Map<string
 
 /** r27 (LOTS): `dis` = nenhuma obra cabe no caixa (ou todas já existem): a placa aparece igual, com o preço e o
  *  motivo, e a compra fica bloqueada até dar (antes o lote sumia e virava cidade comum). */
-export interface Sale27 { lot: number; price: number; kind: BKind; opt: string; name: L; dis?: L }
+export interface Sale27 { lot: number; price: number; kind: BKind; opt: string; name: L; dis?: L;
+  /** r31 (LOTE): texto da placa (terreno vago "VENDE-SE", seu "SEU") e terreno já seu */ txt?: string; own?: boolean }
 /** Lotes livres À VENDA com o tipo sugerido (melhor vizinhança, depois o mais barato). Os que cabem no caixa vêm
  *  primeiro; os outros aparecem bloqueados com o motivo. A cidade cresce (sim/sys/campus18 `dist18`) e os vizinhos
  *  deixam 3 lotes livres: sempre há pelo menos 3 placas enquanto houver bairro para abrir. */
@@ -218,7 +220,7 @@ export function forSale27(s: GameState): Sale27[] {
   const busy = new Set(st.proj.map((p) => p.lot));
   const out: Sale27[] = [];
   LOTS18.forEach((_, lot) => {
-    if (lot === 0 || lot >= open || used.has(lot) || nbl.has(lot) || busy.has(lot)) return;
+    if (lot === 0 || lot >= open || used.has(lot) || nbl.has(lot) || busy.has(lot) || ownsLot31(s, lot)) return; // r31 (LOTE): terreno seu não está à venda
     const p = lotPop19(s, lot);
     if (!p || !p.opts.length) return;
     const ok = p.opts.filter((o) => !o.dis);

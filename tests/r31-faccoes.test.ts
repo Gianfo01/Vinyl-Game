@@ -57,7 +57,7 @@ describe('U · dados: facções por país e época', () => {
     }
     expect(FAC31.length).toBeGreaterThanOrEqual(50);
     expect(facGen31().length).toBeGreaterThan(50);
-    expect(Object.keys(REALNAMES31).some((k) => k.includes('fac'))).toBe(false);
+    expect(Object.keys(REALNAMES31).some((k) => k.split(':')[0].includes('fac') || REALNAMES31[k].tipo === 'faction')).toBe(false); // espaço do registro (lugares reais como "Factory" não contam)
   });
   it('não vão para o mapa nem para os NPCs: a lista padrão continua a de sempre', () => {
     const ids = new Set(allFac31().map((o) => o.id));
