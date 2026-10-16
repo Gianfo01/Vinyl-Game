@@ -18,6 +18,8 @@ import { geom27, interior27, liftOf27, placePeople27, type IKind27, type Interio
 import { alertOf31, type Badge31, type Spot31 } from './scene31model';
 import { youAt31 } from './salas31model';
 import { bailes31, bmRows31, cells31, myFile31, room31, type BmRow31 } from '../../sim/sys/under31';
+import { artItems31, artSpots31, dressRoom31 } from './art31model';
+import type { ArtItem31 } from '../pixel/props31';
 
 export const INSIDE_W31 = 360;
 
@@ -35,6 +37,8 @@ export interface InsideM31 {
   /** seu rastro no mundo (uma frase por marca) */ trail: L[];
   acts: PAct27[];
   note?: L;
+  /** r31 (ART2): adereços novos pintados por cima da mobília da época (props31) */
+  art: ArtItem31[];
 }
 
 // ---------------------------------------------------------------- objetos clicáveis por lugar (a tabela do plano)
@@ -170,7 +174,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const W = INSIDE_W31;
   const you = youIn31(s, x.name);
   const people = [...(you.who ? [you.who] : []), ...x.people.filter((p) => !p.away)];
-  const room = interior27(x.k, x.year, people.length, x.v);
+  const room = dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v));
   const G = geom27(W);
   const acts = actsOfPlace(s, x);
   const trail = trail31(s, x.k);
@@ -191,6 +195,8 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     const badge = badgeOf(s, x, o.id, trail);
     spots.push({ id: o.id, x: px, y: py, w: pw, h: ph, label: o.label, tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: o.tip, w: lk }) : o.tip, go: { panel: go }, badge, quiet: false });
   }
+  // r31 (ART2): objetos novos ligados às mecânicas (jukebox, parada, telefone, vitrine, carro na porta…)
+  spots.push(...artSpots31(s, x, room, W));
   // gestão do lugar quando é seu
   if (x.own) spots.push({ id: 'mgmt', x: G.X(0.42), y: G.y0 + 2, w: G.Wd(0.16), h: 12, label: l('Gestão', 'Management'), tip: l('Equipe, caixa do lugar e programação.', 'Staff, the place\'s cash and programming.'), go: { panel: 'go:own' } });
   // pessoas (o mesmo cálculo da pintura)
@@ -206,7 +212,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   });
   const city = cityById[x.city]?.name;
   return {
-    id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W, H: G.H, room, people, spots, you, trail, acts,
+    id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W, H: G.H, room, people, spots, you, trail, acts, art: artItems31(s, x),
     note: you.here ? undefined : fmtL(l('{w} — você olha de longe; as ações seguem valendo.', '{w} — you look from afar; actions still work.'), { w: you.where }),
     ...(city ? {} : {}),
   };

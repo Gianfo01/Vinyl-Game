@@ -48,6 +48,11 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   **I · Gente e interiores** · **S · Submundo** · **T · Aeroporto, transporte e leilões** · **W · Mecânicas em cena 2** ·
   **R · Resultados e aprendizados** · **N · Extras** · **M · Estilos por época** · **X · Nomes e obras reais**.
 
+- **Pedidos do dono durante a onda 4 (2026-10-16):** CAR2 (pendências das carreiras) · FIX (suíte verde) · ART (uniformizar
+  assets das cenas, ex.: bateria) · ART2 (assets novos interativos) · FOS (casa da família Fossati e praça como cenas) ·
+  VIT (vitrine do mês: interiores dinâmicos no estilo da loja de instrumentos, motor único) · LOTE (≥ 90% dos prédios do
+  mapa são negócio, lote comprável ou casa de CEO/artista da cidade).
+
 ## Onda 5 (31.5) · fechamento
 > **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a onda 5. Juntar tudo, gerar a build `Masters_31_onda4.html`
 > com tudo, enviar ao dono e esperar os pedidos de ajuste. A onda 5 fica para o final, depois dos ajustes.
