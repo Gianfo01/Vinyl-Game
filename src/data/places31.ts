@@ -1110,7 +1110,7 @@ P('aarhus_train', 'aarhus', 'venue', 1998, 0, 'Train', 'Trem', 'v'),
 // Tampere
 P('tampere_talo', 'tampere', 'theatre', 1990, 0, 'Tampere Hall (Tampere-talo)', 'Tampa-talo', ''),
 // Akureyri
-P('akureyri_hof', 'akureyri', 'theatre', 2010, 0, 'Hof', 'Hof-Hof', ''),
+P('akureyri_hof', 'akureyri', 'theatre', 2010, 0, 'Hof', 'Casa Norte', ''),
 // Torshavn
 P('torshavn_nordic_house', 'torshavn', 'theatre', 1983, 0, 'Nordic House (Norðurlandahúsið)', 'Casa Nórdica do Carneiro', ''),
 P('torshavn_tutl', 'torshavn', 'label', 1977, 0, 'Tutl', 'Tutu', ''),

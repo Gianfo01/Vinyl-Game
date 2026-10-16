@@ -1045,7 +1045,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'place:aarhus_musikhuset': { real: 'Musikhuset Aarhus', substituto: 'Musikcasinha Aarhus', tipo: 'venue' },
   'place:aarhus_train': { real: 'Train', substituto: 'Trem', tipo: 'venue' },
   'place:tampere_talo': { real: 'Tampere Hall (Tampere-talo)', substituto: 'Tampa-talo', tipo: 'venue' },
-  'place:akureyri_hof': { real: 'Hof', substituto: 'Hof-Hof', tipo: 'venue' },
+  'place:akureyri_hof': { real: 'Hof', substituto: 'Casa Norte', tipo: 'venue' },
   'place:torshavn_nordic_house': { real: 'Nordic House (Norðurlandahúsið)', substituto: 'Casa Nórdica do Carneiro', tipo: 'venue' },
   'place:torshavn_tutl': { real: 'Tutl', substituto: 'Tutu', tipo: 'label' },
   'place:louisville_whas': { real: 'WHAS', substituto: 'WHAZ', tipo: 'media' },
