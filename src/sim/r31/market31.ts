@@ -14,7 +14,7 @@
 //   y31.local  fama no país pesa nas vendas ali (e soma na demanda total); y31.lang língua; y31.laws leis e cotas só no
 //   país da lei; y31.domino nº 1 puxa vizinhos e mesma língua; y31.fame fama menos uniforme (teto fora de mercado e
 //   língua, parada nacional soma à fama global, NPCs guardam picos); y31.reserve parte da parada reservada ao artista
-//   local (último recurso, desligado por padrão).
+//   local (último recurso; ligado porque a medição mostrou necessidade — Japão 53% → 86%, ver docs/r31/dy.md).
 
 import { l, type L } from '../../data/world';
 import type { Act, GameState, Release } from '../types';
@@ -40,7 +40,7 @@ registerSwitch({ id: 'y31.domino', def: true, scope: 'game',
 registerSwitch({ id: 'y31.fame', def: true, scope: 'game',
   desc: l('Fama por país menos uniforme: teto mais baixo fora dos mercados e da língua do artista; parada nacional soma à fama global; artistas do mundo guardam picos de parada.',
     'Less uniform fame by country: lower ceiling outside the act\'s markets and language; national charts add to global fame; world acts keep chart peaks.') });
-registerSwitch({ id: 'y31.reserve', def: false, scope: 'game',
+registerSwitch({ id: 'y31.reserve', def: true, scope: 'game',
   desc: l('Paradas: parte de cada parada nacional fica reservada aos artistas do país, conforme a preferência local (último recurso).',
     'Charts: part of each national chart is reserved for the country\'s artists, by local preference (last resort).') });
 

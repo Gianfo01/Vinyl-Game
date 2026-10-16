@@ -13,7 +13,8 @@
 //   y31.domino  nº 1 num país (últimas 8 semanas) puxa os vizinhos de mercado e quem fala a mesma língua.
 //   y31.fame    a parada nacional soma um pouco à fama global, pesada pelo tamanho do país; artistas do mundo guardam
 //               picos por país como o jogador (o teto da fama fora de casa mora em fame16.base16).
-//   y31.reserve parte de cada parada nacional reservada aos artistas da casa (último recurso, desligado por padrão).
+//   y31.reserve parte de cada parada nacional reservada aos artistas da casa (último recurso; ligado: só ele levou o Japão
+//               e a Índia perto do histórico, porque há poucos artistas locais no mundo gerado).
 // Determinismo: nada sorteia. O cache por semana só é preenchido dentro do mercado da semana (marketWeek → charts7);
 // fora dele (interface, previsão) a conta é refeita sem gravar nada.
 
@@ -49,7 +50,7 @@ export function langEra31(s: GameState): number {
   return k;
 }
 /** Desconto máximo para língua estrangeira no país: onde o público prefere o local (Japão, Brasil) pesa mais. */
-const MU = LP.map((x) => 0.45 * clamp((x - 1) / 1.7, 0, 1));
+const MU = LP.map((x) => 0.3 * clamp((x - 1) / 1.7, 0, 1));
 const SAME_LANG = 0.3;
 
 // ---------------------------------------------------------------- leis e cotas por país
@@ -58,7 +59,7 @@ interface Quota31 { id: string; a3: string; name: L; on: (s: GameState) => boole
 const FOREIGN = (home: string | null, a3: string) => home !== a3;
 export const QUOTAS31: Quota31[] = [
   { id: 'cancon', a3: 'CAN', name: l('CanCon: 30% de música canadense no rádio', 'CanCon: 30% Canadian music on radio'),
-    on: (s) => s.year >= 1971 || lawOn19(s, 'cancon'), k: (_s, _a, h) => (FOREIGN(h, 'CAN') ? 0.85 : 1.3) },
+    on: (s) => s.year >= 1971 || lawOn19(s, 'cancon'), k: (_s, _a, h) => (FOREIGN(h, 'CAN') ? 0.92 : 1.15) },
   { id: 'toubon', a3: 'FRA', name: l('Lei Toubon: 40% de canções em francês', 'Toubon law: 40% French-language songs'),
     on: (s) => s.year >= 1996 || lawOn19(s, 'toubon'),
     k: (_s, _a, _h, lang, fam) => (lang === 'fr' ? 1.25 : ['pop', 'rock', 'rnb', 'hiphop', 'electronic', 'country_folk'].includes(fam) ? 0.88 : 1) },
@@ -211,7 +212,7 @@ Y31.weights = (s, rel, act, w) => {
 // ---------------------------------------------------------------- mercado reservado (último recurso)
 
 /** Fatia mínima da parada nacional que fica com artistas da casa, pela preferência local (Japão alto, Holanda baixo). */
-export const reserveShare31 = (a3: string): number => clamp((localPref(a3) - 1) / 2, 0.05, 0.9);
+export const reserveShare31 = (a3: string): number => clamp((localPref(a3) - 1.3) / 3, 0, 0.6);
 Y31.reserve = (s, rels, U, nC) => {
   if (!on31(s, 'y31.reserve')) return;
   const home = rels.map((r) => countryOfCity(s.acts[r.actId]?.city ?? ''));
@@ -219,7 +220,7 @@ Y31.reserve = (s, rels, U, nC) => {
     const a3 = COUNTRY_INFO[i].a3, r = reserveShare31(a3);
     let L = 0, T = 0;
     for (let j = 0; j < rels.length; j++) { const u = U[j * nC + i]; T += u; if (home[j] === a3) L += u; }
-    if (T <= 0 || L <= 0 || L >= r * T) continue;
+    if (r <= 0 || T <= 0 || L <= 0 || L >= r * T) continue;
     const up = Math.min(6, (r * (T - L)) / ((1 - r) * L)), down = (T - L * up) / (T - L);
     for (let j = 0; j < rels.length; j++) { const q = j * nC + i; if (U[q] > 0) U[q] *= home[j] === a3 ? up : Math.max(0, down); }
   }
