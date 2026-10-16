@@ -485,3 +485,9 @@ T('act', 'connect29', ['Conexões', 'Connections'],
 T('label', 'facts29', ['Fatos e rivalidade', 'Facts and rivalry'],
   ['O que o selo rival fez e sofreu: contratações, disputas com você, processos, escândalos do fundador e a reputação que os artistas enxergam.', 'What the rival label did and went through: signings, fights with you, lawsuits, founder scandals and the reputation acts see.'],
   ['Antes de disputar um artista, veja se o rival anda processando gente ou quebrou: isso derruba o peso da proposta dele.', 'Before fighting over an act, check whether the rival has been suing people or went broke: it lowers the weight of their offer.']);
+// r31 (EDT): editor dentro da partida (só aparece com Opções › "Modo editor (testes)")
+H('editor31', ['Editor (testes)', 'Editor (testing)'],
+  ['Mexe na partida aberta para testar: dinheiro, pessoas, empresas, carreiras, itens e relíquias, cenas e eventos, mundo e ferramentas. Cada alteração entra no diário e marca a partida como editada (deixa de contar para conquistas e recordes).', 'Changes the open game for testing: money, people, companies, careers, items and relics, scenes and events, world and tools. Every change goes into the diary and flags the game as edited (it no longer counts for achievements and records).'],
+  ['Ligue o modo em Opções (ou Ctrl+Shift+E), escolha a aba, o alvo (pessoa, artista, empresa…) e aplique. Ex.: aba Dinheiro › Caixa da empresa › 500000 › Aplicar; o "Registro de edições" mostra tudo o que foi mudado.', 'Turn the mode on in Options (or Ctrl+Shift+E), pick the tab, the target (person, act, company…) and apply. E.g. Money tab › Company cash › 500000 › Apply; the "Edit log" shows everything that was changed.'],
+  [['Desligar o modo desliga o editor e as trapaças em qualquer partida.', 'Turning the mode off disables the editor and cheats in every game.']],
+  ['cockpit']);

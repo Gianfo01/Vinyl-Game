@@ -8,8 +8,12 @@ import { CATALOG_ACTS } from '../src/data/catalog';
 import { EVENTS } from '../src/sim/events';
 import { opinionOf } from '../src/sim/opinion';
 import { ownerOf } from '../src/sim/sys/people/owner';
-import { applyEdit, editables, isEdited31, registerEditable, registerRunnable, runEdit, runnables, setEditorOn, edit31, myPersonId31 } from '../src/sim/r31/editor';
-import { applyBase31, baseCode31, baseJson31, emptyBase31, importBase31, mergeBases31, sameBase31, validateBase31, type BaseData31 } from '../src/sim/r31/base31';
+import { applyEdit, cheat31, editables, editorOn31, EDITOR_PREF31, isEdited31, registerEditable, registerRunnable, runEdit, runnables, setEditorOn, syncEditor31, edit31, myPersonId31 } from '../src/sim/r31/editor';
+import { applyBase31, baseCode31, baseJson31, cleanBase31, emptyBase31, importBase31, mergeBases31, sameBase31, validateBase31, type BaseData31 } from '../src/sim/r31/base31';
+import { CATALOG_LABELS } from '../src/data/catalog';
+import { cityById } from '../src/data/world';
+import { decodeSave20, encodeSave20 } from '../src/core/save20';
+import { migrate } from '../src/ui/store';
 import { l } from '../src/data/world';
 import type { GameState } from '../src/sim/types';
 
@@ -159,5 +163,115 @@ describe('R31 EDT · editor de base', () => {
     expect(CATALOG_ACTS[0].name).toBe('Ida Cypress');
     expect(isEdited31(s3)).toBe(false);
     applyBase31(undefined);
+  });
+
+  // ------------------------------------------------------------------ W1-REV2
+  it('payload malicioso: __proto__/constructor/toString recusados, campos fora da lista não entram, Object.prototype intacto', () => {
+    const evil = `{"v":1,"game":"31.1","name":"Mal","acts":{"__proto__":{"polluted":1},"5001":{"name":"Banda","genre":"rock","debut":1970,"city":"constructor","members":3,"__proto__":{"polluted":2},"extra":"x"}},`
+      + `"labels":{"constructor":{"name":"Z"}},"cities":{"toString":{"w":1},"rio":{"name":{"pt":"Rio","en":"Rio"},"__proto__":{"polluted":3}}},"relics":{"x1":{"name":{"pt":"R","en":"R"},"year":1970,"kind":"toString","value":1}}}`;
+    const r = importBase31(evil);
+    expect(r.ok).toBe(false);
+    const all = r.errors.map((e) => e.pt).join(' | ');
+    expect(all).toMatch(/proibido ou inválido: "__proto__"/);
+    expect(all).toMatch(/proibido ou inválido: "constructor"/);
+    expect(all).toMatch(/cidade "constructor" não existe/);
+    expect(all).toMatch(/tipo "toString" não existe/);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    // aplicar o mesmo payload (ex.: vindo de um save) não polui nada nem copia campos fora da lista
+    applyBase31(JSON.parse(evil) as BaseData31);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect(Object.getPrototypeOf(cityById.rio)).toBe(Object.prototype);
+    expect('extra' in (CATALOG_ACTS.find((a) => a.no === 5001) ?? {})).toBe(false);
+    const ok = JSON.parse(`{"v":1,"game":"31.1","name":"Ok","acts":{"5001":{"name":"Banda","genre":"rock","debut":1970,"city":"london","members":3,"extra":"x","__proto__":{"polluted":4}}},"labels":{},"cities":{},"relics":{}}`);
+    const c = cleanBase31(ok);
+    expect(c.base!.acts['5001']).toEqual({ city: 'london', debut: 1970, genre: 'rock', members: 3, name: 'Banda' });
+    applyBase31(ok);
+    const a = CATALOG_ACTS.find((x) => x.no === 5001)!;
+    expect(Object.getPrototypeOf(a)).toBe(Object.prototype);
+    expect('extra' in a).toBe(false);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    applyBase31(undefined);
+    expect(CATALOG_ACTS.some((x) => x.no === 5001)).toBe(false);
+  });
+
+  it('entrada torta não lança: cidades com null, cenas que não são lista; código grande demais recusado', () => {
+    const b = emptyBase31('Torta') as unknown as Record<string, Record<string, unknown>>;
+    b.cities.rio = null;
+    expect(() => validateBase31(b)).not.toThrow();
+    expect(validateBase31(b).ok).toBe(false);
+    const b2 = emptyBase31('Torta 2') as unknown as Record<string, Record<string, unknown>>;
+    b2.cities.rio = { scenes: 'samba' };
+    expect(validateBase31(b2).ok).toBe(false);
+    expect(importBase31(JSON.stringify(b2)).ok).toBe(false);
+    expect(validateBase31(null).ok).toBe(false);
+    expect(validateBase31([]).ok).toBe(false);
+    // bomba de LZW: poucos bytes que expandem para mais de 5 MB
+    const codes: number[] = [];
+    for (let i = 0; i < 6000; i++) codes.push(i === 0 ? 65 : 256 + i - 1); // cada código repete o anterior + 1 letra
+    const bytes = new Uint8Array(codes.length * 2);
+    codes.forEach((c, i) => { bytes[2 * i] = c >> 8; bytes[2 * i + 1] = c & 255; });
+    let bin = ''; for (const x of bytes) bin += String.fromCharCode(x);
+    const r = importBase31('M31B1:' + btoa(bin));
+    expect(r.ok).toBe(false);
+    expect(r.errors[0].pt).toMatch(/5 MB/);
+  });
+
+  it('mesma base com chaves em ordens diferentes: mesma forma canônica e mesmo mundo', () => {
+    const mkA = (): BaseData31 => { const b = emptyBase31('Ordem'); b.labels.zz_nova = { name: 'Zeta Discos', city: 'london', founded: 1960, family: 'B', focus: [] }; b.labels.aa_nova = { name: 'Alfa Discos', city: 'rio', founded: 1961, family: 'A', focus: [] }; b.acts['5002'] = { name: 'Dois', genre: 'rock_br', debut: 1982, city: 'london', members: 2 }; b.acts['5001'] = { name: 'Um', genre: 'rock_br', debut: 1981, city: 'london', members: 1 }; return b; };
+    const mkB = (): BaseData31 => { const b = emptyBase31('Ordem'); b.acts['5001'] = { members: 1, city: 'london', debut: 1981, genre: 'rock_br', name: 'Um' }; b.acts['5002'] = { name: 'Dois', genre: 'rock_br', debut: 1982, city: 'london', members: 2 }; b.labels.aa_nova = { focus: [], family: 'A', founded: 1961, city: 'rio', name: 'Alfa Discos' }; b.labels.zz_nova = { name: 'Zeta Discos', city: 'london', founded: 1960, family: 'B', focus: [] }; return b; };
+    expect(validateBase31(mkA()).errors.map((e) => e.pt)).toEqual([]);
+    const cfg = (b: BaseData31) => ({ ...defaultConfig('r31ord', { startYear: 1975 }), base31: { name: b.name, data: b } });
+    const ga = createGame(cfg(mkA()));
+    const la = CATALOG_LABELS.map((x) => x.id).join(',');
+    const gb = createGame(cfg(mkB()));
+    expect(CATALOG_LABELS.map((x) => x.id).join(',')).toBe(la);
+    expect(JSON.stringify(gb.config.base31)).toBe(JSON.stringify(ga.config.base31));
+    expect(Object.values(gb.labels).map((x) => x.name)).toEqual(Object.values(ga.labels).map((x) => x.name));
+    expect(gb.upcoming.map((u) => u.name)).toEqual(ga.upcoming.map((u) => u.name));
+    applyBase31(undefined);
+  });
+
+  it('a base não vaza entre partidas: carregar save sem base volta à original; save com base reaplica', () => {
+    const b = sample();
+    const withBase = createGame({ ...defaultConfig('r31leak', { startYear: 1990 }), base31: { name: b.name, data: b } });
+    expect(CATALOG_ACTS[0].name).toBe('Ida Cipreste');
+    expect(cityById.rio.name.pt).toBe('Rio de Janeiro (editado)');
+    const txtWith = encodeSave20(withBase);
+    const plain = createGame(defaultConfig('r31leak2', { startYear: 1990 }));
+    const txtPlain = encodeSave20(plain);
+    // volta a aplicar a base (como se a partida com base estivesse aberta) e carrega um save SEM base
+    decodeSave20(txtWith, migrate);
+    expect(CATALOG_ACTS[0].name).toBe('Ida Cipreste');
+    decodeSave20(txtPlain, migrate);
+    expect(CATALOG_ACTS[0].name).toBe('Ida Cypress');
+    expect(cityById.rio.name.pt).not.toBe('Rio de Janeiro (editado)');
+    expect(CATALOG_ACTS.some((a) => a.no === 5001)).toBe(false);
+    // carregar o save COM base reaplica
+    const g = decodeSave20(txtWith, migrate);
+    expect(g.config.base31!.name).toBe('Brasil anos 80 turbinado');
+    expect(CATALOG_ACTS[0].name).toBe('Ida Cipreste');
+    expect(CATALOG_ACTS.some((a) => a.no === 5001)).toBe(true);
+    applyBase31(undefined);
+  });
+});
+
+describe('R31 EDT · modo editor (W1-REV2)', () => {
+  it('trapaça exige o editor ligado; modo desligado vale para qualquer partida; carregar sincroniza', () => {
+    const s = game('r31cheat');
+    edit31(s).cheats.noExhaust = true;
+    expect(cheat31(s, 'noExhaust')).toBe(false); // editor desligado: trapaça gravada fica inerte
+    setEditorOn(s, true);
+    expect(cheat31(s, 'noExhaust')).toBe(true);
+    try {
+      EDITOR_PREF31.on = false; // interface com o modo desligado
+      expect(editorOn31(s)).toBe(false);
+      expect(cheat31(s, 'noExhaust')).toBe(false);
+      expect(applyEdit(s, 'money.company', 1).ok).toBe(false);
+      syncEditor31(s);
+      expect(edit31(s).on).toBe(false);
+      EDITOR_PREF31.on = true;
+      const t = game('r31cheat2'); // partida nova segue o modo
+      expect(edit31(t).on).toBe(true);
+    } finally { delete EDITOR_PREF31.on; }
   });
 });

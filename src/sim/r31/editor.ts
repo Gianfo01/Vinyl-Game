@@ -16,6 +16,7 @@
 // por `transferLabel`, relíquia pela lista de donos); quando não há, o editável declara `raw: true` ("edição crua").
 
 import { Rng, clamp } from '../../core/rng';
+import { formatMoney } from '../../core/money';
 import { GENRES, genreById, l, type L } from '../../data/world';
 import { labelValuation, transferLabel } from '../business';
 import { EVENTS, emitEvent, eventById } from '../events';
@@ -117,13 +118,30 @@ export function edit31(s: GameState): Edit31State {
 }
 /** Leitura sem criar estado (para quem só olha). */
 const ro = (s: GameState): Edit31State | undefined => (s as unknown as { x4?: { edit31?: Edit31State } }).x4?.edit31;
-export const editorOn31 = (s: GameState): boolean => !!ro(s)?.on;
+/** Preferência "Modo editor" da interface (fora do save). `undefined` = sem interface (testes, robôs): vale só o estado
+ *  da partida. Com a interface, modo desligado desliga o editor e as trapaças de QUALQUER partida (save com
+ *  `edit31.on` não fica com trapaça invisível); a partida carregada/criada é sincronizada com a preferência. */
+export const EDITOR_PREF31: { on?: boolean } = {};
+export const editorOn31 = (s: GameState): boolean => !!ro(s)?.on && EDITOR_PREF31.on !== false;
 /** A partida foi mexida pelo editor (ou começou com uma base editada). */
 export const isEdited31 = (s: GameState): boolean => !!ro(s)?.edited || !!s.config.base31;
-export const cheat31 = (s: GameState, k: keyof Edit31State['cheats']): boolean => !!ro(s)?.on && !!ro(s)?.cheats[k];
+/** Trapaça ativa: exige o editor ligado nesta partida E o modo editor (com interface). */
+export const cheat31 = (s: GameState, k: keyof Edit31State['cheats']): boolean => editorOn31(s) && !!ro(s)?.cheats[k];
 
 /** Liga/desliga o editor nesta partida. Ligar não marca a partida; só editar marca. */
 export function setEditorOn(s: GameState, on: boolean): void { edit31(s).on = on; }
+/** Partida carregada ou criada com a interface: `on` segue a preferência do modo editor (não grava sem interface). */
+export function syncEditor31(s: GameState): void {
+  if (EDITOR_PREF31.on === undefined) return;
+  if (EDITOR_PREF31.on) edit31(s).on = true;
+  else if (ro(s)?.on) ro(s)!.on = false;
+}
+
+// ---------------------------------------------------------------- nomes das abas (áreas)
+const AREA_LABELS = new Map<string, L>();
+/** Sistema com área própria no editor registra o nome dela (a aba não mostra o id cru). */
+export function registerEditArea31(id: EditArea, label: L): void { AREA_LABELS.set(id, label); }
+export const editAreaLabel31 = (id: EditArea): L | undefined => AREA_LABELS.get(id);
 
 export const LOG31_MAX = 200;
 const OFF_MSG = l('O editor está desligado nesta partida.', 'The editor is off in this game.');
@@ -149,11 +167,10 @@ export function targetName(s: GameState, t: EditTarget | undefined, id: string |
 }
 const targetOk = (s: GameState, t: EditTarget | undefined, id: string | undefined): boolean => !t || (!!id && targetName(s, t, id) !== '');
 
-const moneyTxt = (c: number): string => `$ ${Math.round(c / 100).toLocaleString('pt-BR')}`;
-function valText(e: Editable, v: EditVal): L {
+function valText(s: GameState, e: Editable, v: EditVal): L {
   if (e.kind === 'bool') return v ? l('ligado', 'on') : l('desligado', 'off');
-  if (e.kind === 'money') return l(moneyTxt(Number(v)), moneyTxt(Number(v)));
-  if (e.kind === 'select' && e.options) return l(String(v), String(v));
+  if (e.kind === 'money') return l(formatMoney(Number(v), 'pt-BR'), formatMoney(Number(v), 'en-US')); // formatador do jogo, nas duas línguas
+  if (e.kind === 'select' && e.options) { const o = e.options(s).find((x) => x.value === String(v)); if (o) return o.label; }
   return l(String(v), String(v));
 }
 
@@ -177,7 +194,7 @@ export function applyEdit(s: GameState, id: string, v: EditVal, target?: string)
   const err = e.set(s, v, target);
   if (err) return { ok: false, text: err };
   const who = targetName(s, e.target, target);
-  const text = fmtL(l('{w}{f} → {v}', '{w}{f} → {v}'), { w: who ? `${who} · ` : '', f: e.label, v: valText(e, e.get(s, target)) });
+  const text = fmtL(l('{w}{f} → {v}', '{w}{f} → {v}'), { w: who ? `${who} · ` : '', f: e.label, v: valText(s, e, e.get(s, target)) });
   mark(s, id, target, text, e.raw);
   return { ok: true, text };
 }
@@ -356,6 +373,7 @@ function rest(s: GameState): void {
   if (p) { p.stress = 0; p.fatigue = 0; const st = stress17(s); if (st.l[p.id]) st.l[p.id] = 0; }
 }
 registerSimHook('week', 'editor31', (s) => { if (cheat31(s, 'noExhaust')) rest(s); });
+registerSimHook('newgame', 'editor31sync', (s) => syncEditor31(s)); // partida nova segue o modo editor da interface
 registerLoad('editor31', (s) => (cheat31(s, 'noExhaust') ? -careers(s).active.reduce((t, id) => t + (careerDef(id)?.load ?? 0.25), 0) : 0));
 KNOW_REVEAL31.f = (s) => cheat31(s, 'reveal');
 

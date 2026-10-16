@@ -32,7 +32,8 @@ registerPendingSource('inbox', (s: GameState): Pending[] =>
     .map((m) => {
       const actId = m.ref?.act !== undefined ? String(m.ref.act) : undefined;
       return {
-        id: `ib:${m.id}`, kind: `inbox:${m.ref?.k18 ?? m.kind}`, title: m.subject, owner: { area: 'inbox', intent: 'answer' },
+        // mesmo id que a fila única dá à carta (`msg:<id>`, people/state.addMsg): a carta conta UMA vez no menu/Hoje
+        id: `msg:${m.id}`, kind: `inbox:${m.ref?.k18 ?? m.kind}`, title: m.subject, owner: { area: 'inbox', intent: 'answer' },
         ...(m.expires !== undefined ? { due: m.expires } : {}), ...(actId ? { actId } : {}),
         shortcuts: actDest(actId), prio: m.expires !== undefined && m.expires - s.week <= 2 ? 3 : 1,
       };

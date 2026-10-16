@@ -49,6 +49,7 @@ import { noteTurnErr20 } from './savehealth20';
 import { tx20 } from '../core/save20';
 import { runCard17body } from './newgame17';
 import { applyRealNames } from '../data/realnames';
+import { ensureBase31 } from '../sim/r31/base31'; // R31 (EDT)
 import { INT_PREF23 } from '../sim/interrupt23';
 import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
 import { UX19UI } from './hooks19'; // r19 ux19: divulgação progressiva, rodapé do menu e fim de partida
@@ -567,6 +568,7 @@ function renderApp(): void {
   { const r = resolve17(store.area, groups()); if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; } // r17: telas absorvidas → página da carreira
   if (store17.recent[0] !== store.area) { store17.recent = pushRecent17(store17.recent, store.area); save17(); }
   applyRealNames(!!g.config.realNames);
+  ensureBase31(g); // r31 (EDT): base da partida aberta (idempotente; troca de partida/preview de outra não vaza)
   applySkin31(g.year, g.signature); // r31 (C): estilo da interface por era (data-era-skin, data-era) e aviso de troca
   // rodada 15: rolagem lembrada por área (mesma área mantém; área nova volta onde estava ou abre no topo)
   const old = document.querySelector('main');

@@ -11,7 +11,7 @@ import type { GameState } from '../types';
 import { destKey, type Dest } from './dest';
 
 export interface Pending {
-  /** estável enquanto a pendência existir (ex.: 'dec:d12', 'ib:ib40', 'offer:o3') */
+  /** estável enquanto a pendência existir (ex.: 'dec:d12', 'msg:ib40', 'offer:o3') */
   id: string;
   /** lugar dono: onde a pendência é resolvida */
   owner: Dest;

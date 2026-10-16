@@ -8,6 +8,8 @@ import { getLang, setLang, type Lang } from '../i18n/strings';
 import type { GameState } from '../sim/types';
 import { resolveSkin31, skinPref31, type SkinPref31 } from './skin31model';
 import { MIN_SAVE_VERSION, SAVE_VERSION } from '../sim/worldgen';
+import { ensureBase31 } from '../sim/r31/base31'; // R31 (EDT): a base da partida carregada vale (ou a original) — depois do worldgen (ordem de carga)
+import { syncEditor31 } from '../sim/r31/editor'; // R31 (EDT): `on` segue o modo editor ao carregar
 import { decodeSave20, encodeSave20, inflate20, MAX_FILE23, MAX_IN20, MAX_OUT20, now20, SaveError20 } from '../core/save20';
 import { errName20, noteCost20, retry20, setHealth20 } from './savehealth20';
 
@@ -251,6 +253,8 @@ export function migrate(g: GameState): GameState {
   ensureExt(g);
   migrate18(g);
   registerMovementGenres(g);
+  syncEditor31(g);
+  ensureBase31(g); // r31: dados de base são estado de módulo — restaura a original e reaplica a base desta partida
   g.version = SAVE_VERSION;
   return g;
 }
