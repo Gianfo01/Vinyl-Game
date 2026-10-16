@@ -24,7 +24,7 @@ import type { Cutscene } from '../sim/ext4';
 import { actState } from '../sim/people';
 import { personActions18 } from '../sim/personact18';
 import { recordingCost, recordingSessionsAvailable, unrecorded } from '../sim/production';
-import { plannedCombos } from '../sim/sys/agenda7';
+import { plannedCombos } from '../sim/agenda';
 import { renewWithReading } from '../sim/sys/explain12';
 import { actStatus } from '../sim/sys/hq8';
 import { canTalk, talk } from '../sim/sys/people/talks';

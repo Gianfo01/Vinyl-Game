@@ -16,7 +16,7 @@ import { ownerOf } from '../src/sim/sys/people/owner';
 import { persona } from '../src/sim/sys/persona';
 import { offerSong, fairTerms, sales } from '../src/sim/sys/songsale';
 import { defaultOffer, offerNow } from '../src/sim/contracts';
-import { plannedCombos } from '../src/sim/sys/agenda7';
+import { plannedCombos } from '../src/sim/agenda';
 import { replaceMember } from '../src/sim/sys/lifecycle7';
 import { personDies } from '../src/sim/dynasty';
 import { money } from '../src/sim/util';
