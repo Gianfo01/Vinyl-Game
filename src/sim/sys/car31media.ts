@@ -177,7 +177,7 @@ export function rivalList31(s: GameState, v: Venture, st = stRo31(s, v)): { name
 export function slotW31(s: GameState, v: Venture, st: St31, x: Slot31): number {
   const rel = s.releases[x.rel], a = rel ? s.acts[rel.actId] : undefined;
   if (!rel || !a) return 0;
-  return 6 * st.share * coverage31(v) * ROT_W31[x.rot] * eraW31(s, v) * fitOf(st.fmt, a) * burn31(s, x);
+  return 9 * st.share * coverage31(v) * ROT_W31[x.rot] * eraW31(s, v) * fitOf(st.fmt, a) * burn31(s, x);
 }
 const SRC_OF: Record<MKind31, 'radio' | 'tv' | 'magazine' | 'web'> = { radio: 'radio', tv: 'tv', magazine: 'magazine', web: 'web' };
 registerExec31('media', (s, out) => {
@@ -335,13 +335,14 @@ function ibope(s: GameState, v: Venture, st: St31, pw: Power31): void {
   const y = q === 4 ? s.year - 1 : s.year;
   st.ib.push({ y, q, share: Math.round(st.share * 1000) / 1000, rank, n: rv.length + 1 });
   if (st.ib.length > 12) st.ib.shift();
-  const pct = Math.round(st.share * 1000) / 10;
+  const pc = Math.round(st.share * 1000) / 10;
+  const pct = l(String(pc).replace('.', ','), String(pc));
   emitFact(s, { kind: 'ibope', actors: ['player'], place: v.city, severity: rank === 1 ? 40 : 20, tags: ['car31', 'media'], src: 'car31',
-    text: fmtL(l('Pesquisa de audiência ({q}º trimestre): {n} tem {p}% dos ouvintes e fica em {r}º entre {k}.', 'Ratings (Q{q}): {n} holds {p}% of listeners and ranks No. {r} of {k}.'), { q, n: v.name, p: pct, r: rank, k: rv.length + 1 }),
+    text: fmtL(l('Pesquisa de audiência ({q}º trimestre de {y}): {n} tem {p}% dos ouvintes e fica em {r}º entre {k}.', 'Ratings (Q{q} {y}): {n} holds {p}% of listeners and ranks No. {r} of {k}.'), { q, y, n: v.name, p: pct, r: rank, k: rv.length + 1 }),
     notify: { kind: rank === 1 ? 'good' : 'info', cat: 'business' }, ...(rank === 1 ? { diary: true as const } : {}) });
   if (rank === 1) {
     st.top++;
-    if (st.top >= 2 && st.copy < 3) {
+    if (st.top >= 3 && st.copy < 3) { // três trimestres seguidos na liderança: as rivais copiam o formato
       st.copy++;
       st.top = 0;
       emitFact(s, { kind: 'format_copied', actors: ['player'], place: v.city, severity: 30, tags: ['car31', 'media'], src: 'car31',

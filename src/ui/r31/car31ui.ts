@@ -6,11 +6,11 @@
 //   cliente". Cena-assinatura (salas31): os objetos ganham as mesmas decisões em 1 clique (RUN31) e a lista de degraus.
 // A tela só lê; cada clique chama a função do sistema dono (sys/car31*.ts). Fama de quem não é seu passa por know.
 
-import { formatMoney } from '../../core/money';
 import { l, type L } from '../../data/world';
-import { t } from '../../i18n/strings';
+import { getLang, t } from '../../i18n/strings';
 import { MODE31, modeOf31, setMode31 } from '../../sim/deleg31';
 import { recentFacts } from '../../sim/facts17';
+import { visibleAct } from '../../sim/future';
 import { band, bandText, know } from '../../sim/know';
 import { car31On, ledger31, ledgerSummary31, relW31, SRC31 } from '../../sim/sys/car31';
 import { FMT_NAME31, ROTS31, addGrid31, answerJaba31, cands31, dropGrid31, fmtsFor31, kindOf31, lawRisk31, mediaVentures31, power31, rotName31, setFmt31, setRot31, slotsOf31, stRo31, used31, BURN_W31, type Rot31 } from '../../sim/sys/car31media';
@@ -44,7 +44,7 @@ const vl = (s: GameState) => ((s.x4 as unknown as { ventures9?: { list?: { kind:
 const hasKind = (s: GameState, k: string) => vl(s).some((v) => v.kind === k);
 const mgClients = (s: GameState): string[] => ((s.x4 as unknown as { ventures9?: { mg?: { clients?: { actId: string }[] } } }).ventures9?.mg?.clients ?? []).map((c) => c.actId);
 const say = (e: L | null, ok: L): void => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
-const pct = (v: number): string => `${Math.round(v * 1000) / 10}%`;
+const pct = (v: number): string => { const x = String(Math.round(v * 1000) / 10); return `${getLang() === 'pt' ? x.replace('.', ',') : x}%`; };
 const mine = (a?: Act): boolean => !!a && (a.owner === 'player' || !!a.playerBand);
 /** fama vista pelo jogador (faixa de know; a sua: exata) */
 function fameTxt(s: GameState, a: Act): string { return mine(a) ? String(Math.round(a.fame)) : bandText(band(s, a.id, 'fame', a.fame, know(s, a.id).width('fame'))); }
@@ -128,7 +128,7 @@ function platView(s: GameState): HTMLElement {
 
 function stageView(s: GameState): HTMLElement {
   const vn = venueNow31(s), st = stageRo31(s);
-  const cands = (n: number) => Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && (a.city === vn?.cityId || mine(a))).sort((a, b) => a.fame - b.fame || (a.id < b.id ? -1 : 1)).slice(0, n);
+  const cands = (n: number) => Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && visibleAct(s, a) && a.debutYear <= s.year && (a.city === vn?.cityId || mine(a))).sort((a, b) => a.fame - b.fame || (a.id < b.id ? -1 : 1)).slice(0, n);
   return h('div', null,
     vn ? section(`${vn.name} · ${t(l('prestígio', 'prestige'))} ${Math.round(st.pres)}`,
       h('p', { class: 'small muted' }, t(fmtL(l('Quem fecha e quem abre cada noite ganha fama na cidade (abertura vale metade). Abrir com artista novo (fama abaixo de {n}) custa cachê e esvazia o bar, mas dá prestígio. Noites lendárias até agora: {k}.', 'Whoever closes and opens each night gains fame in the city (opener counts half). Opening with a new act (fame below {n}) costs a fee and empties the bar, but brings prestige. Legendary nights so far: {k}.'), { n: NEW_FAME31, k: st.legends }))),
@@ -232,7 +232,7 @@ registerQuick31({
 });
 registerQuick31({
   id: 'q.car31.open', verb: 'lineup', icon: 'mic', kinds: ['act'], label: l('Abrir uma noite na sua casa', 'Open a night at your venue'),
-  applies: (s) => car31On(s, 'stage') && !!venueNow31(s),
+  applies: (s, tg) => car31On(s, 'stage') && !!venueNow31(s) && visibleAct(s, s.acts[tg.id]) && (s.acts[tg.id]?.debutYear ?? 9999) <= s.year,
   lock: (s) => (!(venueNow31(s)?.x.prog ?? []).some((n) => n.k !== 'private' && !stageRo31(s).open[n.id]) ? { why: l('Todas as noites já têm abertura', 'Every night already has an opener'), unlock: l('Tire uma abertura em Palcos', 'Remove an opener under Stages') } : null),
   dest: () => ({ area: CAR_AREA31, tab: `${CAR_AREA31}/stage` }),
   run: (s, tg) => { const n = (venueNow31(s)?.x.prog ?? []).find((x) => x.k !== 'private' && !stageRo31(s).open[x.id] && x.actId !== tg.id); if (n) say(setOpener31(s, n.id, tg.id), l('Abertura escalada.', 'Opener booked.')); go('stage'); },
@@ -257,7 +257,7 @@ SIG31.acts = (s, c, hot) => {
     out.push(B('grid31', l('Montar a grade da semana', 'Build the week\'s grid'), { k: 'run', id: 'car31.go', arg: 'media' }, true, mediaVentures31(s).length ? null : l('Abra uma rádio, TV ou revista', 'Found a radio, TV or magazine')));
     out.push(B('pd31', modeOf31(s, 'radio') === 'me' ? l('Delegar ao diretor de programação', 'Delegate to the programme director') : l('Voltar a montar você mesmo', 'Go back to building it yourself'), { k: 'run', id: 'car31.pd' }));
     for (const v of mediaVentures31(s)) for (const o of stRo31(s, v).offers.slice(0, 1)) {
-      out.push(B(`jy${o.id}`, fmtL(l('Aceitar jabá ({v})', 'Take payola ({v})'), { v: formatMoney(o.amt, 'pt-BR') }), { k: 'run', id: 'car31.jaba', arg: `${v.id}|${o.id}|1` }));
+      out.push(B(`jy${o.id}`, fmtL(l('Aceitar jabá ({v})', 'Take payola ({v})'), { v: $(o.amt) }), { k: 'run', id: 'car31.jaba', arg: `${v.id}|${o.id}|1` }));
       out.push(B(`jn${o.id}`, l('Recusar jabá', 'Refuse payola'), { k: 'run', id: 'car31.jaba', arg: `${v.id}|${o.id}|0` }));
     }
   }

@@ -79,7 +79,7 @@ export function setOpener31(s: GameState, nightId: string, actId?: string): L | 
   const st = st31(s);
   if (!actId) { delete st.open[nightId]; touch31(s); return null; }
   const a = s.acts[actId];
-  if (!a || a.status === 'retired' || a.status === 'split') return l('Artista indisponível.', 'Act unavailable.');
+  if (!a || a.status === 'retired' || a.status === 'split' || (a.debutYear > s.year && !mine(a))) return l('Artista indisponível.', 'Act unavailable.');
   if (actId === n.actId) return l('Quem fecha a noite não pode abrir também.', 'The headliner cannot open too.');
   if (n.k === 'private') return l('Evento privado não tem abertura.', 'A private event has no opener.');
   st.open[nightId] = actId;

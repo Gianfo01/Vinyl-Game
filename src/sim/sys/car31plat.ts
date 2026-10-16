@@ -10,7 +10,7 @@
 // conflito (artistas e confiança caem, e a execução vale menos); fazendas de streams se escondem em Novidades.
 
 import { Rng, clamp } from '../../core/rng';
-import { COUNTRY_INFO, countryPop } from '../../data/countries';
+import { COUNTRY_INFO, countryMarketSize, countryPop } from '../../data/countries';
 import { countryOfCity } from '../../data/geo';
 import { l, type L } from '../../data/world';
 import { registerDeadline, type Deadline19 } from '../calendar19';
@@ -59,13 +59,14 @@ const isMajor = (s: GameState, id: string): boolean => { const lb = s.labels[id]
 
 /** penetração do streaming na população (cresce de 2005 até ~45%) */
 export const pen31 = (year: number): number => clamp(0.01 + (year - 2005) * 0.02, 0.01, 0.45);
-/** fatia da plataforma entre os ouvintes de streaming de cada país (só os 8 maiores para ela) */
+/** fatia da plataforma entre os ouvintes de streaming de cada país (só os 8 maiores para ela): metade dos assinantes no
+ *  país da sede, o resto pelo tamanho do mercado de música de cada país */
 export function subsShare31(s: GameState, v: Venture): { a3: string; share: number; subs: number }[] {
   const subs = v.subs ?? 0;
   if (subs <= 0) return [];
   const home = countryOfCity(v.city) ?? 'USA';
   let t = 0;
-  const w = COUNTRY_INFO.map((c) => { const k = c.a3 === home ? 0 : countryPop(c, s.year); t += k; return k; });
+  const w = COUNTRY_INFO.map((c) => { const k = c.a3 === home ? 0 : countryMarketSize(c, s.year); t += k; return k; }); // o resto segue o dinheiro gasto com música
   const out = COUNTRY_INFO.map((c, i) => {
     const n = (c.a3 === home ? 0.5 : 0) * subs + (t > 0 ? (0.5 * subs * w[i]) / t : 0);
     const users = countryPop(c, s.year) * 1e6 * pen31(s.year);
