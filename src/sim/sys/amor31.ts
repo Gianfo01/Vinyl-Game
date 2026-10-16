@@ -247,7 +247,8 @@ export function askOdds31(s: GameState, key0: string): AskOdds31 {
   const o = ownerOf(s);
   add(l('Seu charme (carisma e aparência)', 'Your charm (charisma and looks)'), (o.attrs.charisma - 50) / 220 + (LOOKH31.date?.(s) ?? 0) / 100);
   // atração (orientação da pessoa)
-  add(l('Atração (orientação da pessoa)', 'Attraction (their orientation)'), attraction(s, key));
+  const at = attraction(s, key);
+  add(at <= -0.5 ? l('Não sente atração por você (orientação)', 'Not attracted to you (orientation)') : l('Pouca atração (orientação da pessoa)', 'Little attraction (their orientation)'), at);
   // idade
   const b = bornOf(s, key);
   if (b !== undefined) { const gap = Math.abs(b - o.born); if (gap > 6) add(fmtL(l('Diferença de idade ({n} anos)', 'Age gap ({n} years)'), { n: gap }), -Math.min(0.35, (gap - 6) / 45)); }

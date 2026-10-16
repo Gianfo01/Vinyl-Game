@@ -109,8 +109,11 @@ const spots = await p.$$('.sc31-spot[data-spot^="who:"]');
 let found = false;
 for (const sp of spots) { await sp.click({ force: true }); await p.waitForTimeout(400); if (await p.$('.in31-pane .am31-ask')) { found = true; break; } }
 if (!found) console.error('ninguém com pedido no interior');
-await p.evaluate(() => { const d = document.querySelector('.in31-pane details.am31-why'); if (d) d.open = true; });
+await p.evaluate(() => { const d = document.querySelector('.in31-pane details.am31-why'); if (d) d.open = true;
+  for (const e of [document.querySelector('.in31'), document.querySelector('.in31 .in31-body'), document.querySelector('.in31-pane')]) if (e) { e.style.maxHeight = 'none'; e.style.height = 'auto'; e.style.overflow = 'visible'; } });
 await shot('onda4-amor-interior', '.in31 .in31-body');
+await p.evaluate(() => { const e = document.querySelector('.in31-pane'); if (e) { e.style.position = 'fixed'; e.style.left = '20px'; e.style.top = '20px'; e.style.zIndex = '99999'; e.style.width = '620px'; e.style.background = '#241a1e'; } });
+await shot('onda4-amor-interior-pedido', '.in31-pane');
 // menu de pessoa: recusa recente (motivo + quando) no pedido
 if (setup.refused) {
   await p.evaluate(async ([k]) => { const am = await import('/src/sim/sys/amor31.ts'); const life = await import('/src/sim/sys/life.ts'); life.life(window.__g).used = -20; am.askOut31(window.__g, k); const ui = await import('/src/ui/r31/amor31ui.ts'); document.querySelectorAll('.overlay').forEach((e) => e.remove()); ui.openAsk31(window.__g, k); }, [setup.refused]);

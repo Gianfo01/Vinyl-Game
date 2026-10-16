@@ -59,7 +59,17 @@ Editor: os três interruptores, afinidade com o par, discrição do caso; execut
 
 ## Medição (`scripts/r31/measure.ts`, sementes e eras fixas da base30)
 
-MEDICAO
+Rodadas: ligado (`docs/r31/amor-medida.json`/`.md`) e desligado (`--sw amor31.ask=false,amor31.affair=false,amor31.market=false`,
+`docs/r31/amor-off.json`/`.md`), 4 sementes × 5 eras × 36 meses.
+
+- **Números de jogo idênticos** nas 20 partidas (caixa, patrimônio, fama, atos, lançamentos, nº 1, receita por ano,
+  encerramentos): o robô (`playbot16`) não namora, e o mês do amor31 não faz nada sem par, caso, boato ou pedido em
+  aberto (não consome sorteio, não cria estado — `x4.amor31` só nasce com a primeira ação).
+- Única diferença: o save desligado tem **+62 bytes** (os três interruptores gravados em `x4.sw31`, que só guarda o que
+  difere do padrão). Chaves do `x4`: iguais (289/290 por era).
+- Desempenho: dentro do ruído (ms/mês por era: 1900 ≈ 400, 1955 ≈ 920, 1990 ≈ 1.960, 2012 ≈ 3.280, 2030 ≈ 3.580, ligado;
+  a rodada desligada ficou na mesma faixa).
+- Goldens (r27-p2a, r27-p2b, r27-m3, r16-playbot): sem mudança esperada, conferidos na suíte.
 
 ## Arquivos
 
