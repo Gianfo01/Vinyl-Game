@@ -14,7 +14,7 @@ import { playerActs } from '../../sim/util';
 import { $, modal, pill, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf } from '../pixel/avatar';
-import { drawText, fitText } from '../pixel/font';
+import { abbrText, drawText } from '../pixel/font';
 import { box, floor, screen, sign, wall, windowPane } from '../pixel/places/kit';
 import { eraOf, paletteOf, type Palette } from '../pixel/palette';
 import { C, INK, Px, discV, ellipseV, lv, rectV, tint, volume, withAlpha, type Col } from '../pixel/px';
@@ -109,21 +109,29 @@ function paint(cv: HTMLCanvasElement, s: GameState, m: Air31): void {
   // telão / quadro de partidas
   const chalk = m.year < 1950;
   screen(p, 144, 10, 94, 40, chalk ? C('#24382c') : C('#121216'), chalk ? pal.woodDark : pal.metalDark, !chalk);
-  drawText(p, fitText(T(m.era === 'rail' ? l('PARTIDAS: TRENS E NAVIOS', 'DEPARTURES: TRAINS AND SHIPS') : l('PARTIDAS', 'DEPARTURES')).toUpperCase(), 88), 147, 12, chalk ? C('#f0f0e0') : TXT);
+  drawText(p, abbrText(T(m.era === 'rail' ? l('PARTIDAS: TRENS E NAVIOS', 'DEPARTURES: TRAINS AND SHIPS') : l('PARTIDAS', 'DEPARTURES')).toUpperCase(), 88), 147, 12, chalk ? C('#f0f0e0') : TXT);
   const rows = m.dep.slice(0, 4);
   rows.forEach((f, i) => {
-    const t = fitText(`${cityN(f.city)}`.toUpperCase(), 62);
+    const t = abbrText(`${cityN(f.city)}`.toUpperCase(), 62);
     drawText(p, t, 147, 20 + i * 7, chalk ? C('#e0e8d8') : C('#f4ecd8'));
     drawText(p, `${Math.max(0, f.w - s.week)}S`, 226, 20 + i * 7, chalk ? C('#e0e8d8') : TXT);
   });
   // o resto do quadro: as linhas regulares da cidade (apagadas: não são seus artistas)
   ['london', 'new_york', 'paris', 'rio', 'tokyo'].filter((c) => c !== s.config.homeCity && !rows.some((f) => f.city === c)).slice(0, 4 - rows.length)
-    .forEach((c, i) => drawText(p, fitText(cityN(c).toUpperCase(), 62), 147, 20 + (rows.length + i) * 7, chalk ? C('#7a8a74') : C('#6a6658')));
+    .forEach((c, i) => drawText(p, abbrText(cityN(c).toUpperCase(), 62), 147, 20 + (rows.length + i) * 7, chalk ? C('#7a8a74') : C('#6a6658')));
   // portas (hangar e cais) e relógio
   discV(p, 135, 70, 5, pal.paper);
   p.line(135, 70, 135, 67, INK); p.line(135, 70, 137, 71, INK);
   if (m.hangar) { box(p, 214, 60, 30, 36, tint(pal.metal, -0.1), 0); p.rect(218, 64, 22, 32, C('#2a2e36')); sign(p, 229, 52, T(l('HANGAR', 'HANGAR')), pal.paper, C('#2a3a5a')); }
-  box(p, 266, 70, 34, 26, pal.woodDark, 0); p.rect(270, 74, 26, 22, C('#1e2a38')); sign(p, 283, 64, T(l('CAIS', 'PIER')), pal.paper, C('#1a4a6a'));
+  // porta do cais (R31 POL: antes um retângulo escuro liso): duas folhas com almofadas, vigias redondas com o mar, chapa e puxadores
+  box(p, 266, 70, 34, 26, pal.woodDark, 0);
+  for (const dx of [270, 284]) {
+    const leaf = m.year < 1960 ? lv(pal.woodDark, 2.6) : C('#4a5a6a');
+    p.rect(dx, 74, 12, 22, leaf); p.hline(dx, dx + 11, 74, lv(leaf, 4)); p.vline(dx, 74, 95, lv(leaf, 3.6));
+    discV(p, dx + 6, 80, 3, C('#3a78a8'), { ink: false }); p.put(dx + 5, 79, C('#c8e8f8')); p.hline(dx + 4, dx + 8, 81, C('#8ac0e0'));
+    p.rect(dx + 1, 91, 10, 4, lv(pal.metal, 3)); p.rect(dx + (dx === 270 ? 10 : 1), 85, 1, 3, pal.gold);
+  }
+  sign(p, 283, 64, T(l('CAIS', 'PIER')), pal.paper, C('#1a4a6a'));
   // estúdio de holograma (2027+)
   // balcões
   desk(p, 14, 120, 58, pal.wood, T(l('DESEMBARQUE', 'ARRIVALS')), pal);
@@ -137,26 +145,35 @@ function paint(cv: HTMLCanvasElement, s: GameState, m: Air31): void {
   for (let i = 0; i < 3; i++) p.rect(225 + i * 7, 118, 5, 8, [C('#f4ecd8'), C('#e8d0a0'), C('#f0e0c8')][i]);
   const ctx = blitPx31(cv, p.d, m.W, m.H);
   if (!ctx) return;
-  const fur = (k: Parameters<typeof furniture>[0], x: number, y: number, f: 'SW' | 'SE' = 'SW'): void => { const sp = furniture(k, eraOf(m.year), f); ctx.drawImage(sp.c, x - sp.ax, y - sp.ay); };
+  // R31 (POL): móveis e pessoas numa só fila de profundidade (pé mais no fundo é pintado antes) e viajantes em lugares
+  // livres — antes o poste do abajur atravessava uma pessoa e outra ficava dentro do sofá; ninguém se sobrepõe
+  const q: { y: number; f: () => void }[] = [];
+  const fur = (k: Parameters<typeof furniture>[0], x: number, y: number, f: 'SW' | 'SE' = 'SW'): void => { q.push({ y, f: () => { const sp = furniture(k, eraOf(m.year), f); ctx.drawImage(sp.c, x - sp.ax, y - sp.ay); } }); };
   fur('sofa', 176, 136); fur('plant', 160, 128); fur('lamp', 212, 126);
   if (m.holo) { fur('holo', 148, 104); }
   const dude = (id: string, x: number, y: number, dir: 'SE' | 'SW' | 'NE' | 'NW', scale = 1): void => {
-    const sp = avatarSprite(lookOf({ id }), { year: m.year, role: null, pose: 'stand', dir });
-    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x - 6 * scale, y, 12 * scale, 2);
-    ctx.drawImage(sp.c, x - sp.ax * scale, y - sp.ay * scale, sp.c.width * scale, sp.c.height * scale);
+    q.push({ y, f: () => {
+      const sp = avatarSprite(lookOf({ id }), { year: m.year, role: null, pose: 'stand', dir });
+      ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x - 6 * scale, y, 12 * scale, 2);
+      ctx.drawImage(sp.c, x - sp.ax * scale, y - sp.ay * scale, sp.c.width * scale, sp.c.height * scale);
+    } });
   };
-  // funcionários nos balcões
+  // funcionários nos balcões (atrás do balcão: do tronco para cima)
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, m.W, 117); ctx.clip();
-  dude('desk-arr', 43, 124, 'SE'); dude('desk-cus', 117, 124, 'SW');
+  { const a = avatarSprite(lookOf({ id: 'desk-arr' }), { year: m.year, role: null, pose: 'stand', dir: 'SE' }); ctx.drawImage(a.c, 43 - a.ax, 124 - a.ay); }
+  { const a = avatarSprite(lookOf({ id: 'desk-cus' }), { year: m.year, role: null, pose: 'stand', dir: 'SW' }); ctx.drawImage(a.c, 117 - a.ax, 124 - a.ay); }
   ctx.restore();
-  // multidão no portão (fama de quem voltou)
-  for (let i = 0; i < m.crowd * 3; i++) dude(`fan-${i}`, 10 + (i % 6) * 11, 152 + Math.floor(i / 6) * 10, i % 2 ? 'NE' : 'NW');
-  // viajantes
-  for (let i = 0; i < 3; i++) dude(`trav-${m.year}-${i}`, 96 + i * 46, 168 - (i % 2) * 6, i % 2 ? 'SW' : 'SE');
+  // multidão no portão (fama de quem voltou): fileiras desencontradas, 14 px entre pessoas
+  for (let i = 0; i < m.crowd * 3; i++) dude(`fan-${i}`, 12 + (i % 5) * 14 + (Math.floor(i / 5) % 2) * 7, 150 + Math.floor(i / 5) * 9, i % 2 ? 'NE' : 'NW');
+  // viajantes: no saguão, longe do sofá, do abajur e de você
+  ([[92, 172, 'SE'], [268, 172, 'SW'], [302, 158, 'SW']] as const).forEach(([x, y, d], i) => dude(`trav-${m.year}-${i}`, x, y, d));
   const me = playerPerson(s);
-  const sp = avatarSprite(lookOf(me ?? { id: 'player' }), { year: m.year, role: me?.role ?? null, pose: 'stand', dir: 'SE' });
-  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(150, 176, 12, 2);
-  ctx.drawImage(sp.c, 156 - sp.ax, 177 - sp.ay);
+  q.push({ y: 177, f: () => {
+    const sp = avatarSprite(lookOf(me ?? { id: 'player' }), { year: m.year, role: me?.role ?? null, pose: 'stand', dir: 'SE' });
+    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(132, 176, 12, 2);
+    ctx.drawImage(sp.c, 138 - sp.ax, 177 - sp.ay);
+  } });
+  for (const it of q.sort((a, b) => a.y - b.y)) it.f();
 }
 
 // ---------------------------------------------------------------- painéis

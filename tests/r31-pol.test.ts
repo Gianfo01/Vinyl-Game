@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest';
 import '../src/sim/worldgen'; // ordem de carga do motor (como os outros testes)
 import { EMPTY_RX31, feetOk31, flatShare31, labelHits31, polScenes31 } from '../src/ui/r31/pol31';
 import { abbrText } from '../src/ui/pixel/font';
+import { UNLOCK31, unlockFor31 } from '../src/sim/r31/lock';
+import { l } from '../src/data/world';
 import { placeLabels31, shortNames31 } from '../src/ui/r31/scene31model';
 import '../src/ui/r31/pol31reg';
 
@@ -47,6 +49,11 @@ describe('R31 POL — acabamento das cenas', () => {
     const sp = (id: string, x: number) => ({ id, x, y: 10, w: 6, h: 6, label: { pt: 'Nome muito comprido demais', en: 'x' }, tip: { pt: 't', en: 't' }, go: { area: 'x' } });
     const ls = placeLabels31([sp('a', 10), sp('b', 14), sp('c', 18)], 60, 40, 4, (s) => s.label.pt);
     for (let i = 0; i < ls.length; i++) for (let j = i + 1; j < ls.length; j++) expect(ls[i].x + ls[i].w <= ls[j].x || ls[j].x + ls[j].w <= ls[i].x || ls[i].y + ls[i].h <= ls[j].y || ls[j].y + ls[j].h <= ls[i].y).toBe(true);
+  });
+  it('motivo com data pede esperar a data, não a dica de agenda (lockBtn31)', () => {
+    expect(unlockFor31(l('A vaga abre na estreia, em março de 2027.', 'The slot opens at the premiere, in March 2027.'))).toEqual(UNLOCK31.date);
+    expect(unlockFor31(l('Agenda cheia este mês.', 'Agenda full this month.'))).toEqual(UNLOCK31.agenda);
+    expect(unlockFor31(l('Sem espaço na agenda do artista.', 'No room on the act\'s agenda.'))).toEqual(UNLOCK31.agenda);
   });
   it('pré-visualização (POL_DUMP)', () => {
     const dir = process.env.POL_DUMP;

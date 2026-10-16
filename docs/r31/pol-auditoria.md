@@ -72,11 +72,26 @@ Legenda dos defeitos: **F** flutuando / sem chão · **E** escala · **P** place
 ### M — Estilos por época (`onda4-m-*`)
 - Telas de interface (temas), não cenas pintadas. Sem defeito de pixel art próprio; as cenas dentro delas (mesa do chefe, salas) herdam as correções acima. Observação deixada: o mural vazio da mesa do chefe usa um "+" grande como chamada para começar um disco — é botão, não placeholder.
 
-### Chegaram no merge final (aeroporto `airport31`, leilões `auction31`)
-- Vieram de sessões ainda ativas (VIT/LOTE) depois desta auditoria; não mexi para não conflitar. Pendências vistas no código:
-  **R** textos do telão/catálogo com `fitText` (corta no meio da palavra) → trocar por `abbrText`; **F** pintam e
-  desenham os bonecos no mesmo canvas, sem camada da frente (o leiloeiro usa recorte manual) → separar a pintura pura
-  e registrar em `pol31reg.ts` para a checagem automática valer também para elas.
+### T — Aeroporto e leilões (`onda4-t-*`) → `onda4-pol-t-*-antes-depois.png`
+Conferidas todas as épocas (estação 1910, campo 1925, terminal 1950, jatos 2030, cruzeiro, holograma; salão 1905,
+auditório 1978, tela 2004, aplicativo 2025, lance).
+- **F** pessoas se sobrepondo, poste do abajur atravessando uma pessoa, alguém dentro do sofá → móveis e pessoas numa
+  só fila de profundidade (pé mais no fundo pintado antes); viajantes e você em lugares livres; multidão do portão em
+  fileiras desencontradas (14 px entre pessoas).
+- **P** porta do cais = retângulo escuro liso → porta de duas folhas com almofadas, vigias com o mar, chapa e puxadores.
+- **R** 1ª linha do painel de partidas "riscada": o reflexo diagonal do `screen` (kit) cruzava o texto → brilho curto no
+  canto de cima à direita (vale para todo telão/painel do kit). Nomes do painel abreviados na palavra.
+- **R** catálogo cortando ("GRANDE LEILA", "2 – 0S") → ficha alta para duas linhas, nome abreviado na palavra
+  ("GRANDE LEIL."), prazo legível ("2 LOTES · HOJE" / "EM 3 SEM").
+- **R** "(lista de relíquias)" cortado na borda → posicionador comum (rótulo sempre dentro da cena).
+- **P** plaquinhas = quadrados brancos lisos → plaquinha com o número do licitante (a sua é a nº 1).
+- **F** leiloeiro sumindo atrás do púlpito → de pé no tablado, tronco acima do púlpito.
+
+### Motivo de bloqueio (`lockBtn31`, pedido da integração)
+- "A vaga abre na estreia, em março de 2027. → Abra espaço na agenda…": a dedução da condição casava "slot/vaga" com a
+  regra de agenda. Na raiz (`sim/r31/lock.ts`): motivo com data (abre na/em…, estreia/premiere, "em março") vira
+  "Espere a data: libera sozinho quando ela chegar."; a regra de agenda só casa com agenda/capacidade/sem espaço.
+  Testado em `tests/r31-pol.test.ts`.
 
 ## Checagem automática (`tests/r31-pol.test.ts`)
 Passa em todas as cenas registradas (`src/ui/r31/pol31reg.ts`: loja e casa em 5 épocas/cidades, 7 salas de mecânica × 3 épocas, 19 interiores × 3 épocas com objetos ART2, casa Fossati e praça, todas as salas da sede):
