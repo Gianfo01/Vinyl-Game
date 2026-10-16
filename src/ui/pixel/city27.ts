@@ -13,6 +13,7 @@
 //   • vizinhos com nome (gravadoras rivais, rádio, bar com palco): quem são e o que estão fazendo;
 //   • modelo do painel lateral (o que é, custo/mês, receita, quem está lá, 2–3 ações).
 
+import { tourList } from '../../sim/tours';
 import { builtVenue, realVenues } from '../../sim/sys/venuestore27';
 import { CLIMATE19 } from '../../data/hood19';
 import { LANDMARKS19, landmarksAt19, type Landmark19, type LmShape } from '../../data/landmarks19';
@@ -277,7 +278,7 @@ export function life27(s: GameState, bs: Bld18[] = buildings18(s)): Life27 {
   const staff = s.player.staff.slice(0, 4);
   staff.forEach((p, i) => { if (dest.length) walkers.push({ who: p.name, k: 'staff', from: 'hq', to: dest[i % dest.length].id }); });
   // ônibus da turnê: turnê rodando (ou que começa em até 2 semanas)
-  const tr = s.tours.find((t) => mineSet.has(t.actId) && (t.status === 'running' || (t.status === 'planned' && (t.stops[0]?.day ?? 1e9) - s.day <= 14)));
+  const tr = tourList(s).find((t) => mineSet.has(t.actId) && (t.status === 'running' || (t.status === 'planned' && (t.stops[0]?.day ?? 1e9) - s.day <= 14)));
   const bus = tr ? { act: s.acts[tr.actId]?.name ?? '?', tour: tr.name } : undefined;
   // fãs: disco seu na parada (mais perto do topo = mais gente)
   let fans = 0, fansWhy: L | undefined;

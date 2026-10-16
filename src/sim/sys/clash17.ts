@@ -40,13 +40,13 @@ const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.play
 export interface PShow { actId: string; city: string; w: number; kind: 'tour' | 'booking' | 'festival'; label: string }
 export function playerShows(s: GameState): PShow[] {
   const out: PShow[] = [];
+  // UNI-4 (B.13): um registro só de datas — turnês e shows avulsos (agente/promotor: turnê de 1 data com papel `by`)
   for (const t of s.tours ?? []) {
     if (t.status !== 'planned' && t.status !== 'running') continue;
     if (!mine(s, s.acts[t.actId])) continue;
+    if (t.by) { const sh = t as unknown as { city: string; week: number }; out.push({ actId: t.actId, city: sh.city, w: sh.week, kind: 'booking', label: '' }); continue; }
     for (const st of t.stops) if (st.status === 'scheduled') out.push({ actId: t.actId, city: st.cityId, w: weekOfDay(st.day), kind: 'tour', label: t.name });
   }
-  const c12 = (s.x4 as unknown as { tour12?: { shows: { actId: string; city: string; week: number; status: string }[] } }).tour12;
-  for (const sh of c12?.shows ?? []) if (sh.status === 'booked' && mine(s, s.acts[sh.actId])) out.push({ actId: sh.actId, city: sh.city, w: sh.week, kind: 'booking', label: '' });
   for (const f of festWeeks(s)) for (const id of f.acts) if (mine(s, s.acts[id])) out.push({ actId: id, city: f.city, w: f.w, kind: 'festival', label: f.name });
   return out.filter((x) => x.w >= s.week - 1).sort((a, b) => a.w - b.w);
 }

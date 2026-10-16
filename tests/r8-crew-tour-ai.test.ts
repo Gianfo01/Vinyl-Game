@@ -165,7 +165,7 @@ describe('turnê roteada com promotor', () => {
     const res = bookRoutedTour(s, act.id, cities, terms({ support: 2, intensity: 'rest' }), 10);
     expect('tourId' in res).toBe(true);
     if (!('tourId' in res)) return;
-    expect(route(s).deals[res.tourId]).toBeDefined();
+    expect(s.tours.find((t) => t.id === res.tourId)?.r8).toBeDefined(); // UNI-4: o acordo mora na própria turnê
     invariant(s);
     for (let i = 0; i < 4 && !route(s).reports.length; i++) advanceMonth(s);
     const rep = route(s).reports.find((x) => x.tourId === res.tourId);

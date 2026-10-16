@@ -1,3 +1,4 @@
+import { tourList } from '../../sim/tours';
 import { buildings18 } from '../../sim/sys/campus18';
 // r25 (Pixel Studio, fase 3 "Sede viva") — o MODELO da tela inicial da Sede, função pura do estado (sem DOM):
 // era e nível da sede (o desenho em pixel art fica em hqpx27.ts), as 6 salas com selos de estado, quem está em cada sala (elenco e equipe
@@ -94,7 +95,7 @@ export function hqModel25(s: GameState): HqModel25 {
   const acts = live(s);
   const mine = new Set(acts.map((a) => a.id));
   const sessions = (s.sessions ?? []).filter((x) => !x.done && mine.has(x.actId));
-  const tours = (s.tours ?? []).filter((x) => mine.has(x.actId) && (x.status === 'running' || x.status === 'planned'));
+  const tours = tourList(s).filter((x) => mine.has(x.actId) && (x.status === 'running' || x.status === 'planned'));
   const running = tours.filter((x) => x.status === 'running');
   const soonShows = tours.flatMap((x) => x.stops.filter((st) => st.status === 'scheduled' && st.day >= s.day && st.day < s.day + 28).map((st) => ({ t: x, st })));
 

@@ -1,3 +1,4 @@
+import { tourList } from '../../tours';
 import { builtVenue, setBuiltVenue } from '../venuestore27';
 import { deferEvents } from '../../ext4';
 // Casa de shows própria (agenda, aluguel a terceiros, bar, acústica), residência em cassino para
@@ -145,7 +146,7 @@ export function startResidency(s: GameState, actId: string, months: number): Res
   if (!act) return l('Inválido.', 'Invalid.');
   const why = residencyEligible(s, act);
   if (why) return why;
-  if (s.tours.some((t) => t.actId === actId && (t.status === 'planned' || t.status === 'running'))) return l('Termine a turnê antes.', 'Finish the tour first.');
+  if (tourList(s).some((t) => t.actId === actId && (t.status === 'planned' || t.status === 'running'))) return l('Termine a turnê antes.', 'Finish the tour first.');
   const res: Residency = { id: nextId(s, 'rz'), actId, cityId: residencyCity(s, act), startMonth: monthIndex(s) + 1, months: clamp(Math.round(months), 3, 24), nights: 12, earned: 0, status: 'active' };
   liveOf(s).residencies.push(res);
   // ocupa a capacidade da formação nos meses da residência

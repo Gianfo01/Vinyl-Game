@@ -16,7 +16,7 @@ import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { registerExplain } from '../explain18';
 import { addStress, relieveLong } from '../stress17';
-import { TICKET, cityDemand } from '../tours';
+import { TICKET, cityDemand, tourList } from '../tours';
 import { KIT0, TOUR18, type Kit18, type KitInfo } from '../tourhook18';
 import type { Act, GameState } from '../types';
 import type { Tour, TourStop } from '../xtypes';
@@ -186,7 +186,7 @@ TOUR18.q = (s, t, st) => {
 registerMod('tourRisk', 'live18', (s, v, c) => {
   const a = c.act;
   if (!mine(s, a)) return null;
-  const t = s.tours.find((x) => x.actId === a.id && x.status === 'running');
+  const t = tourList(s).find((x) => x.actId === a.id && x.status === 'running');
   let k = live18(s).well ? 0.85 : 1;
   if (t) { const kt = kitOf18(t); k *= (kt.reh === 2 ? 0.85 : 1) * (kt.gear === 'rent' ? 0.9 : 1) * (kt.move === 'fly' ? 0.95 : kt.move === 'van' ? 1.12 : 1); }
   return Math.abs(k - 1) > 0.01 ? { value: v * k, label: k < 1 ? l('Logística e cuidado com o grupo', 'Logistics and care for the group') : l('Logística precária', 'Shoestring logistics') } : null;
@@ -380,7 +380,7 @@ registerInboxKind('live18', { label: l('Estrada', 'Road'), cat: 'deals', icon: '
 
 export function liveMonth18(s: GameState): void {
   const v = live18(s);
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     const pm = tourPM18(s, t.id);
     if (!pm) continue;
     const act = s.acts[t.actId];
@@ -409,7 +409,7 @@ export function liveMonth18(s: GameState): void {
   for (const id of Object.keys(v.band)) {
     const b = v.band[id];
     if (!s.acts[id]) { delete v.band[id]; continue; }
-    if (!s.tours.some((t) => t.actId === id && t.status === 'running')) { b.tight = Math.max(10, b.tight - 2); b.chem *= 0.97; }
+    if (!tourList(s).some((t) => t.actId === id && t.status === 'running')) { b.tight = Math.max(10, b.tight - 2); b.chem *= 0.97; }
   }
   // programa de bem-estar (V3)
   if (v.well) {
@@ -506,7 +506,7 @@ registerExplain('live18.band', (s, c) => {
 
 registerAdvisorTip('live18', (s) => {
   const out = [];
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.status !== 'planned') continue;
     const pm = tourPM18(s, t.id), k = kitOf18(t);
     const gross = pm ? pm.shows.reduce((a, x) => a + x.e * (t.stops.find((y) => y.day === x.d)?.price ?? 0), 0) : 0;

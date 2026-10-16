@@ -15,7 +15,7 @@ import { CITIES, cityById, l, type L, type MarketId } from '../../data/world';
 import { activeMembers } from '../capacity';
 import { liveBlocked } from '../culture';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
-import { PRODUCTION_COST, autoTier, cityDemand, planTour, type TourPlan } from '../tours';
+import { PRODUCTION_COST, autoTier, cityDemand, planTour, type TourPlan, tourList } from '../tours';
 import { legInfo } from '../travelAdapter';
 import type { Act, GameState } from '../types';
 import { fmtL, money, post, remember, staffSkill } from '../util';
@@ -94,13 +94,15 @@ export interface TourReport {
   format: TourFormat;
 }
 
+/** UNI-4 (B.13): o acordo de cada turnê roteada mora na própria turnê (`tour.r8`, papel de quem banca); aqui só os relatórios. */
 export interface RouteState {
-  deals: Record<string, RouteDeal>;
   reports: TourReport[];
 }
 
 declare module '../ext4' { interface Ext4 { route8: RouteState } }
-registerExt4('route8', () => ({ deals: {}, reports: [] }));
+registerExt4('route8', () => ({ reports: [] }));
+/** Acordos vivos (turnês roteadas com promotor), na ordem das turnês. */
+export const routeDeals = (s: GameState): RouteDeal[] => tourList(s).filter((t) => t.r8).map((t) => t.r8!);
 export const route = (s: GameState): RouteState => (s as unknown as { x4: { route8: RouteState } }).x4.route8;
 
 export const FORMAT_NAME: Record<TourFormat, L> = {
@@ -342,7 +344,7 @@ export function bookRoutedTour(s: GameState, actId: string, cities: string[], as
   const people = activeMembers(s, a).length + crewN;
   const restCost = restDays * money(s, 35 * people);
   if (restCost) post(s, `r8rest:${res.id}`, -restCost, 'live_costs', `Diárias de folga — ${res.name}`);
-  route(s).deals[res.id] = {
+  res.r8 = {
     tourId: res.id, actId, terms: t, mood: deal.mood, doorShare: deal.doorShare, base: before,
     newCities: legs.legs.filter((x) => x.newCity).map((x) => x.cityId), newMarkets: [...new Set(legs.legs.filter((x) => x.newMarket).map((x) => x.market))],
     cost: res.costReserved - covered - lean + restCost, extra: 0, label: 0, press: 0, rel: 0, shows: 0,
@@ -372,10 +374,10 @@ function labelShare(s: GameState, a: Act): number {
 registerSimHook('show', 'route8', (s, _r, arg) => {
   const sh = arg.show;
   if (!sh) return;
-  const d = route(s).deals[sh.tourId];
+  const tour = tourList(s).find((x) => x.id === sh.tourId);
+  const d = tour?.r8;
   if (!d) return;
   const a = s.acts[sh.actId];
-  const tour = s.tours.find((x) => x.id === sh.tourId);
   const st = tour?.stops.find((x) => x.cityId === sh.cityId && x.status === 'played' && x.sold === sh.sold);
   if (!a || !tour || !st) return;
   const t = d.terms;
@@ -408,7 +410,7 @@ registerSimHook('show', 'route8', (s, _r, arg) => {
 
 registerMod('tourRisk', 'route8', (s, value, ctx) => {
   if (!ctx.act) return null;
-  for (const d of Object.values(route(s).deals)) {
+  for (const d of routeDeals(s)) {
     if (d.actId !== ctx.act.id) continue;
     const m = INTENSITY[d.terms.intensity].risk * (1 - d.terms.rider * 0.05);
     return { value: value * m };
@@ -424,12 +426,10 @@ registerMod('cityDemand', 'route8', (s, value, ctx) => {
 registerMod('chartUnits', 'route8', (s, value, ctx) => {
   const rel = ctx.release;
   if (!rel || rel.owner !== 'player') return null;
-  const deals = route(s).deals;
-  for (const id in deals) {
-    const d = deals[id];
-    if (d.actId !== rel.actId) continue;
-    const tour = s.tours.find((x) => x.id === id);
-    if (tour?.status !== 'running') continue;
+  for (const tour of tourList(s)) {
+    const d = tour.r8;
+    if (!d || d.actId !== rel.actId) continue;
+    if (tour.status !== 'running') continue;
     return { value: value * (1.04 + d.terms.support * 0.02), label: l('Turnê na estrada', 'Tour on the road') };
   }
   return null;
@@ -437,7 +437,7 @@ registerMod('chartUnits', 'route8', (s, value, ctx) => {
 
 /** Relatório final da turnê (várias métricas, nenhuma decide sozinha). */
 export function buildReport(s: GameState, d: RouteDeal): TourReport | null {
-  const tour = s.tours.find((x) => x.id === d.tourId);
+  const tour = tourList(s).find((x) => x.id === d.tourId);
   const a = s.acts[d.actId];
   if (!tour || !a) return null;
   const played = tour.stops.filter((x) => x.status === 'played');
@@ -461,14 +461,13 @@ export function buildReport(s: GameState, d: RouteDeal): TourReport | null {
 
 export function routeWeek(s: GameState, _r: Rng): void {
   const st = route(s);
-  for (const id of Object.keys(st.deals)) {
-    const d = st.deals[id];
-    const tour = s.tours.find((x) => x.id === id);
-    if (tour && (tour.status === 'planned' || tour.status === 'running')) continue;
-    const rep = tour ? buildReport(s, d) : null;
-    delete st.deals[id];
+  for (const tour of tourList(s)) {
+    const d = tour.r8;
+    if (!d || tour.status === 'planned' || tour.status === 'running') continue;
+    const rep = buildReport(s, d);
+    delete tour.r8; // o papel do promotor acaba com o relatório
     if (!rep) continue;
-    for (const x of tour!.stops) if (x.status === 'cancelled') cityRelAdd(s, x.cityId, -3);
+    for (const x of tour.stops) if (x.status === 'cancelled') cityRelAdd(s, x.cityId, -3);
     s.player.reputation.artistic = clamp(s.player.reputation.artistic + clamp(rep.press / 15, -3, 3), 0, 100);
     st.reports.unshift(rep);
     if (st.reports.length > 8) st.reports.length = 8;
@@ -482,8 +481,8 @@ registerSimHook('week', 'route8', (s, r) => routeWeek(s, r));
 // r31 (UNI-1): calendário único — cada data da turnê roteada com promotor (a janela da turnê já vem por 'live').
 registerDeadline('route8', (s, from, to) => {
   const out: Deadline19[] = [];
-  for (const d of Object.values(route(s).deals)) {
-    const t = s.tours.find((x) => x.id === d.tourId);
+  for (const d of routeDeals(s)) {
+    const t = tourList(s).find((x) => x.id === d.tourId);
     if (!t || (t.status !== 'planned' && t.status !== 'running')) continue;
     for (const st of t.stops) {
       const w = Math.floor(st.day / 7);

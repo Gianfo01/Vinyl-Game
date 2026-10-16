@@ -16,7 +16,7 @@ import { registerArea } from '../registry';
 import { WorldMap, type MapCity, type MapOverlay } from '../map';
 import { store } from '../store';
 import { foundInline, signInline } from './careerui13';
-import { PROMOTER_LICENSE } from '../../sim/sys/tour12';
+import { PROMOTER_LICENSE, shows12 } from '../../sim/sys/tour12';
 import { money } from '../../sim/util';
 import { rng19 } from '../../sim/rng19';
 
@@ -68,7 +68,7 @@ function calendar(s: GameState): HTMLElement {
   const act = s.acts[actId], tr = act ? fatigueTrack(s, actId, draft) : new Map<Stop, number>();
   const cells: HTMLElement[] = [];
   for (let i = 2; i < WEEKS_AHEAD + 2; i++) {
-    const w = s.week + i, booked = c12(s).shows.filter((x) => x.actId === actId && x.status === 'booked' && x.week === w), dr = draft.filter((x) => x.week === w);
+    const w = s.week + i, booked = shows12(s).filter((x) => x.actId === actId && x.status === 'planned' && x.week === w), dr = draft.filter((x) => x.week === w);
     const fat = Math.max(0, ...[...booked, ...dr].map((x) => tr.get(x) ?? 0));
     cells.push(h('div', { class: 'cal12', title: `${wk(s, w)}`, style: `padding:3px;border-radius:4px;font-size:11px;min-width:54px;text-align:center;border:1px solid ${dr.length ? '#e6a23c' : 'rgba(127,127,127,.3)'};background:${fat > 0 ? `rgba(220,80,60,${Math.min(0.6, fat * 0.4)})` : 'rgba(127,127,127,.08)'}` },
       h('div', { class: 'muted' }, wk(s, w)),
@@ -150,12 +150,12 @@ function offersView(s: GameState): HTMLElement | null {
 }
 
 function showsView(s: GameState): HTMLElement {
-  const c = c12(s), mine = [...c.shows].filter((x) => x.status !== 'cancelled').sort((a, b) => b.week - a.week).slice(0, 14);
+  const mine = shows12(s).filter((x) => x.status !== 'cancelled').sort((a, b) => b.week - a.week).slice(0, 14);
   return section(t(l('Agenda e resultados', 'Schedule & results')), mine.length ? h('table', { class: 'tbl compact' }, h('thead', null, h('tr', null, ...[l('Data', 'Date'), l('Artista', 'Act'), l('Cidade', 'City'), l('Papel', 'Role'), l('Resultado', 'Result'), l('Por quê', 'Why'), l('', '')].map((x) => h('th', null, t(x))))),
     h('tbody', null, mine.map((x) => h('tr', null, h('td', null, wk(s, x.week)), h('td', null, actLink(s, x.actId)), h('td', null, cityName(x.city)), h('td', null, t(x.by === 'agent' ? l('agente', 'agent') : l('promotor', 'promoter'))),
       h('td', null, x.res ? (x.res.cancelled ? pill(t(l('cancelado', 'cancelled')), 'bad') : `${x.res.att}/${x.res.cap} · ${x.by === 'agent' ? $(x.res.comm) : $(x.res.prom)}`) : t(l('marcado', 'booked'))),
       h('td', { class: 'small' }, x.res ? x.res.why.map((w) => t(w)).join(' ') : ''),
-      h('td', null, x.status === 'booked' ? btn(l('Cancelar', 'Cancel'), () => { const e = cancelShow(s, x.id); toast(t(e ?? l('Cancelado (relação com a cidade sofre).', 'Cancelled (city relations suffer).')), e ? 'bad' : 'info'); rerender(); }, 'btn tiny ghost') : null)))))
+      h('td', null, x.status === 'planned' ? btn(l('Cancelar', 'Cancel'), () => { const e = cancelShow(s, x.id); toast(t(e ?? l('Cancelado (relação com a cidade sofre).', 'Cancelled (city relations suffer).')), e ? 'bad' : 'info'); rerender(); }, 'btn tiny ghost') : null)))))
     : h('p', { class: 'muted' }, t(l('Nada marcado ainda.', 'Nothing booked yet.'))));
 }
 

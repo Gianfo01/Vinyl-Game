@@ -272,6 +272,14 @@ export interface Tour {
   status: 'planned' | 'running' | 'done' | 'cancelled';
   log: L[];
   accidents: number;
+  /** R31 · UNI-4 (B.13): s.tours é o registro ÚNICO de datas. Show avulso marcado como agente/promotor (tour12) é uma
+   *  turnê de 1 data com o papel de quem banca em `by` (os dados do acerto ficam na própria turnê — ver tour12.Show);
+   *  o motor diário (tours.ts) não toca essas datas — quem liquida é o tour12. */
+  by?: 'agent' | 'promoter';
+  /** acordo com o promotor da turnê roteada (route8: quem banca a logística, termos, resultado) — papel sobre a turnê */
+  r8?: import('./sys/route8').RouteDeal;
+  /** eventos de estrada da turnê marcada pelo mapa (road27) */
+  road?: import('./sys/road27').RoadTour27;
 }
 
 // ---------- Marcas ----------

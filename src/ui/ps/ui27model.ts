@@ -3,6 +3,7 @@
 // que abrem as páginas mais usadas. Só lê o estado do jogo: nenhuma regra muda, nenhum sorteio.
 // A parte com DOM fica em ui27.ts; o guia em docs/ui27.md.
 
+import { tourList } from '../../sim/tours';
 import { l, type L } from '../../data/world';
 import { formatMoney, formatNumber } from '../../core/money';
 import type { GameState } from '../../sim/types';
@@ -124,7 +125,7 @@ const KP: Record<string, (s: GameState, loc: string) => Kpi27[]> = {
   },
   live: (s, loc) => {
     const ids = new Set(mine(s));
-    const tours = (s.tours ?? []).filter((x) => ids.has(x.actId));
+    const tours = tourList(s).filter((x) => ids.has(x.actId));
     const run = tours.filter((x) => x.status === 'running').length, plan = tours.filter((x) => x.status === 'planned').length;
     const next = tours.flatMap((x) => x.stops ?? []).filter((x) => x.status === 'scheduled').length;
     const net = sum(tours.filter((x) => x.status === 'done' || x.status === 'running').map((x) => (x.revenue ?? 0) - (x.costs ?? 0)));

@@ -10,6 +10,7 @@
 //
 // As cenas da onda 2 registram mais ações com registerQuick31 (mesmo formato).
 
+import { tourList } from '../../sim/tours';
 import { builtVenue } from '../../sim/sys/venuestore27';
 import { cityById, CITIES, l, type L } from '../../data/world';
 import { defaultOffer, offerEligible29 } from '../../sim/contracts';
@@ -116,7 +117,7 @@ export function releaseLock31(s: GameState, actId: string, projectId?: string): 
 export function tourLock31(s: GameState, a: Act): Lock31 | null {
   if (a.status === 'retired' || a.status === 'split') return lock31(N('O artista encerrou a carreira.', 'The act has ended its career.'), UNLOCK31.ended);
   if (a.status === 'hiatus') return lock31(N('O artista está em pausa.', 'The act is on hiatus.'), UNLOCK31.hiatus);
-  if (s.tours.some((x) => x.actId === a.id && (x.status === 'planned' || x.status === 'running'))) return lock31(N('Já existe uma turnê marcada.', 'A tour is already booked.'), UNLOCK31.tour);
+  if (tourList(s).some((x) => x.actId === a.id && (x.status === 'planned' || x.status === 'running'))) return lock31(N('Já existe uma turnê marcada.', 'A tour is already booked.'), UNLOCK31.tour);
   return null;
 }
 

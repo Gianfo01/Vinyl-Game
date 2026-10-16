@@ -61,10 +61,10 @@ export const TRACKS18: Track18[] = [
   ] },
   { id: 'booking', name: l('Agente e promotor', 'Agent & promoter'), intro: l('Rotas, propostas e a parte de cada noite.', 'Routes, offers and a cut of every night.'), objs: [
     o('page', 'Abrir rotas e propostas', 'Open routes and offers', 'cp17-booking'),
-    o('show', 'Fechar o primeiro show', 'Book the first show', 'cp17-booking', (s) => (x4(s).tour12?.shows ?? []).length >= 1 || (x4(s).tour12?.promoter?.n ?? 0) >= 1),
+    o('show', 'Fechar o primeiro show', 'Book the first show', 'cp17-booking', (s) => ((s.tours ?? []) as { by?: string }[]).some((x) => !!x.by) || (x4(s).tour12?.promoter?.n ?? 0) >= 1),
     o('cal', 'Ver a agenda de shows (concorrência)', 'Check the show calendar (competition)', 'cal17'),
     o('fest', 'Olhar o circuito de festivais', 'Look at the festival circuit', 'festivals'),
-    o('ten', 'Somar 10 shows agenciados', 'Book 10 shows in total', 'cp17-booking', (s) => (x4(s).tour12?.shows ?? []).length + (x4(s).tour12?.promoter?.n ?? 0) >= 10),
+    o('ten', 'Somar 10 shows agenciados', 'Book 10 shows in total', 'cp17-booking', (s) => ((s.tours ?? []) as { by?: string }[]).filter((x) => !!x.by).length + (x4(s).tour12?.promoter?.n ?? 0) >= 10),
   ] },
   { id: 'festival', name: l('Dono de festival', 'Festival owner'), intro: l('Line-up, local, preço e a primeira edição.', 'Line-up, site, price and the first edition.'), objs: [
     o('page', 'Abrir seus festivais', 'Open your festivals', 'cp17-festival'),

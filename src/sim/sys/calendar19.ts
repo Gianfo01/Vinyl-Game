@@ -4,6 +4,7 @@
 // da fábrica (supply18), turnês e festivais próprios, obras (campus18), tribunal (crime17), empréstimos e prêmios.
 // Escreve: dica do Conselheiro (semana apertada), estresse do dono (fato 'crunch' com ouvinte) e "por quê" (cal19.week).
 
+import { tourList } from '../tours';
 import { ownFests } from './feststore';
 import { formatMoney } from '../../core/money';
 import { l, type L } from '../../data/world';
@@ -98,7 +99,7 @@ registerDeadline('release', (s) => {
 // 6. turnês e festivais próprios
 registerDeadline('live', (s) => {
   const mine = mineSet(s), out: Deadline19[] = [];
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (!mine.has(t.actId) || (t.status !== 'planned' && t.status !== 'running')) continue;
     const next = t.stops.filter((x) => x.status === 'scheduled').sort((a, b) => a.day - b.day);
     if (!next.length) continue;

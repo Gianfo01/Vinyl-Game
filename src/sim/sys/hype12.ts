@@ -5,6 +5,7 @@
 // ingressos, preço de relíquias e atenção da imprensa. Expectativa alta com disco fraco → reação (backlash);
 // disco ótimo sem expectativa → sucesso tardio (sleeper). Alavancas do jogador com custo e risco, por época.
 
+import { tourList } from '../tours';
 import { ownFests } from './feststore';
 import { FORECAST31, isForecast31 } from '../r31/market31';
 import { Rng, clamp } from '../../core/rng';
@@ -110,7 +111,7 @@ function parts(s: GameState, key: string): { t: L; v: number }[] {
     const acts = top3((sceneIx ? sceneIx.get(`${id}:${id2}`) ?? [] : actsNow27(s).filter((a) => a.city === id && a.genre === id2 && !a.deceased)).map((a) => actBase(s, a)));
     if (acts.length) out.push({ t: l('Artistas da cena em alta', 'Hot acts in the scene'), v: (acts.reduce((t, x) => t + x, 0) / acts.length) * 0.8 });
   } else if (k === 't') {
-    const tr = s.tours.find((x) => x.id === id), a = tr && s.acts[tr.actId];
+    const tr = tourList(s).find((x) => x.id === id), a = tr && s.acts[tr.actId];
     if (a) out.push({ t: fmtL(l('Hype de {a}', '{a} hype'), { a: a.name }), v: actBase(s, a) * 0.8 });
     if (tr) { const st = tr.stops.filter((x) => x.status === 'played'); const fill = st.length ? st.reduce((t, x) => t + x.sold / Math.max(1, x.capacity), 0) / st.length : 0; if (fill > 0.9) out.push({ t: l('Datas esgotadas', 'Sold-out dates'), v: 12 }); }
   }
@@ -278,7 +279,7 @@ export function nameOfKey(s: GameState, key: string): string {
   if (k === 'f') return ownFests(s).find((x) => x.id === id)?.name ?? '?';
   if (k === 'l') return id === 'player' ? s.config.companyName : s.labels[id]?.name ?? '?';
   if (k === 's') return `${id} · ${id2}`;
-  if (k === 't') return s.tours.find((x) => x.id === id)?.name ?? '?';
+  if (k === 't') return tourList(s).find((x) => x.id === id)?.name ?? '?';
   return key;
 }
 
@@ -289,7 +290,7 @@ export function tracked(s: GameState): string[] {
   for (const p of s.pendingReleases) keys.add(`n:${p.actId}`);
   for (const rl of relics(s).list) if (rl.st === 'auction') keys.add(`o:${rl.id}`);
   for (const f of ownFests(s)) keys.add(`f:${f.id}`);
-  for (const t of s.tours) if (t.status === 'running' || t.status === 'planned') keys.add(`t:${t.id}`);
+  for (const t of tourList(s)) if (t.status === 'running' || t.status === 'planned') keys.add(`t:${t.id}`);
   keys.add('l:player');
   for (const lb of Object.values(s.labels)) if (lb.active) keys.add(`l:${lb.id}`);
   for (const k of Object.keys(chronState(s).sc)) keys.add(`s:${k}`);

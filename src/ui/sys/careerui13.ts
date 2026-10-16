@@ -9,7 +9,7 @@ import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { careerDef, careers, timeLoad } from '../../sim/sys/careers12';
 import { prod, studios } from '../../sim/sys/studio12';
-import { c12, hasAgency } from '../../sim/sys/tour12';
+import { c12, hasAgency, shows12 } from '../../sim/sys/tour12';
 import { VKINDS, bookingCandidates, foundCost, foundVenture, funds, kindsAvailable, signBooking, bookingChance, ventures, type Holder, type VKind } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
 import { fmtL, money } from '../../sim/util';
@@ -87,7 +87,7 @@ function kpis(s: GameState, id: string): Kpi[] {
   switch (id) {
     case 'label': { const r = s.player.reputation; return [[l('Elenco', 'Roster'), String(Object.values(s.acts).filter((a) => a.owner === 'player').length)], [l('Caixa', 'Cash'), $(s.player.cash), s.player.cash < 0 ? 'bad' : ''], [l('Reputação', 'Reputation'), String(Math.round((r.artistic + r.commercial + r.artists + r.institutional) / 4))]]; }
     case 'manager': { const mg = ventures(s).mg; return [[l('Clientes', 'Clients'), String(mg.clients.length), mg.clients.length ? '' : 'bad'], [l('Reputação', 'Reputation'), String(Math.round(mg.rep))], [l('Comissões (total)', 'Commissions (total)'), $(mg.total)], [l('Crises', 'Crises'), String(mg.clients.filter((c) => c.crisis).length), mg.clients.some((c) => c.crisis) ? 'bad' : '']]; }
-    case 'booking': { const c = c12(s), ag = hasAgency(s); return [[l('Agência', 'Agency'), ag ? `${ag.clients?.length ?? 0} ${t(l('clientes', 'clients'))}` : '—', ag ? '' : 'bad'], [l('Datas marcadas', 'Dates booked'), String(c.shows.filter((x) => x.status === 'booked').length)], [l('Promotora', 'Promotion arm'), c.promoter.on ? $(c.promoter.total) : '—', c.promoter.total < 0 ? 'bad' : ''], [l('Ofertas na mesa', 'Offers pending'), String(c.offers.length), c.offers.length ? 'warn' : '']]; }
+    case 'booking': { const c = c12(s), ag = hasAgency(s); return [[l('Agência', 'Agency'), ag ? `${ag.clients?.length ?? 0} ${t(l('clientes', 'clients'))}` : '—', ag ? '' : 'bad'], [l('Datas marcadas', 'Dates booked'), String(shows12(s).filter((x) => x.status === 'planned').length)], [l('Promotora', 'Promotion arm'), c.promoter.on ? $(c.promoter.total) : '—', c.promoter.total < 0 ? 'bad' : ''], [l('Ofertas na mesa', 'Offers pending'), String(c.offers.length), c.offers.length ? 'warn' : '']]; }
     case 'festival': { const f = ownFests(s); return [[l('Festivais', 'Festivals'), String(f.length), f.length ? '' : 'bad'], ...ventureKpis(s, 'festival').slice(1)]; }
     case 'venue': { const v = builtVenue(s); return [[l('Casa', 'Venue'), v ? v.name : '—', v ? '' : 'bad']]; }
     case 'studio': { const p = prod(s); return [[l('Estúdios', 'Studios'), String(studios(s).length), studios(s).length || p.on ? '' : 'bad'], [l('Produtor: reputação', 'Producer reputation'), p.on ? String(Math.round(p.rep)) : '—'], [l('Propostas', 'Offers'), String(p.offers.length)]]; }

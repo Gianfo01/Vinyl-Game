@@ -7,6 +7,7 @@
 //   seguidos, alguém se esgota (perde rendimento ou pede as contas).
 // • Rivais: o A&R de cada selo fecha um número limitado de contratos por mês (gate14.ts).
 
+import { tourList } from '../tours';
 import { Rng } from '../../core/rng';
 import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
@@ -92,7 +93,7 @@ interface RoleWork { unit: L; per: number; demand: (s: GameState) => number }
 const mine = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a);
 const recentReleases = (s: GameState): number => mine(s).reduce((t, a) => t + a.releases.filter((rid) => { const r = s.releases[rid]; return !!r && s.week - r.week >= 0 && s.week - r.week < 5; }).length, 0)
   + s.pendingReleases.filter((p) => s.acts[p.actId]?.owner === 'player').length;
-const liveTours = (s: GameState): number => s.tours.filter((t) => t.status !== 'done' && t.status !== 'cancelled' && s.acts[t.actId]?.owner === 'player').length;
+const liveTours = (s: GameState): number => tourList(s).filter((t) => t.status !== 'done' && t.status !== 'cancelled' && s.acts[t.actId]?.owner === 'player').length;
 const delegatedCount = (s: GameState): number => mine(s).filter((a) => s.delegated[a.id] !== false && !a.playerBand).length;
 
 /** Rodada 16: ordens permanentes ativas delegadas a uma função (estado em x4.deleg16, sem importar o sistema). */

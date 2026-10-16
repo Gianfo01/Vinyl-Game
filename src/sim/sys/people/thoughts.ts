@@ -1,6 +1,7 @@
 // Humor como pilha de pensamentos (inspiração: RimWorld). Cada pensamento tem valor e prazo; a soma
 // é o humor, que puxa o moral existente todo mês e entra no apelo dos lançamentos ("Clima na banda").
 
+import { tourList } from '../../tours';
 import { l, type L } from '../../../data/world';
 import { registerMod, registerSimHook } from '../../ext4';
 import type { GameState, Person } from '../../types';
@@ -152,7 +153,7 @@ registerSimHook('show', 'people-thoughts', (s, r, arg) => {
     else if (ratio >= 0.7) addThought(s, id, 'show_good', { p: city });
     else if (ratio < 0.4) addThought(s, id, 'show_empty', { p: city });
   }
-  const tour = s.tours.find((t) => t.id === sh.tourId);
+  const tour = tourList(s).find((t) => t.id === sh.tourId);
   const stop = tour?.stops.find((x) => x.cityId === sh.cityId && x.status === 'played' && x.travelDays > 0);
   if (stop && !s.player.equipment.includes('tour_bus') && r.chance(0.5)) for (const id of act.members) addThought(s, id, 'bus_sleep');
 });

@@ -11,6 +11,7 @@
 //    (`season19`) aplicada nas vendas (chartUnits) e na procura de shows (cityDemand), marcada no calendar19; o
 //    "guardar para o Natal" do npc17 vira decisão do jogador (campanha de fim de ano, diluída pelos astros que seguraram discos).
 
+import { tourList } from '../tours';
 import { cityRelAdd, cityRelEach } from '../city';
 import { Rng, clamp } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
@@ -308,7 +309,7 @@ export function liveMonth19(s: GameState): void {
   for (const b of activeBoy19(s)) {
     const a = s.acts[b.act];
     if (!a) { b.end = s.week; continue; }
-    if (s.tours.some((t) => t.actId === a.id && t.status === 'running') && mine(s, a)) {
+    if (tourList(s).some((t) => t.actId === a.id && t.status === 'running') && mine(s, a)) {
       const c = boyCost19(s, a); b.cost += c;
       post(s, `lv19boy:${b.id}:${s.year}-${s.month}`, -c, 'live', `Boicote: casas alternativas (${a.name})`);
       const f = fan18(s, a.id, false); if (f) f.loy = clamp(f.loy + 0.5, 0, 100);

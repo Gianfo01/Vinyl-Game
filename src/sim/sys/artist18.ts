@@ -10,6 +10,7 @@
 // distribuição (P&D), contrato de desenvolvimento, editora para suas músicas, empresário e agente de shows.
 // Seu extrato de artista mostra adiantamento, recuperável, royalties e prestações de contas (econ18).
 
+import { tourList } from '../tours';
 import { clamp, hashString, Rng, seedState } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { familyOf, l, type L, type MarketId } from '../../data/world';
@@ -835,7 +836,7 @@ postHooks18().push((s, key, amount, cat) => {
     const frac = c.clauses18?.rec ?? 0.5;
     c.recoupBalance = Math.max(0, c.recoupBalance + Math.round(v * frac) - (key.startsWith('rec:') ? Math.round(-amount * 0.5) : 0));
     led(s, 'rec', v, fmtL(l('Fundo de gravação de {b} ({p}% recuperável)', 'Recording fund from {b} ({p}% recoupable)'), { b: nameOf(s, d.lb), p: Math.round(frac * 100) }));
-  } else if (cat === 'live_costs' && key.startsWith('tour:') && s.tours.find((t) => key === `tour:${t.id}` && t.actId === a.id)) {
+  } else if (cat === 'live_costs' && key.startsWith('tour:') && tourList(s).find((t) => key === `tour:${t.id}` && t.actId === a.id)) {
     const cap = r100(s, 1500 + labelClout(s, d.lb) * 6000);
     const v = Math.min(Math.round(-amount * (d.tour ? 0.5 : 0.25)), cap);
     if (v <= 0 || !post(s, `a18tour:${key}`, v, 'advances', `Apoio de turnê ${nameOf(s, d.lb)}`)) return;

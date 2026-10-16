@@ -12,7 +12,7 @@ import type { GameState } from '../src/sim/types';
 import { money, playerActs } from '../src/sim/util';
 import { emitFact } from '../src/sim/facts17';
 import {
-  ODDS27, autoPick27, basePlan27, bookRoute27, isRoad27, pendingRoad27, resolveRoad27, road27, roadEvent27, routeView27,
+  ODDS27, autoPick27, basePlan27, bookRoute27, isRoad27, pendingRoad27, resolveRoad27, roadOf27, roadEvent27, routeView27,
 } from '../src/sim/sys/road27';
 import {
   ACTS27, CFG27, actCrisis27, crisisActs27, crisisById27, crisisCands27, crisisWeek27, delegatePick27, finish27, openCrisis27, type Crisis27,
@@ -231,7 +231,7 @@ describe('r27 P2B — turnê no mapa', () => {
   it('sem decisão do jogador, a equipe decide no dia (dentro da política) e o mês corre igual nos dois clones', () => {
     const a = roadFix(), b = roadFix();
     advanceMonth(a.s); advanceMonth(b.s);
-    const R = road27(a.s).tours[a.tid];
+    const R = roadOf27(a.s, a.tid)!; // UNI-4: estrada na própria turnê
     expect(Object.values(R.ev).length).toBeGreaterThan(0);
     expect(Object.values(R.ev).every((x) => x.auto)).toBe(true);
     expect(hashString(JSON.stringify(a.s.tours))).toBe(hashString(JSON.stringify(b.s.tours)));

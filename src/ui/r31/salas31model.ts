@@ -11,6 +11,7 @@
 // Salas: Estúdio, Elenco, Equipe, Catálogo, Talentos, Troféus e relíquias, e a cena-assinatura de cada uma das 12
 // carreiras ('sig:<carreira>'). A pintura fica em salas31px.ts; a tela em salas31.ts.
 
+import { tourList } from '../../sim/tours';
 import { TIER_NAME31, relicTierOf31 } from '../../sim/r31/relic31';
 import type { Relic } from '../../sim/sys/relics9';
 import { HQ_LEVELS, STAFF_ROLES, STUDIO_TIERS } from '../../data/rules';
@@ -162,7 +163,7 @@ export function youAt31(s: GameState): You31 {
   const pid = p?.id;
   const band = pid ? live(s).find((a) => a.members.includes(pid)) ?? (s.player.bandActId ? s.acts[s.player.bandActId] : undefined) : undefined;
   if (band) {
-    const tour = (s.tours ?? []).find((x) => x.actId === band.id && x.status === 'running');
+    const tour = tourList(s).find((x) => x.actId === band.id && x.status === 'running');
     if (tour) {
       const st = [...tour.stops].reverse().find((x) => x.status === 'played') ?? tour.stops.find((x) => x.status === 'scheduled');
       const city = st ? cityById[st.cityId]?.name : undefined;
@@ -317,7 +318,7 @@ function studioM(s: GameState): SalaM31 {
 
 type Where31 = 'rest' | 'rehearse' | 'pack' | 'stress' | 'tour' | 'studio' | 'hiatus';
 function whereAct(s: GameState, a: Act): { w: Where31; at?: L } {
-  const tour = (s.tours ?? []).find((x) => x.actId === a.id && x.status === 'running');
+  const tour = tourList(s).find((x) => x.actId === a.id && x.status === 'running');
   if (tour) {
     const st = [...tour.stops].reverse().find((x) => x.status === 'played') ?? tour.stops.find((x) => x.status === 'scheduled');
     const c = st ? cityById[st.cityId]?.name : undefined;
@@ -328,9 +329,9 @@ function whereAct(s: GameState, a: Act): { w: Where31; at?: L } {
   const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p && p.alive);
   const stress = ms.length ? ms.reduce((t, p) => t + p.stress, 0) / ms.length : 0;
   if (stress >= 65) return { w: 'stress' };
-  const planned = (s.tours ?? []).find((x) => x.actId === a.id && x.status === 'planned');
+  const planned = tourList(s).find((x) => x.actId === a.id && x.status === 'planned');
   if (planned && planned.stops.some((x) => x.status === 'scheduled' && x.day - s.day <= 14)) return { w: 'pack' };
-  if ((s.tours ?? []).some((x) => x.actId === a.id && x.stops.some((st) => st.status === 'scheduled' && st.day >= s.day && st.day < s.day + 28))) return { w: 'rehearse' };
+  if (tourList(s).some((x) => x.actId === a.id && x.stops.some((st) => st.status === 'scheduled' && st.day >= s.day && st.day < s.day + 28))) return { w: 'rehearse' };
   return { w: 'rest' };
 }
 const yearsLeft = (s: GameState, a: Act): number | null => { const c = a.contractId ? s.contracts[a.contractId] : undefined; return c && c.party === 'player' ? Math.max(0, (c.endWeek - s.week) / 52) : null; };
@@ -677,7 +678,7 @@ function sigSpec(s: GameState, c: Career31): Sig31 {
       ], deco: [{ prop: 'desk', x: 0.56, w: 0.3 }, { prop: 'window', x: 0.84, w: 0.12 }] };
     }
     case 'booking': {
-      const tours = (s.tours ?? []).filter((x) => x.status === 'planned' || x.status === 'running').length;
+      const tours = tourList(s).filter((x) => x.status === 'planned' || x.status === 'running').length;
       return { props: [
         { id: 'map', prop: 'routemap', x: 0.06, w: 0.5, label: l('Mapa de rotas', 'Route map'), tip: l('Turnês planejadas e em curso', 'Planned and running tours'), chip: n(tours, l('{n} turnê', '{n} tour'), l('{n} turnês', '{n} tours')), do: go(), pp: { n: Math.min(6, tours) } },
         { id: 'cal', prop: 'schedule', x: 0.66, w: 0.16, label: l('Calendário de datas', 'Date calendar'), tip: l('Datas confirmadas e propostas', 'Confirmed and proposed dates'), chip: { sym: '▦', text: l('datas', 'dates'), tone: 'info' }, do: go('calendar19') },

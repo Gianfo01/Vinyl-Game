@@ -1,5 +1,6 @@
 // Rodada 14 — cenas ilustradas ligadas ao estado do jogo (cabeçalhos das telas e miniaturas de eventos).
 
+import { tourList } from '../../sim/tours';
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { Decision, GameState } from '../../sim/types';
@@ -8,7 +9,7 @@ import { scene14, sceneOfCat14, type Scene14, type SceneView14 } from '../pixel/
 /** Último show tocado pelo jogador (público, capacidade, cidade) para desenhar a casa certa. */
 export function lastGig14(s: GameState): { attendance: number; capacity: number; cityId: string } | null {
   let best: { attendance: number; capacity: number; cityId: string; day: number } | null = null;
-  for (const tr of s.tours ?? []) for (const st of tr.stops ?? []) {
+  for (const tr of tourList(s) ?? []) for (const st of tr.stops ?? []) {
     if (st.status !== 'played') continue;
     if (!best || st.day > best.day) best = { attendance: st.sold, capacity: st.capacity, cityId: st.cityId, day: st.day };
   }

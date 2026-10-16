@@ -8,6 +8,7 @@
 //   • placeActs27 / doPlace27 — ações (com custo, motivo de bloqueio e efeito real).
 // Sem sorteio do jogo: nomes, donos e funcionários vêm de hash estável (não mexe na semente).
 
+import { tourList } from '../tours';
 import { realVenues } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { FIRST_NAMES, LAST_NAMES } from '../../data/people';
@@ -155,7 +156,7 @@ const membersOf = (s: GameState, a: Act, n: number, role: L, mine = false): Pers
   a.members.slice(0, n).map((pid) => ({ name: s.persons[pid]?.name ?? a.name, role, pid, actId: a.id, mine }));
 const homeShowSoon = (s: GameState, days = 21) => {
   const mine = new Set(playerActs(s));
-  for (const t of s.tours) if (mine.has(t.actId) && (t.status === 'planned' || t.status === 'running')) {
+  for (const t of tourList(s)) if (mine.has(t.actId) && (t.status === 'planned' || t.status === 'running')) {
     const st = t.stops.find((x) => x.cityId === s.config.homeCity && x.day >= s.day && x.day - s.day <= days);
     if (st) return { t, st };
   }
@@ -299,7 +300,7 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
       const fmt = p.k === 'bar' ? 'small' : 'standard';
       out.push({ id: 'show', act: true, label: p.k === 'bar' ? l('Marcar show no bar', 'Book a bar gig') : l('Marcar show aqui', 'Book a show here'),
         desc: l('Uma data na cidade daqui a 2 semanas (bilheteria, cachê e fãs pelo sistema de turnês).', 'One date in town two weeks from now (door, fee and fans via the touring system).'),
-        dis: noAct ?? (s.tours.some((t) => t.actId === a!.id && (t.status === 'planned' || t.status === 'running')) ? l('Esse artista já tem turnê marcada.', 'That act already has a tour booked.') : undefined) });
+        dis: noAct ?? (tourList(s).some((t) => t.actId === a!.id && (t.status === 'planned' || t.status === 'running')) ? l('Esse artista já tem turnê marcada.', 'That act already has a tour booked.') : undefined) });
       if (p.k === 'bar' && playerPerson(s) && s.config.role === 'artist') out.push({ id: 'play', label: l('Tocar hoje à noite (você)', 'Play tonight (you)'), desc: l('Microfone aberto: cachê, palco e um pouco de fama.', 'Open mic: a fee, stage time and a little fame.') });
       if (p.venue && p.sale !== undefined) out.push({ id: 'buyv', label: l('Comprar a casa', 'Buy the venue'), desc: l('A casa vira sua (receita de bilheteria e bar; manutenção).', 'The venue becomes yours (door and bar income; upkeep).'), cost: p.sale, dis: cash(p.sale) });
       void fmt;

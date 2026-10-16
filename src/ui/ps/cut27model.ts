@@ -10,6 +10,7 @@
 // e nada muda na simulação se ninguém escolher (ficar parado = status quo). Sem sorteios: os "cara ou coroa" das
 // escolhas arriscadas saem de um hash do id da cena (não mexe em nenhum fluxo do Rng).
 
+import { tourList } from '../../sim/tours';
 import { cityById, l, type L } from '../../data/world';
 import { EQUIPMENT } from '../../data/rules';
 import { takeLoan } from '../../sim/economy';
@@ -289,7 +290,7 @@ export function scan27(s: GameState, pref: CutPref27 = 'all', max = 2): CutData2
     if (s.player.stats.releases > 0) st.once.press1 = s.week;
     if (s.player.stats.top10s > 0 || Object.values(s.acts).some((a) => isMine(s, a.id) && a.peakChart > 0 && a.peakChart <= 100)) st.once.chart1 = s.week;
     if (s.week > 12) st.once.show1 = s.week;
-    for (const t of s.tours ?? []) if (isMine(s, t.actId) && t.status !== 'planned') st.once[`tour:tour:${t.id}`] = s.week;
+    for (const t of tourList(s) ?? []) if (isMine(s, t.actId) && t.status !== 'planned') st.once[`tour:tour:${t.id}`] = s.week;
     init29(s, st.once); // r29
     return [];
   }
@@ -320,7 +321,7 @@ export function scan27(s: GameState, pref: CutPref27 = 'all', max = 2): CutData2
     const e = [...(s.charts?.singles ?? []), ...(s.charts?.albums ?? [])].find((x) => isMine(s, s.releases[x.releaseId]?.actId));
     if (e) { const r = s.releases[e.releaseId]; add(dataOf(s, 'chart1', `c:${r.id}`, r.actId, { t: r.title })); }
   }
-  for (const t of s.tours ?? []) {
+  for (const t of tourList(s) ?? []) {
     if (!isMine(s, t.actId) || t.status !== 'running' || !t.stops.some((x) => x.status === 'played')) continue;
     add(dataOf(s, 'tour', `tour:${t.id}`, t.actId, { t: t.name }));
   }

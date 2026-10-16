@@ -22,6 +22,7 @@
 //
 // Interruptor `look31` (padrão ligado): desligado = tudo como antes (imagem recalculada de carisma/vaidade/palco).
 
+import { tourList } from './tours';
 import { clamp, hashString, Rng } from '../core/rng';
 import { familyOf, l, type FamilyId, type L } from '../data/world';
 import { emitEvent, type Ctx, type EventDef } from './events';
@@ -557,7 +558,7 @@ export function monthLook31(s: GameState): void {
   for (const p of tracked(s)) {
     const r0 = st.p[p.id];
     const a = actOfP(s, p.id);
-    const touring = !!a && s.tours.some((t) => t.actId === a.id && t.status === 'running');
+    const touring = !!a && tourList(s).some((t) => t.actId === a.id && t.status === 'running');
     let r = r0;
     const W = () => (r ??= recW(s, p.id), r);
     // forma: rotina do jogador; sem treino, volta devagar ao natural

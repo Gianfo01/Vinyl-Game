@@ -1,6 +1,7 @@
 // Conquistas (inspiração: CD Market): vendas, turnês, prêmios, formatos, processos, lojas, digital,
 // palco e festivais; algumas escondidas até serem desbloqueadas.
 
+import { tourList } from '../../tours';
 import { l, type L } from '../../../data/world';
 import { registerSimHook } from '../../ext4';
 import type { GameState } from '../../types';
@@ -53,7 +54,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'legal_won', cat: 'legal', icon: 'gavel', name: l('Veredito favorável', 'Favorable verdict'), desc: l('Vença um processo.', 'Win a lawsuit.'), hidden: true, check: (s) => (s.lawsuits ?? []).some((x) => x.stage === 'won') },
   { id: 'store_merch', cat: 'stores', icon: 'shirt', name: l('Banca de camisetas', 'Shirt stand'), desc: l('Tenha uma linha de merch.', 'Have a merch line.'), check: (s) => Object.keys(s.merch ?? {}).length >= 1 },
   { id: 'store_branch', cat: 'stores', icon: 'building', name: l('Filial aberta', 'Branch office'), desc: l('Abra uma filial em outra cidade.', 'Open a branch in another city.'), check: (s) => (s.branches ?? []).length >= 1 },
-  { id: 'tour_first', cat: 'tours', icon: 'tour-bus', name: l('Pé na estrada', 'On the road'), desc: l('Complete uma turnê.', 'Finish a tour.'), check: (s) => s.tours.some((t) => t.status === 'done' && (s.acts[t.actId]?.owner === 'player' || s.acts[t.actId]?.playerBand)) || cnt(s, 'shows') >= 5 },
+  { id: 'tour_first', cat: 'tours', icon: 'tour-bus', name: l('Pé na estrada', 'On the road'), desc: l('Complete uma turnê.', 'Finish a tour.'), check: (s) => tourList(s).some((t) => t.status === 'done' && (s.acts[t.actId]?.owner === 'player' || s.acts[t.actId]?.playerBand)) || cnt(s, 'shows') >= 5 },
   { id: 'shows_50', cat: 'tours', icon: 'tour-bus', name: l('Cinquenta noites', 'Fifty nights'), desc: l('Toque 50 shows de turnê.', 'Play 50 tour shows.'), check: (s) => cnt(s, 'shows') >= 50 },
   { id: 'people_1m', cat: 'tours', icon: 'fans', name: l('Um milhão de ingressos', 'A million tickets'), desc: l('Um milhão de pessoas nos seus shows.', 'A million people at your shows.'), check: (s) => cnt(s, 'showPeople') >= 1000000 },
   { id: 'sellout', cat: 'live', icon: 'fire', name: l('Esgotado em minutos', 'Sold out in minutes'), desc: l('Esgote um show em minutos.', 'Sell out a show in minutes.'), check: (s) => cnt(s, 'sellouts') >= 1 },

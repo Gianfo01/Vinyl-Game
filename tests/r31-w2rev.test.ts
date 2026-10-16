@@ -18,7 +18,7 @@ import { agendaCount31, anrMonth31, setAgendaMode31 } from '../src/sim/sys/deleg
 import { addOrder, d16, quality, runStaff } from '../src/sim/sys/deleg16';
 import { roleLoads } from '../src/sim/sys/capacity14';
 import { budgetLeft, overCapacity, pace8 } from '../src/sim/sys/pacing8';
-import { c12 } from '../src/sim/sys/tour12';
+import { shows12 } from '../src/sim/sys/tour12';
 import { createFestival } from '../src/sim/sys/live/festival';
 import { myContract31, rescind31, rescindQuote31 } from '../src/sim/r31/rescind31';
 import { rng19 } from '../src/sim/rng19';
@@ -158,9 +158,9 @@ describe('W2-REV · delegação', () => {
     const e = autoLog31(s, { r: 'tour', act: act.id }).find((x) => x.undo?.k === 'show');
     expect(e).toBeTruthy();
     expect(undo31(s, e!.id)).toBeNull();
-    const n = c12(s).shows.filter((x) => x.actId === act.id && x.status === 'booked').length;
+    const n = shows12(s).filter((x) => x.actId === act.id && x.status === 'planned').length;
     runStaff(s, rng19(s, 'deleg16'), ag);
-    expect(c12(s).shows.filter((x) => x.actId === act.id && x.status === 'booked').length).toBe(n);
+    expect(shows12(s).filter((x) => x.actId === act.id && x.status === 'planned').length).toBe(n);
     expect(autoLog31(s, { r: 'tour', act: act.id, n: 1 })[0].t.pt).toContain('desfez');
   });
 

@@ -13,7 +13,7 @@ import { cityById, l, type L } from '../../data/world';
 import { evaluateOffer, expectedAdvance, registerContractHook, renewContract, renewHooks29 } from '../contracts';
 import { registerMod, registerSimHook } from '../ext4';
 import { renewalAdj } from '../rights';
-import { cityDemand, type TourEstimate, type TourPlan } from '../tours';
+import { cityDemand, type TourEstimate, type TourPlan, tourList } from '../tours';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, notify, playerActs, staffCount, staffSkill } from '../util';
 import { festCapacity, festFee, festTierFor, editionOf, pitchOdds8, TIER_NAME, type FestTier } from './fests8';
@@ -238,7 +238,7 @@ function debriefOffers(s: GameState): void {
 
 function debriefTours(s: GameState): void {
   const st = ex12(s);
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     const act = s.acts[t.actId];
     if (!act || (act.owner !== 'player' && !act.playerBand)) continue;
     if (t.status === 'planned' && !st.tourSnap[t.id]) {

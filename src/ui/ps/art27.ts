@@ -13,6 +13,7 @@
 //   const art = artSlots27.get(area)?.(s);  if (art) header.prepend(art);
 // ou diretamente:  pageArt27(area, s)  (devolve null quando a página não tem arte).
 
+import { tourList } from '../../sim/tours';
 import { l, type L } from '../../data/world';
 import type { GameState } from '../../sim/types';
 import { avatarSprite, crowdLook27, lookOf, randomLook } from '../pixel/avatar';
@@ -159,7 +160,7 @@ function stateOf(kind: SceneKind27, s: GameState): St {
       base.n = { fill, hop: fame > 50 ? 1 : fame > 20 ? 0.6 : 0.2 };
       base.state = fill > 0.8 ? 'packed' : fill > 0.4 ? 'half' : 'thin';
       if (kind === 'tour') {
-        const t = (s.tours ?? []).find((x) => x.status === 'running' && s.acts[x.actId]?.owner === 'player');
+        const t = tourList(s).find((x) => x.status === 'running' && s.acts[x.actId]?.owner === 'player');
         base.state = t ? 'on-road' : 'parked';
         base.sign.tour = short(t?.name ?? me?.name, 12);
         base.figs.push({ fx: 0.4, pose: t ? 'walk' : 'stand', dir: 'SE', pid: mem[0], seed: 'tour-a' }, { fx: 0.46, pose: 'stand', dir: 'SE', pid: mem[1], seed: 'tour-b' });
