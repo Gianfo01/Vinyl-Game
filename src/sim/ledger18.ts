@@ -129,6 +129,14 @@ export function postHooks18(): ((s: GameState, key: string, amount: number, cat:
   return (f.l ??= []);
 }
 
+/** R31 (txn, src/sim/r31/txn.ts): observadores de TODO lançamento de `post` (qualquer seção), só leitura — acumulam os
+ *  totais duráveis atribuídos (artista, projeto, período). Não mudam valores. Função içada, como `postHooks18`. */
+export type PostObs18 = (s: GameState, key: string, amount: number, cat: string, sect: Sect18, cash: boolean) => void;
+export function postObs18(): PostObs18[] {
+  const f = postObs18 as unknown as { l?: PostObs18[] };
+  return (f.l ??= []);
+}
+
 /** Migração de saves anteriores à rodada 18: cria o livro e marca o ano de corte (histórico antigo fica como estava). */
 export function migrate18(s: GameState): void {
   const p = s.player as unknown as { fin18?: Fin18 };
