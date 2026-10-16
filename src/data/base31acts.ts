@@ -100,7 +100,6 @@ export const BASE31_ACTS: RealArtist[] = [
   { n: 'Wonder Girls', g: 'kpop', c: 'seoul', d: 2007, e: 2017, t: 3, cn: 'KOR', al: [['Tell Me', 2007, 'single'], ['Nobody', 2008, 'single']] },
   { n: 'Kumar Sanu', g: 'bollywood', c: 'kolkata', d: 1989, t: 3, cn: 'IND', b: 1957, r: 'vocal', al: [['Aashiqui', 1990, 'lp', 'soundtrack']] },
   { n: 'Alka Yagnik', g: 'bollywood', c: 'mumbai', d: 1980, t: 3, cn: 'IND', b: 1966, r: 'vocal' },
-  { n: 'Barış Manço', g: 'anatolian_rock', c: 'istanbul', d: 1962, e: 1999, t: 3, cn: 'TUR', b: 1943, x: 1999, r: 'vocal' },
   { n: 'Sharon Cuneta', g: 'opm', c: 'manila', d: 1978, t: 3, cn: 'PHL', b: 1966, r: 'vocal', al: [['Mr. DJ', 1978, 'single']] },
 
   // ---------------------------------------------------------------- A2 · África

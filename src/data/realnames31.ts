@@ -90,7 +90,6 @@ export const REALNAMES31: Record<string, RealName31> = {
   'cur:wonder_girls': { real: 'Wonder Girls', substituto: 'Wonder Gals', tipo: 'artist' },
   'cur:kumar_sanu': { real: 'Kumar Sanu', substituto: 'Kumar Sanu Playback', tipo: 'artist' },
   'cur:alka_yagnik': { real: 'Alka Yagnik', substituto: 'Alka Yagna', tipo: 'artist' },
-  'cur:baris_manco': { real: 'Barış Manço', substituto: 'Barış Mançu', tipo: 'artist' },
   'cur:sharon_cuneta': { real: 'Sharon Cuneta', substituto: 'Sharon Cunha', tipo: 'artist' },
   'cur:awilo_longomba': { real: 'Awilo Longomba', substituto: 'Awilo Longo', tipo: 'artist' },
   'cur:yemi_alade': { real: 'Yemi Alade', substituto: 'Yemi Alada', tipo: 'artist' },

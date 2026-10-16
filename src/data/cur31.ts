@@ -108,7 +108,6 @@ const NOTE31: Record<string, Note> = {
   wonder_girls: { sub: 'Wonder Gals' },
   kumar_sanu: { sub: 'Kumar Sanu Playback' },
   alka_yagnik: { sub: 'Alka Yagna' },
-  baris_manco: { sub: 'Barış Mançu' },
   sharon_cuneta: { lang: 'tl', sub: 'Sharon Cunha' },
   awilo_longomba: { lang: 'ln', sub: 'Awilo Longo' },
   yemi_alade: { sub: 'Yemi Alada' },

@@ -25,12 +25,16 @@ export interface Fiction31 {
   lang: string;
   /** detalhe de fã (easter egg) */
   fan?: string;
+  /** já está na base de artistas reais (REAL_ALL): a onda 4 só liga a obra a esse ato, sem criar outro */
+  naBase?: true;
 }
 
 const F = (id: string, n: string, kind: FicKind31, obra: string, obraAno: number, ano: number, c: string, g: string, m: string[], lang = 'en', lugar?: string, fan?: string): Fiction31 =>
   ({ id, n, kind, obra, obraAno, ano, c, g, m, lang, ...(lugar ? { lugar } : {}), ...(fan ? { fan } : {}) });
 
-export const FICTION31: Fiction31[] = [
+/** Já na base de artistas reais (não duplicar na ativação): The Monkees, Hatsune Miku. */
+const NA_BASE31 = new Set(['monkees', 'hatsune_miku']);
+const FICTION31_RAW: Fiction31[] = [
   // ---------------------------------------------------------------- ficção que virou real
   F('monkees', 'The Monkees', 'virou_real', 'The Monkees (NBC)', 1966, 1966, 'los_angeles', 'pop_rock', ['Micky Dolenz', 'Davy Jones', 'Michael Nesmith', 'Peter Tork']),
   F('archies', 'The Archies', 'virou_real', 'The Archie Show', 1968, 1969, 'new_york', 'teen_pop', ['Archie Andrews', 'Jughead Jones', 'Reggie Mantle', 'Betty Cooper', 'Veronica Lodge'], 'en', 'Riverdale', '"Sugar, Sugar" chega ao topo sem a banda existir de verdade.'),
@@ -91,3 +95,4 @@ export const FICTION31: Fiction31[] = [
   F('rayna_jaymes', 'Rayna Jaymes', 'so_ficcao', 'Nashville', 2012, 2012, 'nashville', 'country_pop', ['Rayna Jaymes']),
   F('lyon_family', 'Família Lyon', 'so_ficcao', 'Empire', 2015, 2015, 'new_york', 'hiphop', ['Lucious Lyon', 'Jamal Lyon', 'Hakeem Lyon']),
 ];
+export const FICTION31: Fiction31[] = FICTION31_RAW.map((f) => (NA_BASE31.has(f.id) ? { ...f, naBase: true as const } : f));

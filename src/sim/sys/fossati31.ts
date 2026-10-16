@@ -310,7 +310,8 @@ export function tennisClub31(s: GameState): FamRes31 {
 // ---------------------------------------------------------------- ganchos
 
 registerSimHook('newgame', 'fam31', (s) => { syncFam31(s); ensureEfroViolin31(s); });
-registerSimHook('year', 'fam31', (s) => { syncFam31(s); });
+// a virada do ano: o gancho 'year' roda no fechamento de dezembro (ano velho); o de janeiro já vê o ano novo
+registerSimHook('month', 'fam31', (s) => { if (s.month === 0) syncFam31(s); });
 
 // ---------------------------------------------------------------- editor (regra 10)
 
