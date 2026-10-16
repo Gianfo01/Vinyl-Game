@@ -497,3 +497,9 @@ H('deleg31', ['Delegação', 'Delegation'],
   ['Escolha a área, o responsável e os limites. Ex.: A&R › Delegar › teto de $20.000 por contrato, só rock e pop, "me pergunte acima de $10.000"; o A&R passa a propor sozinho dentro disso.', 'Pick the area, who is in charge and the limits. E.g. A&R › Delegate › $20,000 cap per contract, rock and pop only, "ask me above $10,000"; the A&R then makes offers on their own within that.'],
   [['Desfazer uma decisão delegada impede que ela se repita por 12 semanas.', 'Undoing a delegated decision stops it from repeating for 12 weeks.']],
   ['cockpit']);
+// r31 onda 3 (F): conhecidos
+H('known31', ['Conhecidos', 'Acquaintances'],
+  ['Todas as pessoas que você conhece, com a relação em cinco dimensões (intimidade, afeto, respeito, confiança e rivalidade) e como vocês se conheceram. Quem nunca te viu não aparece aqui.', 'Everyone you know, with the relationship in five dimensions (intimacy, affection, respect, trust and rivalry) and how you met. People who have never met you do not show up here.'],
+  ['Filtre por tipo, proximidade ou forma de encontro. Ex.: filtro "Músicos" + "Próximos" mostra quem pode te apresentar a alguém; na ficha, "Pedir apresentação" usa esse amigo em comum.', 'Filter by type, closeness or how you met. E.g. "Musicians" + "Close" shows who can introduce you to someone; on the profile, "Ask for an introduction" uses that mutual friend.'],
+  [['Conhecer alguém melhor (gravar, tocar junto, presentear) aumenta o que você sabe dessa pessoa.', 'Getting to know someone better (recording, playing together, gifts) increases what you know about them.']],
+  ['cockpit']);
