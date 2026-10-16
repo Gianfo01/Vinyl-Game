@@ -152,3 +152,4 @@ export function settingsExtras31(): HTMLElement | null {
   if (!s) return null;
   return h('fieldset', { class: 'small' }, h('legend', null, t(l('Cultura pop e humor', 'Pop culture and humor'))), controls31(s));
 }
+

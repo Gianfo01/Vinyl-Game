@@ -265,7 +265,7 @@ P('liv_anfield', 'liverpool', 'arena', 1884, 0, 'Anfield', 'Anfieldinho', 'v'),
 P('man_free_trade_hall', 'manchester', 'theatre', 1856, 1997, 'Free Trade Hall', 'Fair Trade Hall', 'lm:man_fth'),
 P('man_old_trafford', 'manchester', 'arena', 1910, 0, 'Old Trafford', 'Old Stafford', 'lm:man_trafford'),
 P('man_hacienda', 'manchester', 'venue', 1982, 1997, 'The Haçienda', 'The Fazenda', 'u'),
-P('man_factory', 'manchester', 'label', 1978, 1992, 'Factory Records', 'Fábrica Records', ''),
+P('man_fr_label', 'manchester', 'label', 1978, 1992, 'Factory Records', 'Fábrica Records', ''),
 P('man_granada', 'manchester', 'tv', 1956, 2013, 'Granada Studios', 'Romã Studios', ''),
 P('man_piccadilly_radio', 'manchester', 'radio', 1974, 0, 'Piccadilly Radio', 'Piccadolly Radio', 'v'),
 P('man_apollo', 'manchester', 'theatre', 1938, 0, 'Manchester Apollo', 'Manchester Apolinho', ''),
@@ -336,7 +336,7 @@ P('tok_tokyo_dome', 'tokyo', 'arena', 1988, 0, 'Tokyo Dome', 'Tokyo Cúpula', ''
 P('tok_disk_union', 'tokyo', 'store', 1969, 0, 'Disk Union', 'Disk Onion', ''),
 P('tok_tower_shibuya', 'tokyo', 'store', 1981, 0, 'Tower Records Shibuya', 'Torre Records Shibuya', 'v'),
 // Kingston
-P('kin_studio_one', 'kingston', 'studio', 1963, 1980, 'Studio One', 'Studio Two', 'u v lm:kgn_studio1'),
+P('kin_studio_one', 'kingston', 'studio', 1963, 1980, 'Studio One', 'Studio Uno', 'u v lm:kgn_studio1'),
 P('kin_federal', 'kingston', 'label', 1954, 1981, 'Federal Records', 'Federativa Records', 'v'),
 P('kin_treasure_isle', 'kingston', 'studio', 1965, 1975, 'Treasure Isle', 'Treasure Ilha', 'v'),
 P('kin_dynamic', 'kingston', 'studio', 1969, 0, 'Dynamic Sounds', 'Dinâmico Sounds', 'v'),
@@ -556,7 +556,7 @@ P('aus_continental', 'austin', 'bar', 1957, 0, 'Continental Club', 'Continentinh
 P('aus_sxsw', 'austin', 'fest', 1987, 0, 'SXSW', 'SXSO', ''),
 // Atlanta
 P('atl_fox', 'atlanta', 'theatre', 1929, 0, 'Fox Theatre', 'Raposa Theatre', ''),
-P('atl_lafaces', 'atlanta', 'label', 1989, 2011, 'LaFace Records', 'LaFrente Records', 'v'),
+P('atl_laf_label', 'atlanta', 'label', 1989, 2011, 'LaFace Records', 'LaFrente Records', 'v'),
 P('atl_wsb', 'atlanta', 'radio', 1922, 0, 'WSB Radio', 'WSV Radio', ''),
 P('atl_tabernacle', 'atlanta', 'venue', 1996, 0, 'Tabernacle', 'Tabernaculinho', ''),
 P('atl_stankonia', 'atlanta', 'studio', 1998, 0, 'Stankonia Studios', 'Stinkonia Studios', 'v'),
@@ -1110,7 +1110,7 @@ P('aarhus_train', 'aarhus', 'venue', 1998, 0, 'Train', 'Trem', 'v'),
 // Tampere
 P('tampere_talo', 'tampere', 'theatre', 1990, 0, 'Tampere Hall (Tampere-talo)', 'Tampa-talo', ''),
 // Akureyri
-P('akureyri_hof', 'akureyri', 'theatre', 2010, 0, 'Hof', 'Casa Norte', ''),
+P('akureyri_hof', 'akureyri', 'theatre', 2010, 0, 'Hof', 'Hofshöll', ''),
 // Torshavn
 P('torshavn_nordic_house', 'torshavn', 'theatre', 1983, 0, 'Nordic House (Norðurlandahúsið)', 'Casa Nórdica do Carneiro', ''),
 P('torshavn_tutl', 'torshavn', 'label', 1977, 0, 'Tutl', 'Tutu', ''),

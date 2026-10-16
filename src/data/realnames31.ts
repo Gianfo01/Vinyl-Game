@@ -21,7 +21,7 @@ export interface RealName31 {
 }
 
 /** espaços de id aceitos (cada um tem um conferidor no teste de varredura; espaço novo = conferidor novo) */
-export const REALNAME_SPACES31 = ['act', 'festival', 'media', 'platform', 'award', 'city', 'cur', 'place', 'mode'] as const;
+export const REALNAME_SPACES31 = ['act', 'festival', 'media', 'platform', 'award', 'city', 'cur', 'mode', 'place'] as const;
 export type RealSpace31 = (typeof REALNAME_SPACES31)[number];
 
 export const REALNAMES31: Record<string, RealName31> = {
@@ -183,6 +183,16 @@ export const REALNAMES31: Record<string, RealName31> = {
   'cur:radio_89fm': { real: '89 FM', substituto: 'Rádio 98 Rock', tipo: 'media' },
   'cur:radio_virgin': { real: 'Virgin', substituto: 'Rádio Vírgula', tipo: 'media' },
   'cur:radio_gazeta': { real: 'Gazeta FM', substituto: 'Rádio Folha FM', tipo: 'media' },
+  // R31 · onda 4 (X): modos e cenários com nome tirado de obra, marca ou evento de terceiros (chave = id do cenário)
+  'mode:sun_1954': { real: 'Sun Records', substituto: 'Sol Records', tipo: 'mode' },
+  'mode:motown_1960': { real: 'Hitsville', substituto: 'Hitstown', tipo: 'mode' },
+  'mode:bossa_1958': { real: 'Chega de Saudade', substituto: 'Basta de Saudade', tipo: 'mode' },
+  'mode:mtv_1981': { real: 'MTV', substituto: 'ClipNet', tipo: 'mode' },
+  'mode:rockinrio_1985': { real: 'Rock in Rio', substituto: 'Rock na Baía Dourada', tipo: 'mode' },
+  'mode:memphis_studio_1961': { real: 'Soulsville', substituto: 'Soultown', tipo: 'mode' },
+  'mode:studioone_1963': { real: 'Studio One', substituto: 'Studio Uno', tipo: 'mode' },
+  'mode:jovemguarda_1965': { real: 'Quero que vá tudo pro inferno', substituto: 'Que vá tudo pelos ares', tipo: 'mode' },
+  'mode:napster': { real: 'Napster', substituto: 'ShareWave', tipo: 'mode' },
   // @@PLACES31-BEGIN (gerado por scripts/r31/gen-places31.ts — não editar à mão)
   'place:sp_gazeta_fm': { real: 'Gazeta FM', substituto: 'Rádio Folha FM', tipo: 'media' },
   'place:sp_tv_gazeta': { real: 'TV Gazeta', substituto: 'TV Folhetim', tipo: 'media' },
@@ -398,7 +408,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'place:man_free_trade_hall': { real: 'Free Trade Hall', substituto: 'Fair Trade Hall', tipo: 'venue' },
   'place:man_old_trafford': { real: 'Old Trafford', substituto: 'Old Stafford', tipo: 'venue' },
   'place:man_hacienda': { real: 'The Haçienda', substituto: 'The Fazenda', tipo: 'venue' },
-  'place:man_factory': { real: 'Factory Records', substituto: 'Fábrica Records', tipo: 'label' },
+  'place:man_fr_label': { real: 'Factory Records', substituto: 'Fábrica Records', tipo: 'label' },
   'place:man_granada': { real: 'Granada Studios', substituto: 'Romã Studios', tipo: 'media' },
   'place:man_piccadilly_radio': { real: 'Piccadilly Radio', substituto: 'Piccadolly Radio', tipo: 'media' },
   'place:man_apollo': { real: 'Manchester Apollo', substituto: 'Manchester Apolinho', tipo: 'venue' },
@@ -465,7 +475,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'place:tok_tokyo_dome': { real: 'Tokyo Dome', substituto: 'Tokyo Cúpula', tipo: 'venue' },
   'place:tok_disk_union': { real: 'Disk Union', substituto: 'Disk Onion', tipo: 'brand' },
   'place:tok_tower_shibuya': { real: 'Tower Records Shibuya', substituto: 'Torre Records Shibuya', tipo: 'brand' },
-  'place:kin_studio_one': { real: 'Studio One', substituto: 'Studio Two', tipo: 'company' },
+  'place:kin_studio_one': { real: 'Studio One', substituto: 'Studio Uno', tipo: 'company' },
   'place:kin_federal': { real: 'Federal Records', substituto: 'Federativa Records', tipo: 'label' },
   'place:kin_treasure_isle': { real: 'Treasure Isle', substituto: 'Treasure Ilha', tipo: 'company' },
   'place:kin_dynamic': { real: 'Dynamic Sounds', substituto: 'Dinâmico Sounds', tipo: 'company' },
@@ -654,7 +664,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'place:aus_continental': { real: 'Continental Club', substituto: 'Continentinho Club', tipo: 'venue' },
   'place:aus_sxsw': { real: 'SXSW', substituto: 'SXSO', tipo: 'festival' },
   'place:atl_fox': { real: 'Fox Theatre', substituto: 'Wolf Theatre', tipo: 'venue' },
-  'place:atl_lafaces': { real: 'LaFace Records', substituto: 'LaFrente Records', tipo: 'label' },
+  'place:atl_laf_label': { real: 'LaFace Records', substituto: 'LaFrente Records', tipo: 'label' },
   'place:atl_wsb': { real: 'WSB Radio', substituto: 'WSV Radio', tipo: 'media' },
   'place:atl_tabernacle': { real: 'Tabernacle', substituto: 'Tabernaculinho', tipo: 'venue' },
   'place:atl_stankonia': { real: 'Stankonia Studios', substituto: 'Stinkonia Studios', tipo: 'company' },
@@ -1045,7 +1055,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'place:aarhus_musikhuset': { real: 'Musikhuset Aarhus', substituto: 'Musikcasinha Aarhus', tipo: 'venue' },
   'place:aarhus_train': { real: 'Train', substituto: 'Trem', tipo: 'venue' },
   'place:tampere_talo': { real: 'Tampere Hall (Tampere-talo)', substituto: 'Tampa-talo', tipo: 'venue' },
-  'place:akureyri_hof': { real: 'Hof', substituto: 'Casa Norte', tipo: 'venue' },
+  'place:akureyri_hof': { real: 'Hof', substituto: 'Hofshöll', tipo: 'venue' }, // X: homenagem não pode conter o nome real inteiro
   'place:torshavn_nordic_house': { real: 'Nordic House (Norðurlandahúsið)', substituto: 'Casa Nórdica do Carneiro', tipo: 'venue' },
   'place:torshavn_tutl': { real: 'Tutl', substituto: 'Tutu', tipo: 'label' },
   'place:louisville_whas': { real: 'WHAS', substituto: 'WHAZ', tipo: 'media' },
@@ -1107,16 +1117,6 @@ export const REALNAMES31: Record<string, RealName31> = {
   'place:papeete_toata': { real: 'Place To\'ata', substituto: 'Praça To\'atinha', tipo: 'venue' },
   'place:apia_2ap': { real: 'Radio 2AP', substituto: 'Rádio 2AÊ', tipo: 'media' },
   // @@PLACES31-END
-  // R31 · onda 4 (X): modos e cenários com nome tirado de obra, marca ou evento de terceiros (chave = id do cenário)
-  'mode:sun_1954': { real: 'Sun Records', substituto: 'Sol Records', tipo: 'mode' },
-  'mode:motown_1960': { real: 'Hitsville', substituto: 'Hitstown', tipo: 'mode' },
-  'mode:bossa_1958': { real: 'Chega de Saudade', substituto: 'Basta de Saudade', tipo: 'mode' },
-  'mode:mtv_1981': { real: 'MTV', substituto: 'ClipNet', tipo: 'mode' },
-  'mode:rockinrio_1985': { real: 'Rock in Rio', substituto: 'Rock na Baía Dourada', tipo: 'mode' },
-  'mode:memphis_studio_1961': { real: 'Soulsville', substituto: 'Soultown', tipo: 'mode' },
-  'mode:studioone_1963': { real: 'Studio One', substituto: 'Studio Two', tipo: 'mode' },
-  'mode:jovemguarda_1965': { real: 'Quero que vá tudo pro inferno', substituto: 'Que vá tudo pelos ares', tipo: 'mode' },
-  'mode:napster': { real: 'Napster', substituto: 'ShareWave', tipo: 'mode' },
 };
 
 /** Nome a mostrar para um id registrado (undefined = não registrado: quem chama usa o nome de sempre). */

@@ -132,6 +132,15 @@ export function makeVideo18(s: GameState, relId: string, o: { tier: number; dir:
   return joinL(out);
 }
 
+/** R31 CAR (car31.clips, sys/car31media.ts): a SUA TV põe o clipe em rotação pesada — o mesmo campo que a rede de
+ *  clipes usa (fonte única: nada de lista paralela na TV). Clipe banido não volta ao ar. */
+export function tvHeavy18(s: GameState, relId: string, until: number): boolean {
+  const v = media18(s).vids[relId];
+  if (!v || v.banned) return false;
+  if ((v.heavy ?? 0) < until) v.heavy = until;
+  return true;
+}
+
 // ================================================================ M3 — viral e catálogo
 
 function startViral(s: GameState, rel: Release, k: number, weeks: number, how: string): void {
