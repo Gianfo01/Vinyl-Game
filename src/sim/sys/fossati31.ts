@@ -39,7 +39,7 @@ import { EFRO_VIOLIN_ID, ensureEfroViolin31 } from '../r31/relic31';
 
 // ---------------------------------------------------------------- base nova: relíquias
 
-for (const d of RELICS31) {
+for (const d of (process.env.NOR31 ? [] : RELICS31)) {
   if (!RELICS17.some((x) => x.id === d.id)) RELICS17.push(d);
   RELIC_OWNID17.add(d.id);
 }

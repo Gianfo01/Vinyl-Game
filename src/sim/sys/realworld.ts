@@ -76,7 +76,7 @@ applyLineups25(REAL_ALL); // r25: formações reais que estavam incompletas (ban
 for (const a of [...NEW27_C1, ...NEW27_F]) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } } // r27 (F): + artistas da pesquisa
 /** R31 (Z): base nova (data/base31acts) no FIM — os números de catálogo de quem já existia não mudam; usa o sorteio do acervo. */
 export const BASE31_FROM = REAL_ALL.length;
-for (const a of BASE31_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+for (const a of (process.env.NOB31 ? [] : BASE31_ACTS)) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
 // r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
 {
