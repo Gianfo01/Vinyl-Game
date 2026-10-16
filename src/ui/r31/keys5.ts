@@ -196,13 +196,13 @@ export function bindOf5(chord: string, paper?: string, list: readonly Bind5[] = 
 export interface Change5 { chord: string; before: L; after: L; why: L }
 /** Toda tecla que muda de função com `exp5.nav` ligado (o resto continua igual). */
 export const KEY_CHANGES5: Change5[] = [
-  { chord: 'e', before: l('Outras carreiras (careers)', 'Other careers (careers)'), after: l('Caixa de entrada (correspondência da época)', 'Inbox (the era\'s mail)'),
+  { chord: 'e', before: l('Outras carreiras', 'Other careers'), after: l('Caixa de entrada (correspondência da época)', 'Inbox (the era\'s mail)'),
     why: l('Pedido do dono: E = caixa de entrada. "Outras carreiras" virou marcador do escritório em casa (tecla N).', 'Owner\'s request: E = inbox. "Other careers" became a marker of the home office (key N).') },
-  { chord: 'g', before: l('Página de empresário (cp17-manager)', 'Manager page (cp17-manager)'), after: l('Agenda de couro (agenda, calendário, shows marcados)', 'Leather planner (schedule, calendar, booked shows)'),
+  { chord: 'g', before: l('Página de empresário', 'Manager page'), after: l('Agenda de couro (agenda, calendário, shows marcados)', 'Leather planner (schedule, calendar, booked shows)'),
     why: l('Os mocks tinham G = telefone; o pedido fixou G = agenda. A página de empresário foi para Shift+G; o telefone ficou com Shift+T.', 'The mocks had G = phone; the request set G = planner. The manager page moved to Shift+G; the phone got Shift+T.') },
-  { chord: 'h', before: l('Lendas (lendas)', 'Legends (lendas)'), after: l('Volta à sede de qualquer lugar', 'Back to the HQ from anywhere'),
+  { chord: 'h', before: l('Lendas', 'Legends'), after: l('Volta à sede de qualquer lugar', 'Back to the HQ from anywhere'),
     why: l('Regra 8 do mapa: H volta à sede. Lendas virou marcador do livro "Cultura" (tecla M).', 'Map rule 8: H goes back to the HQ. Legends became a marker of the "Culture" book (key M).') },
-  { chord: 'c', before: l('Compromissos (plan)', 'Commitments (plan)'), after: l('Quadro de planejamento (plan, com o elenco por mês)', 'Planning board (plan, roster by month)'),
+  { chord: 'c', before: l('Compromissos', 'Commitments'), after: l('Quadro de planejamento (a mesma página, com o elenco por mês)', 'Planning board (same page, roster by month)'),
     why: l('Mesma página, objeto novo: nos mocks C era o calendário; o calendário virou a agenda (G) e C abre o quadro de planejamento.', 'Same page, new object: in the mocks C was the calendar; the calendar became the planner (G) and C opens the planning board.') },
   { chord: 'shift+1', before: l('Menu: Hoje', 'Menu: Today'), after: l('Viagem: Sede', 'Travel: HQ'),
     why: l('Botões de viagem Sede, Casa, Cidade, Mundo em Shift+1…4. "Hoje" virou a mesa do mês (tecla 1).', 'Travel buttons HQ, Home, City, World on Shift+1…4. "Today" became the monthly desk (key 1).') },

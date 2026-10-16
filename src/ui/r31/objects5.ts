@@ -192,7 +192,7 @@ export const DEFAULT_OBJECTS5: Obj5[] = [
   O('secretaria', l('Secretária eletrônica (recados)', 'Answering machine (messages)'), 'sede.recepcao', 'bilhete', 'shift+e', [], {
     links: [ln('cockpit', ['ck20', 'panel'])],
     forms: [{ era: [1889, 1969], label: l('Bloco de recados da recepcionista', 'Receptionist\'s message pad') }, { era: [1970, 2009], label: l('Secretária eletrônica que pisca', 'Blinking answering machine') }, { era: [2010, 2040], label: l('Notificações no celular', 'Phone notifications') }],
-    note: l('Avisos do mês com "ir até lá" (goto5).', 'Month\'s notices with "go there" (goto5).'), bang: l('avisos novos da fila de atenção', 'new notices in the attention queue') }),
+    note: l('Avisos do mês, cada um com "ir até lá".', 'The month\'s notices, each with "go there".'), bang: l('avisos novos da fila de atenção', 'new notices in the attention queue') }),
   O('chaveiro', l('Chaveiro (suas casas)', 'Key ring (your houses)'), 'sede.recepcao', 'cena', undefined, [], { keyRef: 'sys:houses', note: l('Aparece com 2+ carreiras ativas; Tab troca de casa.', 'Shows with 2+ active careers; Tab switches house.') }),
   O('mesames', l('Mesa do mês', 'Monthly desk'), 'sede.sala', 'cena', '1', [ln('cockpit', ['ck20', 'desk']), 'desk'], { bang: bangPend(l('decisões do mês (pendências "decision")', 'month\'s decisions ("decision" pending items)')) }),
   O('correspondencia', l('Correspondência', 'Mail'), 'sede.sala', 'caixa', 'e', ['inbox'], {

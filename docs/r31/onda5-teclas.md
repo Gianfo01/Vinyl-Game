@@ -167,10 +167,10 @@ Shift+1…6 do menu) e nada muda.
 
 | Tecla | Antes | Agora | Por quê |
 |---|---|---|---|
-| E | Outras carreiras (careers) | Caixa de entrada (correspondência da época) | Pedido do dono: E = caixa de entrada. "Outras carreiras" virou marcador do escritório em casa (tecla N). |
-| G | Página de empresário (cp17-manager) | Agenda de couro (agenda, calendário, shows marcados) | Os mocks tinham G = telefone; o pedido fixou G = agenda. A página de empresário foi para Shift+G; o telefone ficou com Shift+T. |
-| H | Lendas (lendas) | Volta à sede de qualquer lugar | Regra 8 do mapa: H volta à sede. Lendas virou marcador do livro "Cultura" (tecla M). |
-| C | Compromissos (plan) | Quadro de planejamento (plan, com o elenco por mês) | Mesma página, objeto novo: nos mocks C era o calendário; o calendário virou a agenda (G) e C abre o quadro de planejamento. |
+| E | Outras carreiras | Caixa de entrada (correspondência da época) | Pedido do dono: E = caixa de entrada. "Outras carreiras" virou marcador do escritório em casa (tecla N). |
+| G | Página de empresário | Agenda de couro (agenda, calendário, shows marcados) | Os mocks tinham G = telefone; o pedido fixou G = agenda. A página de empresário foi para Shift+G; o telefone ficou com Shift+T. |
+| H | Lendas | Volta à sede de qualquer lugar | Regra 8 do mapa: H volta à sede. Lendas virou marcador do livro "Cultura" (tecla M). |
+| C | Compromissos | Quadro de planejamento (a mesma página, com o elenco por mês) | Mesma página, objeto novo: nos mocks C era o calendário; o calendário virou a agenda (G) e C abre o quadro de planejamento. |
 | ⇧1 | Menu: Hoje | Viagem: Sede | Botões de viagem Sede, Casa, Cidade, Mundo em Shift+1…4. "Hoje" virou a mesa do mês (tecla 1). |
 | ⇧2 | Menu: Sede | Viagem: Casa | "Você" virou a sua casa (EXP-6) e entra no segundo botão de viagem. |
 | ⇧5 | Menu: Você | Pilha de demos (talentos) | Você agora é Shift+2 (Casa). Shift+dígito livre vira "irmão" do objeto do dígito: 5 olheiro, Shift+5 demos. |

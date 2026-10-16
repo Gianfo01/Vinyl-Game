@@ -45,7 +45,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **Marcadores:** — (papel de uma folha só)
 - **"!":** avisos novos da fila de atenção
 - **Forma por época:** 1889–1969 Bloco de recados da recepcionista · 1970–2009 Secretária eletrônica que pisca · 2010–2040 Notificações no celular
-- **Nota:** Avisos do mês com "ir até lá" (goto5).
+- **Nota:** Avisos do mês, cada um com "ir até lá".
 
 ### Chaveiro (suas casas) · tecla Tab (troca de casa (várias carreiras ativas))
 - **Lugar:** Sede › Recepção
