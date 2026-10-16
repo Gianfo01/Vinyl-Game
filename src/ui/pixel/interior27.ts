@@ -12,6 +12,7 @@ import { C, INK, Px, inked, lv, mix, noise, tint, withAlpha, type Col } from './
 import { bars31, crowd31, inst31, instSpec31, speaker31 } from './stage31px';
 import { eraOf } from './palette';
 import { gearOf27, lightOf27, prim27, type Ctx27, type Plan27 } from '../ps/hqpx27';
+import { view31, window31 } from './window31';
 
 // ---------------------------------------------------------------- modelo (puro)
 
@@ -356,7 +357,7 @@ export function paintInterior27(m: Interior27, people: Person27[], o: IDrawOpts2
       case 'couch': prim27.couch(g, x, fy, w, pal.fabric); break;
       case 'tv': prim27.tv(g, x, fy); break;
       case 'plant': prim27.plant(g, x, fy, true); break;
-      case 'window': prim27.backWindow(g, x, y0 + 12, w, 30, year < 1930); break;
+      case 'window': window31(p, x, y0 + 12, w, 30, g.pl.city || view31.city, year, view31.month); break; // R31 (POL2): a cidade e a época reais, não silhuetas genéricas
       case 'keys': { blk(p, x, y0 + 14, w, 18, pal.woodDark); for (let r = 0; r < 3; r++) for (let xx = x + 2; xx < x + w - 2; xx += 4) p.rect(xx, y0 + 16 + r * 6, 1, 3, C('#d8b040')); break; }
       case 'poster': prim27.poster(g, x, y0 + 12, w, Math.round(w * 1.4), hs(`${seed}|${pr.x}`) % 6); break;
       case 'gold': { const n = pr.n ?? 3; for (let i = 0; i < n; i++) prim27.goldDisc(g, x + i * 14, y0 + 14, i === 0); break; }

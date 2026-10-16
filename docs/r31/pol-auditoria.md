@@ -133,6 +133,12 @@ Roteiro: `scripts/r31/shots-pol2.mjs` (antes = integração `claude/friendly-bro
   (N1 / HOT / NOVO / TOUR) no estilo da época (pintado, neon, luminoso, LED); o painel desvia das placas, dos pinos e de
   outro outdoor subindo no poste. Clique: disco → ficha da obra; em alta/turnê → ficha do artista
   (`outdoor-london-1935`, `outdoor-rio-1975`, `outdoor-new_york-2015`). Teste em `tests/r31-cidade.test.ts`.
+- **C/S** AMOR (acréscimo do dono) — "A descoberta" e os encontros (restaurante, cinema, discoteca, bar, casa, viagem)
+  são interiores (`paintInterior27`) e a peça `window` ainda era `prim27.backWindow` (silhuetas genéricas) → na raiz, a
+  janela dos interiores usa `window31` (cidade e época reais), valendo para todos os interiores com janela
+  (`onda4-pol2-amor-*-antes-depois.png`; o roteiro `shots-amor.mjs` começa uma NOVA RUN com semente nova, por isso as
+  pessoas mudam entre antes e depois). Painel Coração: plural certo ("1 pessoa sabe" / "2 pessoas sabem"; idem
+  fofoqueiro/fofoqueiros).
 - GEO (geografia real das cidades) ainda não está na integração; estas mudanças ficam só na camada da cidade
   (`city31model`/`city31px`/`campus18`: letreiros e outdoors), não nas telas do mundo.
 - Varredura: as outras cenas antigas do r27 (mesa de composição, estúdio, sala de guerra, crise, coletiva) não têm estado
