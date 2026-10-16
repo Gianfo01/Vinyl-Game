@@ -59,6 +59,7 @@ export const STREAMS19: Record<string, string> = {
   exch20: 'residência de intercâmbio entre cenas: convites, ecos e parcerias com músicos locais (exch20)',
   union20: 'negociação coletiva de músicos de estúdio e equipe de estrada: pautas, greves e locautes (union20)',
   r21: 'funções múltiplas por pessoa: quem abre selo, empresaria ou cria festival (roles21)',
+  bolsa31: 'bolsa: humor do mercado (desvio pequeno e com memória do preço sobre o valor de cada empresa listada) (r31/value31 stepPrice31)',
   // r31 (W0-RNG): chaves que substituíram o fluxo único antigo (rngOf / s.rng)
   world: 'geração do mundo inicial: datas das tecnologias, gêneros, gravadoras, artistas e pessoas (worldgen)',
   tick: 'motor da semana e do mês: dias, abertura do mês e os sistemas que recebem o sorteio do motor (tick)',

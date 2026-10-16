@@ -41,6 +41,7 @@ import { goSolo16, l16, leaveBand16, newBand16 } from './lineup16';
 import { activeMgrs, mgrName } from './managers14';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { relAdd } from '../opinion';
+import { joinDelegated31 } from '../deleg31';
 
 // ---------------------------------------------------------------- estado
 export interface Sold19 { act: string; lb: string; w: number; y: number; price: number; pct: number; until: number; fame0: number; n10: number; u: Record<string, number>; paid: number; regret?: 1 }
@@ -105,7 +106,7 @@ function moveAct19(s: GameState, a: Act, to: string): void {
   if (a.owner && a.owner !== 'player') { const lb = s.labels[a.owner]; if (lb) lb.roster = lb.roster.filter((x) => x !== a.id); }
   if (k) k.party = to;
   a.owner = to;
-  if (to === 'player') s.delegated[a.id] = true;
+  if (to === 'player') s.delegated[a.id] = joinDelegated31(s, a);
   else { const lb = s.labels[to]; if (lb && !lb.roster.includes(a.id)) lb.roster.push(a.id); delete s.agenda[a.id]; }
 }
 /** Comprador: selo ativo com caixa, preferindo quem tem o ato na mira (rivalmind18). */

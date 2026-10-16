@@ -8,7 +8,6 @@
 //
 // Uso:  npx tsx scripts/r31/measure.ts [--seeds 4] [--starts 1900,1955,1990,2012,2030] [--months 36]
 //                                      [--jobs N] [--out docs/r31/base30] [--label "versão 30"] [--compare antigo.json]
-//                                      [--sw id=v,id=v]   (interruptores de src/sim/r31/switches.ts, logo depois de criar)
 //   Grava <out>.json (tudo) e <out>.md (tabelas). Os números de JOGO (bloco `game` e `save`) são determinísticos;
 //   só o bloco `perf` varia entre execuções. --compare confere os números de jogo contra outro JSON (sai com erro se
 //   diferirem). Cada partida roda inteira num processo filho (fila; --jobs 1 = sem concorrência, tempos mais limpos).
@@ -21,7 +20,7 @@ import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 type Num = number;
-export interface Job { seed: string; start: number; months: number; sw?: Record<string, boolean | number | string> }
+export interface Job { seed: string; start: number; months: number }
 export interface Year30 { year: number; cash: Num; cashReal: Num; acts: Num; fame: Num; revenue: Num; revenueReal: Num; finRev: Num; finNet: Num }
 export interface Res30 {
   seed: string; start: number; months: number;
@@ -60,8 +59,27 @@ async function runOne(j: Job): Promise<Res30> {
   const t0 = performance.now();
   // mesma configuração do lote balance19 (selo, rock, base padrão do jogo)
   const s = createGame(defaultConfig(j.seed, { startYear: j.start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' }));
+  // R31: interruptores para medir ligado/desligado — R31_SW="id=false,outro=3" (aplicado logo depois de criar a partida)
+  if (process.env.R31_SW) {
+    const { setSw, switchDef } = await import('../../src/sim/r31/switches');
+    for (const kv of process.env.R31_SW.split(',')) {
+      const [id, raw] = kv.split('=');
+      const d = switchDef(id);
+      if (!d) throw new Error(`R31_SW: interruptor desconhecido ${id}`);
+      setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);
+    }
+  }
   const createMs = performance.now() - t0;
-  if (j.sw) { const { setSw } = await import('../../src/sim/r31/switches'); for (const [k, v] of Object.entries(j.sw)) setSw(s, k, v); } // R31 onda 3: --sw id=v,...
+  // R31 onda 3: interruptores pela variável R31_SW ("id=valor,id2=valor") para medir regra ligada/desligada
+  if (process.env.R31_SW) {
+    const { setSw, switchDef } = await import('../../src/sim/r31/switches');
+    for (const kv of process.env.R31_SW.split(',')) {
+      const [id, raw] = kv.split('=');
+      const d = switchDef(id);
+      if (!d) throw new Error(`R31_SW: interruptor desconhecido ${id}`);
+      setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);
+    }
+  }
   const w0 = ownerOf(s).wealth;
   const per: number[] = [], cpu: number[] = [];
   const years: Year30[] = [];
@@ -141,11 +159,9 @@ async function main(): Promise<void> {
   const out = arg('out', `${ROOT}/docs/r31/base30`);
   const label = arg('label', 'versão 30');
   const cmp = arg('compare', '');
-  const sw: Record<string, boolean | number | string> = {};
-  for (const kv of arg('sw', '').split(',').filter(Boolean)) { const [k, v] = kv.split('='); sw[k] = v === 'true' ? true : v === 'false' ? false : Number.isFinite(Number(v)) ? Number(v) : v; }
   const seeds = Array.from({ length: nSeeds }, (_, i) => `r31-base-${i}`);
   // partidas mais lentas (eras tardias) primeiro
-  const queue: Job[] = starts.flatMap((start) => seeds.map((seed) => ({ seed, start, months, sw }))).sort((a, b) => b.start - a.start);
+  const queue: Job[] = starts.flatMap((start) => seeds.map((seed) => ({ seed, start, months }))).sort((a, b) => b.start - a.start);
   const total = queue.length;
   console.log(`measure r31: ${total} partidas (${nSeeds} sementes × ${starts.length} eras), ${months} meses, ${jobs} processos`);
   const t0 = Date.now();
@@ -175,7 +191,7 @@ async function main(): Promise<void> {
     for (let k = 0; k < Math.min(jobs, total); k++) spawn();
   });
   res.sort((a, b) => a.start - b.start || (a.seed < b.seed ? -1 : 1));
-  const meta = { label, generatedBy: 'scripts/r31/measure.ts', seeds, starts, months, jobs, cpus: cpus().length, cpu: cpus()[0]?.model ?? '', node: process.version, wallSec: Math.round((Date.now() - t0) / 1000), errors: errs, sw };
+  const meta = { label, generatedBy: 'scripts/r31/measure.ts', seeds, starts, months, jobs, cpus: cpus().length, cpu: cpus()[0]?.model ?? '', node: process.version, wallSec: Math.round((Date.now() - t0) / 1000), errors: errs };
   const doc = { meta, byEra: summarize(res, [...starts].sort((a, b) => a - b)), runs: res };
   writeFileSync(`${out}.json`, JSON.stringify(doc, null, 1) + '\n');
   writeMd(`${out}.md`, doc);

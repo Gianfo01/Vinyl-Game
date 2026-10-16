@@ -68,7 +68,9 @@ export const ACT27 = {
     else seeAttn(s, it.key); // r31 UNI-1: aviso = item da fila única
   },
   /** Responde uma mensagem (tratador do sistema que a criou). */
-  reply(s: GameState, m: InboxMsg, action: string): void { toast(t(answerMsg(s, m.id, action))); rerender(); },
+  /** R31: o único tratador de resposta (a Mesa do chefe também passa por aqui). */
+  answer(s: GameState, msgId: string, action: string): L { return answerMsg(s, msgId, action); },
+  reply(s: GameState, m: InboxMsg, action: string): void { toast(t(ACT27.answer(s, m.id, action))); rerender(); },
   /** Escolhe uma opção de decisão da mesa (respeita o portão da opção travada). */
   decide(s: GameState, d: Decision, o: DecisionOption): void {
     if (decLocked18(s, d, o)) return;

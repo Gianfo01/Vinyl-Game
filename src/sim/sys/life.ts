@@ -23,6 +23,7 @@ import { applyRoles29 } from './char29'; // r29: funções extras do personagem 
 import { actsTouched17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
 import { relPut } from '../opinion';
+import { joinDelegated31 } from '../deleg31';
 
 export * from './life/data';
 
@@ -535,7 +536,7 @@ function signOwn(s: GameState, act: Act): void {
     act.trust = 80;
   }
   s.knowledge[act.id] = { actId: act.id, degree: 5, stage: 'negotiation', bias: 0, updatedWeek: s.week, source: 'self' };
-  s.delegated[act.id] = true;
+  s.delegated[act.id] = joinDelegated31(s, act);
 }
 
 /** Carreira solo ou banda nova (com músicos recrutados na cidade). */

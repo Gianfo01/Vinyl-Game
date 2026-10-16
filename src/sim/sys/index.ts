@@ -376,6 +376,7 @@ import './family29'; // R29 (família): vida familiar de todo artista NPC, filho
 import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
 import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
 import './deleg31run'; // R31 onda 2 (Q): delegação única — A&R e produtor executivo delegados, desfazer, pedidos (sim/deleg31.ts)
+import './value31run'; // R31 onda 3 (E · Bolsa): editor do modelo único de valor (sim/r31/value31.ts); sem ganchos
 import '../r31/index'; // R31 onda 0 (W0-CON/W0-ROLE): contratos compartilhados — pendência, destino, papéis, objeto, transação atribuída, interruptores
 import './social31sys'; // R31 onda 3 (F): grafo social de todos com todos — como se conheceram, mês social (sim/social31.ts)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
