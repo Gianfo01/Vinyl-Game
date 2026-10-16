@@ -167,7 +167,7 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   - **Opção:** transições completas, rápidas ou desligadas. Nunca bloqueiam nem atrasam a simulação.
 - Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
 
-> **Etapa 2 liberada (dono, 2026-10-16: "podemos fazer o que falta da onda 5"):** frentes NAV (EXP-1, EXP-2), MAPA (EXP-3), PAPEL (EXP-4 + caixa de entrada), ELENCO (EXP-7) e CASA (EXP-5, EXP-6), todas atrás de `exp5.nav` desligado até a aprovação; TRN (EXP-11) e SALAS (EXP-8, salas antigas) já rodando. Regras em `docs/r31/onda5-cabecalho.md` (Etapa 2).
+> **Etapa 2 liberada (dono, 2026-10-16: "podemos fazer o que falta da onda 5"):** frentes NAV (EXP-1, EXP-2), MAPA (EXP-3), PAPEL (EXP-4 + caixa de entrada), ELENCO (EXP-7) e CASA (EXP-5, EXP-6), todas atrás de `exp5.nav` desligado até a aprovação; TRN (EXP-11) e SALAS (EXP-8, salas antigas) já rodando. Regras em `docs/r31/onda5-cabecalho.md` (Etapa 2). Arte da ART5 (galeria `docs/r31/shots/onda5-art-galeria-*.png`: objetos, papéis, caixa de entrada) aprovada pelo dono em 2026-10-16.
 
 ## Onda 6 (31.6) · fechamento
 > **Decisão do dono (2026-10-16):** ao terminar a onda 4, NÃO começar a próxima. Juntar tudo, gerar a build `Masters_31_onda4.html`
