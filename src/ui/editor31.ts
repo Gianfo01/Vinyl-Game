@@ -18,6 +18,7 @@ import { fmtL } from '../sim/util';
 import { rerender, toast } from './common';
 import { h } from './dom';
 import { registerArea, registerSection } from './registry';
+import { NAVEXTRA31 } from './ps/menu31ui';
 import { store } from './store';
 import './editor31.css';
 
@@ -194,3 +195,6 @@ registerRunnable({
 });
 
 export const targetLabel31 = targetName; // reexporta para quem montar atalhos de editor em outras telas
+
+// R31 onda 1 (integração A × EDT): com o modo editor ligado, o menu lateral ganha a entrada "Editor".
+NAVEXTRA31.push(() => (modeOn() ? h('button', { class: 'nav-item nav31-extra', 'data-area': EDITOR_AREA31, onclick: () => openEditor31() }, '🛠 ', t(l('Editor', 'Editor'))) : null));
