@@ -124,13 +124,13 @@ beforeAll(() => {
   // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
   // UNI-4 + I juntos: re-medido — só acts muda em relação ao UNI-4 sozinho (4266817177 → 3500990849).
   // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
-  // R31 onda 4 (BASE-BR · base brasileira ampliada, de propósito — docs/r31/DECISOES.md e docs/r31/base-br.md): 165 atos
+  // R31 onda 4 (BASE-BR · base brasileira ampliada, de propósito — docs/r31/DECISOES.md e docs/r31/base-br.md): 337 atos
   // brasileiros reais novos no fim de REAL_ALL estreiam (mais atos reais disputando contratos, paradas e público com
   // eles) — caixa, turnês, acts e rng mudam; o caixa do bot nesta semente oscila centenas de milhares de mês a mês (já anotado no UNI-4). Com
   // `base31.br` desligado voltam 182589 / 3575668786 / 1693608899 / 3302724126 (conferido).
-  expect(s.player.cash).toBe(2850185);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1632616710);
-  expect(hashString(rngSnapshot19(s))).toBe(4125773869);
+  expect(s.player.cash).toBe(9071);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1695895254);
+  expect(hashString(rngSnapshot19(s))).toBe(4020433329);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);

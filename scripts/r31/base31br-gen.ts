@@ -23,6 +23,11 @@ const ok: { a: J; note: J }[] = [], out: string[] = [], fixes: string[] = [];
 const known = new Map<string, { b?: number; x?: number; where: string }>();
 const know = (nm: string, b: number | undefined, x: number | undefined, where: string) => { const k = dedupKey27(nm); const c = known.get(k) ?? { where }; if (c.b === undefined && b !== undefined) c.b = b; if (c.x === undefined && x !== undefined) c.x = x; known.set(k, c); };
 for (const a of REAL_ALL.slice(0, BASE31BR_FROM)) { if (!a.m?.length) know(a.n, a.b, a.x, a.n); for (const m of a.m ?? []) know(m[0], m[2], m[3], a.n); }
+// e as fichas solo do próprio lote (com fonte): Jacob do Bandolim no Época de Ouro
+for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) for (const line of readFileSync(`${DIR}/${f}`, 'utf8').split('\n')) {
+  if (!line.trim()) continue; const j = JSON.parse(line) as J;
+  if (j.status === 'ok' && !(Array.isArray(j.m) && j.m.length) && !known.has(dedupKey27(String(j.n)))) know(String(j.n), num(j.b), num(j.x), `${j.n} (este lote)`);
+}
 for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
   for (const line of readFileSync(`${DIR}/${f}`, 'utf8').split('\n')) {
     if (!line.trim()) continue;
@@ -60,8 +65,9 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
         const mn = String(m[0]).trim(); let mb = num(m[2]), mx = num(m[3]); const inn = num(m[4]); let outY = num(m[5]);
         const join = inn ?? d!;
         const kp = known.get(dedupKey27(mn)); // mesma pessoa já na base: as datas dela (Pixinguinha nos Oito Batutas)
-        if (kp && mb === undefined && kp.b !== undefined && kp.b < join) { mb = kp.b; extra.push(`datas de ${mn}: da ficha que já existe na base (${kp.where})`); }
-        if (kp && mx === undefined && kp.x !== undefined && kp.x >= join) { mx = kp.x; if (!extra.some((t) => t.startsWith(`datas de ${mn}`))) extra.push(`datas de ${mn}: da ficha que já existe na base (${kp.where})`); }
+        const plaus = !!kp && kp.b !== undefined && kp.b <= join - 14 && (kp.x === undefined || kp.x >= join); // homônimo (Armandinho do reggae ≠ Armandinho d'A Cor do Som): só com idade plausível
+        if (kp && plaus && mb === undefined) { mb = kp.b; extra.push(`datas de ${mn}: da ficha que já existe na base (${kp.where})`); }
+        if (kp && plaus && mx === undefined && kp.x !== undefined) { mx = kp.x; if (!extra.some((t) => t.startsWith(`datas de ${mn}`))) extra.push(`datas de ${mn}: da ficha que já existe na base (${kp.where})`); }
         if (mb !== undefined && mb >= join) { fixes.push(`${n}/${mn}: nascimento ${mb} ≥ entrada ${join} — removido`); mb = undefined; }
         if (mx !== undefined && (mx < join || (mb !== undefined && mx <= mb))) { fixes.push(`${n}/${mn}: morte ${mx} antes da entrada — removida`); mx = undefined; }
         if (outY !== undefined && outY < join) outY = undefined;
