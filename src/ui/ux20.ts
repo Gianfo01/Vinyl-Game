@@ -3,6 +3,7 @@
 // camadas (resumo do que cada lado concede, diferença do preset, comparação com até 2 alternativas e revisão de caixa).
 // A interface (ui/sys/ui20.ts, offer20.ts, review20.ts) só desenha o que sai daqui.
 
+import { notes } from '../sim/attention';
 import { commissionOf29, shareOf29, targetOf29 } from '../sim/terms29';
 import { formatMoney } from '../core/money';
 import { l, type L } from '../data/world';
@@ -37,7 +38,7 @@ export const moreLabel20 = (n: number): L => (n === 1 ? l('+1 outro aviso', '+1 
 export interface Change20 { text: L; kind: Notification['kind']; week: number }
 /** Mudanças do último mês (avisos não agrupados), já em destaques + resto. */
 export function changes20(s: GameState, weeks = 5): { top: Change20[]; rest: Change20[]; folded: number } {
-  const xs = s.notifications.filter((n) => n.week > s.week - weeks);
+  const xs = notes(s, { since: s.week - weeks + 1 });
   return { ...highlights20(xs.filter((n) => !n.fold)), folded: xs.filter((n) => n.fold).length };
 }
 export interface DecRow20 { id: string; title: L; left: number | null; def: L | null; why: L }

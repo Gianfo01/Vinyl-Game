@@ -14,6 +14,7 @@ import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { ventures } from './ventures9';
 import { clash17 } from './clash17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { registerDeadline, type Deadline19 } from '../calendar19';
 
 export type Deal = 'guarantee' | 'door' | 'versus';
 export type Role = 'agent' | 'promoter';
@@ -379,4 +380,21 @@ registerSimHook('month', 'tour12', (s) => {
       if (pool.length) { const o = buildOffer(s, r, v, r.pick(pool)); if (o && !c.offers.some((x) => x.actId === o.actId)) { c.offers.push(o); notify(s, fmtL(l('Oferta de show para {a}: arena com cachê alto ou duas noites em casa menor.', 'Show offer for {a}: arena with a big guarantee or two nights in a smaller house.'), { a: s.acts[o.actId].name }), 'info'); } }
     }
   }
+});
+
+// ---------------------------------------------------------------- r31 (UNI-1): calendário único
+
+// Shows marcados como agente/promotor e ofertas de show que vencem. Só leitura.
+registerDeadline('tour12', (s, from, to) => {
+  const c = c12(s), out: Deadline19[] = [];
+  for (const sh of c.shows) {
+    if (sh.status !== 'booked' || sh.week < from || sh.week > to) continue;
+    const a = s.acts[sh.actId];
+    out.push({ id: `t12:${sh.id}`, w: sh.week, kind: 'tour', t: fmtL(sh.by === 'agent' ? l('Show agenciado: {a} em {c}', 'Booked show: {a} in {c}') : l('Show que você promove: {a} em {c}', 'Show you promote: {a} in {c}'), { a: a?.name ?? '—', c: cityById[sh.city]?.name ?? l('—', '—') }), tone: 'info', goto: { area: 'shows' } });
+  }
+  for (const o of c.offers) {
+    if (o.until < from || o.until > to) continue;
+    out.push({ id: `t12o:${o.id}`, w: o.until, kind: 'tour', t: fmtL(l('Oferta de show para {a} vence', 'Show offer for {a} expires'), { a: s.acts[o.actId]?.name ?? '—' }), d: l('Sem resposta, a oferta cai.', 'Unanswered, the offer lapses.'), tone: 'info', act: true, goto: { area: 'shows' } });
+  }
+  return out;
 });

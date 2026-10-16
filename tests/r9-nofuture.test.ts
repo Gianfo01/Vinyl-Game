@@ -9,6 +9,7 @@ import { noveltiesBetween } from '../src/sim/sys/novelty9';
 import { existsNow, visibleAct } from '../src/sim/future';
 import { FESTIVALS } from '../src/data/catalog';
 import type { GameState, RunConfig } from '../src/sim/types';
+import { notes } from '../src/sim/attention';
 
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, { mode: 'historic', scenario: 'established', ...over }));
 
@@ -78,13 +79,13 @@ describe('nada do futuro', () => {
     expect(fest).toBeTruthy();
     expect(noveltiesBetween(s, 1966, 1968).some((x) => x.pt.includes(fest!.name))).toBe(true);
     advanceMonth(s);
-    const startNews = s.notifications.filter((n) => /Novidades de|Novo festival/.test(n.text.pt)).length;
+    const startNews = notes(s).filter((n) => /Novidades de|Novo festival/.test(n.text.pt)).length;
     expect(startNews).toBe(0);
     let seen = 0;
     while (s.year < 1969) {
       const w0 = s.week;
       advanceMonth(s);
-      seen += s.notifications.filter((n) => n.week >= w0 && /Novidades de|Novo festival/.test(n.text.pt)).length;
+      seen += notes(s).filter((n) => n.week >= w0 && /Novidades de|Novo festival/.test(n.text.pt)).length;
     }
     expect(seen).toBeGreaterThan(0);
     expect(s.memory.some((m) => m.kind === 'novelty' && m.text.pt.includes(fest!.name))).toBe(true);

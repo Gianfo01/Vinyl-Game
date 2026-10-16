@@ -26,7 +26,7 @@ import { store } from '../store';
 import { EXTRA_ACTIONS } from '../../data/actions';
 import { agendaLoad, slotLoad } from '../../sim/capacity';
 import { slotWeek } from '../../sim/agenda';
-import { PRESETS, ag7, applyTemplate, crowdedWeeks, deleteTemplate, plannedCombos, releaseWeek, saveTemplate } from '../../sim/sys/agenda7';
+import { PRESETS, ag7, applyTemplate, crowdedWeeks, deleteTemplate, plannedCombos, releaseWeek, saveTemplate } from '../../sim/agenda';
 import { freeCapacity } from '../../sim/agenda';
 import { getTab, ic, loadBar, meter, setTab, stat, tabs } from '../vis';
 import { contractExtra, fandomSection, membersSection, reunionSection } from './people';

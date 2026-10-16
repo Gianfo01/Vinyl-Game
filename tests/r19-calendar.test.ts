@@ -9,11 +9,11 @@ import { pushInbox18 } from '../src/sim/inbox18';
 import { follow18 } from '../src/sim/sys/echoes18';
 import { Fx18 } from '../src/sim/decide18';
 import { Rng } from '../src/core/rng';
-import { answerMsg } from '../src/sim/sys/people/inbox';
+import { answerMsg, inboxItems } from '../src/sim/sys/people/inbox';
 import { P } from '../src/sim/sys/people/state';
-import { ib19 } from '../src/sim/sys/notify19';
 import { l } from '../src/data/world';
 import { playerActs } from '../src/sim/util';
+import { ATTN, attn, bulletinOf } from '../src/sim/attention';
 
 describe('r19 calendar19 + notify19', () => {
   // meio ano já enche o calendário; BALANCE_FULL=1 joga o ano inteiro (como antes)
@@ -37,23 +37,27 @@ describe('r19 calendar19 + notify19', () => {
     expect(calendar19(s, { weeks: 26 }).filter((d) => !d.id.startsWith('t19') && !d.id.startsWith('n19')).length).toBeGreaterThan(0);
   });
 
+  // r31 (UNI-1): o boletim é uma vista da fila única (itens dobrados da semana + um item-cabeça que a caixa mostra como
+  // carta) e o orçamento é o único da fila (antes: carta 'bulletin19' em P.inbox e cota por categoria no ib19).
   it('boletim semanal: relatórios e excedente do orçamento viram um item; o que pede resposta nunca', () => {
     const n0 = P(s).inbox.length;
     pushInbox18(s, 'review18', { from: 'x', subject: l('Pós', 'Post'), body: l('a', 'a') });
     pushInbox18(s, 'market18', { from: 'x', subject: l('Mercado', 'Market'), body: l('b', 'b') });
-    const bul = P(s).inbox.filter((m) => m.ref?.k18 === 'bulletin19' && m.ref.bw === s.week);
+    const bul = inboxItems(s).filter((it) => it.msg?.ref?.k18 === 'bulletin19' && it.msg.ref.bw === s.week);
     expect(bul.length).toBe(1);
-    expect(Number(bul[0].ref!.n)).toBeGreaterThanOrEqual(2);
+    expect(Number(bul[0].msg!.ref!.n)).toBeGreaterThanOrEqual(2);
     expect(bul[0].body.pt).toContain('Mercado');
+    expect(bulletinOf(s, s.week).map((x) => x.k18)).toEqual(expect.arrayContaining(['review18', 'market18']));
     const asks = pushInbox18(s, 'review18', { from: 'x', subject: l('Q', 'Q'), body: l('?', '?'), actions: [{ id: 'y', label: l('Sim', 'Yes') }] });
     expect(P(s).inbox).toContain(asks);
-    // orçamento: 'other' tem 1 item individual por mês; o segundo vai para o boletim
-    ib19(s).mk = -1;
+    // orçamento único: com o mês quase cheio, o primeiro ainda entra sozinho e o segundo vai para o boletim
+    attn(s).bm = s.year * 12 + s.month; attn(s).bn = ATTN.notes - 1;
     const a = pushInbox18(s, 'zz19_other', { from: 'x', subject: l('um', 'one'), body: l('1', '1') });
     const b = pushInbox18(s, 'zz19_other', { from: 'x', subject: l('dois', 'two'), body: l('2', '2') });
-    expect(a.ref?.k18).toBe('zz19_other');
-    expect(b.ref?.k18).toBe('bulletin19');
-    expect(P(s).inbox.length).toBeLessThanOrEqual(n0 + 3);
+    expect(P(s).inbox).toContain(a);
+    expect(P(s).inbox.some((m) => m.id === b.id)).toBe(false);
+    expect(bulletinOf(s, s.week).some((x) => x.k18 === 'zz19_other' && x.title.pt === 'dois')).toBe(true);
+    expect(P(s).inbox.length).toBeLessThanOrEqual(n0 + 2);
   });
 
   it('carta perdida (mesa cheia) vira mensagem com prazo no calendário; ao vencer vale o padrão', () => {

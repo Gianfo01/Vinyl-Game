@@ -7,6 +7,7 @@
 //   registerCutscene('awards', (s, cs, close) => ...);   // abre sozinha quando a simulação enfileira
 //   openScene(l('Título', 'Title'), (close) => elemento);  // tela cheia para mini-jogos e locais
 
+import { quietScene } from '../sim/attention';
 import type { L } from '../data/world';
 import { t } from '../i18n/strings';
 import type { Cutscene } from '../sim/ext4';
@@ -189,25 +190,25 @@ export function showPendingCutscene(s: GameState, rerender: () => void, skip: bo
   if (!skip) {
     const quiet = pending.filter((c) => !shouldInterrupt23(interruptOf23(c), INT_PREF23.v));
     if (quiet.length) {
-      for (const c of quiet) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); }
+      for (const c of quiet) { quietScene(s, c); sceneDone(s, c); }
       for (const f of ON_QUIET23) f(s, quiet);
       pending = pending.filter((c) => !quiet.includes(c));
       if (!pending.length) { rerender(); return false; }
     }
   }
-  // r28 (F3): orçamento único de atenção (story28) — no máximo 2 cenas por avanço e 3 por mês; decisões sempre passam
+  // r28 (F3): orçamento único de atenção (r31: sim/attention.ts) — no máximo 2 cenas por avanço e 3 por mês; decisões sempre passam
   if (!skip && SCENE_GATE28.f) {
     const ok = new Set(SCENE_GATE28.f(s, pending));
     const over = pending.filter((c) => !ok.has(c.id));
     if (over.length) {
-      for (const c of over) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); }
+      for (const c of over) { quietScene(s, c); sceneDone(s, c); }
       for (const f of ON_QUIET23) f(s, over);
       pending = pending.filter((c) => ok.has(c.id));
       if (!pending.length) { rerender(); return false; }
     }
   }
   if (skip) {
-    for (const c of pending) { c.seen = true; c.data.quiet23 = true; sceneDone(s, c); } // r23: fica para rever
+    for (const c of pending) { quietScene(s, c); sceneDone(s, c); } // r23: fica para rever
     return false;
   }
   const cs = pending[0];

@@ -4,7 +4,7 @@ import type { GameState, MemoryEntry, Notification } from './types';
 import { book18, postHooks18, postObs18, sect18, type Sect18 } from './ledger18';
 import { noteSect23 } from './close23';
 import { playerActIds27 } from './tickcache27';
-import { pushAttn, type AttnIn, type AttnPrio } from './attention';
+import { pushAttn, ROUTINE_ATTN, type AttnIn, type AttnPrio } from './attention';
 import { registerFactSink, type FactNotifyOpts } from './facts17';
 
 export const START_DAY_MS = (year: number) => Date.UTC(year, 0, 1);
@@ -121,19 +121,13 @@ export function rememberListeners(): ((s: GameState, e: MemoryEntry) => void)[] 
   return (f.l ??= []);
 }
 
-/** r19 (onda 5, B.5): avisos de pouco valor vão para o resumo do mês (budget19); true = agrupado (marcado `fold`). */
-export const NOTIFY19: { f: ((s: GameState, n: Notification) => boolean) | null } = { f: null };
 /** r31 (W0-AT): tom do aviso → prioridade na fila única quando quem chama não diz. */
 const NOTIFY_PRIO: Record<Notification['kind'], AttnPrio> = { info: 0, good: 1, event: 1, bad: 2 };
-/** Aviso ao jogador. Grava em `s.notifications` (interface atual) e também na fila única de atenção (attention.ts).
+/** Aviso ao jogador: um item da fila única de atenção (attention.ts; r31 UNI-1: `s.notifications` deixou de existir).
+ *  Rotina (ROUTINE_ATTN) e o que passa do orçamento do mês vão para o boletim da semana.
  *  `o` dá os campos da fila (categoria, prioridade, pendência única, destino, remetente). */
 export function notify(s: GameState, text: L, kind: Notification['kind'] = 'info', o: Partial<Omit<AttnIn, 'title'>> = {}): void {
-  const n: Notification = { week: s.week, text, kind };
-  if (NOTIFY19.f?.(s, n)) n.fold = 1;
-  s.notifications.push(n);
-  if (s.notifications.length > 120) s.notifications.splice(0, s.notifications.length - 120);
-  const it = pushAttn(s, { cat: kind, prio: NOTIFY_PRIO[kind] ?? 0, ...o, title: text });
-  if (n.fold && !it.pendId && it.prio < 2) it.fold = 1; // o corte antigo (budget19) continua valendo até a 31.1
+  pushAttn(s, { cat: kind, prio: NOTIFY_PRIO[kind] ?? 0, low: ROUTINE_ATTN.test(text.pt), ...o, title: text, tone: kind });
 }
 
 // r31 (W0-FACT): ouvintes centrais das saídas de um fato — `emitFact(s, { ..., diary, notify })` gera a entrada

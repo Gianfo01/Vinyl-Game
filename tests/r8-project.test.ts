@@ -13,6 +13,7 @@ import { money, playerActs } from '../src/sim/util';
 import { l } from '../src/data/world';
 import type { GameState, Release, RunConfig } from '../src/sim/types';
 import { rng19 } from '../src/sim/rng19';
+import { notes } from '../src/sim/attention';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, over: Partial<RunConfig> = {}) => createGame(defaultConfig(seed, { scenario: 'emerging', ...over }));
@@ -67,7 +68,7 @@ describe('projeto musical', () => {
     expect(res.spent).toBe(p.spent);
     // a leitura chegou como notificação algumas semanas depois
     expect(rel.expl).toBe(true);
-    expect(s.notifications.some((n) => n.text.pt.startsWith('Leitura:') && n.text.pt.includes(rel.title))).toBe(true);
+    expect(notes(s).some((n) => n.text.pt.startsWith('Leitura:') && n.text.pt.includes(rel.title))).toBe(true);
     invariant(s);
   });
 

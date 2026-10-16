@@ -22,7 +22,7 @@ import './furnish';
 import './custom7';
 import './vices';
 import './songsale';
-import './agenda7';
+// r31 UNI-1: a agenda por semana (antigo sys/agenda7) mora em sim/agenda.ts; estado e ganchos entram no fim de songsale
 import './warmup8';
 import './fests8';
 import './ceremonies8';

@@ -19,6 +19,7 @@ import type { Act, GameState } from '../types';
 import { dateOfDay, fmtL, money, post } from '../util';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
+import { registerDeadline, type Deadline19 } from '../calendar19';
 
 export interface NpcShow { a: string; c: string; w: number; cap: number; mv?: 1 }
 export type Tix = 'fair' | 'tiered' | 'dynamic' | 'fanclub' | 'paperless';
@@ -185,3 +186,21 @@ registerSimHook('show', 'clash17:scalp', (s, _r, arg) => {
 });
 
 export const clashLog = (s: GameState) => cal17(s).log;
+
+// r31 (UNI-1): calendário único — shows seus que batem com concorrência (outro ato na mesma cidade e semana,
+// festival na cidade, cláusula de raio). Só leitura; a blitz de divulgação é o contra-ataque.
+registerDeadline('clash17', (s, from, to) => {
+  const out: Deadline19[] = [];
+  const seen = new Set<string>();
+  for (const p of playerShows(s)) {
+    if (p.w < from || p.w > to) continue;
+    const k = `${p.actId}:${p.city}:${p.w}`;
+    const a = s.acts[p.actId];
+    if (seen.has(k) || !a) continue;
+    seen.add(k);
+    const c = clashOf(s, a, p.city, p.w);
+    if (c.mult >= 0.97) continue;
+    out.push({ id: `c17:${k}`, w: p.w, kind: 'tour', t: fmtL(l('Concorrência: {a} em {c} (público −{p}%)', 'Competition: {a} in {c} (crowd −{p}%)'), { a: a.name, c: cityById[p.city]?.name ?? l('—', '—'), p: Math.round((1 - c.mult) * 100) }), d: c.why[0], tone: 'bad', act: !cal17(s).blitz[k], goto: { area: 'shows' } });
+  }
+  return out;
+});

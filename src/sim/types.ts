@@ -657,7 +657,7 @@ export interface Notification {
   week: number;
   text: L;
   kind: 'info' | 'good' | 'bad' | 'event';
-  /** r19 (B.5): aviso menor agrupado no "Resumo do mês" (fica no registro, some da lista e dos toasts) */
+  /** aviso menor agrupado no boletim da semana (r31 UNI-1: vista da fila única; some da lista e dos toasts) */
   fold?: 1;
 }
 
@@ -720,7 +720,6 @@ export interface GameState extends ExtState {
   eventCooldowns: Record<string, number>;
   tension: number;
   memory: MemoryEntry[];
-  notifications: Notification[];
   briefing: Notification[];
   genrePop: Record<string, number>; // popularidade 0..2
   scenes: Record<string, number>; // força da cena "cidade:gênero"

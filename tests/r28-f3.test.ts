@@ -15,9 +15,11 @@ import { EV28, EVENTS, eventById } from '../src/sim/events';
 import { conseq18, conseqKeys18, Fx18 } from '../src/sim/decide18';
 import { dec18, fire18, schedule18, type Echo18 } from '../src/sim/sys/decide18';
 import {
-  ATTN28, ERA_FIX28, VOCAB28, annualRev28, attnScenes28, attnTip28, diary28, echoSceneMark28, echoSceneOk28, eraFrom28, eraOk28,
-  fullDiary28, landmarks28, lost28, pickScenes28, recent28, spendTip28, st28, strongEcho28,
+  ATTN28, ERA_FIX28, VOCAB28, annualRev28, diary28, echoSceneMark28, echoSceneOk28, eraFrom28, eraOk28,
+  fullDiary28, landmarks28, lost28, recent28, st28, strongEcho28,
 } from '../src/sim/sys/story28';
+// r31 (UNI-1): o orçamento de cenas e dicas mudou do story28 para a fila única de atenção (mesmos números)
+import { ATTN, attnScenes as attnScenes28, attnTip as attnTip28, pickScenes as pickScenes28, spendTip as spendTip28 } from '../src/sim/attention';
 import { VARIANTS28, echoText28, stake28 } from '../src/sim/sys/echovar28';
 import { chartName28, chartNameL28 } from '../src/sim/chartname28';
 import { bandName } from '../src/sim/people';
@@ -90,7 +92,7 @@ describe('r28 F3 — orçamento de atenção', () => {
     expect(attnTip28(s)).toBe(false);
     s.week += 1; // próximo avanço, mesmo mês
     expect(attnTip28(s)).toBe(true);
-    for (let i = 0; i < ATTN28.tipsMonth; i++) spendTip28(s);
+    for (let i = 0; i < ATTN.tipsMonth; i++) spendTip28(s);
     expect(attnTip28(s)).toBe(false);
   });
 });

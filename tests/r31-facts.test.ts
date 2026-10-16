@@ -5,13 +5,13 @@ import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga do
 import { defaultConfig } from '../src/sim/bot';
 import { l } from '../src/data/world';
 import { emitFact, factSinks31, recentFacts } from '../src/sim/facts17';
-import { attn } from '../src/sim/attention';
+import { attn, notes } from '../src/sim/attention';
 import type { GameState } from '../src/sim/types';
 
 const game = (): GameState => createGame(defaultConfig('r31facts', { startYear: 1975 }));
 const count = (s: GameState, pt: string) => ({
   diary: s.memory.filter((m) => m.text.pt === pt).length,
-  notif: s.notifications.filter((n) => n.text.pt === pt).length,
+  notif: notes(s).filter((n) => n.text.pt === pt).length,
   attn: attn(s).q.filter((x) => x.title.pt === pt).length,
 });
 
@@ -30,7 +30,7 @@ describe('r31 W0-FACT · emitFact com diário e aviso', () => {
     expect(m.kind).toBe('r31d');
     expect(m.actId).toBe(act.id); // primeiro ator que é ato
     expect(m.important).toBe(true);
-    expect(s.notifications.find((n) => n.text.pt === t.pt)!.kind).toBe('bad');
+    expect(notes(s).find((n) => n.text.pt === t.pt)!.kind).toBe('bad');
     const it0 = attn(s).q.find((x) => x.title.pt === t.pt)!;
     expect(it0.prio).toBe(2);
     expect(it0.from).toBe('r31test');

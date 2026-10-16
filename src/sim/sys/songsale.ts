@@ -13,6 +13,7 @@ import { songProfile, songStatus } from '../repertoire';
 import type { GameState, Song } from '../types';
 import { fmtL, money, nextId, playerActs, post, remember } from '../util';
 import { ownerOf } from './people/owner';
+import { registerAgendaWeek } from '../agenda';
 
 export interface SongSale { id: string; songId: string; title: string; fromActId: string; toActId: string; relId: string; writers: string[]; fee: number; royalty: number; labelShare: number; paid: number; lastRev: number; week: number }
 export interface SaleTerms { fee: number; royalty: number; labelShare: number }
@@ -162,3 +163,7 @@ function npcSales(s: GameState, r: Rng): void {
 }
 
 registerSimHook('month', 'songsale', (s, r) => { salesMonth(s); npcSales(s, r); });
+
+// r31 (UNI-1): a agenda por semana (antigo sys/agenda7, fundido em sim/agenda.ts) registra estado e ganchos AQUI, no
+// mesmo ponto da cadeia de sys/index em que o arquivo antigo entrava — a ordem dos ganchos do tick é determinismo.
+registerAgendaWeek();

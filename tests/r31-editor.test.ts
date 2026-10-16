@@ -1,4 +1,5 @@
 // R31 · onda 1 (EDT) — editores: editar dinheiro/pessoa/opinião muda o estado e marca a partida; desligado não faz nada;
+import { notes } from '../src/sim/attention';
 // exportar → importar base dá a mesma base; base inválida é recusada com mensagem; disparar evento pelo editor funciona.
 import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
@@ -68,7 +69,7 @@ describe('R31 EDT · editor dentro da partida', () => {
   it('disparar evento pelo editor funciona', () => {
     const s = game();
     setEditorOn(s, true);
-    const before = s.decisions.length + s.notifications.length;
+    const before = s.decisions.length + notes(s).length;
     let fired = false;
     for (const e of EVENTS) {
       if (e.id.startsWith('sit17:')) continue;
@@ -76,7 +77,7 @@ describe('R31 EDT · editor dentro da partida', () => {
       if (r.ok) { fired = true; break; }
     }
     expect(fired).toBe(true);
-    expect(s.decisions.length + s.notifications.length).toBeGreaterThan(before);
+    expect(s.decisions.length + notes(s).length).toBeGreaterThan(before);
   });
 
   it('registro aberto: sistemas novos registram editáveis e executáveis', () => {

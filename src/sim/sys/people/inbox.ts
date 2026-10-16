@@ -4,7 +4,8 @@
 
 import type { Rng } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
-import type { GameState, Notification } from '../../types';
+import type { GameState } from '../../types';
+import { attn, resolveAttn, seeAttn } from '../../attention';
 import { fmtL, money, post } from '../../util';
 import { P, actOf, addMsg, clamp01, mediumFor, trackedPersons, type InboxMsg, type Medium } from './state';
 import { activeThoughts, addThought, thoughtText } from './thoughts';
@@ -14,7 +15,7 @@ import { personalAdvance } from './life';
 import { leakSecret } from './secrets';
 import { talk } from './talks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
-import { isSeen18, noteKey18 } from '../../inbox18';
+import { isSeen18 } from '../../inbox18';
 import { rng19 } from '../../rng19';
 
 /**
@@ -109,6 +110,7 @@ export function answerMsg(s: GameState, msgId: string, action: string, r: Rng = 
   }
   m.resolved = action;
   m.read = true;
+  resolveAttn(s, `msg:${m.id}`);
   for (const f of MSG_AFTER18) f(s, m, action);
   return out;
 }
@@ -118,10 +120,11 @@ export function markRead(s: GameState, msgId?: string): void {
   if (msgId) {
     const m = st.inbox.find((x) => x.id === msgId);
     if (m) m.read = true;
+    seeAttn(s, msgId);
     return;
   }
   for (const m of st.inbox) m.read = true;
-  st.readUntil = s.week;
+  seeAttn(s);
 }
 
 /** Reclamações espontâneas de quem está mal; respostas expiradas seguem o padrão. */
@@ -171,25 +174,46 @@ function yearAtWeek(s: GameState, week: number): number {
   return s.year - Math.floor((s.week - week) / 52);
 }
 
+/** A caixa única (r31 UNI-1): lista pela fila de atenção — mensagens (corpo em `P(s).inbox`), avisos e o boletim da
+ *  semana (item-cabeça; as linhas são os itens dobrados) — mais as decisões da mesa. Itens dobrados e cenas não entram. */
 export function inboxItems(s: GameState): InboxItem[] {
   const st = P(s);
+  const byId = new Map(st.inbox.map((m) => [m.id, m]));
   const items: InboxItem[] = [];
-  for (const m of st.inbox) {
-    items.push({ key: m.id, week: m.week, year: m.year, medium: msgMedium(m), from: m.from, subject: m.subject, body: m.body, tone: m.tone ?? 'info', unread: !m.read, source: 'msg', msg: m });
+  for (const x of attn(s).q) {
+    if (x.cat === 'scene' || (x.fold && x.bw === undefined)) continue;
+    if (x.msg) {
+      const m = byId.get(x.msg);
+      if (!m) continue;
+      byId.delete(x.msg);
+      items.push({ key: m.id, week: m.week, year: m.year, medium: msgMedium(m), from: m.from, subject: m.subject, body: m.body, tone: m.tone ?? 'info', unread: !m.read, source: 'msg', msg: m });
+    } else if (x.bw !== undefined) {
+      const year = yearAtWeek(s, x.at);
+      const m: InboxMsg = { id: x.id, week: x.at, year, from: l('Boletim', 'Bulletin').pt, subject: x.title, body: x.body ?? x.title, kind: 'deal', tone: 'info', read: x.seen, ref: { sys: 'k18', k18: 'bulletin19', bw: x.bw, n: x.n ?? 1 } };
+      items.push({ key: x.id, week: x.at, year, medium: msgMedium(m), from: m.from, subject: m.subject, body: m.body, tone: 'info', unread: !x.seen, source: 'msg', msg: m });
+    } else if (x.tone) {
+      const year = yearAtWeek(s, x.at), n = x.tone;
+      items.push({ key: x.id, week: x.at, year, medium: mediumFor(year, n === 'bad'), from: s.config.companyName, subject: n === 'bad' ? l('Alerta', 'Alert') : n === 'good' ? l('Boa notícia', 'Good news') : l('Aviso', 'Notice'), body: x.title, tone: n, unread: !x.seen, source: 'notification' });
+    }
   }
-  s.notifications.forEach((n: Notification, i) => {
-    const year = yearAtWeek(s, n.week);
-    items.push({ key: `n${i}-${n.week}`, week: n.week, year, medium: mediumFor(year, n.kind === 'bad'), from: s.config.companyName, subject: n.kind === 'bad' ? l('Alerta', 'Alert') : n.kind === 'good' ? l('Boa notícia', 'Good news') : l('Aviso', 'Notice'), body: n.text, tone: n.kind, unread: n.week > st.readUntil && !isSeen18(s, noteKey18(n.week, n.text.pt)), source: 'notification' });
-  });
   for (const d of s.decisions) {
     items.push({ key: d.id, week: d.week, year: s.year, medium: mediumFor(s.year, true), from: l('Mesa de decisões', 'Decision desk').pt, subject: d.title, body: d.text, tone: 'event', unread: !isSeen18(s, d.id), source: 'decision', decisionId: d.id });
   }
   return items.sort((a, b) => b.week - a.week || (a.source === 'decision' ? -1 : 1));
 }
 
+/** Não lidos: mensagens (e o boletim) não lidas e não resolvidas + decisões + avisos não vistos que não são só informativos. */
 export function unreadCount(s: GameState): number {
   const st = P(s);
-  return st.inbox.filter((m) => !m.read && !m.resolved).length + s.decisions.length + s.notifications.filter((n) => n.week > st.readUntil && n.kind !== 'info' && !isSeen18(s, noteKey18(n.week, n.text.pt))).length;
+  const open = new Set(st.inbox.filter((m) => !m.read && !m.resolved).map((m) => m.id));
+  let n = s.decisions.length;
+  for (const x of attn(s).q) {
+    if (x.cat === 'scene' || x.done) continue;
+    if (x.msg) { if (open.has(x.msg)) { n++; open.delete(x.msg); } }
+    else if (x.bw !== undefined) { if (!x.seen) n++; }
+    else if (x.tone && !x.fold && !x.seen && x.tone !== 'info') n++;
+  }
+  return n;
 }
 
 export { money };

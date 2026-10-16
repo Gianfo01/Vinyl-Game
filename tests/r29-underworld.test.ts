@@ -36,6 +36,7 @@ import { AWCAT29, peekRig29, rigAward29, rigPow29 } from '../src/sim/sys/rig29';
 import { hallScore } from '../src/sim/sys/rockhall9';
 import { st18 } from '../src/sim/sys/stream18';
 import { cockpit27 } from '../src/ui/sys/cockpit27model';
+import { attnSeq, notes } from '../src/sim/attention';
 const commitCrime = commit17;
 /** Rng que sempre "acerta". */
 const LUCKY = { chance: () => true, float: (a: number) => a, int: (a: number) => a, pick: <T>(x: T[]) => x[0] } as unknown as Rng;
@@ -156,12 +157,12 @@ describe('r29 Submundo — famílias: interações, contratar, favores, escalada
     expect(crime17(s).log.some((e) => e.actor === o.key && e.target === v.id)).toBe(true);
     // chega a data: a família cobra (pedido com prazo, na caixa de entrada)
     fav.data!.due = s.week;
-    const n0 = s.notifications?.length ?? 0;
+    const n0 = attnSeq(s);
     advanceMonth(s);
     const a = asks29(s, 'fnoite').find((x) => x.hold === fav.id)!;
     expect(a).toBeTruthy();
     expect(a.dl).toBeGreaterThan(s.week);
-    expect((s.notifications?.length ?? 0)).toBeGreaterThan(n0);
+    expect(notes(s, { after: n0 }).length).toBeGreaterThan(0);
     // cumprir zera a dívida e sobe a confiança
     const res0 = meter29(s, 'fnoite').respect;
     const f = fulfill29(s, a.id);

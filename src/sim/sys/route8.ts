@@ -20,6 +20,7 @@ import type { Act, GameState } from '../types';
 import { fmtL, money, post, remember, staffSkill } from '../util';
 import { eff360, take360 } from './deal360_17';
 import { chemistry, hasSpec } from './crew8';
+import { registerDeadline, type Deadline19 } from '../calendar19';
 
 export type TourFormat = 'support' | 'small' | 'standard' | 'arena';
 export type Intensity = 'rest' | 'normal' | 'grind';
@@ -478,3 +479,18 @@ export function routeWeek(s: GameState, _r: Rng): void {
 }
 
 registerSimHook('week', 'route8', (s, r) => routeWeek(s, r));
+
+// r31 (UNI-1): calendário único — cada data da turnê roteada com promotor (a janela da turnê já vem por 'live').
+registerDeadline('route8', (s, from, to) => {
+  const out: Deadline19[] = [];
+  for (const d of Object.values(route(s).deals)) {
+    const t = s.tours.find((x) => x.id === d.tourId);
+    if (!t || (t.status !== 'planned' && t.status !== 'running')) continue;
+    for (const st of t.stops) {
+      const w = Math.floor(st.day / 7);
+      if (st.status !== 'scheduled' || w < from || w > to) continue;
+      out.push({ id: `r8:${t.id}:${st.day}`, w, kind: 'tour', t: fmtL(l('Show de "{n}" em {c}', '"{n}" show in {c}'), { n: t.name, c: cityById[st.cityId]?.name ?? l('—', '—') }), d: fmtL(l('Acordo com o promotor: {f}.', 'Promoter deal: {f}.'), { f: FORMAT_NAME[d.terms.format] }), tone: 'info', goto: { area: 'shows' } });
+    }
+  }
+  return out;
+});

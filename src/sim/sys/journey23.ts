@@ -9,7 +9,7 @@ import { agendaLoad } from '../capacity';
 import { unrecorded, unreleasedRecorded } from '../production';
 import type { Act, AgendaSlot, GameState } from '../types';
 import { fmtL, playerActs } from '../util';
-import { ag7 } from './agenda7';
+import { ag7 } from '../agenda';
 import { needSongs, projectSession, projectStage, type MusicProject } from './project8';
 
 /** r23: as sete paradas da jornada (ids estáveis; a interface traduz). */

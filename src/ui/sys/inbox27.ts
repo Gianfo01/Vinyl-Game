@@ -15,6 +15,7 @@ import { resolveDecision } from '../../sim/events';
 import { archive18, isSeen18, seen18, star18, type Goto18, type InboxCat18 } from '../../sim/inbox18';
 import type { Item18 } from '../../sim/sys/inbox18';
 import { answerMsg, markRead, unreadCount } from '../../sim/sys/people/inbox';
+import { seeAttn } from '../../sim/attention';
 import { P, type InboxMsg } from '../../sim/sys/people/state';
 import type { Decision, DecisionOption, GameState } from '../../sim/types';
 import { logoUrl } from '../art';
@@ -63,7 +64,8 @@ export const ACT27 = {
   /** Abre (marca lida/vista) — mensagens: `read`; avisos e decisões: marcador `seen` da caixa. */
   open(s: GameState, it: Item18): void {
     if (it.msg) markRead(s, it.msg.id);
-    else if (!isSeen18(s, it.key)) seen18(s, it.key);
+    else if (it.source === 'decision') { if (!isSeen18(s, it.key)) seen18(s, it.key); }
+    else seeAttn(s, it.key); // r31 UNI-1: aviso = item da fila única
   },
   /** Responde uma mensagem (tratador do sistema que a criou). */
   reply(s: GameState, m: InboxMsg, action: string): void { toast(t(answerMsg(s, m.id, action))); rerender(); },

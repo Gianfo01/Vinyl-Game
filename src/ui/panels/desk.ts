@@ -1,6 +1,7 @@
 // Mesa do mês: briefing (até 5 itens), cartões de decisão com custo/prazo/risco,
 // o que mudou, metas visíveis e rumores (GDD §6, §22, §24).
 
+import { notes } from '../../sim/attention';
 import { l } from '../../data/world';
 import { S, t } from '../../i18n/strings';
 import { acceptCounter, withdrawOffer } from '../../sim/contracts';
@@ -37,7 +38,7 @@ export function deskPanel(s: GameState): HTMLElement {
   );
   const counters = s.offers.filter((o) => o.status === 'counter');
   const pending = s.offers.filter((o) => o.status === 'pending');
-  const recentNotes = s.notifications.filter((n) => !n.fold).slice(-12).reverse(); // r19: agrupados ficam no Resumo do mês
+  const recentNotes = notes(s).filter((n) => !n.fold).slice(-12).reverse(); // r19: agrupados ficam no Resumo do mês
   const lm = lastMonthView23(s); // r23: mesmo retrato do fechamento usado na barra do topo
   const net = lm.delta;
   const myCharts = [...s.charts.singles, ...s.charts.albums].filter((e) => s.releases[e.releaseId]?.owner === 'player' || s.acts[s.releases[e.releaseId]?.actId]?.playerBand);

@@ -366,7 +366,6 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     eventCooldowns: {},
     tension: 0.3,
     memory: [],
-    notifications: [],
     briefing: [],
     genrePop: {},
     scenes: {},

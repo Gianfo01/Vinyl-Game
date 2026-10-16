@@ -26,6 +26,7 @@ import { dateOfDay, fmtL, money, post, staffSkill } from '../util';
 import { cityEcon27 } from './cities27';
 import { PH27, sceneDemand27 } from './scenes27';
 import { pol18, reserveCents18 } from './policy18';
+import { registerDeadline, type Deadline19 } from '../calendar19';
 
 export const ROAD27_RNG = 'road27v1';
 const rng = (s: GameState, t: string, day: number, part: string) => Rng.fromSeed(`${s.config.seed}|${ROAD27_RNG}|${t}|${day}|${part}`);
@@ -388,3 +389,16 @@ export function roadSummary27(s: GameState, tourId: string): { events: number; m
   const v = Object.values(R.ev);
   return { events: v.length, mine: v.filter((x) => !x.auto).length, auto: v.filter((x) => x.auto).length, skipped: v.filter((x) => x.skip).length };
 }
+
+// r31 (UNI-1): calendário único — datas da estrada com evento ainda sem decisão (puro: o sorteio é o da própria data).
+registerDeadline('road27', (s, from, to) => {
+  if (!(s.x4 as unknown as { road27?: Road27 }).road27) return [];
+  const days = Math.max(7, Math.min(26 * 7, (to - s.week + 1) * 7));
+  const out: Deadline19[] = [];
+  for (const { t, st, ev } of pendingRoad27(s, days)) {
+    const w = Math.floor(st.day / 7);
+    if (w < from || w > to) continue;
+    out.push({ id: `r27:${t.id}:${st.day}`, w, kind: 'tour', t: fmtL(l('Na estrada ({c}): {k}', 'On the road ({c}): {k}'), { c: cityL(st.cityId), k: ev.title }), d: l('Sem escolha sua, a equipe decide sozinha.', 'Without your call, the crew decides.'), tone: 'bad', act: true, goto: { area: 'shows' } });
+  }
+  return out;
+});

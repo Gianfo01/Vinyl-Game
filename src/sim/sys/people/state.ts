@@ -7,6 +7,7 @@ import { registerExt4 } from '../../ext4';
 import type { Act, GameState, Person, StaffMember } from '../../types';
 import { nextId, playerActs } from '../../util';
 import { actsOfPerson17 } from '../../actidx17';
+import { pushAttn, resolveAttn, type AttnPrio } from '../../attention';
 
 // ---------------------------------------------------------------- tipos
 
@@ -181,7 +182,6 @@ export interface PeopleState {
   lastRoyalty: Record<string, number>;
   inbox: InboxMsg[];
   /** notificações/decisões vistas até esta semana */
-  readUntil: number;
   feed: FeedPost[];
   breakdowns: Breakdown[];
   /** afinidade entre atos do elenco (a|b ordenados) −100..100 */
@@ -203,7 +203,7 @@ declare module '../../ext4' {
 
 registerExt4('people', () => ({
   thoughts: {}, health: {}, promises: [], lastTalk: {}, talkCount: {}, secrets: [], secretsSeeded: {}, owner: null, career: {},
-  romances: [], wealth: {}, lastRoyalty: {}, inbox: [], readUntil: 0, feed: [], breakdowns: [], bonds: {}, roster: [], medics: [], neg: null,
+  romances: [], wealth: {}, lastRoyalty: {}, inbox: [], feed: [], breakdowns: [], bonds: {}, roster: [], medics: [], neg: null,
   negCooldown: {}, seenCrises: {},
 }));
 
@@ -213,7 +213,7 @@ export function P(s: GameState): PeopleState {
   if (!st.x4.people) {
     st.x4.people = {
       thoughts: {}, health: {}, promises: [], lastTalk: {}, talkCount: {}, secrets: [], secretsSeeded: {}, owner: null, career: {},
-      romances: [], wealth: {}, lastRoyalty: {}, inbox: [], readUntil: 0, feed: [], breakdowns: [], bonds: {}, roster: [], medics: [], neg: null,
+      romances: [], wealth: {}, lastRoyalty: {}, inbox: [], feed: [], breakdowns: [], bonds: {}, roster: [], medics: [], neg: null,
       negCooldown: {}, seenCrises: {},
     };
   }
@@ -281,15 +281,30 @@ export const MEDIUM_NAME: Record<Medium, L> = {
   message: l('Mensagem', 'Message'),
 };
 
-export function addMsg(s: GameState, m: Omit<InboxMsg, 'id' | 'week' | 'year'>): InboxMsg {
+/** Como a mensagem entra na fila única de atenção (r31 UNI-1). Sem `o`, vale a regra das mensagens de pessoas. */
+export interface MsgAttn { cat?: string; prio?: number; k18?: string; label?: L }
+const MSG_ATTN_CAT: Partial<Record<InboxMsg['kind'], string>> = { staff: 'staff', owner: 'life', secret: 'press', fan: 'press', deal: 'deals', info: 'other' };
+/** Prioridade na fila: segredo/saúde 2, tom ruim 1, resto 0; pedir resposta põe em ≥ 2 (vira pendência). */
+export function msgPrio31(m: Pick<InboxMsg, 'kind' | 'tone' | 'actions'>, base?: number): number {
+  const p = base ?? (m.kind === 'secret' || m.kind === 'health' ? 2 : m.tone === 'bad' ? 1 : 0);
+  return Math.min(3, m.actions?.length ? Math.max(2, p + 1) : p);
+}
+
+/** Mensagem na caixa: o corpo (botões, respostas, prazo) mora em `P(s).inbox`; a caixa lista pela fila única de atenção. */
+export function addMsg(s: GameState, m: Omit<InboxMsg, 'id' | 'week' | 'year'>, o: MsgAttn = {}): InboxMsg {
   const st = P(s);
   const msg: InboxMsg = { id: nextId(s, 'ib'), week: s.week, year: s.year, ...m };
   st.inbox.push(msg);
   if (st.inbox.length > 60) {
     // descarta primeiro o que já foi resolvido
     const drop = st.inbox.findIndex((x) => x.resolved || !x.actions?.length);
-    st.inbox.splice(drop >= 0 ? drop : 0, 1);
+    const [gone] = st.inbox.splice(drop >= 0 ? drop : 0, 1);
+    if (gone) resolveAttn(s, `msg:${gone.id}`);
   }
+  pushAttn(s, {
+    cat: o.cat ?? MSG_ATTN_CAT[msg.kind] ?? 'people', prio: msgPrio31(msg, o.prio) as AttnPrio, title: msg.subject, body: msg.body, from: msg.from, msg: msg.id,
+    ...(msg.actions?.length ? { pendId: `msg:${msg.id}` } : {}), ...(o.k18 ? { k18: o.k18 } : {}), ...(o.label ? { label: o.label } : {}), fold: 0,
+  });
   return msg;
 }
 

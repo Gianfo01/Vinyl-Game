@@ -8,7 +8,7 @@ import { fileLawsuit } from '../src/sim/business';
 import { queueCutscene } from '../src/sim/ext4';
 import { emitFact } from '../src/sim/facts17';
 import { album28 } from '../src/sim/sys/end28';
-import { attnScenes28 } from '../src/sim/sys/story28';
+import { attnScenes as attnScenes28 } from '../src/sim/attention'; // r31 UNI-1: orçamento único (era story28)
 import type { Act, GameState } from '../src/sim/types';
 import { remember } from '../src/sim/util';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
@@ -169,7 +169,7 @@ describe('r29 — fila e orçamento de atenção', () => {
     expect(got.map((d) => d.key)).toEqual(['sale', 'split']); // prioridades 96 e 87
     expect(scan27(s)).toEqual([]);
   });
-  it('as cenas novas passam pelo mesmo orçamento do story28 (2 por avanço, 3 por mês; decisões passam)', () => {
+  it('as cenas novas passam pelo mesmo orçamento de atenção (2 por avanço, 3 por mês; decisões passam)', () => {
     const s = game();
     const list = ['hq', 'leg', 'gold', 'join'].map((k) => queueCutscene(s, 'cut27', { title: CUT27[k as CutKey27].title, d: { key: k }, int23: 'milestone' }));
     const ok = attnScenes28(s, list);

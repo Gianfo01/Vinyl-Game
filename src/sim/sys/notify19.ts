@@ -1,7 +1,5 @@
-// Rodada 19 (Frente 8, P9 + 11.3/11.15) — ORÇAMENTO DE NOTIFICAÇÕES e BOLETIM SEMANAL. Mensagens sem resposta e de baixa
-// prioridade (relatórios, mercado, pós-lançamento, trajetória, prestações…) não entram mais uma a
-// uma na Caixa: viram linhas de um único "Boletim da semana". Cada categoria tem um orçamento por mês; o excedente vai
-// para o boletim. O que pede resposta, o que é urgente (prio ≥ 2) e o que é ruim nunca é engolido.
+// Rodada 19 (Frente 8, P9 + 11.3/11.15) — BOLETIM SEMANAL (r31 UNI-1: o orçamento mora na fila única de atenção,
+// sim/attention.ts; aqui fica só o tipo do boletim).
 // Também: carta de continuação perdida (mesa cheia) vira mensagem com prazo (follow19) e o "por quê" do pulso do
 // Cockpit (pulse19 → cash.month e cadeia de causas dos fatos: fact19.chain).
 
@@ -10,78 +8,20 @@ import { l, type L } from '../../data/world';
 import { dec18 } from './decide18';
 import { FOLLOW19 } from './echoes18';
 import { emitEvent, eventById, ctxParams, resolveDecision } from '../events';
-import { registerExt4 } from '../ext4';
 import { registerExplain, type WhyPart } from '../explain18';
 import { causeChain, factById, recentFacts } from '../facts17';
-import { INBOX_ROUTE19, inboxKind18, pushInbox18, registerInboxKind, type InboxCat18, type Push18 } from '../inbox18';
+import { pushInbox18, registerInboxKind } from '../inbox18';
 import { noteDeadline19, dropDeadline19 } from '../calendar19';
 import type { GameState } from '../types';
-import { fmtL, nextId, playerActs } from '../util';
-import { addMsg, P, type InboxMsg } from './people/state';
+import { fmtL, playerActs } from '../util';
+import type { InboxMsg } from './people/state';
 import { cashDeltaL23, lastClosed23, lastMonthView23 } from '../close23';
 
-// ---------------------------------------------------------------- regras
+// ---------------------------------------------------------------- boletim
 
-/** Sempre no boletim (sem resposta): relatórios e leituras periódicas. */
-export const BULLETIN19 = new Set(['review18', 'market18', 'analyst', 'traj18', 'a18_stmt', 'tv18_third', 'regions18']);
-/** Itens individuais por categoria por mês (sem resposta, prio ≤ 1); o excedente vai para o boletim. */
-export const BUDGET19: Record<InboxCat18, number> = { decision: 3, people: 1, deals: 1, money: 1, press: 1, world: 1, staff: 1, life: 1, analyst: 0, other: 1 };
-
-export interface Ib19State { mk: number; n: Partial<Record<InboxCat18, number>>; ind: number; bul: number; y: Record<number, [number, number]> }
-declare module '../ext4' { interface Ext4 { ib19: Ib19State } }
-const fresh = (): Ib19State => ({ mk: -1, n: {}, ind: 0, bul: 0, y: {} });
-registerExt4('ib19', fresh);
-export function ib19(s: GameState): Ib19State {
-  const x = s.x4 as unknown as { ib19?: Ib19State };
-  const st = (x.ib19 ??= fresh());
-  st.n ??= {}; st.y ??= {};
-  return st;
-}
-const yr = (s: GameState, i: 0 | 1) => { const st = ib19(s); const r = (st.y[s.year] ??= [0, 0]); r[i]++; const ks = Object.keys(st.y); if (ks.length > 12) delete st.y[Number(ks[0])]; };
-
-/** Decide se a mensagem vai para o boletim (true) ou entra sozinha. Atualiza o orçamento do mês. */
-export function routes19(s: GameState, kind: string, m: Push18): boolean {
-  if (kind === 'bulletin19' || m.actions?.length) return false;
-  const k = inboxKind18(kind);
-  const cat: InboxCat18 = k?.cat ?? 'other';
-  const prio = k?.prio ?? 0;
-  if (BULLETIN19.has(kind)) return true;
-  if (prio >= 2 || m.tone === 'bad') return false;
-  const st = ib19(s), mk = s.year * 12 + s.month;
-  if (st.mk !== mk) { st.mk = mk; st.n = {}; }
-  const used = st.n[cat] ?? 0;
-  if (used >= BUDGET19[cat]) return true;
-  st.n[cat] = used + 1;
-  return false;
-}
-
-const clip = (x: string, n = 150) => (x.length > n ? `${x.slice(0, n - 1)}…` : x);
-/** Acrescenta uma linha ao boletim desta semana (cria se não houver). */
-export function bulletin19(s: GameState, kind: string, m: Push18): InboxMsg {
-  const k = inboxKind18(kind);
-  const lab = k?.label ?? l('Aviso', 'Notice');
-  const line: L = { pt: `• ${lab.pt}: ${m.subject.pt} — ${clip(m.body.pt)}`, en: `• ${lab.en}: ${m.subject.en} — ${clip(m.body.en)}` };
-  const st = ib19(s);
-  st.bul++; yr(s, 1);
-  const cur = P(s).inbox.find((x) => x.ref?.k18 === 'bulletin19' && x.ref.bw === s.week);
-  if (cur) {
-    nextId(s, 'ib'); // consome o id que a mensagem teria (mantém a sequência de ids — e as sementes derivadas — igual)
-    const n = Number(cur.ref!.n ?? 1) + 1;
-    cur.ref!.n = n;
-    cur.body = { pt: `${cur.body.pt}\n${line.pt}`, en: `${cur.body.en}\n${line.en}` };
-    cur.subject = fmtL(l('Boletim da semana ({n} itens)', 'Weekly bulletin ({n} items)'), { n });
-    cur.read = false;
-    return cur;
-  }
-  return addMsg(s, { from: l('Boletim', 'Bulletin').pt, subject: l('Boletim da semana (1 item)', 'Weekly bulletin (1 item)'), body: line, kind: 'deal', tone: 'info', ref: { sys: 'k18', k18: 'bulletin19', bw: s.week, n: 1, first: kind } });
-}
-
-INBOX_ROUTE19.f = (s, kind, m) => {
-  if (routes19(s, kind, m)) return bulletin19(s, kind, m);
-  if (kind !== 'bulletin19') { ib19(s).ind++; yr(s, 0); }
-  return null;
-};
-
+// r31 (UNI-1): o orçamento por categoria (BUDGET19/routes19) e o boletim como carta própria saíram daqui. O corte é o
+// orçamento único da fila de atenção (sim/attention.ts) e o boletim é uma vista dela (itens dobrados da semana); o tipo
+// abaixo só dá rótulo e destino ao item-cabeça do boletim na caixa.
 registerInboxKind('bulletin19', { label: l('Boletim semanal', 'Weekly bulletin'), cat: 'analyst', icon: 'newspaper', prio: 0, goto: () => ({ area: 'cockpit' }) });
 
 // ---------------------------------------------------------------- carta perdida → mensagem com prazo (11.15)

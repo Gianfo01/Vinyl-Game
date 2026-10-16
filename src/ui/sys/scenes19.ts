@@ -4,12 +4,13 @@
 import { t } from '../../i18n/strings';
 import { LIVE19, releaseHeld19 } from '../../sim/sys/scenes19';
 import { toast } from '../common';
+import { attnSeq, notes } from '../../sim/attention';
 import { ON_SCENE_DONE } from '../registry';
 
 LIVE19.on = true;
 ON_SCENE_DONE.push((s, cs) => {
   if (cs.kind !== 'awards') return;
-  const n0 = s.notifications.length;
+  const n0 = attnSeq(s);
   if (!releaseHeld19(s, cs.id)) return;
-  for (const n of s.notifications.slice(n0)) toast(t(n.text), n.kind);
+  for (const n of notes(s, { after: n0 })) toast(t(n.text), n.kind);
 });
