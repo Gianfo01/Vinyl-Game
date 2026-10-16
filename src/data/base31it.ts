@@ -366,10 +366,27 @@ s('Clara', 'pop_rnb', 'milan', 2022, 1999, u, [['Diamanti grezzi', 2024, 'single
 s('Rhove', 'trap', 'milan', 2021, u, u, [['Shakerando', 2022, 'single']], 'fimi', { r: 'mc', rc: 'Rho', nick: ['Samuel Roveda'], cf: ['ano de nascimento'], ap: ['d'] });
 s('Andrea Laszlo De Simone', 'indie', 'milan', 2012, u, u, [['Uomo donna', 2017]], '', { rc: 'Turim', cf: ['ano de nascimento'], ap: ['d'] });
 
+// ================================================================ 2ª passada · MusicBrainz (gerado por script — não editar à mão)
+// Coleta por gênero (país IT) e ficha de cada artista no MusicBrainz; só entra quem tem link para o Wikidata (notoriedade),
+// local de origem dentro da Itália (cidade do jogo pela região), disco com data e gênero que mapeia para um gênero do jogo
+// já existente na estreia. Estreia = primeiro disco datado (álbum, single ou EP; sem coletânea/ao vivo); obras = esse
+// disco e o 1º e o último álbum (não necessariamente os maiores sucessos); nascimento/morte = life-span da pessoa;
+// integrantes só com instrumento/voz informado. Discografia pequena (< 10 lançamentos) entra só nas bases Grande/Enorme
+// (z: 2). Ver docs/r31/base-it.md.
+/** Ato vindo do MusicBrainz: fontes = MBID + QID do Wikidata. */
+function mb(n: string, g: string, c: string, d: number, b: number | undefined, x: number | undefined, al: RealRelease[], mbid: string, qid: string, o: O = {}): void {
+  const { rc, nick, cf, ...rest } = o;
+  const solo = rest.r !== undefined;
+  IT.push({ a: { n, g, c, d, t: 3, cn: 'ITA', ...(solo && b !== u ? { b } : {}), ...(solo && x !== u ? { x, e: x } : {}), al, ...rest }, fo: [`mb:${mbid}`, `wd:${qid}`], rc, nick, cf });
+}
+// @@MB31-START
+// @@MB31-END
+void mb; // o bloco acima pode ficar vazio
+
 /** Curadoria completa da base italiana (ato + fontes + cidade real + apelidos + a confirmar). */
 export const IT31: readonly It31[] = IT;
 /** Os atos (formato RealArtist), na ordem em que entram no fim de REAL_ALL. */
 export const BASE31_IT: RealArtist[] = IT.map((x) => x.a);
 /** Texto das fontes de um ato (códigos expandidos). */
 export const itSources31 = (x: It31): string[] => x.fo.map((k) =>
-  k.startsWith('sr') ? `Festival di Sanremo ${k.slice(2)} (albo d'oro dos vencedores)` : k.startsWith('ev') ? `Eurovision Song Contest ${k.slice(2)} (vencedores)` : FO31[k] ?? k);
+  k.startsWith('mb:') ? `MusicBrainz: https://musicbrainz.org/artist/${k.slice(3)}` : k.startsWith('wd:') ? `Wikidata: ${k.slice(3)}` : k.startsWith('sr') ? `Festival di Sanremo ${k.slice(2)} (albo d'oro dos vencedores)` : k.startsWith('ev') ? `Eurovision Song Contest ${k.slice(2)} (vencedores)` : FO31[k] ?? k);
