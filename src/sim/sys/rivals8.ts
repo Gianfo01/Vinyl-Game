@@ -23,6 +23,7 @@ import type { ProfileId } from './identity/data';
 import { XBY_ID, envOf, adj } from './identity/extra';
 import { skipBlockedLog } from './gate14';
 import { actsNow27, releasesNow27 } from '../tickcache27';
+import { guessPot31 } from '../know';
 
 export type PlaybookId = 'vulture' | 'scene' | 'catalog' | 'tech' | 'live' | 'idol' | 'gospel' | 'prestige' | 'sync' | 'regional' | 'fund' | 'visionary' | 'purist'
   | 'viral' | 'school' | 'royalty' | 'conglomerate' | 'importer' | 'agitator' | 'copycat' | 'budget';
@@ -364,11 +365,11 @@ function sceneOwner(s: GameState, r: Rng, lb: Label): void {
   const key = homeScene(s, lb);
   if (!key) return;
   if (r.chance(0.06)) {
-    const t0 = sceneTargets(s, key).sort((x, y) => y.fame - x.fame || y.potential - x.potential);
+    const t0 = sceneTargets(s, key).sort((x, y) => y.fame - x.fame || guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id));
     if (t0[0]) markInterest(s, lb, t0[0]);
   }
   if (r.chance(0.04) && lb.roster.length < 18) {
-    const a = sceneTargets(s, key).sort((x, y) => y.potential - x.potential)[0];
+    const a = sceneTargets(s, key).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.2)) {
       signWithRival(s, a, lb.id, r);
       s.scenes[key] = (s.scenes[key] ?? 0) + 1.5;
@@ -538,7 +539,7 @@ function idolFactory(s: GameState, r: Rng, lb: Label): void {
   }
   // trainees: assina jovens do pop com contrato longo
   if (r.chance(0.04) && lb.roster.length < 16) {
-    const t0 = actsNow27(s).filter((a) => free(a) && a.fame < 12 && famOf(a) === 'pop' && a.members.every((id) => s.year - (s.persons[id]?.born ?? 0) < 25)).sort((x, y) => y.potential - x.potential)[0];
+    const t0 = actsNow27(s).filter((a) => free(a) && a.fame < 12 && famOf(a) === 'pop' && a.members.every((id) => s.year - (s.persons[id]?.born ?? 0) < 25)).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (t0 && lb.cash > money(s, expectedAdvance(s, t0) * 1.2)) { signWithRival(s, t0, lb.id, r); logMove(s, lb, { k: 'scene_sign', a: t0.name, x: `${t0.city}:${t0.genre}` }); }
   }
 }
@@ -585,7 +586,7 @@ function regionalKing(s: GameState, r: Rng, lb: Label): void {
   s.scenes[k] = (s.scenes[k] ?? 0) + 0.8;
   logMove(s, lb, { k: 'regional_tour', a: a.name });
   if (key && r.chance(0.5) && lb.roster.length < 14) {
-    const t0 = sceneTargets(s, key).sort((x, y) => y.potential - x.potential)[0];
+    const t0 = sceneTargets(s, key).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (t0 && lb.cash > money(s, expectedAdvance(s, t0) * 1.2)) { signWithRival(s, t0, lb.id, r); logMove(s, lb, { k: 'scene_sign', a: t0.name, x: key }); }
   }
 }
@@ -607,7 +608,7 @@ function assetStripper(s: GameState, r: Rng, lb: Label): void {
 
 function visionaryExec(s: GameState, r: Rng, lb: Label): void {
   if (!r.chance(0.03) || lb.cash < money(s, 120000) || lb.roster.length >= 14) return;
-  const a = actsNow27(s).filter((x) => free(x) && x.positioning < 40 && x.fame < 35).sort((x, y) => y.potential - x.potential)[0];
+  const a = actsNow27(s).filter((x) => free(x) && x.positioning < 40 && x.fame < 35).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
   if (!a || lb.cash < money(s, expectedAdvance(s, a) * 1.2)) return;
   signWithRival(s, a, lb.id, r);
   logMove(s, lb, { k: 'visionary_bet', a: a.name });
@@ -649,12 +650,12 @@ function viralHunter(s: GameState, r: Rng, lb: Label): void {
 
 function artistSchool(s: GameState, r: Rng, lb: Label): void {
   if (r.chance(0.04) && lb.roster.length < 16) {
-    const a = actsNow27(s).filter((x) => free(x) && x.fame < 8 && fits(lb, x)).sort((x, y) => y.potential - x.potential)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.fame < 8 && fits(lb, x)).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) { signWithRival(s, a, lb.id, r); logMove(s, lb, { k: 'school_class', a: a.name }); }
   }
   if (r.chance(0.035)) {
     const a = liveActs(s, lb).filter((x) => { const k = x.contractId ? s.contracts[x.contractId] : undefined; return !!k && s.week - k.startWeek >= 104 && x.fame < 30; })
-      .sort((x, y) => y.potential - x.potential)[0];
+      .sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (a) {
       const k = s.contracts[a.contractId!];
       a.fame = clamp(a.fame + 2.5, 0, 100);
@@ -745,7 +746,7 @@ function sceneAgitator(s: GameState, r: Rng, lb: Label): void {
     }
   }
   if (r.chance(0.03) && lb.roster.length < 14) {
-    const a = actsNow27(s).filter((x) => free(x) && x.fame < 20 && fits(lb, x) && x.positioning < 45).sort((x, y) => y.potential - x.potential)[0];
+    const a = actsNow27(s).filter((x) => free(x) && x.fame < 20 && fits(lb, x) && x.positioning < 45).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) { signWithRival(s, a, lb.id, r); logMove(s, lb, { k: 'agitator_sign', a: a.name }); }
   }
   if (r.chance(0.015)) {
@@ -773,7 +774,7 @@ function trendCopycat(s: GameState, r: Rng, lb: Label): void {
     return;
   }
   if (lb.roster.length < 20) {
-    const a = actsNow27(s).filter((x) => free(x) && famOf(x) === fam && x.fame < 15).sort((x, y) => y.potential - x.potential)[0];
+    const a = actsNow27(s).filter((x) => free(x) && famOf(x) === fam && x.fame < 15).sort((x, y) => guessPot31(s, y.id, lb.id) - guessPot31(s, x.id, lb.id))[0];
     if (a && lb.cash > money(s, expectedAdvance(s, a) * 1.1)) { signWithRival(s, a, lb.id, r); logMove(s, lb, { k: 'copy_sign', a: a.name }); }
   }
 }

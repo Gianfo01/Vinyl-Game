@@ -144,10 +144,22 @@ export function rivalDeg31(s: GameState, lbId: string, a: Act): number {
  * próprio observador quando ele sabe o bastante; senão, o burburinho público (fama e momento). Nunca o valor real —
  * salvo com o interruptor know31.rivals desligado (medição).
  */
+const GUESS = new WeakMap<GameState, { w: number; m: Map<string, number> }>();
 export function guessPot31(s: GameState, actId: string, obs: string): number {
   const a = s.acts[actId];
   if (!a) return 0;
   if (!sw<boolean>(s, 'know31.rivals')) return a.potential;
+  let c = GUESS.get(s);
+  if (!c || c.w !== s.week) { c = { w: s.week, m: new Map() }; GUESS.set(s, c); }
+  const ck = `${obs}|${actId}|${a.owner ?? ''}|${Math.round(a.fame)}|${Math.round(a.potential)}`;
+  const hit = c.m.get(ck);
+  if (hit !== undefined) return hit;
+  const v = guessRaw(s, a, obs);
+  c.m.set(ck, v);
+  return v;
+}
+function guessRaw(s: GameState, a: Act, obs: string): number {
+  const actId = a.id;
   const deg = obs === 'player' ? know(s, actId).priv : s.labels[obs] ? rivalDeg31(s, obs, a) : 0;
   const w = KNOW_WIDTHS.potential.byDeg[clamp(deg, 0, 5)];
   if (w >= KNOW_HIDDEN) return clamp(Math.round(35 + a.fame * 0.5 + a.momentum * 0.15), 0, 100);
