@@ -21,7 +21,7 @@ import { registerReviewAdjust } from '../media';
 import { addStress } from '../stress17';
 import { realKey18 } from './personact18';
 import type { Act, GameState, Person, Release } from '../types';
-import { fmtL, notify, playerActs, post, remember } from '../util';
+import { fmtL, playerActs, post, remember } from '../util';
 import { songTheme, themeById } from './creation/core';
 import { capDeltas, songRec, syncSong, type Deltas } from './music/state';
 import { openProjects } from './project8';
@@ -273,9 +273,9 @@ function evaluate(s: GameState, act: Act, t: T18, rel: Release): void {
   }
   t.out[rel.id] = res;
   if (res !== 'solid') {
-    emitFact(s, { kind: 'art_turn', actors: [act.id], severity: res === 'hit' || res === 'cult' ? 45 : 35, visibility: 'public', tags: ['art18', res], text: text ?? OUT18[res], src: 'traj18', data: { rel: rel.id, ratio: Math.round(ratio * 100), critic } });
-    if (text) remember(s, 'traj18', text, { actId: act.id, important: res === 'hit' || (res === 'cult' && first) });
-    if (mine && text) notify(s, text, res === 'hit' || res === 'cult' ? 'good' : 'bad');
+    emitFact(s, { kind: 'art_turn', actors: [act.id], severity: res === 'hit' || res === 'cult' ? 45 : 35, visibility: 'public', tags: ['art18', res], text: text ?? OUT18[res], src: 'traj18', data: { rel: rel.id, ratio: Math.round(ratio * 100), critic },
+      diary: text ? { kind: 'traj18', actId: act.id, important: res === 'hit' || (res === 'cult' && first) } : undefined,
+      notify: mine && text ? (res === 'hit' || res === 'cult' ? 'good' : 'bad') : undefined });
   }
 }
 

@@ -4,6 +4,8 @@ import type { GameState, MemoryEntry, Notification } from './types';
 import { book18, postHooks18, sect18, type Sect18 } from './ledger18';
 import { noteSect23 } from './close23';
 import { playerActIds27 } from './tickcache27';
+import { pushAttn, type AttnIn, type AttnPrio } from './attention';
+import { registerFactSink, type FactNotifyOpts } from './facts17';
 
 export const START_DAY_MS = (year: number) => Date.UTC(year, 0, 1);
 
@@ -120,11 +122,43 @@ export function rememberListeners(): ((s: GameState, e: MemoryEntry) => void)[] 
 
 /** r19 (onda 5, B.5): avisos de pouco valor vão para o resumo do mês (budget19); true = agrupado (marcado `fold`). */
 export const NOTIFY19: { f: ((s: GameState, n: Notification) => boolean) | null } = { f: null };
-export function notify(s: GameState, text: L, kind: Notification['kind'] = 'info'): void {
+/** r31 (W0-AT): tom do aviso → prioridade na fila única quando quem chama não diz. */
+const NOTIFY_PRIO: Record<Notification['kind'], AttnPrio> = { info: 0, good: 1, event: 1, bad: 2 };
+/** Aviso ao jogador. Grava em `s.notifications` (interface atual) e também na fila única de atenção (attention.ts).
+ *  `o` dá os campos da fila (categoria, prioridade, pendência única, destino, remetente). */
+export function notify(s: GameState, text: L, kind: Notification['kind'] = 'info', o: Partial<Omit<AttnIn, 'title'>> = {}): void {
   const n: Notification = { week: s.week, text, kind };
   if (NOTIFY19.f?.(s, n)) n.fold = 1;
   s.notifications.push(n);
   if (s.notifications.length > 120) s.notifications.splice(0, s.notifications.length - 120);
+  const it = pushAttn(s, { cat: kind, prio: NOTIFY_PRIO[kind] ?? 0, ...o, title: text });
+  if (n.fold && !it.pendId && it.prio < 2) it.fold = 1; // o corte antigo (budget19) continua valendo até a 31.1
+}
+
+// r31 (W0-FACT): ouvintes centrais das saídas de um fato — `emitFact(s, { ..., diary, notify })` gera a entrada
+// do diário e o aviso aqui, em vez de cada sistema chamar emitFact + remember + notify.
+registerFactSink('diary', (s, f, o) => {
+  const d = o.diary;
+  if (d === undefined) return;
+  const obj = d === true || isL(d) ? {} : d;
+  const text = d === true ? f.text : isL(d) ? d : (d.text ?? f.text);
+  const actId = 'actId' in obj ? obj.actId : f.actors.find((id) => !!s.acts[id]);
+  const opts: { actId?: string; pid?: string; causeIds?: string[]; important?: boolean } = {};
+  if (actId) opts.actId = actId;
+  if (obj.pid) opts.pid = obj.pid;
+  if (obj.causeIds) opts.causeIds = obj.causeIds;
+  if (obj.important !== undefined) opts.important = obj.important;
+  remember(s, obj.kind ?? f.kind, text, opts);
+});
+registerFactSink('notify', (s, f, o) => {
+  const x = o.notify;
+  if (x === undefined) return;
+  const y: FactNotifyOpts = x === true ? {} : typeof x === 'string' ? { kind: x } : x;
+  const { kind, text, ...rest } = y;
+  notify(s, text ?? f.text, kind ?? 'info', { from: f.src, ...rest });
+});
+function isL(x: unknown): x is L {
+  return !!x && typeof x === 'object' && typeof (x as L).pt === 'string' && typeof (x as L).en === 'string';
 }
 
 export function sum(arr: number[]): number {

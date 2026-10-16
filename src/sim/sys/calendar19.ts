@@ -5,6 +5,7 @@
 // Escreve: dica do Conselheiro (semana apertada), estresse do dono (fato 'crunch' com ouvinte) e "por quê" (cal19.week).
 
 import { l, type L } from '../../data/world';
+import { CRITICS_CAL19, ECHOES_CAL19, INDUSTRY_CAL19, LIVE_CAL19, type Cal19 } from '../awardcal19';
 import { calendar19, crunch19, nextMonthWeek19, registerDeadline, weekOfMonth19, type Deadline19 } from '../calendar19';
 import { registerExplain } from '../explain18';
 import { emitFact, onFact } from '../facts17';
@@ -137,6 +138,44 @@ registerDeadline('awards', (s) => {
     { id: `noms:${s.year}`, w: nextMonthWeek19(s, NOMS_MONTH), kind: 'award', t: N('Indicações aos prêmios', 'Award nominations'), d: N('Campanha "para sua consideração" só vale antes das indicações.', '"For your consideration" campaigns only count before nominations.'), tone: 'info', goto: { area: 'awards' } },
     { id: `cer:${s.year}`, w: nextMonthWeek19(s, CEREMONY_MONTH), kind: 'award', t: N('Cerimônia de prêmios', 'Awards ceremony'), tone: 'good', goto: { area: 'awards' } },
   ];
+});
+
+// 11. r31 (W0-CAL): as outras quatro premiações com data própria (awardcal19) — Crítica, Indústria, Ao Vivo e Hall dos
+// Ecos. Mesmo critério dos Gramofones: só aparecem se o selo lançou algo no último ano; antes da fundação não existem.
+const OTHER_AWARDS31: { c: Cal19; t: L }[] = [
+  { c: CRITICS_CAL19, t: N('Enquete da crítica', 'Critics\' poll') },
+  { c: INDUSTRY_CAL19, t: N('Prêmios da indústria', 'Industry awards') },
+  { c: LIVE_CAL19, t: N('Prêmios do ao vivo', 'Live awards') },
+  { c: ECHOES_CAL19, t: N('Hall dos Ecos', 'Hall of Echoes') },
+];
+registerDeadline('awardcal19', (s) => {
+  const mine = mineSet(s);
+  if (!releasesNow27(s).some((r) => mine.has(r.actId) && s.week - r.week < 52)) return [];
+  const out: Deadline19[] = [];
+  for (const { c, t } of OTHER_AWARDS31) {
+    const w = nextMonthWeek19(s, c.month);
+    const y = c.month > s.month || (c.month === s.month && weekOfMonth19(s, s.year, c.month) >= s.week) ? s.year : s.year + 1;
+    if (y < c.start) continue;
+    out.push({ id: `aw31:${c.id}:${y}`, w, kind: 'award', t, tone: 'info', goto: { area: 'awards' } });
+  }
+  return out;
+});
+
+// 12. r31 (W0-CAL): compromissos de dinheiro dos festivais próprios (fest12: patrocínio, fornecedores, tiqueteira,
+// direitos). A data do festival já entra por 'live'. Lê o estado direto (sem importar fest12: a ordem de carga dos
+// sistemas não muda) e sem criar nada.
+type Commit31 = { id: string; due: number; amt: number; what: L; done?: boolean };
+registerDeadline('fest12', (s) => {
+  const st = (s.x4 as unknown as { fest12?: { f?: Record<string, { commits?: Commit31[] }> } }).fest12?.f;
+  if (!st) return [];
+  const out: Deadline19[] = [];
+  for (const f of liveOf(s).fests) for (const c of st[f.id]?.commits ?? []) {
+    if (c.done) continue;
+    const w = weekOfMonth19(s, Math.floor(c.due / 12), c.due % 12);
+    if (w < s.week) continue;
+    out.push({ id: `f12:${c.id}`, w, kind: 'money', t: fmtL(N('{f}: {w}', '{f}: {w}'), { f: f.name, w: c.what }), d: fmtL(c.amt < 0 ? N('A pagar: {v}', 'To pay: {v}') : N('A receber: {v}', 'To receive: {v}'), { v: `$${Math.round(Math.abs(c.amt) / 100).toLocaleString('en-US')}` }), tone: c.amt < 0 && s.player.cash < -c.amt ? 'bad' : 'info', goto: { area: 'shows' } });
+  }
+  return out;
 });
 
 // ---------------------------------------------------------------- semana apertada: dica, fato e estresse
