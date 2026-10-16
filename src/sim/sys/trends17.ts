@@ -53,6 +53,15 @@ export function hotList17(s: GameState, k = 10): { g: string; share: number; n: 
     .sort((a, b) => b.share - a.share).slice(0, k);
 }
 
+/** R31 CAR (car31.trend, sys/car31more.ts): empurrão de fora na moda de um estilo (a assinatura do seu estúdio fazendo
+ *  sucesso). Mesmo estado e mesmo teto da popularidade de gênero; a volta para a fatia das paradas segue o mês daqui. */
+export function pushTrend17(s: GameState, g: string, d: number): number {
+  const p0 = s.genrePop[g];
+  if (p0 === undefined || !genreById[g]) return 0;
+  s.genrePop[g] = clamp(p0 + d, 0.15, 2.2);
+  return s.genrePop[g] - p0;
+}
+
 registerSimHook('month', 'trends17', (s) => {
   const st = trends17(s);
   const { share, n } = chartShare17(s);

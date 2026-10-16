@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&family=Press+Start+2P&display=swap');
+:root{--bg:#0f1a26;--panel:#16263a;--line:#2b4260;--ink:#e9e2d0;--mute:#9aa8b8;--gold:#f0c060;--red:#e04848;--paper:#efe6cf;--pink:#e05a8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
+.px{image-rendering:pixelated}
+.hud{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;gap:18px;padding:0 18px;background:#0b141e;border-bottom:3px solid var(--pink)}
+.hud .logo{font-family:'Press Start 2P';font-size:12px;color:var(--gold)}
+.hud .chip{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:18px}
+.hud .cash b{color:var(--gold)}
+.hud .sp{flex:1}
+.hud .k{font-size:15px;color:var(--mute)}
+kbd{font-family:'Press Start 2P';font-size:9px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
+.adv{background:var(--gold);color:#1a1214;font-weight:700;font-size:18px;padding:9px 16px;border-radius:6px}
+.stage{position:absolute;left:0;right:0;top:58px;bottom:64px;display:flex;align-items:center;justify-content:center}
+.scene{position:relative}
+.scene img{display:block;width:100%;height:100%}
+.tag{position:absolute;transform:translate(-50%,-100%);background:#101a24ee;border:1px solid #f0c06099;color:#fff;font-size:14px;font-weight:600;padding:3px 7px;border-radius:4px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.tag.new{border:2px dashed #7fd0ff;background:#0d2236ee}
+.tag .bang{background:var(--red);color:#fff;font-family:'Press Start 2P';font-size:9px;padding:3px 5px;border-radius:3px}
+.box{position:absolute;border:2px dashed #7fd0ff;border-radius:3px;background:#7fd0ff18}
+.hover{outline:3px solid var(--gold);outline-offset:2px;border-radius:3px;position:absolute}
+.tip{position:absolute;background:#0b141ef4;border:1px solid var(--gold);padding:8px 10px;border-radius:6px;font-size:15px;width:260px}
+.tip b{color:var(--gold)}
+.bolso{position:absolute;left:0;right:0;bottom:0;height:64px;background:#0b141e;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 18px}
+.bolso .lbl{font-family:'Press Start 2P';font-size:9px;color:var(--mute);margin-right:8px}
+.slot{border:1px solid var(--line);background:#16263a;border-radius:6px;padding:6px 10px;font-size:15px;display:flex;gap:8px;align-items:center}
+.slot.empty{border-style:dashed;color:#5d7088}
+.where{position:absolute;left:18px;top:72px;font-family:'Press Start 2P';font-size:11px;color:var(--gold);z-index:5}
+.where span{color:var(--mute)}
+.note{position:absolute;right:18px;top:72px;width:300px;background:#16263af0;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:15px;z-index:5}
+.note h4{margin:0 0 8px;font-size:13px;letter-spacing:.06em;color:var(--mute)}
+.note .it{border-left:3px solid var(--gold);padding:6px 8px;margin:6px 0;background:#0f1d2c}
+.note .it a{color:var(--gold);font-weight:700;text-decoration:none}
+.dim::after{content:'';position:absolute;inset:58px 0 0 0;background:#050a10b8}
+.paper{position:absolute;z-index:10;left:150px;top:92px;width:1140px;height:740px;background:var(--paper);color:#2a2018;border-radius:6px;box-shadow:0 14px 40px #000a;border:3px solid #7a5a3a;padding:18px 22px}
+.paper h2{margin:0;font-family:'Press Start 2P';font-size:16px;color:#5a3a1e}
+.paper .sub{color:#6d5a44;font-size:16px;margin:6px 0 12px}
+.close{position:absolute;right:16px;top:14px;font-size:15px;color:#5a3a1e}
+.tabsAZ{display:flex;gap:3px;margin:8px 0}
+.tabsAZ span{background:#d8c9a6;border:1px solid #a88a60;border-bottom:none;border-radius:4px 4px 0 0;padding:4px 7px;font-family:'Press Start 2P';font-size:9px}
+.tabsAZ span.on{background:#fff6dd;color:#b0441e}
+.filters{display:flex;gap:8px;align-items:center;font-size:15px;margin-bottom:10px}
+.filters .f{background:#fff6dd;border:1px solid #a88a60;border-radius:4px;padding:5px 9px}
+.filters .q{flex:1;background:#fff;border:2px solid #a88a60;border-radius:4px;padding:6px 10px;color:#8a7a66}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:#fffaf0;border:1px solid #b9a07a;border-radius:4px;padding:10px;box-shadow:2px 3px 0 #c9b48e;position:relative;min-height:126px}
+.card:before{content:'';position:absolute;left:50%;top:-6px;width:40px;height:10px;margin-left:-20px;background:#cfc2a0;border-radius:3px}
+.card .pic{float:left;width:46px;height:58px;margin-right:10px;border:2px solid #5a3a1e;background:#cfe0ee;object-fit:contain;image-rendering:pixelated}
+.card b{font-size:17px;display:block}
+.card .g{font-size:14px;color:#6d5a44}
+.card .bar{clear:both;margin-top:10px;font-size:13px;color:#6d5a44}
+.card .bar i{display:inline-block;height:7px;background:#b0441e;border-radius:2px;vertical-align:middle;margin-left:6px}
+.card .stamp{position:absolute;right:8px;top:8px;font-family:'Press Start 2P';font-size:8px;padding:3px 4px;border:2px solid;transform:rotate(6deg)}
+.pausa{position:absolute;z-index:10;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;background:#16263a;border:2px solid var(--gold);border-radius:10px;padding:22px}
+.pausa h2{font-family:'Press Start 2P';font-size:16px;color:var(--gold);margin:0 0 16px;text-align:center}
+.pausa .b{display:flex;justify-content:space-between;align-items:center;background:#0f1d2c;border:1px solid var(--line);border-radius:6px;padding:11px 14px;margin:7px 0;font-size:19px}
+.pausa .b.main{background:var(--gold);color:#1a1214;font-weight:700}
+.pausa .small{color:var(--mute);font-size:14px}
+.legend{position:absolute;right:14px;bottom:78px;background:#16263af0;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;z-index:5;width:215px}
+.legend b{color:var(--gold)}
+</style></head><body>
+<div class="hud">
+  <span class="logo">SELO AGULHA</span>
+  <span class="chip">Set 1962</span>
+  <span class="chip cash">Caixa <b>$3.447</b></span>
+  <span class="chip">★ 38</span>
+  <span class="sp"></span>
+  <span class="k"><kbd>Ctrl K</kbd> buscar</span>
+  <span class="k"><kbd>?</kbd> teclas</span>
+  <span class="k"><kbd>H</kbd> sede</span>
+  <span class="k"><kbd>Esc</kbd> pausa</span>
+  <span class="adv">▶ AVANÇAR MÊS</span>
+</div>
+<div id="app"></div>
+<div class="bolso"><span class="lbl">BOLSO</span>
+  <span class="slot"><kbd>Z</kbd> Livro-caixa</span>
+  <span class="slot"><kbd>A</kbd> Fichário</span>
+  <span class="slot"><kbd>5</kbd> Caderno do olheiro</span>
+  <span class="slot"><kbd>U</kbd> Quadro branco</span>
+  <span class="slot"><kbd>3</kbd> Revista de paradas</span>
+  <span class="slot empty">+ fixar objeto</span>
+  <span class="slot empty">+ fixar objeto</span>
+  <span class="slot empty">+ fixar objeto</span>
+</div>
+<script>
+const v=new URLSearchParams(location.search).get('v')||'sede';
+const app=document.getElementById('app');
+const T=(x,y,t,k,o={})=>`<div class="tag ${o.n?'new':''}" style="left:${x}%;top:${y}%">${o.b?`<span class="bang">${o.b}</span>`:''}${t}${k?` <kbd>${k}</kbd>`:''}</div>`;
+const B=(x,y,w,h)=>`<div class="box" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></div>`;
+function sede(extra=''){return `<div class="stage"><div class="scene" style="width:1240px;height:780px"><img class="px" src="sede.png">
+ ${T(42,20,'Letreiro: história do selo','')}
+ ${T(20,38,'Calendário','C')}
+ ${T(10,44,'Livro-caixa','Z')}
+ ${T(29,50,'Arquivo de aço','')}
+ ${T(17,57,'Mesa do mês','1',{b:'2'})}
+ ${T(40,48,'Mesa de som','S')}
+ ${T(62,50,'Piano: compor','')}
+ ${T(87,42,'Mural do elenco','4')}
+ ${T(84,57,'Lounge: seus artistas','')}
+ ${T(26,74,'Mapa-múndi','W')}
+ ${T(12,85,'Porta da rua: cidade','⇧3')}
+ ${T(27,86,'Secretária eletrônica','',{b:'3'})}
+ ${T(48,86,'Palco: shows','9')}
+ ${T(81,86,'Sala nova à venda','')}
+ <div class="hover" style="left:3.5%;top:33%;width:27%;height:29%"></div>
+ <div class="tip" style="left:31%;top:23%"><b>Escritório</b> · 5 objetos<br>Mesa do mês, livro-caixa, arquivo, fichário, telefone. Clique num objeto ou use a tecla.</div>
+ </div></div>${extra}`}
+const NOTE=`<div class="note"><h4>RECADOS (secretária eletrônica)</h4>
+ <div class="it">A independência dança ska<br><a>ir até lá →</a> mapa-múndi › Jamaica</div>
+ <div class="it">Discos presos na alfândega<br><a>ir até lá →</a> aeroporto</div>
+ <div class="it">6 talentos prontos para proposta<br><a>ir até lá →</a> caderno do olheiro</div></div>`;
+const V={
+ sede:()=>`<div class="where">SEDE <span>· Londres · 1962</span></div>`+sede(NOTE),
+ fichario:()=>`<div class="dim">`+sede()+`</div><div class="paper">
+  <span class="close"><kbd>Esc</kbd> fechar</span>
+  <h2>FICHÁRIO DE CONTATOS</h2>
+  <div class="sub">Todos os artistas que você conhece · 1.284 cartões · clique num cartão para abrir a ficha</div>
+  <div class="tabsAZ">${'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z'.split(' ').map(c=>`<span class="${c=='M'?'on':''}">${c}</span>`).join('')}</div>
+  <div class="filters"><span class="f">Gaveta: letra ▾</span><span class="f">Gênero: todos ▾</span><span class="f">País: todos ▾</span><span class="f">Só sem selo</span><span class="f">Ordenar: fama ▾</span><span class="q">buscar no fichário…</span></div>
+  <div class="cards">
+   ${[['Maria Bastos','Folk · Londres',72,'SEU','#2c7a3c'],['Miraro Makino','Mbaqanga · Joanesburgo',61,'',''],['Mick Varela','Beat · Liverpool',55,'RIVAL','#b0441e'],['Marta Quinn','Ska · Kingston',48,'SEM SELO','#2c5aa0'],
+     ['Milo Fenn','Skiffle · Londres',44,'',''],['Mabel Ortiz','Bolero · Havana',39,'',''],['Moses Kanu','Highlife · Acra',35,'SEM SELO','#2c5aa0'],['Mona Riel','Chanson · Paris',33,'RIVAL','#b0441e'],['Manu Dias','Bossa nova · Rio',31,'',''],['Mayra Lunn','Jazz · Nova York',28,'',''],['Merle Hoyt','Country · Nashville',24,'',''],['Mateus Rojo','Tango · Buenos Aires',19,'SEM SELO','#2c5aa0']]
+     .map(([n,g,f,s,c])=>`<div class="card"><img class="pic" src="p${(n.length)%5}.png"><b>${n}</b><span class="g">${g}</span>${s?`<span class="stamp" style="color:${c};border-color:${c}">${s}</span>`:''}<div class="bar">fama ${f}<i style="width:${f}px"></i><br>o que você sabe ${'▮'.repeat(Math.round(f/20))}${'▯'.repeat(5-Math.round(f/20))}</div></div>`).join('')}
+  </div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:15px;color:#6d5a44"><span>Gaveta M · cartões 1–12 de 86</span><span><kbd>{</kbd> <kbd>}</kbd> trocar gaveta · <kbd>↑↓←→</kbd> andar nos cartões · <kbd>Enter</kbd> abrir ficha</span><span>próxima ▸</span></div></div>`,
+ casa:()=>`<div class="where">SUA CASA <span>· apartamento alugado · 1975</span></div><div class="stage"><div class="scene" style="width:960px;height:766px"><img class="px" src="casa.png">
+  ${T(18,7,'Janela: a cidade e a época','')}
+  ${T(28,64,'Sofá: descansar','')}
+  ${T(66,64,'Som: ouvir discos','')}
+  ${T(79,40,'Instrumento: praticar','')}
+  ${B(51,24,11,30)}${T(56.5,24,'Espelho: sua ficha','V',{n:1})}
+  ${B(63,8,14,13)}${T(70,8,'Porta-retratos: Coração','Y',{n:1})}
+  ${B(86,50,11,20)}${T(91,50,'Telefone: contatos','',{n:1})}
+  ${B(86,12,10,16)}${T(91,12,'Calendário','',{n:1})}
+  ${T(93,90,'Garagem: veículos →','')}
+  ${T(10,90,'← Porta: sair para a cidade','⇧3')}
+  </div></div>
+  <div class="legend"><b>Contorno azul tracejado</b> = objeto novo que a onda 5 desenha (a arte final passa pela revisão de acabamento). Gaveta/cofre, escrivaninha e quarto das crianças entram quando a função existir.</div>`,
+ cidade:()=>`<div class="where">CIDADE <span>· Rio de Janeiro · 1975</span></div><div class="stage"><div class="scene" style="width:1110px;height:740px"><img class="px" src="cidade.png">
+  ${T(47,33,'Sua sede','H')}
+  ${T(78,69,'Casa de shows','',{b:'!'})}
+  ${T(62,52,'Rádio e TV','')}
+  ${T(30,57,'Banco','')}
+  ${T(20,20,'Aeroporto (fora do mapa) →','')}
+  </div></div>
+  <div class="note"><h4>PLACAS (mostrar no mapa)</h4>
+  <div class="it">Lojas e serviços</div><div class="it">Casas de show e rádios</div><div class="it">Lotes à venda</div><div class="it">Lugares reais da música</div>
+  <h4 style="margin-top:12px">ATALHOS</h4><div class="small" style="color:#9aa8b8">Segure <kbd>Alt</kbd> para ver o nome de todos os prédios. Clique = entrar (andar é opcional).</div></div>`,
+ pausa:()=>`<div class="dim">`+sede()+`</div><div class="pausa"><h2>PAUSA</h2>
+  <div class="b main">Continuar <kbd>Esc</kbd></div>
+  <div class="b">Salvar <span class="small">Ctrl S</span></div>
+  <div class="b">Carregar</div>
+  <div class="b">Opções <span class="small">nomes reais, som, teclas</span></div>
+  <div class="b">Teclas de atalho <kbd>?</kbd></div>
+  <div class="b">Ajuda e tutorial</div>
+  <div class="b">Índice completo <span class="small">consulta (opcional)</span></div>
+  <div class="b">Menu principal</div></div>`
+};
+app.innerHTML=V[v]();
+</script></body></html>
