@@ -31,10 +31,10 @@ const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', '
 const dateTxt = (d: { year: number; month: number; dom: number }) => `${d.dom} ${MONTHS[d.month]} ${d.year}`;
 const SKY: Record<RoadKind27, Sky27> = { van: 'day', border: 'day', promoter: 'dusk', party: 'night', press: 'day', ill: 'dusk', weather: 'storm' };
 
-function roadCanvas(s: GameState, o: { sky?: Sky27; broken?: boolean; border?: boolean }): HTMLCanvasElement {
+function roadCanvas(s: GameState, o: { sky?: Sky27; broken?: boolean; border?: boolean; city?: string }): HTMLCanvasElement {
   const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('A van na estrada', 'The van on the road')) }) as HTMLCanvasElement;
   let f = 0;
-  const paint = () => drawScene27(cv, paintRoad27(s.year, { ...o, frame: f }), s.year, []);
+  const paint = () => drawScene27(cv, paintRoad27(s.year, { city: s.config.homeCity, month: s.month, ...o, frame: f }), s.year, []);
   paint();
   if (!reduced27()) { const tick = () => { if (!cv.isConnected && f > 2) return; f += 1; if (f % 4 === 0) paint(); requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
   return cv;
@@ -158,7 +158,7 @@ export function openRoad27(tourId: string, onDone?: (played: boolean) => void): 
     const next = pend[0];
     const played = tr.stops.filter((x) => x.status === 'played');
     put27(root, 
-      roadCanvas(s, next ? { sky: SKY[next.ev.k], broken: next.ev.k === 'van', border: next.ev.k === 'border' } : { sky: 'dusk' }),
+      roadCanvas(s, { ...(next ? { sky: SKY[next.ev.k], broken: next.ev.k === 'van', border: next.ev.k === 'border' } : { sky: 'dusk' as const }), city: tr.stops.find((x) => x.status !== 'played')?.cityId ?? tr.stops[tr.stops.length - 1]?.cityId }),
       h('div', { class: 'a27-head' }, h('b', null, tr.name), ' · ', s.acts[tr.actId]?.name ?? '', ' · ',
         t(l('{p}/{n} datas tocadas', '{p}/{n} dates played'), { p: played.length, n: tr.stops.length }), ' · ',
         t(l('eventos: {e} (você {m}, equipe {a})', 'events: {e} (you {m}, staff {a})'), { e: sum.events, m: sum.mine, a: sum.auto })),
