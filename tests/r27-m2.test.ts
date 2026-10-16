@@ -257,6 +257,7 @@ describe('r27 M2 — negociação jogável', () => {
     const s1 = clone(FIX); s1.player.cash += 50_000_00;
     const act = pickAct(s1);
     const n1 = startNego27(s1, act.id, draft(s1, act.id)) as Nego27;
+    // R31 Z (base nova): o ato escolhido mudou e aceita pouco; a proposta cai até ficar abaixo do mínimo dele
     const low = { ...n1.ours, advance: 0, royalty: 0.05 };
     // W3-FIX: o mínimo (n.res) é SORTEADO para bater com a chance do modo rápido; com o mundo da onda 3 o sorteio desta
     // artista caiu em 0,22 (a proposta irrisória marca 0,24 — chance de 6% no modo rápido) e ela assinava. O caso testado é

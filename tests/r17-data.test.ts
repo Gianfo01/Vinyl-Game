@@ -3,9 +3,9 @@
 import { ARTISTS27 } from '../src/data/audit27_artists';
 import { NEW27_C1 } from '../src/data/new27c1';
 import { NEW27_F } from '../src/data/research27'; // r27 (F): artistas da pesquisa no fim
+import { BASE31_ACTS } from '../src/data/base31acts'; // R31 Z: base nova no fim
 import { ACERVO21 } from '../src/data/acervo21';
 import { LIKES22_ARTISTS } from '../src/data/songs22';
-import { BASE31_ACTS } from '../src/data/base31acts';
 import { describe, expect, it } from 'vitest';
 import { COUNTRY_INFO, countryInfoByA3, countryMarketSize, countryPop } from '../src/data/countries';
 import { COVERS17, ERAS17, SCENES17 } from '../src/data/heritage17';
