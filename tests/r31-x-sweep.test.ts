@@ -8,6 +8,7 @@ import { advanceMonth } from '../src/sim/tick';
 import { REALNAMES31 } from '../src/data/realnames31';
 import { FICTION31 } from '../src/data/fiction31';
 import { CUR31 } from '../src/data/cur31';
+import { POP31 } from '../src/data/pop31';
 import { homage31 } from '../src/data/homage31';
 import { disp31, setDisplay31 } from '../src/data/realdisp31';
 import { allRealNames31, realPairsOff31, realShown31, setRealShown31, syncRealShow31 } from '../src/sim/r31/realshow31';
@@ -32,6 +33,7 @@ describe('X · varredura de nomes reais', () => {
     for (const a of REAL_ALL) { if (!all.has(a.n)) missing.push(a.n); for (const m of a.m ?? []) if (!all.has(m[0])) missing.push(m[0]); }
     for (const a of Object.values(REAL_ACTS)) if (!all.has(a.name)) missing.push(a.name);
     for (const f of FICTION31) { if (!all.has(f.n)) missing.push(f.n); for (const m of f.m) if (!all.has(m)) missing.push(m); }
+    for (const p of POP31) for (const [r] of p.refs) if (!all.has(r)) missing.push(r);
     for (const c of CUR31) if ((c.area === 'artista' || c.area === 'ficcao' || c.area === 'marca' || c.area === 'tv') && !all.has(c.nome)) missing.push(c.nome);
     expect(missing).toEqual([]);
   });

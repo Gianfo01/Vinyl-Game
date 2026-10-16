@@ -1,4 +1,4 @@
-// Rodada 27 (ACH) — telas de conquistas: grade só com as desbloqueadas (ícones em pixel art), contador "X de N",
+// Rodada 27 (ACH) — telas de conquistas (R31 N: bloqueadas comuns com nome e como ganhar; secretas "???"): grade (ícones em pixel art), contador "X de N",
 // "??? × k" por categoria (secretas só no total). Na tela inicial: conquistas do perfil antes de carregar um save,
 // com troca de perfil. No jogo (Metas → Conquistas): desta partida + do perfil. Modelo puro em ach27model.ts.
 
@@ -9,7 +9,7 @@ import type { GameState } from '../sim/types';
 import { h, select } from './dom';
 import { AFTER_ADVANCE } from './registry';
 import { ic } from './vis';
-import { card27, emptyState27, statusChip27 } from './ps/ui27';
+import { card27, statusChip27 } from './ps/ui27';
 import { MARKS27, profMedals27, profView27, runView27, syncRunAch27, type AchItem27, type AchView27 } from './ach27model';
 import { curProfile17, profiles17, switchProfile17 } from './saves17';
 import './ach27.css';
@@ -39,20 +39,22 @@ function item27(it: AchItem27, o: { fresh?: Set<string>; showRun?: boolean }): H
       meta.length ? h('small', { class: 'ach27-meta' }, meta.join(' · ')) : null));
 }
 
-/** Grade por categoria: só desbloqueadas; bloqueadas comuns viram "??? × k". */
+/** R31 (N): bloqueada comum — nome e como ganhar, apagada. */
+function locked31(it: AchItem27): HTMLElement {
+  return h('li', { class: 'ach27-it ach31-locked', 'data-ach': it.id, 'aria-label': `${T(it.name)} — ${T(l('bloqueada', 'locked'))}` },
+    h('span', { class: 'ach27-ic', 'aria-hidden': 'true', style: 'opacity:.35;filter:grayscale(1)' }, ic(it.icon, 2)),
+    h('span', { class: 'ach27-b', style: 'opacity:.75' }, h('b', null, T(it.name), ' ', h('small', { class: 'muted' }, '🔒')),
+      h('small', null, T(l('Como ganhar: ', 'How to earn: ')), T(it.desc))));
+}
+
+/** Grade por categoria: desbloqueadas primeiro; bloqueadas comuns com nome e como ganhar; secretas "???". */
 export function achGrid27(v: AchView27, o: { fresh?: Set<string>; showRun?: boolean; empty?: L } = {}): HTMLElement {
-  if (!v.got) {
-    return h('div', { class: 'ach27' }, achCounter27(v), emptyState27({ icon: 'trophy', title: o.empty ?? l('Nenhuma conquista ainda.', 'No achievements yet.'), why: l('As conquistas ficam escondidas até você destravá-las jogando.', 'Achievements stay hidden until you unlock them by playing.') }));
-  }
-  const lockedChip = (n: number) => statusChip27(`??? × ${n}`, 'neutral', T(l('Bloqueadas: descubra jogando.', 'Locked: find out by playing.')));
-  const open = v.cats.filter((c) => c.items.length), shut = v.cats.filter((c) => !c.items.length && c.locked);
+  const secretChip = (n: number) => statusChip27(`??? × ${n}`, 'neutral', T(l('Secretas: descubra jogando.', 'Secret: find out by playing.')));
   return h('div', { class: 'ach27' }, achCounter27(v),
-    ...open.map((c) => h('section', { class: 'ach27-cat', 'data-cat': c.cat },
-      h('h4', null, T(c.label), ' ', h('small', { class: 'muted' }, `${c.items.length}`), c.locked ? h('span', { class: 'ach27-locked' }, lockedChip(c.locked)) : null),
-      h('ul', { class: 'ach27-grid' }, ...c.items.map((it) => item27(it, o))))),
-    // categorias sem nada desbloqueado: uma linha só, com a contagem (sem nomes)
-    shut.length ? h('section', { class: 'ach27-cat ach27-shut' }, h('h4', null, T(l('Ainda bloqueadas', 'Still locked'))),
-      h('p', { class: 'ach27-shut-row' }, ...shut.map((c) => h('span', { class: 'ach27-shut-it', 'data-cat': c.cat }, T(c.label), ' ', lockedChip(c.locked))))) : null);
+    !v.got ? h('p', { class: 'small muted' }, T(o.empty ?? l('Nenhuma conquista ainda.', 'No achievements yet.')), ' ', T(l('Abaixo, o que dá para ganhar.', 'Below, what you can earn.'))) : null,
+    ...v.cats.map((c) => h('section', { class: 'ach27-cat', 'data-cat': c.cat },
+      h('h4', null, T(c.label), ' ', h('small', { class: 'muted' }, `${c.items.length}/${c.items.length + c.locked + c.secretLocked}`), c.secretLocked ? h('span', { class: 'ach27-locked' }, secretChip(c.secretLocked)) : null),
+      h('ul', { class: 'ach27-grid' }, ...c.items.map((it) => item27(it, o)), ...c.lockedItems.map(locked31)))));
 }
 
 /** Medalhas de cenário do perfil. */

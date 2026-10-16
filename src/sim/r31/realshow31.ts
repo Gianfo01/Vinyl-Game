@@ -19,6 +19,7 @@ import { REAL_PRODS } from '../../data/producers15';
 import { REAL_ACTS, REAL_LABELS, REAL_TEXT, applyRealNames } from '../../data/realnames';
 import { REALNAMES31 } from '../../data/realnames31';
 import { FICTION31 } from '../../data/fiction31';
+import { POP31 } from '../../data/pop31';
 import { homage31 } from '../../data/homage31';
 import { setDisplay31, type DispPair31 } from '../../data/realdisp31';
 import { CITIES, GENRES } from '../../data/world';
@@ -127,6 +128,8 @@ export function realPairsOff31(): RealPairs31 {
     add(f.obra, homage31(f.obra), true);
     for (const m of f.m) add(m, homage31(m));
   }
+  // 5) cultura pop, memes, bolhas e fracassos (src/data/pop31.ts): homenagem escrita junto da referência
+  for (const p of POP31) for (const [real, sub] of p.refs) add(real, sub);
   return (STATIC_OFF = { names, titles });
 }
 
@@ -147,6 +150,8 @@ export function syncRealShow31(s: GameState): void {
     // partida nascida com nomes inventados: o ato real volta ao nome real na tela
     const names: DispPair31[] = [];
     if (!s.config.realNames) {
+      const fic = (s as unknown as { x4?: { x31?: { fic?: Record<string, string> } } }).x4?.x31?.fic ?? {};
+      for (const [fid, aid] of Object.entries(fic)) { const f = FICTION31.find((x) => x.id === fid), a = s.acts[aid]; if (f && a && a.name !== f.n) names.push([a.name, f.n]); }
       for (const a of Object.values(s.acts)) {
         const real = a.catalogNo ? (realDataOf(a)?.n ?? REAL_ACTS[a.catalogNo]?.name) : undefined;
         if (real && real !== a.name && inText31(a.name)) names.push([a.name, real]);
