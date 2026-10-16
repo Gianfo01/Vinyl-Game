@@ -126,18 +126,16 @@ export function famRoleLabel31(s: GameState, id: FamId31): L {
   const n = famNow31(s).find((x) => x.m.id === id)!;
   if (n.retired) return l('Aposentada', 'Retired');
   const work = n.eras.filter((e) => e.kind !== 'family');
-  const e = work[work.length - 1] ?? n.eras[0];
-  if (!e) return l('Família Fossati', 'Fossati family');
-  if (e.brand && !s.config.realNames) {
-    const generic: Record<string, L> = {
-      'cur:radio_89fm': l('Diretora de promoções e eventos de uma FM de rock', 'Promotions and events director at a rock FM'),
-      'cur:radio_virgin': l('Diretora de promoções e eventos de uma FM pop', 'Promotions and events director at a pop FM'),
-      'cur:radio_gazeta': l('Diretora de promoções e eventos de uma FM adulta', 'Promotions and events director at an adult FM'),
-      'cur:milton_guedes': l('Empresária de artistas', 'Artist manager'),
-    };
-    return generic[e.brand] ?? e.label;
-  }
-  return e.label;
+  const list = work.length ? work : n.eras.slice(0, 1);
+  if (!list.length) return l('Família Fossati', 'Fossati family');
+  const generic: Record<string, L> = {
+    'cur:radio_89fm': l('Diretora de promoções e eventos de uma FM de rock', 'Promotions and events director at a rock FM'),
+    'cur:radio_virgin': l('Diretora de promoções e eventos de uma FM pop', 'Promotions and events director at a pop FM'),
+    'cur:radio_gazeta': l('Diretora de promoções e eventos de uma FM adulta', 'Promotions and events director at an adult FM'),
+    'cur:milton_guedes': l('Empresária de artistas', 'Artist manager'),
+  };
+  const ls = list.map((e) => (e.brand && !s.config.realNames ? generic[e.brand] ?? e.label : e.label));
+  return { pt: ls.map((x) => x.pt).join(' · '), en: ls.map((x) => x.en).join(' · ') };
 }
 
 // ---------------------------------------------------------------- o violino do Efro (dono: frente G, r31/relic31.ts)
