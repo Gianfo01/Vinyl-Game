@@ -34,7 +34,9 @@ import { VENUES17, buyVenue17, venueOpen, venuePrice } from './venues17';
 
 export type PlaceK27 = 'venue' | 'records' | 'radio' | 'studio' | 'bar' | 'press' | 'rehearsal' | 'label' | 'office' | 'apartments' | 'hotel' | 'instruments'
   // r31 (S): o submundo da cidade — fachada de facção, delegacia (com cadeia) e o mercado negro
-  | 'facade' | 'police' | 'market';
+  | 'facade' | 'police' | 'market'
+  // r31 (LOTE): casa de quem mora na cidade (CEO, artista, família Fossati) e terreno vago (à venda ou seu) — sys/lots31
+  | 'home' | 'vacant';
 /** Os lugares básicos da música (sempre presentes na cidade, conforme a época). */
 export const MUSIC27: PlaceK27[] = ['venue', 'records', 'studio', 'radio', 'bar', 'press'];
 export const RADIO_FROM27 = 1922;
@@ -63,11 +65,19 @@ export interface Place27 {
   /** r31 (FOS): a casa da família Fossati (moradia da cidade comum que a família ocupa) */ fam31?: boolean;
   /** veículo de imprensa real (media17) */ outlet?: string;
   /** r31 (S): facção dona da fachada (id do crime17) */ org?: string;
+  /** r31 (LOTE): casa (quem mora: chave da pessoa, porte 0 apartamento · 1 casa · 2 mansão) ou terreno (seu ou à venda) */
+  lot31?: { k: 'home' | 'sale' | 'own'; who?: string; tier?: number };
 }
 /** r31 (FOS): a casa da família Fossati na cidade de início (sys/fossati31 preenche): ocupa um prédio de moradia. */
 export const FAMHOME27: { fn?: (s: GameState) => { name: L; what: L; owner: string; now: L; people: Person27[] } | null } = {};
 /** r31 (S): lugares do submundo na cidade (sys/under31 preenche): fachadas das facções do país, delegacia e beco. */
 export interface Under27 { k: 'facade' | 'police' | 'market'; key: string; name: L; what: L; owner: string; people: Person27[]; now: L; org?: string }
+/** r31 (LOTE): registro de lotes (sys/lots31) — dá função aos prédios sem função (casas e terrenos) e as ações deles. */
+export const LOTS27: {
+  fn?: (s: GameState, out: Place27[]) => void;
+  acts?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>) => PAct27[];
+  run?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>, id: string) => { ok: boolean; text: L };
+} = {};
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
 
 /** R31 (H): negócio da época num prédio de cidade comum (lojas com ano de abertura e fechamento — sim/r31/city31). */
@@ -117,6 +127,8 @@ export function eraWhat27(k: PlaceK27, year: number, city = ''): L {
     case 'facade': return l('Fachada', 'Front business');
     case 'police': return year < 1930 ? l('Delegacia e cadeia', 'Police station and lockup') : l('Delegacia (com cadeia)', 'Police station (with cells)');
     case 'market': return l('Mercado negro (beco)', 'Black market (alley)');
+    case 'home': return year < 1930 ? l('Moradia', 'Residence') : l('Residência', 'Residence');
+    case 'vacant': return l('Terreno vago', 'Vacant plot');
   }
 }
 
@@ -150,11 +162,12 @@ const ROLE27: Record<PlaceK27, [L, L]> = {
   office: [l('Gerente', 'Manager'), l('Secretária', 'Secretary')], apartments: [l('Síndico', 'Building manager'), l('Porteiro', 'Doorman')],
   hotel: [l('Gerente do hotel', 'Hotel manager'), l('Recepcionista', 'Receptionist')], instruments: [l('Luthier', 'Luthier'), l('Vendedor', 'Salesperson')],
   facade: [l('Gerente', 'Manager'), l('Garçom', 'Waiter')], police: [l('Delegado(a)', 'Police chief'), l('Detetive', 'Detective')], market: [l('Receptador', 'Fence'), l('Olheiro', 'Lookout')],
+  home: [l('Morador(a)', 'Resident'), l('Visita', 'Guest')], vacant: [l('Dono do terreno', 'Plot owner'), l('Corretor(a)', 'Estate agent')],
 };
 /** Tipo de prédio desenhado no mapa para cada lugar. */
 export const DRAW27: Record<PlaceK27, BKind> = {
   venue: 'venue', records: 'store', radio: 'media', studio: 'studio', bar: 'venue', press: 'publisher', rehearsal: 'rehearsal', label: 'branch',
-  office: 'office', apartments: 'home', hotel: 'office', instruments: 'store', facade: 'venue', police: 'office', market: 'store',
+  office: 'office', apartments: 'home', hotel: 'office', instruments: 'store', facade: 'venue', police: 'office', market: 'store', home: 'home', vacant: 'home',
 };
 const NBK27: Record<Nb19['k'], PlaceK27> = { rival: 'label', records: 'records', bar: 'bar', rehearsal: 'rehearsal', radio: 'radio' };
 
@@ -311,6 +324,8 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
       if (!p.venue || crew[0].job === 0) p.owner = crew[0].job === 0 ? crew[0].name : p.owner;
     }
   }
+  // r31 (LOTE): prédio sem função vira casa de quem mora na cidade ou terreno vago (e o terreno comprado é seu)
+  LOTS27.fn?.(s, out);
   return out;
 }
 
@@ -359,7 +374,8 @@ export const GO27: Partial<Record<PlaceK27, Goto18>> = {
 };
 
 /** Ações do lugar (com bloqueio explicado). `actId` = artista escolhido (padrão: o primeiro do elenco). */
-export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & { fam31?: boolean }, actId?: string): PAct27[] {
+export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & Partial<Pick<Place27, 'lot' | 'lot31' | 'fam31'>>, actId?: string): PAct27[] {
+  if (p.k === 'home' || p.k === 'vacant') return LOTS27.acts?.(s, { k: p.k, id: p.id, lot: p.lot ?? +p.id.slice(3), lot31: p.lot31 }) ?? []; // r31 (LOTE)
   const mine = activeMine(s);
   const a = (actId ? mine.find((x) => x.id === actId) : undefined) ?? mine[0];
   const noAct: L | undefined = a ? undefined : l('Você não tem artista ativo no elenco.', 'You have no active act on the roster.');
@@ -420,7 +436,13 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
 }
 
 /** Executa a ação do lugar. Devolve o texto do resultado (ok = deu certo). */
-export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src' | 'name'>, id: string, actId?: string): { ok: boolean; text: L } {
+export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src' | 'name'> & Partial<Pick<Place27, 'lot' | 'lot31'>>, id: string, actId?: string): { ok: boolean; text: L } {
+  if ((p.k === 'home' || p.k === 'vacant') && LOTS27.run) { // r31 (LOTE)
+    const a0 = placeActs27(s, p, actId).find((x) => x.id === id);
+    if (!a0) return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
+    if (a0.dis) return { ok: false, text: a0.dis };
+    return LOTS27.run(s, { k: p.k, id: p.id, lot: p.lot ?? +p.id.slice(3), lot31: p.lot31 }, id);
+  }
   const act = placeActs27(s, p, actId).find((x) => x.id === id);
   if (!act) return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
   if (act.dis) return { ok: false, text: act.dis };

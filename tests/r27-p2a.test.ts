@@ -126,7 +126,7 @@ beforeAll(() => {
   // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
   expect(s.player.cash).toBe(182589);
   expect(hashString(JSON.stringify(s.acts))).toBe(1693608899);
-  expect(hashString(rngSnapshot19(s))).toBe(103954728);
+  expect(hashString(rngSnapshot19(s))).toBe(828266377); // r31 LOTE: fluxo rng19 'lots31' entra no retrato (103954728 sem ele; DECISOES)
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

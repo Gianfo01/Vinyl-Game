@@ -92,6 +92,16 @@ const OBJS31: Partial<Record<IKind27, ObjDef31[]>> = {
     O('guitars', 'wall', l('Parede de instrumentos', 'Instrument wall'), l('Comprar para você, para a empresa ou de presente.', 'Buy for yourself, the company or as a gift.'), 'go:shop'),
     O('counter', 'counter', l('Balcão', 'Counter'), l('A loja nova: estoque do mês.', 'The new shop: this month\'s stock.'), 'go:shop'),
   ],
+  // r31 (LOTE): casa de quem mora na cidade (ações que já existem: conhecer, radar, negociar; nada secreto por abrir)
+  home: [
+    O('couch', 'sit', l('Sala de estar', 'Living room'), l('Sentar e se apresentar (conhecer).', 'Sit down and introduce yourself (meet).'), 'do:visit'),
+    O('guitar', 'song', l('Violão no canto', 'Guitar in the corner'), l('Ouvir o que anda compondo: pôr no radar.', 'Hear what they are writing: put them on the radar.'), 'do:scout'),
+    O('piano', 'song', l('Piano', 'Piano'), l('Ouvir o que anda compondo: pôr no radar.', 'Hear what they are writing: put them on the radar.'), 'do:scout'),
+    O('desk', 'deal', l('Escritório da casa', 'Home office'), l('Negociar em particular.', 'Negotiate in private.'), 'info:home'),
+    O('listen', 'deal', l('Toca-discos', 'Record player'), l('Quem mora aqui e negociar em particular.', 'Who lives here and negotiate in private.'), 'info:home'),
+    O('tables', 'deal', l('Mesa da família', 'Family table'), l('A família Fossati: almoço, conversa e favores.', 'The Fossati family: lunch, a chat and favours.'), 'info:home'),
+    O('window', 'who', l('Quem mora aqui', 'Who lives here'), l('Morador, porte da casa e desde quando.', 'Resident, size of the home and since when.'), 'info:home'),
+  ],
   // submundo
   facade: [
     O('door', 'back', l('Porta dos fundos', 'Back door'), l('Entrar na sala dos fundos (o chefe e a mesa).', 'Go into the back room (the boss and the table).'), 'room:enter'),
@@ -174,7 +184,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const W = INSIDE_W31;
   const you = youIn31(s, x.name);
   const people = [...(you.who ? [you.who] : []), ...x.people.filter((p) => !p.away)];
-  const room = dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v));
+  const room = dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v ?? (x.k === 'home' ? `${x.place?.lot31?.tier ?? 1}:${x.place?.lot31?.who === 'fam' ? 'fam' : x.place?.lot31?.who?.startsWith('l:') ? 'ceo' : 'artist'}` : undefined)));
   const G = geom27(W);
   const acts = actsOfPlace(s, x);
   const trail = trail31(s, x.k);
