@@ -118,6 +118,7 @@ import { PURPOSE27, kpis27 } from './ps/ui27model';
 import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em nomes abre o menu de ações
 // R31 (onda 1, A): menu "mundo primeiro" (entradas ≤ 10 + Lugares + Listas), Hoje, cabeçalho único e topo enxuto
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
+import { regionCmds5 } from './r31/map5ui'; // R31 onda 5 (MAPA): busca aponta prédio/país no mapa (só com exp5.nav)
 import { NAV5, TRANS5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { paperGo5, paperKey5Ev } from './r31/papers5'; // R31 onda 5 (PAPEL): páginas dentro dos papéis (registradas na casca; só com exp5.nav)
 import { chordLabel5 } from './r31/keys5';
@@ -904,6 +905,7 @@ function palette(): void {
     for (const x of searchRoute16.f?.(g, qq) ?? []) out.push({ label: x.label, kind: 'person', icon: 'star', hint: x.hint, run: () => personRoute16.f?.(x.key) });
     out.push(...paletteCmds20(g, true)); // r20 G4: ações dos outros artistas do elenco
     out.push(...paletteCmds31(g, q)); // R31 (O): "contratar X", "gravar com Y"… abrem o painel rápido na ação
+    out.push(...regionCmds5(g, q).map((x): PCmd => ({ label: x.label, kind: 'area', icon: x.icon, hint: x.hint, weight: 6, run: x.run }))); // R31 onda 5 (MAPA)
     out.push(...eggCmds27(g, qq)); // r27 ovos: códigos secretos da busca (payola, hall da fama, 1889…)
     return out;
   };
