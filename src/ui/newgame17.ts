@@ -172,6 +172,9 @@ export function worldCard17(cfg: RunConfig, onChange: () => void, rebuild?: () =
       lineupPick29(cfg, () => { draw(); onChange(); })));
     const exact = rs.id === 'exact';
     adv.replaceChildren(...nn20(
+      // R31 (X): interruptor "Nomes e obras reais" — com que nomes o mundo nasce (em Opções dá para trocar só a exibição)
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: cfg.showReal31 ?? !!cfg.realNames, onchange: (e: Event) => { const on = (e.target as HTMLInputElement).checked; cfg.showReal31 = on; if (!exact) cfg.realNames = on; draw(); onChange(); } }),
+        ' ', t(l('Nomes e obras reais (desligado: tudo vira homenagem parecida; a história documentada continua valendo)', 'Real names and works (off: everything becomes a similar tribute; documented history still applies)')), ' ', helpTip('realNames')),
       h('label', null, t(l('Linha do tempo da tecnologia', 'Technology timeline')), ' ', helpTip('mode'), select(cfg.mode, [
         { value: 'historic', label: t(l('Datas reais fixas', 'Fixed real dates')) }, { value: 'free', label: t(l('Perto das datas reais (janela de anos)', 'Near the real dates (year window)')) }, { value: 'chaos', label: t(l('Sorteada (caos)', 'Rolled (chaos)')) },
       ] as { value: RunConfig['mode']; label: string }[], (v) => { cfg.mode = v; draw(); onChange(); }, exact ? { disabled: true } : undefined)),

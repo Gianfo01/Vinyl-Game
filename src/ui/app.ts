@@ -14,7 +14,7 @@ import { advanceUntil, digestEnd, digestStart, type Digest } from '../sim/sys/pa
 import { openUntilConfig, showDigest, stopSummary } from './sys/pacing8';
 import { playerActs } from '../sim/util';
 import { $, dateLabel, inspect, kv, modal, toast } from './common';
-import { applySkin31, settingsSkin31 } from './skin31'; // r31 (C)
+import { applySkin31, settingsSkin31, skinHook31 } from './skin31'; // r31 (C) + onda 4 (M)
 import { bar, h, select } from './dom';
 import { registerInspect } from './ficha';
 import { titleScreen } from './newgame';
@@ -38,8 +38,10 @@ import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } fr
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
 import { paletteBase31, paletteCmds31 } from './r31/quick31'; // R31 (O): busca que abre a ação, favoritos e metas
 import './r31/results31ui'; // R31 onda 3 (P): resultados por projeto/artista e extrato pessoal (Finanças)
+import './r31/learn31ui'; // R31 onda 4 (R): resultados e aprendizados — por projeto, coortes e biblioteca (correlação)
 import './r31/socio31ui'; // R31 onda 3 (SOC): sócios e compras (Negócios, ficha da empresa, painel rápido da cidade)
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
+import './r31/city31ui'; // R31 onda 4 (H): loja e casa em cena (áreas 'loja31' e 'casa31')
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
@@ -54,7 +56,9 @@ import { saveChip20 } from './savechip20';
 import { noteTurnErr20 } from './savehealth20';
 import { tx20 } from '../core/save20';
 import { runCard17body } from './newgame17';
-import { applyRealNames } from '../data/realnames';
+import { syncRealShow31 } from '../sim/r31/realshow31';
+import { settingsRealNames31 } from './r31/realshow31ui';
+import { settingsExtras31 } from './sys/extras31';
 import { ensureBase31 } from '../sim/r31/base31'; // R31 (EDT)
 import { INT_PREF23 } from '../sim/interrupt23';
 import { AFTER_ADVANCE, EXTRA_AREAS, areaView20, extraSections, extraTabs, mergeTabs, showPendingCutscene } from './registry';
@@ -158,6 +162,7 @@ export function boot(el: HTMLElement): void {
   registerInspect();
   store.rerender = render;
   store.toast = toast;
+  skinHook31.options = () => settings(); skinHook31.rerender = () => render(); // r31 (M): ações do aviso de virada
   // r25: a cena da Sede navega pelo mesmo caminho do menu
   sedeNav25.go = (id) => go(id);
   sedeNav25.rerender = () => { navMemo = null; groupsMemo = null; if (store.game) render(); };
@@ -574,7 +579,7 @@ function renderApp(): void {
   store.area = alias14(store.area);
   { const r = resolve17(store.area, groups()); if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; } // r17: telas absorvidas → página da carreira
   if (store17.recent[0] !== store.area) { store17.recent = pushRecent17(store17.recent, store.area); save17(); }
-  applyRealNames(!!g.config.realNames);
+  syncRealShow31(g); // r31 (X): interruptor "Nomes e obras reais" (exibição; inclui o filtro antigo da rodada 6)
   ensureBase31(g); // r31 (EDT): base da partida aberta (idempotente; troca de partida/preview de outra não vaza)
   applySkin31(g.year, g.signature); // r31 (C): estilo da interface por era (data-era-skin, data-era) e aviso de troca
   // rodada 15: rolagem lembrada por área (mesma área mantém; área nova volta onde estava ou abre no topo)
@@ -710,6 +715,8 @@ function settings(): void {
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo
+    settingsRealNames31(), // R31 (X): Nomes e obras reais (só exibição)
+    settingsExtras31(), // R31 (N): controle central de frequência e de tom da cultura pop
     settingsLook31(), // R31 (AP): Pressão estética: normal / suave / desligada
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(S.reducedMotion)),

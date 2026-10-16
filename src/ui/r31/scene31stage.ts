@@ -40,7 +40,7 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
     p: { id: c.lookId, role: c.role ?? 'producer', look: c.look, born: c.born ?? s.year - 35 },
     x: spots[i].x, y: spots[i].y, pose: spots[i].pose, dir: spots[i].dir,
   }));
-  try { drawScene27(cv, paintRoom31(m.room, s.year, watchers), s.year, who); } catch { /* canvas indisponível (testes) */ }
+  try { drawScene27(cv, paintRoom31(m.room, s.year, watchers, m.cards ?? 0), s.year, who); } catch { /* canvas indisponível (testes) */ }
   const showLabels = labels31(s);
   let k = 0;
   const pts = m.cast.map((c, i) => {

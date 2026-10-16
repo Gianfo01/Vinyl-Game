@@ -1,0 +1,20 @@
+/* R31 · onda 4 (I + S) — interiores em cena: cena + painel curto embaixo (a ação se resolve aqui). */
+.in31 .in31-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.4rem 0.6rem 0.8rem; }
+.in31 .sc31 { margin: 0; }
+.in31 .sc31-bar, .in31 .sc31-pts summary, .in31 .sc31-note { color: #e8e0cc; }
+.in31-pane { min-height: 3rem; padding: 0.45rem 0.6rem; border: 1px solid rgba(244, 236, 216, 0.25); border-radius: 6px; background: rgba(0, 0, 0, 0.25); color: #f4ecd8; }
+.in31-pane .muted { color: #b8b0a0; }
+.in31-pn { display: flex; flex-direction: column; gap: 0.35rem; }
+.in31-pn h4 { margin: 0; font-size: 0.95rem; }
+.in31-pn p { margin: 0; }
+.in31-ph { justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
+.in31-act { padding: 0.3rem 0.45rem; border: 1px solid rgba(244, 236, 216, 0.18); border-radius: 5px; }
+.in31-lines { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; }
+.in31-trail { margin: 0; color: #ffe9b0; }
+.in31-list { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; }
+.in31-shop { max-height: 26rem; overflow: auto; color: var(--text, #f4ecd8); }
+.in31 .link { color: #ffd34a; }
+.in31.in31-inline { position: static; inset: auto; z-index: auto; border-radius: 6px; margin: 0.4rem 0; }
+.in31-hub { display: flex; flex-direction: column; gap: 0.5rem; }
+.in31-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.4rem; }
+.in31-mural summary { cursor: pointer; font-weight: 600; }

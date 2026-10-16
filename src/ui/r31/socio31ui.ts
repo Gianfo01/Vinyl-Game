@@ -18,6 +18,7 @@ import { registerPageTab, registerTab } from '../registry';
 import { ic } from '../vis';
 import { basisTag31, lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
+import { sceneHook31 } from './scene31reg'; // R31 onda 4 (W): mecânicas em cena, lote 2
 
 const SLICES = [1000, 2500, 4900, 5100, TOTAL31];
 /** filtros da tela (estado de interface, não do jogo) */
@@ -64,7 +65,8 @@ function targetRow(s: GameState, tg: Target31): HTMLElement {
         h('ul', null, a.why.map((w) => h('li', null, t(w)))))),
     h('td', null, $(v.total), h('div', { class: 'muted small' }, t(l('rende {r}/ano', 'earns {r}/yr'), { r: $(v.annual) }))),
     h('td', null, h('b', null, $(price)), h('div', { class: 'muted small' }, t(pct31(bp)))),
-    h('td', null, lockBtn31(t(bp >= TOTAL31 ? l('Comprar inteiro', 'Buy outright') : l('Comprar {p}', 'Buy {p}'), { p: pct31(bp) }), lock, () => res(buy31(s, tg.id, bp, UI.h), l('Negócio fechado.', 'Deal closed.')), { cls: 'btn small primary' })));
+    h('td', null, lockBtn31(t(bp >= TOTAL31 ? l('Comprar inteiro', 'Buy outright') : l('Comprar {p}', 'Buy {p}'), { p: pct31(bp) }), lock, () => res(buy31(s, tg.id, bp, UI.h), l('Negócio fechado.', 'Deal closed.')), { cls: 'btn small primary' }),
+      tg.never ? null : h('button', { type: 'button', class: 'btn small ghost', 'data-w31': 'buy', title: t(l('Reunião com o dono na sala dele: fatias, reação dele e dos sócios, antitruste.', 'Meeting with the owner in their office: slices, their and their partners\' reaction, antitrust.')), onclick: () => sceneHook31.open?.('buy', tg.id, 'scene') }, '🎬 ', t(l('Reunião', 'Meeting')))));
 }
 
 function marketBlock(s: GameState, cityLock?: string): HTMLElement {

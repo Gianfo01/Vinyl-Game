@@ -36,6 +36,7 @@ import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
 import { projView31 } from '../r31/proj31'; // R31 onda 2 (J): projeto musical em cena
 import { projResult31 } from '../r31/results31mini'; // R31 onda 3 (P): resultado do projeto
+import { sceneHook31 } from '../r31/scene31reg'; // R31 onda 4 (W): mecânicas em cena, lote 2
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -121,7 +122,8 @@ function nextAction(s: GameState, p: MusicProject, st: ProjStage): HTMLElement |
   if (st === 'finishing') body.push(h('span', { class: 'row wrap' },
     h('label', { class: 'pj-inline' }, t(l('Sai em (semanas)', 'Out in (weeks)')), h('input', { type: 'number', min: 1, max: 26, value: p.weeksAhead, onchange: (e: Event) => { p.weeksAhead = Math.max(1, Math.min(26, Number((e.target as HTMLInputElement).value) || 1)); rerender(); } })),
     h('button', { class: 'btn primary small', onclick: () => say(scheduleProject(s, rng19(s, 'act'), p), l('Lançamento programado.', 'Release scheduled.')) }, ic('cd'), ' ', t(l('Programar lançamento', 'Schedule release'))),
-    p.type === 'lp' ? h('button', { class: 'btn small', onclick: () => say(rolloutProject(s, p), l('Rollout planejado.', 'Rollout planned.')) }, ic('calendar'), ' ', t(l('Lançar com rollout', 'Release with a rollout'))) : null));
+    p.type === 'lp' ? h('button', { class: 'btn small', onclick: () => say(rolloutProject(s, p), l('Rollout planejado.', 'Rollout planned.')) }, ic('calendar'), ' ', t(l('Lançar com rollout', 'Release with a rollout'))) : null,
+    h('button', { class: 'btn small ghost', 'data-w31': 'release', title: t(l('Quadro branco com os cartões de divulgação; A&R, assessoria e produtor opinam.', 'Whiteboard with the promotion cards; A&R, publicist and producer weigh in.')), onclick: () => sceneHook31.open?.('release', p.id, 'scene') }, '🎬 ', t(l('Reunião de lançamento', 'Release meeting')))));
   if (st === 'scheduled') body.push(h('p', null, pr ? t(l('Chega às lojas na semana {w}. Shows e entrevistas nessa semana somam.', 'Hits stores in week {w}. Shows and interviews that week add up.'), { w: pr.week }) : t(l('Rollout em andamento.', 'Rollout in progress.'))),
     pr ? h('button', { class: 'btn ghost small', onclick: () => { unscheduleProject(s, p); rerender(); } }, t(l('Cancelar lançamento', 'Cancel release'))) : null);
   if (st === 'released') body.push(h('p', { class: 'muted' }, t(l('Nas lojas. A leitura completa sai em algumas semanas; o próximo passo já pode ser escolhido.', 'In stores. The full reading comes in a few weeks; the next step can be chosen now.'))));

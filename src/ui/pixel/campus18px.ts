@@ -32,7 +32,7 @@ export const iso = (gx: number, gy: number): [number, number] => isoAt18(G, gx, 
 const unIso = (x: number, y: number): [number, number] => { const a = (x - G.ox) / 8, b = (y - OY) / 4; return [(a + b) / 2, (b - a) / 2]; };
 /** r27 (LOTS): avenidas (início em gy, 2 de largura) e ruas (início em gx). O centro só tem a avenida 7 e a rua 9;
  *  as outras aparecem quando o bairro abre (fora da grade não se desenha nada). */
-const HROADS = [7, 16], VROADS = [9, 20];
+const HROADS = [7, 16, 24], VROADS = [9, 20, 29]; // R31 (H): avenida 24 e rua 29 dos bairros novos (mapa até 44×32)
 const hIn = () => HROADS.filter((b) => b + 2 <= G.gh), vIn = () => VROADS.filter((a) => a + 2 <= G.gw);
 const hAt = (gy: number) => HROADS.find((b) => gy >= b && gy < b + 2), vAt = (gx: number) => VROADS.find((a) => gx >= a && gx < a + 2);
 const ROAD = (gx: number, gy: number) => hAt(gy) !== undefined || vAt(gx) !== undefined;
@@ -723,7 +723,11 @@ export function path19(sp: Sprite18, all: Sprite18[]): [number, number][] {
 export interface Nbr19 { lot: number; k: string; name: string }
 const NBK: Record<string, BKind> = { rival: 'branch', records: 'store', bar: 'venue', rehearsal: 'rehearsal', radio: 'media' };
 /** r27: extras da cena (estado dos prédios, lotes à venda, cidade comum, vida na rua). */
-export interface SceneX27 { /** r27 (LOTS): bairros abertos (índice em DIST18); sem isso, o menor que cabe nos lotes desenhados */ dist?: number; /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind> }
+export interface SceneX27 { /** r27 (LOTS): bairros abertos (índice em DIST18); sem isso, o menor que cabe nos lotes desenhados */ dist?: number; /** r27: andares abertos da sede (salas/andares compráveis) e obra em andamento */ hqFloors?: { open: number; building: boolean }; vis?: Map<string, BVis27>; sale?: Sale27[]; filler?: number[]; life?: Life27; saleTxt?: string; /** r27 (CITY2): tipo de prédio de cada lote de cidade comum (lugares do bairro) */ fillKind?: Map<number, BKind>;
+  /** R31 (H): prédios extras de cidade comum fora de LOTS18 ou com tipo próprio (lugares reais nos terrenos reservados, festival) — sprites `fl:<id>` */ extra31?: Extra31[];
+  /** R31 (H): largura mínima da grade (terrenos reservados dos lugares reais) */ minGw?: number }
+/** R31 (H): prédio extra (lugar real, festival num terreno). */
+export interface Extra31 { id: string; lot: { gx: number; gy: number; w: number; d: number }; kind: BKind; lvl: number; style?: Style18; sign?: boolean }
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido; letra cinza quando não cabe no caixa). */
@@ -801,6 +805,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
   const top = Math.max(0, ...used, ...(x.sale ?? []).map((q) => q.lot), ...(x.filler ?? []), ...nbs.map((q) => q.lot));
   const dist = Math.max(x.dist ?? 0, DIST18.findIndex((q) => top < q.end));
   G = geoDist18(dist < 0 ? DIST18.length - 1 : dist);
+  if (x.minGw && x.minGw > G.gw) G = geo18(Math.min(44, x.minGw), G.gh); // R31 (H): terrenos reservados dos lugares reais
   const geo = G;
   const look = cityLook27(env.city, env.lat, env.year), era = era27(env.year);
   const sprites: Sprite18[] = [];
@@ -834,6 +839,15 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
       { filler: true, snow: env.snow, wall: style === 'glass' ? undefined : mix(wall, MAT[style].wall, 0.3), sign: x.fillKind?.has(lot) && kind !== 'home' && kind !== 'office' ? era.sign : noise(lot, 7, seed) < 0.35 ? era.sign : undefined });
     sprites.push(sp);
     used.add(lot);
+  }
+  // R31 (H): lugares reais (terrenos reservados) e festival do mês num terreno — clicáveis como cidade comum (`fl:<id>`)
+  for (const e of x.extra31 ?? []) {
+    if (e.lot.gx + e.lot.w > G.gw || e.lot.gy + e.lot.d > G.gh) continue;
+    const r = noise(e.lot.gx * 7 + e.lot.gy, 13, seed);
+    const style: Style18 = e.style ?? styleOf18(Math.max(1889, env.year - 8 - Math.floor(r * 20)));
+    const sp = buildingSprite18({ id: `fl:${e.id}`, kind: e.kind, name: '', city: '', zone: 'campus', lvl: e.lvl, st: 'open', since: env.year, sy: env.year, style },
+      e.kind === 'fest' ? e.lot : { gx: e.lot.gx + 0.3, gy: e.lot.gy + 0.3, w: e.lot.w - 0.6, d: e.lot.d - 0.6 }, env.year, seed + Math.round(e.lot.gx * 13 + e.lot.gy * 31), '', { filler: true, snow: env.snow, sign: e.sign ? era.sign : undefined });
+    sprites.push(sp);
   }
   sprites.sort((a, b) => a.depth - b.depth);
   const marks: Mark19[] = [];
@@ -948,6 +962,14 @@ function puff27(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, 
     ctx.fillRect(x - half, y + dy, half * 2 + 1, 1);
   }
 }
+/** R31 (H): posição de um veículo na faixa (PURO). `u` corre de −3 a GW+3: a faixa horizontal atravessa a grade de uma
+ *  borda à outra; a vertical é a mesma corrida reescalada para a altura (−3 … GH+3). `face` é o lado para onde o carro
+ *  aponta na tela (+1 = direita): na isométrica, andar em +gx vai para a direita e andar em +gy vai para a esquerda. */
+export function laneAt31(GW: number, GH: number, horiz: boolean, at: number, dir: number, u: number): { gx: number; gy: number; face: 1 | -1 } {
+  if (horiz) return dir > 0 ? { gx: u, gy: at, face: 1 } : { gx: GW - u, gy: at, face: -1 };
+  const v = ((u + 3) / (GW + 6)) * (GH + 6) - 3;
+  return dir < 0 ? { gx: at, gy: v, face: -1 } : { gx: at, gy: GH - v, face: 1 };
+}
 /** Ciclo do dia: 0 = meio-dia, 1 = meia-noite. */
 export const nightOf = (t: number): number => { const ph = (t / 48) % 1; return Math.max(0, Math.min(1, (Math.cos(ph * Math.PI * 2) * -1 + 0.2) * 0.9)); };
 
@@ -1003,9 +1025,10 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
   for (let i = 0; i < nV; i++) {
     const sp = 1 + noise(i, 4, sc.seed) * 1.2, [lh, at, dir] = lanes[i % lanes.length];
     const u = ((noise(i, 5, sc.seed) * 30 + t * sp) % (GW + 6)) - 3;
-    const [gx, gy] = lh ? [dir > 0 ? u : GW - u, at] : [at, dir < 0 ? u * fv : GH - u * fv];
+    const { gx, gy, face } = laneAt31(GW, GH, lh, at, dir, u); // R31 (H): entra e sai pela borda certa, de frente para onde vai
+    void fv;
     const [x, yy] = iso(gx, gy);
-    items.push({ d: gx + gy, f: () => vehicle(ctx, x, yy, vk, i, lh ? dir : -dir, undefined, t, cars, night) });
+    items.push({ d: gx + gy, f: () => vehicle(ctx, x, yy, vk, i, face, undefined, t, cars, night) });
   }
   const byId = new Map(sc.sprites.map((s) => [s.id, s]));
   // r27: estado de cada prédio — fila de músicos (estúdio), fila de público (show), fumaça (fábrica prensando)

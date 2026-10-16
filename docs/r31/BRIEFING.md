@@ -26,7 +26,10 @@ Leia isto inteiro antes de mexer em código. Cada agente recebe, além deste arq
 7. **Sem janelas do navegador** (`alert`, `confirm`, `prompt`) em código novo.
 8. **Arte:** só o estilo pixel art antigo do jogo (ver `docs/arte29*.md` e a skill `masters-artist-sprites`). Sem selos
    "simulado/fictício".
-9. **Nomes reais** novos entram no registro `src/data/realnames31.ts` (identificador → nome real → substituto).
+9. **Nomes reais** novos entram no registro `src/data/realnames31.ts` (identificador → nome real → substituto), ou numa base
+   real ligada à tabela do interruptor (`src/sim/r31/realshow31.ts › realPairsOff31`, homenagem gerada por `src/data/homage31.ts`
+   ou escrita junto do dado, como `refs` em `src/data/pop31.ts`). O teste de varredura `tests/r31-x-sweep.test.ts` falha se um
+   nome real escapar com "Nomes e obras reais" desligado. A família Fossati nunca é trocada.
 10. **Editores (obrigatório a partir da onda 1):** todo sistema novo registra no editor dentro da partida
     (`src/sim/r31/editor.ts`) o que pode ser editado — `registerEditable({ id, area, label: l(…), kind, get, set })`
     (`kind`: number/money/text/bool/select; `target: 'person'|'act'|'label'|'relic'|'genre'` para editar por entidade;

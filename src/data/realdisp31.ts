@@ -1,0 +1,80 @@
+// R31 · onda 4 (X) — MOTOR DE EXIBIÇÃO do interruptor "Nomes e obras reais". Puro (sem DOM, sem estado do jogo):
+// recebe a tabela de trocas montada por src/sim/r31/realshow31.ts (registro realnames31 + bases reais + atos da partida)
+// e troca o texto FINAL mostrado na tela (t(), nós de texto do h(), títulos e o texto pintado nas cenas). A troca é só na
+// hora de mostrar: saves e simulação não mudam.
+//
+// Duas camadas, para não trocar homônimos:
+//  - nome (camada "em frase"): nome próprio com mais de uma palavra ou palavra única que não é palavra comum, cidade,
+//    país ou gênero — trocado em qualquer ponto do texto, palavra inteira, maiúsculas exatas;
+//  - título (camada "inteira"): músicas, discos e nomes de uma palavra comum ("Queen", "Boston", "Help!") — só quando o
+//    texto inteiro é o título, ou quando ele aparece entre aspas.
+// A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing).
+
+export type DispPair31 = [from: string, to: string];
+
+const FAMILY_GUARD31 = /\b(Efro|Lucia|Sonia|Antonella|Gianluca|Fossati)\b/;
+const WORD = /[\p{L}\p{N}]+/gu;
+const firstWord = (s: string): string | undefined => { WORD.lastIndex = 0; const m = WORD.exec(s); return m ? m[0] : undefined; };
+const isWordChar = (c: string | undefined) => !!c && /[\p{L}\p{N}]/u.test(c);
+
+let byFirst = new Map<string, DispPair31[]>();
+let whole = new Map<string, string>();
+let active = false;
+
+/** Monta a tabela (chamado ao abrir a partida e ao trocar o interruptor). Lista vazia desliga o filtro. */
+export function setDisplay31(names: DispPair31[], titles: DispPair31[]): void {
+  const idx = new Map<string, DispPair31[]>();
+  const w = new Map<string, string>();
+  for (const [from, to] of names) {
+    if (!from || from === to || FAMILY_GUARD31.test(from)) continue;
+    const k = firstWord(from);
+    if (!k) continue;
+    let arr = idx.get(k);
+    if (!arr) idx.set(k, (arr = []));
+    arr.push([from, to]);
+    if (!w.has(from)) w.set(from, to);
+  }
+  for (const arr of idx.values()) arr.sort((a, b) => b[0].length - a[0].length);
+  for (const [from, to] of titles) if (from && from !== to && !FAMILY_GUARD31.test(from) && !w.has(from)) w.set(from, to);
+  byFirst = idx;
+  whole = w;
+  active = idx.size > 0 || w.size > 0;
+}
+
+export const display31Active = (): boolean => active;
+
+function swapNames(text: string): string {
+  if (!byFirst.size) return text;
+  let out = '';
+  let last = 0;
+  WORD.lastIndex = 0;
+  for (let m = WORD.exec(text); m; m = WORD.exec(text)) {
+    const pos = m.index;
+    if (pos < last) continue;
+    const cands = byFirst.get(m[0]);
+    if (!cands) continue;
+    for (const [from, to] of cands) {
+      if (!text.startsWith(from, pos)) continue;
+      const end = pos + from.length;
+      if (isWordChar(text[end]) && isWordChar(from[from.length - 1])) continue;
+      out += text.slice(last, pos) + to;
+      last = end;
+      WORD.lastIndex = end;
+      break;
+    }
+  }
+  return last ? out + text.slice(last) : text;
+}
+
+const QUOTED = /(["“«'‘])([^"”»'’\n]{1,90})(["”»'’])/g;
+
+/** Texto final com as trocas (sem filtro ligado, devolve o mesmo texto). */
+export function disp31(text: string): string {
+  if (!active || !text) return text;
+  const trimmed = text.trim();
+  const w = whole.get(trimmed);
+  if (w !== undefined) return text.replace(trimmed, w);
+  let s = text;
+  if (whole.size && /["“«'‘]/.test(s)) s = s.replace(QUOTED, (all, a: string, inner: string, b: string) => { const r = whole.get(inner); return r === undefined ? all : a + r + b; });
+  return swapNames(s);
+}
