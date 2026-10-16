@@ -109,10 +109,16 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
     // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
     // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
-    expect(AFTER.player.cash).toBe(257209);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(4026815485);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(68287867);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(205718420);
+    // R31 onda 4 (UNI-4 · fusões grandes, de propósito — docs/r31/DECISOES.md e docs/r31/uni4.md): relação com a praça numa
+    // fonte só (neutro 30), segredos da Intriga e trunfos do livro na camada única (podem vazar), satisfação do cliente = confiança
+    // do empresário, shows avulsos/acordos/estrada como papéis em s.tours e registros únicos de festivais, casas e rivais (a
+    // ordem de carga dos módulos mudou a ordem dos ganchos): caixa, turnês, acts e rng mudam; o caixa do bot nesta semente
+    // oscila centenas de milhares de mês a mês (o 8º mês caiu num vale). Com `uni4.links` desligado só acts muda (289804343).
+    // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
+    expect(AFTER.player.cash).toBe(10093);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(2845419151);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(4266817177);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(4017770377);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(AFTER.tours.some((t) => t.road)).toBe(false); // UNI-4: estrada na própria turnê
