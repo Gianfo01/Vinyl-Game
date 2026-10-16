@@ -10,6 +10,7 @@ import { h } from '../dom';
 import { store } from '../store';
 import { ic } from '../vis';
 import { SEDE25 } from './nav25';
+import { trnMode31, trnOn31 } from '../../sim/r31/exp5trn';
 import './zoom27.css';
 
 /** Pedido de chegada: o mapa abre aproximado na sede e se afasta (consumido pelo mapa). */
@@ -22,7 +23,7 @@ const goArea = (a: string): void => { store.area = a as typeof store.area; reren
 /** Sai da sede para a cidade (com a sede encolhendo, se houver movimento). */
 export function toCity27(el?: HTMLElement | null): void {
   zoom27.arrive = true;
-  if (!el || reduced()) { goArea(CITY27); return; }
+  if (!el || reduced() || (trnOn31() && trnMode31() !== 'off')) { goArea(CITY27); return; } // R31 onda 5 (TRN): a cortina de viagem assume
   el.style.transition = 'transform 260ms ease-in, opacity 260ms ease-in';
   el.style.transformOrigin = '50% 60%';
   el.style.transform = 'scale(0.42)';
