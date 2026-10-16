@@ -25,7 +25,7 @@ export type Zone27 = 'stage' | 'floor' | 'booth' | 'live' | 'counter' | 'desk';
 export interface ISpot27 { x: number; z: Zone27; pose: Pose; dir: 'SE' | 'SW' }
 /** r31 (S): salas que não são lugares do mapa (fundos da fachada, baile) */
 export type IKind27 = PlaceK27 | 'backroom' | 'baile';
-export interface Interior27 { k: IKind27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean; /** r31: fachada (restaurante, boate…) */ v?: string }
+export interface Interior27 { k: IKind27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean; /** r31: fachada (restaurante, boate…) */ v?: string; /** r31 (AMOR): onde fica o seu personagem (padrão: na porta) */ youAt?: ISpot27 }
 
 export const INTERIOR_KINDS27: PlaceK27[] = ['venue', 'records', 'radio', 'studio', 'bar', 'press', 'rehearsal', 'label', 'office', 'apartments', 'hotel', 'instruments'];
 
@@ -165,7 +165,7 @@ export function placePeople27(m: Interior27, people: Person27[]): [Person27, ISp
   const more = (): ISpot27 => sp(0.16 + ((extra++ * 0.17) % 0.6), 'floor', 'stand', extra % 2 ? 'SW' : 'SE');
   const take = (zs: Zone27[], any = true): ISpot27 | undefined => { for (const z of zs) { const i = free.findIndex((s0) => s0.z === z); if (i >= 0) return free.splice(i, 1)[0]; } return any ? free.shift() : more(); };
   const placed: [Person27, ISpot27][] = [];
-  for (const x of you) placed.push([x, sp(m.k === 'police' || m.k === 'backroom' ? 0.24 : 0.06, 'floor', 'stand', 'SE')]);
+  for (const x of you) placed.push([x, m.youAt ?? sp(m.k === 'police' || m.k === 'backroom' ? 0.24 : 0.06, 'floor', 'stand', 'SE')]);
   for (const x of cell) placed.push([x, take(['booth'], false) ?? more()]);
   for (const x of perf) { const s0 = take(['stage', 'live', 'booth', 'floor']); if (s0) placed.push([x, s0]); }
   const restZ: Zone27[] = m.k === 'police' ? ['desk', 'counter', 'floor'] : ['counter', 'desk', 'booth', 'floor'];

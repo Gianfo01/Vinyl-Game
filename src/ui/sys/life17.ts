@@ -11,7 +11,8 @@ import { castRehab, castTherapy, ex17, faithRetreat, REHAB17, THERAPY17 } from '
 import { kidLook, kidOf, PATH17, stageOf, TEMPER17, temperOf } from '../../sim/sys/kids17';
 import { life } from '../../sim/sys/life';
 import { lookEffects17, ownerLook17 } from '../../sim/sys/looks17';
-import { candMarried, candSex, confess, divorce17, divorceTerms, endAffair, love17, playerFame, reconcile, setPrenup, startAffair } from '../../sim/sys/love17';
+import { affairRisk17, candMarried, candSex, confess, divorce17, divorceTerms, endAffair, love17, reconcile, setPrenup, startAffair } from '../../sim/sys/love17';
+import { amorHeart31 } from '../r31/amor31ui'; // R31 · onda 4 (AMOR): amor no mundo (par/caso com quem é, risco, quem sabe, cenas)
 import { ownerOf } from '../../sim/sys/people/owner';
 import { healthOf } from '../../sim/sys/people/state';
 import { per13 } from '../../sim/sys/persona13';
@@ -114,8 +115,7 @@ function affairBox(s: GameState): HTMLElement | null {
   const L7 = love17(s);
   const a = L7.affair;
   if (a) {
-    const months = (s.week - a.since) / 4.3;
-    const risk = Math.min(0.2, 0.03 + (100 - a.disc) / 1500 + playerFame(s) / 2500 + months * 0.002 + (L7.jeal > 60 ? 0.02 : 0));
+    const risk = affairRisk17(s, a); // r31 (AMOR): o mesmo número que o motor sorteia (com quem sabe e a imprensa da época)
     return section(t(l('Caso secreto', 'Secret affair')),
       h('p', null, h('b', null, a.name), ' ', pill(a.sx === 'f' ? '♀' : '♂'), a.married ? pill(t(l('casado(a)', 'married')), 'warn') : null, a.pid ? pill(t(l('artista conhecido(a)', 'known artist')), 'warn') : null),
       h('p', { class: 'small' }, t(fmtL(l('Discrição {d}/100 · risco de descoberta {r}/mês (cresce com o tempo, sua fama e o ciúme). {c} guarda o segredo (obrigação contra você). Gravidez possível.', 'Discretion {d}/100 · discovery risk {r}/month (grows with time, your fame and jealousy). {c} holds the secret (an obligation against you). Pregnancy possible.'), { d: Math.round(a.disc), r: pct(risk), c: a.name }))),
@@ -152,7 +152,7 @@ function exesBox(s: GameState): HTMLElement | null {
 
 export function heartTab(s: GameState): HTMLElement {
   const L7 = love17(s);
-  return h('div', null, identityBox(s), partnerBox(s), affairBox(s), exesBox(s),
+  return h('div', null, identityBox(s), partnerBox(s), affairBox(s), amorHeart31(s), exesBox(s),
     L7.log.length ? section(t(l('Histórico do coração', 'Heart history')), h('ul', { class: 'small' }, L7.log.slice(0, 10).map(([y, x]) => h('li', null, h('span', { class: 'muted' }, `${y} · `), t(x))))) : null);
 }
 

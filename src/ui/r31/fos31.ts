@@ -30,6 +30,7 @@ import '../sys/extras31';
 import { cityEggs27 } from '../sys/eggs27';
 import { openFicha13 } from '../sys/persona13';
 import { lockBtn31, quickBtn31 } from './lock31';
+import { askBox31 } from './amor31ui';
 import { registerQuick31 } from './quick31core';
 import { sceneView31 } from './scene31';
 import { homeModel31, squareModel31, type FosM31, type FosWho31 } from './fos31model';
@@ -132,7 +133,8 @@ function passerPanel(s: GameState, p: FosWho31): HTMLElement {
     h('div', { class: 'row wrap' },
       btn(l('Ver a ficha', 'See the card'), null, () => { if (p.key) openFicha13(p.key); else if (p.pid) inspect.person(p.pid); }),
       p.key ? btn(l('Conhecer', 'Meet'), null, () => result(meetHere31(s, p.key!)), false) : null,
-      p.pid ? quickBtn31({ kind: 'person', id: p.pid }, p.name) : null));
+      p.pid ? quickBtn31({ kind: 'person', id: p.pid }, p.name) : null),
+    p.pid || (p.key && /^(p|l|c|e|pd):/.test(p.key)) ? askBox31(s, p.key ?? `p:${p.pid}`) : null); // r31 (AMOR): quem passa na praça
 }
 
 function squarePanel(s: GameState, id: string): HTMLElement {
