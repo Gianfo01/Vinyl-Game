@@ -46,11 +46,17 @@ import { signLock31 } from './quick31core';
 
 // ---------------------------------------------------------------- tipos
 
-export type SceneKind31 = 'nego' | 'renew' | 'rescind' | 'hire' | 'fire' | 'punish' | 'lineup';
+export type SceneKind31 = 'nego' | 'renew' | 'rescind' | 'hire' | 'fire' | 'punish' | 'lineup'
+  // onda 4 (W) — lote 2, registrado em scene31w.ts: quadro do lançamento, banco, compra/sociedade, jabá (dar e receber)
+  | 'release' | 'bank' | 'buy' | 'jaba' | 'jabain';
+/** lote 1 (onda 2, V) */
 export const SCENE_KINDS31: SceneKind31[] = ['nego', 'renew', 'rescind', 'hire', 'fire', 'punish', 'lineup'];
+/** lote 2 (onda 4, W) */
+export const SCENE_KINDS_W31: SceneKind31[] = ['release', 'bank', 'buy', 'jaba', 'jabain'];
+export const SCENE_KINDS_ALL31: SceneKind31[] = [...SCENE_KINDS31, ...SCENE_KINDS_W31];
 /** Alvo: `id` = ato (nego/renew/rescind/lineup), profissional (hire), funcionário (fire) ou pessoa (punish). */
 export interface SceneTarget31 { id: string }
-export type Room31 = 'table' | 'office' | 'rehearsal';
+export type Room31 = 'table' | 'office' | 'rehearsal' | 'board' | 'bank' | 'ceo' | 'radio';
 export type Tone31 = 'warm' | 'ok' | 'cool' | 'cold' | 'unknown';
 
 /** Humor visível: tom, gesto (ícone + texto curto) e se a leitura é clara (você conhece bem) ou ambígua. */
@@ -81,6 +87,8 @@ export interface Choice31 {
   danger?: boolean;
   /** escolha que só abre outra tela (a mesa completa): não decide aqui */
   opens?: 'nego-table';
+  /** W: ajuste que não encerra a cena (cartão no quadro): decide, mostra a reação e continua na sala */
+  stay?: boolean;
 }
 export interface SceneModel31 {
   kind: SceneKind31;
@@ -93,6 +101,8 @@ export interface SceneModel31 {
   lock: Lock31 | null;
   important: boolean;
   note?: L;
+  /** W: cartões no quadro (sala 'board') */
+  cards?: number;
 }
 export interface SceneOut31 { ok: boolean; text: L; tone: 'good' | 'warn' | 'bad'; /** gesto da outra parte depois da decisão */ react?: Mood31 }
 
@@ -105,10 +115,15 @@ interface Spec31 {
   important: (s: GameState, t: SceneTarget31) => boolean;
   build: (s: GameState, t: SceneTarget31) => Omit<SceneModel31, 'kind' | 'room' | 'important' | 'lock'> & { lock?: Lock31 | null };
   decide: (s: GameState, t: SceneTarget31, choice: string) => SceneOut31;
+  /** W: alvos possíveis (editor e busca) — as cenas do lote 1 usam o switch de sceneTargets31 */
+  targets?: (s: GameState) => { id: string; name: string }[];
 }
 
 const REG = new Map<SceneKind31, Spec31>();
 const reg = (x: Spec31): void => { REG.set(x.kind, x); };
+/** W (onda 4): registro de cenas de outros arquivos (scene31w.ts) — o mesmo registro, sem caminho paralelo. */
+export const registerScene31 = (x: Spec31): void => reg(x);
+export type SceneSpec31 = Spec31;
 export const sceneSpec31 = (k: SceneKind31): Spec31 | undefined => REG.get(k);
 export const sceneLabel31 = (k: SceneKind31): L => REG.get(k)?.label ?? l(k, k);
 export const sceneIcon31 = (k: SceneKind31): string => REG.get(k)?.icon ?? 'eye';
@@ -150,15 +165,18 @@ export const staffMood31 = (s: GameState, staffId: string): Mood31 => mood31(ton
 
 // ---------------------------------------------------------------- elenco da cena
 
+export function you31(s: GameState): Cast31 { return you(s); }
 function you(s: GameState): Cast31 {
   const me = playerPerson(s);
   return { id: 'you', name: me?.name ?? s.config.companyName, lookId: me?.id ?? 'player', look: me?.look, born: me?.born, role: me?.role, side: 'you', part: N('Você', 'You'), mood: mood31('ok', true, '🧑‍💼', N('Você', 'You')) };
 }
+export const personCast31 = (s: GameState, pid: string, part: L, side: Cast31['side'] = 'them'): Cast31 | null => personCast(s, pid, part, side);
 function personCast(s: GameState, pid: string, part: L, side: Cast31['side'] = 'them'): Cast31 | null {
   const p = s.persons[pid];
   if (!p) return null;
   return { id: pid, name: p.name, lookId: p.id, look: p.look, born: p.born, role: p.role, side, part, mood: personMood31(s, pid) };
 }
+export const staffCast31 = (s: GameState, st: StaffMember, side: Cast31['side'], mood?: Mood31): Cast31 => staffCast(s, st, side, mood);
 function staffCast(s: GameState, st: StaffMember, side: Cast31['side'], mood?: Mood31): Cast31 {
   return { id: st.id, name: st.name, lookId: `staff:${st.id}`, side, part: staffRoleById[st.role]?.name ?? l(st.role, st.role), mood: mood ?? staffMood31(s, st.id) };
 }
@@ -173,6 +191,7 @@ function actSide(s: GameState, a: Act): Cast31[] {
   return out;
 }
 
+export const live31 = (a: Act | undefined): a is Act => live(a);
 const live = (a: Act | undefined): a is Act => !!a && a.status !== 'retired' && a.status !== 'split';
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 
@@ -552,5 +571,6 @@ export function sceneTargets31(s: GameState, kind: SceneKind31): { id: string; n
     case 'hire': return s.professionals.map((x) => ({ id: x.id, name: x.name }));
     case 'fire': return s.player.staff.map((x) => ({ id: x.id, name: x.name }));
     case 'punish': return acts.flatMap((a) => a.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).map((m) => ({ id: m, name: `${s.persons[m].name} (${a.name})` })));
+    default: return REG.get(kind)?.targets?.(s) ?? [];
   }
 }

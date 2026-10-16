@@ -16,6 +16,7 @@ import { pill, rerender, section } from '../common';
 import { h } from '../dom';
 import { registerTab } from '../registry';
 import { btn, note } from './world4/util';
+import { fosHomeView31, fosSquareView31, fosUi31, openFos31 } from '../r31/fos31';
 
 let actSel = '';
 let langSel = 'en';
@@ -32,7 +33,20 @@ function member(s: GameState, n: ReturnType<typeof famNow31>[number]): HTMLEleme
     h('p', { class: 'small' }, h('b', null, t(l('Hoje', 'Now'))), ': ', t(famRoleLabel31(s, n.m.id))));
 }
 
+/** R31 · onda 4 (FOS): a aba é a ficha da família e a porta para o mundo — a casa é um prédio da sua cidade e a praça
+ *  fica ao lado da sede ("Ir à casa" / "Ir à praça" abrem o mapa já lá dentro); a lista continua aqui com tudo. */
 export function famTab31(s: GameState): HTMLElement {
+  if (fosUi31.view === 'home') return fosHomeView31(s);
+  if (fosUi31.view === 'square') return fosSquareView31(s);
+  return h('div', null,
+    h('div', { class: 'fos31-doors' },
+      h('button', { type: 'button', class: 'btn small primary', onclick: () => openFos31('home') }, '🏠 ', t(l('Ir à casa (no mapa)', 'Go to the house (on the map)'))),
+      h('button', { type: 'button', class: 'btn small primary', onclick: () => openFos31('square') }, '⛲ ', t(l('Ir à praça (no mapa)', 'Go to the square (on the map)'))),
+      h('span', { class: 'small muted' }, t(l('A Casa Fossati é um prédio da sua cidade no "Nosso mundo"; a praça fica ao lado da sua sede. A lista abaixo continua com tudo.', 'The Fossati home is a building in your city in "Our world"; the square is next to your HQ. The list below still has everything.')))),
+    famList31(s));
+}
+
+function famList31(s: GameState): HTMLElement {
   const acts = playerActs(s);
   if (!acts.includes(actSel)) actSel = acts[0] ?? '';
   const on = sw<boolean>(s, 'fam31');

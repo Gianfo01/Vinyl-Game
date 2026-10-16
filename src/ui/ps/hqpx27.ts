@@ -15,8 +15,7 @@ import { avatarSprite } from '../pixel/avatar';
 import { drawLandmark19 } from '../pixel/landmarks19px';
 import { eraOf, paletteOf, type EraId, type Palette } from '../pixel/palette';
 import { C, INK, Px, dith, inked, lv, mix, noise, tint, withAlpha, type Col } from '../pixel/px';
-import { gearPx } from '../pixel/gear21';
-import type { GearId } from '../pixel/gear21-atlas';
+import { amp31, drumKit31 } from '../pixel/stage31px';
 import { drawText, fitText, textWidth } from '../pixel/font';
 import type { HqModel25, Room25, Sprite25 } from './hq25model';
 
@@ -225,14 +224,6 @@ const blk = (p: Px, x: number, y: number, w: number, h: number, c: Col): void =>
   if (h > 2) p.vline(x + w - 1, y + 1, y + h - 2, lv(c, 2));
 };
 
-/** Sprite do pacote de equipamentos (atlas gear21) com o pé em (cx, fy); false = sem atlas (fica o procedural). */
-const gear = (g: Ctx, id: GearId, cx: number, fy: number, flip = false): boolean => {
-  const q = gearPx(id);
-  if (!q) return false;
-  g.p.blit(q, Math.round(cx - q.w / 2), fy - q.h + 1, flip);
-  return true;
-};
-
 function sky(g: Ctx): void {
   const { p, pl } = g;
   const stops: [number, Col][] = pl.year < 1960
@@ -426,16 +417,10 @@ function neighbours(g: Ctx): void {
 
 // ---------------------------------------------------------------- mobília (vista lateral; fy = chão)
 
+// R31 (arte): bateria e amplificador vêm da fonte única no estilo padrão (stage31px) — não mais do atlas do pacote
+// de equipamentos (arte em alta resolução reduzida, que destoava dos bonecos e da mobília).
 function amp(g: Ctx, x: number, fy: number, big = false): void {
-  const { p, pl } = g;
-  if (big && pl.year >= 1950 && gear(g, 'amplificador', x + 7, fy)) return; // pacote: amplificador valvulado com tela
-  const w = big ? 14 : 11, h = big ? 16 : 11;
-  const body = pl.year < 1965 ? C('#c8a46a') : C('#1e1c22');
-  blk(p, x, fy - h, w, h, body);
-  p.rect(x + 1, fy - h + 3, w - 2, h - 5, pl.year < 1965 ? C('#7a5a3a') : C('#34323a'));
-  for (let yy = fy - h + 4; yy < fy - 2; yy += 2) p.hline(x + 2, x + w - 3, yy, pl.year < 1965 ? C('#8e6c48') : C('#2a282e'));
-  p.rect(x + 1, fy - h + 1, w - 2, 1, pl.year < 1965 ? C('#e8d8b8') : C('#c8a24a'));
-  p.hline(x + 3, x + w - 4, fy - h - 1, INK);
+  amp31(g.p, x, fy, g.pl.year, big);
 }
 function micStand(g: Ctx, x: number, fy: number): void {
   const { p, pl } = g;
@@ -454,15 +439,18 @@ function guitar(g: Ctx, x: number, fy: number, col: Col): void {
   p.rect(x + 1, fy - 24, 1, 11, C('#6a4a2a')); p.rect(x, fy - 26, 3, 2, C('#2a2a2e'));
 }
 function drums(g: Ctx, x: number, fy: number): void {
-  const { p, pal, pl } = g;
-  if (pl.year >= 1940 && gear(g, 'bateria', x + 13, fy)) return; // pacote: bateria com pratos de latão
-  const shell = pl.year < 1960 ? C('#e8e0d0') : pl.year < 1990 ? pal.accent2 : C('#2a2a38');
-  p.disc(x + 13, fy - 8, 7.5, shell); p.disc(x + 13, fy - 8, 6, C('#f0ece4'));
-  if (pl.year >= 1960) drawText(p, 'B', x + 12, fy - 10, pal.accent);
-  blk(p, x + 1, fy - 13, 7, 5, shell); p.vline(x + 4, fy - 8, fy - 1, C('#9aa0aa')); // caixa
-  blk(p, x + 8, fy - 20, 6, 4, shell); blk(p, x + 15, fy - 20, 6, 4, shell); // tons
-  p.vline(x + 25, fy - 22, fy - 1, C('#9aa0aa')); p.hline(x + 21, x + 29, fy - 22, C('#e2c050'));
-  p.vline(x, fy - 19, fy - 1, C('#9aa0aa')); p.hline(x - 3, x + 3, fy - 19, C('#e2c050')); p.hline(x - 3, x + 3, fy - 18, C('#c8a840'));
+  drumKit31(g.p, x, fy, g.pl.year, g.pal.accent2);
+}
+/** Porta interna (fundos, agenda do estúdio): batente, duas almofadas com luz embaixo, maçaneta; `note` = papel colado. */
+function door(g: Ctx, x: number, fy: number, w = 14, h = 32, note = false): void {
+  const { p, pal } = g;
+  const wd = pal.woodDark;
+  blk(p, x, fy - h, w, h, wd);
+  const pw = w - 4, top = fy - h + 3, ph1 = Math.round((h - 8) * 0.42), ph2 = h - 8 - ph1;
+  for (const [py, ph] of [[top, ph1], [top + ph1 + 2, ph2]] as const) { p.rect(x + 2, py, pw, ph, lv(wd, 2.4)); p.hline(x + 2, x + 1 + pw, py, lv(wd, 1.6)); p.hline(x + 2, x + 1 + pw, py + ph - 1, lv(wd, 3.8)); }
+  if (note) { p.rect(x + 3, top + 2, pw - 2, 6, pal.paper); for (let i = 0; i < 3; i++) p.hline(x + 4, x + pw - 1 - i, top + 3 + i * 2, INK); }
+  const hy = fy - Math.round(h * 0.47);
+  p.rect(x + w - 4, hy, 2, 2, pal.gold); p.put(x + w - 4, hy, lv(pal.gold, 4.6));
 }
 function piano(g: Ctx, x: number, fy: number): void {
   const { p, pal } = g;
@@ -1412,6 +1400,6 @@ export function drawHqCutaway27(canvas: HTMLCanvasElement, model: Pick<HqModel25
  *  uma planta de um andar só e reaproveitam a mesma mobília, luz e rua da sede. */
 export type Ctx27 = Ctx;
 export const prim27 = {
-  blk, sky, street, neighbours, wallFill, lamp, sign, amp, micStand, guitar, drums, piano, lathe, reelDeck, monitorSpk, consoleDesk, couch, shelf, desk, deskGear,
+  blk, sky, street, neighbours, wallFill, lamp, sign, amp, micStand, guitar, drums, door, piano, lathe, reelDeck, monitorSpk, consoleDesk, couch, shelf, desk, deskGear,
   chair, filing, plant, tv, recordPlayer, poster, goldDisc, backWindow, foam, corkBoard, rng27, INK,
 };

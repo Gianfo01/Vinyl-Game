@@ -11,3 +11,7 @@
 .res31-mini .row { gap: 0.9rem; }
 .ctx31 { cursor: help; }
 @media (max-width: 640px) { .res31 { font-size: 0.82rem; } .res31 td:nth-child(3), .res31 th:nth-child(3) { display: none; } }
+/* R31 · onda 4 (R) — aprendizados */
+.lrn31-view .linklike { border: 0; background: none; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; text-align: left; }
+.lrn31 { padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: 6px; }
+.lrn31 p { margin: 0.25rem 0; }

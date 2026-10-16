@@ -20,6 +20,7 @@ import { drawScene27, type Who27 } from './scene27';
 import './act27.css';
 import './p2b27.css';
 import { staffLoyalty } from '../../sim/opinion';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 function room(s: GameState, ds: Dir27[], speaker?: string): HTMLCanvasElement {
   const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Sala da diretoria', 'Boardroom')) }) as HTMLCanvasElement;
@@ -70,7 +71,7 @@ export function openBoard27(onDone?: (played: boolean) => void): void {
     (root.querySelector('.p2b-prop .btn.primary:not([disabled])') as HTMLElement | null)?.focus();
   };
   view();
-  const close = modal(t(l('Reunião de diretoria', 'Board meeting')), root, { wide: true, onClose: () => { onDone?.(true); rerender(); } });
+  const close = modal(t(l('Reunião de diretoria', 'Board meeting')), withCast31(s, s.player.staff.map((x) => x.id), root, () => close()), { wide: true, onClose: () => { onDone?.(true); rerender(); } });
 }
 
 function propCard(s: GameState, p: Prop27, ds: Dir27[], done: 'yes' | 'no' | undefined, after: (t: L, tone: string) => void): HTMLElement {

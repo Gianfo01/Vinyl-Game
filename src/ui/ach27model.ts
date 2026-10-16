@@ -1,6 +1,6 @@
 // Rodada 27 (ACH) — conquistas escondidas e conquistas do PERFIL (camada de interface; não toca na simulação).
-// • Só aparecem conquistas desbloqueadas: nome, descrição e ícone de uma bloqueada nunca saem daqui. Por categoria, no
-//   máximo "??? × k" (bloqueadas comuns); as secretas (hidden, ovos do eggs27) nem isso — só entram no total.
+// • R31 (N): bloqueadas comuns aparecem com nome e como ganhar (`lockedItems`); as secretas (hidden, ovos do eggs27)
+//   continuam "???" — só a contagem por categoria (`secretLocked`), nunca id, nome ou descrição.
 // • Conquista desbloqueada em qualquer partida é gravada no perfil local (saves17: curProfile17) com data real, partida
 //   (empresa, ano de início, semente) e ano do jogo. Mesmo armazenamento dos perfis (localStorage, com try/catch).
 // • Apagar o perfil apaga as conquistas dele; apagar um save não mexe nelas.
@@ -53,7 +53,9 @@ export const CAT27: Record<AchievementDef['cat'], L> = {
   stores: l('Lojas e filiais', 'Stores and branches'), digital: l('Digital', 'Digital'), live: l('Palco e festivais', 'Stage and festivals'), company: l('Empresa', 'Company'),
 };
 export interface AchItem27 { id: string; name: L; desc: L; icon: string; cat: AchievementDef['cat']; secret: boolean; gy?: number; at?: number; run?: AchRun27; runs?: number }
-export interface AchCat27 { cat: AchievementDef['cat']; label: L; items: AchItem27[]; /** bloqueadas comuns (as secretas não contam aqui) */ locked: number }
+export interface AchCat27 { cat: AchievementDef['cat']; label: L; items: AchItem27[]; /** bloqueadas comuns (as secretas não contam aqui) */ locked: number;
+  /** R31 (N): bloqueadas comuns com nome e "como ganhar" (descrição); secretas bloqueadas nunca entram aqui */
+  lockedItems: AchItem27[]; /** R31 (N): secretas ainda bloqueadas desta categoria (aparecem como "???") */ secretLocked: number }
 export interface AchView27 { got: number; total: number; /** secretas ainda não achadas (só no total) */ secretLeft: number; cats: AchCat27[]; items: AchItem27[] }
 type Unl = Record<string, { gy?: number; at?: number; run?: AchRun27; runs?: number }>;
 
@@ -63,15 +65,18 @@ export function achView27(unlocked: Unl, defs: readonly AchievementDef[] = ACHIE
   const items: AchItem27[] = [];
   let secretLeft = 0;
   for (const d of defs) {
-    const c = cats.get(d.cat) ?? { cat: d.cat, label: CAT27[d.cat] ?? l(d.cat, d.cat), items: [], locked: 0 };
+    const c = cats.get(d.cat) ?? { cat: d.cat, label: CAT27[d.cat] ?? l(d.cat, d.cat), items: [], locked: 0, lockedItems: [], secretLocked: 0 };
     cats.set(d.cat, c);
     const u = unlocked[d.id];
-    if (!u) { if (d.hidden) secretLeft++; else c.locked++; continue; }
+    if (!u) {
+      if (d.hidden) { secretLeft++; c.secretLocked++; } else { c.locked++; c.lockedItems.push({ id: d.id, name: d.name, desc: d.desc, icon: d.icon, cat: d.cat, secret: false }); }
+      continue;
+    }
     const it: AchItem27 = { id: d.id, name: d.name, desc: d.desc, icon: d.icon, cat: d.cat, secret: !!d.hidden, ...u };
     c.items.push(it); items.push(it);
   }
   // categoria só aparece se tiver algo desbloqueado ou bloqueadas comuns (uma categoria só de secretas some)
-  const list = [...cats.values()].filter((c) => c.items.length || c.locked);
+  const list = [...cats.values()].filter((c) => c.items.length || c.locked || c.secretLocked);
   return { got: items.length, total: defs.length, secretLeft, cats: list, items };
 }
 /** Vista das conquistas desta partida. */

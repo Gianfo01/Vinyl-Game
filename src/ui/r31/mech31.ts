@@ -26,6 +26,11 @@ import {
   type Cast31, type Choice31, type Mood31, type SceneKind31, type SceneModel31, type SceneOut31,
 } from './scene31core';
 import { sceneHook31 } from './scene31reg';
+import { openProjects } from '../../sim/sys/project8';
+import { socio31, targets31 } from '../../sim/sys/socio31';
+import { goToProjects } from '../sys/project8';
+import { radioTab } from '../sys/world4/industry';
+import { openBiz31, openCitySoc31 } from './socio31ui';
 import { hot31, labels31, stage31 } from './scene31stage';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
@@ -40,6 +45,12 @@ function details31(s: GameState, kind: SceneKind31, id: string): void {
     case 'hire': goDest31({ area: 'market' }); return;
     case 'fire': store.companyTab = 'staff'; goDest31({ area: 'company' }); return;
     case 'punish': openPerson(id); return;
+    // W (onda 4): o formulário de sempre de cada mecânica do lote 2
+    case 'release': { const p = openProjects(s).find((x) => x.id === id); if (p) goToProjects(p.actId, p.id); return; }
+    case 'bank': store.companyTab = 'finances'; goDest31({ area: 'company' }); return;
+    case 'buy': { if (id.startsWith('lb:')) { goDest31({ area: 'company' }); return; } const tg = targets31(s, true).find((x) => x.id === id); if (socio31(s).b[id]) openBiz31(s, id); else if (tg) openCitySoc31(s, tg.city); return; }
+    case 'jaba': modal(t(l('Jabá e rádio', 'Payola and radio')), radioTab(s), { wide: true }); return;
+    case 'jabain': goDest31({ area: 'business' }); return;
   }
   void s;
 }
@@ -82,10 +93,13 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
       asking = false;
       if (!ok || out || !root.isConnected) return;
     }
-    out = decideScene31(s, kind, { id }, c.id);
+    const res = decideScene31(s, kind, { id }, c.id);
     const them = m.cast.find((x) => x.side === 'them');
-    if (them && out.react) react = { [them.id]: out.react };
-    toast(t(out.text), out.tone === 'good' ? 'good' : out.tone === 'warn' ? 'info' : 'bad');
+    if (them && res.react) react = { [them.id]: res.react };
+    toast(t(res.text), res.tone === 'good' ? 'good' : res.tone === 'warn' ? 'info' : 'bad');
+    // W: ajuste que não encerra a cena (cartão no quadro): a sala continua, com os números já atualizados
+    if (c.stay && res.ok) { draw(); return; }
+    out = res;
     draw();
     (root.querySelector('.mc31-out button') as HTMLElement | null)?.focus();
   };

@@ -31,6 +31,8 @@ export interface RunConfig {
   contentFilters: string[]; // tags desligadas
   /** rodada 6: artistas, selos, festivais e mídia com nomes reais */
   realNames?: boolean;
+  /** R31 (X): o que a tela mostra no começo (Nomes e obras reais); ausente = igual a realNames. Só exibição. */
+  showReal31?: boolean;
   /** rodada 7: no modo histórico, pessoas reais morrem perto do ano real */
   realFates?: boolean;
   /** rodada 7: início personalizado (tudo opcional; ausente = padrão do cenário) */

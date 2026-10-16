@@ -26,6 +26,9 @@ const SYSTEMS: Record<string, [string, string[]]> = {
   clash17: ['src/sim/sys/clash17.ts', ['clash17']], // agenda de concorrência (cal17)
   rollout: ['src/sim/rollout.ts', ['rollout']], // passos do plano de lançamento
   agenda17: ['src/sim/sys/agenda17.ts', ['agenda17']], // bolinhas do mês do dono
+  // r31 onda 4 (T)
+  auction31: ['src/sim/sys/auction31.ts', ['auction31']], // pregões e chegadas da alfândega
+  travel31: ['src/sim/sys/travel31.ts', ['travel31']], // fim das temporadas no mar
 };
 
 /** PENDENTES: só pode diminuir. Ao registrar o provedor de um destes, tire-o daqui (o teste avisa). */

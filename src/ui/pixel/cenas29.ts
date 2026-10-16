@@ -416,7 +416,7 @@ const FULL29: Record<string, Painter29> = {
     k.p.line(Math.round(W * 0.5), 0, lx, 30, k.c('#1a1a1e')); k.p.disc(lx, 32, 2, k.c('#ffe8a0'));
     cone(k, lx, 32, 3, fy, 60, k.c('#ffe8a0'), 40); halo(k, lx, 32, 10, k.c('#ffe8a0'), 90);
     drums(k, Math.round(W * 0.62), fy);
-    k.p.line(Math.round(W * 0.62) + 5, fy - 6, Math.round(W * 0.62) + 13, fy - 6, k.c('#2a2a2e')); // pele furada
+    k.p.line(Math.round(W * 0.62) + 10, fy - 11, Math.round(W * 0.62) + 16, fy - 6, k.c('#2a2a2e')); // pele furada
     amp(k, Math.round(W * 0.8), fy); speaker(k, Math.round(W * 0.88), fy, 10, 16);
     // guitarra no chão (deitada) e o cabo
     ink27(k, () => { k.p.ellipse(Math.round(W * 0.3), fy - 3, 5, 2, k.pal.accent2); k.p.line(Math.round(W * 0.3) + 4, fy - 3, Math.round(W * 0.3) + 20, fy - 5, k.pal.woodDark); });

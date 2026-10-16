@@ -34,9 +34,14 @@ import { chips, ic, stat } from '../vis';
 import { cityEggs27, cityShake27, type CityEgg27 } from './eggs27';
 import './campus18.css';
 import { places27, type Place27 } from '../../sim/sys/place27';
+import { fosHomeView31, fosSquareView31 } from '../r31/fos31';
 import { PINNED27, PLACE_IC27, insideView27, ownPlace27, placePanel27, type InsideT27 } from './place27ui';
 import { placeTabs27, zoom27 } from '../ps/zoom27';
 import { askConfirm, askText } from '../ask31';
+import { FEST_ID31, cityOv31, cityX31, festLine31, type CityOv31 } from '../r31/city31model';
+import { drawCity31 } from '../r31/city31px';
+import { coverPx } from '../art';
+import { openRelease } from '../ficha';
 
 /** r27 INT: sprite de ovo desenhado no quadro e sua caixa (coordenadas do mapa). */
 interface Egg27Box { box: [number, number, number, number]; e: CityEgg27 }
@@ -49,8 +54,10 @@ const mobile = () => !!window.matchMedia?.('(max-width: 860px)').matches;
 /** UI efêmera (por sessão; não vai para o save). */
 const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: 'cycle' | 'day' | 'night'; q: number; moving?: string; f: { mine: boolean; nb: boolean; lm: boolean }; legend?: boolean; z: number; px: number; py: number; /** r27 (CITY2): lugar aberto por dentro */ inside?: string; /** r27 (LOTS): largura do mapa já enquadrado no celular */ zFor?: number } =
   { mode: 'cycle', q: 1, f: { mine: true, nb: true, lm: true }, z: 1, px: 0, py: 0 };
+/** R31 (FOS): abre o mapa já dentro de um lugar ('fos31:home' = casa da família Fossati, 'fos31:square' = a praça). */
+export function openInside18(id: string): void { ui.inside = id; ui.pop = undefined; store.area = 'campus18' as typeof store.area; rerender(); }
 
-interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[] }
+interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[]; /** R31 (H): camada da cidade da época */ ov?: CityOv31; festName?: string; bbHits?: { relId: string; box: [number, number, number, number] }[] }
 /** r27: o que a vida na rua (fãs, imprensa) e o estado dos prédios (fila de show) já mostram sai do ambiente antigo. */
 const AMB_DONE27 = new Set(['fans', 'press', 'show']);
 function makeView(s: GameState, year?: number): View {
@@ -68,11 +75,15 @@ function makeView(s: GameState, year?: number): View {
   const life = life27(s, bs);
   const nbs = nbInfo27(s);
   // r27 (CITY2): todo prédio que não é seu vira um lugar (vizinhos + cidade comum, com os básicos da música da época)
-  const places = places27(s, filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1);
-  const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n }))];
-  const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms,
-    { dist: dist18(s, bs), vis, sale, filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill').map((p) => [p.lot, p.draw])) });
-  return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene };
+  // R31 (H): lugares reais nos terrenos reservados, festival do mês num terreno, lojas da época (place27 → city31)
+  const cx = cityX31(s, filler);
+  const places = [...places27(s, cx.filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1), ...cx.places];
+  const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n })), ...cx.amb];
+  const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms.filter((m) => !cx.lmOut.has(m.id)),
+    { dist: dist18(s, bs), vis, sale, filler: cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), extra31: cx.extra, minGw: cx.minGw });
+  const ov = cityOv31(s, cx, places, scene.sprites.map((x) => ({ id: x.id, kind: x.kind, top: x.box[1] })), t(l('a', 'b')) === 'a');
+  for (const b of ov.boards) { const r = s.releases[b.relId], a = r ? s.acts[r.actId] : undefined; if (r) b.cover = coverPx(r.coverSeed, r.title, a?.name ?? '', a?.genre ?? 'pop', r.year, 0.5, r.coverChoice).canvas(); }
+  return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene, ov, festName: cx.festName };
 }
 /** Iniciais do selo (placa da sede e letreiro). */
 export const brand18 = (s: GameState): string => (s.config.companyName.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).map((w) => w[0]).join('').toUpperCase().slice(0, 3) || 'REC');
@@ -97,11 +108,12 @@ function mapCanvas(v: View): HTMLCanvasElement {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (dx || dy) { ctx.clearRect(0, 0, MW, MH); ctx.translate(dx, dy); }
     drawFrame18(ctx, v.scene, tm, night);
+    if (v.ov) v.bbHits = drawCity31(ctx, v.scene, v.ov, tm, night); // R31 (H): lojas da época, letreiros, outdoors, festival, neon
     eggs.length = 0;
     if (v.live && hqSp) for (const f of cityEggs27) {
       const e = f(v.s, { t: tm, night, city });
       if (!e) continue;
-      const x = Math.round(hqSp.door[0] + 12), y = Math.round(hqSp.door[1] - e.h + 3);
+      const x = Math.round(hqSp.door[0] + 12 + (e.dx ?? 0)), y = Math.round(hqSp.door[1] - e.h + 3 + (e.dy ?? 0));
       e.draw(ctx, x, y, tm);
       eggs.push({ box: [x + dx, y + dy, e.w, e.h], e });
     }
@@ -270,6 +282,7 @@ function bldPanel(v: View, id: string, close: () => void, rerun: () => void, ins
     notes.length ? h('ul', { class: 'w19-notes small' }, notes.map((n) => h('li', null, tx(n)))) : null,
     h('div', { class: 'c27-main-acts' },
       pn.enter ? h('button', { type: 'button', class: 'btn small primary', onclick: () => { close(); enterHq27(); } }, ic('house'), ' ', t(l('Entrar na sede', 'Enter the HQ'))) : null,
+      b.kind === 'home' && v.live ? h('button', { type: 'button', class: 'btn small primary', onclick: () => { close(); go18({ area: 'casa31' }); } }, ic('door'), ' ', t(l('Entrar na casa', 'Enter your home'))) : null, // R31 (H)
       inside && v.live && ownPlace27(s, b) ? h('button', { type: 'button', class: 'btn small c2-enter', onclick: inside }, ic('door'), ' ', t(l('Ver por dentro', 'Look inside'))) : null, // r27 (CITY2)
       pn.main.map(mainBtn)),
     h('details', { class: 'c27-more' }, h('summary', null, t(l('Mais opções e números', 'More options and numbers'))), popBody(v, p, close, rerun, true)));
@@ -388,20 +401,25 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   // r27 (CITY2): entrar num lugar — aproxima no prédio e abre o corte por dentro; "Voltar à cidade" afasta
   const insideOf = (id: string): InsideT27 | null => {
     const plc = v.places.find((x) => x.id === id);
-    if (plc) return { id, k: plc.k, name: t(plc.name), what: t(plc.what), people: plc.people, year: v.year, city: s.config.homeCity, seed: s.config.seed };
+    if (plc) return { id, k: plc.k, name: t(plc.name), what: t(plc.what), people: plc.people, year: v.year, city: s.config.homeCity, seed: s.config.seed, place: plc, org: plc.org };
     const b = v.bs.find((x) => x.id === id), o = b ? ownPlace27(s, b) : null;
-    return b && o ? { id, k: o.k, name: o.name, what: t(KIND18[b.kind].name), people: o.people, year: v.year, city: s.config.homeCity, seed: s.config.seed } : null;
+    return b && o ? { id, k: o.k, name: o.name, what: t(KIND18[b.kind].name), people: o.people, year: v.year, city: s.config.homeCity, seed: s.config.seed, own: true } : null;
   };
   let inBox: HTMLElement | null = null;
   const leaveInside = () => { ui.inside = undefined; inBox?.remove(); inBox = null; (layer.querySelector(`[data-id="${CSS.escape(ui.pop ?? '')}"]`) as HTMLElement | null)?.focus({ preventScroll: true }); };
-  const showInside = (id: string, anim: boolean) => {
-    const x = insideOf(id);
-    if (!x) { ui.inside = undefined; return; }
+  const showInside = (id0: string, anim: boolean) => {
+    // r31 (FOS): a casa da família Fossati (um prédio de moradia da cidade) e a praça ao lado da sede abrem as cenas próprias
+    const famPl = v.places.find((p) => p.fam31);
+    const id = id0 === 'fos31:home' ? famPl?.id ?? id0 : id0;
+    const fos = id0 === 'fos31:square' ? 'square' : famPl && id === famPl.id ? 'home' : null;
+    const x = fos ? null : insideOf(id);
+    if (!x && !fos) { ui.inside = undefined; return; }
     ui.inside = id; inBox?.remove();
     // celular: a folha de ações desce para o interior aparecer; "Ações" a traz de volta
     const mob = mobile();
     if (mob) { sheet.hidden = true; document.body.classList.remove('w19-open'); }
-    inBox = insideView27(s, x, leaveInside, mob ? () => { if (ui.pop) open(ui.pop, lastHs); } : undefined);
+    inBox = fos === 'home' ? fosHomeView31(s, leaveInside, true) : fos === 'square' ? fosSquareView31(s, leaveInside, true)
+      : insideView27(s, x!, leaveInside, mob ? () => { if (ui.pop) open(ui.pop, lastHs); } : undefined);
     if (anim) inBox.classList.add('enter');
     vp.append(inBox);
     if (mob && anim) frame.scrollIntoView({ block: 'start' });
@@ -428,6 +446,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const sc = v.scene;
   // prédios (seus e vizinhos), em ordem de profundidade; ícone próprio por tipo com alertas e prazo de obra
   for (const sp of sc.sprites) {
+    if (sp.id === `fl:${FEST_ID31}` && v.festName) { hot(sp.id, 'fill', sp.box, `${t(festLine31(v.festName))} — ${t(l('abrir festivais', 'open festivals'))}`, [h('span', { class: 'c27-pin pl', style: '--k:#d07018', 'aria-hidden': 'true' }, ic('ticket'))], () => go18({ area: 'festivals' })); continue; }
     if (sp.filler) { // r27 (CITY2): a cidade comum também é lugar (loja, rádio, jornal, prédio, hotel…) — clicável
       const plc = ui.f.nb ? v.places.find((x) => x.id === `pl:${sp.id.slice(3)}`) : undefined;
       if (plc) hot(plc.id, 'fill', sp.box, `${t(plc.name)} · ${t(plc.what)} — ${t(plc.now)}`,
@@ -445,6 +464,8 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
       : nb ? h('span', { class: `c27-pin nb ${nb.k === 'rival' ? 'rival' : ''}`, 'aria-hidden': 'true' }, ic(nb.icon), h('i', { class: 'c27-nm' }, t(nb.name).replace(/ \((escritório|office)\)$/, '').slice(0, 16))) : null;
     hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label, [pin], b?.kind === 'hq' && v.live ? enter : undefined);
   }
+  // R31 (H): outdoors das paradas — clicar abre a ficha da obra
+  for (const b of v.bbHits ?? []) { const r = s.releases[b.relId]; if (r) hot(`bb:${b.relId}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: "${r.title}" — ${s.acts[r.actId]?.name ?? ''}`, [], () => openRelease(b.relId)); }
   // marcos da cidade
   if (ui.f.lm) for (const m of sc.marks) { const lm = mapLms27(s.config.homeCity, v.year).find((x) => x.id === m.id); if (lm) hot(`lm:${m.id}`, 'lm', m.box, `${t(lm.n)} · ${lm.from > 0 ? lm.from : ''}`); }
   if (v.live && ui.f.mine) {
