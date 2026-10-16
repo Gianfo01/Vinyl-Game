@@ -348,7 +348,7 @@ export function consign31(s: GameState, rid: string): L | null {
   const rl = consignable31(s).find((x) => x.id === rid);
   if (!rl) return l('Só peças do seu acervo, fora de empréstimo.', 'Only pieces in your collection, not on loan.');
   const st = auction31(s);
-  rl.st = 'auction'; rl.ex = undefined; rl.bid = undefined;
+  rl.st = 'auction'; rl.ex = undefined; rl.bid = undefined; rl.au = s.week + 13; // o prazo de sempre de um leilão (relics9)
   st.cons[rid] = 1;
   ensureSessions31(s);
   assignLots31(s);
