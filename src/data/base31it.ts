@@ -348,6 +348,23 @@ s('Enrico Rava', 'cool_jazz', 'milan', 1964, 1939, u, [['Tribe', 2011]], '', { r
 s('Paolo Fresu', 'cool_jazz', 'rome', 1984, 1961, u, [['Mare nostrum', 2007]], '', { r: 'horns', rc: 'Berchidda (Sardenha)', ap: ['d'] });
 s('Stefano Bollani', 'cool_jazz', 'milan', 1996, 1972, u, [['Stone in the Water', 2009]], '', { r: 'keys', ap: ['d'] });
 
+// ================================================================ complemento (60s–2020s)
+s('Wilma Goich', 'canzone', 'milan', 1963, 1945, u, [['In un fiore', 1965, 'single']], '', { rc: 'Cairo Montenotte (Savona)', ap: ['d'] });
+s('Gianni Pettenati', 'beat', 'milan', 1965, 1945, u, [['Bandiera gialla', 1966, 'single']], '', { rc: 'Piacenza', ap: ['d'] });
+s('Marisa Sannia', 'canzone', 'rome', 1966, 1947, 2008, [['Casa bianca', 1968, 'single']], '', { rc: 'Iglesias (Sardenha)', ap: ['d'] });
+s('Rosanna Fratello', 'canzone', 'naples', 1968, 1951, u, [['Sono una donna, non sono una santa', 1971, 'single']], '', { rc: 'Bitonto (Bari)', ap: ['d'] });
+s('Alberto Fortis', 'cantautori', 'milan', 1979, 1955, u, [['Milano e Vincenzo', 1979, 'single']], '', { rc: 'Domodossola' });
+s('Marco Ferradini', 'cantautori', 'milan', 1978, 1949, u, [['Teorema', 1981, 'single']], '', { rc: 'Como', ap: ['d'] });
+bd('Ladri di Biciclette', 'pop_rock', 'milan', 1989, u, [], [['Sotto questo sole', 1990, 'single']], '', { rc: 'Novara', ap: ['d'] });
+s('Massimo Di Cataldo', 'canzone', 'rome', 1995, 1968, u, [['Se adesso te ne vai', 1996, 'single']], '', { ap: ['d'] });
+s('Daniele Groff', 'pop_rock', 'milan', 1999, u, u, [['Daisy', 1999, 'single']], '', { rc: 'Trento', cf: ['ano de nascimento'] });
+s('Chiara Galiazzo', 'canzone', 'milan', 2012, 1986, u, [['Due respiri', 2013, 'single']], '', { rc: 'Pádua', nick: ['Chiara'] });
+s('Lorenzo Fragola', 'pop_rock', 'naples', 2014, 1995, u, [['The Reason Why', 2014, 'single']], '', { rc: 'Catânia' });
+s('Michele Bravi', 'canzone', 'rome', 2013, 1994, u, [['Il diario degli errori', 2017, 'single']], '', { rc: 'Città di Castello', ap: ['d'] });
+s('Clara', 'pop_rnb', 'milan', 2022, 1999, u, [['Diamanti grezzi', 2024, 'single']], '', { rc: 'Varese', nick: ['Clara Soccini'], ap: ['d'] });
+s('Rhove', 'trap', 'milan', 2021, u, u, [['Shakerando', 2022, 'single']], 'fimi', { r: 'mc', rc: 'Rho', nick: ['Samuel Roveda'], cf: ['ano de nascimento'], ap: ['d'] });
+s('Andrea Laszlo De Simone', 'indie', 'milan', 2012, u, u, [['Uomo donna', 2017]], '', { rc: 'Turim', cf: ['ano de nascimento'], ap: ['d'] });
+
 /** Curadoria completa da base italiana (ato + fontes + cidade real + apelidos + a confirmar). */
 export const IT31: readonly It31[] = IT;
 /** Os atos (formato RealArtist), na ordem em que entram no fim de REAL_ALL. */

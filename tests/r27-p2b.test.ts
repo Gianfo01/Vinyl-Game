@@ -126,10 +126,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // UNI-4 (cache da ficha com chave completa — o jogo carregado de um save divergia): caixa 10093 → 10092 e
     // acts 3500990849 → 1560130818 (o r27-p2a, sem os módulos P2B, não muda).
     // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
-    expect(AFTER.player.cash).toBe(182589);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3575668786);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1693608899);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3302724126);
+    // R31 onda 4 (BASE-IT · base italiana, de propósito — docs/r31/DECISOES.md e docs/r31/base-it.md): 283 artistas italianos reais
+    // no fim de REAL_ALL (nascem no início e estreiam nesses 8 meses): caixa, turnês, acts e rng mudam. Com `base31.it` desligado
+    // (config.base31it = false) voltam 182589 / 3575668786 / 1693608899 / 3302724126.
+    expect(AFTER.player.cash).toBe(231334);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(524285119);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3299931953);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(2977368711);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
   it('nada de estado P2B criado sem o jogador', () => {

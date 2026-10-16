@@ -1386,6 +1386,21 @@ export const REALNAMES31: Record<string, RealName31> = {
   'cur:enrico_rava': { real: 'Enrico Rava', substituto: 'Enriel Raers', tipo: 'artist' },
   'cur:paolo_fresu': { real: 'Paolo Fresu', substituto: 'Paowick Friel', tipo: 'artist' },
   'cur:stefano_bollani': { real: 'Stefano Bollani', substituto: 'Stefino Bollby', tipo: 'artist' },
+  'cur:wilma_goich': { real: 'Wilma Goich', substituto: 'Wiliel Goiford', tipo: 'artist' },
+  'cur:gianni_pettenati': { real: 'Gianni Pettenati', substituto: 'Giaiel Petters', tipo: 'artist' },
+  'cur:marisa_sannia': { real: 'Marisa Sannia', substituto: 'Marella Sanine', tipo: 'artist' },
+  'cur:rosanna_fratello': { real: 'Rosanna Fratello', substituto: 'Rosondo Fratford', tipo: 'artist' },
+  'cur:alberto_fortis': { real: 'Alberto Fortis', substituto: 'Albford Forby', tipo: 'artist' },
+  'cur:marco_ferradini': { real: 'Marco Ferradini', substituto: 'Mariel Ferriel', tipo: 'artist' },
+  'cur:ladri_di_biciclette': { real: 'Ladri di Biciclette', substituto: 'Ladley di Bicicmann', tipo: 'artist' },
+  'cur:massimo_di_cataldo': { real: 'Massimo Di Cataldo', substituto: 'Massano Di Catola', tipo: 'artist' },
+  'cur:daniele_groff': { real: 'Daniele Groff', substituto: 'Danard Grola', tipo: 'artist' },
+  'cur:chiara_galiazzo': { real: 'Chiara Galiazzo', substituto: 'Chine Galino', tipo: 'artist' },
+  'cur:lorenzo_fragola': { real: 'Lorenzo Fragola', substituto: 'Lorix Fragella', tipo: 'artist' },
+  'cur:michele_bravi': { real: 'Michele Bravi', substituto: 'Michondo Briel', tipo: 'artist' },
+  'cur:clara': { real: 'Clara', substituto: 'Cline', tipo: 'artist' },
+  'cur:rhove': { real: 'Rhove', substituto: 'Rhford', tipo: 'artist' },
+  'cur:andrea_laszlo_de_simone': { real: 'Andrea Laszlo De Simone', substituto: 'Andmann Lasard De Simella', tipo: 'artist' },
   // @@BASE31IT-END
 };
 
