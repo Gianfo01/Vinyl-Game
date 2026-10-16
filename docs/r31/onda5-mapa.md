@@ -135,7 +135,7 @@ Atributos que guiam essas mecânicas: **custo**, **privacidade** e **alcance**.
 
 ## Botões de viagem (lugares principais)
 
-- Uma barra fixa pequena num canto (embaixo à esquerda, antes do bolso) com botões grandes em pixel art: **Sede**,
+- Uma barra fixa pequena num canto (embaixo à esquerda, antes do bolso) com ícones em pixel art e o nome embaixo (sem botão só de texto): **Sede**,
   **Casa**, **Cidade** e **Mundo**.
 - Teclas Shift+1 a Shift+4 (as mesmas do menu de hoje).
 - Cada botão ganha "!" quando há novidade lá.

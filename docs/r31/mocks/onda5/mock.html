@@ -14,7 +14,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Con
 .hud .k{font-size:15px;color:var(--mute)}
 kbd{font-family:'Press Start 2P';font-size:9px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
 .adv{background:var(--gold);color:#1a1214;font-weight:700;font-size:18px;padding:9px 16px;border-radius:6px}
-.stage{position:absolute;left:0;right:0;top:58px;bottom:64px;display:flex;align-items:center;justify-content:center}
+.stage{position:absolute;left:0;right:0;top:58px;bottom:84px;display:flex;align-items:center;justify-content:center}
 .scene{position:relative}
 .scene img{display:block;width:100%;height:100%}
 .tag{position:absolute;transform:translate(-50%,-100%);background:#101a24ee;border:1px solid #f0c06099;color:#fff;font-size:14px;font-weight:600;padding:3px 7px;border-radius:4px;white-space:nowrap;display:flex;gap:6px;align-items:center}
@@ -75,16 +75,16 @@ kbd{font-family:'Press Start 2P';font-size:9px;background:#24364d;border:1px sol
   <span class="adv">▶ AVANÇAR MÊS</span>
 </div>
 <div id="app"></div>
-<div class="bolso"><span class="lbl">BOLSO</span>
+<div class="bolso" id="bolso"><span class="lbl">BOLSO</span>
+  <span class="slot"><kbd>E</kbd> Caixa de entrada</span>
   <span class="slot"><kbd>Z</kbd> Livro-caixa</span>
   <span class="slot"><kbd>A</kbd> Fichário</span>
   <span class="slot"><kbd>5</kbd> Caderno do olheiro</span>
   <span class="slot"><kbd>U</kbd> Quadro branco</span>
   <span class="slot"><kbd>3</kbd> Revista de paradas</span>
-  <span class="slot empty">+ fixar objeto</span>
-  <span class="slot empty">+ fixar objeto</span>
-  <span class="slot empty">+ fixar objeto</span>
+  <span class="slot empty">+ fixar</span>
 </div>
+<script src="travel.js"></script>
 <script>
 const v=new URLSearchParams(location.search).get('v')||'sede';
 const app=document.getElementById('app');
@@ -148,6 +148,13 @@ const V={
   <div class="note"><h4>PLACAS (mostrar no mapa)</h4>
   <div class="it">Lojas e serviços</div><div class="it">Casas de show e rádios</div><div class="it">Lotes à venda</div><div class="it">Lugares reais da música</div>
   <h4 style="margin-top:12px">ATALHOS</h4><div class="small" style="color:#9aa8b8">Segure <kbd>Alt</kbd> para ver o nome de todos os prédios. Clique = entrar (andar é opcional).</div></div>`,
+ mundo:()=>`<div class="where">MUNDO <span>· fronteiras de 1985</span></div><div class="stage"><div class="scene" style="width:1180px;height:558px;border:4px solid #0a121a;border-radius:6px;overflow:hidden"><img src="mundo.png">
+  ${T(27,43,'Reino Unido: seu mercado','')}
+  ${T(48,44,'Alemanha Ocidental','',{b:'!'})}
+  ${T(54,22,'Suécia: turnê marcada','')}
+  ${T(43,57,'França','')}
+  </div></div>
+  <div class="note" style="top:742px;right:auto;left:130px;width:1180px;display:flex;gap:12px;align-items:center"><h4 style="margin:0">CLIQUE NUM PAÍS</h4><div class="it" style="margin:0">mercado do país</div><div class="it" style="margin:0">cidade = mapa da cidade</div><div class="it" style="margin:0">telex: este mês no mundo</div><div class="it" style="margin:0">livro: cultura e lendas</div></div>`,
  pausa:()=>`<div class="dim">`+sede()+`</div><div class="pausa"><h2>PAUSA</h2>
   <div class="b main">Continuar <kbd>Esc</kbd></div>
   <div class="b">Salvar <span class="small">Ctrl S</span></div>
@@ -159,4 +166,6 @@ const V={
   <div class="b">Menu principal</div></div>`
 };
 app.innerHTML=V[v]();
+const on={sede:'sede',fichario:'sede',pausa:'sede',casa:'casa',cidade:'cidade',mundo:'mundo'}[v];
+const bo=document.getElementById('bolso');bo.insertBefore(buildTravel(on),bo.firstChild);
 </script></body></html>

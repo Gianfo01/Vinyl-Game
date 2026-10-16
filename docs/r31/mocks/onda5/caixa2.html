@@ -24,7 +24,7 @@ kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px sol
 .slot{border:1px solid var(--line);background:#16263a;border-radius:6px;padding:6px 9px;font-size:14px;display:flex;gap:7px;align-items:center}
 .slot.empty{border-style:dashed;color:#5d7088}
 /* moldura comum da caixa (o conteúdo e o layout são iguais em toda época) */
-.frame{position:absolute;left:60px;top:76px;width:1320px;height:744px}
+.frame{position:absolute;left:60px;top:70px;width:1320px;height:730px}
 .title{position:absolute;left:22px;top:14px;font-family:'Press Start 2P';font-size:15px}
 .title span{font-size:9px;margin-left:10px;opacity:.85}
 .close{position:absolute;right:18px;top:12px;font-size:15px}
@@ -118,16 +118,11 @@ kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px sol
 <span class="sp"></span><span class="k"><kbd>Ctrl K</kbd> buscar</span><span class="k"><kbd>?</kbd> teclas</span><span class="k"><kbd>Esc</kbd> pausa</span><span class="adv">▶ AVANÇAR MÊS</span></div>
 <img class="bgsede" src="sede.png">
 <div id="app"></div>
-<div class="bottom">
-  <div class="travel">
-    <div class="tb on">Sede<i>⇧1</i></div>
-    <div class="tb">Casa<i>⇧2</i></div>
-    <div class="tb">Cidade<i>⇧3</i><span class="bang">!</span></div>
-    <div class="tb">Mundo<i>⇧4</i><span class="bang">2</span></div>
-  </div>
+<div class="bottom" id="bolso">
   <span class="lbl">BOLSO</span>
   <span class="slot"><kbd>E</kbd> Caixa de entrada</span><span class="slot"><kbd>Z</kbd> Livro-caixa</span><span class="slot"><kbd>A</kbd> Fichário</span><span class="slot"><kbd>U</kbd> Quadro branco</span><span class="slot empty">+ fixar</span><span class="slot empty">+ fixar</span>
 </div>
+<script src="travel.js"></script>
 <script>
 const era=new URLSearchParams(location.search).get('era')||'85';
 const C={
@@ -146,6 +141,7 @@ const text=era=='25'
  ?`<div class="bubble">A Guilda propõe +8% no piso por faixa gravada (ou uma fatia da bilheteria nos shows com nossos músicos).</div><div class="bubble">Sem acordo até o fim do mês, nossos membros não entram em estúdio com o seu selo.</div>`
  :`<p>A Guilda propõe aumento de 8% no piso pago por faixa gravada (ou uma fatia da bilheteria nos shows em que nossos músicos tocam). Sem acordo até o fim do mês, nossos membros não entram em estúdio com o seu selo.</p><p style="text-align:right">— T. Hargreaves, secretário</p>`;
 document.body.className='e'+era;
+const bo=document.getElementById('bolso');bo.insertBefore(buildTravel('sede'),bo.firstChild);
 document.getElementById('app').innerHTML=`<div class="frame">${era!='85'?'<div class="screen"></div>':''}${era=='00'?'<div class="bar">Correio · Selo Agulha</div>':''}
  <div class="title">${C.title} <span>${C.sub} · tecla E</span></div><div class="close"><kbd>Esc</kbd> fechar</div>
  <div class="row1"><span class="btn on">Entrada <i>29</i></span><span class="btn">Adiadas 4</span><span class="btn">Arquivadas 212</span><span class="search">procurar remetente, assunto ou texto…</span><span class="btn on">Por data</span><span class="btn">Por prioridade</span><span class="btn">Arquivar lidas</span></div>
