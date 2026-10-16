@@ -5,7 +5,7 @@ import { mkdirSync, readdirSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_PATH ?? '/opt/node-tools/node_modules/playwright');
 const port = process.argv[2] ?? '5871';
-const out = 'docs/r31/shots';
+const out = process.argv[3] ?? 'docs/r31/shots';
 mkdirSync(out, { recursive: true });
 const exe = `/opt/pw-browsers/${readdirSync('/opt/pw-browsers').find((d) => d.startsWith('chromium-'))}/chrome-linux/chrome`;
 const b = await chromium.launch({ executablePath: exe });

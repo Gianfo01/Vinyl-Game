@@ -246,6 +246,7 @@ export const KIND_AT31: Record<PlaceK27, L> = {
   label: l('na gravadora', 'at the label'), office: l('nos escritórios', 'at the offices'), apartments: l('no prédio', 'at the apartment block'),
   hotel: l('no hotel', 'at the hotel'), instruments: l('na loja de instrumentos', 'at the instrument shop'),
   facade: l('na fachada', 'at the front business'), police: l('na delegacia', 'at the police station'), market: l('no beco', 'in the alley'),
+  home: l('em casa', 'at home'), vacant: l('no terreno', 'on the plot'),
 };
 
 /** O outro lado de quem faz bico: "guitarra em X". */

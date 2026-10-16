@@ -89,3 +89,32 @@ export function fitText(text: string, maxW: number, scale = 1): string {
   while (t.length > 1 && textWidth(t, scale) > maxW) t = t.slice(0, -1);
   return t.trim();
 }
+
+/**
+ * R31 (POL) — abrevia para caber em maxW SEM cortar palavra no meio: tira palavras miúdas ("de", "do"…), depois
+ * encurta as palavras do fim para a inicial com ponto ("LOJA DE INSTRUMENTOS" → "LOJA INSTRUMENTOS" → "LOJA INSTR." →
+ * "LOJA I."); só em último caso fica a primeira palavra abreviada. Nunca devolve pedaço de palavra sem o ponto.
+ */
+export function abbrText(text: string, maxW: number, scale = 1): string {
+  const fits = (t: string) => textWidth(t, scale) <= maxW;
+  let words = normalizeText(text).trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '';
+  const full = words.join(' ');
+  if (fits(full)) return full;
+  const SMALL = new Set(['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'A', 'O', 'OF', 'THE', 'AND', 'LA', 'EL', 'DI', 'DEL', 'DU', 'LE', 'DER', 'Y']);
+  if (words.length > 1) { const w2 = words.filter((w, i) => i === 0 || !SMALL.has(w)); if (w2.length) words = w2; }
+  if (fits(words.join(' '))) return words.join(' ');
+  // encurta da última para a primeira: corte em fronteira de sílaba simples (consoante antes de vogal) + ponto
+  const cut = (w: string, n: number) => (w.length <= n + 1 ? w : `${w.slice(0, n)}.`);
+  for (let i = words.length - 1; i >= 0; i--) {
+    for (let n = Math.min(words[i].length - 2, 6); n >= 1; n--) {
+      const ws = [...words]; ws[i] = cut(words[i], n);
+      if (fits(ws.join(' '))) return ws.join(' ');
+    }
+    words[i] = cut(words[i], 1);
+    if (fits(words.join(' '))) return words.join(' ');
+  }
+  // ainda não cabe: menos palavras (as iniciais do fim saem)
+  while (words.length > 1 && !fits(words.join(' '))) words.pop();
+  return fits(words.join(' ')) ? words.join(' ') : '';
+}

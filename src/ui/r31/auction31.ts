@@ -19,7 +19,7 @@ import type { GameState } from '../../sim/types';
 import { $, modal, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf } from '../pixel/avatar';
-import { drawText, fitText } from '../pixel/font';
+import { abbrText, drawText, fitText } from '../pixel/font';
 import { beam, box, curtain, floor, lightRig, screen, sign, stagePlatform, wall, type FloorStyle } from '../pixel/places/kit';
 import { eraOf, paletteOf, type Palette, type WallKind } from '../pixel/palette';
 import { C, INK, Px, discV, ellipseV, lv, tint, withAlpha, type Col } from '../pixel/px';
@@ -28,6 +28,7 @@ import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
+import { vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
 import { blitPx31, moreBtn31, runGo31, sceneView31 } from './scene31';
 import { auction31Model, cityName31, ROOM_NAME31, type Auc31 } from './auction31model';
 
@@ -92,10 +93,12 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
   box(p, 238, 14, 62, 64, m.room === 'salon' ? pal.gold : pal.woodDark, 0);
   p.rect(241, 17, 56, 58, C('#f2ead6'));
   drawText(p, fitText(t(l('CATÁLOGO', 'CATALOGUE')), 52), 243, 19, C('#5a3a20'));
+  // R31 (POL): nome abreviado na palavra (não "GRANDE LEILA"), ficha alta o bastante para as duas linhas, prazo legível
   m.picks.slice(0, 3).forEach((x, i) => {
-    box(p, 243, 28 + i * 15, 52, 13, C('#e6d8b8'), 0, lv(C('#e6d8b8'), 1.4));
-    drawText(p, fitText(t(HOUSE31[x.house].name).toUpperCase(), 48), 245, 30 + i * 15, C('#3a2a1a'));
-    drawText(p, `${x.lots.length} - ${Math.max(0, x.w - s.week)}S`, 245, 36 + i * 15, C('#8a5a30'));
+    const wk = Math.max(0, x.w - s.week);
+    box(p, 243, 28 + i * 16, 52, 15, C('#e6d8b8'), 0, lv(C('#e6d8b8'), 1.4));
+    drawText(p, abbrText(t(HOUSE31[x.house].name), 48), 245, 30 + i * 16, C('#3a2a1a'));
+    drawText(p, abbrText(`${t(l('{n} lotes', '{n} lots'), { n: x.lots.length })} ${wk ? t(l('em {w} sem', 'in {w} wk'), { w: wk }) : t(l('hoje', 'today'))}`, 48), 245, 36 + i * 16, C('#8a5a30'));
   });
   // palco com o púlpito e o pedestal
   stagePlatform(p, 26, 98, 200, 8, pal.wood, pal.woodDark);
@@ -124,7 +127,7 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
   };
   // leiloeiro atrás do púlpito, com o martelo
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, m.W, 83); ctx.clip();
-  spr(lookOf({ id: `auctioneer-${m.sess?.house ?? 'x'}` }), null, 54, 96, 'SE');
+  spr(lookOf({ id: `auctioneer-${m.sess?.house ?? 'x'}` }), null, 54, 92, 'SE'); // de pé no tablado: tronco acima do púlpito
   ctx.restore();
   ctx.fillStyle = '#3a1e10'; ctx.fillRect(66, 76, 1, 6); ctx.fillStyle = '#8a5028'; ctx.fillRect(64, 75, 6, 3);
   // plateia sentada, de costas para você, com as plaquinhas
@@ -137,6 +140,8 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
     ctx.fillStyle = '#170e12'; ctx.fillRect(x.x + 1, x.y - 34 - up, 11, 9);
     ctx.fillStyle = x.outAt !== undefined ? '#8a8a8a' : x.lead ? '#f0c040' : '#f4ecd8';
     ctx.fillRect(x.x + 2, x.y - 33 - up, 9, 7);
+    // R31 (POL): plaquinha com o número do licitante (antes um quadrado branco liso)
+    drawText(ctx, String((m.seats.indexOf(x) + 1) * 7 + 10), x.x + 3, x.y - 32 - up, x.outAt !== undefined ? '#d8d8d8' : '#170e12');
   }
   // você, de pé no corredor, com a sua plaquinha
   const me = playerPerson(s);
@@ -145,6 +150,7 @@ function paintScene(cv: HTMLCanvasElement, s: GameState, m: Auc31): void {
     const lead = m.lad?.lead === 'player';
     ctx.fillStyle = '#170e12'; ctx.fillRect(166, lead ? 138 : 146, 1, lead ? 20 : 12); ctx.fillRect(161, lead ? 131 : 139, 12, 9);
     ctx.fillStyle = lead ? '#f0c040' : '#ffffff'; ctx.fillRect(162, lead ? 132 : 140, 10, 7);
+    drawText(ctx, '1', 166, lead ? 133 : 141, '#170e12');
   }
 }
 
@@ -292,7 +298,7 @@ const fmtIntro = (m: Auc31): L => l(`A sala muda com a época (${ROOM_NAME31[m.r
 
 registerArea({ id: 'auction31', label: l('Casa de leilões', 'Auction house'), icon: 'vault', key: '',
   badge: (s) => { const se = auction31Model(s); return se.today ? 1 : undefined; },
-  render: (s) => h('div', null, h('h2', null, T(l('Casa de leilões', 'Auction house'))), auction31View(s)) });
+  render: (s) => h('div', null, h('h2', null, T(l('Casa de leilões', 'Auction house'))), auction31View(s), vitStrip31(s, 'auction')) });
 
 registerQuick31({
   id: 'q.auction31', verb: 'open', icon: 'vault', kinds: ['city'], passive: true, label: l('Casa de leilões (catálogo e lances)', 'Auction house (catalogue and bids)'),

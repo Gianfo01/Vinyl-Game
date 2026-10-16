@@ -46,6 +46,9 @@ import './newgame20.css';
 import { buildRun27, draftDefaults27 } from './ps/home27model';
 import { homeScreen27 } from './ps/home27';
 import { attachBase31 } from './base31ui'; // R31 (EDT): editor de base
+import { ini5On } from './r31/ini5sw'; // R31 onda 5 (INI): tela inicial e nova run novas (interruptor exp5.ini)
+import { homeScreen5 } from './r31/home5';
+import { skin5 } from './r31/newrun5';
 
 /** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1889 a 2039). */
 const START_YEARS = START_YEARS13;
@@ -66,6 +69,7 @@ export function randomSeed(): string {
 
 /** r27: tela inicial no estilo "Pixel Studio" (ps/home27.ts); mantém o nome usado por app.ts. */
 export function titleScreen(root: HTMLElement, onStart: () => void): void {
+  if (ini5On()) return homeScreen5(root, onStart); // R31 onda 5 (EXP-10): palco; desligado volta à tela r27
   homeScreen27(root, onStart);
 }
 
@@ -294,6 +298,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
   const REVIEW = tabs.length - 1;
   let cur = Math.max(0, Math.min(REVIEW, tab0));
   let fromReview = false;
+  let skin31: { after: (cur: number) => void } | undefined; // R31 onda 5 (EXP-9): prancheta por cima da mesma tela
   const fullSummary = h('section', { class: 'card wide ng-summary-full' });
   tabs[REVIEW].body.push(fullSummary);
   const side = h('div', { class: 'ng-side-body' });
@@ -316,7 +321,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
         ...(lineupApplies29(cfg) ? [[l('Formação inicial', 'Starting lineup'), t(LINEUPS29.find((x) => x.id === (cfg.lineup29 ?? LINEUP29_DEFAULT))!.name)] as Row] : []), // R29 (formação)
         [S.startYear, String(cfg.startYear)],
         [l('História prévia', 'Prior history'), prehist ? t(l('{n} anos', '{n} years'), { n: prehist }) : t(l('nenhuma', 'none'))],
-        [l('Base de dados', 'Database'), cfg.dbSize ?? 'medium'],
+        [l('Base de dados', 'Database'), `${cfg.dbSize ?? 'medium'}${cfg.realOff31?.length ? ` · ${t(l('sem artistas reais de {n} país(es)', 'no real artists from {n} countr(y/ies)'), { n: cfg.realOff31.length })}` : ''}`], // R31 onda 5: países desligados
         [l('Relíquias', 'Relics'), t(DENS29_NAME[cfg.relicDensity ?? 'many'])],
         [S.seed, cfg.seed || '—'],
       ] },
@@ -425,6 +430,7 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     if (focus) tabBtns[cur].focus();
     else if (focusPanel) { panels[cur].scrollIntoView?.({ block: 'start' }); (panels[cur].querySelector('h3, h4') as HTMLElement | null)?.setAttribute('tabindex', '-1'); (panels[cur].querySelector('h3, h4') as HTMLElement | null)?.focus?.(); }
     else if (!quiet) tabBtns[cur].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    skin31?.after(cur);
   }
   // r20 (§6.2, NR06): começar sem submissão dupla; gera sobre uma CÓPIA do rascunho; falha mantém rascunho e semente
   let busy = false;
@@ -467,7 +473,8 @@ export function newGameScreen(root: HTMLElement, onStart: () => void, init?: Run
     if (!hd || (e.target as HTMLElement).closest('button, a, input, select, .help')) return;
     hd.closest('section.card')!.classList.toggle('ng21-folded');
   });
-  root.replaceChildren(wrap);
+  if (ini5On()) skin31 = skin5({ root, onStart, cfg, wrap, tabBtns, panels, go: (i) => { fromReview = false; go(i); }, cur: () => cur });
+  else root.replaceChildren(wrap);
   go(cur, false, false, true);
 }
 

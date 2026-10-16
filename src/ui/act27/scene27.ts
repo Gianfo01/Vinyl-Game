@@ -3,6 +3,7 @@
 // (hqpx27): paleta da era, contorno, pontilhado; os bonecos são os avatares reais das pessoas (avatarSprite).
 // paintTable27/paintStudio27 são PURAS (só Px); drawScene27 pinta no <canvas> (escala inteira por CSS).
 
+import { cityView31, view31 } from '../pixel/window31';
 import type { Person } from '../../sim/types';
 import { avatarSprite, lookOf, type Pose } from '../pixel/avatar';
 import { paletteOf, type Palette } from '../pixel/palette';
@@ -27,8 +28,8 @@ export function paintTable27(year: number, played: string[] = [], seed = 0): Px 
   const p = new Px(W27, H27);
   room(p, pal, 58, 'lounge');
   // janela com a cidade à noite
-  p.rect(14, 10, 34, 24, pal.outline); p.rect(15, 11, 32, 22, mix(pal.sky, C('#0b1430'), 0.5));
-  for (let i = 0; i < 9; i++) { const x = 16 + ((i * 7 + seed) % 30), h = 4 + ((i * 5 + seed) % 9); p.rect(x, 33 - h, 3, h, shade(pal.outline, 0.6)); if (i % 2) p.set(x + 1, 33 - h + 2, pal.lamp); }
+  // R31 (POL): a vista vem da cidade e da época (skyline27), à noite
+  p.rect(14, 10, 34, 24, pal.outline); { const v = cityView31(view31.city, year, view31.month, 32, 22); for (let y = 0; y < v.h; y++) for (let x = 0; x < v.w; x++) p.set(15 + x, 11 + y, mix(v.d[y * v.w + x], C('#0b1430'), 0.45)); void seed; }
   p.vline(31, 11, 32, pal.outline); p.hline(15, 46, 22, pal.outline);
   // quadro de cortiça com papéis
   p.rect(150, 12, 36, 22, pal.woodDark); p.rect(151, 13, 34, 20, mix(pal.wood, C('#c8a165'), 0.5));
@@ -87,7 +88,8 @@ export function paintStudio27(year: number, rec = false): Px {
 export interface Who27 { p: Pick<Person, 'id' | 'role' | 'look' | 'born'>; x: number; y: number; pose: Pose; dir?: 'SE' | 'SW' }
 
 /** Pinta o buffer e os bonecos no canvas (tamanho lógico; o CSS escala por inteiro). */
-export function drawScene27(canvas: HTMLCanvasElement, px: Px, year: number, who: Who27[]): void {
+/** `front` (R31 POL): o que fica na frente das pessoas (mesa, balcão, vidro) — pintado depois dos bonecos. */
+export function drawScene27(canvas: HTMLCanvasElement, px: Px, year: number, who: Who27[], front?: Px): void {
   canvas.width = px.w; canvas.height = px.h;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -102,6 +104,11 @@ export function drawScene27(canvas: HTMLCanvasElement, px: Px, year: number, who
       ctx.fillRect(w.x - 6, w.y, 12, 1);
       ctx.drawImage(sp.c, w.x - sp.ax, w.y - sp.ay + 1);
     } catch { /* avatar opcional */ }
+  }
+  if (front && typeof document !== 'undefined') {
+    const fc = document.createElement('canvas'); fc.width = front.w; fc.height = front.h;
+    const f2 = fc.getContext('2d');
+    if (f2) { const im = f2.createImageData(front.w, front.h); new Uint32Array(im.data.buffer).set(front.d); f2.putImageData(im, 0, 0); ctx.drawImage(fc, 0, 0); }
   }
 }
 

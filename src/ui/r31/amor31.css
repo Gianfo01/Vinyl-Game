@@ -1,0 +1,9 @@
+/* R31 · onda 4 (AMOR) — pedido, ficha e cenas do coração */
+.am31-ask { margin-top: .4rem; display: flex; flex-direction: column; gap: .25rem; }
+.am31-why ul { margin: .2rem 0 0 1rem; padding: 0; }
+.am31-row { border-top: 1px solid var(--line, #3334); padding-top: .4rem; margin-top: .4rem; }
+.am31-req { background: var(--panel2, #0001); border-radius: 6px; padding: .3rem .5rem; margin: .3rem 0; }
+.am31-places { gap: .25rem; }
+.am31-pick { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
+.am31-pick li { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.am31 .in31-body { margin-top: .4rem; }

@@ -154,6 +154,17 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
     - 1960: amplificadores e bateria;
     - 2025: telão de LED e DJ.
   - **Menu:** Nova run, Continuar, Carregar, Cenários e Opções, com a dedicatória embaixo.
+- **EXP-11 · Transições entre telas** — arte e interface · mocks `onda5-mock-transicao-{1..5}.png` (aprovado pelo dono, 2026-10-16):
+  - **Viagem (Sede, Casa, Cidade, Mundo):** cortina de palco fecha, cartão do destino com o que espera lá, cortina abre
+    no destino. 0,5 s no total; qualquer tecla ou clique pula.
+  - **Objeto da sede:** sem cortina; zoom em pixel no objeto e o papel sobe (0,3 s). Esc faz o papel descer (0,15 s).
+    Atalhos do bolso abrem direto, sem zoom.
+  - **Mundo:** a rota anda no mapa com o transporte da época (navio/trem até 1949, avião depois), depois cortina com a
+    passagem.
+  - **Virada do mês:** a folha do calendário cai, o mês novo mostra só o que pede você e a sede volta com os "!".
+  - **Por época:** veludo vermelho (1889–1949), veludo vinho (1950–79), lâminas de metal e neon (1980–2009), painel de
+    LED (2010–40). O calendário da virada acompanha: folha de parede, relógio de virar, tela do celular.
+  - **Opção:** transições completas, rápidas ou desligadas. Nunca bloqueiam nem atrasam a simulação.
 - Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
 
 ## Onda 6 (31.6) · fechamento

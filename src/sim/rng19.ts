@@ -56,6 +56,7 @@ export const STREAMS19: Record<string, string> = {
   cancel19: 'ondas de cancelamento: resposta de NPCs e contra-ataque (cancel19)',
   culture19: 'cultura caótica: erros de metadados e vazamentos (culture19)',
   dlg19: 'delegação por carreira: renovações de mandato feitas pela regra (budget19; configuradas na delegação única)',
+  amor31: 'amor: divórcio na justiça depois da descoberta e fim do caso pela ficha Coração (sys/amor31)',
   deleg31: 'delegação única: o A&R delegado escolhe a quem propor (leitura com ruído pela qualidade dele) (sys/deleg31run)',
   exch20: 'residência de intercâmbio entre cenas: convites, ecos e parcerias com músicos locais (exch20)',
   union20: 'negociação coletiva de músicos de estúdio e equipe de estrada: pautas, greves e locautes (union20)',
@@ -63,6 +64,8 @@ export const STREAMS19: Record<string, string> = {
   fac31: 'facções por país: crescimento, expansão para países vizinhos e guerras (uma vez por ano) (sys/fac31 expandYear31)',
   broker31: 'intermediário das facções de fora: prazo, traição, entrega (só quando o jogador contrata) (sys/broker31)',
   socio31: 'sócios e compras: sorte do mês de cada negócio seu (festival, casa, rádio, estúdio) e o que o sócio NPC faz (propor, pedir saída, brigar) — só com participação (sys/socio31)',
+  vit31: 'vitrine do mês: o que cada lugar mostra no mês (itens, pessoas, raridades), sorteado na virada (r31/vitrine31)',
+  lots31: 'lotes da cidade: quem subiu de porte se muda para uma casa maior e o paparazzi na porta (só com lots31.press) — sys/lots31',
   bolsa31: 'bolsa: humor do mercado (desvio pequeno e com memória do preço sobre o valor de cada empresa listada) (r31/value31 stepPrice31)',
   // r31 (W0-RNG): chaves que substituíram o fluxo único antigo (rngOf / s.rng)
   world: 'geração do mundo inicial: datas das tecnologias, gêneros, gravadoras, artistas e pessoas (worldgen)',

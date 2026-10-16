@@ -68,3 +68,34 @@ registerSwitch({
   desc: l('Contratos da R31 em modo estrito: violação de invariante vira erro em vez de aviso no relatório.',
     'R31 contracts in strict mode: an invariant violation becomes an error instead of a report warning.'),
 });
+
+// ---------------------------------------------------------------- onda 5 · interface (antes de existir partida)
+
+/** Interruptores de interface que valem fora da partida (tela inicial, nova run): o valor mora no navegador, não no
+ *  save. A interface carrega/grava pelas preferências (`setSwUiStore`); sem loja, vale o padrão. */
+const UI_SW = new Map<string, SwVal>();
+let uiStore: ((all: Record<string, SwVal>) => void) | null = null;
+export function setSwUiStore(load: Record<string, SwVal> | undefined, save: (all: Record<string, SwVal>) => void): void {
+  for (const [k, v] of Object.entries(load ?? {})) UI_SW.set(k, v);
+  uiStore = save;
+}
+/** Valor de um interruptor de interface sem estado de partida. */
+export function swUi<V extends SwVal = SwVal>(id: string): V {
+  const d = DEFS.get(id);
+  if (!d) throw new Error(`switch desconhecido: ${id}`);
+  const v = UI_SW.get(id);
+  return (v === undefined || typeof v !== typeof d.def ? d.def : v) as V;
+}
+export function setSwUi(id: string, v: SwVal): void {
+  const d = DEFS.get(id);
+  if (!d) throw new Error(`switch desconhecido: ${id}`);
+  if (v === d.def) UI_SW.delete(id); else UI_SW.set(id, v);
+  uiStore?.(Object.fromEntries(UI_SW));
+}
+registerSwitch({
+  id: 'exp5.ini', def: true, scope: 'prod',
+  desc: l('Onda 5 · tela inicial com palco e nova run em ficha (desligado volta à tela inicial e à nova run antigas).',
+    'Wave 5 · stage title screen and form-style new run (off goes back to the old title screen and new run).'),
+  read: () => swUi<boolean>('exp5.ini'),
+  write: (_s, v) => setSwUi('exp5.ini', !!v),
+});

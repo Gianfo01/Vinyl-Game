@@ -20,6 +20,8 @@ import { youAt31 } from './salas31model';
 import { bailes31, bmRows31, cells31, myFile31, room31, type BmRow31 } from '../../sim/sys/under31';
 import { artItems31, artSpots31, dressRoom31 } from './art31model';
 import type { ArtItem31 } from '../pixel/props31';
+import type { VitPx31 } from '../pixel/vit31px';
+import { vitPeople31, vitPx31, vitSpots31 } from './vit31model';
 
 export const INSIDE_W31 = 360;
 
@@ -29,6 +31,7 @@ export interface InsideT31 {
   /** lugar de terceiros (ações do place27) */ place?: Place27;
   /** prédio seu (gestão) */ own?: boolean;
   /** fachada: facção e o tipo (restaurante, boate…) */ org?: string; v?: string;
+  /** r31 (VIT): vitrine própria deste interior (a feira dentro da loja de discos) */ vit?: string;
 }
 export interface InsideM31 {
   id: string; k: IKind27; title: L; what: L; year: number; W: number; H: number;
@@ -39,6 +42,8 @@ export interface InsideM31 {
   note?: L;
   /** r31 (ART2): adereços novos pintados por cima da mobília da época (props31) */
   art: ArtItem31[];
+  /** r31 (VIT): itens da prateleira do mês (vit31px) */
+  vit: VitPx31[];
 }
 
 // ---------------------------------------------------------------- objetos clicáveis por lugar (a tabela do plano)
@@ -91,6 +96,16 @@ const OBJS31: Partial<Record<IKind27, ObjDef31[]>> = {
   instruments: [
     O('guitars', 'wall', l('Parede de instrumentos', 'Instrument wall'), l('Comprar para você, para a empresa ou de presente.', 'Buy for yourself, the company or as a gift.'), 'go:shop'),
     O('counter', 'counter', l('Balcão', 'Counter'), l('A loja nova: estoque do mês.', 'The new shop: this month\'s stock.'), 'go:shop'),
+  ],
+  // r31 (LOTE): casa de quem mora na cidade (ações que já existem: conhecer, radar, negociar; nada secreto por abrir)
+  home: [
+    O('couch', 'sit', l('Sala de estar', 'Living room'), l('Sentar e se apresentar (conhecer).', 'Sit down and introduce yourself (meet).'), 'do:visit'),
+    O('guitar', 'song', l('Violão no canto', 'Guitar in the corner'), l('Ouvir o que anda compondo: pôr no radar.', 'Hear what they are writing: put them on the radar.'), 'do:scout'),
+    O('piano', 'song', l('Piano', 'Piano'), l('Ouvir o que anda compondo: pôr no radar.', 'Hear what they are writing: put them on the radar.'), 'do:scout'),
+    O('desk', 'deal', l('Escritório da casa', 'Home office'), l('Negociar em particular.', 'Negotiate in private.'), 'info:home'),
+    O('listen', 'deal', l('Toca-discos', 'Record player'), l('Quem mora aqui e negociar em particular.', 'Who lives here and negotiate in private.'), 'info:home'),
+    O('tables', 'deal', l('Mesa da família', 'Family table'), l('A família Fossati: almoço, conversa e favores.', 'The Fossati family: lunch, a chat and favours.'), 'info:home'),
+    O('window', 'who', l('Quem mora aqui', 'Who lives here'), l('Morador, porte da casa e desde quando.', 'Resident, size of the home and since when.'), 'info:home'),
   ],
   // submundo
   facade: [
@@ -173,8 +188,8 @@ function vband(t: PropT27 | null, G: ReturnType<typeof geom27>): [number, number
 export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const W = INSIDE_W31;
   const you = youIn31(s, x.name);
-  const people = [...(you.who ? [you.who] : []), ...x.people.filter((p) => !p.away)];
-  const room = dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v));
+  const people = [...(you.who ? [you.who] : []), ...x.people.filter((p) => !p.away), ...vitPeople31(s, x).filter((v) => !x.people.some((p) => (p.pid && p.pid === v.pid) || (p.key && p.key === v.key)))];
+  const room = dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v ?? (x.k === 'home' ? `${x.place?.lot31?.tier ?? 1}:${x.place?.lot31?.who === 'fam' ? 'fam' : x.place?.lot31?.who?.startsWith('l:') ? 'ceo' : 'artist'}` : undefined)));
   const G = geom27(W);
   const acts = actsOfPlace(s, x);
   const trail = trail31(s, x.k);
@@ -182,7 +197,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const lockOf = (id: string): L | undefined => acts.find((a) => a.id === id)?.dis;
   // objetos
   const seen = new Set<string>();
-  for (const o of OBJS31[x.k] ?? []) {
+  for (const o of x.vit ? [] : OBJS31[x.k] ?? []) { // r31 (VIT): na feira só valem as bancas do mês
     if (seen.has(o.id)) continue;
     const pr = o.prop ? room.props.find((p) => p.t === o.prop) : undefined;
     if (o.prop && !pr) continue;
@@ -196,7 +211,9 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     spots.push({ id: o.id, x: px, y: py, w: pw, h: ph, label: o.label, tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: o.tip, w: lk }) : o.tip, go: { panel: go }, badge, quiet: false });
   }
   // r31 (ART2): objetos novos ligados às mecânicas (jukebox, parada, telefone, vitrine, carro na porta…)
-  spots.push(...artSpots31(s, x, room, W));
+  if (!x.vit) spots.push(...artSpots31(s, x, room, W));
+  // r31 (VIT): a prateleira do mês (itens sorteados na virada) e a porta da feira
+  spots.push(...vitSpots31(s, x, W));
   // gestão do lugar quando é seu
   if (x.own) spots.push({ id: 'mgmt', x: G.X(0.42), y: G.y0 + 2, w: G.Wd(0.16), h: 12, label: l('Gestão', 'Management'), tip: l('Equipe, caixa do lugar e programação.', 'Staff, the place\'s cash and programming.'), go: { panel: 'go:own' } });
   // pessoas (o mesmo cálculo da pintura)
@@ -206,13 +223,13 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     const role = p.away ? fmtL(l('{r} (fora: {w})', '{r} (away: {w})'), { r: p.role, w: p.away }) : p.role;
     const short = /^[a-zà-ú]/.test(p.name) ? p.role : l(p.name.split(' ')[0], p.name.split(' ')[0]); // "a cúpula de…" vira o papel
     spots.push({ id: p.you ? 'you' : `who:${i}`, x: fx - 7, y: fyy - 31, w: 14, h: 32, label: p.you ? l('Você', 'You') : short,
-      tip: p.you ? you.where : fmtL(l('{n} — {r}', '{n} — {r}'), { n: p.name, r: role }), go: p.you ? { panel: 'you' } : { panel: `who:${i}` },
+      tip: p.you ? you.where : fmtL(l('{n} — {r}', '{n} — {r}'), { n: p.name, r: role }), go: p.you ? { panel: 'you' } : p.vit ? { panel: `vit:${p.vit}` } : { panel: `who:${i}` },
       quick: p.actId ? { kind: 'act', id: p.actId } : undefined, quiet: true,
-      badge: p.bico ? { text: l('bico', 'day job'), level: 'info', sym: '♪' } : p.cell ? { text: l('preso', 'jailed'), level: 'info', sym: '⛓' } : undefined });
+      badge: p.vit ? { text: l('no mês', 'this month'), level: 'info', sym: '✦' } : p.bico ? { text: l('bico', 'day job'), level: 'info', sym: '♪' } : p.cell ? { text: l('preso', 'jailed'), level: 'info', sym: '⛓' } : undefined });
   });
   const city = cityById[x.city]?.name;
   return {
-    id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W, H: G.H, room, people, spots, you, trail, acts, art: artItems31(s, x),
+    id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W, H: G.H, room, people, spots, you, trail, acts, art: artItems31(s, x), vit: vitPx31(s, x),
     note: you.here ? undefined : fmtL(l('{w} — você olha de longe; as ações seguem valendo.', '{w} — you look from afar; actions still work.'), { w: you.where }),
     ...(city ? {} : {}),
   };
