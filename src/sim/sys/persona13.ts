@@ -167,7 +167,7 @@ export function per13(s: GameState, key: string): P13 | null {
 }
 const staffSig = (s: GameState, key: string): string => {
   if (key === 'player' || s.persons[key.slice(2)]?.isPlayer) return Object.values(ownerOf(s).attrs).join(',') + persona(s).traits.join(',');
-  if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return (p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : '') + (p ? LOOKH31.sig?.(s, p) ?? '' : ''); }
+  if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return (p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : '') + (p ? LOOKH31.sig?.(s, p) ?? '' : '') + (p ? `|${Object.values(p.skills).join(',')}` : ''); } // UNI-4: habilidades na chave (treino muda a ficha dentro do ano; sem isso o jogo carregado divergia)
   if (key.startsWith('e:')) return s.config.realNames ? 'R' : 'F';
   if (!key.startsWith('s:')) return '';
   const st = s.player.staff.find((x) => x.id === key.slice(2));
@@ -414,7 +414,7 @@ export function imageWeight(y: number): { w: number; era: L } {
 /** Barreiras e trunfos de um ato num país (padrão: a cidade do ato). m = multiplicador do alcance. */
 const BCACHES = new WeakMap<GameState, Map<string, Barrier13[]>>();
 export function barriers13(s: GameState, a: Act, cityId?: string): Barrier13[] {
-  const ck = `${s.config.seed}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}|${LOOKH31.sig ? a.members.map((id) => { const p = s.persons[id]; return p ? LOOKH31.sig!(s, p) : ''; }).join(',') : ''}`;
+  const ck = `${s.config.seed}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}|${LOOKH31.sig ? a.members.map((id) => { const p = s.persons[id]; return p ? LOOKH31.sig!(s, p) : ''; }).join(',') : ''}|${LOOKH31.weight?.(s, a).k ?? 1}|${a.members.map((id) => per13(s, `p:${id}`)?.attrs.img ?? '').join(',')}`; // UNI-4: peso do visual (muda com o público) e a imagem das fichas — sem eles o cache ficava velho dentro do ano e o jogo carregado divergia
   let BCACHE = BCACHES.get(s);
   if (!BCACHE) BCACHES.set(s, (BCACHE = new Map()));
   const hit = BCACHE.get(ck);

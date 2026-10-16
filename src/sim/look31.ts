@@ -313,7 +313,11 @@ LOOKH31.imgDelta = (s, p) => (lookOn31(s) ? imgDelta31(s, p) : 0);
 LOOKH31.sig = (s, p) => {
   if (!lookOn31(s)) return '';
   const r = rec31(s, p.id);
-  return `${r?.v ?? 0}.${r?.st !== undefined ? mAbs(s) : ''}.${Math.floor(p.stress / 10)}${Math.floor(p.fatigue / 10)}${p.health}.${pressure31(s)}`;
+  // UNI-4: estresse/cansaço exatos acima do limiar e marcas ativas — com a chave por dezena a ficha em cache ficava velha
+  // dentro do ano e o jogo carregado de um save (cache vazio) divergia do original
+  const hs = `${Math.max(0, p.stress - 60)}|${Math.max(0, p.fatigue - 70)}`;
+  const mk = (r?.mk ?? []).filter((m) => m[1] >= s.week).length;
+  return `${r?.v ?? 0}.${r?.st !== undefined ? mAbs(s) : ''}.${hs}${p.health}.${mk}.${pressure31(s)}`;
 };
 LOOKH31.weight = (s, a) => {
   if (!lookOn31(s)) return { k: 1 };

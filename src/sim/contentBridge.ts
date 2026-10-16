@@ -36,7 +36,8 @@ export function applyContent(): void {
     const sig = SIG[p.signature] ?? 'organic';
     return { id: p.id, name: p.name, signature: sig, from: p.start, to: p.end, families: p.families.length ? p.families : SIGNATURES[sig].families, skill: p.skill, fee: Math.max(80, Math.round(p.fee / 10)), ego: p.ego };
   });
-  if (mapped.length) PRODUCERS.splice(0, PRODUCERS.length, ...mapped);
+  // UNI-4: mantém os produtores reais/gerados ('rp_…') já registrados — a troca não pode depender da ordem de carga dos módulos
+  if (mapped.length) PRODUCERS.splice(0, PRODUCERS.length, ...mapped, ...PRODUCERS.filter((p) => p.id.startsWith('rp_')));
 
   const geo: GeoEvent[] = GEOPOLITICS.map((g) => ({
     id: g.id, name: g.name, from: g.from, to: g.to, markets: g.markets, demand: g.effects.demandMult,
