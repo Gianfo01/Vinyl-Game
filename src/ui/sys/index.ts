@@ -192,6 +192,7 @@ import './money19';
 import './regions19';
 import './history19'; // r19 T8: Mundo › Marcos da história + bloco do Cockpit
 import './fossati31'; // R31 onda 3 (Z): Mundo › Família Fossati (homenagem)
+import './extras31'; // R31 onda 4 (N): Mundo › Extras (praça Fossati, Arara, filme, ficção, cultura pop)
 // Rodada 19 (onda 3, T6): Mercado — certificados por país, pesquisa de mercado, cenas, plataformas/360 e fusões.
 import './market19a';
 // Rodada 19 (onda 3, T9): Imprensa e fanzines (zines19) e Fraudes e sósias (fakes19).

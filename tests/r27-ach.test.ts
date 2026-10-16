@@ -48,23 +48,23 @@ const secret = ACHIEVEMENTS.filter((a) => a.hidden);
 const plain = ACHIEVEMENTS.filter((a) => !a.hidden);
 
 describe('r27 conquistas escondidas', () => {
-  it('bloqueadas não aparecem no modelo de tela (só contagem); secretas só no total', () => {
+  it('R31 (N): bloqueadas comuns aparecem com nome e como ganhar; secretas bloqueadas só como "???"', () => {
     const got = plain[0];
     const v = achView27({ [got.id]: { gy: 1971 } });
     expect(v.items.map((x) => x.id)).toEqual([got.id]);
     expect(v.got).toBe(1);
     expect(v.total).toBe(ACHIEVEMENTS.length);
     expect(v.secretLeft).toBe(secret.length);
+    const lockedIds = v.cats.flatMap((c) => c.lockedItems.map((x) => x.id));
+    expect(lockedIds.length).toBe(plain.length - 1);
     const dump = JSON.stringify(v);
-    for (const a of ACHIEVEMENTS) {
-      if (a.id === got.id) continue;
+    for (const a of secret) {
       expect(dump).not.toContain(`"${a.id}"`);
-      expect(dump).not.toContain(a.name.pt);
       expect(dump).not.toContain(a.desc.pt);
     }
-    // por categoria: só bloqueadas comuns; as secretas não entram
-    const lockedPerCat = v.cats.reduce((n, c) => n + c.locked, 0);
-    expect(lockedPerCat).toBe(plain.length - 1);
+    // por categoria: bloqueadas comuns + secretas contadas à parte
+    expect(v.cats.reduce((n, c) => n + c.locked, 0)).toBe(plain.length - 1);
+    expect(v.cats.reduce((n, c) => n + c.secretLocked, 0)).toBe(secret.length);
     expect(secret.length).toBeGreaterThan(0);
   });
 

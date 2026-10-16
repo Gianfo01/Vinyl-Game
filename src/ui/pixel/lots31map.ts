@@ -61,7 +61,7 @@ export function cityLots31(s: GameState, txt: { sale: string; own: string } = { 
     if (sl) { cells.push({ lot, fn: sl.own ? 'own' : 'sale', name: nm }); continue; }
     if (fest.has(lot)) { cells.push({ lot, fn: 'business', name: cx.festName ? l(cx.festName, cx.festName) : nm }); continue; } // festival do mês
     const p = byLot.get(lot);
-    if (p) { cells.push({ lot, fn: p.k === 'home' ? 'home' : bad.has(lot) ? 'none' : 'business', k: p.k, name: p.name, who: p.lot31?.who }); continue; }
+    if (p) { cells.push({ lot, fn: p.k === 'home' || p.fam31 ? 'home' : bad.has(lot) ? 'none' : 'business', k: p.k, name: p.name, who: p.lot31?.who ?? (p.fam31 ? 'fam' : undefined) }); continue; }
     cells.push({ lot, fn: 'none', name: nm }); // lote fora das listas (não deveria acontecer)
   }
   for (const p of cx.places) cells.push({ lot: -1, id: p.id, fn: 'business', k: p.k, name: p.name }); // lugares reais (terreno reservado)

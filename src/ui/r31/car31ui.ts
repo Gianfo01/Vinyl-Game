@@ -29,6 +29,7 @@ import { lockBtn31 } from './lock31';
 import { goDest31 } from './quick31';
 import { registerQuick31 } from './quick31core';
 import { RUN31, SIG31, type Btn31, type Career31, type Row31 } from './salas31model';
+import { sceneHook31 } from './scene31reg'; // R31 onda 4 (W): mecânicas em cena, lote 2
 
 export const CAR_AREA31 = 'car31';
 type Tab = 'media' | 'plat' | 'stage' | 'mgr' | 'crit' | 'prog';
@@ -92,7 +93,8 @@ function mediaView(s: GameState): HTMLElement {
         return h('div', { class: 'row wrap' }, r ? relRow(s, r) : null, ' ', h('b', null, $(o.amt)), ' ',
           h('small', { class: 'muted' }, t(fmtL(l('risco legal aqui e agora: {r}', 'legal risk here and now: {r}'), { r: lawRisk31(countryOf(s, v.city), s.year) >= 0.7 ? l('alto', 'high') : lawRisk31(countryOf(s, v.city), s.year) >= 0.4 ? l('médio', 'medium') : l('baixo', 'low') }))),
           h('button', { type: 'button', class: 'btn small', onclick: () => say(answerJaba31(s, v.id, o.id, true), l('Aceito. Melhor ninguém descobrir.', 'Accepted. Better nobody finds out.')) }, t(l('Aceitar', 'Accept'))),
-          h('button', { type: 'button', class: 'btn small ghost', onclick: () => say(answerJaba31(s, v.id, o.id, false), l('Recusado.', 'Refused.')) }, t(l('Recusar', 'Refuse'))));
+          h('button', { type: 'button', class: 'btn small ghost', onclick: () => say(answerJaba31(s, v.id, o.id, false), l('Recusado.', 'Refused.')) }, t(l('Recusar', 'Refuse'))),
+          h('button', { type: 'button', class: 'btn small ghost', 'data-w31': 'jabain', onclick: () => sceneHook31.open?.('jabain', `${v.id}|${o.id}`, 'scene') }, '🎬 ', t(l('Receber o divulgador', 'Receive the plugger'))));
       })) : null,
       h('details', null, h('summary', null, t(l('Faixas para a grade (melhor encaixe primeiro)', 'Tracks for the grid (best fit first)'))),
         h('table', { class: 'tbl compact' }, h('tbody', null, ...cands31(s, v, 24).map((r) => {

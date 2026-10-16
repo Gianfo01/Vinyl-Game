@@ -30,7 +30,7 @@ import { LAND18, LOTS18, buildings18, campus18, homeLot18, layout18, lotsOpen18 
 import { famCity31, famNow31 } from './fossati31';
 import { meetHere31, scoutHere31 } from './gente31';
 import { hoodStats19, nb19 } from './hood19';
-import { LOTS27, PLACE_X27, type PAct27, type Person27, type Place27 } from './place27';
+import { FAMHOME27, LOTS27, PLACE_X27, type PAct27, type Person27, type Place27 } from './place27';
 import { where31 } from './where31';
 import { met31, meNode31, node31 } from '../social31';
 
@@ -97,7 +97,8 @@ const actLives = (s: GameState, a: Act, city: string): boolean => a.city === cit
 /** Quem pode morar na cidade agora, em ordem (família, CEOs, artistas por fama). */
 export function residents31(s: GameState, city = s.config.homeCity): Res31[] {
   const out: Res31[] = [];
-  if (city === famCity31()) out.push({ who: 'fam', name: 'Fossati', tier: 1, kind: 'fam', score: 1e6 });
+  // a família Fossati: quando a frente FOS põe a Casa Fossati no mapa (FAMHOME27), a casa é dela — não entra na fila
+  if (city === famCity31(s) && !FAMHOME27.fn) out.push({ who: 'fam', name: 'Fossati', tier: 1, kind: 'fam', score: 1e6 });
   for (const lb of Object.values(s.labels ?? {})) {
     if (!lb || lb.id === 'player' || lb.city !== city || lb.active === false || lb.closedYear || (lb.founded ?? 0) > s.year || !lb.leaderId) continue;
     const n = lb.roster?.length ?? 0;
@@ -130,7 +131,7 @@ export function resInfo31(s: GameState, who: string): Res31 | null {
 
 /** Por que o morador deixou a casa (null = continua). */
 function leaveWhy(s: GameState, who: string, city: string): L | null {
-  if (who === 'fam') return city === famCity31() ? null : l('a família mora em outra cidade', 'the family lives in another city');
+  if (who === 'fam') return city === famCity31(s) ? null : l('a família mora em outra cidade', 'the family lives in another city');
   if (who.startsWith('l:')) {
     const lb = Object.values(s.labels ?? {}).find((x) => x && x.leaderId === who.slice(2));
     if (!lb || lb.active === false || lb.closedYear) return l('a gravadora fechou', 'the label closed');
@@ -238,7 +239,7 @@ LAND18.mult = ownLotBuildMult31;
  *  frente H, loja da época) ou tem dono real próprio. Prédio de apartamentos genérico não é negócio; a mesma equipe
  *  repetida em outro prédio (a cidade comum repete escritórios e hotéis) também não. */
 export function functional31(s: GameState, p: Place27): boolean {
-  if (p.lot31 || p.lot < 0) return true;
+  if (p.lot31 || p.fam31 || p.lot < 0) return true; // casa nossa, Casa Fossati (frente FOS), lugar real (frente H)
   if (p.src === 'nb' || p.venue || p.outlet || p.org || p.k === 'police' || p.k === 'market' || p.k === 'label') return true;
   if (eraBiz31(s, p)) return true;
   if (p.k === 'apartments') return false;

@@ -18,6 +18,8 @@ import { $, N, actLink, monthName, pill, releaseLink, rerender, section } from '
 import { h, select } from '../../dom';
 import { ic, meter, tabs } from '../../vis';
 import { act, btn, note, pct } from './util';
+import { sceneHook31 } from '../../r31/scene31reg'; // R31 onda 4 (W): mecânicas em cena, lote 2
+import { sceneTargets31 } from '../../r31/scene31core';
 
 // ======================================================================= jabá e rádio
 
@@ -38,6 +40,7 @@ export function radioTab(s: GameState): HTMLElement {
       !radio ? note(l('Ainda não há rádio comercial.', 'No commercial radio yet.')) : h('div', { class: 'row' },
         btn(`${t(curator ? l('Apresentar repertório aos curadores', 'Pitch curators') : l('Visitar rádios (legítimo)', 'Visit stations (legit)'))} · ${$(money(s, 500))}`, () => act(() => pitchLegit(s)), { disabled: p.pitchWeek === s.week }),
         PAYOLA_TIERS.map((tier, i) => btn(`${t(tier.name)} · ${$(payolaCost(s, i))}`, () => act(() => payDJs(s, i), l('Pagamento feito. As rádios vão tocar…', 'Payment made. The stations will play…')), { cls: i === 2 ? 'primary' : '', disabled: p.lastWeek === s.week, title: t(fmtL(l('Empurrão +{a}%, risco +{b}', 'Push +{a}%, risk +{b}'), { a: Math.round(tier.level * 100), b: Math.round(tier.heat * info.heat) })) }))),
+      radio ? h('div', { class: 'row' }, h('button', { class: 'btn small ghost', 'data-w31': 'jaba', onclick: () => { const id = sceneTargets31(s, 'jaba')[0]?.id; if (id) sceneHook31.open?.('jaba', id, 'scene'); } }, '🎬 ', t(l('Ir à rádio (ver o rosto do diretor)', 'Go to the station (see the director\'s face)')))) : null,
       h('div', { class: 'row small muted' }, `${t(l('Gasto total', 'Total spent'))}: ${$(p.spent)}`, ' · ', `${t(l('Investigações', 'Investigations'))}: ${p.caught}`),
     ),
   );

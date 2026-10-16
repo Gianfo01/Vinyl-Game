@@ -72,6 +72,8 @@ const SETUP: Record<string, (s: GameState) => Show27 | void> = {
   tropicalia_exile: (s) => { when(s, 1970); const a = act(s, { genre: 'tropicalia', city: 'london' }); soc18(s).exile[a.id] = { from: 'salvador', to: 'london', since: 1969, reg: 'br' }; },
   sai_do_chao: (s) => { when(s, 1995); return show(act(s, { genre: 'axe', city: 'salvador' }), { cityId: 'salvador', sold: 5000, capacity: 5000 }); },
   edison_lamb: (s) => { s.config.startYear = 1889; when(s, 1889); },
+  edison_tone31: (s) => { when(s, 1920); return show(act(s, { genre: 'nola_jazz', city: 'new_orleans' })); }, // R31 (N): Tone Test 1915–25
+  edison_cyl31: (s) => { when(s, 1925); }, // R31 (N): o último freguês dos cilindros (antes de 1931)
   caruso_hotel: (s) => { when(s, 1903); act(s, { genre: 'opera', city: 'milan', members: 1 }); },
   bristol_1927: (s) => { when(s, 1927); act(s, { genre: 'country', city: 'nashville' }); },
   crossroads: (s) => { when(s, 1936); const a = act(s, { genre: 'delta_blues', city: 'memphis', members: 1 }); s.persons[a.members[0]].role = 'guitar'; },

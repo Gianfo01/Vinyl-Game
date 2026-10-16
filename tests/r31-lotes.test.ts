@@ -44,16 +44,19 @@ describe('r31 LOTE: varredura — prédios do mapa com função, por cidade e é
 
   it('casas de quem mora na cidade aparecem no mapa (família Fossati em São Paulo; CEO ou artista com porte)', () => {
     const s = game('lote-homes', 2036, 'sao_paulo');
-    const homes = cityLots31(s).places.filter((p) => p.k === 'home');
+    const c = cityLots31(s);
+    const homes = c.places.filter((p) => p.k === 'home');
     expect(homes.length).toBeGreaterThan(0);
-    expect(homes.some((p) => p.lot31?.who === 'fam')).toBe(true);
+    // a Casa Fossati: da frente FOS quando ela existe (fam31), senão uma das casas do registro
+    expect(c.places.some((p) => p.fam31 || p.lot31?.who === 'fam')).toBe(true);
+    expect(c.places.filter((p) => p.fam31 || p.lot31?.who === 'fam').length).toBe(1);
+    expect(c.cells.some((x) => x.who === 'fam' && x.fn === 'home')).toBe(true);
     for (const p of homes) {
       expect([0, 1, 2]).toContain(p.lot31?.tier);
       expect(p.people.length).toBeGreaterThan(0);
       expect(JSON.stringify(p.name)).not.toMatch(/undefined|NaN|p:|l:/);
     }
     const r = residents31(s);
-    expect(r[0].who).toBe('fam');
     expect(r.some((x) => x.kind === 'artist')).toBe(true);
   }, 60000);
 });

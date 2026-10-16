@@ -13,6 +13,7 @@ import { modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { ic } from '../vis';
 import { drawScene27, kindColor27, paintTable27, type Who27 } from './scene27';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const sign = (n: number) => `${n > 0 ? '+' : ''}${n}`;
 
@@ -53,7 +54,7 @@ export function openCompose27(s: GameState, actId: string, onEnd?: (played: bool
   let err: L | null = null;
   const root = h('div', { class: 'a27 a27-compose' });
   const put = (...xs: (Node | null)[]) => root.replaceChildren(...xs.filter((x): x is Node => !!x));
-  const close = modal(t(l('Sessão de composição', 'Writing session')) + ` — ${a.name}`, root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); onEnd?.(!!result); if (result) rerender(); } });
+  const close = modal(t(l('Sessão de composição', 'Writing session')) + ` — ${a.name}`, withCast31(s, c.writers.map((w) => w.id), root, () => close()), { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); onEnd?.(!!result); if (result) rerender(); } });
 
   const scene = (): HTMLElement => {
     const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Mesa de composição', 'Writing table')) }) as HTMLCanvasElement;

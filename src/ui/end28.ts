@@ -6,6 +6,7 @@
 //    (substitui a cena 'run17Result'), oferece "Continuar em sandbox" e também abre pela tela de fim.
 // Modelo puro em src/sim/sys/end28.ts.
 
+import { creditsBody31 } from './r31/credits31'; // R31 (N)
 import { l, type L } from '../data/world';
 import { t } from '../i18n/strings';
 import { queueCutscene } from '../sim/ext4';
@@ -118,7 +119,8 @@ function storyView(st: Story28, s: GameState): HTMLElement {
       : h('p', { class: 'small muted' }, T(l('Nenhuma decisão ecoou ainda.', 'No decision has echoed yet.'))),
     h('h4', null, T(l('Capítulos', 'Chapters'))),
     h('div', { class: 'ch28-list' }, ...st.chapters.map(chapterView)),
-    runDone17(s) ? runCard17body(s) : null);
+    runDone17(s) ? runCard17body(s) : null,
+    h('h4', null, T(l('Créditos', 'Credits'))), creditsBody31()); // R31 (N): créditos com a dedicatória
 }
 
 export function openStory28(s: GameState): void {
