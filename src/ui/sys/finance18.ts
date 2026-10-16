@@ -1,5 +1,6 @@
 // Rodada 18 (econ18): DRE e fluxo de caixa por mês/ano, contas a receber/pagar na linha do tempo, câmbio por
 // exposição, renda perdida com vendas de catálogo e resultado das turnês. Lucro ≠ caixa, e a tela mostra por quê.
+import { tourList } from '../../sim/tours';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { arTotal18, apTotal18, fin18, netProfit18, opProfit18, sumP18 } from '../../sim/ledger18';
@@ -117,7 +118,7 @@ function lost(s: GameState): HTMLElement | null {
 }
 
 function tours(s: GameState): HTMLElement | null {
-  const done = s.tours.filter((x) => x.status === 'done' && s.acts[x.actId]?.owner === 'player').slice(-6).reverse();
+  const done = tourList(s).filter((x) => x.status === 'done' && s.acts[x.actId]?.owner === 'player').slice(-6).reverse();
   if (!done.length) return null;
   return section(t(l('Turnês: casa cheia não é lucro', 'Tours: a full house is not profit')),
     h('table', { class: 'tbl compact' },

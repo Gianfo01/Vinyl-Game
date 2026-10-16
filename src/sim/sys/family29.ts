@@ -22,6 +22,7 @@
 //    casamentos e filhos simulados valem como história alternativa (marcados "simulado") — nunca contra o documentado.
 // Aleatoriedade própria (Rng.fromSeed com chaves `fam29|…`): não mexe no fluxo compartilhado.
 
+import { tourList } from '../tours';
 import { Rng, clamp, hashString } from '../../core/rng';
 import { KIN15 } from '../../data/kin15';
 import { KIN25 } from '../../data/kin25';
@@ -362,7 +363,7 @@ function lifeOf(s: GameState, r: Rng, p: Person, a: Act, pool: { pid: string; a:
   const q = F[1] ? s.persons[F[1]] : undefined;
   if (F[1] && (!q || !q.alive)) { F[3] = 3; return; } // par morreu (luto vem do kin15) ou sumiu
   // separação (vício, estresse, estrada; casal célebre sob holofote)
-  const away = s.tours.some((t) => t.actId === a.id && t.status === 'running') ? 0.002 : 0;
+  const away = tourList(s).some((t) => t.actId === a.id && t.status === 'running') ? 0.002 : 0;
   const sep = 0.0035 + (p.health === 'addiction' ? 0.008 : 0) + (p.stress > 70 ? 0.004 : 0) + away + (q ? 0.0015 : 0);
   if (r.chance(acc(sep, k))) { separate(s, r, p, a, F, q); return; }
   if (stt === 1) {

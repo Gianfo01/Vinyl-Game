@@ -9,6 +9,7 @@
 //   gasto, reserva mínima, objetivo por artista, descanso obrigatório).
 // Sorte: Rng.fromSeed(semente|board27v1|mês|quem) — nunca s.rng.
 
+import { tourList } from '../tours';
 import { Rng, clamp, hashString } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerSimHook } from '../ext4';
@@ -107,7 +108,7 @@ export function agenda27(s: GameState, mk = monthKey27(s)): Prop27[] {
 }
 function actFor(s: GameState, k: PropKind27, acts: Act[], r: Rng): Act | undefined {
   if (k === 'rest') return acts.map((a) => ({ a, v: tired18(s, a).v })).filter((x) => x.v >= 45).sort((a, b) => b.v - a.v)[0]?.a;
-  if (k === 'tour') return acts.filter((a) => !s.tours.some((t) => t.actId === a.id && (t.status === 'planned' || t.status === 'running'))).sort((a, b) => b.fame - a.fame)[0];
+  if (k === 'tour') return acts.filter((a) => !tourList(s).some((t) => t.actId === a.id && (t.status === 'planned' || t.status === 'running'))).sort((a, b) => b.fame - a.fame)[0];
   return acts[Math.floor(r.next() * acts.length)];
 }
 

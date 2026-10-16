@@ -4,6 +4,7 @@
 // formar ou entrar numa banda, festas da indústria, hobbies, terapia, filantropia e memórias.
 // Dinheiro pessoal = patrimônio do dono (separado do caixa da empresa).
 
+import { secKnown, secretsOf } from './people/secrets';
 import { clamp, type Rng } from '../../core/rng';
 import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: aparência nos encontros
 import { exitMember20 } from '../members20';
@@ -806,7 +807,7 @@ export function writeMemoir(s: GameState, r: Rng): L | null {
   const gain = money(s, 15000 + L0.fame * 1200 + s.player.stats.signed * 500);
   purse(s, gain, 'income', 'memoir');
   L0.fame = clamp(L0.fame + 5, 0, 100);
-  if (P(s).secrets.some((x) => x.owner === 'owner' && !x.known) && r.chance(0.3)) {
+  if (secretsOf(s, 'owner').some((x) => !secKnown(s, x)) && r.chance(0.3)) {
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100);
     logLife(s, l('O livro vendeu bem, mas um capítulo reabriu feridas antigas na imprensa.', 'The book sold well, but one chapter reopened old wounds in the press.'), 'bad', true);
   } else logLife(s, fmtL(l('Memórias publicadas: "{t}". Best-seller!', 'Memoir published: "{t}". Best-seller!'), { t: `${s.config.companyName}: ${l('uma vida em discos', 'a life in records').pt}` }), 'good', true);

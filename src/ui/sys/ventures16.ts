@@ -2,6 +2,7 @@
 // Veículos de mídia e Plataforma. "Empreendimentos" vira só a carteira: todos os negócios, números do mês,
 // melhor/pior e fundar um novo (que leva à página do tipo). Rótulo no menu = título da página = migalha.
 
+import { ownFests } from '../../sim/sys/feststore';
 import { ERA19, fmtL19 } from '../../sim/era19';
 import { FESTIVALS } from '../../data/catalog';
 import { l, type L } from '../../data/world';
@@ -23,7 +24,6 @@ import { foundForm, kindTab, ventureHead } from './ventures9';
 import { PAGE16 } from '../pages16';
 import { npcMonth19, rivalFest19 } from '../../sim/ctx19';
 import { f12 } from '../../sim/sys/fest12';
-import { liveOf } from '../../sim/sys/live/state';
 
 export const FEST_FROM = Math.min(1950, ...FESTIVALS.map((f) => f.start));
 
@@ -73,7 +73,7 @@ function kindPage(s: GameState, kind: VKind, intro: L): HTMLElement {
 function rivalsTab(s: GameState): HTMLElement {
   const npc = ventures(s).npc.filter((n) => n.kind === 'festival').sort((a, b) => b.rep - a.rep);
   // r19: o peso de cada rival é contextual (rivalFest19): distância, sobreposição de mês, gênero/identidade e porte
-  const mine = [...liveOf(s).fests.map((f) => ({ name: f.name, city: f.cityId, month: f.month, fam: f12(s, f).fam, ident: f12(s, f).ident, rep: f.rep })),
+  const mine = [...ownFests(s).map((f) => ({ name: f.name, city: f.cityId, month: f.month, fam: f12(s, f).fam, ident: f12(s, f).ident, rep: f.rep })),
     ...ventures(s).list.filter((v) => v.kind === 'festival' && !v.fx).map((v) => ({ name: v.name, city: v.city, month: v.month ?? 6, fam: null, ident: undefined, rep: v.rep }))];
   const hitOf = (n: (typeof npc)[number]) => mine.map((m) => ({ m, loss: 1 - rivalFest19(s, [n], m).v })).filter((x) => x.loss > 0.004).sort((a, b) => b.loss - a.loss)[0];
   return h('div', null,

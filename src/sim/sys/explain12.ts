@@ -6,6 +6,7 @@
 // Variação controlada: humor mensal do artista (offers12), "buzz" mensal por cidade/gênero na procura por
 // shows e humor na renovação — tudo por hash (sem consumir o Rng do jogo, determinístico por semente).
 
+import { editions8 } from './feststore';
 import { clamp } from '../../core/rng';
 import { toReal } from '../../core/money';
 import { FESTIVALS } from '../../data/catalog';
@@ -13,7 +14,7 @@ import { cityById, l, type L } from '../../data/world';
 import { evaluateOffer, expectedAdvance, registerContractHook, renewContract, renewHooks29 } from '../contracts';
 import { registerMod, registerSimHook } from '../ext4';
 import { renewalAdj } from '../rights';
-import { cityDemand, type TourEstimate, type TourPlan } from '../tours';
+import { cityDemand, type TourEstimate, type TourPlan, tourList } from '../tours';
 import type { Act, GameState, Offer } from '../types';
 import { fmtL, notify, playerActs, staffCount, staffSkill } from '../util';
 import { festCapacity, festFee, festTierFor, editionOf, pitchOdds8, TIER_NAME, type FestTier } from './fests8';
@@ -238,7 +239,7 @@ function debriefOffers(s: GameState): void {
 
 function debriefTours(s: GameState): void {
   const st = ex12(s);
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     const act = s.acts[t.actId];
     if (!act || (act.owner !== 'player' && !act.playerBand)) continue;
     if (t.status === 'planned' && !st.tourSnap[t.id]) {
@@ -279,9 +280,9 @@ function debriefTours(s: GameState): void {
 
 function debriefFests(s: GameState): void {
   const st = ex12(s);
-  const fs = (s as unknown as { x4: Record<string, unknown> }).x4?.fest8 as { editions?: { fi: number; year: number; month: number; lineup: { actId: string; tier: FestTier; fee: number }[]; done: boolean; crowd?: number }[] } | undefined;
+  const eds = editions8(s); // UNI-4: edições do mundo no registro único de festivais
   const mine = new Set(playerActs(s));
-  for (const ed of fs?.editions ?? []) {
+  for (const ed of eds) {
     const f = FESTIVALS[ed.fi];
     if (!f) continue;
     for (const slot of ed.lineup) {

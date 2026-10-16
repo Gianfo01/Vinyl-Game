@@ -2,6 +2,7 @@
 // festivais com line-up e negociação, premiações com indicados e campanha, críticos regionais e peso
 // mundial dos países.
 
+import { editions8, pastOf8 } from '../src/sim/sys/feststore';
 import { describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
@@ -89,13 +90,13 @@ describe('festivais', () => {
   it('line-up do ano, negociação na hora, convite aceito e cachê na data', () => {
     const s = mk('r8-fest', { startYear: 1975, scenario: 'established', realNames: true, mode: 'historic' });
     const st = fest8(s);
-    expect(st.editions.length).toBeGreaterThan(5);
-    const big = st.editions.find((e) => e.lineup.length >= 5)!;
+    expect(editions8(s).length).toBeGreaterThan(5); // UNI-4: edições no registro único de festivais
+    const big = editions8(s).find((e) => e.lineup.length >= 5)!;
     expect(big.lineup.some((x) => x.tier === 'headline')).toBe(true);
     // nosso artista mais famoso, num festival que combina e ainda vai acontecer
     const act = playerActs(s).map((id) => s.acts[id]).sort((a, b) => b.fame - a.fame)[0];
     act.fame = 60;
-    const target = st.editions.find((e) => !e.done && e.month > s.month + 1 && festTierFor(s, FESTIVALS[e.fi], e.fi, act));
+    const target = editions8(s).find((e) => !e.done && e.month > s.month + 1 && festTierFor(s, FESTIVALS[e.fi], e.fi, act));
     if (target) {
       const f = FESTIVALS[target.fi];
       const tier = festTierFor(s, f, target.fi, act)!;
@@ -109,7 +110,7 @@ describe('festivais', () => {
       const fest0 = s.player.stats.festivals;
       for (let i = 0; i < 12 && !editionOf(s, target.fi)?.done; i++) advanceMonth(s);
       if (editionOf(s, target.fi)?.lineup.some((x) => playerActs(s).includes(x.actId))) expect(s.player.stats.festivals).toBeGreaterThan(fest0);
-      expect(st.past[target.fi]?.length ?? 0).toBeGreaterThan(0);
+      expect(pastOf8(s, target.fi).length).toBeGreaterThan(0);
     }
     invariant(s);
   });

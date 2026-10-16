@@ -5,6 +5,9 @@
 // arranjo, conflitos artista x selo x prazo, take imperfeito, cachê x pontos, créditos que atraem
 // trabalho e assinatura que envelhece se não for reinventada.
 
+import { familyOf, type FamilyId } from '../../data/world';
+import { uni4On } from '../r31/uni4';
+import { trends17 } from './trends17';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -207,7 +210,24 @@ registerMod('songQ', 'studio12:eng', (s, value, ctx) => {
 
 // ---------------------------------------------------------------- produtor
 
-export const hotStyle = (s: GameState): Style => STYLES[Math.floor(Rng.fromSeed(`${s.config.seed}:hot12:${Math.floor(s.year / 3)}`).next() * 4)];
+/** Família de gênero → estilo de produção que ela puxa (UNI-4/B.21: o estilo em alta sai das paradas). */
+const FAM_STYLE: Record<FamilyId, Style> = {
+  rock: 'raw', hiphop: 'raw', country_folk: 'raw',
+  blues_jazz: 'warm', rnb: 'warm', caribbean: 'warm', brazil: 'warm', africa: 'warm', latin: 'warm',
+  pop: 'polished', sacred: 'polished', europe: 'polished',
+  electronic: 'experimental', asia_me: 'experimental',
+};
+/** Estilo em alta: o que tem a maior fatia das paradas (trends17, ponderada pela posição). Sem paradas medidas ainda
+ *  (ou com o interruptor uni4.links desligado), o sorteio antigo por semente a cada 3 anos. */
+export function hotStyle(s: GameState): Style {
+  if (uni4On(s)) {
+    const share = trends17(s).share, w: Record<Style, number> = { raw: 0, warm: 0, polished: 0, experimental: 0 };
+    let tot = 0;
+    for (const [g, x] of Object.entries(share)) { w[FAM_STYLE[familyOf(g)] ?? 'polished'] += x; tot += x; }
+    if (tot > 0) return STYLES.reduce((b, st) => (w[st] > w[b] ? st : b), STYLES[0]);
+  }
+  return STYLES[Math.floor(Rng.fromSeed(`${s.config.seed}:hot12:${Math.floor(s.year / 3)}`).next() * 4)];
+}
 export const dated = (p: Producer): boolean => p.fresh < 35;
 export function startProducer(s: GameState): void { const p = prod(s); if (!p.on) { p.on = true; remember(s, 'life', l('Você passa a produzir discos de outros artistas: a cadeira de produtor é uma carreira à parte.', 'You start producing other acts\' records: the producer\'s chair is a separate career.')); } }
 export function reinvent(s: GameState, style: Style): L | null {

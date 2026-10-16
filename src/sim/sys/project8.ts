@@ -191,7 +191,7 @@ export function projectCosts(s: GameState, p: MusicProject): ProjectCosts {
   const cover = done ? 0 : coverCost(s, p.cover?.style);
   const marketing = done ? 0 : p.marketing.reduce((t, m) => t + m.budget, 0);
   const act = s.acts[p.actId];
-  const pressing = done || !act || labelFunded(s, p.actId) ? 0 : pressingCost(s, availableFormats(s), suggestedPress(s, act, p.type, projectQ(s, p)));
+  const pressing = done || !act || labelFunded(s, p.actId) ? 0 : pressingCost(s, availableFormats(s), suggestedPress(s, act, p.type, projectQ(s, p), { marketing: p.marketing.filter((m) => m.budget > 0), extra: { songs: [...p.songIds] } }));
   const remaining = recording + feat + cover + marketing + pressing;
   return { recording, feat, cover, marketing, pressing, remaining, committed: p.spent + remaining };
 }
@@ -255,7 +255,7 @@ function planOf(s: GameState, p: MusicProject): ReleasePlan {
   const act = s.acts[p.actId];
   return {
     actId: p.actId, type: p.type, songs: [...p.songIds], title: p.title || undefined, formats: availableFormats(s),
-    press: suggestedPress(s, act, p.type, projectQ(s, p)), marketing: p.marketing.filter((m) => m.budget > 0), territories: [...s.player.territories],
+    press: suggestedPress(s, act, p.type, projectQ(s, p), { marketing: p.marketing.filter((m) => m.budget > 0), extra: { songs: [...p.songIds] } }), marketing: p.marketing.filter((m) => m.budget > 0), territories: [...s.player.territories],
     weeksAhead: Math.max(1, Math.min(26, p.weeksAhead)), cover: p.cover,
   };
 }

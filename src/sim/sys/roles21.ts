@@ -299,7 +299,7 @@ registerInboxKind('r21_client', { label: l('Novo cliente', 'New client'), cat: '
     const a = actOf(s, m.ref);
     if (!live(a) || act === 'no') return l('Você segue com a carteira atual.', 'You keep your current roster.');
     if (act === 'up' && !r.chance(0.5)) return fmtL(l('{a} achou 20% demais e procurou outro empresário.', '{a} found 20% too much and went elsewhere.'), { a: a.name });
-    ventures(s).mg.clients.push({ actId: a.id, rate: act === 'up' ? 0.2 : 0.15, since: s.week, sat: 60, earned: 0 });
+    ventures(s).mg.clients.push({ actId: a.id, rate: act === 'up' ? 0.2 : 0.15, since: s.week, earned: 0 });
     return fmtL(l('{a} entrou na sua carteira de empresariados.', '{a} joined your management roster.'), { a: a.name });
   } });
 

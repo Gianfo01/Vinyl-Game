@@ -11,11 +11,12 @@
 // A intenção nunca aparece pronta: o jogador vê indícios (com atraso e ruído) e antecipa.
 // Gerador próprio por mês (semente), sem tocar no RNG do jogo.
 
+import { rivalOf, rivalRec, rivals31, rivalsWith } from './rivalstore';
 import { Rng, clamp } from '../../core/rng';
 import { FAMILIES, familyOf, l, type L } from '../../data/world';
 import { endContract, expectedAdvance, signWithRival } from '../contracts';
 import { emitEvent } from '../events';
-import { registerExt4, registerMod, registerSimHook } from '../ext4';
+import { registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { pushInbox18, registerAdvisorTip, registerInboxKind, type AdvTip18 } from '../inbox18';
 import type { Act, GameState, Label } from '../types';
@@ -38,19 +39,13 @@ export interface Mind18 {
   over?: number;
   signs: Sign18[];
 }
-export interface RM18 { m: Record<string, Mind18>; bids: Record<string, string>; au: Record<string, 1>; offered?: number }
-declare module '../ext4' { interface Ext4 { rivalmind18: RM18 } }
-const fresh = (): RM18 => ({ m: {}, bids: {}, au: {} });
-registerExt4('rivalmind18', fresh);
-export function rm18(s: GameState): RM18 {
-  const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
-  const st = (x.rivalmind18 ??= fresh()) as RM18;
-  st.m ??= {}; st.bids ??= {}; st.au ??= {};
-  return st;
-}
+/** UNI-4 (B.19): a memória de cada selo mora no registro único dos rivais (rivalstore `lb[selo].mind`); aqui as partes do circuito. */
+export interface RM18 { bids: Record<string, string>; au: Record<string, 1>; offered?: number }
+export const rm18 = (s: GameState): RM18 => rivals31(s).m18;
+/** Memória estratégica de um selo, só leitura (não cria). */
+export const mindOf18 = (s: GameState, lbId: string): Mind18 | undefined => rivalOf(s, lbId)?.mind;
 export function mind18(s: GameState, lbId: string): Mind18 {
-  const st = rm18(s);
-  const m = (st.m[lbId] ??= { lost: [], won: [], drop: {}, signs: [] });
+  const m = (rivalRec(s, lbId).mind ??= { lost: [], won: [], drop: {}, signs: [] });
   m.lost ??= []; m.won ??= []; m.drop ??= {}; m.signs ??= [];
   return m;
 }
@@ -278,8 +273,7 @@ registerInboxKind('rivalmind18_pact', {
 registerMod('appeal', 'rivalmind18:pact', (s, value, ctx) => {
   const rel = ctx.release;
   if (!rel || rel.owner !== 'player') return null;
-  const st = rm18(s);
-  for (const [id, m] of Object.entries(st.m)) {
+  for (const [id, m] of rivalsWith(s, 'mind')) {
     const lb = s.labels[id];
     if (!m.pact || m.pact.until <= s.week || !lb?.active) continue;
     if (!rel.territories.some((t) => lb.territories.includes(t) && !s.player.territories.includes(t))) continue;
@@ -318,7 +312,7 @@ function mistakes(s: GameState, r: Rng): void {
 }
 // quebrou depois dos sinais: vira fato com o porquê
 function bankruptcies(s: GameState): void {
-  for (const [id, m] of Object.entries(rm18(s).m)) {
+  for (const [id, m] of rivalsWith(s, 'mind')) {
     const lb = s.labels[id];
     if (!lb || lb.active || !lb.closedYear || m.signs.some((x) => x.k === 'bankrupt')) continue;
     const why = m.signs.find((x) => x.k === 'overexp' || x.k === 'badsign');
@@ -347,7 +341,7 @@ export function observed18(s: GameState, lbId: string): { signs: Sign18[]; read:
 registerAdvisorTip('rivalmind18', (s) => {
   if (s.config.role === 'artist') return [];
   const out: AdvTip18[] = [];
-  for (const [id, m] of Object.entries(rm18(s).m)) {
+  for (const [id, m] of rivalsWith(s, 'mind')) {
     const lb = s.labels[id];
     if (!lb?.active) continue;
     const t = m.target;

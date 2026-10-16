@@ -151,11 +151,14 @@ function monthOfDay(s: GameState, day: number): number {
   return d.year * 12 + d.month;
 }
 
+/** Turnês "de verdade" (sem os shows avulsos de agente/promotor, que são turnês de 1 data com papel `by`). */
+export const tourList = (s: GameState): Tour[] => s.tours.filter((t) => !t.by);
+
 export function planTour(s: GameState, p: TourPlan): Tour | L {
   const act = s.acts[p.actId];
   if (!act || (act.owner !== 'player' && !act.playerBand)) return l('Ato não é seu.', 'Not your act.');
   if (!p.cities.length) return l('Escolha ao menos uma cidade.', 'Pick at least one city.');
-  if (s.tours.some((t) => t.actId === act.id && (t.status === 'planned' || t.status === 'running'))) return l('Já existe uma turnê marcada.', 'A tour is already booked.');
+  if (tourList(s).some((t) => t.actId === act.id && (t.status === 'planned' || t.status === 'running'))) return l('Já existe uma turnê marcada.', 'A tour is already booked.');
   const est = estimateTour(s, p);
   // capacidade: dias por mês
   const perMonth: Record<number, number> = {};
@@ -194,7 +197,7 @@ export function planTour(s: GameState, p: TourPlan): Tour | L {
 }
 
 export function cancelTour(s: GameState, tourId: string): L | null {
-  const t = s.tours.find((x) => x.id === tourId);
+  const t = tourList(s).find((x) => x.id === tourId);
   if (!t || t.status === 'done' || t.status === 'cancelled') return l('Turnê inválida.', 'Invalid tour.');
   const left = t.stops.filter((x) => x.status === 'scheduled').length;
   const refund = Math.round((t.costReserved * left) / Math.max(1, t.stops.length) * 0.5);
@@ -219,7 +222,7 @@ function setlistQuality(s: GameState, t: Tour): { q: number; coverPenalty: numbe
 
 /** Um dia de turnê: viagem ou show na data marcada. */
 export function tourDay(s: GameState, r: Rng, day: number): void {
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.status !== 'planned' && t.status !== 'running') continue;
     const st = t.stops.find((x) => x.day === day && x.status === 'scheduled');
     if (!st) continue;
@@ -376,7 +379,7 @@ export function playStop(s: GameState, r: Rng, t: Tour, st: TourStop, day: numbe
 
 /** Fim de turnê: todas as datas resolvidas (tocadas ou canceladas). */
 export function tourEnd(s: GameState): void {
-  for (const t of s.tours) {
+  for (const t of tourList(s)) {
     if (t.status !== 'running') continue;
     if (t.stops.every((x) => x.status !== 'scheduled')) {
       t.status = 'done';
@@ -394,11 +397,13 @@ export function tourEnd(s: GameState): void {
 }
 
 export function toursCleanup(s: GameState): void {
-  s.tours = s.tours.filter((t) => t.status === 'planned' || t.status === 'running' || s.day - (t.stops.at(-1)?.day ?? 0) < 400).slice(-25);
+  // turnês: as 25 mais recentes (e as em curso); os shows avulsos (papel `by`) o tour12 poda pela regra dele
+  const big = new Set(tourList(s).filter((t) => t.status === 'planned' || t.status === 'running' || s.day - (t.stops.at(-1)?.day ?? 0) < 400).slice(-25));
+  s.tours = s.tours.filter((t) => !!t.by || big.has(t));
 }
 
 export function tourEligibleLive(s: GameState, actId: string): boolean {
-  return s.tours.some((t) => t.actId === actId && t.status === 'done');
+  return tourList(s).some((t) => t.actId === actId && t.status === 'done');
 }
 
 export function tourMonthIdx(s: GameState): number {

@@ -6,6 +6,8 @@
 // 3–4× o preço e pelo menos 3× o fôlego de corte do perfil depois da compra.
 // Só as funções que os botões da interface chamam. Sem aleatoriedade própria (o acaso é o do jogo).
 
+import { ownFests } from './sys/feststore';
+import { builtVenue } from './sys/venuestore27';
 import { cityById } from '../data/world';
 import type { GameState } from './types';
 import { money, playerActs } from './util';
@@ -13,7 +15,6 @@ import { buyBlocker27, buyRoom27, hqRooms27, hqr27 } from './sys/hqrooms27';
 import { foundCost, foundVenture, placeSong, signWriter, upgradeGear, ventures, writerAdvance, writerCandidates, maxGear } from './sys/ventures9';
 import { acceptJob, studioOf } from './sys/studio12';
 import { buyVenue, setVenueAgenda, venueKind } from './sys/live/venue';
-import { liveOf } from './sys/live/state';
 import { addNight12, v12 } from './sys/venue12';
 import { buyVenue17, marketVenues, monthEst17, venuePrice } from './sys/venues17';
 import { hasVenue27, venueCount27, MAX_VENUES27 } from './sys/venues27';
@@ -87,7 +88,6 @@ function publisher(s: GameState, c: Ctx, L: LogBiz27, open: boolean): boolean {
 
 // ---------------------------------------------------------------- casa de shows (lista única venues27)
 function venue(s: GameState, p: Prof, c: Ctx, L: LogBiz27, open: boolean): boolean {
-  const lv = liveOf(s);
   if (!hasVenue27(s) && venueCount27(s) < MAX_VENUES27) {
     if (!open) return false;
     // 1) casa real à venda na região (a mesma conta da tela: retorno anual da curadoria)
@@ -116,14 +116,14 @@ function venue(s: GameState, p: Prof, c: Ctx, L: LogBiz27, open: boolean): boole
     return false;
   }
   // programação da casa construída: uma noite autoral às sextas com divisão de porta (a cena gosta)
-  const x = lv.venue ? v12(s) : null;
+  const x = builtVenue(s) ? v12(s) : null;
   if (x && !x.prog.length && !addNight12(s, { k: 'original', day: 'fri', deal: 'door' })) L.venueNights++;
   return false;
 }
 
 // ---------------------------------------------------------------- festival próprio (fest12)
 function festival(s: GameState, c: Ctx, L: LogBiz27, open: boolean): boolean {
-  const f = liveOf(s).fests[0];
+  const f = ownFests(s)[0];
   const acts = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.fame >= 12);
   if (!f) {
     if (!open) return false;

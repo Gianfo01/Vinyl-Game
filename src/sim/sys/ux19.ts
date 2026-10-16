@@ -34,7 +34,7 @@ import { ERA_SHIFTS, currentEra, eraYear, stanceOf, type EraId } from './eras8';
 import { headline19 } from './factlink19';
 import { legacy18, mainPath18, pathDef18, pathEnding18, PATHS18, pathScore18, tierOf, type PathId } from './paths18';
 import { burn18 } from './policy18';
-import { moveText, rivals8 } from './rivals8';
+import { moveText, allMoves8 } from './rivals8';
 import { sg18 } from './saga18';
 import { CHAINS19, DISC19, HEIRS19, KEY_TECH19, eraBand19, type GoalSpec19 } from './ux19data';
 import { actsNow27, releasesNow27 } from '../tickcache27';
@@ -160,7 +160,7 @@ export function decadeSum19(s: GameState, y0: number, y1: number): DecSum19 {
 /** Jogadas dos rivais: postura na era nova (eras8) e a última jogada registrada (rivals8). */
 export function rivalMoves19(s: GameState, era?: EraId): L[] {
   const lbs = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.revenueYear - a.revenueYear).slice(0, 3);
-  const log = rivals8(s)?.log ?? {};
+  const log = Object.fromEntries(allMoves8(s));
   return lbs.map((lb) => {
     const st = era ? stanceOf(s, lb.id, era) : undefined;
     const mv = (log[lb.id] ?? []).slice(-1)[0];

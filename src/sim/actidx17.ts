@@ -35,3 +35,10 @@ export function actsOfPerson17(s: GameState, pid: string): Act[] {
 }
 /** Versão do índice (muda a cada reconstrução): serve de chave para caches derivados. */
 export const actIxVersion17 = (s: GameState): number => ix(s).v;
+/** W3-FIX (desempenho): a pessoa está, pelo índice, em algum ato do jogador? Pré-filtro barato para buscas "ato do
+ *  jogador desta pessoa" que varriam playerActs (todos os atos) para cada pessoa do mundo; quem passa refaz a busca de
+ *  sempre (mesma ordem e regra de playerActs). */
+export function inPlayerAct17(s: GameState, pid: string): boolean {
+  for (const a of actsOfPerson17(s, pid)) if (a.owner === 'player') return true;
+  return false;
+}

@@ -1,12 +1,12 @@
 // Rodada 16 — painel "Delegar": agentes de shows e promotores recebem ordens permanentes e prestam contas.
 // Fica na tela de Equipe (Empresa) e na página do ato ("Agenciado por").
 
+import { ownFests } from '../../sim/sys/feststore';
 import { MARKETS, l } from '../../data/world';
 import { VENUE_TIERS } from '../../data/rules';
 import { t } from '../../i18n/strings';
 import { ORDER_CAP, KINDS, addOrder, d16, delegates, eligibleActs, handlersOf, kindsOf, letGo, log16, matchOffer, ordersOf, qLabel, quality, removeOrder, toggleOrder, type Order16, type OrderKind } from '../../sim/sys/deleg16';
 import { tiersOpen } from '../../sim/sys/tour12';
-import { liveOf } from '../../sim/sys/live/state';
 import type { GameState, StaffMember } from '../../sim/types';
 import { $, actLink, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
@@ -82,7 +82,7 @@ registerSection('company', {
       h('p', { class: 'muted small' }, t(l('Contrate "Agente de shows" e "Promotor" na lista de profissionais. Cada um cuida de até 3 ordens permanentes, executadas no fechamento do mês. A qualidade depende de habilidade, atributos e notoriedade do selo; eles erram, e selos rivais tentam levá-los.', 'Hire a "Booking agent" and a "Promoter" from the professionals list. Each handles up to 3 standing orders, run at month close. Quality depends on skill, attributes and label notoriety; they make mistakes, and rival labels try to poach them.'))),
       h('p', { class: 'small' }, h('button', { class: 'btn small ghost', onclick: () => { store.area = 'deleg31' as typeof store.area; rerender(); } }, t(l('Quem decide o quê: abrir a tela de delegação', 'Who decides what: open the delegation screen')))),
       ds.length ? ds.map((st) => card(s, st)) : h('p', { class: 'muted small' }, t(l('Ninguém contratado ainda para esses cargos.', 'Nobody hired for these roles yet.'))),
-      !liveOf(s).fests.length ? h('p', { class: 'muted small' }, t(l('Ordem "Preencher festival" só aparece com festival próprio.', 'The "Fill festival slots" order needs a festival of your own.'))) : null);
+      !ownFests(s).length ? h('p', { class: 'muted small' }, t(l('Ordem "Preencher festival" só aparece com festival próprio.', 'The "Fill festival slots" order needs a festival of your own.'))) : null);
   },
 });
 

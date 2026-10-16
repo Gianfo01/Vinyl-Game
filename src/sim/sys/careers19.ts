@@ -10,6 +10,8 @@
 //    do ofício que chegam ao jogador.
 // Gerador próprio (semente + chave + mês): nada desloca o fluxo principal.
 
+import { ownFests } from './feststore';
+import { builtVenue } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: imagem nas marcas
 import { MARKETS, cityById, familyOf, l, type L } from '../../data/world';
@@ -28,7 +30,7 @@ import { monthIndex } from '../capacity';
 import { careers, isActive } from './careers12';
 import { buyVenue } from './live/venue';
 import { festCap19, festModel } from './live/festival';
-import { liveOf, type OwnFestival } from './live/state';
+import { type OwnFestival } from './live/state';
 import { f12, festDem19, festOf, festPay12, muOf, sync12 } from './fest12';
 import { c12, endorse19, mgRenew12 } from './manager12';
 import { standingOf } from './standing9';
@@ -146,7 +148,7 @@ export function applyStarter19(s: GameState, id: string): L | null {
     }
     t = fmtL(l('Pacote inicial: {n} ({c}).', 'Starter package: {n} ({c}).'), { n: p.name, c: `$${Math.round(cost / 100).toLocaleString()}` });
   } else if (id === 'venue') {
-    if (liveOf(s).venue || s.year < 1920) return null;
+    if (builtVenue(s) || s.year < 1920) return null;
     const full = money(s, 60000);
     const down = Math.min(Math.round(full * 0.3), Math.max(0, s.player.cash));
     creditLoan(s, full - down, 48, 'Crédito de fundação: clube arrendado');
@@ -219,7 +221,7 @@ export function festQ19(s: GameState, f: OwnFestival, acts: Act[]): Dem19 {
   const hot = acts.reduce((t, a) => t + clamp((s.genrePop?.[a.genre] ?? 1) / 2, 0, 1), 0) / acts.length;
   const mk = cityById[f.cityId]?.market;
   // canibalização: outro festival SEU no mesmo mês e mercado (festivais rivais de NPC: regra própria em fest12/ventures16)
-  const comp = liveOf(s).fests.filter((y) => y !== f && y.month === f.month && cityById[y.cityId]?.market === mk).length;
+  const comp = ownFests(s).filter((y) => y !== f && y.month === f.month && cityById[y.cityId]?.market === mk).length;
   const k = clamp(0.15 + top * 0.008 + avg * 0.005 + coh * 0.12 + hot * 0.12 - comp * 0.07, 0.15, 1.25);
   // público potencial satura: quem se interessa pelas atrações (fãs em todo o país) não vira comprador sem limite —
   // o mercado da cidade, a reputação do festival e os fiéis definem até onde a procura chega
@@ -460,7 +462,7 @@ function mgBranchMonth(s: GameState): void {
 // ---------------------------------------------------------------- mês
 
 registerSimHook('month', 'careers19', (s) => {
-  for (const f of liveOf(s).fests.slice()) festBranchMonth(s, f);
+  for (const f of ownFests(s).slice()) festBranchMonth(s, f);
   mgBranchMonth(s);
   // renovações pendentes que perderam o sentido (cliente saiu)
   const st = car19(s);
@@ -517,7 +519,7 @@ registerExplain('careers19.rent', (s) => ({ title: l('Aluguel da sede', 'HQ rent
 
 registerAdvisorTip('careers19', (s) => {
   const out: ReturnType<Parameters<typeof registerAdvisorTip>[1]> = [];
-  for (const f of liveOf(s).fests) {
+  for (const f of ownFests(s)) {
     const mu = muOf(s, f);
     if (mu > 0 && mu <= 4 && !f.lineup.length) out.push({ id: `c19-skip-${f.id}`, level: 'warn', cat: 'career', score: 80, text: fmtL(l('{f}: {m} meses para a edição e nenhuma atração.', '{f}: {m} months to the edition and no acts.'), { f: f.name, m: mu }), why: [l('Sem line-up a edição é cancelada (reputação −5, fiéis −30%).', 'With no bill the edition is cancelled (reputation −5, loyalists −30%).')], goto: { area: 'festivals' } });
     const g = groundOf19(s, f.id), nx = GROUND19[g + 1];

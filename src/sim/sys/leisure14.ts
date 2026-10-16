@@ -7,6 +7,7 @@
 // Barato: no máximo CAP pessoas por mês (rodízio; o elenco do jogador sempre entra).
 // Aleatoriedade própria (Rng semeado por semente+mês e por música): não mexe no fluxo compartilhado.
 
+import { tourList } from '../tours';
 import { Rng, clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
@@ -446,7 +447,7 @@ export function leisureMonth14(s: GameState): void {
     let free = 1;
     if (w.act) {
       free = 1 - (s.loadNow[w.act.id] ?? 0) / 130;
-      if (s.tours.some((t) => t.actId === w.act!.id && t.status === 'running')) free = Math.min(free, 0.3);
+      if (tourList(s).some((t) => t.actId === w.act!.id && t.status === 'running')) free = Math.min(free, 0.3);
     }
     const fx: Required<Fx14> = { mor: 0, insp: 0, str: 0, fat: 0, fit: -1, dep: 0 };
     for (const id of rc.h) { const h0 = hob14[id]; if (!h0) continue; for (const k of Object.keys(h0.fx) as (keyof Fx14)[]) fx[k] += (h0.fx[k] ?? 0) * free * 0.7; }

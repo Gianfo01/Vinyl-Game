@@ -4,7 +4,7 @@ import { defaultConfig } from '../src/sim/bot';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { foundVenture, signBooking, ventures } from '../src/sim/sys/ventures9';
-import { bookRoute, c12, defaultStop, openPromoter, predict, validate } from '../src/sim/sys/tour12';
+import { bookRoute, defaultStop, shows12, openPromoter, predict, validate } from '../src/sim/sys/tour12';
 import { deliver, prod, startProducer, stepBand, stepConflict, stepIntent, stepTake, studioOf, studios, takeJob } from '../src/sim/sys/studio12';
 import { rng19 } from '../src/sim/rng19';
 
@@ -25,8 +25,8 @@ describe('agente x promotor', () => {
     const r = bookRoute(s, rng19(s, 'act'), 'promoter', act.id, [st]);
     if (!r.ok) return; // data/casa ocupada: o validador explicou
     for (let i = 0; i < 3; i++) advanceMonth(s);
-    const sh = c12(s).shows.find((x) => x.actId === act.id);
-    expect(sh?.status).toBe('played');
+    const sh = shows12(s).find((x) => x.actId === act.id); // UNI-4: o show avulso é uma turnê de 1 data em s.tours
+    expect(sh?.status).toBe('done');
     expect(sh?.res?.why.length).toBeGreaterThan(0);
   });
   it('agente exige agência e cliente', () => {

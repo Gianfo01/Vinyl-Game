@@ -2,6 +2,8 @@
 // Cada uma acontece com NPCs (escolha pelos traços) ou com você (cartão na mesa). Desfechos com chance e custo
 // à vista no texto da opção; o que der errado vira Fact (e boato, se público).
 
+import { delSecKnownBy, dossierById, dossiers, secKind, secKnown, secKnownBy, secLeaked, secOwner, secSev, setSecKnown, type Secret } from './people/secrets';
+import { setKnow23 } from './secstore23';
 import { clamp } from '../../core/rng';
 import { l } from '../../data/world';
 import { isStrict, viewsOf } from '../beliefs';
@@ -118,11 +120,11 @@ registerSituation({
 });
 
 // 5 ---------------------------------------------------------------- chantagem de um selo rival (lei)
-const threat = (s: GameState): { sec: ReturnType<typeof P>['secrets'][number]; lb: string } | null => {
+const threat = (s: GameState): { sec: Secret; lb: string } | null => {
   const mine = new Set(playerActs(s).flatMap((id) => s.acts[id]?.members ?? []));
-  for (const sec of P(s).secrets) {
-    if (sec.leaked || !(sec.owner === 'owner' || mine.has(sec.owner))) continue;
-    const lb = sec.knownBy.find((k) => s.labels[k]?.active);
+  for (const sec of dossiers(s)) {
+    if (secLeaked(s, sec) || !(secOwner(sec) === 'owner' || mine.has(secOwner(sec)))) continue;
+    const lb = secKnownBy(s, sec).find((k) => s.labels[k]?.active);
     if (lb) return { sec, lb };
   }
   return null;
@@ -130,25 +132,25 @@ const threat = (s: GameState): { sec: ReturnType<typeof P>['secrets'][number]; l
 registerSituation({
   id: 'blackmail', pressure: 'law', cost: 2, cooldown: 8, playerOnly: true,
   when: (s) => !!threat(s),
-  actorsPick: (s) => { const t = threat(s); return t ? { hero: 'player', cast: { label: t.lb, ...(t.sec.owner !== 'owner' ? { person: t.sec.owner } : {}) }, data: { sec: t.sec.id, sev: t.sec.severity } } : null; },
+  actorsPick: (s) => { const t = threat(s); return t ? { hero: 'player', cast: { label: t.lb, ...(secOwner(t.sec) !== 'owner' ? { person: secOwner(t.sec) } : {}) }, data: { sec: t.sec.id, sev: secSev(t.sec) } } : null; },
   title: (s, c) => fmtL(l('{b} sabe demais', '{b} knows too much'), { b: nm(s, c.cast.label) }),
   text: (s, c) => fmtL(l('{b} descobriu um segredo ({w}) e manda recado: ou paga, ou vaza.', '{b} found out a secret ({w}) and sends word: pay, or it leaks.'), { b: nm(s, c.cast.label), w: c.cast.person ? nm(s, c.cast.person) : l('seu', 'yours').pt }),
   options: [
     { id: 'pay', label: l('Pagar o silêncio', 'Pay for silence'), hint: l('Custa $4.000–13.000 (era): o segredo fica guardado por eles.', 'Costs $4,000–13,000 (era): they keep the secret.'),
-      apply: (s, c) => { const sec = P(s).secrets.find((x) => x.id === c.data.sec); const v = 4000 + Number(c.data.sev) * 3000; post(s, `bm17:${c.data.sec}`, -money(s, v), 'legal', 'Acordo de silêncio'); const lb = s.labels[c.cast.label]; if (lb) lb.cash += money(s, v); if (sec) sec.knownBy = sec.knownBy.filter((k) => k !== c.cast.label); } },
+      apply: (s, c) => { const sec = dossierById(s, String(c.data.sec)); const v = 4000 + Number(c.data.sev) * 3000; post(s, `bm17:${c.data.sec}`, -money(s, v), 'legal', 'Acordo de silêncio'); const lb = s.labels[c.cast.label]; if (lb) lb.cash += money(s, v); if (sec) delSecKnownBy(s, sec, c.cast.label); } },
     { id: 'counter', label: l('Ameaçar de volta', 'Threaten back'), hint: l('Com um segredo/favor sobre eles: empate e nada vaza. Sem isso: 55% vaza.', 'With a secret/favor on them: stalemate, nothing leaks. Without: 55% it leaks.'),
-      apply: (s, c, r) => { const has = holdsOf(s, 'player').has.some((h) => h.target === c.cast.label && (h.kind === 'secret' || h.kind === 'favor')); const sec = P(s).secrets.find((x) => x.id === c.data.sec); if (!sec) return; if (has || !r.chance(0.55)) { sec.knownBy = sec.knownBy.filter((k) => k !== c.cast.label); return l('Eles recuaram: empate técnico.', 'They backed off: a stalemate.'); } leak(s, sec, c); return l('Não colou: o segredo vazou.', 'It did not work: the secret leaked.'); } },
+      apply: (s, c, r) => { const has = holdsOf(s, 'player').has.some((h) => h.target === c.cast.label && (h.kind === 'secret' || h.kind === 'favor')); const sec = dossierById(s, String(c.data.sec)); if (!sec) return; if (has || !r.chance(0.55)) { delSecKnownBy(s, sec, c.cast.label); return l('Eles recuaram: empate técnico.', 'They backed off: a stalemate.'); } leak(s, sec, c); return l('Não colou: o segredo vazou.', 'It did not work: the secret leaked.'); } },
     { id: 'call_bluff', label: l('Pagar para ver', 'Call the bluff'), hint: l('Grátis; 60% de vazar (escândalo).', 'Free; 60% chance it leaks (scandal).'),
-      apply: (s, c, r) => { const sec = P(s).secrets.find((x) => x.id === c.data.sec); if (!sec) return; if (r.chance(0.6)) { leak(s, sec, c); return l('Eles vazaram.', 'They leaked it.'); } sec.knownBy = sec.knownBy.filter((k) => k !== c.cast.label); return l('Era blefe.', 'It was a bluff.'); } },
+      apply: (s, c, r) => { const sec = dossierById(s, String(c.data.sec)); if (!sec) return; if (r.chance(0.6)) { leak(s, sec, c); return l('Eles vazaram.', 'They leaked it.'); } delSecKnownBy(s, sec, c.cast.label); return l('Era blefe.', 'It was a bluff.'); } },
   ],
 });
-function leak(s: GameState, sec: ReturnType<typeof P>['secrets'][number], c: SitCtx): void {
-  sec.leaked = true;
-  sec.known = true;
-  if (sec.owner === 'owner') { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 5 * sec.severity, 0, 100); notify(s, fmtL(l('{b} vazou um segredo seu.', '{b} leaked a secret of yours.'), { b: nm(s, c.cast.label) }), 'bad'); return; }
-  const a = actsNow27(s).find((x) => x.members.includes(sec.owner));
+function leak(s: GameState, sec: Secret, c: SitCtx): void {
+  setKnow23(s, sec, 'press', 4); setKnow23(s, sec, 'player', 4);
+  const ow = secOwner(sec), sv = secSev(sec);
+  if (ow === 'owner') { s.player.reputation.institutional = clamp(s.player.reputation.institutional - 5 * sv, 0, 100); notify(s, fmtL(l('{b} vazou um segredo seu.', '{b} leaked a secret of yours.'), { b: nm(s, c.cast.label) }), 'bad'); return; }
+  const a = actsNow27(s).find((x) => x.members.includes(ow));
   const K: Record<string, Parameters<typeof scandal>[2]> = { affair: 'sex', child: 'sex', addiction: 'drugs', tax: 'money', debt: 'money', payola: 'money', plagiarism: 'money', fake_bio: 'conduct' };
-  if (a) scandal(s, a.id, K[sec.kind] ?? 'conduct', 25 + sec.severity * 18, fmtL(l('{b} vaza: {p} esconde algo.', '{b} leaks: {p} is hiding something.'), { b: nm(s, c.cast.label), p: nm(s, sec.owner) }), { person: sec.owner });
+  if (a) scandal(s, a.id, K[secKind(sec)] ?? 'conduct', 25 + sv * 18, fmtL(l('{b} vaza: {p} esconde algo.', '{b} leaks: {p} is hiding something.'), { b: nm(s, c.cast.label), p: nm(s, ow) }), { person: ow });
 }
 
 // 6 ---------------------------------------------------------------- mágoa que ferve (poder)
@@ -217,10 +219,11 @@ registerSituation({
 
 // 9 ---------------------------------------------------------------- informante vende segredo (poder)
 const forSale = (s: GameState): { id: string; owner: string; act: Act } | null => {
-  for (const sec of P(s).secrets) {
-    if (sec.known || sec.leaked || sec.owner.startsWith('label:') || sec.owner === 'owner') continue;
-    const a = actsNow27(s).find((x) => x.members.includes(sec.owner) && live(x) && x.owner !== 'player' && x.fame >= 30);
-    if (a) return { id: sec.id, owner: sec.owner, act: a };
+  for (const sec of dossiers(s)) {
+    const ow = secOwner(sec);
+    if (secKnown(s, sec) || secLeaked(s, sec) || ow.startsWith('label:') || ow === 'owner') continue;
+    const a = actsNow27(s).find((x) => x.members.includes(ow) && live(x) && x.owner !== 'player' && x.fame >= 30);
+    if (a) return { id: sec.id, owner: ow, act: a };
   }
   return null;
 };
@@ -232,7 +235,7 @@ registerSituation({
   text: (s, c) => fmtL(l('Alguém do círculo de {a} oferece um segredo de {p}. Informação é poder — e risco.', 'Someone close to {a} offers a secret about {p}. Information is power — and risk.'), { a: nm(s, c.act!), p: nm(s, c.cast.target) }),
   options: [
     { id: 'buy', label: l('Comprar', 'Buy it'), hint: l('Custa $2.500 (era): vira obrigação sua sobre eles (chantagem/negociação).', 'Costs $2,500 (era): becomes your hold over them (blackmail/negotiation).'),
-      apply: (s, c) => { post(s, `info17:${c.data.sec}`, -money(s, 2500), 'misc', 'Informante'); const sec = P(s).secrets.find((x) => x.id === c.data.sec); if (sec) sec.known = true; } },
+      apply: (s, c) => { post(s, `info17:${c.data.sec}`, -money(s, 2500), 'misc', 'Informante'); const sec = dossierById(s, String(c.data.sec)); if (sec) setSecKnown(s, sec); } },
     { id: 'tip_off', label: l('Avisar o artista', 'Warn the artist'), hint: l('Grátis: ele fica te devendo um favor (pesa em ofertas).', 'Free: they owe you a favor (weighs on offers).'),
       apply: (s, c) => { grantHold(s, { holder: 'player', target: c.act!, kind: 'favor', strength: 40, months: 36, text: fmtL(l('{a}: você avisou sobre um vazamento', '{a}: you warned them of a leak'), { a: nm(s, c.act!) }), src: 'sit17' }); } },
     { id: 'pass', label: l('Recusar', 'Pass'), hint: l('Nada acontece.', 'Nothing happens.'), apply: () => undefined },

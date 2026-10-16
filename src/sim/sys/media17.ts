@@ -7,6 +7,7 @@
 // favorecem os artistas do grupo). Críticos reais por era entram na lista de críticos; resenha muito dura de
 // ato famoso vira situação do diretor (responder ao crítico?).
 
+import { tourList } from '../tours';
 import { Rng, clamp, hashString } from '../../core/rng';
 import { COUNTRY_INFO } from '../../data/countries';
 import { countryOfCity } from '../../data/geo';
@@ -543,7 +544,7 @@ export function releaseNews(s: GameState, actId: string, outId: string, excl: bo
   const r = Rng.fromSeed(`${s.config.seed}:m17r:${s.week}:${actId}:${outId}`);
   if (!r.chance(od.p)) return { ok: true, text: l('Ninguém publicou o comunicado.', 'Nobody ran the press release.') };
   const pr = s.pendingReleases.filter((p) => p.actId === a.id).sort((x, y) => x.week - y.week)[0];
-  const tr = s.tours.find((x) => x.actId === a.id && (x.status === 'planned' || x.status === 'running'));
+  const tr = tourList(s).find((x) => x.actId === a.id && (x.status === 'planned' || x.status === 'running'));
   const t = pr ? fmtL(l('{a} anuncia "{t}"', '{a} announces "{t}"'), { a: a.name, t: pr.title }) : tr ? fmtL(l('{a} anuncia a turnê "{t}"', '{a} announces the "{t}" tour'), { a: a.name, t: tr.name }) : fmtL(l('{a} abre o jogo sobre a carreira', '{a} opens up about their career'), { a: a.name });
   const full = excl ? fmtL(l('Exclusiva: {t}', 'Exclusive: {t}'), { t }) : t;
   addStory(s, { t: full, tpl: excl ? 'exclusive' : 'release', a: a.id, out: o.id, src: 'player', truth: 1, st: 'confirmed', cred: o.cred, sev: 25, tone: 1, due: s.week, news: 1, mine: 1 });

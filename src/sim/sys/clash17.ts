@@ -7,6 +7,7 @@
 // fã-clube, ingresso nominal anti-cambista) com receita × reação dos fãs, e cambistas quando a casa esgota.
 // Arquivo sem dependência de tour12/tours (eles importam daqui). Gerador próprio por semana/ato.
 
+import { editions8 } from './feststore';
 import { Rng } from '../../core/rng';
 import { FESTIVALS } from '../../data/catalog';
 import { countryOfCity } from '../../data/geo';
@@ -40,21 +41,20 @@ const mine = (s: GameState, a?: Act) => !!a && (a.owner === 'player' || !!a.play
 export interface PShow { actId: string; city: string; w: number; kind: 'tour' | 'booking' | 'festival'; label: string }
 export function playerShows(s: GameState): PShow[] {
   const out: PShow[] = [];
+  // UNI-4 (B.13): um registro só de datas — turnês e shows avulsos (agente/promotor: turnê de 1 data com papel `by`)
   for (const t of s.tours ?? []) {
     if (t.status !== 'planned' && t.status !== 'running') continue;
     if (!mine(s, s.acts[t.actId])) continue;
+    if (t.by) { const sh = t as unknown as { city: string; week: number }; out.push({ actId: t.actId, city: sh.city, w: sh.week, kind: 'booking', label: '' }); continue; }
     for (const st of t.stops) if (st.status === 'scheduled') out.push({ actId: t.actId, city: st.cityId, w: weekOfDay(st.day), kind: 'tour', label: t.name });
   }
-  const c12 = (s.x4 as unknown as { tour12?: { shows: { actId: string; city: string; week: number; status: string }[] } }).tour12;
-  for (const sh of c12?.shows ?? []) if (sh.status === 'booked' && mine(s, s.acts[sh.actId])) out.push({ actId: sh.actId, city: sh.city, w: sh.week, kind: 'booking', label: '' });
   for (const f of festWeeks(s)) for (const id of f.acts) if (mine(s, s.acts[id])) out.push({ actId: id, city: f.city, w: f.w, kind: 'festival', label: f.name });
   return out.filter((x) => x.w >= s.week - 1).sort((a, b) => a.w - b.w);
 }
 export interface FWeek { fi: number; name: string; city: string; w: number; acts: string[]; prestige: number }
 export function festWeeks(s: GameState): FWeek[] {
-  const f8 = (s.x4 as unknown as { fest8?: { editions: { fi: number; year: number; month: number; lineup: { actId: string }[]; done: boolean }[] } }).fest8;
   const out: FWeek[] = [];
-  for (const e of f8?.editions ?? []) {
+  for (const e of editions8(s)) { // UNI-4: edições do mundo no registro único de festivais
     const f = FESTIVALS[e.fi];
     if (!f || e.done) continue;
     const day = Math.round((Date.UTC(e.year, e.month, 15) - Date.UTC(s.config.startYear, 0, 1)) / 86400000);

@@ -12,6 +12,7 @@ import {
   pitchClient, pitchSync, placeSong, pushScene, routeTour, sellVenture, setMgOwner, setPayout, setStaff, signBooking, signWriter, takePayola, transferVenture, upgradeCost,
   upgradeGear, upgradeVenture, valuation, ventures, writerAdvance, writerCandidates, refusedWait9, type CrisisMove, type Holder, type MediaKind, type VKind, type Venture,
   bookingChance,
+  clientTrust9,
 } from '../../sim/sys/ventures9';
 import { RATE19 } from './neg19';
 import { why18 } from '../explain18';
@@ -21,7 +22,7 @@ import { registerArea, registerPageTab, registerSection } from '../registry';
 import { tabs } from '../vis';
 import { visibleAct } from '../../sim/future';
 import { clientExtras, poachTab, reportsTab } from './manager11';
-import { mgr11 } from '../../sim/sys/manager11';
+import { mgr12 } from '../../sim/sys/manager12';
 import { extra12 } from './ventures12';
 import { clientPanel12, managementTabs12 } from './manager12';
 import { careersPanel } from './careers12';
@@ -230,7 +231,7 @@ function rosterTab(s: GameState): HTMLElement {
       let move: CrisisMove = 'pr';
       return h('div', { class: 'card' },
         h('div', { class: 'row between wrap' }, h('h4', null, actLink(s, a.id)), h('span', { class: 'small' }, `${pct(c.rate)} · ${$(Math.round(mgGross(s, a) * c.rate))}/${t(l('mês', 'mo'))}`)),
-        h('div', { class: 'row wrap small' }, t(l('Satisfação', 'Satisfaction')), ' ', bar(c.sat), ` ${Math.round(c.sat)} · ${t(l('Fama', 'Fame'))} ${fameText(s, a.id)} · ${t(l('Momento', 'Momentum'))} ${Math.round(a.momentum)} · `,
+        h('div', { class: 'row wrap small' }, t(l('Confiança', 'Trust')), ' ', bar(clientTrust9(s, c.actId)), ` ${Math.round(clientTrust9(s, c.actId))} · ${t(l('Fama', 'Fame'))} ${fameText(s, a.id)} · ${t(l('Momento', 'Momentum'))} ${Math.round(a.momentum)} · `,
           k ? `${t(l('Contrato', 'Deal'))}: ${k.party === 'player' ? s.config.companyName : s.labels[k.party]?.name ?? '?'} (${pct(k.royalty)})` : t(l('sem gravadora', 'unsigned'))),
         c.crisis ? h('div', { class: 'row wrap' }, pill(t(CRISIS_NAME[c.crisis.k]), 'bad'), ' ',
           select<CrisisMove>(move, (['pr', 'rest', 'lawyer'] as CrisisMove[]).map((m) => ({ value: m, label: `${t({ pr: l('Assessoria de imprensa', 'PR push'), rest: l('Pausa e conversa', 'Break and talk'), lawyer: l('Advogados', 'Lawyers') }[m])} (${$(crisisCost(s, m))})` })), (m) => (move = m)),
@@ -259,7 +260,7 @@ function prospectTab(s: GameState): HTMLElement {
 
 function managementArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub management9' }, tabs('management9', [
-    { id: 'roster', label: t(l('Meus agenciados', 'My clients')), icon: 'fans', badge: ventures(s).mg.clients.filter((c) => c.crisis || mgr11(s).cx[c.actId]?.poach).length || undefined, render: () => rosterTab(s) },
+    { id: 'roster', label: t(l('Meus agenciados', 'My clients')), icon: 'fans', badge: ventures(s).mg.clients.filter((c) => c.crisis || mgr12(s).c[c.actId]?.poach).length || undefined, render: () => rosterTab(s) },
     { id: 'prospect', label: t(l('Prospectar', 'Prospect')), icon: 'handshake', render: () => prospectTab(s) },
     { id: 'reports', label: t(l('Relatórios', 'Reports')), icon: 'chart-up', render: () => reportsTab(s) },
     { id: 'poach', label: t(l('Roubar clientes', 'Poach clients')), icon: 'fire', render: () => poachTab(s) },

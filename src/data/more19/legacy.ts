@@ -11,4 +11,6 @@ export const LEGACY_FORERUNNERS19: string[] = [
   'Luis Alberto Spinetta', 'Yma Sumac', 'Aquarium', 'Southern All Stars', 'Miyuki Nakajima', 'Abida Parveen',
   'Mory Kanté', 'Olivia Newton-John', 'Sun Ra', 'Ornette Coleman', 'Pete Seeger', 'Emmylou Harris',
   'Ilê Aiyê',
+  // r31 (Z): base nova — precursores do brega (anos 60, "cafona") e da balada da nueva ola que virou pop latino
+  'Waldick Soriano', 'Leo Dan',
 ];

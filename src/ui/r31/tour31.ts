@@ -3,6 +3,7 @@
 // cancelar — as MESMAS funções da tabela de turnês) e conflito (o que bate com o quê e onde resolver).
 // A tabela detalhada continua logo abaixo (Ver como lista mostra só ela).
 
+import { tourList } from '../../sim/tours';
 import { cityById, l } from '../../data/world';
 import { geoData, loadGeo, countryIndexAt, type Geo } from '../../data/geo';
 import { t } from '../../i18n/strings';
@@ -134,7 +135,7 @@ function paintTour(cv: HTMLCanvasElement, s: GameState, m: Tour31, repaint: () =
 // ---------------------------------------------------------------- painéis na cena
 
 function busPanel(s: GameState, m: Tour31): void {
-  const tr = m.tour ? s.tours.find((x) => x.id === m.tour!.id) : undefined;
+  const tr = m.tour ? tourList(s).find((x) => x.id === m.tour!.id) : undefined;
   if (!tr) return;
   const kit: Kit18 = { ...KIT0, ...(tr.kit18 ?? {}) };
   let close = (): void => {};
@@ -197,6 +198,6 @@ export function tourView31(s: GameState, list: () => HTMLElement): HTMLElement {
 // painel rápido de um artista com turnê marcada: leva ao mapa + calendário
 registerQuick31({
   id: 'q.tourmap', verb: 'open', icon: 'tour-bus', kinds: ['act'], passive: true, label: l('Ver a turnê no mapa', 'See the tour on the map'),
-  applies: (s, tg) => tg.kind === 'act' && s.tours.some((x) => x.actId === tg.id && (x.status === 'planned' || x.status === 'running')),
+  applies: (s, tg) => tg.kind === 'act' && tourList(s).some((x) => x.actId === tg.id && (x.status === 'planned' || x.status === 'running')),
   dest: () => ({ area: 'shows', tab: 'showsHub/tours' }),
 });

@@ -140,8 +140,8 @@ export interface LiveState {
   liveDone: Record<string, number>;
   /** R20 (B7): registro auditável do show ao vivo — incidente, carta, sorteio, acerto e delta (por chave do show). */
   liveLog20?: Record<string, LiveLog20[]>;
-  fests: OwnFestival[];
-  venue: OwnVenue | null;
+  /** UNI-4 (B.11): seus festivais saíram daqui — moram no registro único de festivais (feststore, parte `land`). */
+  /** UNI-4 (B.12): a casa construída saiu daqui — mora no registro único das casas (venuestore27, chave 'lv:venue'). */
   tickets: { vip: boolean; dynamic: boolean };
   residencies: Residency[];
   mega: { year: number; name: string; actId: string; accepted?: boolean }[];
@@ -164,7 +164,7 @@ declare module '../../ext4' {
 }
 
 registerExt4('live', () => ({
-  notes: {}, curves: {}, liveQueued: {}, liveDone: {}, fests: [], venue: null, tickets: { vip: false, dynamic: false }, residencies: [], mega: [], boosts: {},
+  notes: {}, curves: {}, liveQueued: {}, liveDone: {}, tickets: { vip: false, dynamic: false }, residencies: [], mega: [], boosts: {},
   scenario: null, challenge: null, events: [], ach: {}, achNew: [], counters: {}, cur: null,
 }));
 
@@ -173,7 +173,7 @@ export function liveOf(s: GameState): LiveState {
   st.x4 ??= {};
   let x = st.x4.live as LiveState | undefined;
   if (!x) {
-    x = { notes: {}, curves: {}, liveQueued: {}, liveDone: {}, fests: [], venue: null, tickets: { vip: false, dynamic: false }, residencies: [], mega: [], boosts: {}, scenario: null, challenge: null, events: [], ach: {}, achNew: [], counters: {}, cur: null };
+    x = { notes: {}, curves: {}, liveQueued: {}, liveDone: {}, tickets: { vip: false, dynamic: false }, residencies: [], mega: [], boosts: {}, scenario: null, challenge: null, events: [], ach: {}, achNew: [], counters: {}, cur: null };
     st.x4.live = x;
   }
   return x;

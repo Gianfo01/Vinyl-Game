@@ -4,6 +4,7 @@
 // gênero em alta, notícia recente, cena da cidade) e o valor depende disso (0,6×–1,4× do antigo).
 // Módulo puro (sem sistemas): usado por sys/hype12.
 
+import { tourList } from './tours';
 import { hashString } from '../core/rng';
 import { cityById, genreById, l, type L } from '../data/world';
 import { actorId, facts17, recentFacts, type Fact } from './facts17';
@@ -87,7 +88,7 @@ export function momentumParts17(s: GameState, a: Act, m: number): Part[] {
   const ch = chartOf(s, a);
   if (ch) ds.push({ t: Q(() => ch.pos === 1 ? fmtL(l('"{t}" é o nº 1 ({k} sem. na parada)', '"{t}" is number one ({k} wk on chart)'), { t: ch.rel.title, k: ch.weeks }) : fmtL(l('"{t}" em #{p} nas paradas', '"{t}" at #{p} on the charts'), { t: ch.rel.title, p: ch.pos })), w: 1.4 * (41 - Math.min(40, ch.pos)) / 40 });
   // 3. turnê
-  const tr = s.tours.find((x) => x.actId === a.id && x.status === 'running');
+  const tr = tourList(s).find((x) => x.actId === a.id && x.status === 'running');
   if (tr) {
     const played = tr.stops.filter((x) => x.status === 'played');
     const full = played.filter((x) => x.sold >= x.capacity * 0.95).length;

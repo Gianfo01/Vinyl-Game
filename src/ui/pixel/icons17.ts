@@ -75,6 +75,15 @@ const DRAW: Record<Icon17, (p: Px) => void> = {
 const cache = new Map<string, string>();
 const isIcon17 = (n: string): n is Icon17 => (ICON17_NAMES as readonly string[]).includes(n);
 
+/** Pixels 16×16 do ícone extra (com contorno), ou null se o nome não é um deles. */
+export function icon17Px(name: string): Px | null {
+  if (!isIcon17(name)) return null;
+  const p = new Px(16, 16);
+  DRAW[name](p);
+  p.outline(K.ink);
+  return p;
+}
+
 /** <img> do ícone extra, ou null se o nome não é um deles. */
 export function icon17(name: string, scale = 1): HTMLImageElement | null {
   if (!isIcon17(name)) return null;
@@ -82,10 +91,7 @@ export function icon17(name: string, scale = 1): HTMLImageElement | null {
   const key = `${name}:${sc}`;
   let url = cache.get(key);
   if (!url) {
-    const p = new Px(16, 16);
-    DRAW[name](p);
-    p.outline(K.ink);
-    url = upscale(p.canvas(), 16 * sc).toDataURL();
+    url = upscale(icon17Px(name)!.canvas(), 16 * sc).toDataURL();
     cache.set(key, url);
   }
   const img = document.createElement('img');

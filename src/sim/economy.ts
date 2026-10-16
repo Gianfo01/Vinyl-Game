@@ -9,6 +9,7 @@ import type { GameState, StaffMember } from './types';
 import { fmtL, hasMutator, hasTech, money, nextId, notify, post, remember } from './util';
 import { genProfessionals } from './worldgen';
 import { emitEvent } from './events';
+import { registerSwitch, sw } from './r31/switches';
 import { addAsset } from './finance';
 import { branchRent, hqBlocker, hqCaps } from './branches';
 import { perk } from './perks';
@@ -87,6 +88,13 @@ export function takeLoan(s: GameState): boolean {
 /** Meses seguidos de caixa negativo até a insolvência. */
 export const INSOLVENT_AT = 4;
 
+// R31 onda 3 (bal · equilíbrio da onda junta): socorro no aperto. Medido: as falências do robô no começo dependiam de o
+// evento investor_offer sair no sorteio do narrador (sai em ~10% das varreduras em que vale); com as frentes juntas ele
+// não saía e o robô quebrava (docs/r31/bal.md). Agora o primeiro mês no vermelho traz a oferta (aceitar custa 15% das vendas por 5 anos).
+registerSwitch({ id: 'bal31.mercy', def: true, scope: 'game',
+  desc: l('Socorro no aperto: no primeiro mês com o caixa no vermelho, um fundo oferece aporte (em troca de 15% das vendas por 5 anos).',
+    'Help in a pinch: in the first month with cash in the red, a fund offers capital (for 15% of sales over 5 years).') });
+
 export function checkInsolvency(s: GameState, r: Rng): void {
   if (s.player.cash >= 0) {
     s.player.insolvencyMonths = 0;
@@ -103,6 +111,12 @@ export function checkInsolvency(s: GameState, r: Rng): void {
   // r17 balanço: insolvência após INSOLVENT_AT meses seguidos no vermelho (era 6); o aviso conta os meses que faltam
   if (m < INSOLVENT_AT) notify(s, fmtL(m === 1 ? l('ALERTA: caixa negativo. Reestruture, venda ativos ou peça crédito — {n} meses seguidos no vermelho e o selo quebra.', 'ALERT: negative cash. Restructure, sell assets or seek credit — {n} straight months in the red and the label goes bust.')
     : l('Caixa negativo há {m} meses: faltam {k} para a insolvência.', 'Cash negative for {m} months: {k} left before insolvency.'), { n: INSOLVENT_AT, m, k: INSOLVENT_AT - m }), 'bad');
+  // R31 onda 3 (bal31.mercy): no primeiro mês no vermelho, o fundo que oferece aporte bate à porta (a mesma oferta e as
+  // mesmas condições do evento investor_offer: reputação comercial > 30, sem investidor em vigor, fora do papel artista)
+  if (m0 < 1 && m >= 1 && sw<boolean>(s, 'bal31.mercy') && s.config.role !== 'artist' && s.economy.investorUntil <= s.week
+    && s.player.reputation.commercial > 30 && !s.decisions.some((d) => d.eventId === 'investor_offer')) {
+    emitEvent(s, r, 'investor_offer', { amount: 50000 + s.player.reputation.commercial * 3000 });
+  }
   if (m0 < 2 && m >= 2) {
     const mine = Object.values(s.releases).filter((x) => x.owner === 'player');
     const n = Math.max(1, Math.ceil(mine.length / 2));

@@ -3,6 +3,7 @@
 // disco ao vivo, guardar no cofre, descartar, oferecer a outro artista ou ao catálogo de sync.
 // Também o caderno de ideias: temas colhidos na estrada, na família e nas cenas alimentam composições.
 
+import { tourList } from './tours';
 import { clamp, type Rng } from '../core/rng';
 import { cityById, l, type L } from '../data/world';
 import { availableFormats, scheduleRelease, songQ, suggestedPress } from './production';
@@ -196,11 +197,11 @@ export function releaseCompilation(s: GameState, r: Rng, actId: string, songIds:
 
 /** Turnês concluídas com shows tocados permitem um disco ao vivo. */
 export function liveCandidates(s: GameState, actId: string) {
-  return s.tours.filter((tr) => tr.actId === actId && tr.stops.some((x) => x.status === 'played') && !s.flags[`liveAlbum:${tr.id}`]);
+  return tourList(s).filter((tr) => tr.actId === actId && tr.stops.some((x) => x.status === 'played') && !s.flags[`liveAlbum:${tr.id}`]);
 }
 
 export function releaseLive(s: GameState, r: Rng, tourId: string): L | null {
-  const tr = s.tours.find((x) => x.id === tourId);
+  const tr = tourList(s).find((x) => x.id === tourId);
   const act = tr ? s.acts[tr.actId] : undefined;
   if (!tr || !act) return l('Turnê inválida.', 'Invalid tour.');
   const played = tr.stops.filter((x) => x.status === 'played');
@@ -339,7 +340,7 @@ export function discardIdea(s: GameState, actId: string, ideaId: string): void {
 function ideasMonth(s: GameState, r: Rng): void {
   for (const id of playerActs(s)) {
     const act = s.acts[id];
-    const playedTour = s.tours.some((tr) => tr.actId === id && tr.stops.some((x) => x.status === 'played' && s.day - x.day < 31 && s.day >= x.day));
+    const playedTour = tourList(s).some((tr) => tr.actId === id && tr.stops.some((x) => x.status === 'played' && s.day - x.day < 31 && s.day >= x.day));
     if (playedTour && r.chance(0.6)) addIdea(s, r, id, 'tour', r.int(4, 9));
     if (s.movements.some((m) => m.city === act.city && s.year - m.born <= 2) && r.chance(0.25)) addIdea(s, r, id, 'movement', r.int(5, 9));
     const fam = act.members.some((m) => s.families[m] && r.chance(0.08));

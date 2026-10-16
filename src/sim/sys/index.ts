@@ -62,7 +62,6 @@ import './ventures9';
 import './tour12';
 import './studio12';
 // Rodada 11: ofício de empresário (metas, turnês, propostas, imagem, conflitos, rivais) e scouting com névoa.
-import './manager11';
 import './scout11';
 // Rodada 9: mundo vivo — crônica (Lendas), alma das pessoas, relíquias, boatos e jornal, história prévia.
 import './pace9';

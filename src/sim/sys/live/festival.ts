@@ -4,12 +4,13 @@
 // pensamentos do público e desastres. O festival cresce a cada edição bem-sucedida.
 // r27 (AUD1): aqui fica o TERRENO (grade, peças, line-up, modelo de lotação/conforto); o ciclo e a edição são do fest12.
 
+import { addOwnFest, ownFests } from '../feststore';
 import { clamp } from '../../../core/rng';
 import { cityById, l, type L } from '../../../data/world';
 import { registerSimHook } from '../../ext4';
 import type { Act, GameState } from '../../types';
 import { fmtL, money, nextId, post, remember } from '../../util';
-import { isMine, liveOf, type FestTile, type OwnFestival } from './state';
+import { isMine, type FestTile, type OwnFestival } from './state';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 
 export interface TileDef {
@@ -55,7 +56,7 @@ export function guestAccepts(f: OwnFestival, act: Act): boolean {
 }
 
 export function canFoundFestival(s: GameState): L | null {
-  if (liveOf(s).fests.length >= MAX_FESTS) return l('Limite de dois festivais próprios.', 'Limit of two own festivals.');
+  if (ownFests(s).length >= MAX_FESTS) return l('Limite de dois festivais próprios.', 'Limit of two own festivals.');
   if (s.year < 1950) return l('Festivais de música ao ar livre só surgem nos anos 1950.', 'Open-air music festivals only appear in the 1950s.');
   return null;
 }
@@ -83,13 +84,13 @@ export function createFestival(s: GameState, name: string, cityId: string, month
     w, h, grid, lineup: [], rep: 20, founded: s.year, nextYear: month > s.month ? s.year : s.year + 1, editions: [],
   };
   post(s, `festfound:${f.id}`, -cost, 'live_costs', `Licença do festival ${f.name}`);
-  liveOf(s).fests.push(f);
+  addOwnFest(s, f);
   remember(s, 'fest_founded', fmtL(l('Nasce o festival {f} em {c}.', 'The {f} festival is born in {c}.'), { f: f.name, c: cityById[cityId].name }), { important: true });
   return f;
 }
 
 export function placeTile(s: GameState, festId: string, x: number, y: number, tile: FestTile): L | null {
-  const f = liveOf(s).fests.find((x2) => x2.id === festId);
+  const f = ownFests(s).find((x2) => x2.id === festId);
   if (!f) return l('Festival inválido.', 'Invalid festival.');
   if (x < 0 || y < 0 || x >= f.w || y >= f.h) return l('Fora do terreno.', 'Outside the grounds.');
   f.grid[y * f.w + x] = tile;
@@ -97,7 +98,7 @@ export function placeTile(s: GameState, festId: string, x: number, y: number, ti
 }
 
 export function setFestival(s: GameState, festId: string, patch: Partial<Pick<OwnFestival, 'price' | 'days' | 'month' | 'name'>>): void {
-  const f = liveOf(s).fests.find((x) => x.id === festId);
+  const f = ownFests(s).find((x) => x.id === festId);
   if (!f) return;
   if (patch.price !== undefined) f.price = clamp(Math.round(patch.price), 5, 400);
   if (patch.days !== undefined) f.days = clamp(Math.round(patch.days), 1, 3);
@@ -113,7 +114,7 @@ export function lineupMax(f: OwnFestival): number {
 }
 
 export function addToLineup(s: GameState, festId: string, actId: string): L | null {
-  const f = liveOf(s).fests.find((x) => x.id === festId);
+  const f = ownFests(s).find((x) => x.id === festId);
   const act = s.acts[actId];
   if (!f || !act) return l('Inválido.', 'Invalid.');
   if (f.lineup.some((x) => x.actId === actId)) return l('Já está no line-up.', 'Already on the bill.');
@@ -126,7 +127,7 @@ export function addToLineup(s: GameState, festId: string, actId: string): L | nu
 }
 
 export function removeFromLineup(s: GameState, festId: string, actId: string): void {
-  const f = liveOf(s).fests.find((x) => x.id === festId);
+  const f = ownFests(s).find((x) => x.id === festId);
   if (f) f.lineup = f.lineup.filter((x) => x.actId !== actId);
 }
 

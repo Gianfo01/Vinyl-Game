@@ -5,14 +5,15 @@
 // manutenção pela programação, vizinhança (barulho e horário) e três metas: clube de referência,
 // rede de casas ou espaço grande. A aleatoriedade usa gerador próprio (semente + mês).
 
+import { BUILT27, builtVenue, house27 } from './venuestore27';
 import { Rng, clamp } from '../../core/rng';
 import { cityById, l, type L } from '../../data/world';
-import { deferEvents, registerExt4 } from '../ext4';
+import { deferEvents } from '../ext4';
 import { emitEvent, type EventDef } from '../events';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, post, remember } from '../util';
 import { monthIndex } from '../capacity';
-import { isMine, liveOf, type OwnVenue } from './live/state';
+import { isMine, type OwnVenue } from './live/state';
 import { VENUE_KINDS, venueKind } from './live/venue';
 import { cashWhy20, freeCash20 } from '../oblig20';
 
@@ -29,18 +30,11 @@ export interface V12 {
   goal: Goal; branches: Branch[]; refMonths: number; done: Partial<Record<Goal, number>>; quietUntil: number; corpAt: number;
 }
 
-declare module '../ext4' { interface Ext4 { venue12: { v: V12 | null } } }
-registerExt4('venue12', () => ({ v: null }));
-const keyOf = (v: OwnVenue) => `${v.cityId}:${v.boughtYear}:${v.name}`;
-export function v12(s: GameState): V12 | null {
-  const x = s.x4 as unknown as { venue12?: { v: V12 | null } };
-  x.venue12 ??= { v: null };
-  const v = liveOf(s).venue;
-  if (!v) return null;
-  if (!x.venue12.v || x.venue12.v.key !== keyOf(v)) {
-    x.venue12.v = { key: keyOf(v), prog: [], regulars: 15, scene: 30, neigh: 60, cond: 80, staff: 2, maint: 1, ups: {}, rel: {}, hist: [], notes: [], goal: 'reference', branches: [], refMonths: 0, done: {}, quietUntil: 0, corpAt: 0 };
-  }
-  return x.venue12.v;
+/** Programação de uma casa (UNI-4/B.12: guardada na própria casa do registro único, `house.prog`; chave padrão = a construída). */
+export function v12(s: GameState, key = BUILT27): V12 | null {
+  const h = house27(s, key);
+  if (!h?.built) return null;
+  return (h.prog ??= { key, prog: [], regulars: 15, scene: 30, neigh: 60, cond: 80, staff: 2, maint: 1, ups: {}, rel: {}, hist: [], notes: [], goal: 'reference', branches: [], refMonths: 0, done: {}, quietUntil: 0, corpAt: 0 });
 }
 
 // ---------------------------------------------------------------- dados
@@ -113,7 +107,7 @@ export function nightEst(s: GameState, v: OwnVenue, x: V12, n: Night): NightEst 
 }
 
 export function monthEst12(s: GameState): { house: number; cost: number; net: number; maint: number; staff: number; branches: number } | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return null;
   let house = 0, cost = 0;
@@ -133,7 +127,7 @@ function freeRentals(v: OwnVenue, x: V12): void {
 }
 
 export function addNight12(s: GameState, o: { k: NightK; day: DayK; deal: DealK; actId?: string; name?: string }): L | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   if (x.prog.some((n) => n.day === o.day)) return l('Esse dia da semana já tem programação fixa.', 'That weekday already has a fixed night.');
@@ -169,7 +163,7 @@ export function setDeal12(s: GameState, id: string, deal: DealK): void {
 
 export const upCost = (s: GameState, v: OwnVenue, u: UpK) => money(s, venueKind(v.kind).price * UPS[u].f);
 export function upgrade12(s: GameState, u: UpK): L | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   if (x.ups[u]) return l('Já feito.', 'Already done.');
@@ -188,7 +182,7 @@ export function setMaint12(s: GameState, n: number): void { const x = v12(s); if
 export function setGoal12(s: GameState, g: Goal): void { const x = v12(s); if (x) x.goal = g; }
 
 export function neighFund12(s: GameState): L | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   const c = money(s, 1500 * Math.pow(scale(s, v), 0.6));
@@ -208,7 +202,7 @@ export function quiet12(s: GameState): void {
 
 export const branchCost = (s: GameState) => money(s, VENUE_KINDS[0].price * 1.3);
 export function branch12(s: GameState, city: string): L | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   if (!cityById[city] || city === v.cityId || x.branches.some((b) => b.city === city)) return l('Escolha outra cidade.', 'Pick another city.');
@@ -229,7 +223,7 @@ export function biggerCost(s: GameState, v: OwnVenue): number {
   return nk ? Math.max(0, money(s, nk.price) - Math.round(v.price * 0.6)) : 0;
 }
 export function bigger12(s: GameState): L | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return l('Sem casa de shows.', 'No venue.');
   const i = VENUE_KINDS.findIndex((k) => k.id === v.kind);
@@ -265,7 +259,7 @@ const CORP: EventDef = {
 deferEvents([CORP]);
 
 export function corp(s: GameState, how: 'take' | 'move' | 'no', nid: string, amount: number): void {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   const n = x?.prog.find((y) => y.id === nid);
   if (!v || !x || !n) return;
@@ -298,7 +292,7 @@ export function corp(s: GameState, how: 'take' | 'move' | 'no', nid: string, amo
 /** Mês da PROGRAMAÇÃO da casa construída (noites, fiéis, cena, vizinhança, metas). r27: devolve receita e custo para o
  * fechamento único das casas (venues27) lançar junto com a base; multas e consertos seguem como eventos à parte. */
 export function programmeMonth12(s: GameState): { rev: number; cost: number } | null {
-  const v = liveOf(s).venue;
+  const v = builtVenue(s);
   const x = v12(s);
   if (!v || !x) return null;
   const r = Rng.fromSeed(`${s.config.seed}:venue12:${monthIndex(s)}`);

@@ -4,11 +4,11 @@
 // comum: tempo de carreira, peso na agenda (e o alívio da experiência), notoriedade, indicadores, próximos
 // passos e atalhos para páginas relacionadas — sempre marcados ↗ (links, não cópias).
 
+import { ownFests } from '../../sim/sys/feststore';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { careerDef, careers, dropCareer, startCareer, timeLoad } from '../../sim/sys/careers12';
 import { expRelief17 } from '../../sim/sys/exp17';
-import { liveOf } from '../../sim/sys/live/state';
 import { TIERS, notoTier, notoriety } from '../../sim/sys/notoriety14';
 import { prod, studios } from '../../sim/sys/studio12';
 import { c12, hasAgency } from '../../sim/sys/tour12';
@@ -43,7 +43,7 @@ export function pageVisible17(s: GameState, id: string): boolean {
   switch (id) {
     case 'manager': return ventures(s).mg.clients.length > 0;
     case 'booking': return !!hasAgency(s) || !!c12(s).promoter?.on;
-    case 'festival': return owns(s, 'festival') || liveOf(s).fests.length > 0;
+    case 'festival': return owns(s, 'festival') || ownFests(s).length > 0;
     case 'venue': return hasVenue27(s); // r27: lista única de casas (construída + reais)
     case 'studio': return studios(s).length > 0 || !!prod(s).on;
     case 'publisher': case 'media': case 'platform': return owns(s, id);

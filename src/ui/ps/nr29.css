@@ -31,6 +31,6 @@
 }
 .ng21 .ng-tabs .ng-tab.done .ng21-ic { background: transparent; color: var(--good); border-color: var(--good); }
 .ng21 .ng-tabs .ng-tab.done .ng21-ic { font-size: 0; }
-.ng21 .ng-tabs .ng-tab.done .ng21-ic::after { content: '✓'; font-size: 16px; }
+.ng21 .ng-tabs .ng-tab.done .ng21-ic::after { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; background: var(--pxi-check) center / contain no-repeat; image-rendering: pixelated; content: ''; margin: 0; font-size: 16px; } /* r31 EMO */
 /* M48: no celular, o editor de aparência (rótulo + ◀ valor ▶) empilha em vez de vazar 57 px para fora da tela */
 @media (max-width: 600px) { .ng22-you-look .look-row { grid-template-columns: minmax(0, 1fr); } .ng22-you-look .look-step { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: 100%; } }

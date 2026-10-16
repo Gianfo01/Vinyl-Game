@@ -9,7 +9,7 @@ import type { Act, GameState } from '../src/sim/types';
 import { createGame } from '../src/sim/worldgen';
 import { careerActs29, exMembers29 } from '../src/sim/sys/connect29';
 import { acceptTheirs27, propose27, startNego27 } from '../src/sim/sys/nego27';
-import { rv27 } from '../src/sim/sys/rivals27';
+import { memOf27 } from '../src/sim/sys/rivals27';
 import { ses19 } from '../src/sim/sys/session19';
 import { bonds } from '../src/sim/sys/bonds9';
 import { ctxMenu27, menuSections27 } from '../src/ui/ps/ctx27model';
@@ -168,7 +168,7 @@ describe('R29 — oferta a um integrante específico', () => {
     expect(closeAtTable(s, r1.actId)).toBe('deal');
     settleMember29(s);
     expect(lb.cash).toBe(cash0 + buy);
-    const g1 = rv27(s).L[lb.id]?.g ?? 0;
+    const g1 = memOf27(s, lb.id)?.g ?? 0;
     expect(g1).toBeGreaterThan(0);
     // aliciamento (sem pagar): mágoa maior e rivalidade
     const riv0 = s.rivalries[lb.id] ?? 0;
@@ -177,7 +177,7 @@ describe('R29 — oferta a um integrante específico', () => {
     expect('actId' in r2).toBe(true);
     expect(closeAtTable(s, (r2 as { actId: string }).actId)).toBe('deal');
     settleMember29(s);
-    expect((rv27(s).L[lb.id]?.g ?? 0)).toBeGreaterThan(g1 + 10);
+    expect((memOf27(s, lb.id)?.g ?? 0)).toBeGreaterThan(g1 + 10);
     expect(s.rivalries[lb.id] ?? 0).toBeGreaterThan(riv0);
     expect(s.memory.some((m) => m.kind === 'poach')).toBe(true);
   }, 60_000);

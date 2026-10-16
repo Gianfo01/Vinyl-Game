@@ -10,22 +10,24 @@
 // mínimo garantido) e ao mesmo tempo disputar artistas — cada confronto com o parceiro sobe a tensão,
 // e a 100 ele rompe o acordo. Usa o manual (rivals8), o líder (leaders10) e o prestígio (standing9).
 
+import { rivals31 } from './rivalstore';
+import { editions8 } from './feststore';
 import { clamp, Rng } from '../../core/rng';
 import { FESTIVALS } from '../../data/catalog';
 import { cityById, familyOf, l, marketById, type L, type MarketId } from '../../data/world';
 import { bidCatalog } from '../business';
 import { signWithRival } from '../contracts';
 import { raiseBid, withdrawAuction } from '../discovery';
-import { registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
+import { registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import { launchNpcRelease } from '../market';
 import { unreleasedRecorded } from '../production';
 import { PRODUCERS } from '../studio';
 import type { GameState, Label } from '../types';
 import { addHeat, coolHeat, fmtL, heatOf, money, notify, playerActs, post } from '../util';
 import { chron } from './chron9';
-import { editionOf, fest8, TIER_ORDER } from './fests8';
+import { editionOf, TIER_ORDER } from './fests8';
 import { leaderOf } from './leaders10';
-import { logMove, moveText as moveTxt, playbookOf, rivals8, type PlaybookId } from './rivals8';
+import { logMove, moveText as moveTxt, playbookOf, rivals8, type PlaybookId, allMoves8 } from './rivals8';
 import { standingOf, standingScore } from './standing9';
 import { skipBlockedLog } from './gate14';
 import { allReleases17 } from '../relidx17';
@@ -48,13 +50,8 @@ export interface Rivals12State {
   cdm?: Record<string, number>;
 }
 
-declare module '../ext4' { interface Ext4 { rivals12: Rivals12State } }
-const init = (): Rivals12State => ({ c: [], bids: {}, deals: [], push: {}, seenAu: {}, seen: [], cl: {}, cd: {}, seq: 0 });
-registerExt4('rivals12', init);
-export const rivals12 = (s: GameState): Rivals12State => {
-  const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
-  return (x.rivals12 ??= init()) as Rivals12State;
-};
+/** UNI-4 (B.19): parte do estado único dos rivais (rivalstore). */
+export const rivals12 = (s: GameState): Rivals12State => rivals31(s).r12;
 
 const rngFor = (s: GameState, k: string): Rng => Rng.fromSeed(`${s.config.seed}|riv12|${k}|${s.week}`);
 
@@ -219,7 +216,7 @@ function catalogRivals(s: GameState): void {
 function fromRivals8(s: GameState): void {
   const st = rivals12(s);
   const seen = new Set(st.seen);
-  for (const [lbId, moves] of Object.entries(rivals8(s).log)) {
+  for (const [lbId, moves] of allMoves8(s)) {
     for (const m of moves) {
       if (s.week - m.w > 2) continue;
       const key = `${lbId}:${m.w}:${m.k}:${m.a ?? ''}`;
@@ -348,7 +345,7 @@ function festSlot(s: GameState): void {
   if (s.week < (st.cd.fest ?? 0)) return;
   const r = rngFor(s, 'fest');
   const mine = new Set(playerActs(s));
-  for (const ed of fest8(s).editions) {
+  for (const ed of editions8(s)) {
     if (ed.done || ed.month <= s.month + 0 || ed.year !== s.year) continue;
     const slot = ed.lineup.find((x) => mine.has(x.actId) && x.tier !== 'opening');
     if (!slot || !r.chance(0.25)) continue;

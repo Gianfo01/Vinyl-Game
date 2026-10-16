@@ -16,6 +16,8 @@
 //  7. (11.11) Ofertas de selo ao artista (artist18) pela PA e pelo olho do A&R (`pa_bet`); selos NPC disputam o
 //     mesmo jovem que você achou no discover18 (`talent_race`).
 
+import { rivalsWith } from './rivalstore';
+import { mindOf18 } from './rivalmind18';
 import { clamp, hashString } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { subById18, SUBS18, subOfA3_18 } from '../../data/regions18';
@@ -28,7 +30,7 @@ import { histMode, scriptedReal } from '../history15';
 import { pushInbox18, registerAdvisorTip, registerInboxKind } from '../inbox18';
 import { fin18, mIdx18 } from '../ledger18';
 import { rng19 } from '../rng19';
-import { addHeat19, coolHeat19, heat19, mind18, playbookOf, rm18 } from '../rivals19';
+import { addHeat19, coolHeat19, heat19, mind18, playbookOf } from '../rivals19';
 import type { Act, GameState, Label, Release } from '../types';
 import { fmtL, money, notify, playerActs, post, staffSkill } from '../util';
 import { ab18, ability18 } from './ability18';
@@ -280,7 +282,7 @@ export function intelOn19(s: GameState, lbId: string): boolean {
 REP_NOTES19.push((s) => {
   const out: L[] = [];
   for (const [id, w0] of Object.entries(l19b(s).rv)) {
-    const lb = s.labels[id], m = rm18(s).m[id];
+    const lb = s.labels[id], m = mindOf18(s, id);
     if (!lb?.active || !m?.target || m.target.until <= s.week || m.target.since !== w0) continue;
     const a = m.target.k === 'act' ? s.acts[m.target.id] : undefined;
     out.push(fmtL(l('Inteligência: {b} mira {t} ({w}).', 'Intelligence: {b} is after {t} ({w}).'), { b: lb.name, t: a ? a.name : m.target.id.replace(/_/g, ' '), w: m.target.why }));
@@ -289,7 +291,7 @@ REP_NOTES19.push((s) => {
 });
 function monthIntel(s: GameState): void {
   const st = l19b(s);
-  for (const [id, m] of Object.entries(rm18(s).m)) {
+  for (const [id, m] of rivalsWith(s, 'mind')) {
     const lb = s.labels[id];
     if (!lb?.active || !m.target || m.target.until <= s.week || st.rv[id] === m.target.since || !intelOn19(s, id)) continue;
     st.rv[id] = m.target.since;
@@ -299,7 +301,7 @@ function monthIntel(s: GameState): void {
   }
   // pactos: o rival trai quando o calor sobe (decisão: processar, retaliar, perdoar)
   const r = rng(s);
-  for (const [id, m] of Object.entries(rm18(s).m)) {
+  for (const [id, m] of rivalsWith(s, 'mind')) {
     const lb = s.labels[id];
     if (!lb?.active || !m.pact || m.pact.until <= s.week || heat19(s, id) < 35) continue;
     if (!r.chance(0.02 * treachery19(s, lb) / 0.3)) continue;
@@ -373,7 +375,7 @@ registerInboxKind('l19b_betray', { label: l('Traição', 'Betrayal'), cat: 'deci
   } });
 const lbOf = (f: Fx18): Label | undefined => f.s.labels[String(f.c.lb ?? '')];
 registerConseq18('ib:l19b_intel:pact', { now: l('Alvo fora da mira; taxa mensal.', 'Target dropped; monthly fee.'), later: [{ in: [6, 18], p: (s, c) => { const lb = s.labels[String(c.lb)]; return lb ? treachery19(s, lb) : 0; }, tone: 'bad', hint: l('Pacto com rival dura enquanto convém a ele.', 'A pact with a rival lasts while it suits them.'),
-  when: (s, c) => !!rm18(s).m[String(c.lb)]?.pact && !!s.labels[String(c.lb)]?.active,
+  when: (s, c) => !!mindOf18(s, String(c.lb))?.pact && !!s.labels[String(c.lb)]?.active,
   fx: (f) => { const lb = lbOf(f)!; betray19(f.s, lb); return fmtL(l('{b} rompeu o pacto que você propôs.', '{b} broke the pact you proposed.'), { b: lb.name }); } }] });
 registerConseq18('ib:l19b_intel:leak', { later: [{ in: [2, 8], p: 0.45, tone: 'mixed', hint: l('A imprensa lembra quem vazou.', 'The press remembers who leaked.'),
   fx: (f) => { const lb = lbOf(f); if (lb) addHeat19(f.s, lb.id, 5, 100); f.rep('commercial', 1).rep('institutional', -1); return fmtL(l('{b} devolve com boatos sobre você; o mercado admira sua firmeza.', '{b} hits back with rumors about you; the market admires your nerve.'), { b: lb?.name ?? '?' }); } }] });

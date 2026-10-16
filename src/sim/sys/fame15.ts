@@ -89,7 +89,21 @@ export function personFame(s: GameState, pid: string): { v: number; parts: { t: 
   if (Math.abs(po) >= 0.5) parts.push({ t: l('Saldo pessoal (escândalos, solo, ego, morte)', 'Personal balance (scandals, solo, ego, death)'), v: Math.round(po) });
   return { v: Math.round(clamp(base + stage + po, 0, 100) * 10) / 10, parts };
 }
-const pf = (s: GameState, pid: string) => personFame(s, pid).v;
+/** W3-FIX (desempenho): só o número de personFame (a mesma conta, sem montar os textos). */
+export function personFameV(s: GameState, pid: string): number {
+  const p = s.persons[pid];
+  if (!p) return 0;
+  let base = 0;
+  let src: Act | undefined;
+  for (const a of actsOfP(s, pid)) {
+    const share = a.members.length === 1 ? 1 : front(a, p) ? 0.88 : 0.62;
+    if (a.fame * share > base) { base = a.fame * share; src = a; }
+  }
+  const stage = src && front(src, p) && base > 8 ? clamp(((p.skills as Record<string, number>).stage ?? 50) - 50, -20, 40) / 6 : 0;
+  const po = f15(s).po[pid] ?? 0;
+  return Math.round(clamp(base + stage + po, 0, 100) * 10) / 10;
+}
+const pf = personFameV;
 registerKnowFame({ tier: (v) => fameTier(v), person: pf }); // r31: know.ts lê a fama por aqui (sem importar este sistema)
 
 /** Fama de qualquer id (ato ou pessoa). */

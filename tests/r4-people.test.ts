@@ -21,7 +21,7 @@ import { changeRole, trainStaff } from '../src/sim/sys/people/staff';
 import { autoNegotiate, closeNegotiation, propose, startNegotiation } from '../src/sim/sys/people/negotiation';
 import { answerMsg, inboxItems } from '../src/sim/sys/people/inbox';
 import { cliques } from '../src/sim/sys/people/social';
-import { hireDetective, pressureCeo } from '../src/sim/sys/people/secrets';
+import { dossiers, hireDetective, pressureCeo, secKnown, secOwner } from '../src/sim/sys/people/secrets';
 import { breakUp } from '../src/sim/sys/people/life';
 import { feedFor, postAbout } from '../src/sim/sys/people/feed';
 import '../src/sim/sys/people';
@@ -260,10 +260,10 @@ describe('panelinhas, segredos e romances', () => {
   it('detetive e pressão no CEO rival', () => {
     const { s, r } = withAct('pp-18');
     advanceMonth(s);
-    const sec = P(s).secrets.find((x) => x.owner.startsWith('label:'));
+    const sec = dossiers(s).find((x) => secOwner(x).startsWith('label:')); // UNI-4: dossiê no secrets23
     if (!sec) return;
-    for (let i = 0; i < 6 && !sec.known; i++) hireDetective(s, r, sec.owner);
-    if (sec.known) pressureCeo(s, r, sec.id, 'back_off');
+    for (let i = 0; i < 6 && !secKnown(s, sec); i++) hireDetective(s, r, secOwner(sec));
+    if (secKnown(s, sec)) pressureCeo(s, r, sec.id, 'back_off');
     invariant(s);
   });
 

@@ -28,7 +28,7 @@ import { criticScore } from './relinfo';
 import { CAMPAIGN_COST, gramoScore } from './sys/ceremonies8';
 import { crime17, crimeOdds, a3Of } from './sys/crime17';
 import { renewChance } from './sys/explain12';
-import { personFame } from './sys/fame15';
+import { personFameV } from './sys/fame15';
 import { hallScore } from './sys/rockhall9';
 import { hq6 } from './sys/hq6';
 import { pr18 } from './sys/press18';
@@ -109,7 +109,7 @@ export const METRICS29: Metric29[] = [
   { id: 'fama', sys: 'fama', kind: 'mes', name: 'fama do ato', f: (c) => c.a.fame },
   { id: 'fas', sys: 'fama', kind: 'mes', name: 'fãs núcleo', f: (c) => c.a.fans.core },
   { id: 'embalo', sys: 'fama', kind: 'mes', name: 'embalo do ato', f: (c) => c.a.momentum },
-  { id: 'famap', sys: 'fama', kind: 'pura', name: 'fama da pessoa', f: (c) => personFame(c.s, c.a.members[0]).v },
+  { id: 'famap', sys: 'fama', kind: 'pura', name: 'fama da pessoa', f: (c) => personFameV(c.s, c.a.members[0]) },
   { id: 'influencia', sys: 'mundo', kind: 'pura', name: 'influência nas leis', f: (c) => influence(c.s) },
   { id: 'gosto', sys: 'mundo', kind: 'mes', name: 'popularidade do gênero', f: (c) => c.s.genrePop[c.a.genre] ?? 0 },
   { id: 'cena', sys: 'mundo', kind: 'mes', name: 'cena local', f: (c) => c.s.scenes[`${c.a.city}:${c.a.genre}`] ?? 0 },
