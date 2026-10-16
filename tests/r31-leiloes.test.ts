@@ -20,7 +20,7 @@ const mk = (seed: string, y = 1985) => createGame(defaultConfig(seed, { startYea
 const rich = (s: GameState) => { ownerOf(s).wealth = 1e12; s.player.cash = 1e12; };
 function lot(s: GameState, v = 40000): Relic {
   const rl = addRelic(s, 'guitar', { pt: 'Guitarra de teste', en: 'Test guitar' }, undefined, undefined, v, s.year - 10);
-  rl.st = 'auction';
+  rl.st = 'auction'; rl.au = s.week + 13; // como o relics9 abre um leilão
   ensureSessions31(s);
   assignLots31(s);
   return rl;
@@ -33,7 +33,7 @@ describe('r31 T · casa de leilões', () => {
     const se = sessionOf31(s, rl.id)!;
     expect(se).toBeTruthy();
     expect(se.w).toBeGreaterThanOrEqual(s.week + 2);
-    expect(rl.au).toBe(se.w + 1);
+    expect(se.w).toBeLessThanOrEqual(rl.au!); // o martelo é no fechamento do mês do leilão de sempre
     const ids = calendar19(s, { weeks: 30 }).map((d) => d.id);
     expect(ids).toContain(`auc31:${se.id}`);
     // local todo mês, grande a cada 3, prestígio a cada 6

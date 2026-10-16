@@ -35,6 +35,7 @@ import { noteSale31 } from '../r31/relic31';
 import { registerSwitch, sw } from '../r31/switches';
 import type { GameState } from '../types';
 import { fmtL, money, notify, post } from '../util';
+import { chron } from './chron9';
 import { leaders } from './leaders10';
 import {
   isRelicFixed9, openingBid, ownerName, placeBid, realOwners9, relicAuctionHook9, relicBuyFrom9, relics, relMeta, type Relic,
@@ -159,27 +160,34 @@ export const nextSession31 = (s: GameState): Sess31 | undefined => openSessions3
 const houseFor = (rl: Relic): House31 => (rl.v >= HOUSE31.prestige.minV ? 'prestige' : rl.v >= HOUSE31.big.minV ? 'big' : 'local');
 const ownersN = (rl: Relic): number => realOwners9(rl).length;
 
-/** Põe as peças em leilão no catálogo do próximo pregão adequado. Lote repetido (sem troca de dono) volta ao dono. */
+/** Mês absoluto (ano×12+mês) em que cai a semana `w` (aproximação pelo dia do mês atual). */
+export function monthOfWeek31(s: GameState, w: number): number {
+  const days = (w - s.week) * 7 + (s.clock?.dayInMonth ?? 0);
+  return absMonth(s) + Math.floor(days / 30.44);
+}
+/** Põe as peças em leilão no catálogo do pregão do mês do martelo. O martelo é no MESMO momento em que o relics9 sempre
+ *  resolveu o leilão (`rl.au`, fechamento do mês): o pregão escolhe só a casa (porte e cidade) e quem dá lance. Casa pelo
+ *  porte da peça; num mês sem pregão grande/de prestígio, a melhor casa que houver (o local acontece todo mês que tem lote).
+ *  Lote não se repete sem troca de dono (peça sua devolvida pode voltar por consignação). */
 export function assignLots31(s: GameState): void {
   const st = auction31(s);
+  const era = s.year < 1946 ? 0 : 1;
   for (const rl of relics(s).list) {
     if (rl.st !== 'auction' || isRelicFixed9(rl) || rl.meta?.fix || sessionOf31(s, rl.id)) continue;
     const n = ownersN(rl);
-    if (st.listed[rl.id] === n && !st.cons[rl.id]) { // já foi a pregão com este mesmo dono: não repete
-      rl.st = 'kept'; rl.au = undefined; rl.bid = undefined;
-      continue;
-    }
+    if (st.listed[rl.id] === n && !st.cons[rl.id]) continue; // já passou por pregão sem trocar de dono: segue só no relics9
+    const au = rl.au ?? s.week;
+    const m = monthOfWeek31(s, au);
     const want = houseFor(rl);
-    const order: House31[] = want === 'prestige' ? ['prestige', 'big', 'local'] : want === 'big' ? ['big', 'local'] : ['local', 'big'];
-    let target: Sess31 | undefined;
-    for (const h of order) {
-      target = openSessions31(s).find((x) => x.house === h && x.w >= s.week + 2 && x.lots.length < HOUSE31[h].lots);
-      if (target) break;
-    }
-    if (!target) continue; // o motor cria mais pregões na virada do mês
-    target.lots.push(rl.id);
+    const order: House31[] = want === 'prestige' ? ['prestige', 'big', 'local'] : want === 'big' ? ['big', 'local'] : ['local'];
+    const h = order.find((x) => x === 'local' || m % HOUSE31[x].every[era] === 0) ?? 'local';
+    const id = `${h}:${m}`;
+    let se = st.sess.find((x) => x.id === id);
+    if (!se) { se = { id, house: h, city: houseCity31(s, h, Math.floor(m / HOUSE31[h].every[era])), w: au, lots: [] }; st.sess.push(se); st.sess.sort((a, b) => a.w - b.w || (a.id < b.id ? -1 : 1)); }
+    if (se.done) continue;
+    se.w = se.lots.length ? Math.min(se.w, au) : au;
+    se.lots.push(rl.id);
     st.listed[rl.id] = n;
-    rl.au = target.w + 1; // o relics9 não resolve antes do martelo
   }
 }
 
@@ -248,7 +256,7 @@ export function bidders31(s: GameState, sessId: string, rl: Relic): Bidder31[] {
   // peça real: o comprador da história real, por telefone, paga o preço da história (um pouco acima)
   if (rl.rb) out.push({ key: `phone:${rl.rb}`, name: rl.rb, kind: 'phone', want: 1.2, cap: Number.MAX_SAFE_INTEGER, max: Math.round(open * 1.06) });
   // colecionador anônimo ao telefone: garante disputa de peça boa
-  out.push({ key: 'phone:anon', name: '', kind: 'phone', want: 1, cap: Number.MAX_SAFE_INTEGER, max: Math.round(open * (0.95 + H(s, `anon|${sessId}|${rl.id}`) * 0.35)) });
+  out.push({ key: 'phone:anon', name: '', kind: 'phone', want: 1, cap: Number.MAX_SAFE_INTEGER, max: Math.round(open * (1 + H(s, `anon|${sessId}|${rl.id}`) * 0.35)) });
   return out;
 }
 
@@ -340,7 +348,7 @@ export function consign31(s: GameState, rid: string): L | null {
   const rl = consignable31(s).find((x) => x.id === rid);
   if (!rl) return l('Só peças do seu acervo, fora de empréstimo.', 'Only pieces in your collection, not on loan.');
   const st = auction31(s);
-  rl.st = 'auction'; rl.ex = undefined; rl.bid = undefined;
+  rl.st = 'auction'; rl.ex = undefined; rl.bid = undefined; rl.au = s.week + 13; // o prazo de sempre de um leilão (relics9)
   st.cons[rid] = 1;
   ensureSessions31(s);
   assignLots31(s);
@@ -358,7 +366,7 @@ export const dutyRate31 = (y: number): number => (y < 1946 ? 0.2 : y < 1980 ? 0.
 export const shipWeeks31 = (y: number): number => (y < 1946 ? 4 : y < 1970 ? 2 : 1);
 
 /** Fecha um lote: o pregão corre pela mesma conta da cena. Devolve o resultado (ou null se não era lote aberto). */
-export function hammer31(s: GameState, sess: Sess31, rid: string): [string, string, number, 0 | 1] | null {
+export function hammer31(s: GameState, sess: Sess31, rid: string, o: { top?: number; col?: () => string } = {}): [string, string, number, 0 | 1] | null {
   const rl = relics(s).list.find((x) => x.id === rid);
   const st = auction31(s);
   if (!rl || rl.st !== 'auction' || !sess.lots.includes(rid) || sess.res?.some((x) => x[0] === rid)) return null;
@@ -372,6 +380,8 @@ export function hammer31(s: GameState, sess: Sess31, rid: string): [string, stri
   let row: [string, string, number, 0 | 1];
   rl.bid = undefined;
   rl.au = undefined;
+  // o mesmo sorteio do colecionador do relics9 sempre que você não leva (o sorteio comum do mês não muda)
+  const colName = lad.lead !== 'player' && o.col ? o.col() : '';
   if (!lad.lead) { // ninguém chegou ao lance inicial: a peça volta ao dono (não repete sem trocar de dono)
     rl.st = cons ? 'player' : 'kept';
     delete st.cons[rid];
@@ -401,9 +411,9 @@ export function hammer31(s: GameState, sess: Sess31, rid: string): [string, stri
     notify(s, fmtL(l('Martelo batido: {n} é seu por {v}.', 'Hammer down: {n} is yours for {v}.'), { n: rl.n, v: usd(price) }), 'good');
   } else {
     const b = bs.find((x) => x.key === lad.lead)!;
-    const name = b.kind === 'phone' && !b.name ? 'colecionador anônimo (telefone)' : b.name;
-    const factor = lad.price / Math.max(1, lad.open);
-    rl.v = Math.round(rl.v * factor);
+    const name = b.kind === 'phone' && !b.name ? (colName ? `${colName} (telefone)` : 'colecionador anônimo (telefone)') : b.name;
+    // valor de mercado: o do sorteio de sempre (`top`) no fechamento do mês; martelo antecipado na cena: pelo preço
+    rl.v = o.top ?? Math.round(rl.v * (lad.price / Math.max(1, lad.open)));
     rl.st = 'kept';
     rl.own.push([name, s.year, 'leilão']);
     if (b.kind !== 'phone') relMeta(rl).oh = [b.key, realOwners9(rl).length];
@@ -413,10 +423,9 @@ export function hammer31(s: GameState, sess: Sess31, rid: string): [string, stri
       delete st.cons[rid];
       notify(s, fmtL(l('{n} vendido em leilão: você recebe {v} (já sem a comissão da casa).', '{n} sold at auction: you get {v} (after the house commission).'), { n: rl.n, v: usd(net) }), 'good');
     } else if (mine) notify(s, fmtL(l('Seu limite por {n} foi superado.', 'Your limit for {n} was beaten.'), { n: rl.n }), 'info');
-    if (noteSale31(s, rl, rl.v, false)) {
-      emitFact(s, { kind: 'relic', actors: [...(rl.a ? [rl.a] : []), ...(b.pid ? [`p:${b.pid}`] : [])], severity: 40, visibility: 'public', tags: ['relic', 'auction31', 'record'], src: 'auction31',
-        text: fmtL(l('Preço recorde: {n} arrematado por {p}.', 'Record price: {n} bought by {p}.'), { n: rl.n, p: name }) });
-    }
+    // a mesma linha de crônica que o relics9 sempre escreveu (o recorde vira ponto de história em relic31.noteSale31)
+    noteSale31(s, rl, rl.v, false);
+    chron(s, { k: 'relic', i: 2, a: rl.a ? [rl.a] : [], t: fmtL(l('{n} é arrematado em leilão por {p}.', '{n} goes at auction to {p}.'), { n: rl.n, p: name }) });
     row = [rid, name, lad.price, 0];
   }
   (sess.res ??= []).push(row);
@@ -435,7 +444,11 @@ export function closeSession31(s: GameState, sess: Sess31): void {
 
 // ---------------------------------------------------------------- ganchos do motor
 
-relicAuctionHook9.f = (s, rl) => auctionOn31(s) && !!sessionOf31(s, rl.id);
+relicAuctionHook9.f = (s, rl, top, col) => {
+  if (!auctionOn31(s)) return false;
+  const se = sessionOf31(s, rl.id);
+  return !!se && !!hammer31(s, se, rl.id, { top, col });
+};
 
 /** r31 (VIT): os lotes do mês são uma das fontes da vitrine do mês (r31/vitrine31) — o motor da vitrine chama isto na nova
  *  partida e na virada do mês (a casa de leilões não tem mais gancho próprio de catálogo; o martelo segue no gancho semanal). */
@@ -443,7 +456,8 @@ export function restockAuction31(s: GameState): void { if (auctionOn31(s)) { ens
 registerSimHook('week', 'auction31', (s) => {
   if (!auctionOn31(s) || !peek(s)) return;
   assignLots31(s);
-  for (const se of openSessions31(s)) if (se.w < s.week) closeSession31(s, se);
+  // pregão fechado quando todos os lotes já tiveram martelo (no fechamento do mês, pelo relics9) ou saíram do leilão
+  for (const se of openSessions31(s)) if (se.w < s.week && se.lots.every((r) => relics(s).list.find((x) => x.id === r)?.st !== 'auction')) se.done = 1;
   const st = auction31(s);
   st.imports = st.imports.filter((x) => x.arrive >= s.week - 4);
 });
