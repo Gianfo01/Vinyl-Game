@@ -404,3 +404,20 @@ export const seen = (s: GameState, id: string, f: SeeField, obs = 'player'): boo
 
 /** Limiar ÚNICO de informação interna de uma empresa (antes 5% no pregão e 25% no dossiê): participação a partir daqui. */
 export const INSIDE31 = 0.1;
+
+/** Fama MOSTRADA de um ato ou pessoa: a vista do seu país (#4); o que é seu, o número de sempre. */
+export function fameHere31(s: GameState, id: string): number {
+  const a = s.acts[id];
+  if (a) return mineAct(a) ? a.fame : fameAt(s, a, '@me');
+  if (!s.persons[id]) return 0;
+  const pf = FF().person(s, id);
+  const acts = actsOfPerson17(s, id);
+  if (acts.some(mineAct)) return pf;
+  const ma = acts.slice().sort((x, y) => y.fame - x.fame)[0];
+  return ma && ma.fame > 0 ? pf * Math.min(1.25, fameAt(s, ma, '@me') / ma.fame) : pf;
+}
+/** Valor de fama que a tela mostra (para ORDENAR listas pelo que se vê, #5): o palpite da faixa, ou −1 quando oculto. */
+export function shownFame31(s: GameState, id: string): number {
+  const b = band(s, id, 'fame', fameHere31(s, id), know(s, id).width('fame'));
+  return b ? b.mid : -1;
+}

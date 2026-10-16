@@ -12,7 +12,7 @@ import { perk } from './perks';
 import { hasTech, money, staffCount } from './util';
 import { actsNow27 } from './tickcache27';
 import { rng19 } from './rng19';
-import { KNOW_WIDTHS, band, know } from './know';
+import { KNOW_WIDTHS, band, fameHere31, know } from './know';
 
 export const DEGREES: L[] = [
   l('Rumor', 'Rumor'),
@@ -51,7 +51,7 @@ export function estimate(s: GameState, actId: string, field: 'potential' | 'tale
 
 function trueValue(s: GameState, act: Act, field: string, skill?: string): number {
   if (field === 'potential') return act.potential;
-  if (field === 'fame') return act.fame;
+  if (field === 'fame') return fameHere31(s, act.id); // r31 F #4: a fama vista do seu país, a mesma da ficha
   if (field === 'talent') return talentScore(s, act);
   if (field === 'skill' && skill) return (actTalent(s, act) as Record<string, number>)[skill] ?? 0;
   return 0;

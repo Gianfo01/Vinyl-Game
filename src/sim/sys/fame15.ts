@@ -18,7 +18,7 @@ import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
-import { band, bandText, know, registerKnowFame, see } from '../know';
+import { band, bandText, fameHere31, know, registerKnowFame, see } from '../know';
 import { relAdd } from '../opinion';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
@@ -135,7 +135,7 @@ export function whyHidden(f: Field15): L {
 
 /** Fama mostrada pela regra única de know.ts: exata quando pública no seu país, faixa (nunca centrada) quando só se ouve falar, "?" quando desconhecida. */
 export function fameText(s: GameState, id: string): string {
-  return bandText(band(s, id, 'fame', fameOf(s, id), know(s, id).width('fame')));
+  return bandText(band(s, id, 'fame', fameHere31(s, id), know(s, id).width('fame')));
 }
 
 // ---------------------------------------------------------------- histórico
