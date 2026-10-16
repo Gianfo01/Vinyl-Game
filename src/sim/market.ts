@@ -332,6 +332,7 @@ export function marketWeek(s: GameState, r: Rng): void {
   const pool = weeklyPool(s);
   s.stats.weeklyPool = pool;
   const live = allReleases17(s).filter((x) => x.live);
+  Y31.normalize?.(s, live); // R31 Y: a demanda por país redistribui entre os lançamentos (fama → vendas → fama sem bola de neve)
   // foco promocional: lançamentos recentes do mesmo dono disputam a mesma equipe
   const recentByOwner: Record<string, number> = {};
   for (const rel of live) if (s.week - rel.week < 12) recentByOwner[rel.owner] = (recentByOwner[rel.owner] ?? 0) + 1;

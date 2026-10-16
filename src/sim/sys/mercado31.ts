@@ -191,9 +191,19 @@ function relY(s: GameState, rel: Release, act: Act): RelY {
 
 Y31.begin = begin;
 Y31.end = end;
+const yOn = (s: GameState) => on31(s, 'y31.local') || on31(s, 'y31.laws') || on31(s, 'y31.domino');
+// A demanda por país REDISTRIBUI: cada semana o fator é dividido pela média (pelo apelo) de todos os lançamentos vivos.
+// Sem isso, quem já está nas paradas ganha desvio local positivo em todo país, a demanda total infla e o resto do
+// mercado (o jogador incluído) perde fatia — a bola de neve fama → vendas → parada → fama.
+Y31.normalize = (s, rels) => {
+  if (!yOn(s)) return;
+  let num = 0, den = 0;
+  for (const r of rels) { const a = s.acts[r.actId]; if (!a || !(r.appeal > 0)) continue; num += r.appeal * relY(s, r, a).K; den += r.appeal; }
+  s.stats.lastKn31 = den > 0 ? num / den : 1;
+};
 Y31.demand = (s, rel, act) => {
-  if (!on31(s, 'y31.local') && !on31(s, 'y31.laws') && !on31(s, 'y31.domino')) return 1;
-  return relY(s, rel, act).K;
+  if (!yOn(s)) return 1;
+  return relY(s, rel, act).K / (s.stats.lastKn31 ?? 1);
 };
 Y31.why = (s, rel, act): Y31Why[] => {
   const y = relY(s, rel, act);

@@ -74,6 +74,8 @@ export interface Y31Hooks {
   /** abre/fecha o cache da semana (o mercado abre antes de vender; as paradas fecham depois de repartir) */
   begin?: (s: GameState) => void;
   end?: (s: GameState) => void;
+  /** média (pelo apelo) da demanda por país dos lançamentos da semana — divide a demanda para o mercado não inflar */
+  normalize?: (s: GameState, rels: Release[]) => void;
   /** fator da demanda total do lançamento (fama local, leis do país, efeito dominó); 1 = neutro */
   demand?: (s: GameState, rel: Release, act: Act) => number;
   /** partes do fator, para a explicação das vendas */
