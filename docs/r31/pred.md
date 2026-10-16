@@ -93,7 +93,7 @@ própria; banco não é lugar do bairro) — ficam fora.
 ## Prova
 
 - `docs/r31/shots/onda4-pred-galeria-<época>.png` — os 55 tipos lado a lado em cada uma das 6 épocas.
-- `docs/r31/shots/onda4-pred-mapa-{londres-1965,rio-1975,ny-2012,sp-2036}-{antes,depois}.png`.
+- `docs/r31/shots/onda4-pred-mapa-{londres-1965,rio-1975,ny-2012,sp-2036}-{antes,depois}.png` (o "antes" foi tirado antes da junção com a GEO; a diferença de chão/água é dela). Conserto junto: as chaminés vitorianas não saem mais para fora do telhado em prédio estreito.
 - `tests/r31-pred.test.ts`: tabelas cobrem todo lugar (BIZ31, RKINDS31, nb19, place27); desenho sem erro e com
   pixels em 6 épocas × 4 cidades; assinatura de pixels: quaisquer dois tipos diferem em > 4% dos pixels opacos
   em toda época (ou têm silhueta de tamanho diferente).

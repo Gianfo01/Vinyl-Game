@@ -191,7 +191,7 @@ function accessories(t: T, L: T, b: Bld18, st: Style18, gx: number, gy: number, 
   const [cx, cy] = roofTop(gx, gy, w, d, H);
   const m = MAT[st];
   if (st === 'victorian' || st === 'brick') {
-    for (let i = 0; i < Math.min(3, w); i++) { const [x, y] = iso(gx + 0.6 + i * 1.3, gy + 0.5); t.rect(x, y - H - 5, 2, 5, C('#6a3a2a')); t.rect(x, y - H - 6, 2, 1, C('#3a3030')); }
+    for (let i = 0; i < 3 && 0.6 + i * 1.3 < w - 0.4; i++) { const [x, y] = iso(gx + 0.6 + i * 1.3, gy + 0.5); /* R31 (PRED): chaminé só em cima do telhado */ t.rect(x, y - H - 5, 2, 5, C('#6a3a2a')); t.rect(x, y - H - 6, 2, 1, C('#3a3030')); }
     if (st === 'brick' && H > 14) tank27(t, cx + 5, cy);
   } else if (st === 'deco' && H > 18) {
     t.line(cx, cy - 4, cx, cy - 4 - Math.min(16, H / 3), m.trim);
