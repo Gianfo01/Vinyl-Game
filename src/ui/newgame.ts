@@ -45,6 +45,7 @@ import { careerOfSpec } from '../sim/sys/persona';
 import './newgame20.css';
 import { buildRun27, draftDefaults27 } from './ps/home27model';
 import { homeScreen27 } from './ps/home27';
+import { attachBase31 } from './base31ui'; // R31 (EDT): editor de base
 
 /** Anos de início com nomes únicos (rodada 13: ver ngdata13.ts; o campo ao lado aceita qualquer ano de 1889 a 2039). */
 const START_YEARS = START_YEARS13;
@@ -71,6 +72,7 @@ export function titleScreen(root: HTMLElement, onStart: () => void): void {
 /** r27: preparo comum (buildRun27) + createGame; usado pela configuração completa e pela Nova run rápida. */
 export function launchRun27(cfg: RunConfig, onStart: () => void): void {
   const run = buildRun27(cfg);
+  attachBase31(run); // R31 (EDT): base escolhida no Editor de base (ausente = original)
   prepareNewGame(run);
   const g = createGame(run);
   store.game = g;

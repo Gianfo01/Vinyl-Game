@@ -27,8 +27,12 @@ Leia isto inteiro antes de mexer em código. Cada agente recebe, além deste arq
 8. **Arte:** só o estilo pixel art antigo do jogo (ver `docs/arte29*.md` e a skill `masters-artist-sprites`). Sem selos
    "simulado/fictício".
 9. **Nomes reais** novos entram no registro `src/data/realnames31.ts` (identificador → nome real → substituto).
-10. **Editores:** a partir da onda 1, todo sistema novo registra no editor dentro da partida o que pode ser editado/rodado e,
-    se for dado de base, no editor de base.
+10. **Editores (obrigatório a partir da onda 1):** todo sistema novo registra no editor dentro da partida
+    (`src/sim/r31/editor.ts`) o que pode ser editado — `registerEditable({ id, area, label: l(…), kind, get, set })`
+    (`kind`: number/money/text/bool/select; `target: 'person'|'act'|'label'|'relic'|'genre'` para editar por entidade;
+    `raw: true` quando não passa por função do jogo) — e o que pode ser rodado — `registerRunnable({ id, label, run })`.
+    A tela "Editor" lista o registro sozinha. Edição sempre por `applyEdit`/`runEdit` (só com o editor ligado; marca a
+    partida e escreve no diário). Dado de base vai no editor de base (`src/sim/r31/base31.ts`, `registerBaseSection31`).
 11. **Família Fossati** (Efro, Lucia, Sonia, Antonella): sempre presentes, papéis por época, nunca envelhecem nem morrem;
     Sonia só se aposenta. Homenagem é ficção declarada.
 12. Não notificar a sessão da wiki.

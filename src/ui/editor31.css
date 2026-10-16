@@ -1,0 +1,26 @@
+/* R31 (EDT): editor dentro da partida e editor de base — usa os tokens da interface (cores do tema). */
+.ed31-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .5rem; }
+.ed31-head small { flex-basis: 100%; }
+.ed31-tabs { display: flex; flex-wrap: wrap; gap: .25rem; margin: .5rem 0; }
+.ed31-tabs button.on, .b31 .tabs button.on { font-weight: 700; text-decoration: underline; }
+.ed31-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .35rem 0; border-bottom: 1px dashed color-mix(in srgb, currentColor 18%, transparent); }
+.ed31-row input[type=number], .ed31-row input[type=text] { width: 9rem; }
+.ed31-row small { flex-basis: 100%; }
+.ed31-raw { opacity: .7; font-style: italic; }
+.ed31-list { display: flex; flex-wrap: wrap; gap: .25rem; margin: .5rem 0; }
+.ed31-list .ed31-sel { outline: 2px solid currentColor; font-weight: 700; }
+.ed31-relics { flex-direction: column; }
+.ed31-target { margin-top: .75rem; }
+.ed31-flag { display: inline-block; }
+.ed31-log { max-height: 60vh; overflow: auto; }
+.b31 { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.b31 header.row { display: flex; gap: .75rem; align-items: center; }
+.b31-list { list-style: none; padding: 0; display: grid; gap: .5rem; }
+.b31-item { display: grid; gap: .25rem; padding: .5rem; border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 6px; }
+.b31-item.on { border-color: currentColor; border-width: 2px; }
+.b31-rec { padding: .5rem 0; border-bottom: 1px dashed color-mix(in srgb, currentColor 18%, transparent); }
+.b31-f { display: inline-flex; flex-direction: column; font-size: .85em; gap: .1rem; }
+.b31-f input, .b31-f select { max-width: 14rem; }
+.b31-errors { padding: .5rem; border: 2px solid currentColor; border-radius: 6px; margin: .5rem 0; }
+.b31-code { width: 100%; }
+.b31 textarea { width: 100%; }

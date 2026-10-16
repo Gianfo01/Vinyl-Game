@@ -25,7 +25,8 @@ import { dayOfDate, fmtL, hasMutator, nextId, remember } from './util';
 import { l } from '../data/world';
 import { takeoverTerms, type TakeoverTerms } from './takeover';
 import { runSimHooks } from './ext4';
-import { LB29, labelsOn29 } from './labels29gate'; // r29: gravadoras escolhidas na Nova run
+import { LB29, labelsOn29 } from './labels29gate';
+import { BASE31 } from './r31/basehook'; // R31 (EDT): base editada (editor de base) — sempre restaura a original antes // r29: gravadoras escolhidas na Nova run
 import { RNG_VERSION19, rng19 } from './rng19';
 
 export const SAVE_VERSION = 6;
@@ -305,6 +306,7 @@ function spawnCatalogAct(s: GameState, r: Rng, u: GameState['upcoming'][number],
 }
 
 export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): GameState {
+  BASE31.apply?.(cfg);
   normalizeHistory(cfg);
   LB29.prep?.(cfg); // r29: gravadoras escolhidas (quais e quantas) viram a lista da partida; sem labels29 não faz nada
   applyRealNames(!!cfg.realNames);

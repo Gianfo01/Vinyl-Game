@@ -90,6 +90,7 @@ import { allTabs27 } from './ps/subtabs27';
 import { kick27, mayShow27 } from './ps/queue27';
 import { settingsCut27 } from './ps/cut27'; // r27 (K): cenas animadas dos grandes momentos
 import { settingsAudio28 } from './audio28'; // r28 (F4): som opt-in (prévias e vinhetas)
+import { editorModeSetting31 } from './editor31'; // R31 (EDT): editor dentro da partida (área "Editor", Ctrl+Shift+E)
 import { openStory28 } from './end28'; // r28 (F4): capítulos, rumo e storyboard do fim
 import { setAssist28 } from '../sim/sys/assist28'; // r28 F8 (D2): modo história
 import { getLang } from '../i18n/strings';
@@ -652,6 +653,7 @@ function settings(): void {
     settingsCut27(), // r27 (K): Cenas: todas / só importantes / desligadas
     settingsAudio28(), // r28 (F4): Som — desligado por padrão
     alertsSettings29(), // r29 REORG (M44): alertas por categoria (preferência, fora do save)
+    editorModeSetting31(), // R31 (EDT): Modo editor (testes)
     ...(store.game ? [h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!store.game.config.assist28, onchange: (e: Event) => { if (store.game) setAssist28(store.game, (e.target as HTMLInputElement).checked); } }), t(l('Modo história (assistido): narrador alivia, socorro no aperto e dicas', 'Story mode (assisted): gentler narrator, bailout when broke and hints')))] : []), // r28 F8 (D2)
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.cutscenes !== false, onchange: (e: Event) => { p.cutscenes = (e.target as HTMLInputElement).checked; savePrefs(); } }), t(l('Mostrar cenas (premiações, críticas, entrevistas)', 'Show scenes (awards, reviews, interviews)'))),
     settingsSkin31(() => { close(); render(); settings(); }), // r31 (C): Estilo: automático pela época / fixo

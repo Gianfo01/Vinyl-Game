@@ -10,6 +10,7 @@ import { l, type L } from '../data/world';
 import { ACHIEVEMENTS, scenarioById, type AchievementDef } from '../sim/sys/live';
 import type { GameState } from '../sim/types';
 import { yearOfWeek } from '../sim/util';
+import { isEdited31 } from '../sim/r31/editor';
 import { profileId17 } from './store';
 import { EPOCH27, profAch27, recordAch27, recordMedal27, runOf27, type AchRun27, type MedalRec27 } from './ach27store';
 
@@ -31,6 +32,7 @@ export function runUnlocked27(s: GameState): Record<string, number> {
 const SYNCED = new WeakMap<GameState, string>();
 /** Copia para o perfil as conquistas (e a medalha de cenário) desta partida. Só lê o estado. Devolve as novas no perfil. */
 export function syncRunAch27(s: GameState, pid: string = profileId17()): string[] {
+  if (isEdited31(s)) return []; // R31 (EDT): partida editada (editor ou base editada) não conta para conquistas
   const lv = liveRO27(s);
   const ids = Object.keys(lv.ach ?? {});
   const med = lv.scenario?.done?.medal ?? '';

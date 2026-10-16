@@ -35,6 +35,7 @@ import { quickCharBlock29 } from './char29'; // r29: "Seu personagem" (nome, ida
 import { charLine29, isArtist29 } from './char29model';
 import { clampAge29 } from '../../sim/char29data';
 import { askFile, askText } from '../ask31'; // r31 (B): perguntas dentro do jogo
+import { baseEditorScreen31, baseLabel31 } from '../base31ui'; // R31 (EDT): editor de base
 
 /** r27: arte da tela inicial e da Nova run = a sede em pixel art do próprio jogo (hqpx27), não ilustração externa. */
 const SHOW27: [number, number, string][] = [[2, 1966, 'london'], [3, 1984, 'new_york'], [1, 1956, 'memphis'], [4, 2008, 'sao_paulo'], [0, 1977, 'liverpool'], [3, 1995, 'rio'], [5, 2030, 'tokyo'], [2, 1929, 'chicago']];
@@ -141,6 +142,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
         link(t(l('Saves & perfis', 'Saves & profiles')), toSaves),
         link(t(l('Conquistas', 'Achievements')), () => toAch(), { 'data-link': 'ach' }),
         link(t(l('Configuração completa', 'Full setup')), () => { newGameScreen(root, onStart); top27(); }),
+        link(`${t(l('Editor de base', 'Database editor'))} · ${baseLabel31()}`, () => { baseEditorScreen31(root, redraw); top27(); }, { 'data-link': 'base31' }), // R31 (EDT)
         link(t(l('Usar código de run', 'Use a run code')), runCode),
         link(t(l('Importar arquivo', 'Import file')), () => void importFile()),
         link(t(l('Colar save', 'Paste save')), () => void pasteSave()))),
