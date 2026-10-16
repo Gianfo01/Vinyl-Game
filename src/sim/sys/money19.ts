@@ -249,10 +249,15 @@ function auctionMonth(s: GameState, r: Rng): void {
       const top = topBid19(a), cap = fair * app * r.float(0.85, 1.15);
       if (cap > top * 1.03) { const f = FUNDS19[r.int(0, FUNDS19.length - 1)]; a.bids.push({ who: `fund:${f}`, name: f, amt: Math.round(Math.min(cap, top * r.float(1.04, 1.1))), w: s.week }); }
     }
-    if (s.week >= a.ends) { SEAL19.close?.(s, a); closeAuction(s, a); SEAL19.after?.(s, a); }
+    if (s.week >= a.ends) closeAuction(s, a);
   }
 }
 function closeAuction(s: GameState, a: Auc19): void {
+  SEAL19.close?.(s, a);
+  closeAuction0(s, a);
+  SEAL19.after?.(s, a);
+}
+function closeAuction0(s: GameState, a: Auc19): void {
   const order = [...a.bids].sort((x, y) => y.amt - x.amt);
   let win: Bid19 | undefined;
   for (const b of order) {
