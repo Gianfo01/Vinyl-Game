@@ -116,6 +116,7 @@ import './ps/ctx27'; // r27 (CTX): clique direito / toque longo / Shift+F10 em n
 import { LISTS31, LIST_TABS31, LKEY31, badges31, entryHome31, entryLabel31, find31, menu31, placeOf31, placesOf31, type Entry31, type EntryId31, type MenuCtx31 } from './ps/menu31';
 import { NAV5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navegação nova atrás de exp5.nav (desligado = nada muda)
 import { chordLabel5 } from './r31/keys5';
+import { shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
 import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
@@ -182,7 +183,7 @@ export function boot(el: HTMLElement): void {
   initRouter15((r) => { if (store.game && r.area === LISTS31) { goLists31(r.tab?.[0] === LKEY31 ? r.tab[1] : undefined); return true; } if (store.game && r.area.startsWith('hub:') && hubById27(r.area)) { go(r.area); return true; } if (store.game && (REDIRECT29[r.area] || !areaExists(r.area))) { const x = resolve29(r.area); if (x && (x.util || (x.area && areaExists(x.area)))) { open29(x); return true; } } if (!store.game || !areaExists(r.area)) return false; if (r.tab) setTab(r.tab[0], r.tab[1]); store.area = r.area; lastInGroup[groupOf(r.area).id] = r.area; render(); return true; });
   document.addEventListener('vtn15-palette', () => { if (store.game && !document.querySelector('.overlay')) palette(); });
   // R31 onda 5 (TEC): ganchos da navegação nova (só usados com exp5.nav ligado)
-  NAV5.go = (x) => open29({ area: x.area, tab: x.tab }); NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings();
+  NAV5.go = (x) => (shell5On(store.game) ? show5(x.area, x.tab) : open29({ area: x.area, tab: x.tab })); NAV5.home = () => entryHome31('sede', menuCtx31()); NAV5.pause = () => settings();
   NAV5.paper = () => (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined); // caixa de entrada aberta: as teclas dela ganham
   NAV5.help = (rows) => shortcutsHelp15(rows.map((r) => ({ key: chordLabel5(r.key), label: t(r.label) })));
   document.addEventListener('vtn31-go', (e) => { if (!store.game) return; e.preventDefault(); go((e as CustomEvent<string>).detail); }); // R31 (O): destino do painel rápido/favoritos
@@ -206,9 +207,16 @@ function onKey(e: KeyboardEvent): void {
   const tag = (e.target as HTMLElement)?.tagName;
   // r25: Ctrl/Cmd+K (Buscar) vale também de dentro de um campo (ex.: filtro do "Mais")
   const ck = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
-  if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')) return;
+  const nav5 = shell5On(store.game); // R31 onda 5 (NAV): casca nova (exp5.nav); desligado, nada abaixo muda
+  if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') && !(nav5 && e.key === 'Escape')) return;
   if (document.querySelector('.overlay')) return;
   if (keyNav5(store.game, e)) { e.preventDefault(); return; } // R31 onda 5 (TEC): só com exp5.nav ligado
+  if (nav5) {
+    if (shellKey5(e)) { e.preventDefault(); return; }
+    if (ck) { e.preventDefault(); palette(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doAdvance('month'); }
+    return; // teclas antigas (KEY17, Shift+1…6) não valem na casca nova: o mapa é o de keys5
+  }
   if (ck) {
     e.preventDefault();
     palette();
@@ -434,6 +442,7 @@ function go(id: string): void {
   if (hubById27(id) && id.startsWith('hub:')) { const x = hubById27(id)!; id = resolveHub27(id, areaExists, hubHome27(x, x.areas.filter(areaExists))) ?? 'cockpit'; }
   const r = resolve17(alias14(id), groups());
   if (r.tab) setTab(r.tab[0], r.tab[1]);
+  if (shell5On(store.game)) return show5(r.area, r.tab); // R31 onda 5 (NAV): a página abre como papel do objeto dono
   store.area = r.area;
   lastInGroup[groupOf(r.area).id] = r.area;
   render();
@@ -592,6 +601,7 @@ function renderApp(): void {
   syncRealShow31(g); // r31 (X): interruptor "Nomes e obras reais" (exibição; inclui o filtro antigo da rodada 6)
   ensureBase31(g); // r31 (EDT): base da partida aberta (idempotente; troca de partida/preview de outra não vaza)
   applySkin31(g.year, g.signature); // r31 (C): estilo da interface por era (data-era-skin, data-era) e aviso de troca
+  if (shell5On(g)) { renderShell5(g); return; } // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav ligado)
   // rodada 15: rolagem lembrada por área (mesma área mantém; área nova volta onde estava ou abre no topo)
   const old = document.querySelector('main');
   if (old && shownArea) scroll15.save(shownArea, old.scrollTop);
@@ -620,6 +630,33 @@ function renderApp(): void {
   afterRender18(g, store.area, go); // r18 tutorial18: dicas de 1ª vez e trilhas (r27: tour só no "?")
   tutorialTick28(g, store.area, render); // r28 (F4): o passo do tutorial se conclui fazendo
   kick27(g); // r27: a próxima janela da fila (metas de abertura) entra logo
+}
+
+/** R31 onda 5 (NAV): a tela inteira pela casca nova (topo, cena da região, papel, viagem e bolso). */
+function renderShell5(g: NonNullable<typeof store.game>): void {
+  const host: Shell5Host = {
+    page: (area) => {
+      const rd = REDIRECT29[area]; // nomes antigos (inbox, desk) abrem a aba certa da página dona
+      if (rd?.area) { if (rd.tab) setTab(rd.tab[0], rd.tab[1]); area = rd.area; }
+      store.area = alias14(area) as Area;
+      const r = resolve17(store.area, groups());
+      if (r.tab) setTab(r.tab[0], r.tab[1]);
+      store.area = r.area;
+      return withPlayerActsCache(g, () => { const b = panel(); enhanceSelects27(b); return b; });
+    },
+    label: areaLabel, has: (a) => areaExists(a),
+    advance: () => doAdvance('month'), advMore: () => advMenu31(g), search: palette, options: settings,
+    files: () => saveManagerModal17((x) => { store.game = x; startGame(); }),
+    save: async () => { const ok = await saveGame(`slot-${store.game?.signature}`); toast(ok ? t(S.saved) : 'Erro', ok ? 'good' : 'bad'); },
+    mainMenu: () => { void saveGame('auto'); store.game = null; titleScreen(root, startGame); },
+    rerender: render, saveChip: () => saveChip20(),
+    extra: () => (mayShow27('tutorial', g) ? tutorialCard(g, render) : null),
+  };
+  const area0 = store.area;
+  const el = shell5(g, host);
+  root.replaceChildren(el);
+  if (store.area !== area0 && !el.querySelector('.p5')) store.area = area0 as Area;
+  kick27(g);
 }
 
 /** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
