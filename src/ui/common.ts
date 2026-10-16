@@ -1,4 +1,5 @@
 import { formatMoney, formatNumber } from '../core/money';
+import { view31 } from './pixel/window31';
 import { cityById, genreById, type L } from '../data/world';
 import { S, getLang, locale, t } from '../i18n/strings';
 import type { Act, GameState, Release } from '../sim/types';
@@ -168,6 +169,7 @@ export function sparkline(values: number[], w = 120, hgt = 28, name?: string): H
 }
 
 export function rerender(): void {
+  if (store.game) { view31.city = store.game.config.homeCity; view31.month = store.game.month; } // R31 (POL): janelas das cenas mostram a cidade
   store.rerender();
 }
 

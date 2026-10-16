@@ -19,6 +19,7 @@ import type { GameState } from '../../sim/types';
 import { HQ_LEVELS } from '../../data/rules';
 import { modal, rerender, toast } from '../common';
 import { h } from '../dom';
+import { placeLabels31 } from './scene31model';
 import { openPerson, openRelease } from '../ficha';
 import { registerArea } from '../registry';
 import { store } from '../store';
@@ -146,6 +147,12 @@ export function salaStage31(s: GameState, m: SalaM31, o: { compact?: boolean } =
       c.setAttribute('aria-hidden', 'true');
       layer.append(c);
     }
+  }
+  // R31 (POL): com "mostrar tudo", os rótulos saem do posicionador comum (sem colisão, abreviados sem cortar palavra);
+  // o que não couber aparece só ao passar o mouse/foco
+  if (showAll) {
+    const sp = m.hots.filter((x) => d.lay.hits[x.id]).map((x) => ({ id: x.id, ...d.lay.hits[x.id], label: x.label, tip: x.tip, go: { panel: x.id } }));
+    for (const b of placeLabels31(sp, W, H, k, (x) => t(x.label))) layer.append(h('span', { class: 's31-plbl', 'aria-hidden': 'true', title: b.text !== b.full ? b.full : undefined, style: `left:${pct(b.x, W)};top:${pct(b.y, H)};width:${pct(b.w, W)}` }, b.text));
   }
   // você: entra pela porta e anda até o lugar (sem animação se o sistema pedir menos movimento)
   const me = playerPerson(s);

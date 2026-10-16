@@ -40,6 +40,7 @@ import { placeTabs27, zoom27 } from '../ps/zoom27';
 import { askConfirm, askText } from '../ask31';
 import { FEST_ID31, cityOv31, cityX31, festLine31, type CityOv31 } from '../r31/city31model';
 import { drawCity31 } from '../r31/city31px';
+import { shortNames31 } from '../r31/scene31model';
 import { coverPx } from '../art';
 import { openRelease } from '../ficha';
 
@@ -80,11 +81,17 @@ function makeView(s: GameState, year?: number): View {
   const places = [...places27(s, cx.filler, nb19(s), (n) => LOTS18[n]?.vis ?? 1), ...cx.places];
   const amb = [...ambient18(s).filter((a) => !AMB_DONE27.has(a.k)), ...live19ev(s).map((e) => ({ k: e.k as string, at: e.at, why: EV19[e.k].n })), ...cx.amb];
   const scene = buildScene18(bs, layout18(s, bs), env18(s.year, s.month, latOf(s), s.config.homeCity), amb, hashSeed(s), brand18(s), nb19(s).map((x) => ({ ...x, name: t(x.name) })), lms.filter((m) => !cx.lmOut.has(m.id)),
-    { dist: dist18(s, bs), vis, sale, filler: cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), extra31: cx.extra, minGw: cx.minGw });
+    { dist: dist18(s, bs), vis, sale: signSale31(sale), filler: cx.filler, life, saleTxt: t(l('À VENDA', 'FOR SALE')), hqFloors: hqFloors27(s), fillKind: new Map(places.filter((p) => p.src === 'fill' && p.lot >= 0).map((p) => [p.lot, p.draw])), extra31: cx.extra, minGw: cx.minGw });
   const ov = cityOv31(s, cx, places, scene.sprites.map((x) => ({ id: x.id, kind: x.kind, top: x.box[1] })), t(l('a', 'b')) === 'a');
+  // R31 (POL): onde a página vai pôr os ícones (seus prédios, vizinhos, lugares com pino) — as etiquetas do mapa desviam
+  const pinned = new Set(places.filter((p) => PINNED27.has(p.k)).map((p) => `fl:${p.id.slice(3)}`));
+  ov.avoid = scene.sprites.filter((sp) => !sp.filler || pinned.has(sp.id)).map((sp) => { const cx = (sp.box[0] + sp.box[2]) / 2; return [cx - 7, sp.box[1] - 12, cx + 7, sp.box[1] + 1] as [number, number, number, number]; });
   for (const b of ov.boards) { const r = s.releases[b.relId], a = r ? s.acts[r.actId] : undefined; if (r) b.cover = coverPx(r.coverSeed, r.title, a?.name ?? '', a?.genre ?? 'pop', r.year, 0.5, r.coverChoice).canvas(); }
   return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene, ov, festName: cx.festName };
 }
+/** R31 (POL): placas "À venda" pintadas no mapa — no máximo 4 que cabem no caixa e 1 fora dele, para não amontoar
+ *  (todos os lotes à venda continuam na lista ao lado e clicáveis no mapa). */
+const signSale31 = (sale: Sale27[]): Sale27[] => [...sale.filter((x) => !x.dis).slice(0, 4), ...sale.filter((x) => x.dis).slice(0, 1)];
 /** Iniciais do selo (placa da sede e letreiro). */
 export const brand18 = (s: GameState): string => (s.config.companyName.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).map((w) => w[0]).join('').toUpperCase().slice(0, 3) || 'REC');
 const hashSeed = (s: GameState) => { let x = 7; for (const c of s.config.seed) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x % 9973; };
@@ -108,7 +115,7 @@ function mapCanvas(v: View): HTMLCanvasElement {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (dx || dy) { ctx.clearRect(0, 0, MW, MH); ctx.translate(dx, dy); }
     drawFrame18(ctx, v.scene, tm, night);
-    if (v.ov) v.bbHits = drawCity31(ctx, v.scene, v.ov, tm, night); // R31 (H): lojas da época, letreiros, outdoors, festival, neon
+    if (v.ov) { v.ov.zoom = ui.z; v.bbHits = drawCity31(ctx, v.scene, v.ov, tm, night); } // R31 (H): lojas da época, letreiros, outdoors, festival, neon
     eggs.length = 0;
     if (v.live && hqSp) for (const f of cityEggs27) {
       const e = f(v.s, { t: tm, night, city });
@@ -348,7 +355,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   for (const old of document.querySelectorAll('body > .c27-sheet')) old.remove(); // folha antiga (celular) de um render anterior
   const { mw: MW, mh: MH } = v.scene.geo;
   const frame = h('div', { class: 'w19-frame c27-frame' });
-  const vp = h('div', { class: 'w19-vp', style: `--ar:${(MW / MH).toFixed(4)}` });
+  const vp = h('div', { class: `w19-vp${ui.z < 1.5 ? ' c27-far' : ''}`, style: `--ar:${(MW / MH).toFixed(4)}` });
   const zoom = h('div', { class: 'w19-zoom' });
   const layer = h('div', { class: 'w19-hot' });
   const tip = h('div', { class: 'c18-tip', hidden: true, role: 'tooltip' });
@@ -461,7 +468,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
     const k = b ? ICON27[b.kind] : undefined;
     const pin = b && k ? h('span', { class: `c27-pin ${b.kind === 'hq' ? 'hq' : ''} ${x?.scaffold ? 'works' : ''} ${b.st === 'damaged' ? 'dmg' : ''}`, style: `--k:${k.col}`, 'aria-hidden': 'true' },
       ic(k.ic), x?.alerts ? h('b', { class: 'c27-n' }, String(x.alerts)) : null, x?.scaffold && x.eta !== undefined ? h('i', { class: 'c27-eta' }, `${x.eta}${t(l('m', 'mo'))}`) : null)
-      : nb ? h('span', { class: `c27-pin nb ${nb.k === 'rival' ? 'rival' : ''}`, 'aria-hidden': 'true' }, ic(nb.icon), h('i', { class: 'c27-nm' }, t(nb.name).replace(/ \((escritório|office)\)$/, '').slice(0, 16))) : null;
+      : nb ? h('span', { class: `c27-pin nb ${nb.k === 'rival' ? 'rival' : ''}`, 'aria-hidden': 'true' }, ic(nb.icon), h('i', { class: 'c27-nm' }, shortNames31(t(nb.name).replace(/ \((escritório|office)\)$/, '')).find((x) => x.length <= 18) ?? t(nb.name).split(' ')[0])) : null;
     hot(sp.id, sp.nb ? 'nb' : 'mine', sp.box, label, [pin], b?.kind === 'hq' && v.live ? enter : undefined);
   }
   // R31 (H): outdoors das paradas — clicar abre a ficha da obra
@@ -486,7 +493,8 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
     for (const e of live19ev(s)) { const sp = sc.sprites.find((x) => x.id === e.at); if (sp) hot(`ev:${e.id}`, 'ev', [sp.door[0] - 6, sp.door[1] - 2, sp.door[0] + 6, sp.door[1] + 10], `${t(EV19[e.k].n)} — ${t(l('decidir', 'decide'))}`, ['!']); }
   }
   // zoom e arraste (pinça no celular)
-  const apply = () => { zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z})`; };
+  // R31 (POL): de longe os preços das placas só aparecem ao passar o mouse; ao mudar o zoom, o mapa redesenha os rótulos
+  const apply = () => { zoom.style.transform = `translate(${ui.px}px, ${ui.py}px) scale(${ui.z})`; vp.classList.toggle('c27-far', ui.z < 1.5); (cv as HTMLCanvasElement & { redraw27?: () => void }).redraw27?.(); };
   const clampPan = () => { const w = vp.clientWidth, hh = vp.clientHeight; ui.px = Math.min(0, Math.max(w - w * ui.z, ui.px)); ui.py = Math.min(0, Math.max(hh - hh * ui.z, ui.py)); };
   const setZ = (z: number, cx = vp.clientWidth / 2, cy = vp.clientHeight / 2) => { const nz = Math.max(1, Math.min(3, z)); ui.px = cx - ((cx - ui.px) * nz) / ui.z; ui.py = cy - ((cy - ui.py) * nz) / ui.z; ui.z = nz; clampPan(); apply(); };
   const pts = new Map<number, [number, number]>();

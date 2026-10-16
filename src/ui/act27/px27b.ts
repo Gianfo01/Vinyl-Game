@@ -3,6 +3,7 @@
 // (mesa comprida, cadeiras, os diretores sentados). Mesmo estilo da Sede (hqpx27/scene27): paleta da era,
 // contorno, pontilhado; os bonecos são os avatares reais (drawScene27). Funções paint* são PURAS (só Px).
 
+import { cityView31, view31 } from '../pixel/window31';
 import { paletteOf } from '../pixel/palette';
 import { C, Px, dith, mix, noise, shade } from '../pixel/px';
 import { H27, W27 } from './scene27';
@@ -90,8 +91,8 @@ export function paintBoard27(year: number, n: number): Px {
   p.fill((x, y) => (y < 58 ? shade(pal.wall, -0.05 - y / 900) : ((x >> 3) + (y >> 2)) % 2 ? fl.a : fl.b));
   p.hline(0, W27 - 1, 57, pal.trim);
   // janela panorâmica com a cidade
-  p.rect(20, 6, 160, 30, pal.outline); p.rect(21, 7, 158, 28, mix(pal.sky, C('#c9def2'), 0.3));
-  for (let i = 0; i < 20; i++) { const x = 22 + i * 8, h = 6 + Math.floor(noise(i, 2, 9) * 16); p.rect(x, 35 - h, 7, h, shade(mix(pal.sky, C('#33415a'), 0.7), -0.05 * (i % 3))); }
+  // R31 (POL): a vista vem da cidade e da época (skyline27), não de prédios cinza chapados
+  p.rect(20, 6, 160, 30, pal.outline); p.blit(cityView31(view31.city, year, view31.month, 158, 28), 21, 7);
   for (let x = 60; x < 180; x += 40) p.vline(x, 7, 34, pal.outline);
   // quadro com disco de ouro
   p.rect(92, 40, 16, 14, pal.outline); p.rect(93, 41, 14, 12, pal.woodDark); p.disc(100, 47, 4, pal.gold); p.put(100, 47, pal.outline);

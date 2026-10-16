@@ -13,7 +13,7 @@ import { prim27, type Ctx27 } from '../ps/hqpx27';
 export type ArtT31 = 'jukebox' | 'charts' | 'phone' | 'relic' | 'ratings' | 'rack' | 'flyers' | 'arcade' | 'car' | 'wanted' | 'pa' | 'radio';
 export const ART_TYPES31: ArtT31[] = ['jukebox', 'charts', 'phone', 'relic', 'ratings', 'rack', 'flyers', 'arcade', 'car', 'wanted', 'pa', 'radio'];
 /** Variação do carro (quem está na porta). */
-export type CarK31 = 'tour' | 'boss' | 'police' | 'van' | 'cab';
+export type CarK31 = 'tour' | 'boss' | 'police' | 'van' | 'cab' | 'own';
 export interface ArtItem31 {
   t: ArtT31; x: number; w?: number;
   /** carro: quem é; vitrine: o que tem dentro; parada: quantas linhas acesas */
@@ -239,7 +239,14 @@ function relic(g: Ctx27, b: B, v: string, n: number, sd: number): void {
   const { p, pal } = g; const { x, y, w, h } = b;
   blk(p, x, y, w, h, v === 'wood' ? pal.woodDark : v === 'glass' ? C('#5a5e68') : C('#2a2e3a'));
   p.rect(x + 2, y + 2, w - 4, h - 5, v === 'led' ? C('#1a1e2a') : C('#3a2e2a'));
-  const k = Math.max(1, Math.min(3, n));
+  const k = Math.max(0, Math.min(3, n));
+  if (!k) { // R31 (POL): vitrine sem peça — suporte vazio no veludo e plaquinha "em breve" (nunca um retângulo liso)
+    const cx = x + (w >> 1), base = y + h - 4;
+    p.rect(x + 2, base - 2, w - 4, 2, C('#7a1c2a')); p.hline(x + 2, x + w - 3, base - 2, lv(C('#7a1c2a'), 4)); // veludo
+    p.vline(cx - 3, base - 12, base - 3, C('#c8b070')); p.vline(cx + 3, base - 12, base - 3, C('#c8b070')); p.hline(cx - 4, cx + 4, base - 3, C('#c8b070')); // suporte em U vazio
+    p.put(cx - 3, base - 13, lv(C('#c8b070'), 4.6)); p.put(cx + 3, base - 13, lv(C('#c8b070'), 4.6));
+    p.rect(cx - 5, base - 1, 10, 3, C('#f0e8d0')); p.hline(cx - 3, cx + 2, base, C('#6a5a4a')); // plaquinha
+  }
   for (let i = 0; i < k; i++) {
     const cx = x + Math.round(((w - 4) * (i + 0.5)) / k) + 2, base = y + h - 4;
     const kind = (sd >> (i * 3)) % 4;
@@ -434,3 +441,8 @@ function radio(g: Ctx27, b: B, v: string, sd: number): void {
 
 /** Largura do texto (para quem monta rótulos pintados). */
 export const tinyW31 = (s: string): number => textWidth(s.toUpperCase());
+
+/** R31 (POL): vitrine de relíquia (n = peças; 0 = suporte vazio com plaquinha) na caixa dada — mesma arte do ART2. */
+export function showcase31(g: Ctx27, b: { x: number; y: number; w: number; h: number }, year: number, n: number, sd = 0): void { relic(g, b, variant31('relic', year), n, sd); }
+/** R31 (POL): carro de perfil da época (44×14) com o canto em (x, y). */
+export function carSide31(g: Ctx27, x: number, y: number, year: number, k: CarK31 = 'own', sd = 0): void { car(g, { x, y, w: 44, h: 14 }, variant31('car', year), k, sd); }

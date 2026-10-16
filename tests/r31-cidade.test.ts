@@ -218,7 +218,7 @@ describe('H · cenas da loja e da casa', () => {
     expect(shop.px.w).toBe(SW31); expect(shop.px.h).toBe(SH31);
     for (const sp of shop.spots) expect(spotOk31(sp, SW31, SH31), sp.id).toBe(true);
     for (const id of ['news', 'garage', 'counter', 'relic', 'item:o1']) expect(shop.spots.some((x) => x.id === id), id).toBe(true);
-    const house = paintHouse31({ year: 1905, gar: 'Garagem', empty: 'vazia', house: 'chalet', prestige: 3, cars: 2, carNames: [], piano: true, gold: 2, pool: false });
+    const house = paintHouse31({ year: 1905, gar: 'Garagem', house: 'chalet', prestige: 3, cars: 2, carNames: [], piano: true, gold: 2, pool: false });
     for (const sp of house.spots) expect(spotOk31(sp, SW31, SH31), sp.id).toBe(true);
     expect(house.spots.some((x) => x.id === 'garage')).toBe(true);
   });
