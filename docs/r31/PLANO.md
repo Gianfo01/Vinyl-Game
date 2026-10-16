@@ -117,6 +117,37 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
 - **Ficha do personagem fica como está** (decisão do dono, 2026-10-16): só polimento — ícones em pixel art (EMO), retrato
   maior, "o que você sabe" mais claro, aba Coração (AMOR); abre de qualquer lugar (clicar na pessoa numa cena, no cartão do
   fichário ou no mural).
+- **EXP-8 · Polimento geral (pedido do dono, 2026-10-16)** — interface/arte · aceite: passe completo de acabamento em
+  todas as cenas, cenários, objetos, mapas, bonecos e telas, além do POL da onda 4. Inclui:
+  - nada flutuando;
+  - nenhum placeholder;
+  - objetos que parecem o que são;
+  - rótulos sem sobreposição;
+  - cômodos mobiliados por época;
+  - consistência de paleta e escala;
+  - animações pequenas (luz, fumaça, gente andando);
+  - a prévia da nova run e a tela inicial (abaixo).
+- **EXP-9 · Nova run (rápida e completa)** — interface · mocks `onda5-mock-novarun-*.png`:
+  - **Começo rápido:** uma ficha de inscrição só, com as 7 escolhas principais: quem é você, cidade, carreira (6 + "mais"
+    na completa), ano (régua com as eras), tamanho do começo (iniciante → em crise), dificuldade e duração. Além delas,
+    dois interruptores (nomes reais; mundo segue a história real) e o botão "Começar". Links para configuração completa,
+    cenários, código de run e carregar.
+  - **Configuração completa:** as 6 etapas (Mundo, Personagem, Carreiras, Gravadoras, Regras e ritmo, Revisão) como
+    marcadores à esquerda; o conteúdo na mesma ficha de papel; anterior/próxima embaixo; teclas { e }.
+  - **Prévia "Sua história" à direita, no mesmo papel:**
+    - a cena é desenhada na hora com a época, a cidade e a carreira escolhidas (`onda5-mock-novarun-previa.png`), e não é
+      mais uma imagem parada fora do design;
+    - o boneco do jogador;
+    - o resumo em texto e as etiquetas das regras.
+- **EXP-10 · Tela inicial com arte própria** — arte · mock `onda5-mock-inicio.png`:
+  - **Cena musical em pixel art** no lugar da sede: palco à noite, plateia, fachos de luz, lua de vinil, notas no céu,
+    letreiro e skyline.
+  - **Muda conforme a época sorteada ou a última partida:**
+    - 1900: gramofone e piano;
+    - 1960: amplificadores e bateria;
+    - 2025: telão de LED e DJ.
+  - **Menu:** Nova run, Continuar, Carregar, Cenários e Opções, com a dedicatória embaixo.
+  - A arte final é desenhada no estilo do jogo (o mock é um rascunho por código).
 - Testes: robô de jogo e fumaça passam a "clicar no objeto" (ou usar a tecla); goldens iguais.
 
 ## Onda 6 (31.6) · fechamento
