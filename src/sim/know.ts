@@ -428,3 +428,42 @@ export function shownFame31(s: GameState, id: string): number {
   const b = band(s, id, 'fame', fameHere31(s, id), know(s, id).width('fame'));
   return b ? b.mid : -1;
 }
+
+// ---------------------------------------------------------------- 31.3 (U): o que se sabe de uma facção
+
+/** Grau de conhecimento sobre uma facção: 0 só o nome e o país (lista do intermediário) · 1 boato (é do seu país,
+ *  saiu na imprensa ou é organização documentada) · 2 contato (já tratou com ela, direto ou pelo intermediário) ·
+ *  3 trabalhou junto (serviço entregue, sociedade). */
+export type OrgKnow31 = 0 | 1 | 2 | 3;
+/** O que cada grau mostra (a interface pergunta aqui; nada de regra própria nas telas). */
+export const ORG_KNOW31 = { name: 0, country: 0, era: 0, kind: 1, rackets: 1, desc: 1, boss: 2, powerBand: 2, rel: 2, power: 3, ops: 3 } as const;
+export type OrgField31 = keyof typeof ORG_KNOW31;
+/** Largura da faixa de poder no grau 2 (no grau 3 é exato). */
+export const ORG_BAND31 = 15;
+
+/**
+ * Quanto o jogador sabe da facção `oid` (sem 'o:'). `local`: ela age no seu país; `real`: organização documentada
+ * (a descrição é pública). Lê o que outros sistemas gravaram (contatos do crime17/mob29, contratos do intermediário
+ * broker31, fatos não secretos com a facção) — sem escrever.
+ */
+export function orgKnow31(s: GameState, oid: string, o: { local?: boolean; real?: boolean } = {}): OrgKnow31 {
+  const id = oid.replace(/^o:/, '');
+  const x = s.x4 as unknown as {
+    broker31?: { done?: Record<string, number>; met?: Record<string, 1> };
+    mob29?: { o?: Record<string, { partner?: 1 }>; log?: [number, number, string, unknown][] };
+    crime17?: { org?: Record<string, number> };
+  };
+  if ((x.broker31?.done?.[id] ?? 0) > 0 || x.mob29?.o?.[id]?.partner) return 3;
+  if (x.broker31?.met?.[id] || x.mob29?.o?.[id] || x.crime17?.org?.[id] !== undefined || x.mob29?.log?.some((e) => e[2] === id)) return 2;
+  if (o.local || o.real || factsAbout(s, `o:${id}`, { limit: 1, notSecret: true }).length) return 1;
+  return 0;
+}
+export const orgSees31 = (k: OrgKnow31, f: OrgField31): boolean => k >= ORG_KNOW31[f];
+/** Faixa de poder vista (desvio estável por semente e facção, como as faixas das pessoas). */
+export function orgPowerBand31(s: GameState, oid: string, power: number, k: OrgKnow31): Band | null {
+  if (k >= 3) return { lo: power, hi: power, mid: power, exact: true };
+  if (k < 2) return null;
+  const off = (hashString(`${s.config.seed}|orgband|${oid}`) % (ORG_BAND31 + 1)) - Math.floor(ORG_BAND31 / 2);
+  const lo = clamp(power - ORG_BAND31 + Math.round(off / 2), 0, 100), hi = clamp(lo + ORG_BAND31 * 2, 0, 100);
+  return { lo, hi, mid: Math.round((lo + hi) / 2), exact: false };
+}

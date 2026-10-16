@@ -63,7 +63,7 @@ export function mobHireItems29(s: GameState, target: string, env: CtxEnv27 = {})
   try { a3 = a3Of(s, placeOf(s, targetId17(s, target))); } catch { return []; }
   const tks = tksFor(s, target);
   if (!JOBS29.some((j) => tks.includes(jobTk29(j.id)))) return [];
-  const os = orgs17(s, false, true).filter((o) => present29(o, a3) && jobsFor29(o).some((j) => tks.includes(jobTk29(j.id))));
+  const os = orgs17(s, false, true).filter((o) => present29(o, a3, s) && jobsFor29(o).some((j) => tks.includes(jobTk29(j.id))));
   const scored = os.map((o) => {
     const jobs = jobsFor29(o).filter((j) => tks.includes(jobTk29(j.id)));
     const odds = jobs.map((j) => hireOdds29(s, o.id, j.id, target));
