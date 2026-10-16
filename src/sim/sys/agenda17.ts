@@ -35,6 +35,7 @@ import { mgrActive, mgrCap, mgrName, rosterOf } from './managers14';
 import { prodActive, prodName } from './producers15';
 import { liveOf } from './live/state';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { registerDeadline, weekOfMonth19, type Deadline19 } from '../calendar19';
 
 export type Inv = 'lead' | 'normal' | 'deleg';
 export interface Head { id: string; name: string; skill: number; salary: number; since: number; trait: string }
@@ -531,6 +532,29 @@ function relieveChief(s: GameState, c: Head, r: Rng): void {
 }
 
 registerSimHook('month', 'agenda17', (s) => agendaMonth(s));
+
+// r31 (UNI-1): calendário único — fim dos contratos de músicos/orquestra/banda de apoio e do consultor de imagem, e a
+// virada do mês quando a agenda do dono está estourada. Só leitura.
+const monthWeek31 = (s: GameState, m: number): number => weekOfMonth19(s, Math.floor(m / 12), m % 12);
+registerDeadline('agenda17', (s, from, to) => {
+  const a = (s.x4 as unknown as { agenda17?: Ag17 }).agenda17;
+  if (!a) return [];
+  const out: Deadline19[] = [];
+  for (const x of a.sess ?? []) {
+    const w = monthWeek31(s, x.until + 1);
+    if (w < from || w > to) continue;
+    out.push({ id: `a17s:${x.crew}:${x.actId}:${x.until}`, w, kind: 'contract', t: fmtL(l('Fim do contrato de {c} com {a}', '{c}\'s deal with {a} ends'), { c: crewById(x.crew)?.name ?? '—', a: s.acts[x.actId]?.name ?? '—' }), tone: 'info', goto: { area: 'agenda17' } });
+  }
+  for (const x of a.img ?? []) {
+    const w = monthWeek31(s, x.until + 1);
+    if (w < from || w > to) continue;
+    out.push({ id: `a17i:${x.actId}:${x.until}`, w, kind: 'contract', t: fmtL(l('Consultor de imagem de {a} sai', '{a}\'s image consultant leaves'), { a: s.acts[x.actId]?.name ?? '—' }), tone: 'info', goto: { area: 'agenda17' } });
+  }
+  const ob = overbooked(s);
+  const w = monthWeek31(s, mk(s) + 1);
+  if (ob > 0 && w >= from && w <= to) out.push({ id: `a17o:${mk(s) + 1}`, w, kind: 'other', t: fmtL(l('Agenda estourada: {n} bolinha(s) a mais no mês', 'Overbooked: {n} ball(s) too many this month'), { n: ob }), d: l('Sobrecarga vira estresse e piora todas as frentes; delegue uma carreira.', 'Overload turns into stress and hurts every front; delegate a career.'), tone: 'bad', act: true, goto: { area: 'agenda17' } });
+  return out;
+});
 
 /** Para o playbot e testes: atos do jogador elegíveis para freelancers/músicos. */
 export const hireableActs = (s: GameState): Act[] => playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');

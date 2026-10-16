@@ -18,7 +18,7 @@ const SYSTEMS: Record<string, [string, string[]]> = {
   ceremonies8: ['src/sim/sys/ceremonies8.ts', ['awards']],
   awardcal19: ['src/sim/awardcal19.ts', ['awards', 'awardcal19']], // r31: Crítica, Indústria, Ao Vivo, Hall dos Ecos
   fest12: ['src/sim/sys/fest12.ts', ['live', 'fest12']], // r31: data via 'live'; compromissos de dinheiro via 'fest12'
-  // faltam no calendário (B.9)
+  // r31 UNI-1: os que faltavam na onda 0 (B.9)
   tour12: ['src/sim/sys/tour12.ts', ['tour12']], // shows do agente/promotor (c12.shows)
   route8: ['src/sim/sys/route8.ts', ['route8']],
   road27: ['src/sim/sys/road27.ts', ['road27']],
@@ -29,7 +29,7 @@ const SYSTEMS: Record<string, [string, string[]]> = {
 };
 
 /** PENDENTES: só pode diminuir. Ao registrar o provedor de um destes, tire-o daqui (o teste avisa). */
-const PENDING = ['tour12', 'route8', 'road27', 'fests8', 'clash17', 'rollout', 'agenda17'];
+const PENDING: string[] = []; // r31 UNI-1: zerada
 /** Teto histórico da lista (onda 0). Nunca aumente este número. */
 const PENDING_MAX = 7;
 
@@ -56,5 +56,19 @@ describe('r31 W0-CAL · nada tem data sem estar no calendário', () => {
   it('o calendário não quebra com os provedores novos', () => {
     const s = createGame(defaultConfig('r31cal2', { startYear: 1990 }));
     expect(() => calendar19(s, { weeks: 52 })).not.toThrow();
+  });
+
+  it('UNI-1: shows do agente/promotor, passos do lançamento e convites de festival aparecem com a data', () => {
+    const s = createGame(defaultConfig('r31cal3', { startYear: 1990 }));
+    const act = Object.values(s.acts).find((a) => a.owner === 'player') ?? Object.values(s.acts)[0];
+    const x4 = s.x4 as unknown as { tour12: { shows: unknown[] }; fest8: { invites: unknown[] } };
+    x4.tour12.shows.push({ id: 'shX', actId: act.id, by: 'promoter', city: 'nyc', week: s.week + 5, tier: 1, deal: 'guarantee', fee: 0, pct: 0.85, pmult: 1, promo: 1, rate: 0, status: 'booked', deposit: 0 });
+    x4.fest8.invites.push({ id: 'ivX', fi: 0, actId: act.id, tier: 'opening', fee: 0, expires: s.week + 3 });
+    s.rollouts.push({ id: 'roX', actId: act.id, title: 'Teste', songIds: [], singles: [], presaves: 0, hype: 0, status: 'active', phases: [{ kind: 'album', week: s.week + 8, done: false, budget: 0 }] });
+    const ids = calendar19(s, { weeks: 12 }).map((d) => d.id);
+    expect(ids).toContain('t12:shX');
+    expect(ids).toContain('f8i:ivX');
+    expect(ids).toContain('ro:roX:0');
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

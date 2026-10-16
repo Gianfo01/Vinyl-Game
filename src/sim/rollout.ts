@@ -12,6 +12,7 @@ import { fmtL, hasTech, money, nextId, notify, post, remember } from './util';
 import { exploitBlock } from './rights';
 import { addChannel18, teaserK18 } from './sys/mkt18';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { registerDeadline, type Deadline19 } from './calendar19';
 
 export interface RolloutOpts {
   actId: string;
@@ -161,6 +162,23 @@ export function rolloutsWeek(s: GameState, r: Rng): void {
   }
   s.rollouts = s.rollouts.filter((x) => x.status === 'active' || s.week - (x.phases.at(-1)?.week ?? 0) < 52).slice(-20);
 }
+
+// r31 (UNI-1): calendário único — cada passo ainda por vir do plano de lançamento.
+const PHASE_NAME31: Record<RolloutPhase['kind'], L> = {
+  teaser: l('teaser', 'teaser'), presave: l('pré-save', 'pre-save'), single: l('single', 'single'), video: l('clipe', 'music video'), album: l('álbum', 'album'),
+  deluxe: l('edição deluxe', 'deluxe edition'), limited: l('edição limitada', 'limited edition'), anniversary: l('reedição de aniversário', 'anniversary reissue'),
+};
+registerDeadline('rollout', (s, from, to) => {
+  const out: Deadline19[] = [];
+  for (const ro of s.rollouts) {
+    if (ro.status !== 'active') continue;
+    ro.phases.forEach((ph, i) => {
+      if (ph.done || ph.week < from || ph.week > to) return;
+      out.push({ id: `ro:${ro.id}:${i}`, w: ph.week, kind: 'release', t: fmtL(l('"{t}": {k}', '"{t}": {k}'), { t: ro.title, k: PHASE_NAME31[ph.kind] }), d: ph.budget && s.player.cash < ph.budget ? l('Sem verba no caixa, o passo é pulado.', 'Without cash, the step is skipped.') : undefined, tone: ph.budget && s.player.cash < ph.budget ? 'bad' : 'info', goto: { area: 'releases' } });
+    });
+  }
+  return out;
+});
 
 export function cancelRollout(s: GameState, id: string): void {
   const ro = s.rollouts.find((x) => x.id === id);

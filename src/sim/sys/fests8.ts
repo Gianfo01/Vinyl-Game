@@ -11,6 +11,7 @@ import { registerExt4, registerSimHook } from '../ext4';
 import type { Act, GameState } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember, staffSkill } from '../util';
 import { DEMO29 } from '../demo29hook';
+import { registerDeadline, weekOfMonth19, type Deadline19 } from '../calendar19';
 
 export type FestTier = 'headline' | 'afternoon' | 'opening';
 export const TIER_ORDER: FestTier[] = ['headline', 'afternoon', 'opening'];
@@ -263,6 +264,29 @@ function runEditions(s: GameState, r: Rng): void {
     }
   }
 }
+
+// r31 (UNI-1): calendário único — festivais do mundo com gente sua no line-up (ou os maiores, como referência) e
+// convites de festival que vencem. Só leitura.
+registerDeadline('fests8', (s, from, to) => {
+  const st = (s.x4 as unknown as { fest8?: Fest8State }).fest8;
+  if (!st) return [];
+  const mine = new Set(playerActs(s)), out: Deadline19[] = [];
+  for (const ed of st.editions) {
+    const f = FESTIVALS[ed.fi];
+    if (!f || ed.done) continue;
+    const w = weekOfMonth19(s, ed.year, ed.month);
+    if (w < from || w > to) continue;
+    const my = ed.lineup.filter((x) => mine.has(x.actId)).map((x) => s.acts[x.actId]?.name).filter(Boolean);
+    if (!my.length && f.prestige < 85) continue;
+    out.push({ id: `f8:${ed.fi}:${ed.year}`, w, kind: 'festival', t: my.length ? fmtL(l('{f}: {a} no line-up', '{f}: {a} on the bill'), { f: f.name, a: my.join(', ') }) : fmtL(l('Festival {f} ({c})', '{f} festival ({c})'), { f: f.name, c: cityById[f.city]?.name ?? l('—', '—') }), d: fmtL(l('{n} artista(s) no line-up.', '{n} act(s) on the bill.'), { n: ed.lineup.length }), tone: my.length ? 'good' : 'info', goto: { area: 'shows' } });
+  }
+  for (const iv of st.invites) {
+    if (iv.expires < from || iv.expires > to) continue;
+    const f = FESTIVALS[iv.fi];
+    out.push({ id: `f8i:${iv.id}`, w: iv.expires, kind: 'festival', t: fmtL(l('Convite do {f} para {a} vence', '{f} invitation for {a} expires'), { f: f?.name ?? '—', a: s.acts[iv.actId]?.name ?? '—' }), d: l('Sem resposta, o convite cai.', 'Unanswered, the invitation lapses.'), tone: 'info', act: true, goto: { area: 'shows' } });
+  }
+  return out;
+});
 
 registerSimHook('newgame', 'fest8', (s, r) => buildYear(s, r));
 registerSimHook('month', 'fest8', (s, r) => {
