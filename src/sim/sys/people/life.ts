@@ -2,6 +2,7 @@
 // fortuna pessoal dos artistas (cachês e direitos entram, estilo de vida sai). Estrela falida
 // aceita contratos piores; estrela rica fica exigente.
 
+import { addDossier, secKind, secretsOf } from './secrets';
 import type { Rng } from '../../../core/rng';
 import { l, type L } from '../../../data/world';
 import { emitEvent } from '../../events';
@@ -70,9 +71,7 @@ function romanceMonth(s: GameState, r: Rng): void {
           remember(s, 'romance', fmtL(l('{a} e {b} ({c}) estão juntos.', '{a} and {b} ({c}) are together.'), { a: a.name, b: b.name, c: act.name }), { actId });
           // quem tinha parceiro fora da banda agora tem um segredo
           for (const p of [a, b]) {
-            if (s.families[p.id]?.partner && !st.secrets.some((x) => x.owner === p.id && x.kind === 'affair')) {
-              st.secrets.push({ id: nextId(s, 'sc'), owner: p.id, kind: 'affair', severity: 2, known: true, knownBy: [], leaked: false, used: 0 });
-            }
+            if (s.families[p.id]?.partner && !secretsOf(s, p.id).some((x) => secKind(x) === 'affair')) addDossier(s, p.id, 'affair', 2, true);
           }
           break;
         }
