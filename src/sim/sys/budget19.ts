@@ -1,7 +1,7 @@
 // Rodada 19 (onda 5, B.5 — auditoria 8 §5): camadas de prioridade.
 // - Orçamento GLOBAL de conflitos abertos (decisões na mesa + fios do Mestre seus + rixas suas + ecos ruins chegando +
 //   crises de clientes do empresário + apertos do festival). Narrador, situações e Mestre leem conflicts19.CONFLICTS19.
-// - Avisos de pouco valor (rotina, info/bom além da cota do mês) vão para um único "Resumo do mês".
+// - (r31 UNI-1: o corte de avisos de pouco valor saiu daqui — orçamento único em sim/attention.ts.)
 // - autoResolve19: quais cartões vão valer o padrão ao avançar (o diálogo da UI lista e pergunta).
 // - Delegação por carreira (estende policy18): renovação de mandato, patrocínio e headliner do festival, sessões do
 //   estúdio. A equipe age sozinha e só sobe exceções (fato `deleg_exc` → Caixa + exceções da política).
@@ -13,7 +13,7 @@ import { emitFact, onFact } from '../facts17';
 import { pushInbox18, registerInboxKind } from '../inbox18';
 import { rng19 } from '../rng19';
 import type { Decision, GameState } from '../types';
-import { fmtL, NOTIFY19, playerActs } from '../util';
+import { fmtL, playerActs } from '../util';
 import { careers } from './careers12';
 import { pending18 } from './decide18';
 import { dm18 } from './dm18';
@@ -30,13 +30,13 @@ import { ventures } from './ventures9';
 // ---------------------------------------------------------------- estado
 
 export interface Dlg19 { mg: boolean; mgTrust: number; fsp: boolean; fhead: boolean; fcap: number; st: boolean; n: { done: number; exc: number } }
-export interface Bud19 { m: number; vis: number; nf?: number; last: number; dlg: Dlg19 }
+export interface Bud19 { dlg: Dlg19 }
 declare module '../ext4' { interface Ext4 { bud19: Bud19 } }
 const freshDlg = (): Dlg19 => ({ mg: false, mgTrust: 45, fsp: false, fhead: false, fcap: 0.25, st: false, n: { done: 0, exc: 0 } });
-registerExt4('bud19', () => ({ m: -1, vis: 0, nf: 0, last: 0, dlg: freshDlg() }));
+registerExt4('bud19', () => ({ dlg: freshDlg() }));
 export const bud19 = (s: GameState): Bud19 => {
   const x = s.x4 as unknown as { bud19?: Bud19 };
-  const b = (x.bud19 ??= { m: -1, vis: 0, nf: 0, last: 0, dlg: freshDlg() });
+  const b = (x.bud19 ??= { dlg: freshDlg() });
   b.dlg ??= freshDlg();
   return b;
 };
@@ -80,29 +80,8 @@ registerCockpit18('budget19', (s) => {
   return { threats: [{ tone: c.n >= c.cap ? 'bad' : 'info', t: fmtL(c.n >= c.cap ? l('Conflitos abertos {n}/{c}: o diretor segura crises novas até você resolver alguma.', 'Open conflicts {n}/{c}: the director holds new crises until you resolve some.') : l('Conflitos abertos {n}/{c}: perto do teto.', 'Open conflicts {n}/{c}: near the cap.'), { n: Math.round(c.n * 10) / 10, c: c.cap }), goto: { area: 'cockpit' } }] };
 });
 
-// ---------------------------------------------------------------- avisos: resumo do mês
-
-/** avisos de rotina (sempre vão para o resumo) */
-const ROUTINE19 = /gravou \d+ faixa|Por que deu nisso\?|entregou a encomenda|programad[oa] para a semana|pontos de habilidade|Leilão da massa falida/;
-/** cota de avisos informativos/bons por mês antes de agrupar (ruins e eventos nunca são agrupados) */
-export const NOTE_CAP19 = 8;
-const mkey = (s: GameState) => s.year * 12 + s.month;
-const SUM19 = 'Resumo do mês:';
-NOTIFY19.f = (s, n) => {
-  const b = bud19(s);
-  if (b.m !== mkey(s)) { b.last = b.nf ?? 0; b.m = mkey(s); b.vis = 0; b.nf = 0; }
-  const low = n.kind === 'info' || n.kind === 'good';
-  if (!low || (!ROUTINE19.test(n.text.pt) && b.vis < NOTE_CAP19)) { b.vis++; return false; }
-  b.nf = (b.nf ?? 0) + 1;
-  const ex = [...folded19(s).slice(-2).map((x) => x.t), n.text];
-  const text: L = { pt: `${SUM19} ${b.nf} aviso(s) menor(es) agrupado(s) — ${ex.map((x) => x.pt).join(' · ')}`, en: `Monthly summary: ${b.nf} minor notice(s) grouped — ${ex.map((x) => x.en).join(' · ')}` };
-  const sum = b.nf > 1 ? [...s.notifications].reverse().find((x) => !x.fold && x.text.pt.startsWith(SUM19) && x.week >= s.clock.monthStartWeek) : undefined;
-  if (sum) { sum.text = text; sum.week = n.week; }
-  else s.notifications.push({ week: n.week, text, kind: 'info' });
-  return true;
-};
-/** avisos agrupados do mês corrente (ficam no registro marcados `fold`; a tela do resumo lista) */
-export const folded19 = (s: GameState): { w: number; t: L }[] => s.notifications.filter((x) => x.fold && x.week >= s.clock.monthStartWeek).map((x) => ({ w: x.week, t: x.text }));
+// r31 (UNI-1): o corte de avisos de pouco valor (NOTIFY19, cota de 8/mês e "Resumo do mês") saiu daqui — agora é o
+// orçamento único da fila de atenção (sim/attention.ts), e os agrupados viram o boletim da semana.
 
 // ---------------------------------------------------------------- avançar: o que vai valer o padrão
 

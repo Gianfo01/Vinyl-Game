@@ -8,6 +8,7 @@ import { pushInbox18, registerInboxKind } from '../../sim/inbox18';
 import { interruptOf23 } from '../../sim/interrupt23';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
+import { sceneAlbum } from '../../sim/attention';
 import { rerender, section } from '../common';
 import { h } from '../dom';
 import { ON_QUIET23, hasCutscene, openCutscene } from '../registry';
@@ -28,9 +29,9 @@ ON_QUIET23.push((s, list) => {
   });
 });
 
-/** Cenas guardadas em silêncio (mais recentes primeiro). */
+/** Cenas guardadas em silêncio (mais recentes primeiro). r31 (UNI-1): o álbum é uma vista da fila única de atenção. */
 export function quietScenes23(s: GameState): Cutscene[] {
-  return (s.cutscenes ?? []).filter((c) => c.data.quiet23 && hasCutscene(c.kind)).reverse();
+  return sceneAlbum(s).filter((c) => hasCutscene(c.kind));
 }
 
 ALBUM17_X.push((s) => {

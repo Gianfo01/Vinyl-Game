@@ -9,7 +9,7 @@ import { monthlyCosts } from '../economy';
 import { registerSimHook } from '../ext4';
 import { recentFacts } from '../facts17';
 import {
-  advisorTips18, inboxKind18, isArchived18, ib18, noteKey18, pushInbox18, registerAdvisorTip, registerInboxKind, snoozed18,
+  advisorTips18, inboxKind18, isArchived18, ib18, pushInbox18, registerAdvisorTip, registerInboxKind, snoozed18,
   type AdvTip18, type Goto18, type InboxCat18,
 } from '../inbox18';
 import { stressOf } from '../stress17';
@@ -61,7 +61,7 @@ function gotoOf(s: GameState, m: InboxMsg): Goto18 | null {
 export function items18(s: GameState, o: { archived?: boolean } = {}): Item18[] {
   const out: Item18[] = [];
   for (const it of inboxItems(s)) {
-    const key = it.source === 'notification' ? noteKey18(it.week, it.body.pt) : it.key;
+    const key = it.key; // r31 UNI-1: aviso = item da fila única (chave = id do item)
     if (isArchived18(s, key) !== !!o.archived) continue;
     let cat: InboxCat18 = 'other', prio = 0, goto: Goto18 | null = null, label: L | undefined;
     if (it.source === 'decision') { cat = 'decision'; prio = 3; }

@@ -18,6 +18,7 @@ import { maybeStartCult, stories } from '../src/sim/sys/stories8';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { courtOf18 } from '../src/sim/sys/world18';
 import { rng19 } from '../src/sim/rng19';
+import { notes } from '../src/sim/attention';
 
 const invariant = (s: GameState) => expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
 const mk = (seed: string, year = 1975) => createGame(defaultConfig(seed, { startYear: year }));
@@ -188,7 +189,7 @@ describe('rivais com estratégia reconhecível', () => {
     expect(moved).toBe(true);
     const mv = rivals8(s).log[lb.id].find((m) => m.k === 'date_move')!;
     expect(moveText(mv).pt).toMatch(/antecipou o lançamento/);
-    expect(s.notifications.some((n) => /antecipou/.test(n.text.pt))).toBe(true);
+    expect(notes(s).some((n) => /antecipou/.test(n.text.pt))).toBe(true);
   });
 
   it('interesse declarado vira motivo na proposta (contrato mais atraente do rival)', () => {

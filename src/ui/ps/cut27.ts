@@ -6,6 +6,7 @@
 // (AFTER_ADVANCE), então bots e testes nunca enfileiram nada. Preferência em Opções: "Cenas: todas / só
 // importantes / desligadas" (store.prefs.cut27).
 
+import { quietScene } from '../../sim/attention';
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { queueCutscene, type Cutscene } from '../../sim/ext4';
@@ -43,7 +44,7 @@ export function enqueue27(s: GameState, pref: CutPref27 = cutPref27()): Cutscene
   return list.map((d) => {
     // uma cena por acontecimento: a cena antiga do mesmo momento (mesmo ato, avanço recente) fica só no álbum
     const same = SAME27[d.key];
-    if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !d.actId || c.data.actId === d.actId) && same(c)) { c.seen = true; c.data.quiet23 = true; }
+    if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !d.actId || c.data.actId === d.actId) && same(c)) quietScene(s, c);
     const cs = queueCutscene(s, 'cut27', { title: CUT27[d.key].title, d, actId: d.actId ?? null, int23: CUT27[d.key].choices.length ? 'always' : 'milestone' });
     log29(s, cs, d); // r29
     return cs;
@@ -102,7 +103,7 @@ export function bridge27(s: GameState, id: string, ctx: Record<string, unknown> 
   if (st.once[k] !== undefined) return null;
   st.once[k] = s.week; st.n++;
   const same = SAME27[key];
-  if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !actId || c.data.actId === actId) && same(c)) { c.seen = true; c.data.quiet23 = true; }
+  if (same) for (const c of s.cutscenes ?? []) if (!c.seen && s.week - c.week <= 5 && (!c.data.actId || !actId || c.data.actId === actId) && same(c)) quietScene(s, c);
   log29(s, queueCutscene(s, 'cut27', { title: CUT27[key].title, d, actId: actId ?? null, int23: CUT27[key].choices.length ? 'always' : 'milestone' }), d); // r29: álbum
   return d;
 }

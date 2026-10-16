@@ -16,6 +16,7 @@ import { opinionOf } from '../src/sim/sys/persona13';
 import { CATS17, catOf17, groupTabs17 } from '../src/ui/popcat17';
 import type { Act, GameState } from '../src/sim/types';
 import '../src/sim/sys';
+import { attn } from '../src/sim/attention';
 
 const npcAct = (s: GameState): Act => Object.values(s.acts).filter((a) => a.owner !== 'player' && !a.playerBand && a.status !== 'retired' && a.status !== 'split' && a.members.length >= 2).sort((a, b) => b.fame - a.fame)[0];
 
@@ -66,10 +67,9 @@ describe('r18 core', () => {
     s.lastMonthLedger = { salaries: -s.player.cash / 2 };
     expect(advisorTips18(s).some((x) => x.id === 'c18-runway')).toBe(true);
     for (let i = 0; i < 4; i++) advanceMonth(s);
-    const P = (s.x4 as unknown as { people: { inbox: { ref?: Record<string, unknown> }[] } }).people;
-    // r19 (notify19): o relatório do analista entra no boletim semanal
-    const P2 = P as unknown as { inbox: { ref?: Record<string, unknown>; body: { pt: string } }[] };
-    expect(P2.inbox.some((x) => x.ref?.k18 === 'analyst' || (x.ref?.k18 === 'bulletin19' && x.body.pt.includes('Relatório do analista')))).toBe(true);
+    // r19 (notify19): o relatório do analista entra no boletim semanal; r31 (UNI-1): o boletim é uma vista da fila única
+    expect(attn(s).q.some((x) => x.k18 === 'analyst' && x.fold) || items18(s).some((x) => x.msg?.ref?.k18 === 'analyst')).toBe(true);
+    expect(items18(s).some((x) => x.msg?.ref?.k18 === 'bulletin19' && x.body.pt.includes('Relatório do analista'))).toBe(true);
   });
 
   it('ações por pessoa: menu com chance e porquê, custo, cooldown, fatos e crime17 ligado', () => {

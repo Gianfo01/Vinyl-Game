@@ -22,6 +22,7 @@ import { rivalYearEnd, rivalsMonth } from './rivals';
 import { monthlySignals, syncPipeline } from './scouting';
 import type { GameState, Notification } from './types';
 import { dateOfDay, fmtL, money, notify, playerActs, post, remember } from './util';
+import { notes } from './attention';
 import { rng19 } from './rng19';
 
 export const END_YEAR = 2040;
@@ -38,7 +39,6 @@ function openMonth(s: GameState, r: Rng): void {
   s.ledgerKeys = {};
   // r23: o extrato agora gira no FECHAMENTO (closeMonth → rotate23); save antigo gira aqui uma última vez
   if (legacyOpen23(s)) rotate23(s, s.month === 0 ? s.year - 1 : s.year, (s.month + 11) % 12);
-  s.notifications = s.notifications.filter((n) => s.week - n.week < 26);
   s.clock.monthStartWeek = s.week;
   s.clock.dayInMonth = 0;
   s.clock.opened = true;
@@ -257,7 +257,7 @@ function buildBriefing(s: GameState, sinceWeek: number): void {
   const items: Notification[] = [];
   if (s.player.cash < 0) items.push({ week: s.week, kind: 'bad', text: l('Caixa negativo: veja Empresa → Finanças.', 'Negative cash: see Company → Finances.') });
   if (s.decisions.length) items.push({ week: s.week, kind: 'event', text: fmtL(l('{n} decisão(ões) na mesa.', '{n} decision(s) on the desk.'), { n: s.decisions.length }) });
-  const recent = s.notifications.filter((n) => n.week >= sinceWeek);
+  const recent = notes(s, { since: sinceWeek });
   const prio = (n: Notification) => (n.kind === 'bad' ? 0 : n.kind === 'good' ? 1 : n.kind === 'event' ? 2 : 3);
   items.push(...recent.sort((a, b) => prio(a) - prio(b)).slice(0, 5 - items.length));
   s.briefing = items.slice(0, 5);
@@ -269,7 +269,7 @@ function interruptReason(s: GameState, sinceWeek: number): L | undefined {
   if (s.player.cash < 0) return l('Insolvência à vista.', 'Insolvency looming.');
   if (s.decisions.length) return l('Há decisões na mesa.', 'Decisions on the desk.');
   if (s.offers.some((o) => o.status === 'counter')) return l('Contraproposta recebida.', 'Counter-offer received.');
-  const n = s.notifications.find((x) => x.week >= sinceWeek && (x.kind === 'bad' || x.kind === 'event'));
+  const n = notes(s, { since: sinceWeek }).find((x) => x.kind === 'bad' || x.kind === 'event');
   if (n) return n.text;
   return undefined;
 }

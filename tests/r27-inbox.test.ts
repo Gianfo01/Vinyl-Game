@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { l } from '../src/data/world';
 import { botMonth, defaultConfig } from '../src/sim/bot';
-import { archive18, inboxKinds18, isStarred18, noteKey18, pushInbox18, seen18, star18 } from '../src/sim/inbox18';
+import { archive18, inboxKinds18, isStarred18, pushInbox18, seen18, star18 } from '../src/sim/inbox18';
 import { items18 } from '../src/sim/sys/inbox18';
 import { answerMsg, unreadCount } from '../src/sim/sys/people/inbox';
 import { P, addMsg, type InboxMsg } from '../src/sim/sys/people/state';
@@ -19,6 +19,8 @@ import {
   CAT27, FILTER0_27, actions27, letter27, letterText27, mail27, mailbox27, plain27, segment27, snippet27, snooze27, subject27, threadId27, threads27,
 } from '../src/ui/sys/mail27model';
 import '../src/sim/sys';
+import { notes } from '../src/sim/attention';
+import { attn, seeAttn } from '../src/sim/attention';
 
 const fresh = (seed: string): GameState => createGame(defaultConfig(seed, { dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
 const BAD = /undefined|\[object|NaN|\{[a-z]\w*\}/;
@@ -193,9 +195,10 @@ describe('r27 (INBOX) — caixa estilo e-mail', () => {
     botMonth(t); advanceMonth(t);
     notify(t, l('Alerta importante do mês.', 'Important alert this month.'), 'bad');
     const n0 = unreadCount(t);
-    const it = items18(t).find((x) => x.source === 'notification' && x.unread)!;
-    expect(it.key).toBe(noteKey18(it.week, it.body.pt));
-    seen18(t, it.key);
+    // r31 (UNI-1): o aviso é um item da fila única (chave = id do item); abrir marca o item como visto
+    const it = items18(t).find((x) => x.source === 'notification' && x.unread && x.tone === 'bad')!;
+    expect(it.key).toBe(attn(t).q.find((x) => x.title.pt === 'Alerta importante do mês.')!.id);
+    seeAttn(t, it.key);
     expect(unreadCount(t)).toBe(n0 - 1);
     expect(items18(t).find((x) => x.key === it.key)!.unread).toBe(false);
   });
@@ -222,7 +225,7 @@ describe('r27 (INBOX) — caixa estilo e-mail', () => {
     for (const it of items18(b)) { star18(b, it.key); seen18(b, it.key); }
     botMonth(a); advanceMonth(a); botMonth(b); advanceMonth(b);
     expect(b.player.cash).toBe(a.player.cash);
-    expect(b.notifications.map((n) => n.text.pt)).toEqual(a.notifications.map((n) => n.text.pt));
+    expect(notes(b).map((n) => n.text.pt)).toEqual(notes(a).map((n) => n.text.pt));
     expect(P(b).inbox.map((m) => m.id)).toEqual(P(a).inbox.map((m) => m.id));
   });
 });

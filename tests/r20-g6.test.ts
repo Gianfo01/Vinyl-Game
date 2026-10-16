@@ -11,6 +11,7 @@ import '../src/ui/help18data';
 import '../src/ui/help18tabs';
 import { CAREER_PAGE17, NAV17, ORDER17 } from '../src/ui/nav17';
 import { chartSummary20, compareOffers20, concessions20, decisions20, highlights20, minimalHelp20, pp20, rel20, review20, rightsDiff20, changes20 } from '../src/ui/ux20';
+import { pushAttn } from '../src/sim/attention';
 
 const N = (kind: Notification['kind'], week: number, pt = `${kind}${week}`): Notification => ({ kind, week, text: { pt, en: pt } });
 
@@ -57,7 +58,7 @@ describe('r20 G6 — gráficos, unidades e cockpit', () => {
     const s = createGame(defaultConfig('r20g6', { startYear: 1975 }));
     const rows = decisions20(s);
     for (let i = 1; i < rows.length; i++) expect((rows[i].left ?? 999) >= (rows[i - 1].left ?? 999)).toBe(true);
-    s.notifications.push(N('info', s.week), N('bad', s.week), N('good', s.week), N('event', s.week), { ...N('info', s.week), fold: 1 });
+    for (const n of [N('info', s.week), N('bad', s.week), N('good', s.week), N('event', s.week), { ...N('info', s.week), fold: 1 as const }]) pushAttn(s, { cat: n.kind, prio: n.kind === 'bad' ? 2 : 1, title: n.text, tone: n.kind, fold: n.fold ?? 0 });
     const c = changes20(s);
     expect(c.top[0].kind).toBe('bad');
     expect(c.folded).toBeGreaterThanOrEqual(1);

@@ -12,6 +12,7 @@ import { fanMonth15, fn15 } from '../src/sim/sys/fan15';
 import { courtOdds, disputeMonth15 } from '../src/sim/sys/dispute15';
 import { flushTop10, homeOf, homeK, queueTop10 } from '../src/sim/sys/awards15';
 import { l } from '../src/data/world';
+import { attnSeq, notes } from '../src/sim/attention';
 
 /** Um ato do mundo com faixas lançadas passa a ser do jogador (com contrato do jogador). */
 function adopt(s: GameState) {
@@ -121,11 +122,11 @@ describe('r15 aprofundamentos', () => {
     expect(a).toBeTruthy();
     const home = homeOf(s, a!.id)!;
     expect(homeK(s, a!.id, home)).toBeGreaterThan(homeK(s, a!.id, home === 'USA' ? 'GBR' : 'USA'));
-    const n0 = s.notifications.length;
+    const n0 = attnSeq(s);
     for (const c of ['Brazil', 'Chile', 'Japan', 'Kenya']) queueTop10('Hit', l(c, c), 4);
     queueTop10('Hit', l('Peru', 'Peru'), 1);
     flushTop10(s);
-    expect(s.notifications.length - n0).toBe(2);
-    expect(s.notifications.some((n) => n.text.en.includes('4 countries'))).toBe(true);
+    expect(notes(s, { after: n0 }).length).toBe(2);
+    expect(notes(s).some((n) => n.text.en.includes('4 countries'))).toBe(true);
   });
 });

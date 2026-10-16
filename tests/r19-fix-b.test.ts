@@ -22,12 +22,13 @@ import { found12, muOf } from '../src/sim/sys/fest12';
 import { liveOf } from '../src/sim/sys/live';
 import { foundCost } from '../src/sim/sys/ventures9';
 import { CONFLICTS19 } from '../src/sim/conflicts19';
-import { autoResolve19, conflicts19, delegateMonth, dlg19, folded19, NOTE_CAP19 } from '../src/sim/sys/budget19';
+import { autoResolve19, conflicts19, delegateMonth, dlg19 } from '../src/sim/sys/budget19';
 import { EVENTS, storyteller } from '../src/sim/events';
 import { notify } from '../src/sim/util';
 import { pol18 } from '../src/sim/sys/policy18';
 import { l } from '../src/data/world';
 import { pitchTargets } from '../src/sim/sys/license17';
+import { ATTN, attn, attnQueue, attnSeq, foldedSince, notes } from '../src/sim/attention';
 
 /** Rng que devolve sempre u: "aceitou" tem de ser exatamente u < chance mostrada. */
 class FixedRng extends Rng { constructor(private u: number) { super([1, 2, 3, 4]); } next(): number { return this.u; } }
@@ -179,17 +180,21 @@ describe('r19-fix-b §5: orçamento global, aviso antes de avançar, resumo do m
     expect(xs[0].def.pt).toBe(d.options.find((o) => o.id === d.defaultOption)!.label.pt);
     expect(autoResolve19(s, 'week').length).toBe(s.decisions.filter((x) => Number(x.ctx.dl18 ?? 0) && Number(x.ctx.dl18) <= s.week + 1).length);
   });
-  it('avisos menores além da cota viram um "Resumo do mês"; ruins nunca são agrupados', () => {
+  // r31 (UNI-1): a cota é o orçamento único da fila de atenção (ATTN.notes por mês, somando avisos e mensagens) e o
+  // agrupado vira o "Boletim da semana" (antes: cota de 8 avisos e um "Resumo do mês" em s.notifications).
+  it('avisos menores além da cota viram o boletim da semana; ruins nunca são agrupados', () => {
     const s = game(1975, 'r19bnote');
-    const n0 = s.notifications.length;
+    const n0 = attnSeq(s);
+    attn(s).bm = s.year * 12 + s.month; attn(s).bn = 0;
     for (let i = 0; i < 30; i++) notify(s, l(`Aviso ${i}`, `Notice ${i}`), 'info');
     for (let i = 0; i < 3; i++) notify(s, l(`Ruim ${i}`, `Bad ${i}`), 'bad');
-    const fresh = s.notifications.slice(n0).filter((n) => !n.fold);
-    expect(fresh.length).toBeLessThanOrEqual(NOTE_CAP19 + 1 + 3);
-    expect(s.notifications.slice(n0).filter((n) => n.fold).length).toBe(30 - NOTE_CAP19); // ficam no registro
+    const all = notes(s, { after: n0 });
+    const fresh = all.filter((n) => !n.fold);
+    expect(fresh.length).toBe(ATTN.notes + 3);
+    expect(all.filter((n) => n.fold).length).toBe(30 - ATTN.notes); // ficam no registro
     expect(fresh.filter((n) => n.kind === 'bad').length).toBe(3);
-    expect(fresh.some((n) => n.text.pt.startsWith('Resumo do mês'))).toBe(true);
-    expect(folded19(s).length).toBeGreaterThanOrEqual(30 - NOTE_CAP19);
+    expect(attnQueue(s).some((x) => x.bw === s.week && /Boletim da semana/.test(x.title.pt))).toBe(true);
+    expect(foldedSince(s, s.clock.monthStartWeek).length).toBeGreaterThanOrEqual(30 - ATTN.notes);
   });
   it('delegação do empresário renova mandato ou sobe exceção (fato deleg_exc → Caixa)', () => {
     const s = mgGame('r19bdlg');

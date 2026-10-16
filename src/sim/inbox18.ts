@@ -7,10 +7,12 @@
 //   pushInbox18(s, 'radio_payola', { from: 'DJ Joe', subject: l(...), body: l(...), actions: [{ id: 'pay', label: l('Pagar', 'Pay') }, { id: 'no', label: l('Recusar', 'Refuse') }] });
 //   registerAdvisorTip('cash18', (s) => [{ id: 'runway', level: 'warn', text: l(...), why: [l(...)], effect: l('+$2k/mês', '+$2k/mo'), goto: { area: 'finance' } }]);
 
-import { hashString, type Rng } from '../core/rng';
+import type { Rng } from '../core/rng';
 import type { L } from '../data/world';
 import { registerExt4 } from './ext4';
-import { addMsg, type InboxMsg } from './sys/people/state';
+import { addMsg, msgPrio31, type InboxMsg } from './sys/people/state';
+import { pushAttn, takeAttnBudget, type AttnPrio } from './attention';
+import { nextId } from './util';
 import type { GameState } from './types';
 
 export type InboxCat18 = 'decision' | 'people' | 'deals' | 'money' | 'press' | 'world' | 'staff' | 'life' | 'analyst' | 'other';
@@ -41,17 +43,27 @@ export interface Push18 {
   /** semanas até expirar (padrão 6 quando há ações) */
   weeks?: number;
 }
-/** r19 (notify19): orçamento de notificações — devolve uma mensagem (fora da caixa) quando o item foi para o boletim. */
-export const INBOX_ROUTE19: { f?: (s: GameState, kind: string, m: Push18) => InboxMsg | null } = {};
-/** Manda uma mensagem tipada para a caixa de entrada. */
+/** Sempre no boletim (sem resposta): relatórios e leituras periódicas (era o BULLETIN19 do notify19). */
+export const LOW_KINDS18 = new Set(['review18', 'market18', 'analyst', 'traj18', 'a18_stmt', 'tv18_third', 'regions18']);
+/** Manda uma mensagem tipada para a caixa de entrada. r31 (UNI-1): passa pelo orçamento único da fila de atenção — o que
+ *  não pede resposta, não é ruim nem urgente e passou do orçamento do mês (ou é relatório de rotina) vira linha do
+ *  "Boletim da semana" (item dobrado da fila) em vez de carta própria; a mensagem devolvida, então, não fica na caixa. */
 export function pushInbox18(s: GameState, kind: string, m: Push18): InboxMsg {
-  const routed = INBOX_ROUTE19.f?.(s, kind, m);
-  if (routed) return routed;
+  const k = KINDS[kind];
+  const reply = !!m.actions?.length;
+  const prio = msgPrio31({ kind: 'deal', tone: m.tone ?? 'info', actions: m.actions }, m.tone === 'bad' ? Math.max(2, k?.prio ?? 0) : k?.prio ?? 0);
+  const ref = { ...(m.ref ?? {}), sys: 'k18', k18: kind };
+  const low = LOW_KINDS18.has(kind);
+  if (!reply && (low || takeAttnBudget(s, prio))) {
+    const id = nextId(s, 'ib'); // consome o id que a carta teria (a sequência de ids — e as sementes derivadas — não muda)
+    pushAttn(s, { cat: k?.cat ?? 'other', prio: Math.min(1, prio) as AttnPrio, title: m.subject, body: m.body, from: m.from, k18: kind, label: k?.label, fold: 1 });
+    return { id, week: s.week, year: s.year, from: m.from, subject: m.subject, body: m.body, kind: 'deal', tone: m.tone ?? 'info', ref };
+  }
   return addMsg(s, {
     from: m.from, subject: m.subject, body: m.body, kind: 'deal', tone: m.tone ?? 'info', actions: m.actions,
-    expires: m.actions?.length ? s.week + (m.weeks ?? 6) : undefined,
-    ref: { ...(m.ref ?? {}), sys: 'k18', k18: kind },
-  });
+    expires: reply ? s.week + (m.weeks ?? 6) : undefined,
+    ref,
+  }, { cat: k?.cat ?? 'other', prio, k18: kind, label: k?.label });
 }
 
 // ---------------------------------------------------------------- conselheiro / analista
@@ -114,8 +126,6 @@ export function archive18(s: GameState, key: string, on = true): void {
 export const isArchived18 = (s: GameState, key: string): boolean => ib18(s).arch[key] !== undefined;
 
 // ---------------------------------------------------------------- r27 (INBOX): estrela e "aberto" por item
-/** Chave estável de um aviso (notificação) na caixa: semana + hash do texto. */
-export const noteKey18 = (week: number, textPt: string): string => `n${week}:${hashString(textPt)}`;
 export function star18(s: GameState, key: string, on = true): void {
   const st = ib18(s);
   const m = (st.star ??= {});

@@ -17,6 +17,7 @@ import { unrecorded, unreleasedRecorded } from '../production';
 import { advanceWeek } from '../tick';
 import type { Act, AgendaSlot, GameState } from '../types';
 import { fmtL, money, playerActs, staffCount } from '../util';
+import { attnSeq, notes } from '../attention';
 
 export type Prio = 'auto' | 'develop' | 'commercial' | 'tour' | 'rest';
 /** 0 = foco, 1 = normal, 2 = mínimo */
@@ -318,7 +319,7 @@ export interface Digest {
 export interface DigestSnap { week: number; cash: number; totals: Record<string, number>; mem: number; memId: string; notes: number; logLen: number; logWeek: number }
 
 export function digestStart(s: GameState): DigestSnap {
-  return { week: s.week, cash: s.player.cash, totals: { ...s.player.totals }, mem: s.memory.length, memId: s.memory[s.memory.length - 1]?.id ?? '', notes: s.notifications.length, logLen: pace8(s).log.length, logWeek: s.week };
+  return { week: s.week, cash: s.player.cash, totals: { ...s.player.totals }, mem: s.memory.length, memId: s.memory[s.memory.length - 1]?.id ?? '', notes: attnSeq(s), logLen: pace8(s).log.length, logWeek: s.week };
 }
 
 const GROUPS: { id: string; name: L; icon: string; re: RegExp }[] = [
@@ -361,7 +362,7 @@ export function digestEnd(s: GameState, snap: DigestSnap, months: number): Diges
   };
   // fatos importantes primeiro, depois rotina
   for (const m of [...mems.filter((m) => m.important), ...mems.filter((m) => !m.important)]) put(m.kind, m.text);
-  for (const n of s.notifications.filter((x) => x.week > snap.week || (x.week === snap.week && s.week > snap.week))) put(n.kind === 'bad' ? 'incident' : noteKind(n.text.pt), n.text);
+  for (const n of notes(s).filter((x) => x.week > snap.week || (x.week === snap.week && s.week > snap.week))) put(n.kind === 'bad' ? 'incident' : noteKind(n.text.pt), n.text);
   const team = pace8(s).log.filter((e) => e.w >= snap.week && (e.k !== 'ag' || e.w > snap.week));
   return { fromWeek: snap.week, toWeek: s.week, months, cashDelta: s.player.cash - snap.cash, cats: cats.slice(0, 10), groups: groups.filter((g) => g.n > 0), team: team.slice(-40) };
 }

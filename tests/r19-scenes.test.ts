@@ -22,6 +22,7 @@ import { ventures } from '../src/sim/sys/ventures9';
 import { hallOfFameYear } from '../src/sim/dynasty';
 import type { Act, GameState, Release } from '../src/sim/types';
 import { rng19 } from '../src/sim/rng19';
+import { attnSeq, notes } from '../src/sim/attention';
 
 afterEach(() => { LIVE19.on = false; });
 const game = (y = 1990, seed = 'scn19', role: 'label' | 'artist' | 'manager' = 'label') => createGame(defaultConfig(seed, { startYear: y, role }));
@@ -50,32 +51,32 @@ describe('r19 cenas: 1. resultado só depois da cerimônia', () => {
     LIVE19.on = true;
     const s = game();
     const mine = mkRel(s, myAct(s), s.year, 99), other = mkRel(s, npcAct(s), s.year, 10);
-    const n0 = s.notifications.length, a0 = s.awards.length;
+    const n0 = attnSeq(s), a0 = s.awards.length;
     const E = night(s, [mine, other]);
     gramoNight19(s, rng19(s, 'act'));
     const cs = s.cutscenes.find((c) => c.kind === 'awards' && c.data.year === E)!;
     expect(cs).toBeTruthy();
     expect(heldResults19(s)).toBe(1);
     expect(s.awards.length).toBe(a0); // nada no livro (nem fatos, nem notícia) antes da cena
-    expect(s.notifications.slice(n0).some((n) => /Gram[oó]fono/.test(n.text.pt))).toBe(false);
+    expect(notes(s, { after: n0 }).some((n) => /Gram[oó]fono/.test(n.text.pt))).toBe(false);
     releaseHeld19(s); // sem ter visto: continua guardado
     expect(heldResults19(s)).toBe(1);
     cs.seen = true;
     expect(releaseHeld19(s, cs.id)).toBe(1);
     expect(s.awards.some((a) => a.year === E && a.category === 'album')).toBe(true);
-    expect(s.notifications.slice(n0).some((n) => /Gram[oó]fono/.test(n.text.pt))).toBe(true);
+    expect(notes(s, { after: n0 }).some((n) => /Gram[oó]fono/.test(n.text.pt))).toBe(true);
     expect(s.cutscenes.some((c) => c.kind === 'moment16' && /Premia/.test(String((c.data.title as { pt: string }).pt)))).toBe(false); // cerimônia já mostrou
   });
   it('sem interface (bot/teste) o resultado sai na hora, com aviso de derrota quando perde', () => {
     const s = game(1990, 'scn19b');
     const mine = mkRel(s, myAct(s), s.year, 1), other = mkRel(s, npcAct(s), s.year, 100);
     other.totalUnits = 5_000_000;
-    const n0 = s.notifications.length;
+    const n0 = attnSeq(s);
     const E = night(s, [mine, other]);
     gramoNight19(s, rng19(s, 'act'));
     expect(heldResults19(s)).toBe(0);
     expect(s.awards.find((a) => a.year === E && a.category === 'album')?.releaseId).toBe(other.id);
-    expect(s.notifications.slice(n0).some((n) => /perdeu/.test(n.text.pt))).toBe(true);
+    expect(notes(s, { after: n0 }).some((n) => /perdeu/.test(n.text.pt))).toBe(true);
   });
 });
 

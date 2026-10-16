@@ -142,6 +142,9 @@ export interface Cutscene {
  *  `trim` corta a fila sem perder cenas não vistas importantes. Preenchidos por sys/scenes19.ts. */
 export const CS_HOOK19: { hold?: (s: GameState, cs: Cutscene) => boolean; trim?: (s: GameState) => void } = {};
 
+/** r31 (UNI-1): toda cena que entra vira item da fila única de atenção (preenchido por attention.ts). */
+export const CS_PUSH31: { f?: (s: GameState, cs: Cutscene) => void } = {};
+
 export function queueCutscene(s: GameState, kind: string, data: Record<string, unknown>): Cutscene {
   s.cutscenes ??= [];
   // r19: id por contador que só cresce (antes usava o tamanho da fila, que repetia depois do corte em 40)
@@ -150,6 +153,7 @@ export function queueCutscene(s: GameState, kind: string, data: Record<string, u
   const cs: Cutscene = { id: `cs${s.week}-n${x.csSeq}-${kind}`, kind, week: s.week, data };
   if (CS_HOOK19.hold?.(s, cs)) return cs;
   s.cutscenes.push(cs);
+  CS_PUSH31.f?.(s, cs);
   if (CS_HOOK19.trim) CS_HOOK19.trim(s);
   else if (s.cutscenes.length > 40) s.cutscenes.splice(0, s.cutscenes.length - 40);
   return cs;

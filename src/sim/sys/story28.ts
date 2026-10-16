@@ -1,11 +1,8 @@
-// Rodada 28 (F3, C5) — A HISTÓRIA DO JOGADOR EM PRIMEIRO PLANO. Um orçamento único de atenção e um Diário que
-// conta a crônica do selo, não a do mundo:
+// Rodada 28 (F3, C5) — A HISTÓRIA DO JOGADOR EM PRIMEIRO PLANO. Um Diário que conta a crônica do selo, não a do mundo:
 //  1. Diário do jogador num ANEL PRÓPRIO, sem descarte (o Diário geral continua cortando em 1500 entradas). Entra o que é
 //     do selo (atos seus, decisões, eventos do diretor, marcos da empresa) e os ecos — disparados e perdidos.
 //  2. "Só marcantes" sem nº 1 alheio; fatos do mundo entram no máximo 2 por mês (o mesmo orçamento de atenção).
-//  3. ORÇAMENTO DE ATENÇÃO (puro, lido pela interface): cenas que interrompem no máximo 2 por avanço e 3 por mês
-//     (decisões com consequência sempre passam; o eco "você escolheu X" passa na frente); dicas de 1ª vez no máximo
-//     3 por mês e nunca no avanço em que uma cena abriu. O resto vai para o álbum, como as cenas de rotina (r23).
+//  3. (r31 UNI-1: o orçamento de atenção de cenas e dicas mudou para a fila única, sim/attention.ts.)
 //  4. Eventos: cooldown por (evento, ator) — o mesmo ator não volta ao mesmo evento por max(12, 2 × cooldown) meses — e
 //     peso × 0,85ⁿ (n = vezes que o evento saiu nos últimos 10 anos). Portões de época: `era`/`needsTech` no EventDef
 //     ou deduzidos do vocabulário (rádio, TV, LP, CD, internet, streaming, van…), com exceções revisadas à mão.
@@ -19,7 +16,6 @@ import { TECHS } from '../../data/rules';
 import { EV28, eventById, type EventDef } from '../events';
 import { registerExt4 } from '../ext4';
 import { onFact, type Fact } from '../facts17';
-import { interruptOf23 } from '../interrupt23';
 import type { GameState, MemoryEntry } from '../types';
 import { fmtL, money, REMEMBER28 } from '../util';
 import { LOST18, type Echo18 } from './decide18';
@@ -27,10 +23,6 @@ import { LOST18, type Echo18 } from './decide18';
 // ---------------------------------------------------------------- regras (números do orçamento)
 
 export const ATTN28 = {
-  /** cenas que interrompem (classe 'milestone'), por avanço e por mês; 'always' (decisão) não conta */
-  advance: 2, month: 3,
-  /** dicas de 1ª vez por mês (e nenhuma no avanço em que uma cena abriu) */
-  tipsMonth: 3,
   /** fatos do mundo em "Só marcantes", por mês */
   worldMonth: 2,
   /** semanas mínimas entre duas cenas "Você escolheu X" (~2,3 meses) */
@@ -41,7 +33,6 @@ export const ATTN28 = {
 
 // ---------------------------------------------------------------- estado
 
-export interface Attn28 { w: number; nw: number; mk: number; nm: number; tm: number; tn: number }
 export interface St28 {
   /** anel do jogador (sem descarte) */
   dia: MemoryEntry[];
@@ -54,16 +45,14 @@ export interface St28 {
   pr: Record<string, number>;
   /** semana da última cena "Você escolheu X" */
   ew: number;
-  at: Attn28;
 }
 declare module '../ext4' { interface Ext4 { st28: St28 } }
-const freshAt = (): Attn28 => ({ w: -1, nw: 0, mk: -1, nm: 0, tm: -1, tn: 0 });
-const fresh = (): St28 => ({ dia: [], seq: 0, lost: { queue: 0, gone: 0, log: [] }, ev: {}, pr: {}, ew: -999, at: freshAt() });
+const fresh = (): St28 => ({ dia: [], seq: 0, lost: { queue: 0, gone: 0, log: [] }, ev: {}, pr: {}, ew: -999 });
 registerExt4('st28', fresh);
 export function st28(s: GameState): St28 {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.st28 ??= fresh()) as St28;
-  st.dia ??= []; st.lost ??= { queue: 0, gone: 0, log: [] }; st.ev ??= {}; st.pr ??= {}; st.at ??= freshAt(); st.ew ??= -999; st.seq ??= 0;
+  st.dia ??= []; st.lost ??= { queue: 0, gone: 0, log: [] }; st.ev ??= {}; st.pr ??= {}; st.ew ??= -999; st.seq ??= 0;
   return st;
 }
 
@@ -175,49 +164,9 @@ export function strongEcho28(s: GameState, f: Pick<Fact, 'tags' | 'data'>): bool
 export const echoSceneOk28 = (s: GameState): boolean => s.week - st28(s).ew >= ATTN28.echoGap;
 export const echoSceneMark28 = (s: GameState): void => { st28(s).ew = s.week; };
 
-// ---------------------------------------------------------------- 4. orçamento de atenção (lido pela interface)
-
-export interface Cs28 { id: string; kind: string; data: Record<string, unknown> }
-/** Cenas que passam na frente no orçamento (marcos do próprio selo). */
-export const TOP_KINDS28 = new Set(['awards', 'hall', 'number1', 'ipo', 'hologram', 'long18year']);
-/** Puro: das cenas que interromperiam, quais abrem (ids), dado o que já abriu neste avanço e neste mês. */
-export function pickScenes28(list: Cs28[], usedAdv: number, usedMonth: number, caps = ATTN28): string[] {
-  const out: string[] = [];
-  // ordem: grandes marcos (prêmio, Hall, nº 1) → "você escolheu X" → o resto, na ordem em que chegaram
-  const rank = (c: Cs28): number => (TOP_KINDS28.has(c.kind) ? 0 : c.data.echo28 ? 1 : 2);
-  const ord = list.map((c, i) => [c, i] as const).sort((x, y) => rank(x[0]) - rank(y[0]) || x[1] - y[1]).map((x) => x[0]);
-  let a = usedAdv, m = usedMonth;
-  for (const c of ord) {
-    if (interruptOf23(c) === 'always') { out.push(c.id); continue; }
-    if (a >= caps.advance || m >= caps.month) continue;
-    out.push(c.id); a++; m++;
-  }
-  return list.filter((c) => out.includes(c.id)).map((c) => c.id);
-}
-const roll = (s: GameState): Attn28 => {
-  const at = st28(s).at, mk = s.year * 12 + s.month;
-  if (at.w !== s.week) { at.w = s.week; at.nw = 0; }
-  if (at.mk !== mk) { at.mk = mk; at.nm = 0; }
-  if (at.tm !== mk) { at.tm = mk; at.tn = 0; }
-  return at;
-};
-/** Com estado: decide uma vez por cena (marca `data.att28`) e gasta o orçamento do avanço e do mês. */
-export function attnScenes28(s: GameState, list: Cs28[]): string[] {
-  const at = roll(s);
-  const fresh = list.filter((c) => c.data.att28 === undefined);
-  const ok = new Set(pickScenes28(fresh, at.nw, at.nm));
-  for (const c of fresh) {
-    c.data.att28 = ok.has(c.id) ? 1 : 0;
-    if (ok.has(c.id) && interruptOf23(c) !== 'always') { at.nw++; at.nm++; }
-  }
-  return list.filter((c) => c.data.att28 === 1).map((c) => c.id);
-}
-/** Uma dica de 1ª vez pode aparecer agora? */
-export function attnTip28(s: GameState): boolean {
-  const at = roll(s);
-  return at.nw === 0 && at.tn < ATTN28.tipsMonth;
-}
-export const spendTip28 = (s: GameState): void => { roll(s).tn++; };
+// ---------------------------------------------------------------- 4. orçamento de atenção
+// r31 (UNI-1): as faixas de cenas (2 por avanço, 3 por mês) e de dicas (3 por mês) saíram daqui para o orçamento único da
+// fila de atenção (sim/attention.ts: attnScenes, attnTip, spendTip, pickScenes).
 
 // ---------------------------------------------------------------- 5. eventos: época, cooldown por (evento, ator), 0,85ⁿ
 

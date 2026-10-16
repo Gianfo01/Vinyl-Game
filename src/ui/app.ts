@@ -1,5 +1,6 @@
 // Layout principal: barra superior, 10 áreas + Diário, avanço, paleta de comandos, fim de run.
 
+import { attnSeq, notes } from '../sim/attention';
 import { LABEL_LEGACY20 } from '../sim/oblig20';
 import { ERA19 } from '../sim/era19';
 import { ENDINGS, HQ_LEVELS, LEGACY_DIMS } from '../data/rules';
@@ -230,8 +231,7 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
   const snap0 = JSON.stringify(g);
   const prevUndo = store.undoSnapshot;
   if (!g.config.ironman) store.undoSnapshot = snap0;
-  const before = g.notifications.length;
-  const noteWeek = g.week;
+  const before = attnSeq(g); // r31 UNI-1: avisos = itens da fila única
   // rodada 8: avanços longos terminam num resumo agrupado em vez de uma chuva de avisos
   let digest = null as { d: Digest; why?: L } | null;
   let res = {} as { stopReason?: L };
@@ -257,11 +257,10 @@ function doAdvance(mode: 'week' | 'month' | 'quarter' | 'event' | 'until', ok19 
   noteTurnErr20(null);
   if (!digest) {
     // r20 (B23): 3 destaques por severidade + "+N outros" que abre a lista inteira (antes: as 3 últimas por recência)
-    advanceToasts20(g.notifications.filter((n) => n.week > noteWeek && !n.fold));
+    advanceToasts20(notes(g, { after: before }).filter((n) => !n.fold));
   }
   if (res.stopReason && mode !== 'month' && !digest) toast(`⏸ ${t(res.stopReason)}`, 'event');
   announce(g.briefing.map((n) => t(n.text)).join('. '));
-  void before;
   saveSoon(() => void saveGame('auto')); // r15: grava depois de pintar (o mês aparece antes)
   if (g.ended && !g.flags.sandbox) {
     render();
