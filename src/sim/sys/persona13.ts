@@ -29,6 +29,7 @@ import type { BackgroundId } from './life/data';
 import { FACETS, FACET_TXT, soul, type Facet } from './soul9';
 import { actsOfPerson17 } from '../actidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: a imagem lê a ficha de aparência (look31)
 
 // ---------------------------------------------------------------- esquema
 
@@ -166,7 +167,7 @@ export function per13(s: GameState, key: string): P13 | null {
 }
 const staffSig = (s: GameState, key: string): string => {
   if (key === 'player' || s.persons[key.slice(2)]?.isPlayer) return Object.values(ownerOf(s).attrs).join(',') + persona(s).traits.join(',');
-  if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : ''; }
+  if (key.startsWith('p:')) { const p = s.persons[key.slice(2)]; return (p?.look ? `${p.look.skin}${p.look.beard ? 1 : 0}` : '') + (p ? LOOKH31.sig?.(s, p) ?? '' : ''); }
   if (key.startsWith('e:')) return s.config.realNames ? 'R' : 'F';
   if (!key.startsWith('s:')) return '';
   const st = s.player.staff.find((x) => x.id === key.slice(2));
@@ -214,7 +215,7 @@ function build(s: GameState, key: string): P13 | null {
       neg: k.biz * 0.65 + facets.teimosia * 0.15 + facets.confianca * 0.1 + 8,
       cha: k.stage * 0.55 + facets.sociabilidade * 0.25 + facets.confianca * 0.15 + 5,
       mgmt: k.biz * 0.45 + facets.disciplina * 0.4 + 8,
-      img: k.stage * 0.3 + facets.vaidade * 0.35 + u(s, key, 'img') * 35,
+      img: k.stage * 0.3 + facets.vaidade * 0.35 + u(s, key, 'img') * 35 + (LOOKH31.imgDelta?.(s, p) ?? 0),
     };
     up('artist', art); up('producer', k.prod); up('engineer', k.prod * 0.8); up('anr', (k.comp + k.prod) / 2 * 0.75); up('manager', k.biz * 0.85);
     up('booking', k.biz * 0.6 + k.stage * 0.2); up('publicist', k.stage * 0.35 + k.biz * 0.35); up('legal', k.biz * 0.45); up('exec', k.biz * 0.6 + facets.ambicao * 0.2);
@@ -224,7 +225,7 @@ function build(s: GameState, key: string): P13 | null {
     if (p.isPlayer) {
       const o = ownerOf(s);
       attrs.ear = o.attrs.ear; attrs.neg = o.attrs.negotiation; attrs.cha = o.attrs.charisma; attrs.mgmt = o.attrs.management;
-      attrs.img = o.attrs.charisma * 0.45 + facets.vaidade * 0.25 + 18 + (persona(s).visual === 'casual' ? 0 : 8);
+      attrs.img = o.attrs.charisma * 0.45 + facets.vaidade * 0.25 + 18 + (persona(s).visual === 'casual' ? 0 : 8) + (LOOKH31.imgDelta?.(s, p) ?? 0);
       for (const t of persona(s).traits) { const d = playerTraitById[t]; if (d) native.push(d.name); }
       up('exec', 45 + o.attrs.management * 0.4); up('anr', o.attrs.ear * 0.9); up('legal', o.attrs.negotiation * 0.7); up('manager', o.attrs.negotiation * 0.8);
       up('publicist', o.attrs.charisma * 0.8); up('admin', o.attrs.management * 0.85); up('producer', o.attrs.ear * 0.7);
@@ -413,7 +414,7 @@ export function imageWeight(y: number): { w: number; era: L } {
 /** Barreiras e trunfos de um ato num país (padrão: a cidade do ato). m = multiplicador do alcance. */
 const BCACHES = new WeakMap<GameState, Map<string, Barrier13[]>>();
 export function barriers13(s: GameState, a: Act, cityId?: string): Barrier13[] {
-  const ck = `${s.config.seed}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}`;
+  const ck = `${s.config.seed}|${s.year}|${a.id}|${a.genre}|${a.city}|${cityId ?? ''}|${a.members.join(',')}|${p13(s).bar[a.id]?.join() ?? ''}|${LOOKH31.sig ? a.members.map((id) => { const p = s.persons[id]; return p ? LOOKH31.sig!(s, p) : ''; }).join(',') : ''}`;
   let BCACHE = BCACHES.get(s);
   if (!BCACHE) BCACHES.set(s, (BCACHE = new Map()));
   const hit = BCACHE.get(ck);
@@ -434,7 +435,9 @@ function barriersRaw(s: GameState, a: Act, cityId?: string): Barrier13[] {
   const out: Barrier13[] = [];
   const bar = p13(s).bar[a.id];
   const mode = bar && y - bar[0] <= 12 ? bar[1] : undefined;
-  const iw = imageWeight(y);
+  const iw0 = imageWeight(y);
+  const lw = LOOKH31.weight?.(s, a); // R31 · AP: gênero, público e pressão estética histórica
+  const iw = lw && lw.k !== 1 ? { w: iw0.w * lw.k, era: lw.why ? fmtL(l('{e}; {w}', '{e}; {w}'), { e: iw0.era, w: lw.why }) : iw0.era } : iw0;
   const imgs = a.members.map((id) => per13(s, `p:${id}`)?.attrs.img ?? 50);
   const img = P.attrs.img * 0.6 + (imgs.reduce((t, x) => t + x, 0) / imgs.length) * 0.4 + (mode === 'comply' && P.sex === 'f' ? 10 : 0);
   // visual forte rende inteiro; visual apagado pesa pela metade (o som ainda conta mais que a foto)

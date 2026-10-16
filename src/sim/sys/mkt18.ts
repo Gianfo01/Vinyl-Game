@@ -10,6 +10,7 @@
 // Também guarda o pós-morte de cada lançamento (previsto × realizado por canal), lido por long18 e pela interface.
 
 import { clamp } from '../../core/rng';
+import { lookK31 } from '../r31/lookhook31'; // R31 · AP: imagem no clipe/TV
 import { CHANNELS } from '../../data/rules';
 import { l, type L } from '../../data/world';
 import { registerExplain } from '../explain18';
@@ -71,7 +72,9 @@ export function satOf18(s: GameState, actId: string, ch: string): { k: number; s
   const learn = 1 + 0.3 * (1 - Math.exp(-(st.xp[ch] ?? 0) / 8));
   return { k: sat * learn, sat, learn, useA, useL };
 }
-MEDIA18.eff = (s, actId, ch) => satOf18(s, actId, ch).k;
+const VIDEO_CH31 = new Set(['music_video', 'tv_show', 'short_clips', 'social']);
+// R31 · AP: no clipe, na TV e no vídeo curto a imagem do artista conta (fator ~0,85–1,2; 1 com a aparência desligada)
+MEDIA18.eff = (s, actId, ch) => satOf18(s, actId, ch).k * (VIDEO_CH31.has(ch) ? lookK31(s, s.acts[actId], 'video') : 1);
 
 // ---------------------------------------------------------------- perfil da campanha de um lançamento
 

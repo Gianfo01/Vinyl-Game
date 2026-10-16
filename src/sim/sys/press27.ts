@@ -15,6 +15,7 @@
 // Determinístico: Rng.fromSeed(semente|press27v1|entrevista|pergunta|parte); estado preguiçoso em s.x4.press27.
 
 import { Rng, clamp } from '../../core/rng';
+import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: imagem nas entrevistas
 import { familyOf, l, type L } from '../../data/world';
 import { CRITICS } from '../../data/content';
 import { emitFact, facts17, raiseVisibility, type Fact } from '../facts17';
@@ -268,9 +269,12 @@ function finish27(s: GameState, iv: Iv27): void {
   iv.status = 'done';
   const T = Z();
   for (const a of iv.ans) for (const k of Object.keys(T) as (keyof Fx27)[]) if (typeof a.fx[k] === 'number') (T[k] as number) += a.fx[k] as number;
+  const act = iv.actId ? s.acts[iv.actId] : undefined;
+  const lk31 = act && iv.who === 'act' ? LOOKH31.act?.(s, act, 'press') : null; // R31 · AP: presença diante das câmeras
+  if (lk31) T.pop += Math.round((lk31.k - 1) * 20);
   const hype = clamp(T.hype, -10, 20), img = clamp(T.img, -12, 10), pop = clamp(T.pop, -8, 10);
   const lines: L[] = [];
-  const act = iv.actId ? s.acts[iv.actId] : undefined;
+  if (lk31?.why) lines.push(lk31.why);
   const r = rng27(s, iv, 99, 'end');
   const res: IvRes27 = { hype, img, pop, fame: 0, heat: iv.heat, scandal: false, rumor: false, reveal: false, grade: 0, lines };
   if (act && iv.who === 'act') {

@@ -353,6 +353,8 @@ export const KNOW_FIELDS = {
   fame: { cls: 'public', pub: 2 },
   fans: { cls: 'public', pub: 2 },
   image: { cls: 'public', pub: 2 },
+  /** R31 · AP: aparência percebida (o que o público vê) */
+  looks: { cls: 'public', pub: 1 },
   hype: { cls: 'public', pub: 2 },
   members: { cls: 'public', pub: 1 },
   life: { cls: 'private', pub: 3, fact: ['marriage', 'birth', 'breakup', 'romance', 'death'] },
@@ -372,6 +374,8 @@ export const KNOW_FIELDS = {
   songs: { cls: 'pro', scout: 5 },
   opinion: { cls: 'private', met: 2 },
   holds: { cls: 'secret', intim: 4, fact: ['secret_exposed', 'hold_used', 'blackmail'] },
+  /** R31 · AP: procedimento estético escondido (boato não revela; a imprensa confirmar, sim) */
+  lookSecret: { cls: 'secret', intim: 4, fact: ['secret_exposed'] },
   crime: { cls: 'secret', fact: ['arrest', 'crime', 'case_ruling', 'crime_member'] },
   negMin: { cls: 'secret', never: true },
 } as const satisfies Record<string, FieldRule>;

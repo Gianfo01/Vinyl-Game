@@ -56,10 +56,15 @@ export function crowdLook27(seed: string, year: number): Appearance {
 let LOOK_FN: ((p: { id: string }) => Appearance | undefined) | null = null;
 export function setLookResolver(fn: typeof LOOK_FN): void { LOOK_FN = fn; }
 
+/** R31 · AP: ajuste do visual pela ficha de aparência (forma, cabelo, estilo) — a interface registra (look31ui). */
+let LOOK_POST31: ((id: string, a: Appearance) => Appearance) | null = null;
+export function setLookPost31(fn: typeof LOOK_POST31): void { LOOK_POST31 = fn; }
+
 export function lookOf(p: { id: string; look?: Appearance; born?: number }): Appearance {
   const a = p.look ?? LOOK_FN?.(p) ?? randomLook(p.id);
   const g = ageInfo(p); // rodada 17: o visual envelhece com a pessoa
-  return g ? ageLook(a, g.age, p.id, g.sx) : a;
+  const b = g ? ageLook(a, g.age, p.id, g.sx) : a;
+  return LOOK_POST31 ? LOOK_POST31(p.id, b) : b;
 }
 
 export function lookKey(a: Appearance): string {

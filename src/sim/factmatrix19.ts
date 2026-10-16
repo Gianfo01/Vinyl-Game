@@ -26,6 +26,8 @@ export const GENERIC19 = ['bridge17:press', 'cine18:mem', 'post18:hall'];
 
 /** Tipos emitidos sem consumidor, com o motivo (revisar a cada rodada). */
 export const WHITELIST19: Record<string, string> = {
+  look: 'aparência (look31): ensaio, transformação, corte, ícone, crítico — o efeito já sai na própria escolha (apelo, imagem, humor, opinião); o fato é o registro no diário e na ficha',
+  look_rumor: 'boato de procedimento estético (look31): o próprio look31 decide a descoberta pela imprensa (vira secret_exposed); o fato é o registro do boato na ficha',
   editor: 'edição pelo editor de testes (r31/editor.ts): o fato é só registro — o diário o recebe pelo ouvinte central (diary) e a partida fica marcada em edit31; nenhum sistema deve reagir a uma edição',
   fans_region: 'notícia pública (terr20): mercado fora da região de origem passou de 25% dos fãs; registro na crônica/noticiário e factsAbout, sem reação sistêmica pretendida',
   memory: 'ponte genérica de remember(): o conteúdo já é consumido pelo tipo de origem (tags mem:*), não pelo rótulo',

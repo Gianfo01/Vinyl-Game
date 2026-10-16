@@ -5,6 +5,7 @@
 // Dinheiro pessoal = patrimônio do dono (separado do caixa da empresa).
 
 import { clamp, type Rng } from '../../core/rng';
+import { LOOKH31 } from '../r31/lookhook31'; // R31 · AP: aparência nos encontros
 import { exitMember20 } from '../members20';
 import { genreById, l, type L } from '../../data/world';
 import { queueCutscene, registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -273,7 +274,7 @@ export function goOnDate(s: GameState, r: Rng, kind: 'dinner' | 'show' | 'trip' 
   let gain = { dinner: 6, show: 6, trip: 14, home: 5 }[kind];
   if ((kind === 'show' && (lk === 'music' || lk === 'fame')) || (kind === 'home' && (lk === 'family' || lk === 'calm')) || (kind === 'dinner' && lk === 'money')) gain += 6;
   if (kind === 'trip' && lk === 'calm') gain += 4;
-  gain += (ownerOf(s).attrs.charisma - 50) / 12 + r.int(-3, 3);
+  gain += (ownerOf(s).attrs.charisma - 50) / 12 + r.int(-3, 3) + (LOOKH31.date?.(s) ?? 0); // R31 · AP: aparência e estilo
   pt.affinity = clamp(pt.affinity + gain, 0, 100);
   pt.lastDate = s.week;
   const o = ownerOf(s);

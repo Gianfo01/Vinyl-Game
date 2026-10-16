@@ -106,10 +106,13 @@ describe('r27 P2B — modo rápido intacto', () => {
     // de mercado igual para todos, previsão pela conta real, demanda e paradas por país (fama local, língua, leis no país,
     // dominó, teto de fama fora de casa, mercado reservado) e transporte por trecho: caixa, acts e rng mudam e o bot passa a
     // marcar turnê nesses 8 meses. Antes (com a Bolsa E): 178753 / 1382068899 / 1746594873 / 3786914192.
-    expect(AFTER.player.cash).toBe(40406);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(2734588704);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1531685321);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3382588419);
+    // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
+    // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
+    // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
+    expect(AFTER.player.cash).toBe(257209);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(4026815485);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(68287867);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(205718420);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();
