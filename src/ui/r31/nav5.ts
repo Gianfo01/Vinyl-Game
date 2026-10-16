@@ -29,6 +29,63 @@ export const NAV5: {
   paper?: () => string | undefined;
 } = {};
 
+// ---------------------------------------------------------------- registro das frentes (PAPEL, ELENCO, CASA, MAPA, TRN)
+// Contrato (DECISOES, "31.5 NAV · API"): quem desenha o conteúdo de um objeto ou de uma região só registra uma função;
+// a casca (shell5.ts) chama a função quando o papel/região abre. Devolver null = "ainda não tenho": a casca mostra a
+// página antiga dentro da moldura (nunca tela vazia). Nada aqui pode mudar o mundo; ações usam os caminhos de sempre.
+
+/** O que a casca entrega a quem desenha o PAPEL de um objeto. */
+export interface PaperCtx5 {
+  s: GameState;
+  /** objeto aberto (objects5) */
+  obj: Obj5;
+  /** marcador aberto agora (página antiga + aba) */
+  marker: Open5;
+  /** todos os marcadores do papel (páginas donas + abas que vieram para ele) */
+  markers: Open5[];
+  /** troca de marcador sem fechar o papel */
+  mark: (m: Open5) => void;
+  /** abre outro objeto / "ir até lá" a partir do papel */
+  open: (objId: string, marker?: Open5) => void;
+  goto: (x: GotoIn5) => void;
+  close: () => void;
+  rerender: () => void;
+  /** a página antiga do marcador aberto (o que a casca mostraria sem registro) */
+  old: () => HTMLElement;
+}
+export type PaperRender5 = (c: PaperCtx5) => HTMLElement | null;
+
+/** O que a casca entrega a quem desenha uma REGIÃO (cidade e mundo: MAPA; casa: CASA; sede: NAV). */
+export interface RegionCtx5 {
+  s: GameState;
+  region: Region5;
+  open: (objId: string, marker?: Open5) => void;
+  goto: (x: GotoIn5) => void;
+  travel: (r: Region5) => void;
+  rerender: () => void;
+  /** "!" por objeto (nav5.bangs5) */
+  bangs: Record<string, number>;
+  /** a página antiga da região (travelTarget5) */
+  old: () => HTMLElement;
+}
+export type RegionRender5 = (c: RegionCtx5) => HTMLElement | null;
+
+const PAPERS5 = new Map<string, PaperRender5>();
+const REGIONS_R5 = new Map<Region5, RegionRender5>();
+/** PAPEL/ELENCO/CASA: conteúdo próprio do papel de um objeto (id de objects5). Registrar de novo substitui. */
+export function registerPaper5(objectId: string, render: PaperRender5): void { PAPERS5.set(objectId, render); }
+/** MAPA (cidade, mundo) e CASA (casa): a cena da região. Registrar de novo substitui. */
+export function registerRegion5(region: Region5, render: RegionRender5): void { REGIONS_R5.set(region, render); }
+export const paperOf5 = (objectId: string): PaperRender5 | undefined => PAPERS5.get(objectId);
+export const regionOfR5 = (region: Region5): RegionRender5 | undefined => REGIONS_R5.get(region);
+export const papers5 = (): string[] => [...PAPERS5.keys()];
+
+/** Transições (frente TRN): um gancho só. `swap` troca a tela; a transição chama `swap` no meio (cortina fechada) e
+ *  nunca bloqueia: sem TRN, `swap()` direto. `kind`: viagem, abrir papel (zoom no objeto), fechar papel. */
+export type Trans5 = 'travel' | 'open' | 'close';
+export interface TransIn5 { kind: Trans5; from?: Region5; to?: Region5; obj?: string; year: number; /** retângulo do objeto na tela (zoom) */ rect?: { x: number; y: number; w: number; h: number } }
+export const TRANS5: { run: (t: TransIn5, swap: () => void) => void } = { run: (_t, swap) => swap() };
+
 // ---------------------------------------------------------------- abrir um objeto
 
 /** Página (+ aba) que o objeto abre. `marker` escolhe um marcador do objeto (página dona ou aba que veio para ele). */

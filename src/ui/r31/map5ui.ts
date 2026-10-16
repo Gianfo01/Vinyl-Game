@@ -12,6 +12,7 @@ import { cityById, l, type L } from '../../data/world';
 import { getLang, t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { nav5On } from '../../sim/r31/exp5';
+import { registerRegion5 } from './nav5';
 import { buildScene18, drawFrame18, env18 } from '../pixel/campus18px';
 import { mapLms27 } from '../pixel/city27';
 import { LOTS18, DIST18 } from '../../sim/sys/campus18';
@@ -30,17 +31,17 @@ import './map5.css';
 const T = (x: L | string | undefined): string => (x === undefined ? '' : typeof x === 'string' ? x : t(x));
 const DIRS5: Record<string, Dir5> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
 
-// ---------------------------------------------------------------- registro de regiões (até a casca NAV ter o seu)
+// ---------------------------------------------------------------- busca das regiões (Ctrl K) e registro na casca
 
 export interface RegionCmd5 { label: string; hint: string; icon: string; run: () => void }
-export interface Region5Def { find?: (s: GameState, q: string) => RegionCmd5[] }
-const REGIONS5 = new Map<string, Region5Def>();
-/** Registro mínimo das regiões (cidade, mundo…). A casca (frente NAV) pode trocar por um seu; ver DECISOES. */
-export function registerRegion5(id: string, def: Region5Def): void { REGIONS5.set(id, def); }
+type Find5Fn = (s: GameState, q: string) => RegionCmd5[];
+const FINDS5 = new Map<string, Find5Fn>();
+/** Busca de uma região (cidade, mundo…): a paleta (Ctrl K) junta todas com `regionCmds5`. */
+export function registerFind5(id: string, fn: Find5Fn): void { FINDS5.set(id, fn); }
 /** Comandos de busca das regiões (Ctrl K). Desligado: nada. */
 export function regionCmds5(s: GameState, q: string): RegionCmd5[] {
   if (!nav5On(s)) return [];
-  return [...REGIONS5.values()].flatMap((r) => r.find?.(s, q) ?? []);
+  return [...FINDS5.values()].flatMap((f) => f(s, q));
 }
 
 // ---------------------------------------------------------------- estado da sessão (não vai para o save)
@@ -66,17 +67,17 @@ export function openCityMap5(s: GameState, id: string): void {
   WORLD5.city = id; goArea5(CITY_AREA5);
 }
 
-registerRegion5('cidade', {
-  find: (s, q) => find5(s, q).filter((x) => x.region === 'cidade').map((x) => ({
-    label: T(x.name), hint: `${T(l('Cidade', 'City'))} · ${T(x.what)}`, icon: 'skyline', run: () => pointCity5((x as { id: string }).id),
-  })),
-});
-registerRegion5('mundo', {
-  find: (s, q) => find5(s, q).filter((x) => x.region === 'mundo').map((x) => {
-    const w = x as { country: string; city?: string };
-    return { label: T(x.name), hint: `${T(l('Mundo', 'World'))} · ${T(x.what)}`, icon: 'globe', run: () => pointWorld5(s, w.country, w.city) };
-  }),
-});
+registerFind5('cidade', (s, q) => find5(s, q).filter((x) => x.region === 'cidade').map((x) => ({
+  label: T(x.name), hint: `${T(l('Cidade', 'City'))} · ${T(x.what)}`, icon: 'skyline', run: () => pointCity5((x as { id: string }).id),
+})));
+registerFind5('mundo', (s, q) => find5(s, q).filter((x) => x.region === 'mundo').map((x) => {
+  const w = x as { country: string; city?: string };
+  return { label: T(x.name), hint: `${T(l('Mundo', 'World'))} · ${T(x.what)}`, icon: 'globe', run: () => pointWorld5(s, w.country, w.city) };
+}));
+// Casca (frente NAV): a cena das regiões 'cidade' e 'mundo' É o mapa — a página da região (campus18 / mapa-múndi), que
+// com exp5.nav ligado já vem sem lista. Registrar devolve essa página; a casca põe topo, viagem e bolso em volta.
+registerRegion5('cidade', (c) => c.old());
+registerRegion5('mundo', (c) => c.old());
 
 // ---------------------------------------------------------------- cidade: placas, "!", teclado, apontar
 
