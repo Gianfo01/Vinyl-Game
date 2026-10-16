@@ -76,7 +76,8 @@ lidas, pedem resposta, estrela, decisões, contratos, imprensa, finanças, mundo
 | 2010–2040 | Celular e app | Notificações no telefone; mensagens e áudios curtos |
 
 Abre como papel/tela por cima da cena (mock: `docs/r31/mocks/onda5/onda5-mock-caixa.png`); "Responder" usa a cena da
-mecânica quando existe (negociação, banco, compra…). Tecla E de qualquer lugar; o objeto mostra o número de não lidas.
+mecânica quando existe (negociação, banco, compra…). Tecla E de qualquer lugar; o objeto mostra o número de não lidas. A troca de forma por época acontece sozinha; não
+existe linha do tempo nem explicação das épocas na tela (decisão do dono).
 
 ## Cidade — prédios (o menu "Cidade" de hoje já tem quase todos como lugares)
 
