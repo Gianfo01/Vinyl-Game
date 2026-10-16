@@ -79,6 +79,75 @@ Abre como papel/tela por cima da cena (mock: `docs/r31/mocks/onda5/onda5-mock-ca
 mecânica quando existe (negociação, banco, compra…). Tecla E de qualquer lugar; o objeto mostra o número de não lidas. A troca de forma por época acontece sozinha; não
 existe linha do tempo nem explicação das épocas na tela (decisão do dono).
 
+### Mecânicas da correspondência por época (propostas)
+
+Cada meio tem quatro atributos que guiam as regras: **custo**, **velocidade**, **privacidade** e **alcance**.
+
+**Cartas (1889–1919, e depois como meio "pessoal")**
+- **Atraso postal:** uma carta leva dias ou semanas conforme a distância (outro continente vai de navio), e a resposta
+  também demora. Os prazos dos pedidos são reais. Mensageiro pago para urgências.
+- **Selo e franquia custam dinheiro;** correio internacional é mais caro.
+- **Carta extraviada** (chance pequena, maior em guerra); **censura em guerra** (1914–18, 1939–45): carta aberta ou
+  riscada, e assunto sensível pode não chegar.
+- **Carta de próprio punho** para artista, crítico ou dono de rádio: sobe a relação mais que um recado. Sai uma por mês,
+  porque gasta energia.
+- **Sacos de cartas de fãs** medem a fama; responder fãs dá lealdade.
+- **Carta de apresentação:** abre porta com quem você não conhece (sobe o conhecimento).
+- **Carta guardada vira prova:** chantagem e trunfo (holds), falsificação no submundo, relíquia ou memórias no futuro.
+
+**Telegrama, telefone fixo e telex (1920–1969)**
+- **Telegrama:** pago por palavra, chega no mesmo dia, resposta curta.
+- **Telefone de mesa:**
+  - fechar negócio na hora (negociação mais rápida, sem tempo para pensar);
+  - interurbano caro;
+  - telefonista ou mesa PBX na sede;
+  - linha cruzada pode revelar um segredo;
+  - grampo (polícia ou rival).
+- **Telex (1930+):** acordos internacionais sem viajar.
+- **Lista telefônica** = o fichário ganha telefones.
+
+**Fax, secretária eletrônica, bip e "tijolão" (1970–1989)**
+- **Secretária eletrônica:** recados que dá para ignorar; fita cheia perde recados.
+- **Fax:**
+  - contrato assinado à distância, para fechar acordo em outro país sem viajar;
+  - fax enviado ao número errado vaza documento para a imprensa.
+- **Bip (pager):** emergências de turnê te alcançam fora da sede.
+- **Celular tijolão (1985+):** caro, dá prestígio e você atende em qualquer lugar.
+
+**Computador e e-mail (1990–2009)**
+- **E-mail instantâneo:**
+  - demos por e-mail (MP3) aumentam o funil de A&R, mas com muito mais lixo;
+  - um assistente filtra o spam.
+- **Responder a todos sem querer** vira escândalo.
+- **Disco vazado** antes do lançamento (1999+): risco por e-mail ou FTP; segurança custa.
+- **Mailing list e site do artista:** marketing direto com os fãs; MySpace (2003–2008) com mensagens de fãs.
+- **Dados de vendas mais precisos** (SoundScan, 1991): o conhecimento do mercado sobe.
+- **Vírus e invasão** (2000+): dados roubados.
+
+**Celular e apps (2010–2040)**
+- **Mensagem instantânea:** esperam resposta rápida; "visualizou e não respondeu" derruba a opinião.
+- **Grupo da banda no app:** o clima da banda fica visível; print vazado vira escândalo.
+- **Redes sociais no bolso:** posts do artista, viral, cancelamento, DMs de fãs, números de streaming em tempo real.
+- **Videochamada:** reunião à distância (sem viajar, mas com menos efeito que ao vivo).
+- **Golpes:** phishing, clonagem e deepfake de voz (2025+).
+- **Assistente de IA (2030+)** tria e responde o rotineiro (liga com a delegação `deleg31`).
+- **"Não perturbe":** menos estresse e mais energia, mas você perde os urgentes.
+
+**Transversais**
+- A chegada de cada meio novo é um evento: o primeiro telefone da sede, o primeiro fax, o primeiro e-mail. Quem adota
+  cedo ganha velocidade; quem demora perde prazos.
+- Os meios antigos não somem de vez: carta de próprio punho continua valendo mais em 2030.
+
+## Botões de viagem (lugares principais)
+
+- Uma barra fixa pequena num canto (embaixo à esquerda, antes do bolso) com botões grandes em pixel art: **Sede**,
+  **Casa**, **Cidade** e **Mundo**.
+- Teclas Shift+1 a Shift+4 (as mesmas do menu de hoje).
+- Cada botão ganha "!" quando há novidade lá.
+- Clicar leva na hora, sem passar tempo, e o botão do lugar atual fica aceso.
+- Com várias carreiras, o botão Sede vira a casa da carreira atual (o chaveiro troca).
+- É diferente do bolso: os botões de viagem são fixos; o bolso é de objetos que o jogador escolhe.
+
 ## Cidade — prédios (o menu "Cidade" de hoje já tem quase todos como lugares)
 
 | Prédio | Abre |
