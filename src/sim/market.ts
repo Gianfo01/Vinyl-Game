@@ -249,6 +249,9 @@ function contractScope(ts: MarketId[], c: { party: string; territories?: MarketI
 }
 
 /** Lançamento de rivais e independentes (mesmos validadores e economia). */
+/** R31 CAR (sys/car31more.ts): o disco do selo NPC também passa pelo estúdio/editora do jogador (o gancho 'launch' só
+ *  roda para lançamentos do jogador). Sem estúdio ou editora do jogador, não faz nada. */
+export const NPCREL31: { f?: (s: GameState, rel: Release) => void } = {};
 export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, songIds: string[], type: Release['type'], budgetReal: number): Release {
   const lb = s.labels[owner];
   const channels = CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear) && isUnlocked(s, c.id));
@@ -263,6 +266,7 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
   };
   if (type !== 'single') rel.title = `${rel.title}${type === 'lp' ? '' : ' EP'}`;
   rel.appeal = computeAppeal(s, r, rel, act).appeal;
+  NPCREL31.f?.(s, rel);
   for (const id of songIds) if (s.songs[id]) s.songs[id].releaseId = rel.id;
   // terceiros: só a faixa principal fica guardada (save leve)
   for (const id of songIds.slice(1)) delete s.songs[id];

@@ -30,6 +30,7 @@ import { fmtL, money } from '../util';
 import { boost31, car31On, careerSw31, exec31, registerExec31, touch31 } from './car31';
 import { fameIn } from './fame16';
 import { SCREEN31 } from './screen18';
+import { NPCREL31 } from '../market';
 import { ROUTE31, vpay, type Venture } from './ventures9';
 
 export interface Pledge31 { act: string; vid: string; t: string; u: number; k: number }
@@ -85,9 +86,10 @@ export const studioQ31 = (v: Venture): number => (v.sound ?? 0) * (0.6 + v.level
 /** bônus do disco gravado no seu estúdio (q 0..100 da casa): nota +0..5, apelo +0..12% */
 export const studioBonus31 = (q: number): { dq: number; k: number } => ({ dq: clamp((q - 40) / 10, 0, 5), k: clamp((q - 40) / 400, 0, 0.12) });
 
-registerSimHook('launch', 'car31more', (s, _r, arg) => {
-  const rel = arg.release;
-  if (!rel || !car31On(s, 'studio')) return;
+registerSimHook('launch', 'car31more', (s, _r, arg) => { if (arg.release) launch31(s, arg.release); });
+NPCREL31.f = (s, rel) => launch31(s, rel);
+function launch31(s: GameState, rel: Release): void {
+  if (!car31On(s, 'studio')) return;
   const st = moreRo31(s);
   const a = s.acts[rel.actId];
   // estúdio: o selo que gravou com você nas últimas 13 semanas
@@ -116,7 +118,7 @@ registerSimHook('launch', 'car31more', (s, _r, arg) => {
     emitFact(s, { kind: 'cover_recorded', actors: ['player', a.id], place: a.city, severity: 25, tags: ['car31', 'publisher'], src: 'car31',
       text: fmtL(l('{a} grava "{t}", da sua editora, no disco "{r}".', '{a} records "{t}", from your publisher, on "{r}".'), { a: a.name, t: p.t, r: rel.title }), diary: true });
   }
-});
+}
 
 function studioPubMonth(s: GameState): void {
   const st = mx(s);
@@ -150,7 +152,8 @@ function studioPubMonth(s: GameState): void {
 /** teto do empurrão por estilo: por mês e por ano */
 export const TREND_M31 = 0.04, TREND_Y31 = 0.25;
 function sigRec(s: GameState, rel: Release): void {
-  const g = styleOfRel17(s, rel.id);
+  // o disco do selo NPC ainda não está em s.releases quando passa por aqui: o estilo vem da música (ou do ato)
+  const g = styleOfRel17(s, rel.id) ?? rel.songs.map((x) => s.songs[x]?.genre).find(Boolean) ?? s.acts[rel.actId]?.genre;
   if (!g) return;
   const st = mx(s);
   (st.ss ??= []).push({ rel: rel.id, g, w: s.week });

@@ -272,6 +272,9 @@ export function setExcl31(s: GameState, fid: string, actId: string, km: number, 
   (st.ex ??= {})[k] = { f: fid, a: actId, km, wk, paid: Math.max(old?.paid ?? 0, q.cost), w0: old?.w0 ?? s.week };
   return null;
 }
+/** procura a mais por cláusula: cresce com o raio e o prazo (800 km × 16 semanas ≈ os 6% da regra antiga) e com cada
+ *  festival rival bloqueado; teto de 15% */
+export const exclK31 = (km: number, wk: number, blocked: number): number => Math.min(0.15, 0.06 * Math.sqrt(km / 800) * Math.sqrt(wk / 16) + 0.03 * blocked);
 EXCL31.dem = (s, f, deals) => {
   if (!car31On(s, 'excl')) return null;
   const st = stageRo31(s);
@@ -281,10 +284,17 @@ EXCL31.dem = (s, f, deals) => {
     const c = st.ex?.[exKey(f.id, d.actId)];
     if (!c) { k += 0.06; continue; }
     if (c.broke) continue;
-    k += Math.min(0.15, (0.03 + 0.03 * exBlocked31(s, f.id, c.km, c.wk).length) * (0.6 + c.wk / 40));
+    k += exclK31(c.km, c.wk, exBlocked31(s, f.id, c.km, c.wk).length);
   }
   return k;
 };
+/** Bônus de procura das exclusividades do festival (o mesmo número que entra na projeção). Puro. */
+export function exclDemand31(s: GameState, fid: string): number {
+  const f = festOf(s, fid);
+  if (!f) return 0;
+  const exs = Object.values(f12(s, f).deals).filter((d) => d.excl && (s.acts[d.actId]?.fame ?? 0) >= 40);
+  return exs.length ? EXCL31.dem?.(s, f, exs) ?? exs.length * 0.06 : 0;
+}
 /** Mês: a cláusula é quebrada quando o artista toca dentro do raio e do prazo (por você ou por um festival rival). */
 function exclMonth(s: GameState): void {
   const st = st31(s);
