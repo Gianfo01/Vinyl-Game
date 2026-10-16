@@ -25,3 +25,4 @@ import '../city'; // R31 onda 4 (UNI-4/B.4): relação com a praça, fonte únic
 import './exp5'; // R31 onda 5 (TEC): interruptor exp5.nav (desligado) e bolso (pocket5)
 import './exp5ini'; // R31 onda 5 (INI): tela inicial e nova run novas (interruptor no editor)
 import './exp5trn'; // R31 onda 5 (TRN): transições entre telas (interruptor e modo no editor)
+import './deco31'; // R31 DECO-M: decoração de casa, sede e estabelecimentos (lugares, upgrades, efeitos com teto)
