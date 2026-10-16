@@ -34,7 +34,9 @@ beforeAll(() => {
   // existem — antes dependia da ordem dos imports) e os perks religados, r16pb-7 quebra antes do show; r16pb-4 volta a ter
   // show no 9º mês, mas o ato mais famoso livre fecha com um rival na mesa; r16pb-8 tem show no 9º mês e vira o fixture.
   // R29 (CONECTAR TUDO + DEMO juntos): r16pb-8 (e -7) quebram antes do show; r16pb-3 tem show no 8º mês e vira o fixture.
-  const s = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
+  // R31 onda 4 (N: bandas de ficção no mundo): r16pb-3 quebra antes do show; varredura pb-1..12: show no 8º–10º mês em
+  // pb-2, 5, 7, 8, 9, 10, 11, 12; r16pb-11 (o mesmo do r16-playbot) vira o fixture.
+  const s = createGame(defaultConfig('r16pb-11', { startYear: 1975, realNames: true }));
   for (let m = 0; m < 24 && !s.ended; m++) {
     playMonth(s, 'balanced');
     const hit = m >= 7 && playableShows27(s, 40).length > 0;
@@ -58,7 +60,7 @@ describe('r27 M2 — modo rápido intacto', () => {
     // Aqui fica o que não pode quebrar: a mesma seed dá exatamente o mesmo mundo, e o bot toca shows pelo playStop.
     const played = AFTER.tours.flatMap((t) => t.stops.filter((x) => x.status === 'played')).length;
     expect(played).toBeGreaterThan(0);
-    const again = createGame(defaultConfig('r16pb-3', { startYear: 1975, realNames: true }));
+    const again = createGame(defaultConfig('r16pb-11', { startYear: 1975, realNames: true }));
     for (let m = 0; m < MONTHS && !again.ended; m++) { playMonth(again, 'balanced'); advanceMonth(again); }
     expect(again.player.cash).toBe(AFTER.player.cash);
     expect(hashString(JSON.stringify(again.tours))).toBe(hashString(JSON.stringify(AFTER.tours)));
