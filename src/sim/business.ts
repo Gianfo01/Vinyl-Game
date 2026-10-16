@@ -14,6 +14,7 @@ import { unclearedSamples } from './studio';
 import { precAdd18, precMul18 } from './sys/rights18';
 import { allReleases17 } from './relidx17';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { companyValue31, stepPrice31, value31On } from './r31/value31';
 
 // ---------- Avaliações ----------
 
@@ -230,7 +231,8 @@ function securitizationMonth(s: GameState): void {
 
 export function ipoTerms(s: GameState): { valuation: number; raise: number; ok: boolean; reason?: L } {
   const rev = (s.player.revenueByYear[s.year - 1] ?? 0) + (s.player.revenueByYear[s.year] ?? 0);
-  const valuation = Math.round(rev * 2.2 + s.assets.reduce((t, a) => t + a.bookValue, 0) + Math.max(0, s.player.cash));
+  // r31 (E · Bolsa): o IPO usa o mesmo valor da bolsa (conta por parte em r31/value31)
+  const valuation = value31On(s) ? companyValue31(s, 'player').total : Math.round(rev * 2.2 + s.assets.reduce((t, a) => t + a.bookValue, 0) + Math.max(0, s.player.cash));
   const ok = s.player.hq >= 2 && rev > money(s, 1_000_000) && s.year >= 1950;
   return { valuation, raise: Math.round(valuation * 0.25), ok, reason: ok ? undefined : l('IPO exige Loft+, receita acima de $1 mi e mercado de capitais (1950+).', 'IPO needs a Loft+, revenue above $1M and capital markets (1950+).') };
 }
@@ -253,8 +255,13 @@ function listingMonth(s: GameState, r: Rng): void {
   if (!s.listing.listed) return;
   const profit = s.player.profitByYear[s.year] ?? 0;
   const growth = (s.player.revenueByYear[s.year] ?? 0) / Math.max(1, s.player.revenueByYear[s.year - 1] ?? 1);
-  const drift = (profit > 0 ? 0.01 : -0.02) + (growth - 1) * 0.02 + (s.economy.recession ? -0.03 : 0.005);
-  s.listing.price = Math.max(1, Math.round(s.listing.price * Math.exp(drift + r.normal(0, 0.05))));
+  if (value31On(s)) {
+    // r31 (E · Bolsa): o preço segue o valor da empresa (12 meses fechados: sem o escorregão de janeiro) com humor próprio
+    s.listing.price = stepPrice31(s, 'player', s.listing.price, s.listing.shares).p;
+  } else {
+    const drift = (profit > 0 ? 0.01 : -0.02) + (growth - 1) * 0.02 + (s.economy.recession ? -0.03 : 0.005);
+    s.listing.price = Math.max(1, Math.round(s.listing.price * Math.exp(drift + r.normal(0, 0.05))));
+  }
   s.listing.history.push(s.listing.price);
   if (s.listing.history.length > 120) s.listing.history.shift();
   // acionistas cobram: queda forte pressiona a diretoria
