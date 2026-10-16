@@ -3,6 +3,7 @@
 // "Elenco". Toda a lógica está em hq25model.ts (pura); aqui só se desenha. Encaixa pelo slot25.
 
 import { lockBtn31 } from '../r31/lock31';
+import { salaHook31 } from '../r31/salahook31';
 import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { buyBlocker27, buyRoom27, cityMul27, hqRooms27, type Unit27 } from '../../sim/sys/hqrooms27';
@@ -36,7 +37,7 @@ function awayEl(s: GameState, x: Sprite25, i: number): HTMLElement {
   c.getContext('2d')?.drawImage(sp.c, 0, 0);
   c.className = 'px';
   const label = `${x.name} — ${t(x.note)}`;
-  const on = x.actId ? () => go25({ act: x.actId }) : undefined;
+  const on = x.actId ? () => go25({ act: x.actId }) : x.kind === 'you' ? () => go25({ area: 'you' }) : undefined;
   return h(on ? 'button' : 'span', { class: `hq25-sp hq25-sp-${x.kind}`, title: label, 'aria-label': label, onclick: on, type: on ? 'button' : undefined },
     c, h('span', { class: 'hq25-tag', 'aria-hidden': 'true' }, x.name));
 }
@@ -56,12 +57,18 @@ const SHORT27: Record<RoomM25['id'], L> = {
   anr: l('A&R', 'A&R'), stage: l('Palco', 'Stage'), lobby: l('Recepção', 'Lobby'),
 };
 
+/** R31 (K): a sala abre a cena dela de perto (salvo se o jogador pediu para pular as cenas); sem cena, a tela de sempre. */
+function openRoom31(r: RoomM25): void {
+  const sala = r.open ? salaHook31.roomScene?.(r.id) : null;
+  if (sala && salaHook31.open) salaHook31.open(sala); else go25(r.go);
+}
+
 function roomBtn(d: Drawn27, r: RoomM25, c: Cell27, k: number): HTMLElement {
   const say = [t(r.name), t(r.desc), ...r.badges.map((b) => t(b.text))].filter(Boolean).join('. ');
   const hot = r.badges.some((b) => b.tone === 'bad' || b.tone === 'warn');
   const narrow = isNarrow27(c, k);
   const tone = r.badges.find((b) => b.tone === 'bad')?.tone ?? r.badges.find((b) => b.tone === 'warn')?.tone;
-  return h('button', { type: 'button', class: `hq25-room ${hot ? 'hot' : ''} ${narrow ? 'narrow' : ''}`, 'data-room': r.id, style: box(d, c.x, c.y, c.w, c.h), 'aria-label': say, title: narrow ? say : undefined, onclick: () => go25(r.go) },
+  return h('button', { type: 'button', class: `hq25-room ${hot ? 'hot' : ''} ${narrow ? 'narrow' : ''}`, 'data-room': r.id, style: box(d, c.x, c.y, c.w, c.h), 'aria-label': say, title: narrow ? say : undefined, onclick: () => openRoom31(r) },
     h('span', { class: 'hq25-chip' }, ic(r.icon), h('span', { class: 'hq25-chip-t' }, t(narrow ? SHORT27[r.id] : r.name)), narrow && tone ? h('i', { class: `hqr27-dot ${tone}`, 'aria-hidden': 'true' }) : null),
     narrow ? null : h('span', { class: 'hq25-bds' }, r.badges.slice(0, 2).map(badgeEl)));
 }
@@ -156,7 +163,7 @@ function unitList27(s: GameState, units: Unit27[]): HTMLElement | null {
 function hitEl(d: Drawn27, sp: Drawn27['spots'][number]): HTMLElement {
   const x = sp.sprite;
   const label = `${x.name} — ${t(x.note)}`;
-  const on = x.actId ? () => go25({ act: x.actId }) : undefined;
+  const on = x.actId ? () => go25({ act: x.actId }) : x.kind === 'you' ? () => go25({ area: 'you' }) : undefined; // R31 (K): você abre o seu painel
   return h(on ? 'button' : 'span', { class: `hq27-hit hq25-sp-${x.kind}`, style: box(d, sp.x - 7, sp.y - 31, 14, 32), title: label, 'aria-label': label, tabindex: on ? '-1' : undefined, onclick: on, type: on ? 'button' : undefined },
     h('span', { class: 'hq25-tag', 'aria-hidden': 'true' }, x.name));
 }
@@ -188,7 +195,9 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
     const rooms = m.rooms.filter((r) => d.plan.rooms.includes(r.id));
     const fx = new Map(m.units.map((u) => [u.id, u]));
     layer.replaceChildren(
-      ...d.plan.cells.filter((c) => !c.room && c.name && !c.lock).map((c) => h('span', { class: 'hq27-deco', style: box(d, c.x, c.y, c.w, c.h), title: c.unit && fx.get(c.unit) ? t(fx.get(c.unit)!.effect) : undefined }, h('span', null, t(c.name!)))),
+      ...d.plan.cells.filter((c) => !c.room && c.name && !c.lock).map((c) => c.kind === 'archive' && salaHook31.open // R31 (K): o arquivo abre o Catálogo em cena
+        ? h('button', { type: 'button', class: 'hq27-deco hq27-deco-btn', style: box(d, c.x, c.y, c.w, c.h), title: t(l('Catálogo em cena', 'Catalog as a scene')), onclick: () => salaHook31.open?.('catalog') }, h('span', null, t(c.name!)))
+        : h('span', { class: 'hq27-deco', style: box(d, c.x, c.y, c.w, c.h), title: c.unit && fx.get(c.unit) ? t(fx.get(c.unit)!.effect) : undefined }, h('span', null, t(c.name!)))),
       ...rooms.map((r) => roomBtn(d, r, d.plan.cells.find((c) => c.room === r.id)!, k)),
       ...lockEls27(s, d, m.units),
       ...d.spots.map((sp) => hitEl(d, sp)),
@@ -214,6 +223,7 @@ function stage(s: GameState, m: HqModel25): HTMLElement {
         h('b', null, ic('plane'), ' ', t(l('Fora da sede', 'Away'))), h('span', { class: 'hq25-away-row' }, m.away.slice(0, 5).map((x, i) => awayEl(s, x, i))),
         m.away.length > 5 ? h('small', null, `+${m.away.length - 5}`) : null) : null),
     scroll,
+    salaHook31.strip?.(s) ?? null, // R31 (K): salas em cena (estúdio, elenco, equipe, catálogo, talentos, troféus, cena da carreira)
     unitList27(s, m.units),
     shut.length ? h('ul', { class: 'hq27-shut', 'aria-label': t(l('Salas que chegam com uma sede maior', 'Rooms that come with a bigger HQ')) },
       shut.map((r) => h('li', null, h('button', { type: 'button', class: 'btn small ghost', onclick: () => go25(r.go), title: t(r.desc) }, ic('lock'), ' ', h('b', null, t(r.name)), ' · ', h('small', { class: 'muted' }, r.lockNote ? t(r.lockNote) : ''))))) : null);

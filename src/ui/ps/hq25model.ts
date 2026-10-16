@@ -16,6 +16,7 @@ import { unreadCount } from '../../sim/sys/people/inbox';
 import { column23, scout23 } from '../../sim/sys/scout23';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
+import { youAt31 } from '../r31/salas31model';
 
 export type Era25 = 'heritage' | 'garage' | 'modern';
 export type Room25 = 'studio' | 'lounge' | 'office' | 'anr' | 'stage' | 'lobby';
@@ -24,7 +25,7 @@ export type Tone25 = 'good' | 'bad' | 'warn' | 'info' | 'idle';
 export type Goto25 = Goto18 & { market?: string };
 
 export interface Badge25 { tone: Tone25; icon: string; text: L }
-export interface Sprite25 { id: string; kind: 'artist' | 'staff' | 'scout'; name: string; room: Room25 | 'away'; personId?: string; actId?: string; role?: string; note: L }
+export interface Sprite25 { id: string; kind: 'artist' | 'staff' | 'scout' | 'you'; name: string; room: Room25 | 'away'; personId?: string; actId?: string; role?: string; note: L }
 export interface RoomM25 {
   id: Room25; name: L; desc: L; icon: string; go: Goto25;
   badges: Badge25[]; sprites: Sprite25[]; more: number;
@@ -122,6 +123,10 @@ export function hqModel25(s: GameState): HqModel25 {
     const away = tripScouts.has(sc.id);
     sprites.push({ id: `sc:${sc.id}`, kind: 'scout', name: sc.name, room: away ? 'away' : 'anr', note: away ? l('Olheiro em viagem', 'Scout travelling') : l('Olheiro', 'Scout') });
   }
+
+  // R31 (K): você aparece na sala da sede onde está (ou na lista "Fora da sede" com o lugar); vai na frente da fila da sala
+  const me = youAt31(s);
+  if (me.personId) sprites.unshift({ id: 'you', kind: 'you', name: s.persons[me.personId]?.name ?? '', room: me.room, personId: me.personId, note: me.where });
 
   // ---------------------------------------------------------------- selos por sala
   const caps = hqCaps(s);
