@@ -37,7 +37,10 @@ import { heistOn27 } from '../act27/heist27'; // r27 (M3): operação jogável
 import { screen27, screenOn27 } from '../act27/flow27'; // r27 FLOW: uma entrada só
 import { crimeForm17, presetHire29 } from './crimeform29';
 import { ent27 } from '../ps/ent27';
-import { relicBrowser29 } from './relics29'; // R29: filtros e páginas para listas grandes de relíquias
+import { relicBrowser29 } from './relics29';
+import { brokerTab31 } from './broker31ui'; // r31 (U): intermediário das facções de fora
+import { facOn31, home31 } from '../../sim/sys/fac31';
+import { present29 } from '../../sim/sys/mob29'; // R29: filtros e páginas para listas grandes de relíquias
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 /** r28 (arte): brasão semeado da organização (forma pelo tipo, cores pela região, carga pelo negócio). */
@@ -53,9 +56,12 @@ function orgsTab(s: GameState): HTMLElement {
   const st = crime17(s);
   const strict = histMode(s) === 'strict';
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split');
-  const list = orgs17(s, false, true).sort((a, b) => (b.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) - (a.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) || b.power - a.power);
+  // r31 (U): com o interruptor, só as facções que agem no seu país (as de fora ficam na aba Intermediário)
+  const u = facOn31(s), hm = home31(s);
+  const list = orgs17(s, false, true).filter((o) => !u || present29(o, hm, s)).sort((a, b) => (b.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) - (a.a3 === orgs17(s).find((o) => o.id === 'fnoite')?.a3 ? 1 : 0) || b.power - a.power);
   const feuds = Object.entries(st.feud).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
   return h('div', null,
+    u ? h('p', { class: 'small' }, T(fmtL(l('Só as facções que agem em {c} (sede ou operação aberta) e o crime digital. As de fora: aba Intermediário.', 'Only the factions operating in {c} (base or open operation) and digital crime. Foreign ones: Broker tab.'), { c: countryName(hm) }))) : null,
     h('p', { class: 'muted small' }, T(l(
       'Organizações ativas nesta época. ' + (strict ? 'No modo Vida real exata, artista real só aparece ligado a uma organização com laço documentado.' : 'Depois do início, as ligações são o que acontece nesta partida.') + ' Assassinato nunca envolve pessoas reais.',
       'Organizations active in this era. ' + (strict ? 'In Exact real life mode, a real artist only appears tied to an organization with a documented tie.' : 'After the start, ties are whatever happens in this run.') + ' Murder never involves real people.'))),
@@ -191,7 +197,7 @@ function plansTab(s: GameState): HTMLElement {
   const executors = [{ value: 'player', label: `${T(l('Você', 'You'))} (${s.config.companyName})` },
     ...playerActs(s).flatMap((id) => s.acts[id]?.members.filter((m) => s.persons[m]?.alive && !s.persons[m].isPlayer).map((m) => ({ value: m, label: `${s.persons[m].name} (${s.acts[id].name})` })) ?? [])];
   // r29 (Submundo): "Contratar a família" — a organização executa (mob29.hire29), com taxa e favor devido
-  executors.push(...orgs17(s, false, true).filter((o) => !((st.down[o.id] ?? 0) > s.week)).map((o) => ({ value: `hire:${o.id}`, label: `${T(l('Contratar', 'Hire'))} ${T(o.name)} (${T(l('a família executa', 'the family does it'))})` })));
+  executors.push(...orgs17(s, false, true).filter((o) => !((st.down[o.id] ?? 0) > s.week) && (!facOn31(s) || present29(o, home31(s), s))) /* r31 (U): as de fora pelo intermediário */.map((o) => ({ value: `hire:${o.id}`, label: `${T(l('Contratar', 'Hire'))} ${T(o.name)} (${T(l('a família executa', 'the family does it'))})` })));
   if (!executors.some((x) => x.value === form.actor)) form.actor = 'player';
   const hireO = form.actor.startsWith('hire:') ? form.actor.slice(5) : '';
   const cats = d.id === 'award_rig' ? awCatsOn29(s) : [];
@@ -334,6 +340,7 @@ function crimeArea(s: GameState): HTMLElement {
   return h('div', { class: 'hub' }, tabs('crime17', [
     { id: 'orgs', label: t(l('Organizações', 'Organizations')), icon: 'handshake', render: () => orgsTab(s) },
     { id: 'plans', label: t(l('Planos/Ações', 'Plans/Actions')), icon: 'skull', badge: st.warn.length || undefined, render: () => plansTab(s) },
+    { id: 'broker', label: t(l('Intermediário', 'Broker')), icon: 'globe', render: () => brokerTab31(s) },
     { id: 'spy', label: t(l('Espionagem', 'Espionage')), icon: 'camera', render: () => h('div', null, rivalsExtra(s), intriguePanel(s)) },
     { id: 'market', label: t(l('Mercado negro', 'Black market')), icon: 'vault', badge: st.stash.length || undefined, render: () => marketTab(s) },
     { id: 'police', label: t(l('Investigações/Polícia', 'Investigations/Police')), icon: 'gavel', badge: charged || undefined, render: () => policeTab(s) },
