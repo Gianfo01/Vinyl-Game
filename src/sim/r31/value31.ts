@@ -543,9 +543,12 @@ export function stepPrice31(s: GameState, id: string, p: number, shares: number)
       if (Math.sign(d) === Math.sign(chg) && Math.abs(d) > Math.abs(bd)) { bd = d; bk = k; }
     }
     const moved = Math.abs(bd) / Math.max(1, v.total);
+    const gap = Math.abs(Math.log(Math.max(1, v.total / Math.max(1, shares)) / Math.max(1, p)));
     const reason = bk && moved >= Math.abs(chg) * 0.25 ? (chg > 0 ? RISE[bk] : FALL[bk]) : undefined;
     why = fmtL(chg >= 0 ? l('subiu {p}: {w}', 'rose {p}: {w}') : l('caiu {p}: {w}', 'fell {p}: {w}'),
-      { p: `${Math.abs(Math.round(chg * 100))}%`, w: reason ?? (chg >= 0 ? l('humor do mercado (otimismo)', 'market mood (optimism)') : l('humor do mercado (nervosismo)', 'market mood (jitters)')) });
+      { p: `${Math.abs(Math.round(chg * 100))}%`, w: reason ?? (gap > Math.abs(mood)
+        ? (chg >= 0 ? l('o preço ainda corre atrás do valor da empresa', 'the price is still catching up with the company\'s value') : l('o preço ainda desce até o valor da empresa', 'the price is still settling down to the company\'s value'))
+        : (chg >= 0 ? l('humor do mercado (otimismo)', 'market mood (optimism)') : l('humor do mercado (nervosismo)', 'market mood (jitters)'))) });
     st.why[id] = why;
   }
   st.last[id] = now;
