@@ -2,7 +2,9 @@
 // líderes rivais, equipe, críticos e mídia — com opinião sobre você (e por quê), barreiras históricas da
 // época e ações (presente, favor, elogio, crítica pública, declaração política).
 
-import { attrWidth, band, bandText } from '../../sim/know';
+import { attrWidth, band, bandText, seen } from '../../sim/know';
+import { meNode31, node31, tie31 } from '../../sim/social31';
+import { askIntro31, howMet31, introVia31, knowsMe31, nodeName31, tieLabel31 } from '../../sim/sys/social31sys';
 import { opinionWhy } from '../../sim/opinion';
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
@@ -54,7 +56,8 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
   const w13 = kl?.mine ? 0 : attrWidth(s, P.key, P.kind, Math.abs(op ?? 0) >= 15 || led.w.length > 0);
   const sh = (v: number, f: string): string => bandText(band(s, P.key, `attrs.${f}`, v, w13));
   const seeTraits = !pid || !!kl?.mine || canSee(s, pid, 'traits') || (!kl && w13 <= 6);
-  const seeViews = !pid || canSee(s, pid, 'life');
+  const seeViews = !pid || seen(s, pid, 'beliefs'); // r31 F #13: a mesma regra da ficha e dos integrantes
+  const knows = self ? 'met' : knowsMe31(s, P.key); // r31 F #24: quem nunca te viu não tem número
   return h('div', { class: 'p13' },
     h('div', { class: 'grid2' },
       h('div', null,
@@ -75,16 +78,19 @@ export function ficha13(s: GameState, key: string, redraw?: () => void): HTMLEle
         adj ? h('p', { class: 'small' }, t(l('Desempenho efetivo no cargo: {b} {d} = {v}', 'Effective performance in role: {b} {d} = {v}'), { b: staff!.skill, d: signed(adj.v), v: staff!.skill + adj.v }),
           adj.why.length ? h('span', { class: 'muted' }, ` (${adj.why.map((x) => t(x)).join('; ')})`) : null) : null,
         h('h4', null, t(l('Aparência e época', 'Looks and era'))),
-        h('p', { class: 'small' }, `${t(SEX13[P.sex])} · ${t(SKIN13[P.skin] ?? SKIN13[0])} · ${t(l('imagem', 'image'))} ${P.attrs.img}`),
+        h('p', { class: 'small' }, `${t(SEX13[P.sex])} · ${t(SKIN13[P.skin] ?? SKIN13[0])} · ${t(l('imagem', 'image'))} ${w13 ? sh(P.attrs.img, 'img') : P.attrs.img}`), // r31 F #24: imagem também em faixa
         h('p', { class: 'small muted' }, t(l('Na {e}, o visual vale {w}% do alcance para cada 10 pontos de imagem acima ou abaixo de 50.', 'In the {e}, looks are worth {w}% of reach per 10 image points above or below 50.'), { e: t(iw.era), w: Math.round(iw.w * 20 * 10) / 10 })),
         act ? barrierList(barriers13(s, act)) : null,
         ob ? barrierList([ob]) : null,
         act || ob ? h('p', { class: 'small muted' }, t(l('Barreiras são da época e do país, não da pessoa: diminuem com as décadas, e você pode enfrentá-las quando surgirem (eventos).', 'Barriers belong to the era and country, not the person: they ease over the decades, and you can fight them when they come up (events).'))) : null,
       ),
     ),
+    self ? null : relation31(s, P.key, redraw),
     op === null ? null : section(t(l('O que pensa de você', 'What they think of you')),
-      h('p', null, pill(signed(op), op >= 15 ? 'good' : op <= -15 ? 'bad' : ''), ' ', h('span', { class: 'small muted' }, t(l('(−100 a +100; a personalidade amplia ou suaviza cada gesto)', '(−100 to +100; personality amplifies or softens each gesture)')))),
-      led?.w.length ? h('ul', { class: 'small' }, [...led.w].reverse().map(([y, m, d, w]) => h('li', { class: d >= 0 ? 'good' : 'bad' }, `${signed(d)} · ${m + 1}/${y} — `, t(w)))) : h('p', { class: 'muted small' }, t(l('Nada marcante entre vocês ainda.', 'Nothing notable between you yet.'))),
+      knows === 'none' ? h('p', null, pill(t(l('Não te conhece', 'Does not know you')), ''), ' ', h('span', { class: 'small muted' }, t(l('Nunca cruzou com você nem ouviu falar o bastante para ter opinião.', 'Has never met you nor heard enough to have an opinion.'))))
+        : knows === 'name' ? h('p', null, pill(t(l('Conhece de nome', 'Knows you by name')), ''), ' ', pill(t(op >= 15 ? l('impressão boa', 'good impression') : op <= -15 ? l('impressão ruim', 'bad impression') : l('sem opinião formada', 'no opinion yet')), op >= 15 ? 'good' : op <= -15 ? 'bad' : ''), ' ', h('span', { class: 'small muted' }, t(l('(pelo que saiu nas notícias; ainda não houve contato)', '(from the news; no contact yet)'))))
+        : h('p', null, pill(signed(op), op >= 15 ? 'good' : op <= -15 ? 'bad' : ''), ' ', h('span', { class: 'small muted' }, t(l('(−100 a +100; a personalidade amplia ou suaviza cada gesto)', '(−100 to +100; personality amplifies or softens each gesture)')))),
+      led?.w.length ? h('ul', { class: 'small' }, [...led.w].reverse().map(([y, m, d, w]) => h('li', { class: d >= 0 ? 'good' : 'bad' }, knows === 'met' ? `${signed(d)} · ${m + 1}/${y} — ` : `${m + 1}/${y} — `, t(w)))) : knows === 'none' ? null : h('p', { class: 'muted small' }, t(l('Nada marcante entre vocês ainda.', 'Nothing notable between you yet.'))),
       h('div', { class: 'row wrap' },
         h('button', { class: 'btn small', disabled: !!giftBlock(s, P.key), title: t(giftBlock(s, P.key) ?? l('Agrada mais quem é vaidoso ou mão-fechada.', 'Pleases the vain and the stingy most.')), onclick: () => favorAct27(s, P.key, 'gift', () => say(sendGift(s, P.key))) }, `${t(l('Presente', 'Gift'))} · ${$(money(s, GIFT_COST))}`),
         h('button', { class: 'btn small', disabled: !!favorBlock(s, P.key), title: t(favorBlock(s, P.key) ?? l('Gasta boa vontade por um ganho imediato.', 'Spends goodwill for an immediate gain.')), onclick: () => favorAct27(s, P.key, 'ask', () => say(askFavor(s, P.key))) }, t(l('Pedir favor', 'Ask a favor'))),
@@ -118,6 +124,36 @@ export function actNegLine(s: GameState, a: Act): HTMLElement | null {
   if (!ng) return null;
   const bs = barriers13(s, a).filter((b) => b.k !== 'img');
   return h('div', { class: 'small' },
-    t(l('Quem negocia: {n} (negociação {v}) · você: {m}', 'Negotiator: {n} (negotiation {v}) · you: {m}'), { n: ng.p.name, v: ng.neg, m: labelNeg(s) }), ' ', ficha13Btn(`p:${ng.p.id}`),
+    t(l('Quem negocia: {n} (negociação {v}) · você: {m}', 'Negotiator: {n} (negotiation {v}) · you: {m}'), { n: ng.p.name, v: bandText(band(s, `p:${ng.p.id}`, 'attrs.neg', ng.neg, attrWidth(s, `p:${ng.p.id}`, 'person', false))), m: labelNeg(s) }), ' ', ficha13Btn(`p:${ng.p.id}`), // r31 F #24: sem névoa antes
     bs.length ? barrierList(bs) : null);
+}
+
+// ---------------------------------------------------------------- r31 F: a relação (5 dimensões) e "como se conheceram"
+
+const dimTone = (v: number) => (v >= 20 ? 'good' : v <= -20 ? 'bad' : '');
+const dimTxt = (v: number): string => (v >= 50 ? t(l('alto', 'high')) : v >= 20 ? t(l('bom', 'good')) : v <= -50 ? t(l('péssimo', 'terrible')) : v <= -20 ? t(l('baixo', 'low')) : t(l('neutro', 'neutral')));
+
+/** Bloco "Relação com você": conhecimento/intimidade, afeto, respeito, confiança, rivalidade e como se conheceram. */
+export function relation31(s: GameState, key: string, redraw?: () => void): HTMLElement | null {
+  const me = meNode31(s);
+  const n = node31(s, key);
+  if (n === me) return null;
+  const tie = tie31(s, me, n);
+  const op = opinionOf(s, key);
+  if (!tie) {
+    const via = introVia31(s, n);
+    return section(t(l('Relação com você', 'Relationship with you')),
+      h('p', { class: 'small' }, pill(t(l('Nunca se viram', 'Never met')), ''), ' ', h('span', { class: 'muted' }, t(l('Contratar, gravar ou tocar junto, festivais, premiações, visitar o lugar onde a pessoa está ou um amigo em comum fazem vocês se conhecerem.', 'Hiring, recording or playing together, festivals, awards, visiting where they hang out or a mutual friend make you meet.')))),
+      via ? h('button', { class: 'btn small', title: t(l('{f} conhece os dois.', '{f} knows you both.'), { f: nodeName31(s, via) }), onclick: () => { const e = askIntro31(s, n); toast(t(e ?? l('Apresentados por {f}.', 'Introduced by {f}.'), { f: nodeName31(s, via) }), e ? 'warn' : 'good'); redraw?.(); rerender(); } }, t(l('Pedir apresentação a {f}', 'Ask {f} for an introduction'), { f: nodeName31(s, via) })) : null);
+  }
+  const row = (lab: L, v: string, tn = '') => h('li', null, h('span', null, t(lab)), h('b', { class: tn }, v));
+  return section(t(l('Relação com você', 'Relationship with you')),
+    h('p', { class: 'small' }, pill(t(tieLabel31(s, me, n)), tie.v >= 30 ? 'bad' : 'good'), ' ', h('span', { class: 'muted' }, t(l('Como se conheceram: ', 'How you met: ')), t(howMet31(s, tie)))),
+    h('ul', { class: 'attr-list small' },
+      row(l('Intimidade', 'Closeness'), `${Math.round(tie.i)}/100 · ${t(tie.k === 3 ? l('trabalharam juntos', 'worked together') : l('já se viram', 'have met'))}`),
+      row(l('Afeto (opinião)', 'Affection (opinion)'), signed(op), dimTone(op)),
+      row(l('Respeito por você', 'Respect for you'), dimTxt(tie.rBack), dimTone(tie.rBack)),
+      row(l('Confiança em você', 'Trust in you'), dimTxt(tie.tBack), dimTone(tie.tBack)),
+      row(l('Rivalidade', 'Rivalry'), tie.v >= 60 ? t(l('inimigos', 'enemies')) : tie.v >= 30 ? t(l('rivais', 'rivals')) : tie.v > 0 ? t(l('alguma', 'some')) : t(l('nenhuma', 'none')), tie.v >= 30 ? 'bad' : '')),
+    h('p', { class: 'small muted' }, t(l('A intimidade esfria devagar sem contato; presentes, favores e trabalho bem-sucedido aproximam; calote, traição e escândalo afastam.', 'Closeness cools slowly without contact; gifts, favors and successful work bring you closer; defaults, betrayal and scandal push you apart.'))));
 }
