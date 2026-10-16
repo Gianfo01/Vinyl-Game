@@ -20,7 +20,7 @@
   "cpus": 4,
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "node": "v22.22.0",
-  "wallSec": 580,
+  "wallSec": 514,
   "errors": [],
   "sw": {}
  },
@@ -28,91 +28,91 @@
   {
    "start": 1900,
    "n": 4,
-   "msPerMonthMean": 345,
-   "msPerMonthMedian": 328,
-   "cpuMsPerMonthMean": 426,
-   "createMsMean": 233,
-   "saveJsonBytesMedian": 3756935,
-   "saveGzipBytesMedian": 718529,
-   "stringifyMsMean": 53,
+   "msPerMonthMean": 322,
+   "msPerMonthMedian": 321,
+   "cpuMsPerMonthMean": 405,
+   "createMsMean": 190,
+   "saveJsonBytesMedian": 3755461,
+   "saveGzipBytesMedian": 717952,
+   "stringifyMsMean": 50,
    "x4Keys": 283,
-   "cashRealMedian": 63034,
-   "worthRealMedian": 4715939,
-   "fameMedian": 27,
+   "cashRealMedian": 129356,
+   "worthRealMedian": 4817975,
+   "fameMedian": 28,
    "actsMedian": 3,
-   "revenueLastYearRealMedian": 1836880,
+   "revenueLastYearRealMedian": 1832375,
    "ended": 0
   },
   {
    "start": 1955,
    "n": 4,
-   "msPerMonthMean": 794,
-   "msPerMonthMedian": 818,
-   "cpuMsPerMonthMean": 948,
-   "createMsMean": 324,
-   "saveJsonBytesMedian": 5933287,
-   "saveGzipBytesMedian": 1175949,
-   "stringifyMsMean": 95,
+   "msPerMonthMean": 740,
+   "msPerMonthMedian": 746,
+   "cpuMsPerMonthMean": 892,
+   "createMsMean": 314,
+   "saveJsonBytesMedian": 5965918,
+   "saveGzipBytesMedian": 1197104,
+   "stringifyMsMean": 89,
    "x4Keys": 284,
-   "cashRealMedian": -10312,
-   "worthRealMedian": 324258,
-   "fameMedian": 17,
+   "cashRealMedian": -6593,
+   "worthRealMedian": 244179,
+   "fameMedian": 16,
    "actsMedian": 3,
-   "revenueLastYearRealMedian": 256128,
-   "ended": 1
+   "revenueLastYearRealMedian": 281202,
+   "ended": 2
   },
   {
    "start": 1990,
    "n": 4,
-   "msPerMonthMean": 1600,
-   "msPerMonthMedian": 1608,
-   "cpuMsPerMonthMean": 1909,
-   "createMsMean": 498,
-   "saveJsonBytesMedian": 9560274,
-   "saveGzipBytesMedian": 1978191,
-   "stringifyMsMean": 170,
+   "msPerMonthMean": 1486,
+   "msPerMonthMedian": 1506,
+   "cpuMsPerMonthMean": 1777,
+   "createMsMean": 415,
+   "saveJsonBytesMedian": 9497969,
+   "saveGzipBytesMedian": 1967732,
+   "stringifyMsMean": 148,
    "x4Keys": 284,
-   "cashRealMedian": -18134,
-   "worthRealMedian": 1141456,
+   "cashRealMedian": -3991,
+   "worthRealMedian": 694719,
    "fameMedian": 16,
    "actsMedian": 4,
-   "revenueLastYearRealMedian": 514925,
+   "revenueLastYearRealMedian": 263802,
    "ended": 2
   },
   {
    "start": 2012,
    "n": 4,
-   "msPerMonthMean": 2740,
-   "msPerMonthMedian": 2703,
-   "cpuMsPerMonthMean": 3098,
-   "createMsMean": 658,
-   "saveJsonBytesMedian": 13375070,
-   "saveGzipBytesMedian": 2624385,
-   "stringifyMsMean": 254,
+   "msPerMonthMean": 2348,
+   "msPerMonthMedian": 2248,
+   "cpuMsPerMonthMean": 2802,
+   "createMsMean": 568,
+   "saveJsonBytesMedian": 13394066,
+   "saveGzipBytesMedian": 2622919,
+   "stringifyMsMean": 211,
    "x4Keys": 284,
-   "cashRealMedian": 520558,
-   "worthRealMedian": 9247879,
+   "cashRealMedian": 575981,
+   "worthRealMedian": 10958570,
    "fameMedian": 20,
    "actsMedian": 5,
-   "revenueLastYearRealMedian": 4519467,
+   "revenueLastYearRealMedian": 4488858,
    "ended": 0
   },
   {
    "start": 2030,
    "n": 4,
-   "msPerMonthMean": 2884,
-   "msPerMonthMedian": 2719,
-   "cpuMsPerMonthMean": 3384,
-   "createMsMean": 904,
-   "saveJsonBytesMedian": 13304069,
-   "saveGzipBytesMedian": 2533156,
-   "stringifyMsMean": 435,
+   "msPerMonthMean": 2598,
+   "msPerMonthMedian": 2345,
+   "cpuMsPerMonthMean": 3300,
+   "createMsMean": 882,
+   "saveJsonBytesMedian": 13221654,
+   "saveGzipBytesMedian": 2521685,
+   "stringifyMsMean": 219,
    "x4Keys": 284,
-   "cashRealMedian": 700012,
-   "worthRealMedian": 9783662,
+   "cashRealMedian": 359685,
+   "worthRealMedian": 10583100,
    "fameMedian": 21,
-   "actsMedian": 5,
-   "revenueLastYearRealMedian": 5357647,
+   "actsMedian": 4,
+   "revenueLastYearRealMedian": 3355131,
    "ended": 0
   }
  ],
@@ -236,95 +236,95 @@
     ]
    },
    "perf": {
-    "createMs": 220,
+    "createMs": 170,
     "monthMs": {
-     "mean": 329,
-     "median": 327,
-     "p90": 461,
-     "max": 640
+     "mean": 320,
+     "median": 323,
+     "p90": 456,
+     "max": 566
     },
     "cpuMonthMs": {
-     "mean": 420,
-     "median": 410
+     "mean": 409,
+     "median": 389
     },
     "perMonth": [
+     130,
+     134,
+     128,
      191,
-     136,
-     170,
-     240,
+     174,
      177,
-     204,
-     257,
-     435,
-     327,
-     255,
-     265,
-     464,
-     354,
-     219,
-     326,
-     277,
+     231,
+     294,
+     342,
+     311,
+     284,
+     332,
      329,
-     303,
-     627,
-     360,
-     338,
-     315,
-     326,
-     327,
-     338,
-     341,
-     344,
+     210,
+     366,
+     349,
      323,
+     274,
+     402,
+     269,
+     309,
+     249,
+     315,
      316,
-     352,
-     442,
-     640,
-     364,
-     461,
-     365,
-     349
+     370,
+     329,
+     357,
+     372,
+     311,
+     566,
+     453,
+     561,
+     384,
+     522,
+     456,
+     420
     ],
     "cpuPerMonth": [
-     305,
-     175,
-     185,
-     323,
-     203,
-     291,
-     335,
-     564,
-     423,
-     319,
-     309,
-     541,
-     461,
-     241,
-     383,
-     326,
-     408,
-     347,
-     1044,
-     412,
-     438,
-     398,
-     416,
-     427,
-     504,
-     528,
-     438,
-     404,
-     385,
-     457,
-     528,
-     744,
-     430,
-     622,
-     429,
-     393
+     222,
+     182,
+     171,
+     311,
+     228,
+     312,
+     360,
+     381,
+     399,
+     341,
+     316,
+     394,
+     428,
+     237,
+     431,
+     415,
+     432,
+     399,
+     426,
+     314,
+     361,
+     320,
+     354,
+     389,
+     472,
+     377,
+     388,
+     402,
+     353,
+     1005,
+     579,
+     736,
+     487,
+     688,
+     647,
+     464
     ],
-    "stringifyMs": 53,
-    "gzipMs": 97
+    "stringifyMs": 49,
+    "gzipMs": 83
    }
   },
   {
@@ -336,21 +336,21 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 312670,
-    "cashReal": 109555,
-    "worthReal": 3651791,
-    "liquidReal": 25675,
+    "cash": 223222,
+    "cashReal": 78214,
+    "worthReal": 3836527,
+    "liquidReal": 5307,
     "debt": 122371,
-    "fame": 25,
-    "repArtistic": 21,
-    "repCommercial": 62,
+    "fame": 27,
+    "repArtistic": 19,
+    "repCommercial": 66,
     "acts": 3,
-    "songs": 98,
+    "songs": 104,
     "releases": 21,
-    "number1s": 7,
-    "revenueLastYear": 3734899,
-    "revenueLastYearReal": 1326314,
-    "persons": 436,
+    "number1s": 9,
+    "revenueLastYear": 4121246,
+    "revenueLastYearReal": 1463511,
+    "persons": 403,
     "worldActs": 219,
     "labels": 56,
     "ledger": 0,
@@ -368,172 +368,172 @@
      },
      {
       "year": 1901,
-      "cash": 31953,
-      "cashReal": 11347,
+      "cash": 31648,
+      "cashReal": 11239,
       "acts": 3,
-      "fame": 21,
-      "revenue": 1118161,
-      "revenueReal": 402506,
-      "finRev": 1118161,
-      "finNet": -71343
+      "fame": 19,
+      "revenue": 818672,
+      "revenueReal": 294698,
+      "finRev": 818672,
+      "finNet": -209631
      },
      {
       "year": 1902,
-      "cash": 312670,
-      "cashReal": 109555,
+      "cash": 223222,
+      "cashReal": 78214,
       "acts": 3,
-      "fame": 25,
-      "revenue": 3734899,
-      "revenueReal": 1326314,
-      "finRev": 3734899,
-      "finNet": 1345491
+      "fame": 27,
+      "revenue": 4121246,
+      "revenueReal": 1463511,
+      "finRev": 4121246,
+      "finNet": 1582854
      }
     ]
    },
    "save": {
-    "jsonBytes": 3730619,
-    "gzipBytes": 720790,
+    "jsonBytes": 3848266,
+    "gzipBytes": 737693,
     "x4Keys": 283,
     "x4Top": [
      [
       "ch7",
-      300963
+      293069
      ],
      [
       "facts17",
-      221150
+      228498
      ],
      [
       "st28",
-      152248
+      186208
      ],
      [
       "attn",
-      108623
+      106604
      ],
      [
       "people",
-      78638
-     ],
-     [
-      "chron9",
-      57756
-     ],
-     [
-      "fame15",
-      55335
+      79389
      ],
      [
       "media17",
-      50385
+      62722
      ],
      [
-      "leisure14",
-      45792
+      "chron9",
+      58143
+     ],
+     [
+      "fame15",
+      54503
      ],
      [
       "creation",
-      45696
+      48485
      ],
      [
-      "scenes",
-      38148
+      "leisure14",
+      48348
      ],
      [
       "ag18",
-      37942
+      41447
+     ],
+     [
+      "dm18",
+      36886
      ]
     ]
    },
    "perf": {
-    "createMs": 178,
+    "createMs": 184,
     "monthMs": {
-     "mean": 309,
-     "median": 301,
-     "p90": 430,
-     "max": 521
+     "mean": 319,
+     "median": 311,
+     "p90": 422,
+     "max": 610
     },
     "cpuMonthMs": {
-     "mean": 386,
-     "median": 363
+     "mean": 409,
+     "median": 368
     },
     "perMonth": [
-     127,
-     189,
-     144,
-     187,
-     177,
-     201,
-     298,
-     224,
+     150,
+     131,
+     197,
+     196,
+     171,
+     374,
      286,
-     243,
-     218,
-     275,
-     258,
-     368,
-     430,
-     425,
-     301,
-     301,
-     281,
-     301,
+     251,
+     265,
+     215,
+     198,
+     245,
+     236,
+     232,
      414,
-     288,
-     335,
-     380,
-     304,
-     338,
-     328,
+     422,
+     289,
+     309,
+     323,
+     401,
+     389,
+     353,
+     300,
+     357,
+     300,
+     368,
+     424,
+     311,
+     272,
+     363,
+     392,
+     399,
+     355,
      396,
-     343,
-     359,
-     321,
-     446,
-     344,
-     296,
-     466,
-     521
+     582,
+     610
     ],
     "cpuPerMonth": [
-     267,
-     251,
-     180,
-     281,
-     187,
-     224,
-     316,
-     329,
-     306,
-     250,
-     285,
-     348,
-     391,
-     731,
-     500,
-     505,
+     249,
+     198,
+     284,
+     318,
+     189,
+     774,
+     343,
+     315,
+     353,
+     261,
+     222,
+     318,
+     295,
+     304,
+     471,
+     450,
+     345,
      360,
-     399,
-     330,
-     321,
-     465,
-     341,
-     366,
-     422,
-     381,
-     447,
-     371,
+     388,
+     479,
+     453,
+     376,
+     326,
+     439,
+     400,
+     584,
+     419,
+     347,
+     347,
+     495,
+     521,
      503,
-     514,
-     464,
-     360,
-     525,
-     432,
-     344,
-     537,
-     667
+     433,
+     441,
+     640,
+     1073
     ],
-    "stringifyMs": 48,
+    "stringifyMs": 58,
     "gzipMs": 80
    }
   },
@@ -546,23 +546,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 7719,
-    "cashReal": 2705,
-    "worthReal": 3293077,
-    "liquidReal": -84495,
+    "cash": 553682,
+    "cashReal": 194002,
+    "worthReal": 2784054,
+    "liquidReal": 136853,
     "debt": 110172,
     "fame": 26,
-    "repArtistic": 21,
-    "repCommercial": 64,
+    "repArtistic": 31,
+    "repCommercial": 66,
     "acts": 3,
-    "songs": 116,
-    "releases": 25,
-    "number1s": 7,
-    "revenueLastYear": 4146616,
-    "revenueLastYearReal": 1472520,
-    "persons": 437,
-    "worldActs": 229,
-    "labels": 58,
+    "songs": 111,
+    "releases": 18,
+    "number1s": 8,
+    "revenueLastYear": 2749516,
+    "revenueLastYearReal": 976391,
+    "persons": 449,
+    "worldActs": 231,
+    "labels": 57,
     "ledger": 0,
     "years": [
      {
@@ -578,173 +578,173 @@
      },
      {
       "year": 1901,
-      "cash": 10750,
-      "cashReal": 3817,
+      "cash": 36305,
+      "cashReal": 12892,
       "acts": 3,
-      "fame": 22,
-      "revenue": 1183129,
-      "revenueReal": 425892,
-      "finRev": 1183129,
-      "finNet": -196821
+      "fame": 21,
+      "revenue": 582837,
+      "revenueReal": 209805,
+      "finRev": 582837,
+      "finNet": 36439
      },
      {
       "year": 1902,
-      "cash": 7719,
-      "cashReal": 2705,
+      "cash": 553682,
+      "cashReal": 194002,
       "acts": 3,
       "fame": 26,
-      "revenue": 4146616,
-      "revenueReal": 1472520,
-      "finRev": 4146616,
-      "finNet": 1295875
+      "revenue": 2749516,
+      "revenueReal": 976391,
+      "finRev": 2749516,
+      "finNet": 693499
      }
     ]
    },
    "save": {
-    "jsonBytes": 3910917,
-    "gzipBytes": 745053,
+    "jsonBytes": 3636670,
+    "gzipBytes": 719636,
     "x4Keys": 282,
     "x4Top": [
      [
       "ch7",
-      272098
+      252834
      ],
      [
       "facts17",
-      228862
+      214517
      ],
      [
       "st28",
-      154128
-     ],
-     [
-      "deleg31",
-      110545
+      121364
      ],
      [
       "attn",
-      99939
+      89915
      ],
      [
       "people",
-      74532
+      72131
      ],
      [
-      "chron9",
-      64629
+      "deleg31",
+      71801
      ],
      [
       "media17",
-      56743
+      63242
+     ],
+     [
+      "chron9",
+      57533
      ],
      [
       "fame15",
-      56497
+      55640
      ],
      [
       "creation",
-      49266
+      48944
      ],
      [
       "review18",
-      39189
+      34928
      ],
      [
       "dm18",
-      33999
+      34152
      ]
     ]
    },
    "perf": {
-    "createMs": 361,
+    "createMs": 220,
     "monthMs": {
-     "mean": 419,
-     "median": 412,
-     "p90": 648,
-     "max": 840
+     "mean": 329,
+     "median": 340,
+     "p90": 428,
+     "max": 514
     },
     "cpuMonthMs": {
-     "mean": 517,
-     "median": 487
+     "mean": 402,
+     "median": 398
     },
     "perMonth": [
-     222,
-     154,
-     232,
-     236,
-     194,
-     235,
-     299,
-     408,
-     444,
-     298,
-     297,
-     351,
-     332,
-     403,
-     477,
-     290,
-     292,
-     534,
+     158,
+     179,
+     150,
+     198,
+     167,
+     199,
+     318,
+     335,
+     391,
+     293,
+     320,
+     308,
+     370,
+     325,
+     428,
      366,
-     459,
-     437,
-     354,
-     403,
-     660,
-     577,
-     431,
-     492,
-     507,
-     840,
-     532,
-     412,
-     781,
-     523,
-     539,
-     648,
-     434
+     306,
+     407,
+     379,
+     386,
+     303,
+     262,
+     283,
+     341,
+     514,
+     384,
+     341,
+     321,
+     391,
+     330,
+     340,
+     436,
+     441,
+     347,
+     423,
+     388
     ],
     "cpuPerMonth": [
-     332,
+     207,
      221,
-     386,
-     388,
-     285,
-     391,
-     451,
-     430,
-     491,
-     315,
-     334,
-     408,
-     386,
-     437,
-     551,
-     376,
+     186,
+     268,
+     254,
+     321,
+     349,
+     434,
+     425,
+     332,
+     332,
      331,
-     579,
-     416,
-     493,
-     531,
-     405,
+     517,
+     381,
+     473,
+     437,
+     334,
+     390,
+     406,
+     451,
+     327,
+     310,
+     297,
+     417,
+     948,
      483,
-     990,
-     654,
-     497,
-     571,
-     567,
-     898,
-     640,
-     569,
-     1198,
-     652,
-     642,
-     793,
-     535
+     498,
+     498,
+     500,
+     439,
+     375,
+     529,
+     516,
+     389,
+     467,
+     421
     ],
-    "stringifyMs": 46,
-    "gzipMs": 81
+    "stringifyMs": 47,
+    "gzipMs": 79
    }
   },
   {
@@ -756,22 +756,22 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 81516,
-    "cashReal": 28562,
-    "worthReal": 5780086,
-    "liquidReal": -71055,
+    "cash": 460083,
+    "cashReal": 161206,
+    "worthReal": 5799422,
+    "liquidReal": 100676,
     "debt": 126870,
     "fame": 28,
-    "repArtistic": 18,
-    "repCommercial": 71,
+    "repArtistic": 20,
+    "repCommercial": 69,
     "acts": 3,
-    "songs": 108,
-    "releases": 27,
-    "number1s": 12,
-    "revenueLastYear": 6505671,
-    "revenueLastYearReal": 2310252,
-    "persons": 446,
-    "worldActs": 226,
+    "songs": 73,
+    "releases": 17,
+    "number1s": 11,
+    "revenueLastYear": 6464804,
+    "revenueLastYearReal": 2295740,
+    "persons": 455,
+    "worldActs": 225,
     "labels": 56,
     "ledger": 0,
     "years": [
@@ -799,162 +799,162 @@
      },
      {
       "year": 1902,
-      "cash": 81516,
-      "cashReal": 28562,
+      "cash": 460083,
+      "cashReal": 161206,
       "acts": 3,
       "fame": 28,
-      "revenue": 6505671,
-      "revenueReal": 2310252,
-      "finRev": 6505671,
-      "finNet": 2117019
+      "revenue": 6464804,
+      "revenueReal": 2295740,
+      "finRev": 6464804,
+      "finNet": 1996121
      }
     ]
    },
    "save": {
-    "jsonBytes": 3776620,
-    "gzipBytes": 708713,
+    "jsonBytes": 3773671,
+    "gzipBytes": 713121,
     "x4Keys": 282,
     "x4Top": [
      [
       "ch7",
-      334042
+      338898
      ],
      [
       "facts17",
-      220027
+      222451
      ],
      [
       "st28",
-      178037
+      164108
      ],
      [
       "attn",
-      103072
+      96551
      ],
      [
       "people",
-      75698
+      75167
      ],
      [
       "media17",
-      57719
+      58082
      ],
      [
       "fame15",
-      55482
+      56199
      ],
      [
       "chron9",
-      47617
+      47132
      ],
      [
       "creation",
-      44319
+      45018
      ],
      [
       "review18",
-      43559
+      43497
      ],
      [
       "deleg31",
-      39244
+      39465
      ],
      [
       "dm18",
-      34883
+      34573
      ]
     ]
    },
    "perf": {
-    "createMs": 171,
+    "createMs": 185,
     "monthMs": {
-     "mean": 322,
-     "median": 324,
-     "p90": 457,
-     "max": 660
+     "mean": 321,
+     "median": 312,
+     "p90": 531,
+     "max": 579
     },
     "cpuMonthMs": {
-     "mean": 381,
-     "median": 366
+     "mean": 402,
+     "median": 363
     },
     "perMonth": [
-     147,
-     135,
-     154,
-     155,
-     178,
-     183,
-     370,
-     266,
-     309,
+     132,
+     153,
+     207,
+     180,
+     184,
+     207,
+     312,
+     350,
+     456,
+     296,
+     244,
+     289,
+     267,
+     219,
+     313,
+     310,
+     231,
+     290,
+     268,
+     281,
+     345,
+     321,
+     342,
+     384,
+     286,
+     328,
+     322,
+     314,
+     353,
+     430,
      306,
-     215,
-     298,
-     228,
-     212,
-     328,
-     320,
-     239,
-     294,
-     328,
-     276,
-     311,
-     324,
-     348,
-     445,
-     327,
-     326,
-     356,
-     383,
-     512,
-     414,
-     391,
-     436,
-     457,
+     412,
      535,
-     660,
-     442
+     531,
+     579,
+     579
     ],
     "cpuPerMonth": [
-     165,
-     146,
-     199,
-     199,
-     211,
-     328,
-     720,
-     312,
-     352,
-     392,
-     241,
-     367,
-     336,
-     254,
-     358,
-     360,
-     284,
+     192,
+     174,
+     268,
+     233,
+     224,
+     354,
+     331,
+     379,
+     490,
      315,
-     376,
-     303,
-     374,
-     355,
-     377,
-     447,
-     365,
-     416,
-     430,
-     476,
-     596,
-     525,
-     421,
-     458,
-     511,
-     562,
-     703,
-     475
+     279,
+     333,
+     327,
+     290,
+     342,
+     334,
+     263,
+     363,
+     295,
+     353,
+     438,
+     463,
+     405,
+     563,
+     409,
+     388,
+     390,
+     399,
+     529,
+     473,
+     362,
+     475,
+     956,
+     659,
+     693,
+     720
     ],
-    "stringifyMs": 66,
-    "gzipMs": 193
+    "stringifyMs": 46,
+    "gzipMs": 79
    }
   },
   {
@@ -966,10 +966,10 @@
     "endMonth": 6,
     "monthsPlayed": 18,
     "ended": "insolvency",
-    "cash": -224027,
-    "cashReal": -20002,
-    "worthReal": -123454,
-    "liquidReal": -123454,
+    "cash": -281116,
+    "cashReal": -25100,
+    "worthReal": -128551,
+    "liquidReal": -128551,
     "debt": 1072561,
     "fame": 15,
     "repArtistic": 51,
@@ -980,8 +980,8 @@
     "number1s": 0,
     "revenueLastYear": 1522995,
     "revenueLastYearReal": 138454,
-    "persons": 815,
-    "worldActs": 455,
+    "persons": 825,
+    "worldActs": 454,
     "labels": 38,
     "ledger": 0,
     "years": [
@@ -999,114 +999,114 @@
     ]
    },
    "save": {
-    "jsonBytes": 5210879,
-    "gzipBytes": 1137027,
+    "jsonBytes": 5251547,
+    "gzipBytes": 1147246,
     "x4Keys": 283,
     "x4Top": [
      [
       "ch7",
-      747383
+      752844
      ],
      [
       "facts17",
-      215593
+      234086
      ],
      [
       "chron9",
-      93705
+      93050
      ],
      [
       "attn",
-      90956
+      90061
      ],
      [
       "creation",
-      65266
+      66521
      ],
      [
       "people",
-      63365
+      63546
      ],
      [
       "fame16",
-      58690
+      58455
      ],
      [
       "media17",
-      58051
+      58073
      ],
      [
       "st28",
-      50822
+      50372
      ],
      [
       "y31",
-      49394
+      49210
      ],
      [
       "fame15",
-      49008
+      48553
      ],
      [
       "leisure14",
-      43469
+      43523
      ]
     ]
    },
    "perf": {
-    "createMs": 280,
+    "createMs": 311,
     "monthMs": {
-     "mean": 684,
-     "median": 719,
-     "p90": 912,
-     "max": 1121
+     "mean": 671,
+     "median": 673,
+     "p90": 888,
+     "max": 1168
     },
     "cpuMonthMs": {
-     "mean": 844,
-     "median": 824
+     "mean": 826,
+     "median": 813
     },
     "perMonth": [
-     329,
-     365,
-     419,
-     534,
-     427,
-     518,
-     819,
-     719,
-     796,
-     854,
-     613,
-     692,
-     744,
-     1121,
-     975,
-     912,
-     652,
-     817
+     372,
+     332,
+     383,
+     474,
+     459,
+     508,
+     656,
+     648,
+     776,
+     791,
+     640,
+     673,
+     865,
+     1168,
+     952,
+     743,
+     748,
+     888
     ],
     "cpuPerMonth": [
-     567,
-     436,
-     516,
-     641,
-     512,
-     697,
-     994,
-     768,
-     903,
-     1006,
-     794,
-     787,
-     905,
-     1702,
-     1127,
-     1006,
-     853,
-     973
+     493,
+     510,
+     478,
+     553,
+     546,
+     713,
+     778,
+     726,
+     818,
+     946,
+     848,
+     807,
+     944,
+     1669,
+     1141,
+     932,
+     993,
+     982
     ],
-    "stringifyMs": 88,
-    "gzipMs": 136
+    "stringifyMs": 93,
+    "gzipMs": 152
    }
   },
   {
@@ -1118,23 +1118,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 242613,
-    "cashReal": 20915,
-    "worthReal": 850340,
-    "liquidReal": -27402,
+    "cash": 620360,
+    "cashReal": 53479,
+    "worthReal": 836647,
+    "liquidReal": 4769,
     "debt": 342609,
     "fame": 19,
-    "repArtistic": 66,
-    "repCommercial": 48,
-    "acts": 3,
-    "songs": 62,
-    "releases": 11,
+    "repArtistic": 63,
+    "repCommercial": 47,
+    "acts": 2,
+    "songs": 55,
+    "releases": 10,
     "number1s": 0,
-    "revenueLastYear": 5854995,
-    "revenueLastYearReal": 513596,
-    "persons": 966,
-    "worldActs": 529,
-    "labels": 40,
+    "revenueLastYear": 5754249,
+    "revenueLastYearReal": 504759,
+    "persons": 957,
+    "worldActs": 531,
+    "labels": 41,
     "ledger": 0,
     "years": [
      {
@@ -1161,162 +1161,162 @@
      },
      {
       "year": 1957,
-      "cash": 242613,
-      "cashReal": 20915,
-      "acts": 3,
+      "cash": 620360,
+      "cashReal": 53479,
+      "acts": 2,
       "fame": 19,
-      "revenue": 5854995,
-      "revenueReal": 513596,
-      "finRev": 5854995,
-      "finNet": 371330
+      "revenue": 5754249,
+      "revenueReal": 504759,
+      "finRev": 5754249,
+      "finNet": 447189
      }
     ]
    },
    "save": {
-    "jsonBytes": 5943363,
-    "gzipBytes": 1178722,
+    "jsonBytes": 5959997,
+    "gzipBytes": 1180802,
     "x4Keys": 283,
     "x4Top": [
      [
       "ch7",
-      380540
+      381674
      ],
      [
       "facts17",
-      219971
+      226611
      ],
      [
       "chron9",
-      122321
+      122937
      ],
      [
       "attn",
-      92424
+      94933
      ],
      [
       "creation",
-      78317
+      80588
      ],
      [
       "st28",
-      76399
+      74067
      ],
      [
       "people",
-      73036
+      72241
      ],
      [
       "media17",
-      70310
+      69868
      ],
      [
       "fame15",
-      69626
+      69035
      ],
      [
       "fame16",
-      61356
+      60406
      ],
      [
       "deleg31",
-      55465
+      53601
      ],
      [
       "leisure14",
-      49176
+      50713
      ]
     ]
    },
    "perf": {
-    "createMs": 325,
+    "createMs": 248,
     "monthMs": {
-     "mean": 826,
-     "median": 837,
-     "p90": 1119,
-     "max": 1469
+     "mean": 772,
+     "median": 815,
+     "p90": 1015,
+     "max": 1165
     },
     "cpuMonthMs": {
-     "mean": 975,
-     "median": 931
+     "mean": 930,
+     "median": 901
     },
     "perMonth": [
-     290,
-     270,
-     412,
-     403,
-     424,
-     455,
-     889,
-     630,
-     579,
-     755,
-     738,
-     1103,
-     803,
-     716,
-     731,
+     409,
+     249,
+     320,
+     553,
+     470,
+     656,
      632,
-     712,
-     769,
-     945,
-     1320,
-     890,
-     822,
-     1119,
-     869,
-     1080,
-     1059,
-     1177,
-     1060,
-     1469,
-     868,
-     1072,
-     1024,
-     928,
-     834,
-     1045,
-     837
+     645,
+     580,
+     705,
+     844,
+     922,
+     736,
+     622,
+     686,
+     607,
+     715,
+     684,
+     726,
+     938,
+     845,
+     1015,
+     971,
+     886,
+     961,
+     870,
+     1009,
+     1073,
+     815,
+     913,
+     1002,
+     1165,
+     921,
+     777,
+     1047,
+     817
     ],
     "cpuPerMonth": [
-     409,
-     317,
-     389,
-     441,
-     472,
-     491,
-     1598,
-     764,
-     687,
-     840,
-     842,
-     1256,
-     900,
-     809,
-     818,
-     755,
-     827,
-     883,
-     1433,
-     1498,
-     1037,
-     931,
-     1237,
-     1066,
-     1215,
-     1121,
-     1325,
-     1115,
-     2106,
-     1093,
-     1238,
-     1123,
-     1090,
-     931,
-     1146,
-     892
+     548,
+     366,
+     375,
+     629,
+     588,
+     746,
+     736,
+     716,
+     629,
+     820,
+     1421,
+     1133,
+     879,
+     762,
+     822,
+     773,
+     971,
+     748,
+     822,
+     1034,
+     897,
+     1672,
+     1144,
+     1022,
+     1125,
+     1072,
+     1105,
+     1281,
+     935,
+     938,
+     1099,
+     1704,
+     1084,
+     882,
+     1112,
+     905
     ],
-    "stringifyMs": 106,
-    "gzipMs": 128
+    "stringifyMs": 87,
+    "gzipMs": 133
    }
   },
   {
@@ -1438,95 +1438,95 @@
     ]
    },
    "perf": {
-    "createMs": 340,
+    "createMs": 439,
     "monthMs": {
-     "mean": 834,
-     "median": 846,
-     "p90": 1161,
-     "max": 1346
+     "mean": 797,
+     "median": 792,
+     "p90": 1081,
+     "max": 1560
     },
     "cpuMonthMs": {
-     "mean": 997,
-     "median": 986
+     "mean": 958,
+     "median": 919
     },
     "perMonth": [
-     336,
-     394,
-     512,
-     580,
-     432,
-     401,
-     582,
-     563,
-     706,
-     803,
-     714,
-     938,
-     899,
-     753,
-     771,
-     877,
-     838,
-     710,
-     625,
-     830,
-     1157,
-     856,
-     978,
-     1161,
-     1049,
-     1036,
-     923,
-     854,
-     1131,
-     832,
-     1095,
-     1103,
-     846,
-     1196,
-     1184,
-     1346
+     368,
+     349,
+     446,
+     470,
+     408,
+     496,
+     692,
+     651,
+     663,
+     586,
+     812,
+     896,
+     705,
+     666,
+     1033,
+     719,
+     738,
+     688,
+     709,
+     792,
+     985,
+     784,
+     890,
+     1023,
+     1205,
+     941,
+     1089,
+     918,
+     973,
+     870,
+     764,
+     915,
+     903,
+     1081,
+     1560,
+     892
     ],
     "cpuPerMonth": [
-     391,
-     585,
-     581,
-     701,
-     568,
-     453,
-     676,
-     632,
-     815,
-     1335,
-     995,
-     1032,
-     1106,
-     857,
-     912,
-     1042,
-     977,
-     798,
-     716,
-     941,
-     1786,
-     1052,
-     1133,
-     1257,
-     1328,
-     1165,
-     1196,
-     953,
-     1192,
+     570,
+     451,
+     501,
+     600,
+     484,
+     630,
+     899,
+     739,
+     804,
+     689,
+     938,
+     1084,
+     811,
+     724,
+     1626,
+     875,
+     792,
+     826,
+     822,
+     947,
+     1222,
      878,
-     1663,
-     1284,
-     919,
-     1272,
-     1278,
-     1419
+     961,
+     1115,
+     1843,
+     1185,
+     1128,
+     1057,
+     1066,
+     1134,
+     831,
+     1040,
+     962,
+     1161,
+     2036,
+     1061
     ],
-    "stringifyMs": 106,
-    "gzipMs": 136
+    "stringifyMs": 91,
+    "gzipMs": 144
    }
   },
   {
@@ -1534,26 +1534,26 @@
    "start": 1955,
    "months": 36,
    "game": {
-    "endYear": 1958,
-    "endMonth": 0,
-    "monthsPlayed": 36,
-    "ended": null,
-    "cash": -194438,
-    "cashReal": -16762,
-    "worthReal": 78042,
-    "liquidReal": -65459,
-    "debt": 327927,
-    "fame": 16,
-    "repArtistic": 67,
-    "repCommercial": 41,
+    "endYear": 1957,
+    "endMonth": 5,
+    "monthsPlayed": 29,
+    "ended": "insolvency",
+    "cash": -106279,
+    "cashReal": -9323,
+    "worthReal": -82116,
+    "liquidReal": -82116,
+    "debt": 649317,
+    "fame": 15,
+    "repArtistic": 62,
+    "repCommercial": 38,
     "acts": 3,
-    "songs": 112,
-    "releases": 15,
+    "songs": 89,
+    "releases": 9,
     "number1s": 0,
-    "revenueLastYear": 1666151,
-    "revenueLastYearReal": 146154,
-    "persons": 983,
-    "worldActs": 545,
+    "revenueLastYear": 2198590,
+    "revenueLastYearReal": 196303,
+    "persons": 920,
+    "worldActs": 509,
     "labels": 42,
     "ledger": 0,
     "years": [
@@ -1570,173 +1570,148 @@
      },
      {
       "year": 1956,
-      "cash": -178889,
-      "cashReal": -15692,
+      "cash": 910,
+      "cashReal": 80,
       "acts": 3,
       "fame": 14,
-      "revenue": 3430337,
-      "revenueReal": 306280,
-      "finRev": 3430337,
-      "finNet": 656749
-     },
-     {
-      "year": 1957,
-      "cash": -194438,
-      "cashReal": -16762,
-      "acts": 3,
-      "fame": 16,
-      "revenue": 1666151,
-      "revenueReal": 146154,
-      "finRev": 1666151,
-      "finNet": -217385
+      "revenue": 2198590,
+      "revenueReal": 196303,
+      "finRev": 2198590,
+      "finNet": 21479
      }
     ]
    },
    "save": {
-    "jsonBytes": 5923211,
-    "gzipBytes": 1173175,
+    "jsonBytes": 5971839,
+    "gzipBytes": 1292996,
     "x4Keys": 285,
     "x4Top": [
      [
       "ch7",
-      386066
+      771069
      ],
      [
       "facts17",
-      216306
+      211397
      ],
      [
       "chron9",
-      125172
-     ],
-     [
-      "attn",
-      85089
+      110746
      ],
      [
       "creation",
-      81041
+      86063
      ],
      [
-      "people",
-      76378
-     ],
-     [
-      "st28",
-      71462
-     ],
-     [
-      "fame15",
-      69630
+      "attn",
+      85036
      ],
      [
       "media17",
-      68751
+      69125
      ],
      [
-      "leisure14",
-      63814
+      "people",
+      61962
+     ],
+     [
+      "fame15",
+      61507
      ],
      [
       "fame16",
-      58841
+      59335
      ],
      [
-      "deleg31",
-      49482
+      "y31",
+      50707
+     ],
+     [
+      "leisure14",
+      50263
+     ],
+     [
+      "st28",
+      49117
      ]
     ]
    },
    "perf": {
-    "createMs": 350,
+    "createMs": 259,
     "monthMs": {
-     "mean": 777,
-     "median": 814,
-     "p90": 1015,
-     "max": 1186
+     "mean": 674,
+     "median": 724,
+     "p90": 880,
+     "max": 924
     },
     "cpuMonthMs": {
-     "mean": 926,
-     "median": 946
+     "mean": 801,
+     "median": 850
     },
     "perMonth": [
-     275,
-     279,
-     294,
-     423,
-     539,
-     652,
-     626,
-     606,
-     582,
+     301,
+     277,
+     325,
+     431,
+     411,
+     601,
+     558,
+     498,
+     587,
+     887,
+     724,
+     769,
+     714,
+     654,
+     654,
+     610,
+     711,
+     787,
      783,
-     814,
-     930,
-     889,
-     679,
-     861,
-     810,
-     951,
-     1111,
-     779,
-     726,
-     703,
-     744,
-     856,
-     820,
-     866,
+     746,
+     924,
+     808,
+     900,
+     789,
+     880,
      764,
-     771,
-     1186,
-     1000,
-     907,
-     987,
-     1071,
-     821,
-     1015,
-     898,
-     938
+     872,
+     760,
+     818
     ],
     "cpuPerMonth": [
-     305,
-     303,
-     366,
-     461,
-     1016,
-     931,
-     720,
+     367,
+     328,
+     356,
+     475,
+     488,
+     779,
      674,
-     667,
-     829,
-     884,
-     1051,
-     1043,
-     822,
-     1002,
-     885,
+     547,
+     611,
+     1406,
+     880,
+     909,
+     881,
+     786,
+     716,
+     676,
+     879,
+     850,
+     880,
+     760,
+     1556,
+     985,
+     961,
+     897,
      1039,
-     1632,
-     938,
-     817,
-     851,
-     1082,
-     949,
-     949,
-     1043,
-     857,
-     894,
-     1660,
-     1199,
-     1082,
-     1142,
-     1158,
-     943,
-     1120,
-     991,
-     1024
+     794,
+     967,
+     869,
+     926
     ],
-    "stringifyMs": 81,
-    "gzipMs": 132
+    "stringifyMs": 84,
+    "gzipMs": 144
    }
   },
   {
@@ -1748,23 +1723,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 2918654,
-    "cashReal": 51115,
-    "worthReal": 2416996,
-    "liquidReal": 14281,
+    "cash": 8222031,
+    "cashReal": 143994,
+    "worthReal": 4055201,
+    "liquidReal": 107148,
     "debt": 1349373,
-    "fame": 18,
-    "repArtistic": 63,
-    "repCommercial": 45,
+    "fame": 17,
+    "repArtistic": 58,
+    "repCommercial": 42,
     "acts": 3,
-    "songs": 69,
-    "releases": 11,
+    "songs": 48,
+    "releases": 10,
     "number1s": 0,
-    "revenueLastYear": 51991194,
-    "revenueLastYearReal": 938469,
-    "persons": 2298,
-    "worldActs": 1112,
-    "labels": 38,
+    "revenueLastYear": 80216641,
+    "revenueLastYearReal": 1447954,
+    "persons": 2287,
+    "worldActs": 1126,
+    "labels": 37,
     "ledger": 0,
     "years": [
      {
@@ -1780,173 +1755,173 @@
      },
      {
       "year": 1991,
-      "cash": 3478365,
-      "cashReal": 62786,
-      "acts": 2,
-      "fame": 15,
-      "revenue": 42452269,
-      "revenueReal": 790545,
-      "finRev": 42452269,
-      "finNet": 201376
+      "cash": 2371167,
+      "cashReal": 42801,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 31976382,
+      "revenueReal": 595463,
+      "finRev": 31976382,
+      "finNet": -4644128
      },
      {
       "year": 1992,
-      "cash": 2918654,
-      "cashReal": 51115,
+      "cash": 8222031,
+      "cashReal": 143994,
       "acts": 3,
-      "fame": 18,
-      "revenue": 51991194,
-      "revenueReal": 938469,
-      "finRev": 51991194,
-      "finNet": 4157161
+      "fame": 17,
+      "revenue": 80216641,
+      "revenueReal": 1447954,
+      "finRev": 80216641,
+      "finNet": 15999078
      }
     ]
    },
    "save": {
-    "jsonBytes": 10505636,
-    "gzipBytes": 2101042,
+    "jsonBytes": 10385046,
+    "gzipBytes": 2079399,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      426230
+      424146
      ],
      [
       "chron9",
-      294083
+      297121
      ],
      [
       "facts17",
-      244357
+      230794
      ],
      [
       "fame15",
-      168424
+      171013
      ],
      [
       "creation",
-      146862
+      142125
      ],
      [
       "leisure14",
-      124695
+      119640
      ],
      [
       "fame16",
-      95420
-     ],
-     [
-      "ag18",
-      88591
-     ],
-     [
-      "relics9",
-      88075
+      91537
      ],
      [
       "attn",
-      86125
+      87990
      ],
      [
-      "st28",
-      83457
+      "relics9",
+      84367
+     ],
+     [
+      "ag18",
+      83573
      ],
      [
       "people",
-      77666
+      81555
+     ],
+     [
+      "st28",
+      79462
      ]
     ]
    },
    "perf": {
-    "createMs": 452,
+    "createMs": 415,
     "monthMs": {
-     "mean": 1734,
-     "median": 1749,
-     "p90": 2280,
-     "max": 2616
+     "mean": 1658,
+     "median": 1711,
+     "p90": 2290,
+     "max": 2511
     },
     "cpuMonthMs": {
-     "mean": 2038,
-     "median": 2026
+     "mean": 1969,
+     "median": 1925
     },
     "perMonth": [
-     789,
-     721,
-     891,
-     1138,
-     1033,
-     1376,
-     1401,
-     1434,
-     1483,
-     1683,
-     1575,
-     1641,
-     1666,
-     1280,
+     767,
+     594,
+     762,
+     1049,
+     911,
+     1160,
+     1139,
+     1293,
+     1358,
+     1579,
+     1396,
+     1573,
+     1600,
+     1411,
+     1687,
+     1978,
      1659,
-     1968,
-     1792,
-     1938,
-     1973,
-     1561,
-     2018,
-     2074,
-     2616,
-     2071,
-     2032,
-     1749,
-     2280,
-     1669,
-     2481,
-     1967,
-     2061,
-     2216,
-     1854,
-     1732,
-     2493,
-     2105
+     1742,
+     1773,
+     1239,
+     2098,
+     1559,
+     2279,
+     2250,
+     1848,
+     1869,
+     2456,
+     1853,
+     2290,
+     2183,
+     2349,
+     2069,
+     1720,
+     1711,
+     2511,
+     1977
     ],
     "cpuPerMonth": [
-     1114,
-     853,
-     1132,
+     1234,
+     743,
+     1091,
+     1263,
+     1196,
+     1252,
      1304,
-     1291,
-     1475,
-     1517,
-     1557,
-     1538,
-     2484,
-     2002,
-     1932,
-     1971,
-     1461,
-     1721,
-     2734,
-     2066,
-     2304,
-     2237,
-     1813,
-     2196,
-     2253,
-     3425,
-     2352,
-     2221,
-     1898,
-     2456,
+     1427,
+     1426,
+     2328,
+     1762,
+     1766,
      1847,
-     3274,
-     2387,
-     2279,
-     2375,
-     2050,
-     1871,
-     3489,
-     2474
+     1567,
+     1829,
+     2639,
+     1931,
+     2080,
+     2053,
+     1389,
+     2223,
+     1614,
+     3234,
+     2548,
+     2076,
+     2004,
+     2658,
+     1919,
+     3177,
+     2528,
+     2666,
+     2347,
+     1952,
+     1905,
+     3378,
+     2534
     ],
-    "stringifyMs": 200,
-    "gzipMs": 256
+    "stringifyMs": 164,
+    "gzipMs": 237
    }
   },
   {
@@ -1991,8 +1966,8 @@
     ]
    },
    "save": {
-    "jsonBytes": 8605021,
-    "gzipBytes": 1855340,
+    "jsonBytes": 8606694,
+    "gzipBytes": 1856065,
     "x4Keys": 283,
     "x4Top": [
      [
@@ -2013,7 +1988,7 @@
      ],
      [
       "creation",
-      104345
+      104288
      ],
      [
       "fame16",
@@ -2021,7 +1996,7 @@
      ],
      [
       "attn",
-      78728
+      79031
      ],
      [
       "media17",
@@ -2029,7 +2004,7 @@
      ],
      [
       "leisure14",
-      54491
+      54338
      ],
      [
       "hype12",
@@ -2046,51 +2021,51 @@
     ]
    },
    "perf": {
-    "createMs": 487,
+    "createMs": 438,
     "monthMs": {
-     "mean": 1296,
-     "median": 1315,
-     "p90": 1648,
-     "max": 1769
+     "mean": 1260,
+     "median": 1320,
+     "p90": 1599,
+     "max": 1625
     },
     "cpuMonthMs": {
-     "mean": 1646,
-     "median": 1589
+     "mean": 1566,
+     "median": 1463
     },
     "perMonth": [
-     828,
-     704,
-     1166,
-     1226,
-     1196,
-     1315,
-     1374,
-     1178,
-     1337,
-     1184,
-     1769,
-     1604,
-     1608,
-     1648
+     733,
+     722,
+     895,
+     1056,
+     1092,
+     1250,
+     1205,
+     1501,
+     1320,
+     1625,
+     1596,
+     1581,
+     1464,
+     1599
     ],
     "cpuPerMonth": [
-     1250,
-     908,
-     2001,
-     1572,
-     1635,
-     1545,
-     1607,
-     1361,
-     1502,
-     1286,
-     2584,
-     1870,
-     1868,
-     2047
+     1297,
+     884,
+     1116,
+     1321,
+     1403,
+     1452,
+     1391,
+     1621,
+     1475,
+     2468,
+     1849,
+     1993,
+     1746,
+     1907
     ],
-    "stringifyMs": 165,
-    "gzipMs": 227
+    "stringifyMs": 136,
+    "gzipMs": 210
    }
   },
   {
@@ -2102,22 +2077,22 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": -5003297,
-    "cashReal": -87623,
-    "worthReal": 4436533,
-    "liquidReal": -184719,
+    "cash": 513539,
+    "cashReal": 8994,
+    "worthReal": 1523522,
+    "liquidReal": -30646,
     "debt": 1177301,
-    "fame": 17,
-    "repArtistic": 54,
-    "repCommercial": 43,
+    "fame": 19,
+    "repArtistic": 55,
+    "repCommercial": 47,
     "acts": 3,
-    "songs": 130,
-    "releases": 23,
+    "songs": 58,
+    "releases": 8,
     "number1s": 0,
-    "revenueLastYear": 87551929,
-    "revenueLastYearReal": 1580360,
-    "persons": 2343,
-    "worldActs": 1127,
+    "revenueLastYear": 24166680,
+    "revenueLastYearReal": 436222,
+    "persons": 2325,
+    "worldActs": 1119,
     "labels": 38,
     "ledger": 0,
     "years": [
@@ -2134,173 +2109,173 @@
      },
      {
       "year": 1991,
-      "cash": 593576,
-      "cashReal": 10714,
+      "cash": 972110,
+      "cashReal": 17547,
       "acts": 3,
       "fame": 16,
-      "revenue": 23621237,
-      "revenueReal": 439874,
-      "finRev": 23621237,
-      "finNet": -3024348
+      "revenue": 16322836,
+      "revenueReal": 303963,
+      "finRev": 16322836,
+      "finNet": -7846063
      },
      {
       "year": 1992,
-      "cash": -5003297,
-      "cashReal": -87623,
+      "cash": 513539,
+      "cashReal": 8994,
       "acts": 3,
-      "fame": 17,
-      "revenue": 87551929,
-      "revenueReal": 1580360,
-      "finRev": 87551929,
-      "finNet": 27136945
+      "fame": 19,
+      "revenue": 24166680,
+      "revenueReal": 436222,
+      "finRev": 24166680,
+      "finNet": 3445322
      }
     ]
    },
    "save": {
-    "jsonBytes": 10569777,
-    "gzipBytes": 2119070,
+    "jsonBytes": 10453183,
+    "gzipBytes": 2101431,
     "x4Keys": 283,
     "x4Top": [
      [
       "ch7",
-      423798
+      431943
      ],
      [
       "chron9",
-      294056
+      299481
      ],
      [
       "facts17",
-      240948
+      251462
      ],
      [
       "fame15",
-      171974
+      168339
      ],
      [
       "creation",
-      145910
-     ],
-     [
-      "ag18",
-      114761
+      143257
      ],
      [
       "leisure14",
-      109440
+      113370
+     ],
+     [
+      "ag18",
+      112019
      ],
      [
       "fame16",
-      95200
+      91499
      ],
      [
       "attn",
-      90749
-     ],
-     [
-      "st28",
-      84634
+      87604
      ],
      [
       "relics9",
-      81518
+      81567
      ],
      [
       "people",
-      79907
+      76021
+     ],
+     [
+      "st28",
+      71941
      ]
     ]
    },
    "perf": {
-    "createMs": 497,
+    "createMs": 456,
     "monthMs": {
-     "mean": 1741,
-     "median": 1767,
-     "p90": 2376,
-     "max": 3146
+     "mean": 1547,
+     "median": 1591,
+     "p90": 1894,
+     "max": 3165
     },
     "cpuMonthMs": {
-     "mean": 2065,
-     "median": 2069
+     "mean": 1841,
+     "median": 1798
     },
     "perMonth": [
-     712,
-     577,
-     867,
-     990,
-     1043,
-     1019,
-     1568,
-     1767,
-     1652,
-     1281,
-     1543,
-     1328,
-     1535,
-     1683,
-     2100,
-     1654,
+     617,
+     560,
+     819,
+     1008,
+     1077,
+     1234,
+     1120,
+     1349,
+     1507,
+     1424,
+     1487,
+     1346,
+     1859,
+     1438,
+     1894,
+     1516,
+     1647,
+     1510,
+     1596,
+     1390,
+     1603,
+     1506,
      1790,
-     1612,
-     1452,
-     2014,
-     1745,
-     1607,
-     1917,
-     1922,
-     2170,
-     2502,
-     1806,
-     2376,
-     2233,
-     1822,
-     2102,
-     3146,
-     2316,
-     2010,
-     2742,
-     2082
+     1643,
+     1433,
+     1869,
+     1701,
+     1740,
+     1856,
+     1717,
+     1868,
+     3165,
+     1591,
+     1599,
+     2220,
+     1976
     ],
     "cpuPerMonth": [
-     872,
-     640,
-     1074,
-     1109,
-     1173,
-     1172,
-     2492,
-     2186,
-     2009,
-     1534,
-     1882,
-     1584,
-     1749,
-     2490,
-     2376,
-     1824,
-     2076,
-     1686,
-     1548,
-     2817,
-     1972,
-     1871,
-     2061,
-     2096,
-     2433,
-     3493,
-     2298,
-     2634,
-     2426,
-     2013,
-     2361,
-     3983,
-     2565,
-     2160,
-     3222,
-     2466
+     763,
+     710,
+     1011,
+     1163,
+     1222,
+     1952,
+     1298,
+     1617,
+     1829,
+     1585,
+     1725,
+     1555,
+     2737,
+     1726,
+     2195,
+     1675,
+     1908,
+     1647,
+     2290,
+     1595,
+     1786,
+     1625,
+     1936,
+     1920,
+     1570,
+     2754,
+     2011,
+     1947,
+     2070,
+     1899,
+     2088,
+     4174,
+     1703,
+     1810,
+     2384,
+     2384
     ],
-    "stringifyMs": 175,
-    "gzipMs": 247
+    "stringifyMs": 161,
+    "gzipMs": 242
    }
   },
   {
@@ -2326,8 +2301,8 @@
     "number1s": 0,
     "revenueLastYear": 3971794,
     "revenueLastYearReal": 76381,
-    "persons": 2003,
-    "worldActs": 979,
+    "persons": 2002,
+    "worldActs": 978,
     "labels": 36,
     "ledger": 0,
     "years": [
@@ -2345,8 +2320,8 @@
     ]
    },
    "save": {
-    "jsonBytes": 8614911,
-    "gzipBytes": 1854586,
+    "jsonBytes": 8610891,
+    "gzipBytes": 1853915,
     "x4Keys": 285,
     "x4Top": [
      [
@@ -2355,11 +2330,11 @@
      ],
      [
       "chron9",
-      283819
+      283624
      ],
      [
       "facts17",
-      215646
+      214542
      ],
      [
       "creation",
@@ -2371,11 +2346,11 @@
      ],
      [
       "fame16",
-      95207
+      95221
      ],
      [
       "attn",
-      83173
+      83234
      ],
      [
       "ag18",
@@ -2383,7 +2358,7 @@
      ],
      [
       "media17",
-      66647
+      66774
      ],
      [
       "leisure14",
@@ -2395,58 +2370,58 @@
      ],
      [
       "hype12",
-      52541
+      52325
      ]
     ]
    },
    "perf": {
-    "createMs": 554,
+    "createMs": 352,
     "monthMs": {
-     "mean": 1226,
-     "median": 1248,
-     "p90": 1594,
-     "max": 1728
+     "mean": 1135,
+     "median": 1166,
+     "p90": 1474,
+     "max": 1515
     },
     "cpuMonthMs": {
-     "mean": 1469,
-     "median": 1443
+     "mean": 1359,
+     "median": 1343
     },
     "perMonth": [
-     747,
-     609,
-     962,
-     1138,
-     988,
-     1161,
-     1199,
-     1404,
-     1248,
-     1379,
-     1425,
-     1594,
-     1547,
-     1260,
-     1728
+     635,
+     681,
+     807,
+     1166,
+     856,
+     1031,
+     1158,
+     1256,
+     1139,
+     1424,
+     1369,
+     1474,
+     1337,
+     1183,
+     1515
     ],
     "cpuPerMonth": [
-     1140,
+     950,
      732,
-     1039,
-     1258,
-     1137,
-     1310,
-     1383,
-     2025,
-     1509,
-     1593,
-     1618,
-     1757,
-     1630,
-     1443,
-     2459
+     967,
+     1329,
+     974,
+     1123,
+     1252,
+     1790,
+     1549,
+     1654,
+     1472,
+     1604,
+     1521,
+     1343,
+     2125
     ],
-    "stringifyMs": 139,
-    "gzipMs": 236
+    "stringifyMs": 132,
+    "gzipMs": 225
    }
   },
   {
@@ -2458,23 +2433,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 136342690,
-    "cashReal": 1458211,
-    "worthReal": 19249836,
-    "liquidReal": 1424253,
+    "cash": 94831040,
+    "cashReal": 1014236,
+    "worthReal": 19215275,
+    "liquidReal": 980667,
     "debt": 1228907,
-    "fame": 20,
-    "repArtistic": 80,
-    "repCommercial": 51,
+    "fame": 21,
+    "repArtistic": 76,
+    "repCommercial": 53,
     "acts": 5,
-    "songs": 150,
-    "releases": 34,
+    "songs": 157,
+    "releases": 36,
     "number1s": 0,
-    "revenueLastYear": 780474920,
-    "revenueLastYearReal": 8465021,
+    "revenueLastYear": 693570675,
+    "revenueLastYearReal": 7522459,
     "persons": 2975,
-    "worldActs": 1437,
-    "labels": 39,
+    "worldActs": 1439,
+    "labels": 38,
     "ledger": 0,
     "years": [
      {
@@ -2490,173 +2465,173 @@
      },
      {
       "year": 2013,
-      "cash": 15091498,
-      "cashReal": 163682,
+      "cash": 17570894,
+      "cashReal": 190574,
       "acts": 3,
-      "fame": 18,
-      "revenue": 159175383,
-      "revenueReal": 1751104,
-      "finRev": 159175383,
-      "finNet": 37079464
+      "fame": 17,
+      "revenue": 160355151,
+      "revenueReal": 1764083,
+      "finRev": 160355151,
+      "finNet": 37902725
      },
      {
       "year": 2014,
-      "cash": 136342690,
-      "cashReal": 1458211,
+      "cash": 94831040,
+      "cashReal": 1014236,
       "acts": 5,
-      "fame": 20,
-      "revenue": 780474920,
-      "revenueReal": 8465021,
-      "finRev": 780474920,
-      "finNet": 195377753
+      "fame": 21,
+      "revenue": 693570675,
+      "revenueReal": 7522459,
+      "finRev": 693570675,
+      "finNet": 150939419
      }
     ]
    },
    "save": {
-    "jsonBytes": 13583731,
-    "gzipBytes": 2658294,
+    "jsonBytes": 13658659,
+    "gzipBytes": 2670908,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      518115
+      504929
      ],
      [
       "chron9",
-      325506
+      339454
      ],
      [
       "facts17",
-      253936
+      270131
      ],
      [
       "fame15",
-      234205
+      234386
      ],
      [
       "st28",
-      192090
+      216561
      ],
      [
       "creation",
-      191644
-     ],
-     [
-      "attn",
-      137615
-     ],
-     [
-      "ag18",
-      133054
+      192942
      ],
      [
       "leisure14",
-      131524
+      127927
+     ],
+     [
+      "attn",
+      123602
+     ],
+     [
+      "ag18",
+      122734
      ],
      [
       "deleg31",
-      108613
+      110326
      ],
      [
       "fame16",
-      102784
+      102960
      ],
      [
       "relics9",
-      100522
+      101891
      ]
     ]
    },
    "perf": {
-    "createMs": 523,
+    "createMs": 479,
     "monthMs": {
-     "mean": 2895,
-     "median": 2985,
-     "p90": 4191,
-     "max": 4848
+     "mean": 2364,
+     "median": 2267,
+     "p90": 3536,
+     "max": 5122
     },
     "cpuMonthMs": {
-     "mean": 3133,
-     "median": 3137
+     "mean": 2835,
+     "median": 2666
     },
     "perMonth": [
-     1616,
-     838,
-     1161,
-     1322,
-     1415,
-     1871,
+     907,
+     953,
+     1113,
+     1159,
+     1275,
+     1404,
+     1386,
+     1709,
+     2141,
+     1931,
+     1925,
+     2268,
+     1928,
+     1757,
+     2855,
+     2248,
+     2371,
+     2171,
      1727,
-     1973,
-     2724,
-     2201,
-     2985,
-     3017,
-     2473,
-     2339,
-     3770,
-     2727,
-     2868,
-     2345,
-     2486,
-     3232,
-     2453,
-     3278,
-     4191,
-     4549,
-     3519,
-     3479,
-     3236,
-     3178,
-     3796,
-     2982,
-     4185,
-     4154,
-     4309,
-     3136,
-     3853,
-     4848
+     2975,
+     2224,
+     2241,
+     2793,
+     3019,
+     2546,
+     2517,
+     2599,
+     2477,
+     3536,
+     3193,
+     3197,
+     5122,
+     3585,
+     2267,
+     2761,
+     4808
     ],
     "cpuPerMonth": [
-     2033,
-     1328,
-     1593,
-     1441,
-     1531,
-     2125,
-     1895,
-     1918,
-     3131,
-     2464,
-     2597,
-     3204,
-     2526,
-     2071,
-     4264,
-     2908,
-     3082,
-     2553,
-     2562,
-     3898,
-     2781,
-     3411,
-     4143,
-     4581,
-     3548,
-     4139,
-     3377,
-     3333,
-     3933,
-     3142,
-     5147,
-     4009,
-     4490,
-     3435,
-     4329,
-     5854
+     1387,
+     1301,
+     1516,
+     1525,
+     1516,
+     1892,
+     1883,
+     1878,
+     2926,
+     2266,
+     2314,
+     2672,
+     2271,
+     1986,
+     3980,
+     2636,
+     2733,
+     2598,
+     1908,
+     3982,
+     2492,
+     2614,
+     3060,
+     3454,
+     2865,
+     3484,
+     2919,
+     2660,
+     3848,
+     3738,
+     4211,
+     5535,
+     3997,
+     2724,
+     3381,
+     5901
     ],
-    "stringifyMs": 249,
-    "gzipMs": 317
+    "stringifyMs": 240,
+    "gzipMs": 362
    }
   },
   {
@@ -2668,22 +2643,22 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 16530184,
-    "cashReal": 176793,
-    "worthReal": 5708565,
-    "liquidReal": 133413,
+    "cash": 8054213,
+    "cashReal": 86141,
+    "worthReal": 9306753,
+    "liquidReal": 42761,
     "debt": 2361433,
     "fame": 19,
-    "repArtistic": 70,
-    "repCommercial": 48,
+    "repArtistic": 72,
+    "repCommercial": 47,
     "acts": 3,
-    "songs": 115,
-    "releases": 22,
+    "songs": 96,
+    "releases": 24,
     "number1s": 0,
-    "revenueLastYear": 132947036,
-    "revenueLastYearReal": 1441942,
-    "persons": 3047,
-    "worldActs": 1466,
+    "revenueLastYear": 213689662,
+    "revenueLastYearReal": 2317675,
+    "persons": 3015,
+    "worldActs": 1448,
     "labels": 39,
     "ledger": 0,
     "years": [
@@ -2700,173 +2675,173 @@
      },
      {
       "year": 2013,
-      "cash": 3457078,
-      "cashReal": 37495,
+      "cash": 3077622,
+      "cashReal": 33380,
       "acts": 3,
-      "fame": 15,
-      "revenue": 42769312,
-      "revenueReal": 470509,
-      "finRev": 42769312,
-      "finNet": 9552396
+      "fame": 16,
+      "revenue": 41748754,
+      "revenueReal": 459282,
+      "finRev": 41748754,
+      "finNet": 7175072
      },
      {
       "year": 2014,
-      "cash": 16530184,
-      "cashReal": 176793,
+      "cash": 8054213,
+      "cashReal": 86141,
       "acts": 3,
       "fame": 19,
-      "revenue": 132947036,
-      "revenueReal": 1441942,
-      "finRev": 132947036,
-      "finNet": 25955940
+      "revenue": 213689662,
+      "revenueReal": 2317675,
+      "finRev": 213689662,
+      "finNet": 37922243
      }
     ]
    },
    "save": {
-    "jsonBytes": 12978334,
-    "gzipBytes": 2569800,
-    "x4Keys": 285,
+    "jsonBytes": 13188923,
+    "gzipBytes": 2592629,
+    "x4Keys": 286,
     "x4Top": [
      [
       "ch7",
-      482764
+      491094
      ],
      [
       "chron9",
-      321690
+      323347
      ],
      [
       "facts17",
-      237248
+      248691
      ],
      [
       "fame15",
-      225368
+      231715
      ],
      [
       "creation",
-      190015
-     ],
-     [
-      "leisure14",
-      140561
-     ],
-     [
-      "ag18",
-      138678
-     ],
-     [
-      "fame16",
-      104618
-     ],
-     [
-      "relics9",
-      98223
-     ],
-     [
-      "attn",
-      94500
+      187497
      ],
      [
       "st28",
-      94418
+      156707
+     ],
+     [
+      "ag18",
+      139646
+     ],
+     [
+      "leisure14",
+      132231
+     ],
+     [
+      "attn",
+      127288
+     ],
+     [
+      "fame16",
+      104834
+     ],
+     [
+      "relics9",
+      100717
      ],
      [
       "fest8",
-      90396
+      90391
      ]
     ]
    },
    "perf": {
-    "createMs": 653,
+    "createMs": 609,
     "monthMs": {
-     "mean": 2605,
-     "median": 2658,
-     "p90": 3387,
-     "max": 4436
+     "mean": 2246,
+     "median": 2265,
+     "p90": 3211,
+     "max": 4019
     },
     "cpuMonthMs": {
-     "mean": 2862,
-     "median": 2840
+     "mean": 2669,
+     "median": 2661
     },
     "perMonth": [
-     1603,
-     1199,
-     1392,
-     1513,
-     1741,
-     2569,
-     1916,
-     2482,
-     2016,
-     1881,
-     2268,
-     2426,
-     2943,
-     2199,
-     2258,
-     2057,
-     2525,
-     3153,
-     2702,
-     3033,
-     2217,
-     2917,
-     3299,
-     3199,
-     2914,
+     955,
+     869,
+     1041,
+     1306,
+     1209,
+     1433,
+     1355,
+     1730,
+     1795,
+     1580,
+     1765,
+     1971,
+     2051,
+     1835,
+     2550,
+     2098,
+     2124,
+     2219,
+     2197,
+     2473,
      2700,
-     2658,
-     2548,
-     3387,
-     3192,
-     3156,
-     3803,
-     2846,
-     2916,
-     4436,
-     3728
+     2780,
+     2968,
+     2510,
+     2265,
+     2509,
+     2751,
+     3211,
+     2800,
+     2898,
+     2682,
+     3537,
+     2495,
+     2459,
+     4019,
+     3729
     ],
     "cpuPerMonth": [
-     1917,
-     1299,
-     1512,
-     1639,
-     1906,
-     3049,
-     2025,
-     2479,
-     2208,
-     2048,
-     2340,
-     2559,
-     3454,
-     2319,
-     2503,
-     2221,
-     2584,
-     3841,
-     2807,
-     3315,
-     2382,
-     2966,
-     3575,
-     3921,
-     3177,
-     2873,
-     2898,
-     2582,
-     3903,
-     3482,
-     3219,
-     4045,
-     3088,
-     3070,
-     5557,
-     4257
+     1578,
+     1259,
+     1404,
+     1399,
+     1573,
+     1945,
+     1599,
+     1838,
+     2722,
+     1968,
+     2062,
+     2420,
+     2325,
+     2102,
+     3312,
+     2442,
+     2516,
+     2422,
+     2291,
+     2758,
+     3763,
+     3001,
+     3468,
+     2767,
+     2600,
+     3537,
+     3192,
+     3489,
+     3112,
+     3100,
+     2824,
+     4414,
+     2914,
+     2853,
+     4402,
+     4720
     ],
-    "stringifyMs": 228,
-    "gzipMs": 371
+    "stringifyMs": 199,
+    "gzipMs": 320
    }
   },
   {
@@ -2878,23 +2853,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 15135182,
-    "cashReal": 161874,
-    "worthReal": 7187268,
-    "liquidReal": 107420,
+    "cash": 17503063,
+    "cashReal": 187199,
+    "worthReal": 9049056,
+    "liquidReal": 133134,
     "debt": 3206535,
-    "fame": 17,
-    "repArtistic": 78,
-    "repCommercial": 43,
+    "fame": 19,
+    "repArtistic": 75,
+    "repCommercial": 49,
     "acts": 5,
-    "songs": 123,
-    "releases": 32,
-    "number1s": 0,
-    "revenueLastYear": 244391392,
-    "revenueLastYearReal": 2650666,
-    "persons": 3041,
-    "worldActs": 1473,
-    "labels": 37,
+    "songs": 122,
+    "releases": 33,
+    "number1s": 1,
+    "revenueLastYear": 267576258,
+    "revenueLastYearReal": 2902129,
+    "persons": 3021,
+    "worldActs": 1478,
+    "labels": 36,
     "ledger": 0,
     "years": [
      {
@@ -2910,173 +2885,173 @@
      },
      {
       "year": 2013,
-      "cash": 5418826,
-      "cashReal": 58773,
+      "cash": 5474273,
+      "cashReal": 59374,
       "acts": 3,
-      "fame": 16,
-      "revenue": 57915809,
-      "revenueReal": 637138,
-      "finRev": 57915809,
-      "finNet": 8695274
+      "fame": 14,
+      "revenue": 49998183,
+      "revenueReal": 550035,
+      "finRev": 49998183,
+      "finNet": 6567237
      },
      {
       "year": 2014,
-      "cash": 15135182,
-      "cashReal": 161874,
+      "cash": 17503063,
+      "cashReal": 187199,
       "acts": 5,
-      "fame": 17,
-      "revenue": 244391392,
-      "revenueReal": 2650666,
-      "finRev": 244391392,
-      "finNet": 49789246
+      "fame": 19,
+      "revenue": 267576258,
+      "revenueReal": 2902129,
+      "finRev": 267576258,
+      "finNet": 63650810
      }
     ]
    },
    "save": {
-    "jsonBytes": 13327655,
-    "gzipBytes": 2629520,
+    "jsonBytes": 13439823,
+    "gzipBytes": 2638208,
     "x4Keys": 283,
     "x4Top": [
      [
       "ch7",
-      495134
+      498207
      ],
      [
       "chron9",
-      325896
+      340070
      ],
      [
       "facts17",
-      254689
+      258557
      ],
      [
       "fame15",
-      230025
+      231281
      ],
      [
       "creation",
-      191881
-     ],
-     [
-      "leisure14",
-      137416
-     ],
-     [
-      "ag18",
-      130969
+      188900
      ],
      [
       "st28",
-      118911
+      144710
+     ],
+     [
+      "ag18",
+      142991
+     ],
+     [
+      "leisure14",
+      133172
      ],
      [
       "attn",
-      114833
+      123574
      ],
      [
       "fame16",
-      105438
+      105143
      ],
      [
       "relics9",
-      101480
+      102358
      ],
      [
       "fest8",
-      92023
+      92134
      ]
     ]
    },
    "perf": {
-    "createMs": 551,
+    "createMs": 555,
     "monthMs": {
-     "mean": 2724,
-     "median": 2756,
-     "p90": 3956,
-     "max": 4589
+     "mean": 2366,
+     "median": 2267,
+     "p90": 3436,
+     "max": 4349
     },
     "cpuMonthMs": {
-     "mean": 3029,
-     "median": 3038
+     "mean": 2722,
+     "median": 2596
     },
     "perMonth": [
-     970,
-     799,
-     1103,
-     1314,
-     1827,
-     2079,
-     1647,
-     2197,
-     2276,
-     2159,
-     2251,
-     2621,
-     2960,
-     2166,
-     3099,
-     2685,
-     2503,
-     2731,
-     2206,
-     3292,
-     3135,
-     2456,
-     2929,
-     2817,
-     2756,
-     3956,
-     3537,
-     3355,
-     3282,
-     3162,
-     3452,
+     1080,
+     773,
+     1147,
+     1205,
+     1570,
+     1738,
+     1429,
+     1828,
+     1964,
+     1774,
+     2030,
+     2071,
+     2008,
+     1702,
+     2644,
+     1980,
+     2218,
+     2267,
+     2162,
+     2991,
+     2667,
+     2247,
+     2638,
+     2563,
+     2604,
+     2886,
+     2738,
+     2463,
      3931,
-     3655,
-     3990,
-     4168,
-     4589
+     2727,
+     3150,
+     3726,
+     3105,
+     3376,
+     3436,
+     4349
     ],
     "cpuPerMonth": [
-     1329,
-     881,
-     1252,
-     1569,
-     2061,
-     2199,
-     1786,
+     1542,
+     942,
+     1369,
+     1464,
+     1750,
+     2246,
+     1609,
+     2115,
+     2906,
+     2086,
+     2285,
+     2205,
+     2123,
+     1885,
+     3432,
+     2490,
+     2471,
      2430,
-     3070,
-     2423,
-     2387,
-     2880,
-     3053,
-     2435,
-     3899,
-     2931,
-     2727,
-     2738,
-     2493,
-     4326,
-     3370,
-     2688,
-     3068,
-     3022,
-     3109,
-     4787,
-     3801,
-     3493,
-     3404,
-     3310,
-     4432,
-     4229,
-     3930,
-     4205,
-     4391,
-     4942
+     2293,
+     3823,
+     2979,
+     2468,
+     2843,
+     2704,
+     2773,
+     3697,
+     3033,
+     2701,
+     4081,
+     2769,
+     4188,
+     4073,
+     3244,
+     3662,
+     3769,
+     5537
     ],
-    "stringifyMs": 250,
-    "gzipMs": 529
+    "stringifyMs": 202,
+    "gzipMs": 306
    }
   },
   {
@@ -3088,23 +3063,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 80814062,
-    "cashReal": 864322,
-    "worthReal": 11308489,
-    "liquidReal": 829138,
+    "cash": 90205323,
+    "cashReal": 964763,
+    "worthReal": 12610387,
+    "liquidReal": 929968,
     "debt": 2465614,
     "fame": 21,
-    "repArtistic": 82,
-    "repCommercial": 51,
+    "repArtistic": 85,
+    "repCommercial": 53,
     "acts": 5,
-    "songs": 120,
-    "releases": 28,
+    "songs": 147,
+    "releases": 34,
     "number1s": 0,
-    "revenueLastYear": 588998194,
-    "revenueLastYearReal": 6388267,
-    "persons": 2950,
-    "worldActs": 1441,
-    "labels": 39,
+    "revenueLastYear": 560169141,
+    "revenueLastYearReal": 6075587,
+    "persons": 2986,
+    "worldActs": 1435,
+    "labels": 38,
     "ledger": 0,
     "years": [
      {
@@ -3120,173 +3095,173 @@
      },
      {
       "year": 2013,
-      "cash": 4678562,
-      "cashReal": 50744,
+      "cash": 94179,
+      "cashReal": 1021,
       "acts": 3,
       "fame": 17,
-      "revenue": 109407075,
-      "revenueReal": 1203598,
-      "finRev": 109407075,
-      "finNet": 26400672
+      "revenue": 95606989,
+      "revenueReal": 1051782,
+      "finRev": 95606989,
+      "finNet": 24777197
      },
      {
       "year": 2014,
-      "cash": 80814062,
-      "cashReal": 864322,
+      "cash": 90205323,
+      "cashReal": 964763,
       "acts": 5,
       "fame": 21,
-      "revenue": 588998194,
-      "revenueReal": 6388267,
-      "finRev": 588998194,
-      "finNet": 122186679
+      "revenue": 560169141,
+      "revenueReal": 6075587,
+      "finRev": 560169141,
+      "finNet": 106114427
      }
     ]
    },
    "save": {
-    "jsonBytes": 13422484,
-    "gzipBytes": 2619249,
+    "jsonBytes": 13348309,
+    "gzipBytes": 2607629,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      504248
+      499038
      ],
      [
       "chron9",
-      335457
+      337840
      ],
      [
       "facts17",
-      266236
+      266967
      ],
      [
       "fame15",
-      226018
+      224093
      ],
      [
       "creation",
-      186690
+      186741
      ],
      [
       "st28",
-      186452
+      173222
      ],
      [
       "ag18",
-      148774
+      147183
      ],
      [
       "leisure14",
-      135140
+      126251
      ],
      [
       "attn",
-      121513
+      125121
      ],
      [
       "fame16",
-      102764
+      105825
      ],
      [
       "relics9",
-      97917
+      105503
      ],
      [
       "fest8",
-      92903
+      92836
      ]
     ]
    },
    "perf": {
-    "createMs": 905,
+    "createMs": 627,
     "monthMs": {
-     "mean": 2734,
-     "median": 2611,
-     "p90": 4079,
-     "max": 5158
+     "mean": 2416,
+     "median": 2216,
+     "p90": 3478,
+     "max": 4368
     },
     "cpuMonthMs": {
-     "mean": 3370,
-     "median": 3104
+     "mean": 2982,
+     "median": 2966
     },
     "perMonth": [
-     1431,
-     1586,
-     1464,
-     1875,
-     1668,
-     1874,
-     1842,
-     2052,
-     2481,
-     2069,
-     2336,
-     2611,
-     2704,
-     2171,
-     2200,
-     2211,
-     2655,
-     2484,
-     2921,
-     3129,
-     2391,
-     2610,
-     4079,
-     3218,
-     3594,
-     2450,
-     3015,
-     3313,
-     3103,
-     3491,
-     3134,
-     3003,
-     3598,
-     4102,
-     5158,
-     4417
+     1194,
+     1202,
+     1350,
+     1363,
+     1338,
+     1673,
+     1758,
+     1672,
+     2216,
+     1582,
+     1979,
+     2087,
+     1962,
+     1675,
+     2112,
+     1868,
+     2098,
+     2080,
+     2156,
+     3478,
+     2492,
+     2855,
+     3468,
+     2856,
+     2802,
+     2791,
+     3170,
+     2799,
+     2708,
+     2845,
+     3639,
+     2939,
+     3166,
+     3408,
+     4368,
+     3817
     ],
     "cpuPerMonth": [
-     2311,
-     2509,
-     2309,
-     2934,
-     2239,
-     2697,
-     2459,
-     3525,
-     3193,
-     2533,
-     2836,
-     3075,
-     3060,
-     3133,
-     2698,
-     2671,
-     2910,
-     2982,
-     3939,
-     3633,
-     2821,
-     3027,
-     4668,
-     3685,
-     4863,
-     2965,
-     3411,
-     3456,
-     3416,
-     4743,
-     3578,
-     3316,
-     3858,
-     4431,
-     5544,
-     5881
+     2197,
+     2021,
+     2211,
+     2322,
+     1997,
+     2235,
+     2268,
+     2123,
+     3200,
+     2280,
+     2501,
+     2498,
+     2334,
+     1919,
+     3128,
+     2298,
+     2532,
+     2290,
+     2517,
+     4533,
+     2915,
+     3424,
+     3863,
+     3305,
+     3250,
+     3725,
+     3327,
+     3017,
+     3038,
+     3020,
+     4742,
+     3628,
+     3598,
+     3839,
+     4804,
+     4464
     ],
-    "stringifyMs": 288,
-    "gzipMs": 329
+    "stringifyMs": 203,
+    "gzipMs": 414
    }
   },
   {
@@ -3298,23 +3273,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 152423707,
-    "cashReal": 1150368,
-    "worthReal": 11653595,
-    "liquidReal": 1102479,
+    "cash": 67986883,
+    "cashReal": 513109,
+    "worthReal": 13259177,
+    "liquidReal": 465076,
     "debt": 4787275,
     "fame": 22,
-    "repArtistic": 83,
-    "repCommercial": 55,
+    "repArtistic": 80,
+    "repCommercial": 54,
     "acts": 5,
-    "songs": 141,
-    "releases": 28,
+    "songs": 115,
+    "releases": 21,
     "number1s": 0,
-    "revenueLastYear": 974069177,
-    "revenueLastYearReal": 7492840,
-    "persons": 3247,
-    "worldActs": 1574,
-    "labels": 41,
+    "revenueLastYear": 478186465,
+    "revenueLastYearReal": 3678357,
+    "persons": 3208,
+    "worldActs": 1566,
+    "labels": 39,
     "ledger": 0,
     "years": [
      {
@@ -3330,173 +3305,173 @@
      },
      {
       "year": 2031,
-      "cash": 21702125,
-      "cashReal": 166939,
+      "cash": 26241868,
+      "cashReal": 201861,
       "acts": 5,
-      "fame": 16,
-      "revenue": 336412818,
-      "revenueReal": 2638532,
-      "finRev": 336412818,
-      "finNet": 102462903
+      "fame": 17,
+      "revenue": 287389996,
+      "revenueReal": 2254039,
+      "finRev": 287389996,
+      "finNet": 89267758
      },
      {
       "year": 2032,
-      "cash": 152423707,
-      "cashReal": 1150368,
+      "cash": 67986883,
+      "cashReal": 513109,
       "acts": 5,
       "fame": 22,
-      "revenue": 974069177,
-      "revenueReal": 7492840,
-      "finRev": 974069177,
-      "finNet": 162758689
+      "revenue": 478186465,
+      "revenueReal": 3678357,
+      "finRev": 478186465,
+      "finNet": 77229242
      }
     ]
    },
    "save": {
-    "jsonBytes": 13630399,
-    "gzipBytes": 2588204,
+    "jsonBytes": 13452468,
+    "gzipBytes": 2542167,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      504501
+      486915
      ],
      [
       "chron9",
-      313590
+      304154
      ],
      [
       "facts17",
-      249922
+      261665
      ],
      [
       "fame15",
-      233935
+      232196
      ],
      [
       "st28",
-      189466
+      180994
      ],
      [
       "creation",
-      155689
+      148194
      ],
      [
       "ag18",
-      135359
-     ],
-     [
-      "attn",
-      126143
+      139828
      ],
      [
       "leisure14",
-      116767
+      123610
      ],
      [
       "relics9",
-      116458
+      116069
+     ],
+     [
+      "attn",
+      115624
      ],
      [
       "deleg31",
-      111795
+      115049
      ],
      [
       "fame16",
-      98069
+      98686
      ]
     ]
    },
    "perf": {
-    "createMs": 1150,
+    "createMs": 1342,
     "monthMs": {
-     "mean": 3079,
-     "median": 2670,
-     "p90": 4708,
-     "max": 5171
+     "mean": 3341,
+     "median": 2364,
+     "p90": 5823,
+     "max": 6940
     },
     "cpuMonthMs": {
-     "mean": 3819,
-     "median": 3736
+     "mean": 4229,
+     "median": 3455
     },
     "perMonth": [
-     1811,
-     1492,
-     1590,
-     1732,
-     1534,
-     1712,
-     1832,
-     1907,
-     2038,
-     2284,
-     2670,
-     3314,
-     2416,
-     2477,
-     2562,
-     2336,
-     2636,
-     2235,
-     2633,
-     3594,
-     3409,
-     3608,
-     4649,
-     4271,
-     3276,
-     4044,
-     4787,
-     4490,
-     3608,
-     5171,
-     4119,
-     4544,
-     2640,
-     3819,
-     4877,
-     4708
+     1998,
+     1400,
+     1678,
+     2018,
+     1454,
+     1881,
+     1662,
+     1739,
+     1845,
+     1795,
+     2176,
+     3123,
+     2262,
+     2109,
+     2223,
+     1977,
+     2082,
+     2543,
+     2364,
+     2389,
+     2295,
+     2291,
+     5612,
+     5721,
+     4695,
+     5381,
+     5823,
+     4269,
+     4758,
+     5289,
+     4882,
+     5850,
+     4109,
+     5376,
+     6276,
+     6940
     ],
     "cpuPerMonth": [
-     2687,
-     2300,
-     2463,
-     2863,
-     2202,
-     2626,
+     2891,
+     2445,
+     2497,
+     3455,
+     2137,
+     3104,
+     2604,
+     2527,
+     2665,
+     2757,
+     3454,
+     4629,
+     3507,
+     2963,
+     3016,
+     2700,
      2699,
-     2694,
-     2950,
-     3903,
-     3732,
-     4787,
-     3844,
-     3248,
-     3343,
-     3777,
-     3347,
-     3185,
-     3522,
-     3740,
-     3369,
-     4263,
-     5121,
-     4735,
-     3630,
-     4247,
-     5344,
-     5430,
-     3911,
-     5400,
-     4838,
-     5155,
-     3096,
-     4432,
-     5532,
-     5078
+     3947,
+     3306,
+     3180,
+     3046,
+     2611,
+     6655,
+     7058,
+     5375,
+     6033,
+     6359,
+     5603,
+     5416,
+     5890,
+     5452,
+     6488,
+     4791,
+     6459,
+     6939,
+     7594
     ],
-    "stringifyMs": 631,
-    "gzipMs": 936
+    "stringifyMs": 251,
+    "gzipMs": 315
    }
   },
   {
@@ -3508,22 +3483,22 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 15137471,
-    "cashReal": 114245,
-    "worthReal": 6591777,
-    "liquidReal": 56068,
-    "debt": 5439245,
-    "fame": 20,
-    "repArtistic": 67,
-    "repCommercial": 51,
+    "cash": 13187453,
+    "cashReal": 99528,
+    "worthReal": 5873050,
+    "liquidReal": 43153,
+    "debt": 5200408,
+    "fame": 19,
+    "repArtistic": 71,
+    "repCommercial": 47,
     "acts": 3,
-    "songs": 95,
-    "releases": 23,
+    "songs": 59,
+    "releases": 13,
     "number1s": 0,
-    "revenueLastYear": 282247255,
-    "revenueLastYearReal": 2171133,
-    "persons": 3221,
-    "worldActs": 1561,
+    "revenueLastYear": 210027176,
+    "revenueLastYearReal": 1615594,
+    "persons": 3217,
+    "worldActs": 1562,
     "labels": 38,
     "ledger": 0,
     "years": [
@@ -3540,173 +3515,173 @@
      },
      {
       "year": 2031,
-      "cash": 7264078,
-      "cashReal": 55878,
+      "cash": 9420860,
+      "cashReal": 72468,
       "acts": 3,
-      "fame": 17,
-      "revenue": 82871177,
-      "revenueReal": 649970,
-      "finRev": 82871177,
-      "finNet": 10019969
+      "fame": 15,
+      "revenue": 82411760,
+      "revenueReal": 646367,
+      "finRev": 82411760,
+      "finNet": 10995499
      },
      {
       "year": 2032,
-      "cash": 15137471,
-      "cashReal": 114245,
+      "cash": 13187453,
+      "cashReal": 99528,
       "acts": 3,
-      "fame": 20,
-      "revenue": 282247255,
-      "revenueReal": 2171133,
-      "finRev": 282247255,
-      "finNet": 74835069
+      "fame": 19,
+      "revenue": 210027176,
+      "revenueReal": 1615594,
+      "finRev": 210027176,
+      "finNet": 48248962
      }
     ]
    },
    "save": {
-    "jsonBytes": 13221535,
-    "gzipBytes": 2512692,
+    "jsonBytes": 13090922,
+    "gzipBytes": 2494756,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      493062
+      494722
      ],
      [
       "chron9",
-      326003
+      314367
      ],
      [
       "facts17",
-      250259
+      257793
      ],
      [
       "fame15",
-      226964
+      222915
      ],
      [
       "creation",
-      152590
+      150610
      ],
      [
       "leisure14",
-      123610
-     ],
-     [
-      "ag18",
-      123429
+      125664
      ],
      [
       "relics9",
-      115773
-     ],
-     [
-      "attn",
-      112567
+      115760
      ],
      [
       "st28",
-      107743
+      106672
+     ],
+     [
+      "ag18",
+      100677
+     ],
+     [
+      "attn",
+      96884
      ],
      [
       "deleg31",
-      96089
+      95668
      ],
      [
       "fest8",
-      95125
+      94589
      ]
     ]
    },
    "perf": {
-    "createMs": 1094,
+    "createMs": 1086,
     "monthMs": {
-     "mean": 2909,
-     "median": 2965,
-     "p90": 4124,
-     "max": 4628
+     "mean": 2378,
+     "median": 2363,
+     "p90": 2878,
+     "max": 3841
     },
     "cpuMonthMs": {
-     "mean": 3557,
-     "median": 3510
+     "mean": 3252,
+     "median": 3169
     },
     "perMonth": [
-     1991,
-     1629,
-     1644,
-     2015,
-     1572,
-     1971,
-     1889,
-     2334,
-     2641,
-     2400,
-     2123,
-     3135,
-     2613,
-     3160,
-     2704,
-     2529,
-     2965,
-     2802,
-     3134,
-     3137,
-     3630,
-     3058,
-     3721,
-     4628,
-     3565,
-     3007,
-     3519,
-     4124,
-     3621,
-     2877,
-     2975,
-     4125,
-     2671,
-     2698,
-     3842,
-     4259
+     2120,
+     1609,
+     1528,
+     2252,
+     1771,
+     1907,
+     1764,
+     2077,
+     2024,
+     1808,
+     1969,
+     2886,
+     2510,
+     2493,
+     2213,
+     1954,
+     2878,
+     2700,
+     2152,
+     2305,
+     2520,
+     1854,
+     3165,
+     3841,
+     2770,
+     2363,
+     2667,
+     2546,
+     2857,
+     2472,
+     2241,
+     2870,
+     2583,
+     2362,
+     2793,
+     2800
     ],
     "cpuPerMonth": [
-     2840,
-     2473,
+     3032,
+     2609,
+     2605,
+     3771,
+     2768,
+     2931,
+     2676,
+     2935,
+     2819,
+     2468,
+     2708,
+     4217,
+     3586,
+     3445,
+     2804,
+     2755,
+     3698,
+     3969,
+     2731,
+     3098,
+     3366,
      2535,
-     3382,
-     2402,
-     2836,
-     2723,
-     3434,
-     3369,
-     3815,
+     3816,
+     4927,
+     3347,
+     3130,
+     3926,
      3209,
-     4174,
-     3706,
-     3960,
-     3312,
-     3984,
-     3705,
-     3413,
-     3218,
-     3537,
-     3412,
-     3513,
-     4128,
-     4602,
-     3727,
-     3412,
-     3576,
-     4847,
-     4048,
-     3508,
-     3578,
-     4708,
-     3061,
-     2898,
-     4232,
-     4767
+     3644,
+     3072,
+     2639,
+     3368,
+     3769,
+     3258,
+     3735,
+     3694
     ],
-    "stringifyMs": 581,
-    "gzipMs": 406
+    "stringifyMs": 209,
+    "gzipMs": 317
    }
   },
   {
@@ -3718,23 +3693,23 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 164878878,
-    "cashReal": 1244369,
-    "worthReal": 14427724,
-    "liquidReal": 1172812,
-    "debt": 7953101,
+    "cash": 190367424,
+    "cashReal": 1436735,
+    "worthReal": 15407862,
+    "liquidReal": 1425432,
+    "debt": 0,
     "fame": 22,
-    "repArtistic": 76,
-    "repCommercial": 55,
+    "repArtistic": 78,
+    "repCommercial": 54,
     "acts": 5,
-    "songs": 88,
-    "releases": 24,
+    "songs": 127,
+    "releases": 57,
     "number1s": 0,
-    "revenueLastYear": 1081313187,
-    "revenueLastYearReal": 8317794,
-    "persons": 3177,
-    "worldActs": 1564,
-    "labels": 39,
+    "revenueLastYear": 1081865943,
+    "revenueLastYearReal": 8322046,
+    "persons": 3171,
+    "worldActs": 1569,
+    "labels": 38,
     "ledger": 0,
     "years": [
      {
@@ -3750,173 +3725,173 @@
      },
      {
       "year": 2031,
-      "cash": 24858699,
-      "cashReal": 191221,
+      "cash": 15355869,
+      "cashReal": 118122,
       "acts": 3,
-      "fame": 16,
-      "revenue": 154379116,
-      "revenueReal": 1210817,
-      "finRev": 154379116,
-      "finNet": 38233031
+      "fame": 18,
+      "revenue": 126404898,
+      "revenueReal": 991411,
+      "finRev": 126404898,
+      "finNet": 34984087
      },
      {
       "year": 2032,
-      "cash": 164878878,
-      "cashReal": 1244369,
+      "cash": 190367424,
+      "cashReal": 1436735,
       "acts": 5,
       "fame": 22,
-      "revenue": 1081313187,
-      "revenueReal": 8317794,
-      "finRev": 1081313187,
-      "finNet": 273333861
+      "revenue": 1081865943,
+      "revenueReal": 8322046,
+      "finRev": 1081865943,
+      "finNet": 256111199
      }
     ]
    },
    "save": {
-    "jsonBytes": 13386603,
-    "gzipBytes": 2553619,
+    "jsonBytes": 13327124,
+    "gzipBytes": 2542089,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      498233
+      490897
      ],
      [
       "chron9",
-      317391
+      312444
      ],
      [
       "facts17",
-      255752
+      248455
      ],
      [
       "fame15",
-      228538
+      231028
      ],
      [
       "st28",
-      176227
+      157526
      ],
      [
       "creation",
-      159827
+      155947
      ],
      [
       "leisure14",
-      127994
-     ],
-     [
-      "relics9",
-      117278
-     ],
-     [
-      "ag18",
-      116570
+      128902
      ],
      [
       "attn",
-      112591
+      118330
+     ],
+     [
+      "relics9",
+      116711
+     ],
+     [
+      "ag18",
+      108637
      ],
      [
       "fame16",
-      95484
+      95752
      ],
      [
       "fest8",
-      94205
+      94351
      ]
     ]
    },
    "perf": {
-    "createMs": 635,
+    "createMs": 518,
     "monthMs": {
-     "mean": 2628,
-     "median": 2673,
-     "p90": 3631,
-     "max": 4405
+     "mean": 2388,
+     "median": 2492,
+     "p90": 3487,
+     "max": 3759
     },
     "cpuMonthMs": {
-     "mean": 2980,
-     "median": 2909
+     "mean": 2952,
+     "median": 2848
     },
     "perMonth": [
-     1762,
-     1258,
-     1565,
-     1897,
-     1783,
-     2140,
-     1897,
-     1904,
-     1872,
-     2185,
-     2094,
-     3788,
-     2971,
-     1904,
-     2667,
-     4405,
-     2061,
-     2745,
-     2798,
-     2387,
-     2212,
-     2605,
-     2552,
-     3903,
-     3166,
+     1105,
+     1100,
+     1134,
+     1342,
+     1257,
+     1613,
+     1623,
+     1554,
+     1478,
+     1791,
+     1822,
+     2811,
+     2131,
+     1779,
+     2341,
+     2728,
+     2331,
+     2617,
+     2746,
+     2158,
+     2337,
+     2492,
+     2167,
+     3452,
+     3517,
+     3169,
+     3056,
+     2911,
+     3078,
+     2776,
+     3487,
      2742,
-     3357,
-     2801,
-     3212,
-     3088,
-     3101,
-     2673,
-     2919,
-     3575,
-     2998,
-     3631
+     2518,
+     3448,
+     3759,
+     3604
     ],
     "cpuPerMonth": [
-     2535,
-     1590,
-     2266,
-     2085,
-     1938,
-     2840,
-     2055,
-     2173,
-     2106,
-     2492,
-     2201,
-     4299,
-     3431,
-     2233,
-     2885,
-     3022,
-     2253,
-     3684,
-     3040,
-     2702,
-     2491,
-     2972,
-     2745,
-     4681,
-     3566,
-     2933,
-     3563,
-     3236,
-     3404,
-     3895,
-     3508,
-     2627,
-     3224,
-     4105,
-     3611,
-     4885
+     1748,
+     1684,
+     1843,
+     1902,
+     1614,
+     2577,
+     2242,
+     1973,
+     1882,
+     2180,
+     2144,
+     3851,
+     2741,
+     2109,
+     2711,
+     2927,
+     2789,
+     3602,
+     3290,
+     2524,
+     2540,
+     2908,
+     2577,
+     4343,
+     3972,
+     3741,
+     3504,
+     3347,
+     3413,
+     3969,
+     3954,
+     3267,
+     2906,
+     3976,
+     4361,
+     5167
     ],
-    "stringifyMs": 310,
-    "gzipMs": 341
+    "stringifyMs": 206,
+    "gzipMs": 301
    }
   },
   {
@@ -3928,22 +3903,22 @@
     "endMonth": 0,
     "monthsPlayed": 36,
     "ended": null,
-    "cash": 33079375,
-    "cashReal": 249656,
-    "worthReal": 7913729,
-    "liquidReal": 184389,
-    "debt": 5746314,
-    "fame": 20,
-    "repArtistic": 68,
-    "repCommercial": 50,
-    "acts": 5,
-    "songs": 130,
-    "releases": 27,
+    "cash": 27329424,
+    "cashReal": 206260,
+    "worthReal": 7907023,
+    "liquidReal": 141886,
+    "debt": 5576982,
+    "fame": 19,
+    "repArtistic": 71,
+    "repCommercial": 46,
+    "acts": 3,
+    "songs": 119,
+    "releases": 29,
     "number1s": 0,
-    "revenueLastYear": 418919009,
-    "revenueLastYearReal": 3222454,
-    "persons": 3233,
-    "worldActs": 1566,
+    "revenueLastYear": 394147666,
+    "revenueLastYearReal": 3031905,
+    "persons": 3222,
+    "worldActs": 1559,
     "labels": 37,
     "ledger": 0,
     "years": [
@@ -3960,173 +3935,173 @@
      },
      {
       "year": 2031,
-      "cash": 9996492,
-      "cashReal": 76896,
+      "cash": 16098984,
+      "cashReal": 123838,
       "acts": 3,
       "fame": 15,
-      "revenue": 120387569,
-      "revenueReal": 944216,
-      "finRev": 120387569,
-      "finNet": 21023379
+      "revenue": 100210272,
+      "revenueReal": 785963,
+      "finRev": 100210272,
+      "finNet": 9895587
      },
      {
       "year": 2032,
-      "cash": 33079375,
-      "cashReal": 249656,
-      "acts": 5,
-      "fame": 20,
-      "revenue": 418919009,
-      "revenueReal": 3222454,
-      "finRev": 418919009,
-      "finNet": 111865938
+      "cash": 27329424,
+      "cashReal": 206260,
+      "acts": 3,
+      "fame": 19,
+      "revenue": 394147666,
+      "revenueReal": 3031905,
+      "finRev": 394147666,
+      "finNet": 98463346
      }
     ]
    },
    "save": {
-    "jsonBytes": 13089732,
-    "gzipBytes": 2499899,
+    "jsonBytes": 13116183,
+    "gzipBytes": 2501281,
     "x4Keys": 284,
     "x4Top": [
      [
       "ch7",
-      483973
+      488508
      ],
      [
       "chron9",
-      312793
+      308724
      ],
      [
       "facts17",
-      242551
+      247823
      ],
      [
       "fame15",
-      227658
+      225257
      ],
      [
       "creation",
-      151792
+      151833
      ],
      [
       "leisure14",
-      128585
+      127039
      ],
      [
       "ag18",
-      118962
-     ],
-     [
-      "deleg31",
-      115482
+      116387
      ],
      [
       "relics9",
-      115317
+      116083
+     ],
+     [
+      "deleg31",
+      113279
      ],
      [
       "attn",
-      106217
+      106593
+     ],
+     [
+      "st28",
+      94027
      ],
      [
       "fest8",
-      93926
-     ],
-     [
-      "fame16",
-      93404
+      93812
      ]
     ]
    },
    "perf": {
-    "createMs": 736,
+    "createMs": 581,
     "monthMs": {
-     "mean": 2919,
-     "median": 2733,
-     "p90": 4057,
-     "max": 7331
+     "mean": 2282,
+     "median": 2326,
+     "p90": 3302,
+     "max": 3619
     },
     "cpuMonthMs": {
-     "mean": 3180,
-     "median": 2968
+     "mean": 2767,
+     "median": 2722
     },
     "perMonth": [
-     1583,
-     1235,
-     1372,
-     1824,
-     1453,
-     1734,
-     2054,
-     1862,
-     2580,
-     1946,
-     2472,
-     2733,
-     2390,
-     3100,
-     3121,
-     2035,
-     2694,
-     2544,
-     2630,
-     2638,
-     2943,
-     3443,
-     2967,
-     2958,
-     4057,
-     3340,
-     3516,
-     3503,
-     3069,
-     3096,
+     1304,
+     906,
+     1104,
+     1189,
+     1376,
+     1476,
+     2082,
+     1483,
+     1828,
+     1697,
+     2326,
+     2835,
+     2635,
+     2034,
+     2164,
+     1745,
+     2388,
+     1959,
+     2320,
+     2071,
+     1989,
+     2064,
+     2674,
+     2440,
+     3141,
+     2926,
+     2734,
+     3076,
+     2514,
+     2633,
      3302,
-     2545,
-     3987,
-     4103,
-     6928,
-     7331
+     2348,
+     3480,
+     2782,
+     3619,
+     3517
     ],
     "cpuPerMonth": [
-     2335,
-     1626,
-     1726,
+     2303,
+     1452,
+     1704,
+     1841,
+     1763,
+     1731,
+     2895,
+     2066,
+     2168,
+     1995,
+     3325,
+     3466,
+     3579,
      2512,
-     1710,
-     1956,
-     2160,
-     2266,
-     3293,
-     2256,
-     2869,
-     3328,
-     2684,
-     2318,
-     3414,
-     2508,
-     2957,
-     2704,
-     2783,
-     2774,
-     3561,
-     3315,
-     3327,
-     2979,
-     3957,
-     3355,
-     4159,
-     3747,
-     3180,
-     3258,
-     3595,
-     2767,
-     4863,
-     4341,
-     6969,
-     6910
+     2597,
+     2068,
+     2785,
+     2174,
+     3239,
+     2445,
+     2288,
+     2283,
+     3055,
+     2678,
+     4019,
+     3344,
+     3109,
+     3408,
+     2707,
+     2836,
+     4285,
+     2737,
+     3900,
+     3121,
+     3849,
+     3870
     ],
-    "stringifyMs": 219,
-    "gzipMs": 350
+    "stringifyMs": 209,
+    "gzipMs": 460
    }
   }
  ]

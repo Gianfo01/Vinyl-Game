@@ -4,22 +4,25 @@ Interruptores: `auction31` (casa de leilões), `cruise31` (temporadas no mar), `
 (4 sementes × 5 eras, 36 meses, robô playbot16) LIGADO (`docs/r31/t.json`, tabelas abaixo) × DESLIGADO (`docs/r31/t-off.json`,
 `--sw auction31=false,cruise31=false,holo31=false`).
 
-| Era | Caixa (lig./desl.) | Patrimônio (lig./desl.) | Receita do último ano (lig./desl.) | Fama |
-|---|---:|---:|---:|---:|
-| 1900 | 63 mil / 129 mil | 4,72 mi / 4,82 mi | 1,84 mi / 1,83 mi | 27 / 28 |
-| 1955 | −10 mil / −7 mil | 324 mil / 244 mil | 256 mil / 281 mil | 16 / 16 |
-| 1990 | −18 mil / −4 mil | 1,14 mi / 0,69 mi | 515 mil / 264 mil | 16 / 16 |
-| 2012 | 521 mil / 576 mil | 9,25 mi / 10,96 mi | 4,52 mi / 4,49 mi | 20 / 20 |
-| 2030 | 700 mil / 360 mil | 9,78 mi / 10,58 mi | 5,36 mi / 3,36 mi | 21 / 20 |
+**Resultado: números de jogo IDÊNTICOS ligado × desligado nas 20 partidas** (caixa, patrimônio, fama, atos, lançamentos, nº 1,
+receita, pessoas, selos). Medianas (iguais nos dois):
 
-O que mudou e por quê: o robô não dá lance, não consigna, não embarca nem transmite holograma — nenhuma regra nova toca a
-economia dele. As diferenças vêm só do caos do sorteio: com a casa de leilões ligada, os lotes de relíquia são fechados pelo
-martelo do pregão (conta determinística por pessoa) em vez do `relics9.fate`, que tirava números do sorteio mensal comum; a
-sequência dos outros sistemas no mês se desloca. Prova de que não há efeito sistemático: por partida, a razão de receita
-ligado/desligado tem média de log +0,08 com sinais mistos (9 para cima, 6 para baixo, 5 iguais), e caixa e patrimônio mudam de
-lado entre as eras. Fama igual (±1). Goldens r27-p2a, r27-p2b, r27-m3 e r16-playbot IGUAIS (as partidas de referência não têm
-peça em pregão no trecho medido). Desempenho: ms/mês dentro do ruído (pregões e plateia só existem com lote; plateia em cache por
-semana). Save: +1 chave em x4 por sistema (`auction31`, `travel31`).
+| Era | Caixa | Patrimônio | Receita do último ano | Fama |
+|---|---:|---:|---:|---:|
+| 1900 | 129 mil | 4,82 mi | 1,83 mi | 28 |
+| 1955 | −7 mil | 244 mil | 281 mil | 16 |
+| 1990 | −4 mil | 695 mil | 264 mil | 16 |
+| 2012 | 576 mil | 10,96 mi | 4,49 mi | 20 |
+| 2030 | 360 mil | 10,58 mi | 3,36 mi | 20 |
+
+Por quê: o robô não dá lance, não consigna, não embarca nem transmite holograma, e a casa de leilões foi desenhada para não
+mexer no mundo sem você: o martelo do pregão acontece no MESMO fechamento de mês em que o `relics9` sempre resolveu o leilão, depois
+do mesmo sorteio do preço, e chama o mesmo sorteio do colecionador sempre que você não leva (`relicAuctionHook9(s, rl, top, col)`).
+A casa só decide a casa/cidade, quem da plateia leva e o nome na lista de donos; o valor de mercado da peça segue o sorteio de
+sempre. (Uma primeira versão, que antecipava o martelo para a data do pregão, deslocava o sorteio comum do mês e fazia as partidas
+divergirem por caos — 17 de 20 diferentes, sem direção — e derrubava o teste frágil r14-leisure; corrigido antes de entregar.)
+Goldens r27-p2a, r27-p2b, r27-m3 e r16-playbot IGUAIS. Desempenho: ms/mês dentro do ruído; save +2 chaves em x4 (`auction31`,
+`travel31`).
 
 ---
 
@@ -27,7 +30,7 @@ semana). Save: +1 chave em x4 por sistema (`auction31`, `travel31`).
 
 Gerado por `npx tsx scripts/r31/measure.ts` (4 sementes × 5 eras, 36 meses cada, robô `playbot16` perfil equilibrado, selo, rock, base padrão).
 Sementes: `r31-base-0`, `r31-base-1`, `r31-base-2`, `r31-base-3`. Eras de início: 1900, 1955, 1990, 2012, 2030 (antes do rádio, LP, 1990, streaming, futuro).
-Máquina: Intel(R) Xeon(R) Processor @ 2.80GHz (4 núcleos), Node v22.22.0, 2 partidas em paralelo; tempo total 580 s.
+Máquina: Intel(R) Xeon(R) Processor @ 2.80GHz (4 núcleos), Node v22.22.0, 2 partidas em paralelo; tempo total 514 s.
 
 Os números de jogo (caixa, fama, atos, receita, tamanho do save, chaves em `x4`) são determinísticos: rodar de novo dá o mesmo resultado
 (confira com `--compare docs/r31/base30.json`). Os tempos variam com a máquina e a carga: "ms/mês" é relógio (robô + virada do mês),
@@ -37,63 +40,63 @@ Os números de jogo (caixa, fama, atos, receita, tamanho do save, chaves em `x4`
 
 | Era | Partidas | Criar (ms) | ms/mês média | ms/mês mediana | CPU ms/mês | Save JSON | Save gzip | Serializar (ms) | Chaves x4 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1900 | 4 | 233 | 345 | 328 | 426 | 3,76 MB | 0,72 MB | 53 | 283 |
-| 1955 | 4 | 324 | 794 | 818 | 948 | 5,93 MB | 1,18 MB | 95 | 284 |
-| 1990 | 4 | 498 | 1.600 | 1.608 | 1.909 | 9,56 MB | 1,98 MB | 170 | 284 |
-| 2012 | 4 | 658 | 2.740 | 2.703 | 3.098 | 13,38 MB | 2,62 MB | 254 | 284 |
-| 2030 | 4 | 904 | 2.884 | 2.719 | 3.384 | 13,30 MB | 2,53 MB | 435 | 284 |
+| 1900 | 4 | 190 | 322 | 321 | 405 | 3,76 MB | 0,72 MB | 50 | 283 |
+| 1955 | 4 | 314 | 740 | 746 | 892 | 5,97 MB | 1,20 MB | 89 | 284 |
+| 1990 | 4 | 415 | 1.486 | 1.506 | 1.777 | 9,50 MB | 1,97 MB | 148 | 284 |
+| 2012 | 4 | 568 | 2.348 | 2.248 | 2.802 | 13,39 MB | 2,62 MB | 211 | 284 |
+| 2030 | 4 | 882 | 2.598 | 2.345 | 3.300 | 13,22 MB | 2,52 MB | 219 | 284 |
 
 ## Balanço por era (medianas das sementes, US$ de 2020)
 
 | Era | Caixa | Patrimônio | Fama | Atos do jogador | Receita do último ano | Partidas encerradas |
 |---|---:|---:|---:|---:|---:|---:|
-| 1900 | 63 mil | 4,72 mi | 27 | 3 | 1,84 mi | 0 |
-| 1955 | -10 mil | 324 mil | 17 | 3 | 256 mil | 1 |
-| 1990 | -18 mil | 1,14 mi | 16 | 4 | 515 mil | 2 |
-| 2012 | 521 mil | 9,25 mi | 20 | 5 | 4,52 mi | 0 |
-| 2030 | 700 mil | 9,78 mi | 21 | 5 | 5,36 mi | 0 |
+| 1900 | 129 mil | 4,82 mi | 28 | 3 | 1,83 mi | 0 |
+| 1955 | -7 mil | 244 mil | 16 | 3 | 281 mil | 2 |
+| 1990 | -4 mil | 695 mil | 16 | 4 | 264 mil | 2 |
+| 2012 | 576 mil | 10,96 mi | 20 | 5 | 4,49 mi | 0 |
+| 2030 | 360 mil | 10,58 mi | 21 | 4 | 3,36 mi | 0 |
 
 ## Todas as partidas
 
 | Era | Semente | Fim | ms/mês (méd/p90/máx) | Save JSON | gzip | x4 | Caixa (US$ 2020) | Patrimônio | Fama | Rep. art./com. | Atos | Lançamentos | Nº 1 | Receita/ano (US$ 2020) | Encerrou |
 |---|---|---|---|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---|---|
-| 1900 | `r31-base-0` | 01/1903 | 329/461/640 | 3,74 MB | 0,72 MB | 283 | 98 mil | 6,26 mi | 32 | 25/81 | 3 | 23 | 19 | 1900: 66 mil · 1901: 601 mil · 1902: 2,20 mi | não |
-| 1900 | `r31-base-1` | 01/1903 | 309/430/521 | 3,73 MB | 0,72 MB | 283 | 110 mil | 3,65 mi | 25 | 21/62 | 3 | 21 | 7 | 1900: 88 mil · 1901: 403 mil · 1902: 1,33 mi | não |
-| 1900 | `r31-base-2` | 01/1903 | 419/648/840 | 3,91 MB | 0,75 MB | 282 | 3 mil | 3,29 mi | 26 | 21/64 | 3 | 25 | 7 | 1900: 102 mil · 1901: 426 mil · 1902: 1,47 mi | não |
-| 1900 | `r31-base-3` | 01/1903 | 322/457/660 | 3,78 MB | 0,71 MB | 282 | 29 mil | 5,78 mi | 28 | 18/71 | 3 | 27 | 12 | 1900: 111 mil · 1901: 903 mil · 1902: 2,31 mi | não |
-| 1955 | `r31-base-0` | 07/1956 | 684/912/1121 | 5,21 MB | 1,14 MB | 283 | -20 mil | -123 mil | 15 | 51/38 | 3 | 12 | 0 | 1955: 138 mil | insolvency |
-| 1955 | `r31-base-1` | 01/1958 | 826/1119/1469 | 5,94 MB | 1,18 MB | 283 | 21 mil | 850 mil | 19 | 66/48 | 3 | 11 | 0 | 1955: 62 mil · 1956: 288 mil · 1957: 514 mil | não |
-| 1955 | `r31-base-2` | 01/1958 | 834/1161/1346 | 6,08 MB | 1,21 MB | 284 | -4 mil | 570 mil | 17 | 66/43 | 3 | 12 | 0 | 1955: 57 mil · 1956: 271 mil · 1957: 366 mil | não |
-| 1955 | `r31-base-3` | 01/1958 | 777/1015/1186 | 5,92 MB | 1,17 MB | 285 | -17 mil | 78 mil | 16 | 67/41 | 3 | 15 | 0 | 1955: 101 mil · 1956: 306 mil · 1957: 146 mil | não |
-| 1990 | `r31-base-0` | 01/1993 | 1734/2280/2616 | 10,51 MB | 2,10 MB | 284 | 51 mil | 2,42 mi | 18 | 63/45 | 3 | 11 | 0 | 1990: 239 mil · 1991: 791 mil · 1992: 938 mil | não |
-| 1990 | `r31-base-1` | 03/1991 | 1296/1648/1769 | 8,61 MB | 1,86 MB | 283 | -19 mil | -134 mil | 15 | 36/37 | 4 | 10 | 0 | 1990: 91 mil | insolvency |
-| 1990 | `r31-base-2` | 01/1993 | 1741/2376/3146 | 10,57 MB | 2,12 MB | 283 | -88 mil | 4,44 mi | 17 | 54/43 | 3 | 23 | 0 | 1990: 221 mil · 1991: 440 mil · 1992: 1,58 mi | não |
-| 1990 | `r31-base-3` | 04/1991 | 1226/1594/1728 | 8,61 MB | 1,85 MB | 285 | -17 mil | -135 mil | 14 | 37/35 | 4 | 9 | 0 | 1990: 76 mil | insolvency |
-| 2012 | `r31-base-0` | 01/2015 | 2895/4191/4848 | 13,58 MB | 2,66 MB | 284 | 1,46 mi | 19,25 mi | 20 | 80/51 | 5 | 34 | 0 | 2012: 142 mil · 2013: 1,75 mi · 2014: 8,47 mi | não |
-| 2012 | `r31-base-1` | 01/2015 | 2605/3387/4436 | 12,98 MB | 2,57 MB | 285 | 177 mil | 5,71 mi | 19 | 70/48 | 3 | 22 | 0 | 2012: 59 mil · 2013: 471 mil · 2014: 1,44 mi | não |
-| 2012 | `r31-base-2` | 01/2015 | 2724/3956/4589 | 13,33 MB | 2,63 MB | 283 | 162 mil | 7,19 mi | 17 | 78/43 | 5 | 32 | 0 | 2012: 113 mil · 2013: 637 mil · 2014: 2,65 mi | não |
-| 2012 | `r31-base-3` | 01/2015 | 2734/4079/5158 | 13,42 MB | 2,62 MB | 284 | 864 mil | 11,31 mi | 21 | 82/51 | 5 | 28 | 0 | 2012: 92 mil · 2013: 1,20 mi · 2014: 6,39 mi | não |
-| 2030 | `r31-base-0` | 01/2033 | 3079/4708/5171 | 13,63 MB | 2,59 MB | 284 | 1,15 mi | 11,65 mi | 22 | 83/55 | 5 | 28 | 0 | 2030: 82 mil · 2031: 2,64 mi · 2032: 7,49 mi | não |
-| 2030 | `r31-base-1` | 01/2033 | 2909/4124/4628 | 13,22 MB | 2,51 MB | 284 | 114 mil | 6,59 mi | 20 | 67/51 | 3 | 23 | 0 | 2030: 49 mil · 2031: 650 mil · 2032: 2,17 mi | não |
-| 2030 | `r31-base-2` | 01/2033 | 2628/3631/4405 | 13,39 MB | 2,55 MB | 284 | 1,24 mi | 14,43 mi | 22 | 76/55 | 5 | 24 | 0 | 2030: 143 mil · 2031: 1,21 mi · 2032: 8,32 mi | não |
-| 2030 | `r31-base-3` | 01/2033 | 2919/4057/7331 | 13,09 MB | 2,50 MB | 284 | 250 mil | 7,91 mi | 20 | 68/50 | 5 | 27 | 0 | 2030: 115 mil · 2031: 944 mil · 2032: 3,22 mi | não |
+| 1900 | `r31-base-0` | 01/1903 | 320/456/566 | 3,74 MB | 0,72 MB | 283 | 98 mil | 6,26 mi | 32 | 25/81 | 3 | 23 | 19 | 1900: 66 mil · 1901: 601 mil · 1902: 2,20 mi | não |
+| 1900 | `r31-base-1` | 01/1903 | 319/422/610 | 3,85 MB | 0,74 MB | 283 | 78 mil | 3,84 mi | 27 | 19/66 | 3 | 21 | 9 | 1900: 88 mil · 1901: 295 mil · 1902: 1,46 mi | não |
+| 1900 | `r31-base-2` | 01/1903 | 329/428/514 | 3,64 MB | 0,72 MB | 282 | 194 mil | 2,78 mi | 26 | 31/66 | 3 | 18 | 8 | 1900: 102 mil · 1901: 210 mil · 1902: 976 mil | não |
+| 1900 | `r31-base-3` | 01/1903 | 321/531/579 | 3,77 MB | 0,71 MB | 282 | 161 mil | 5,80 mi | 28 | 20/69 | 3 | 17 | 11 | 1900: 111 mil · 1901: 903 mil · 1902: 2,30 mi | não |
+| 1955 | `r31-base-0` | 07/1956 | 671/888/1168 | 5,25 MB | 1,15 MB | 283 | -25 mil | -129 mil | 15 | 51/38 | 3 | 12 | 0 | 1955: 138 mil | insolvency |
+| 1955 | `r31-base-1` | 01/1958 | 772/1015/1165 | 5,96 MB | 1,18 MB | 283 | 53 mil | 837 mil | 19 | 63/47 | 2 | 10 | 0 | 1955: 62 mil · 1956: 288 mil · 1957: 505 mil | não |
+| 1955 | `r31-base-2` | 01/1958 | 797/1081/1560 | 6,08 MB | 1,21 MB | 284 | -4 mil | 570 mil | 17 | 66/43 | 3 | 12 | 0 | 1955: 57 mil · 1956: 271 mil · 1957: 366 mil | não |
+| 1955 | `r31-base-3` | 06/1957 | 674/880/924 | 5,97 MB | 1,29 MB | 285 | -9 mil | -82 mil | 15 | 62/38 | 3 | 9 | 0 | 1955: 101 mil · 1956: 196 mil | insolvency |
+| 1990 | `r31-base-0` | 01/1993 | 1658/2290/2511 | 10,39 MB | 2,08 MB | 284 | 144 mil | 4,06 mi | 17 | 58/42 | 3 | 10 | 0 | 1990: 239 mil · 1991: 595 mil · 1992: 1,45 mi | não |
+| 1990 | `r31-base-1` | 03/1991 | 1260/1599/1625 | 8,61 MB | 1,86 MB | 283 | -19 mil | -134 mil | 15 | 36/37 | 4 | 10 | 0 | 1990: 91 mil | insolvency |
+| 1990 | `r31-base-2` | 01/1993 | 1547/1894/3165 | 10,45 MB | 2,10 MB | 283 | 9 mil | 1,52 mi | 19 | 55/47 | 3 | 8 | 0 | 1990: 221 mil · 1991: 304 mil · 1992: 436 mil | não |
+| 1990 | `r31-base-3` | 04/1991 | 1135/1474/1515 | 8,61 MB | 1,85 MB | 285 | -17 mil | -135 mil | 14 | 37/35 | 4 | 9 | 0 | 1990: 76 mil | insolvency |
+| 2012 | `r31-base-0` | 01/2015 | 2364/3536/5122 | 13,66 MB | 2,67 MB | 284 | 1,01 mi | 19,22 mi | 21 | 76/53 | 5 | 36 | 0 | 2012: 142 mil · 2013: 1,76 mi · 2014: 7,52 mi | não |
+| 2012 | `r31-base-1` | 01/2015 | 2246/3211/4019 | 13,19 MB | 2,59 MB | 286 | 86 mil | 9,31 mi | 19 | 72/47 | 3 | 24 | 0 | 2012: 59 mil · 2013: 459 mil · 2014: 2,32 mi | não |
+| 2012 | `r31-base-2` | 01/2015 | 2366/3436/4349 | 13,44 MB | 2,64 MB | 283 | 187 mil | 9,05 mi | 19 | 75/49 | 5 | 33 | 1 | 2012: 113 mil · 2013: 550 mil · 2014: 2,90 mi | não |
+| 2012 | `r31-base-3` | 01/2015 | 2416/3478/4368 | 13,35 MB | 2,61 MB | 284 | 965 mil | 12,61 mi | 21 | 85/53 | 5 | 34 | 0 | 2012: 92 mil · 2013: 1,05 mi · 2014: 6,08 mi | não |
+| 2030 | `r31-base-0` | 01/2033 | 3341/5823/6940 | 13,45 MB | 2,54 MB | 284 | 513 mil | 13,26 mi | 22 | 80/54 | 5 | 21 | 0 | 2030: 82 mil · 2031: 2,25 mi · 2032: 3,68 mi | não |
+| 2030 | `r31-base-1` | 01/2033 | 2378/2878/3841 | 13,09 MB | 2,49 MB | 284 | 100 mil | 5,87 mi | 19 | 71/47 | 3 | 13 | 0 | 2030: 49 mil · 2031: 646 mil · 2032: 1,62 mi | não |
+| 2030 | `r31-base-2` | 01/2033 | 2388/3487/3759 | 13,33 MB | 2,54 MB | 284 | 1,44 mi | 15,41 mi | 22 | 78/54 | 5 | 57 | 0 | 2030: 143 mil · 2031: 991 mil · 2032: 8,32 mi | não |
+| 2030 | `r31-base-3` | 01/2033 | 2282/3302/3619 | 13,12 MB | 2,50 MB | 284 | 206 mil | 7,91 mi | 19 | 71/46 | 3 | 29 | 0 | 2030: 115 mil · 2031: 786 mil · 2032: 3,03 mi | não |
 
 ## Maiores blocos de `x4` no save (era 2030, mediana em bytes)
 
 | Chave | Bytes |
 |---|---:|
-| `ch7` | 495.648 |
-| `chron9` | 315.491 |
-| `facts17` | 250.091 |
-| `fame15` | 228.098 |
-| `st28` | 176.227 |
-| `creation` | 154.140 |
-| `leisure14` | 125.802 |
-| `ag18` | 121.196 |
-| `relics9` | 116.116 |
-| `attn` | 112.579 |
-| `deleg31` | 111.795 |
-| `fame16` | 95.484 |
+| `ch7` | 489.703 |
+| `chron9` | 310.584 |
+| `facts17` | 253.124 |
+| `fame15` | 228.143 |
+| `creation` | 151.222 |
+| `st28` | 132.099 |
+| `leisure14` | 126.352 |
+| `relics9` | 116.076 |
+| `deleg31` | 113.279 |
+| `ag18` | 112.512 |
+| `attn` | 111.109 |
+| `fame16` | 97.219 |
 
 ## Como medir de novo
 
