@@ -17,7 +17,7 @@
 //   L14 furnish → equipe: sede confortável sobe a lealdade da equipe (people/staff).
 //   L15 secrets23 → crimemem23: quem deve a agiota da organização é recrutado para pagar a dívida.
 
-import { Rng, clamp, seedState } from '../../core/rng';
+import { Rng, seedState } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { familyOf, l } from '../../data/world';
 import { registerSimHook } from '../ext4';
@@ -43,11 +43,12 @@ import { ERA23, MEDIA23, PRESS23, addSecret23, mine23, raise23, sec23, secretsOf
 import { ses19 } from './session19';
 import { hotList17 } from './trends17';
 import { ownOutlet19, zScenesLive19, zinesLive19 } from './zines19';
+import { addStaffLoyalty, staffLoyalty } from '../opinion';
 
 // ---------------------------------------------------------------- L1/L3/L15 recrutamento do crime
 RECRUIT23.push((s, key) => {
   if (!key.startsWith('s:')) return null;
-  const loy = people(s).career[key.slice(2)]?.loyalty;
+  const loy = people(s).career[key.slice(2)] ? staffLoyalty(s, key.slice(2)) : undefined;
   const c = cul19(s).c;
   if (loy !== undefined && loy < 30) return { k: 1.6, why: fmtL(l('Insatisfeito(a) com a casa (lealdade {v})', 'Unhappy with the house (loyalty {v})'), { v: Math.round(loy) }) };
   if (c === 'artist' || c === 'prestige') return { k: 0.8, why: fmtL(l('Cultura da casa: {c}', 'House culture: {c}'), { c: CUL19[c].name }) };
@@ -137,7 +138,7 @@ function month23(s: GameState): void {
   // L14: sede confortável → lealdade da equipe
   const fx = furnEffects(s);
   const up = Math.max(0, fx.morale) * 0.4 + Math.max(0, fx.rep) * 0.1;
-  if (up > 0) for (const m of s.player.staff) { const cr = people(s).career[m.id]; if (cr && cr.loyalty < 70) cr.loyalty = clamp(cr.loyalty + up, 0, 70); }
+  if (up > 0) for (const m of s.player.staff) if (people(s).career[m.id] && staffLoyalty(s, m.id) < 70) addStaffLoyalty(s, m.id, up, { max: 70 });
 }
 registerSimHook('month', 'links23', month23);
 function year23(s: GameState): void {

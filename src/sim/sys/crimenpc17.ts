@@ -25,6 +25,7 @@ import { per13 } from './persona13';
 import { relics } from './relics9';
 import { registerSituation } from './situations17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { shiftOpinion } from '../opinion';
 
 const F = (s: GameState, key: string, f: string): number => ((per13(s, key)?.facets as Record<string, number> | undefined)?.[f] ?? 50);
 /** r18: pessoa real protegida só no modo "Vida real exata" (nos outros, história alternativa). */
@@ -190,7 +191,7 @@ export function replyWarn(s: GameState, wid: string, how: WarnReply, r: Rng = ne
     grantHold(s, { holder: w.actor, target: 'player', kind: 'secret', strength: 55, proof: 1, months: 120, src: 'crime17', text: fmtL(l('Cúmplice no "{c}"', 'Accomplice in the "{c}"'), { c: d.name }), quiet: true });
     grantHold(s, { holder: 'player', target: w.actor, kind: 'secret', strength: 55, proof: 1, months: 120, src: 'crime17', text: fmtL(l('Cúmplice no "{c}"', 'Accomplice in the "{c}"'), { c: d.name }), quiet: true });
     const L0 = leaderOf(s, w.actor);
-    if (L0) L0.rel.player = clamp((L0.rel.player ?? 0) + 20, -100, 100);
+    if (L0) shiftOpinion(s, `l:${L0.id}`, 20, { why: l('fizemos um serviço juntos.', 'we did a job together.') });
     s.rivalries[w.actor] = Math.max(0, (s.rivalries[w.actor] ?? 0) - 15);
     return fmtL(l('Feito em sociedade. {x}{e}', 'Done together. {x}{e}'), { x: res.text, e: res.ex ? l(' E vazou: você também é investigado.', ' And it leaked: you are investigated too.') : '' });
   }

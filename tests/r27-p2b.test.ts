@@ -21,8 +21,8 @@ import { agenda27, autoDecide27, board27, closeMeeting27, decide27, directors27,
 import { setDir31 } from '../src/sim/deleg31';
 import { buyIns19 } from '../src/sim/sys/links19b';
 import { ins19 } from '../src/sim/sys/insure19';
-import { careerOf } from '../src/sim/sys/people/staff';
 import { rngSnapshot19 } from '../src/sim/rng19';
+import { staffLoyalty } from '../src/sim/opinion';
 
 let FIX: GameState; // 7º mês da semente r16pb-5 (mesmo fixture do r27-m2)
 let AFTER: GameState; // 8º mês (modo rápido)
@@ -375,11 +375,11 @@ describe('r27 P2B — reunião de diretoria', () => {
     const y = withStaff(), n = withStaff();
     const p = agenda27(y).find((x) => y.player.staff.some((m) => m.id === x.by) && x.cost <= y.player.cash)!;
     const st = (s: GameState) => s.player.staff.find((m) => m.id === p.by)!;
-    const l0 = careerOf(y, st(y)).loyalty;
+    const l0 = staffLoyalty(y, st(y).id);
     decide27(y, p.id, true);
     decide27(n, p.id, false);
-    expect(careerOf(y, st(y)).loyalty).toBeGreaterThan(l0);
-    expect(careerOf(n, st(n)).loyalty).toBeLessThan(l0);
+    expect(staffLoyalty(y, st(y).id)).toBeGreaterThan(l0);
+    expect(staffLoyalty(n, st(n).id)).toBeLessThan(l0);
     expect(decide27(y, p.id, false).pt).toMatch(/decidida/);
   });
 

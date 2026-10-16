@@ -8,15 +8,17 @@ import { registerExt4 } from './ext4';
 import type { GameState } from './types';
 import { fmtL, money, notify, post } from './util';
 import { cashWhy20, freeCash20 } from './oblig20';
+import { critRelOf, critRelPut } from './opinion';
 
-export interface CritRelState { rel: Record<string, number>; last: Record<string, number> }
+/** r31 (31.3): a relação em si mora em opinion.ts (`c:<crítico>`); aqui só as recargas das ações. */
+export interface CritRelState { last: Record<string, number> }
 
 declare module './ext4' { interface Ext4 { critrel: CritRelState } }
-registerExt4('critrel', () => ({ rel: {}, last: {} }));
+registerExt4('critrel', () => ({ last: {} }));
 export const critRel = (s: GameState): CritRelState => (s as unknown as { x4: { critrel: CritRelState } }).x4.critrel;
 
-/** −50 (inimizade) … +50 (simpatia). */
-export const relWith = (s: GameState, critic: string): number => critRel(s).rel[critic] ?? 0; // r31: leitura nativa crua (escala própria); para exibir use opinionOf(s, `c:…`)
+/** −50 (inimizade) … +50 (simpatia): a opinião `c:<crítico>` (opinion.ts) na escala do sistema de críticos. */
+export const relWith = (s: GameState, critic: string): number => critRelOf(s, critic);
 
 /** Ajuste nas notas (escala 0–10): no máximo ±0,5. */
 export function criticRelBonus(s: GameState, critic: string): number {
@@ -40,16 +42,16 @@ export function criticAction(s: GameState, r: Rng, critic: string, act: CritActi
   if (cost) post(s, `crit:${key}`, -cost, 'marketing', `Relação com crítico: ${critic}`);
   st.last[key] = s.week;
   const cur = relWith(s, critic);
-  if (act === 'advance') st.rel[critic] = clamp(cur + 6, -50, 50);
+  if (act === 'advance') critRelPut(s, critic, clamp(cur + 6, -50, 50), l('mandou uma cópia antecipada.', 'sent an advance copy.'));
   else if (act === 'listening') {
-    st.rel[critic] = clamp(cur + 15, -50, 50);
+    critRelPut(s, critic, clamp(cur + 15, -50, 50), l('audição fechada com jantar.', 'private listening with dinner.'));
     if (r.chance(0.12)) {
-      st.rel[critic] = clamp(cur - 10, -50, 50);
+      critRelPut(s, critic, clamp(cur - 10, -50, 50), l('o jantar virou notícia de jabá.', 'the dinner became a payola story.'));
       s.player.reputation.institutional = clamp(s.player.reputation.institutional - 4, 0, 100);
       notify(s, fmtL(l('Vazou: jantar com {c} vira notícia de jabá.', 'Leaked: dinner with {c} becomes a payola story.'), { c: critic }), 'bad');
     }
   } else {
-    st.rel[critic] = clamp(cur - 25, -50, 50);
+    critRelPut(s, critic, clamp(cur - 25, -50, 50), l('rebateu a resenha em público.', 'publicly rebutted the review.'));
     s.player.reputation.artists = clamp(s.player.reputation.artists + 2, 0, 100);
     s.player.reputation.institutional = clamp(s.player.reputation.institutional - 1, 0, 100);
   }

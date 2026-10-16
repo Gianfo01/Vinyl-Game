@@ -41,6 +41,7 @@ import { conceptById, proj8 } from './project8';
 import { MEDIA15, sy15 } from './sync15';
 import { ventures } from './ventures9';
 import { actsNow27 } from '../tickcache27';
+import { addStaffLoyalty } from '../opinion';
 
 export interface Links16 {
   /** último patamar de fama visto por ato (para notoriedade) */
@@ -296,8 +297,8 @@ export function staffStrain(s: GameState, r: Rng): void {
     const k = C.strain[rl.role] ?? 0;
     if (k < 2) continue;
     for (const m of rl.staff) {
-      const car = careerOf(s, m);
-      car.loyalty = clamp(car.loyalty - 3, 0, 100);
+      careerOf(s, m);
+      addStaffLoyalty(s, m.id, -3, { why: l('sobrecarga de trabalho.', 'work overload.') });
       if (!cw.poach && m.skill >= 60 && r.chance(0.12)) {
         const rivals = Object.values(s.labels).filter((x) => x.active).sort((a, b) => a.id.localeCompare(b.id));
         if (!rivals.length) continue;

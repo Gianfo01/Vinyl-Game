@@ -27,6 +27,7 @@ import {
 import { mem23, name23 } from './crimemem23';
 import { per13 } from './persona13';
 import { addSecret23 } from './secrets23';
+import { opinionRaw, shiftOpinion } from '../opinion';
 
 // ================================================================ tipos
 
@@ -129,7 +130,7 @@ export function crewPool27(s: GameState, plan: Pick<Plan27, 'cid' | 'ctx'>): Cre
       if (!p?.alive || p.isPlayer || pid === plan.ctx.actor || (st.jail[pid]?.u ?? 0) > s.week) continue;
       if (out.some((x) => x.key === `p:${pid}`)) continue;
       const sk = Object.values(p.skills ?? {}).reduce((t, v) => t + v, 0) / Math.max(1, Object.keys(p.skills ?? {}).length);
-      push(`p:${pid}`, p.name, 'artist', sk, 50 + (p.rel.player ?? 0) / 2 - p.resentment / 2, 'musico', [fmtL(l('Do elenco: {a}', 'On the roster: {a}'), { a: a.name })]);
+      push(`p:${pid}`, p.name, 'artist', sk, 50 + opinionRaw(s, `p:${pid}`) / 2 - p.resentment / 2, 'musico', [fmtL(l('Do elenco: {a}', 'On the roster: {a}'), { a: a.name })]);
     }
   }
   // sua equipe
@@ -409,7 +410,7 @@ function loyal(s: GameState, key: string, d: number): void {
   if (key.startsWith('p:')) {
     const p = s.persons[key.slice(2)];
     if (!p) return;
-    p.rel.player = clamp((p.rel.player ?? 0) + d, -100, 100);
+    shiftOpinion(s, key, d);
     if (d < 0) p.resentment = clamp(p.resentment - d / 2, 0, 100);
   } else if (key.startsWith('s:')) {
     const x = s.player.staff.find((y) => `s:${y.id}` === key);

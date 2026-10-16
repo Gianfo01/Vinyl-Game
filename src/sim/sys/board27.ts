@@ -26,6 +26,7 @@ import { modeOf31, rule31, setDir31, setMode31 } from '../deleg31';
 import { careerOf, trainCost, trainStaff } from './people/staff';
 import { overPolicy27 } from './road27';
 import { STAFF_ROLES } from '../../data/rules';
+import { addStaffLoyalty, staffLoyalty } from '../opinion';
 
 export const BOARD27_RNG = 'board27v1';
 export type PropKind27 = 'tour' | 'promo' | 'rest' | 'studio' | 'reserve' | 'cap' | 'renew' | 'raise' | 'train' | 'audit' | 'cut';
@@ -181,14 +182,14 @@ export function autoDecide27(s: GameState, p: Prop27): { yes: boolean; why: L } 
   if (a && g === 'profit' && p.k === 'promo' && rule31(s, 'finance', 'cap') > 0) return { yes: false, why: l('vetado: objetivo "Dar lucro"', 'vetoed: goal "Turn a profit"') };
   if (p.k === 'tour' && a && rule31(s, 'rest', 'rest') > 0 && tired18(s, a).v >= rule31(s, 'rest', 'rest')) return { yes: false, why: l('vetado: descanso obrigatório', 'vetoed: mandatory rest') };
   if (p.k === 'rest') return a && tired18(s, a).v >= (rule31(s, 'rest', 'rest') || 70) ? { yes: true, why: l('aprovado: banda no limite', 'approved: band at the limit') } : { yes: false, why: l('vetado: dá para seguir', 'vetoed: they can keep going') };
-  if (p.k === 'raise') { const st = s.player.staff.find((m) => m.id === p.by); return st && careerOf(s, st).loyalty < 50 ? { yes: true, why: l('aprovado: para não perder a pessoa', 'approved: to keep them') } : { yes: false, why: l('vetado: salário em dia com o mercado', 'vetoed: pay is in line with the market') }; }
+  if (p.k === 'raise') { const st = s.player.staff.find((m) => m.id === p.by); return st && (careerOf(s, st), staffLoyalty(s, st.id)) < 50 ? { yes: true, why: l('aprovado: para não perder a pessoa', 'approved: to keep them') } : { yes: false, why: l('vetado: salário em dia com o mercado', 'vetoed: pay is in line with the market') }; }
   if (p.k === 'cut') return s.player.cash < 0 ? { yes: true, why: l('aprovado: caixa no vermelho', 'approved: cash in the red') } : { yes: false, why: l('vetado: não há aperto', 'vetoed: no squeeze') };
   if (p.k === 'reserve') return s.player.cash < 3 * burn18(s) ? { yes: true, why: l('aprovado: caixa curto', 'approved: thin cash') } : { yes: false, why: l('vetado: caixa folgado', 'vetoed: cash is comfortable') };
   if (p.k === 'cap' || p.k === 'renew') return { yes: false, why: l('vetado: sem mudar as regras sem você', 'vetoed: no rule changes without you') };
   return { yes: true, why: l('aprovado: dentro das regras', 'approved: within the rules') };
 }
 
-const loy = (s: GameState, id: string, d: number) => { const st = s.player.staff.find((m) => m.id === id); if (st) { const c = careerOf(s, st); c.loyalty = clamp(c.loyalty + d, 0, 100); } };
+const loy = (s: GameState, id: string, d: number) => { const st = s.player.staff.find((m) => m.id === id); if (st) { careerOf(s, st); addStaffLoyalty(s, st.id, d, { why: l('decisão da diretoria.', 'board decision.') }); } };
 const invMood = (s: GameState, id: string, d: number, label: L) => { const inv = capital(s).investors.find((x) => `inv:${x.id}` === id); if (inv) { inv.mods.push({ label, value: d, decay: 1 }); if (inv.mods.length > 10) inv.mods.shift(); } };
 
 /** Aprova ou veta uma proposta. Devolve o que aconteceu (frase explicada). */

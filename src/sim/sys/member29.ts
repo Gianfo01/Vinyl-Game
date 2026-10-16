@@ -43,6 +43,7 @@ import { opinionOf } from './persona13';
 import { grudge27, temper27 } from './rivals27';
 import { aceFee19, FREE19, hireAce19, ses19, type Inst19 } from './session19';
 import { hireGhost19, wr19 } from './writers19';
+import { rel0, relPut } from '../opinion';
 
 export type MoKind29 = 'solo' | 'join' | 'session' | 'side' | 'staff' | 'ghost' | 'feat' | 'band';
 /** free = banda sem selo · buyout = paga a rescisão ao selo rival · tamper = alicia sem pagar */
@@ -446,7 +447,7 @@ export function memberJoin29(s: GameState, pid: string, actId: string, mode: MoM
   joinBand(s, p, A, replace ? (ex ? l('{p} (ex-{o}) assume o lugar de {q} em {a}.', '{p} (ex-{o}) takes over from {q} in {a}.') : l('{p} assume o lugar de {q} em {a}.', '{p} takes over from {q} in {a}.'))
     : ex ? l('{p} (ex-{o}) entra em {a}.', '{p} (ex-{o}) joins {a}.') : l('{p} entra em {a}.', '{p} joins {a}.'), replace ? s.persons[replace]?.name ?? '' : '');
   delete l16(s).free[pid];
-  for (const id of A.members) { const q = s.persons[id]; if (q && q.id !== pid) { q.rel[pid] = Math.max(q.rel[pid] ?? 0, 10); p.rel[q.id] = Math.max(p.rel[q.id] ?? 0, 10); } }
+  for (const id of A.members) { const q = s.persons[id]; if (q && q.id !== pid) { relPut(s, q.id, pid, Math.max(rel0(s, q.id, pid), 10)); relPut(s, pid, q.id, Math.max(rel0(s, pid, q.id), 10)); } }
   p.morale = clamp(p.morale + 8, 0, 100);
   const extra = band ? rivalHit(s, r, lb, m, buy, p, band, actId) : null;
   if (lb && band) remember(s, 'poach', T('{c} tira {p} de {b} ({lb}) para {a}.', '{c} takes {p} from {b} ({lb}) into {a}.', { c: s.config.companyName, p: p.name, b: band.name, lb: lb.name, a: A.name }), { actId, pid, important: true });

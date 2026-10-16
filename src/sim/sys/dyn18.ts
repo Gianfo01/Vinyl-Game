@@ -16,6 +16,7 @@ import { cliques, influence } from './people/social';
 import { per13 } from './persona13';
 import { overall } from './talent/attrs';
 import { staffRoleById } from '../../data/rules';
+import { staffLoyalty } from '../opinion';
 
 export interface DynNode {
   key: string;
@@ -126,7 +127,7 @@ export function dynStaff(s: GameState): Dyn18 {
   const st = s.player.staff;
   const ranked = st.map((m) => ({ m, v: m.skill + Math.min(30, (s.week - m.hiredWeek) / 8) + careerOf(s, m).level * 8 })).sort((x, y) => y.v - x.v);
   const nodes: DynNode[] = ranked.map(({ m, v }, i) => {
-    const loy = careerOf(s, m).loyalty;
+    careerOf(s, m); const loy = staffLoyalty(s, m.id);
     const yrs = (s.week - m.hiredWeek) / 52;
     return { key: `s:${m.id}`, name: m.name, role: staffRoleById[m.role]?.name ?? l(m.role, m.role), infl: Math.round(v), tier: tierOf(i, st.length), mood: Math.round(loy), moodWhy: fmtL(l('lealdade {v}', 'loyalty {v}'), { v: Math.round(loy) }), promises: 0, friends: [], foes: [], tags: yrs >= 3 ? [l('veterano(a) da casa', 'house veteran')] : yrs < 0.5 ? [l('recém-chegado(a)', 'newcomer')] : [] };
   });

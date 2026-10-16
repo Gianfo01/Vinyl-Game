@@ -16,6 +16,7 @@ import { FIND23 } from '../src/sim/sys/scout23';
 import { ERA23, PRESS23, addSecret23, eraK23, know23 } from '../src/sim/sys/secrets23';
 import { hotList17 } from '../src/sim/sys/trends17';
 import type { GameState } from '../src/sim/types';
+import { setStaffLoyalty, staffLoyalty } from '../src/sim/opinion';
 
 const fict = (s: GameState) => Object.values(s.acts).find((a) => !a.catalogNo && a.members.length && a.members.every((m) => !isReal(s, m)) && a.status !== 'retired')!;
 
@@ -23,14 +24,14 @@ describe('r23 ligações', () => {
   it('cultura/lealdade → recrutamento do crime; agiota → recrutamento', () => {
     const s = createGame(defaultConfig('r23-l1', { startYear: 1990 }));
     const m = s.player.staff[0] ?? (s.player.staff.push({ id: 'stx', name: 'X', role: 'admin', skill: 40, salary: 100, hiredWeek: 0 }), s.player.staff[0]);
-    (people(s).career[m.id] ??= { loyalty: 50 } as never).loyalty = 10;
+    people(s).career[m.id] ??= { xp: 0, level: 0 }; setStaffLoyalty(s, m.id, 10);
     const ks = RECRUIT23.map((f) => f(s, `s:${m.id}`)).filter(Boolean);
     expect(ks.some((x) => x!.k > 1 && /lealdade/.test(x!.why.pt))).toBe(true);
     const a = fict(s);
     addSecret23(s, { kind: 'shark', subject: `p:${a.members[0]}`, sev: 35, ev: 40 });
     expect(RECRUIT23.map((f) => f(s, `p:${a.members[0]}`)).some((x) => x && x.k >= 2)).toBe(true);
     cul19(s).c = 'chaos';
-    for (const x of s.player.staff) (people(s).career[x.id] ??= { loyalty: 80 } as never).loyalty = 80;
+    for (const x of s.player.staff) { people(s).career[x.id] ??= { xp: 0, level: 0 }; setStaffLoyalty(s, x.id, 80); }
     const own = s.acts[Object.keys(s.acts).find((id) => s.acts[id].owner === 'player') ?? ''];
     if (own) {
       const sec = addSecret23(s, { kind: 'affair', subject: `a:${own.id}`, sev: 40, ev: 40 });
@@ -85,10 +86,10 @@ describe('r23 ligações', () => {
     if (hot) { a.genre = hot.g; expect(FIND23.reduce((m, f) => m * f(s, a, {} as never), 1)).toBeGreaterThan(1); }
     const m = s.player.staff[0];
     if (m) {
-      (people(s).career[m.id] ??= { loyalty: 40 } as never).loyalty = 40;
+      people(s).career[m.id] ??= { xp: 0, level: 0 }; setStaffLoyalty(s, m.id, 40);
       const F = furn(s); F.legacy = false; F.items = { arcade: 1, tv: 1 };
       _links23.month23(s);
-      expect(people(s).career[m.id].loyalty).toBeGreaterThan(40);
+      expect(staffLoyalty(s, m.id)).toBeGreaterThan(40);
     }
   });
 });

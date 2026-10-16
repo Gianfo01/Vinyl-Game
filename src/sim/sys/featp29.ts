@@ -33,6 +33,7 @@ import { rw } from './realworld';
 import { ownerBonus } from './people/owner';
 import { actBond, bump, tieOf } from './social8';
 import { hasSinger, settleVocals, sings } from './vocals10';
+import { relAdd } from '../opinion';
 
 export const FEATP29_RNG = 'feats8p29';
 /** No máximo 4 pessoas convidadas numa faixa. */
@@ -255,7 +256,7 @@ export function bandReact29(s: GameState, pid: string, host: Act): number {
   for (const m of A.members) {
     const q = s.persons[m];
     if (!q || m === pid || !q.alive) continue;
-    q.rel[pid] = clamp((q.rel[pid] ?? 0) + d, -100, 100);
+    relAdd(s, q.id, pid, d);
   }
   return d;
 }

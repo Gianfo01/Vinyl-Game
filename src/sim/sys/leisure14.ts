@@ -27,6 +27,7 @@ import { scene12 } from './scenes12';
 import { actsOfPerson17 } from '../actidx17';
 import { relief27 } from '../relief27';
 import { actsNow27 } from '../tickcache27';
+import { relTouch } from '../opinion';
 
 // ---------------------------------------------------------------- dados
 
@@ -547,7 +548,7 @@ export function goOut14(s: GameState, k: Spot14): { ok: boolean; text: L; met: {
     const dv = Math.round(clamp(v / 3, -6, 10));
     const why = (dv >= 0 ? c0.pos[0] : c0.neg[0]) ?? (dv >= 0 ? l('frequentam o mesmo lugar', 'same haunt') : l('santo não bateu', 'no chemistry'));
     opine(s, key, dv, fmtL(l('Encontro {p}: {w}', 'Met {p}: {w}'), { p: place, w: why }));
-    if (pp && w.p && w.p.rel[pp.id] === undefined) w.p.rel[pp.id] = 0; // passa a conhecer você
+    if (pp && w.p) relTouch(s, w.p.id, pp.id); // passa a conhecer você (registro em 0 quando não havia)
     logTo(s, key, fmtL(dv >= 0 ? l('Encontrou o(a) dono(a) de {c} {p} e gostou ({w}).', 'Met the owner of {c} {p} and liked them ({w}).') : l('Encontrou o(a) dono(a) de {c} {p} e não gostou ({w}).', 'Met the owner of {c} {p} and disliked them ({w}).'), { c: s.config.companyName, p: place, w: why }), dv >= 0 ? 1 : -1);
     met.push({ key, dv, why });
   }

@@ -8,7 +8,6 @@ import { t } from '../../i18n/strings';
 import {
   TRAIT27, agenda27, autoDecide27, board27, closeMeeting27, decide27, directors27, monthKey27, setBoard27, type Dir27, type Prop27,
 } from '../../sim/sys/board27';
-import { careerOf } from '../../sim/sys/people/staff';
 import type { GameState } from '../../sim/types';
 import { $, modal, rerender } from '../common';
 import { h } from '../dom';
@@ -20,6 +19,7 @@ import { paintBoard27, seatX27, put27 } from './px27b';
 import { drawScene27, type Who27 } from './scene27';
 import './act27.css';
 import './p2b27.css';
+import { staffLoyalty } from '../../sim/opinion';
 
 function room(s: GameState, ds: Dir27[], speaker?: string): HTMLCanvasElement {
   const cv = h('canvas', { class: 'a27-scene', role: 'img', 'aria-label': t(l('Sala da diretoria', 'Boardroom')) }) as HTMLCanvasElement;
@@ -58,7 +58,7 @@ export function openBoard27(onDone?: (played: boolean) => void): void {
       h('h4', null, t(l('Quem está à mesa', 'Who\'s at the table'))),
       h('ul', { class: 'p2b-list small' }, ds.map((d) => {
         const st = s.player.staff.find((m) => m.id === d.id);
-        const loy = st ? Math.round(careerOf(s, st).loyalty) : null;
+        const loy = st ? Math.round(staffLoyalty(s, st.id)) : null;
         return h('li', null, h('b', null, d.name), ' · ', t(d.roleName), ' · ', t(TRAIT27[d.trait] ?? l(d.trait, d.trait)), loy !== null ? [' ', statusChip27(t(l('lealdade {v}', 'loyalty {v}'), { v: loy }), loy < 35 ? 'bad' : loy < 55 ? 'warn' : 'good')] : null);
       })),
       h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: B.on, onchange: () => { setBoard27(s, !B.on); view(); } }), ' ',

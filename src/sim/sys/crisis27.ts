@@ -28,6 +28,7 @@ import { careerOf } from './people/staff';
 import { rule31 } from '../deleg31';
 import { overPolicy27 } from './road27';
 import { strikeActive } from './world4/common';
+import { addStaffLoyalty } from '../opinion';
 
 export const CRISIS27_RNG = 'crisis27v1';
 export type CrisisKind27 = 'bankrupt' | 'lawsuit' | 'strike' | 'fire' | 'arrest';
@@ -157,7 +158,7 @@ export interface CrAct27 {
 const sk = (s: GameState, ...roles: string[]) => Math.max(0, ...roles.map((r) => staffSkill(s, r)));
 const act = (s: GameState, c: Crisis27) => (c.ref.act ? s.acts[c.ref.act] : undefined);
 const rep = (s: GameState, k: 'artistic' | 'commercial' | 'artists' | 'institutional', d: number) => { s.player.reputation[k] = clamp(s.player.reputation[k] + d, 0, 100); };
-const loyal = (s: GameState, d: number, roles?: string[]) => { for (const m of s.player.staff) if (!roles || roles.includes(m.role)) { const c = careerOf(s, m); c.loyalty = clamp(c.loyalty + d, 0, 100); } };
+const loyal = (s: GameState, d: number, roles?: string[]) => { for (const m of s.player.staff) if (!roles || roles.includes(m.role)) { careerOf(s, m); addStaffLoyalty(s, m.id, d); } };
 const PR27: CrAct27 = { id: 'pr', label: l('Assessoria de crise', 'Crisis PR'), hint: l('Controla a narrativa na imprensa.', 'Controls the press narrative.'), cost: (s) => money(s, 400), p: (s) => clamp(0.5 + sk(s, 'publicist') / 200, 0.3, 0.92), d: 10 };
 
 export const ACTS27: Record<CrisisKind27, CrAct27[]> = {

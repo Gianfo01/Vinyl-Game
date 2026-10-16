@@ -32,6 +32,7 @@ import { goSolo16 } from './lineup16';
 import { registerDimAdj18 } from './quality18';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
+import { shiftOpinion } from '../opinion';
 
 /** Editoras por época (nomes reais só com nomes reais ligados). */
 const PUB19: [string, string, number, number][] = [
@@ -225,7 +226,7 @@ export function takeOffer19(s: GameState, oid: string, cut: boolean): L {
   st.offers = st.offers.filter((x) => x !== o);
   if (freeCash20(s) < o.fee) return cashWhy20(s, o.fee, l('Caixa insuficiente.', 'Not enough cash.'));
   const r = Rng.fromSeed(`${s.config.seed}|wr19o|${o.id}`);
-  if (cut && !r.chance(cutOdds19(s, o))) { w.rel['player'] = (w.rel['player'] ?? 0) - 10; return fmtL(l('{w} se ofende com o pedido de crédito e leva a canção para outro artista.', '{w} is offended by the credit grab and takes the song to another act.'), { w: w.name }); }
+  if (cut && !r.chance(cutOdds19(s, o))) { shiftOpinion(s, `p:${w.id}`, -10, { why: l('você quis crédito na canção dele(a).', 'you wanted credit on their song.') }); return fmtL(l('{w} se ofende com o pedido de crédito e leva a canção para outro artista.', '{w} is offended by the credit grab and takes the song to another act.'), { w: w.name }); }
   post(s, `wr19o:${o.id}`, -o.fee, 'recording', `Canção de fora: ${w.name}`);
   const [so] = composeSongs(s, r, a, 1);
   if (!so) return l('Algo deu errado.', 'Something went wrong.');

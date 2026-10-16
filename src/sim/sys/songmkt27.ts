@@ -44,6 +44,7 @@ import { settleVocals } from './vocals10';
 import { ventures } from './ventures9';
 import { openPlagSuit19, pubName19 } from './writers19';
 import { actsNow27 } from '../tickcache27';
+import { shiftOpinion } from '../opinion';
 
 export const SONGMKT27 = 'songmkt27';
 
@@ -244,7 +245,7 @@ export function buyLot27(s: GameState, lotId: string, actId: string, kind: 'righ
   const wid = writerOf(s, r, lot);
   const so = newSong(s, a, { t: lot.t, mel: lot.mel, lyr: lot.lyr, org: lot.org, wid });
   const w = s.persons[wid];
-  if (w) w.rel.player = clamp((w.rel.player ?? 0) + 4, -100, 100);
+  if (w) shiftOpinion(s, `p:${w.id}`, 4, { why: l('você gravou uma canção dele(a).', 'you recorded their song.') });
   const d: Deal27 = { id: `md${++st.seq}`, k: kind, song: so.id, act: a.id, t: so.title, wn: lot.wn, pub: kind === 'work' ? s.config.companyName : lot.pub, fee, w: s.week, paid: 0, units: 0,
     ...(lot.sim ? { sim: 1 as const } : {}), ...(lot.dup && s.acts[lot.dup] ? { dup: { act: lot.dup, due: s.week + r.int(6, 14) } } : {}) };
   st.deals.push(d);
@@ -372,7 +373,7 @@ export function declineGift27(s: GameState, giftId: string): L {
   if (!g) return l('Oferta encerrada.', 'Offer closed.');
   st.gifts = st.gifts.filter((x) => x !== g);
   const p = s.persons[g.pid];
-  if (p) p.rel.player = clamp((p.rel.player ?? 0) - 6, -100, 100);
+  if (p) shiftOpinion(s, `p:${p.id}`, -6, { why: l('você recusou a canção que ofereceu.', 'you turned down the song they offered.') });
   pass(s, { t: g.t, q: g.q, wn: p?.name ?? '', g: o?.genre ?? 'pop' }, `gift:${g.id}`);
   return fmtL(l('Você recusou a canção de {o}.', 'You declined {o}\'s song.'), { o: o?.name ?? '?' });
 }
