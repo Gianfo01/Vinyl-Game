@@ -11,8 +11,9 @@ import { drawText, textWidth } from './font';
 import { DIST18, LOTS18, styleOf18, vehicleOf18, type Amb18, type Bld18, type BKind, type Style18 } from '../../sim/sys/campus18';
 import { ICON27, cityLook27, env27, era27, hqExt27, type BVis27, type CityLook27, type Env27, type Era27, type HqExt27, type Life27, type Sale27 } from './city27';
 import type { Landmark19 } from '../../data/landmarks19';
-import { LM_SLOTS27, drawLmIso27, outlineOuter } from './lmiso27';
+import { drawLmIso27, outlineOuter } from './lmiso27';
 import { dusk27, paintSky27, skyCols27 } from './skyline27';
+import { isRiver31, terrainAt31, type At31, type Geo31 } from '../../data/geo31';
 
 /** Grade e canvas do CENTRO (o mapa original, 300×226). Com mais bairros a cena usa `geo18` (ver Scene18.geo). */
 export const GW = 20, GH = 16;
@@ -25,6 +26,8 @@ export const geo18 = (gw: number, gh: number): Geo18 => ({ gw, gh, mw: (gw + gh)
 let G: Geo18 = geo18(GW, GH);
 /** Geometria com os `d`+1 primeiros bairros abertos. */
 export const geoDist18 = (d: number): Geo18 => { const x = DIST18[Math.max(0, Math.min(DIST18.length - 1, d))]; return geo18(x.gw, x.gh); };
+/** R31 (GEO): fixa a geometria em uso sem montar a cena (testes das funções puras de geografia). */
+export const useGeo18 = (g: Geo18): void => { G = g; };
 /** Grade → tela numa geometria dada (pura; `iso` usa a da cena em uso). */
 export const isoAt18 = (g: Geo18, gx: number, gy: number): [number, number] => [g.ox + (gx - gy) * 8, OY + (gx + gy) * 4];
 export const iso = (gx: number, gy: number): [number, number] => isoAt18(G, gx, gy);
@@ -605,29 +608,58 @@ export function palette27(env: Env18): { skyTop: Col; skyBot: Col; grass: Col; g
 }
 
 interface Ground27 { c: HTMLCanvasElement; lc: HTMLCanvasElement }
-function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Sprite18[], lms: Landmark19[], marks: Mark19[], look: CityLook27, sale: Sale27[]): Ground27 {
+function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Sprite18[], lmAt: LmAt31[], marks: Mark19[], look: CityLook27, sale: Sale27[]): Ground27 {
   const y = env.year;
   const p = new Px(G.mw, G.mh), gl = new Px(G.mw, G.mh);
   const road = y < 1910 ? C('#8a6e4c') : y < 1950 ? C('#6e6a66') : y < 2025 ? C('#44464e') : C('#4e5668');
   const walk = y < 1910 ? C('#b0946a') : y < 2025 ? C('#c4bcae') : C('#d0d4da');
   const pal = palette27(env);
   const { grass } = pal;
-  const sea = env.rain ? C('#3a7aa0') : C('#2a8ad0'), sea2 = shade(sea, 0.25), sand = C('#ead8a8');
+  const sea = env.rain ? C('#3a7aa0') : C('#2a8ad0'), sand = C('#ead8a8');
   const { gw: GW, gh: GH } = G;
+  const geo = look.geo;
+  const river = C('#3a86b0'), lake = C('#2f86c4'), quay = y < 1930 ? C('#a89c88') : C('#b8b2a6'), rock = C('#7a7064');
+  const hillG = env.snow ? C('#e2eaf2') : env.climate === 'arid' ? C('#9a9a5a') : env.climate === 'tropical' ? C('#2f7a3a') : C('#3e7438');
+  const deck = y < 1900 ? C('#9a8a70') : y < 1950 ? C('#8a8680') : C('#6a6c74');
+  /** Chão fora da grade (R31 GEO): segue a tabela da cidade; ruas continuam pelo campo e viram pontes sobre o rio. */
+  const outside31 = (px: number, py: number, gx: number, gy: number): Col => {
+    const at = terrainAt31(geo, gx, gy, GW, GH);
+    const rd = roadOut31(gx, gy, at);
+    if (rd === 'bridge') { const f = rd && (hAt(gy) !== undefined ? gy - hAt(gy)! : gx - vAt(gx)!); return f < 0.12 || f > 1.88 ? C('#3a3634') : f < 0.24 || f > 1.76 ? shade(deck, 0.25) : env.snow && noise(px, py, 2) < 0.2 ? C('#eef2f6') : deck; }
+    if (rd === 'road') return env.snow && noise(px, py, 2) < 0.25 ? mix(road, C('#f4f8fc'), 0.6) : y < 1930 ? shade(road, 0.05) : road;
+    const glint = (Math.floor(px / 2) * 7 + py * 13) % 61 === 0 && py % 3 === 0;
+    switch (at.t) {
+      case 'water': {
+        const d = at.d ?? 1, w0 = at.w!.k === 'river' || at.w!.k === 'strait' || at.w!.k === 'lagoon' ? river : at.w!.k === 'lake' ? lake : sea;
+        const base = env.rain ? shade(w0, -0.08) : w0;
+        if (at.w!.shore === 'beach' && d < 0.17) return dith(px, py, 0.5) ? C('#f4fbff') : C('#d6eef8');
+        if (glint) return shade(base, 0.25);
+        return d < 0.9 ? mix(base, C('#5cc0e8'), 0.4 - d * 0.35) : d > 4 ? shade(base, -0.06) : base;
+      }
+      case 'sand': return dith(px, py, 0.2) ? shade(sand, -0.06) : sand;
+      case 'prom': // calçadão: ondas portuguesas (Rio) ou lajota clara
+        if (at.w?.prom === 'wave') return Math.sin((px + py * 2) * 0.55 + Math.sin(py * 0.9) * 2.2) > 0.15 ? C('#2a2a2e') : C('#f2efe6');
+        return (Math.floor(px / 3) + Math.floor(py / 2)) % 2 ? C('#d8d0c0') : C('#e2dccd');
+      case 'quay': return (Math.floor(px / 4) + Math.floor(py / 2)) % 2 ? quay : shade(quay, -0.08);
+      case 'rock': return noise(px >> 1, py >> 1, seed + 11) < 0.4 ? shade(rock, -0.15) : noise(px, py, 5) < 0.3 ? shade(rock, 0.12) : rock;
+      case 'hill': { // mata do morro: manchas grandes de copa (não confete), luz do alto à esquerda nas bordas das manchas
+        const k = noise(px >> 3, py >> 2, seed + 21), k2 = noise((px + 2) >> 3, (py + 1) >> 2, seed + 21);
+        if (env.snow) return k < 0.35 ? C('#c8d6e4') : C('#e8eef6');
+        return k < 0.33 ? (k2 >= 0.33 ? shade(hillG, 0.14) : shade(hillG, -0.16)) : k > 0.8 ? shade(hillG, 0.08) : hillG;
+      }
+      case 'farbank': return env.snow ? C('#e8eef4') : (Math.floor(px / 2) + py) % 7 === 0 ? shade(walk, -0.1) : mix(walk, grass, 0.25);
+      default: { // r27 (I2): campo fora do mapa um tom abaixo, com sebes a cada quadra (sem pontilhado cheio)
+        const hedge = (Math.abs(gx % 5) < 0.18 || Math.abs(gy % 5) < 0.18) && (gx < -0.6 || gy < -0.6 || gx > GW + 0.6 || gy > GH + 0.6);
+        return env.snow ? (dith(px, py, 0.2) ? C('#dfe9f4') : C('#eaf1f8')) : hedge ? shade(grass, -0.24) : dith(px, py, 0.12) ? shade(grass, -0.2) : shade(grass, -0.14);
+      }
+    }
+  };
   for (let py = 0; py < G.mh; py++) for (let px = 0; px < G.mw; px++) {
     const [gx, gy] = unIso(px + 0.5, py + 0.5);
     let c: Col;
     if (gx < 0 || gy < 0 || gx >= GW || gy >= GH) {
       if (py < HZ) c = mix(pal.skyTop, pal.skyBot, Math.pow(py / HZ, 0.8));
-      else if (look.sea) { // r27: cidade de baía: o mapa é cercado de mar e areia
-        const edge = Math.min(Math.abs(gx < 0 ? gx : gx >= GW ? gx - GW : 0), 9) + Math.min(Math.abs(gy < 0 ? gy : gy >= GH ? gy - GH : 0), 9);
-        // r27 (I2): areia → espuma (1 px) → raso → fundo, com brilhos em traços de 2 px (sem ruído de confete)
-        const glint = (Math.floor(px / 2) * 7 + py * 13) % 61 === 0 && py % 3 === 0;
-        c = edge < 0.55 ? (dith(px, py, 0.2) ? shade(sand, -0.06) : sand) : edge < 0.72 ? (dith(px, py, 0.5) ? C('#f4fbff') : C('#d6eef8')) : edge < 1.6 ? (glint ? sea2 : mix(sea, C('#5cc0e8'), 0.45 - edge * 0.2)) : glint ? sea2 : edge > 4 ? shade(sea, -0.06) : sea;
-      } else { // r27 (I2): campo fora do mapa um tom abaixo, com sebes a cada quadra (sem pontilhado cheio)
-        const hedge = (Math.abs(gx % 5) < 0.18 || Math.abs(gy % 5) < 0.18) && (gx < -0.6 || gy < -0.6 || gx > GW + 0.6 || gy > GH + 0.6);
-        c = env.snow ? (dith(px, py, 0.2) ? C('#dfe9f4') : C('#eaf1f8')) : hedge ? shade(grass, -0.24) : dith(px, py, 0.12) ? shade(grass, -0.2) : shade(grass, -0.14);
-      }
+      else c = outside31(px, py, gx, gy); // R31 (GEO): água, praia, cais, morro e campo só nos lados certos (geo31.ts)
     } else if (ROAD(gx, gy)) {
       c = road;
       if (y < 1910 && noise(px, py, 1) < 0.15) c = shade(road, -0.15);
@@ -655,17 +687,19 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
     }
     p.put(px, py, c);
   }
+  // R31 (GEO): marcos no lado que faz sentido (ponte e ópera sobre a água, Cristo no morro, o resto em terra firme)
   // r27 (I2b): céu + horizonte por cidade e época (skyline27.ts, cacheado); as assinaturas desviam dos marcos altos
-  const tallX = lms.map((lm, i) => (lm as Landmark19 & { slot?: number }).slot ?? i).filter((sl) => sl % LM_SLOTS27.length < 2).map((sl) => iso(...LM_SLOTS27[sl % LM_SLOTS27.length])[0]);
-  paintSky27(p, gl, HZ, env, look, seed, tallX);
-  // r27 (I2): marcos em pixel isométrico, em 4 bastidores atrás do mapa (altos no fundo, largos nas laterais);
-  // a escolha (até 4, por peso de ícone e ano de construção) é a função pura mapLms27 (city27.ts)
-  lms.forEach((lm, i) => {
-    const slot = (lm as Landmark19 & { slot?: number }).slot ?? i;
-    const [sgx, sgy] = LM_SLOTS27[slot % LM_SLOTS27.length];
-    const [lx, ly] = iso(sgx, sgy);
-    marks.push({ id: lm.id, box: drawLmIso27(p, gl, lm.id, lm.sh, lx, ly, y, look.sea, seed, env.city) });
-  });
+  const tallX = lmAt.filter((q) => q.tall).map((q) => iso(q.gx, q.gy)[0]);
+  paintSky27(p, gl, HZ, env, { ...look, hz: { ...look.hz, sx: G.ox } }, seed, tallX);
+  // r27 (I2): marcos em pixel isométrico atrás do mapa; R31 (GEO): junto com o casario da outra margem, o subúrbio,
+  // a favela do morro, as palmeiras do calçadão e os barcos — tudo desenhado de trás para a frente
+  const deco = deco31(geo, look, env, seed, lmAt);
+  const td = new T(p, 0, 0), tl = new T(gl, 0, 0);
+  const lmItems = lmAt.filter((q) => !q.front).map((q) => ({ d: q.gx + q.gy, f: () => {
+    const [lx, ly] = iso(q.gx, q.gy);
+    marks.push({ id: q.lm.id, box: drawLmIso27(p, gl, q.lm.id, q.lm.sh, lx, ly, y, q.wet, seed, env.city) });
+  } }));
+  for (const it of [...deco.map((q) => ({ d: q.d, f: () => q.f(td, tl) })), ...lmItems].sort((a, b) => a.d - b.d)) it.f();
   // r27 (I2): sombra projetada de cada prédio para a direita (luz do alto à esquerda)
   for (const sp of sprites) {
     const [gx, gy, w, d] = sp.fp, h = sp.h ?? 0;
@@ -690,6 +724,170 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
     t.poly(q, (x2, y2) => (env.snow && noise(x2, y2, 4) < 0.5 ? C('#eef2f6') : dith(x2, y2, 0.15) ? shade(pc, -0.06) : pc));
   }
   return { c: p.canvas(), lc: gl.canvas() };
+}
+
+
+// ---------------------------------------------------------------- R31 (GEO): geografia fora da grade
+
+/** A rua continua fora da grade? 'road' pelo campo, morro ou outra margem; 'bridge' sobre rio/estreito; null = não
+ *  (no mar e na baía a rua acaba no calçadão ou no cais). Só as faixas de rua/avenida que cruzam aquela borda. */
+function roadOut31(gx: number, gy: number, at: At31): 'road' | 'bridge' | null {
+  const inX = gx >= 0 && gx < G.gw, inY = gy >= 0 && gy < G.gh;
+  const va = inX && !inY ? VROADS.find((a) => a + 2 <= G.gw && gx >= a && gx < a + 2) : undefined;
+  const hb = inY && !inX ? HROADS.find((b) => b + 2 <= G.gh && gy >= b && gy < b + 2) : undefined;
+  if (va === undefined && hb === undefined) return null;
+  const riv = at.w && isRiver31(at.w);
+  if (at.w && riv && at.w.w > 8) return at.t === 'land' && at.e < at.w.o ? 'road' : null; // rio largo demais: sem ponte
+  switch (at.t) {
+    case 'water': case 'quay': return riv ? 'bridge' : null;
+    case 'land': case 'farbank': case 'hill': return at.w && !riv && at.e > at.w.o ? null : 'road';
+    default: return null;
+  }
+}
+/** Rua (ou ponte) fora da grade nesse ponto da cena atual — os carros não entram no mar. */
+export function roadOutAt31(geo: Geo31, gx: number, gy: number): boolean {
+  if (gx >= 0 && gy >= 0 && gx < G.gw && gy < G.gh) return true;
+  return roadOut31(gx, gy, terrainAt31(geo, gx, gy, G.gw, G.gh)) !== null;
+}
+
+/** Onde cada marco fica: candidatos nas faixas do fundo (oeste e norte), na ordem antiga dos bastidores (altos perto do
+ *  canto de trás); cada marco pede água (pontes, ópera, estátua do porto, bondinho do Pão de Açúcar), morro (Cristo) ou
+ *  terra firme. Em lado de rio, o marco de terra vai para a outra margem. Puro sobre a geometria da cena. */
+export const LM_WET31 = new Set(['ny_liberty', 'syd_opera', 'syd_bridge', 'rio_cable', 'lis_belem', 'lis_bridge', 'ist_bridge', 'sf_gate', 'lon_tbridge', 'pra_bridge', 'ny_brooklyn']);
+const LM_HILL31 = new Set(['rio_christ', 'rio_corcovado']);
+export interface LmAt31 { lm: Landmark19; gx: number; gy: number; wet: boolean; tall: boolean; /** na frente do mapa (leste/sul): vira sprite com profundidade */ front?: boolean }
+export function lmPlace31(lms: Landmark19[], geo: Geo31, year: number): LmAt31[] {
+  void year;
+  const cand: { gx: number; gy: number; side: 'w' | 'n' | 'e' | 's'; i: number }[] = [];
+  const along = [3.4, 9.4, 15.4, 21.4, 27.4];
+  along.forEach((v, i) => { if (v < G.gh - 1) cand.push({ gx: -2.7, gy: v, side: 'w', i: i * 2 }); if (v + 1.2 < G.gw - 1) cand.push({ gx: v + 1.2, gy: -2.7, side: 'n', i: i * 2 + 1 }); });
+  // R31 (GEO): na frente (leste/sul) só marcos de água — porto, ponte, ópera — quando a água do mapa está na frente
+  for (const f of [0.3, 0.5, 0.7]) { cand.push({ gx: G.gw + 2.7, gy: f * G.gh, side: 'e', i: 40 + f * 10 }); cand.push({ gx: f * G.gw, gy: G.gh + 2.7, side: 's', i: 41 + f * 10 }); }
+  const vis = (gx: number, gy: number) => { const [x, yy] = iso(gx, gy); return yy >= HZ + 8 && yy < G.mh - 4 && x > 14 && x < G.mw - 14; };
+  const used = new Set<number>(), out: LmAt31[] = [];
+  const order = lms.map((lm, k) => ({ lm, slot: (lm as Landmark19 & { slot?: number }).slot ?? k })).sort((a, b) => a.slot - b.slot);
+  for (const { lm, slot } of order) {
+    const want = LM_WET31.has(lm.id) || lm.sh === 'bridge' || lm.sh === 'tbridge' ? 'wet' : LM_HILL31.has(lm.id) ? 'hill' : 'land';
+    let best: { k: number; gx: number; gy: number; wet: boolean; score: number } | null = null;
+    cand.forEach((c, k) => {
+      if (used.has(k)) return;
+      if ((c.side === 'e' || c.side === 's') && want !== 'wet') return;
+      const out0 = (e: number): [number, number] => (c.side === 'w' ? [-e, c.gy] : c.side === 'n' ? [c.gx, -e] : c.side === 'e' ? [G.gw + e, c.gy] : [c.gx, G.gh + e]);
+      const at0 = terrainAt31(geo, ...out0(2.7), G.gw, G.gh);
+      let e = 2.7, wet = at0.t === 'water';
+      if (want === 'wet' && !wet && at0.w && at0.w.o > 2.7 && at0.w.o < 5) { e = at0.w.o + 0.8; wet = true; }
+      if (want === 'wet' && wet && at0.w && isRiver31(at0.w)) e = at0.w.o + Math.min(at0.w.w, 4) / 2;
+      if (want !== 'wet' && wet && at0.w && isRiver31(at0.w) && at0.w.w <= 5) { e = at0.w.o + at0.w.w + 1.6; wet = false; }
+      const [gx, gy] = out0(e);
+      if (!vis(gx, gy)) return;
+      const at = terrainAt31(geo, gx, gy, G.gw, G.gh);
+      wet = at.t === 'water';
+      const fit = want === 'wet' ? (wet ? 0 : 6) : want === 'hill' ? (at.t === 'hill' ? 0 : wet ? 9 : 3) : wet ? 8 : 0;
+      const score = fit * 10 + Math.abs(c.i - slot);
+      if (!best || score < best.score) best = { k, gx, gy, wet, score };
+    });
+    if (!best) continue;
+    const b = best as { k: number; gx: number; gy: number; wet: boolean };
+    const side = cand[b.k].side;
+    if (b.wet && want !== 'wet') continue; // marco de terra sem lugar em terra firme não vira ilha: fica de fora do mapa
+    used.add(b.k);
+    out.push({ lm, gx: b.gx, gy: b.gy, wet: b.wet, tall: slot % 4 < 2 && side !== 'e' && side !== 's', front: side === 'e' || side === 's' });
+  }
+  return out;
+}
+
+/** Lote fora da grade todo num só terreno, sem rua passando. */
+function freeOut31(geo: Geo31, gx: number, gy: number, w: number, d: number, k: string): boolean {
+  return [[gx, gy], [gx + w, gy], [gx, gy + d], [gx + w, gy + d], [gx + w / 2, gy + d / 2]].every(([a, b]) => {
+    const at = terrainAt31(geo, a, b, G.gw, G.gh);
+    return at.t === k && !roadOut31(a, b, at) && !(a >= -0.3 && b >= -0.3 && a < G.gw + 0.3 && b < G.gh + 0.3);
+  });
+}
+/** Estilo do prédio comum da cidade (o mesmo dos lotes de cidade comum dentro do mapa). */
+function fillStyle31(look: CityLook27, year: number, r: number): Style18 {
+  return look.k === 'brick' ? (year < 1990 || r < 0.5 ? 'brick' : 'loft') : look.k === 'bay' && year >= 1930 && r < 0.6 ? 'tropical' : look.k === 'towers' ? (year < 1950 ? 'deco' : year < 1975 ? 'midcentury' : year < 1990 ? 'brutal' : 'glass') : styleOf18(Math.max(1889, year - 10 - Math.floor(r * 25)));
+}
+/** R31 (GEO): lotes de cidade comum FORA da grade — casario da outra margem do rio (Brooklyn, South Bank, Kowloon…) e
+ *  casas do subúrbio no campo — desenhados com o mesmo prédio dos lotes de cidade comum (não são clicáveis nem lotes do
+ *  jogo). Longe dos marcos (não os cobrem) e só onde se vê. */
+export function outerLots31(look: CityLook27, year: number, seed: number, lmAt: LmAt31[]): { id: string; lot: { gx: number; gy: number; w: number; d: number }; kind: BKind; lvl: number; style: Style18 }[] {
+  const geo = look.geo, W = G.gw, H = G.gh, out: ReturnType<typeof outerLots31> = [];
+  const vis = (gx: number, gy: number) => { const [x, yy] = iso(gx, gy); return yy >= HZ + 6 && yy < G.mh + 4 && x > -8 && x < G.mw + 8; };
+  const hideLm = (gx: number, gy: number) => lmAt.some((q) => { const [lx] = iso(q.gx, q.gy), [x] = iso(gx, gy); return Math.abs(q.gx - gx) < 3.2 && Math.abs(q.gy - gy) < 3.2 || (gx + gy > q.gx + q.gy - 1 && gx + gy < q.gx + q.gy + 5 && Math.abs(x - lx) < 30); });
+  for (let gy = -15; gy < H + 15; gy += 3) for (let gx = -15; gx < W + 15; gx += 3) {
+    if (gx > -3 && gy > -3 && gx < W && gy < H) continue;
+    const at = terrainAt31(geo, gx + 1.25, gy + 1.25, W, H);
+    const r = noise(gx * 3 + 11, gy * 7 + 5, seed + 53);
+    if (at.t === 'farbank') {
+      if (r < 0.1 || !freeOut31(geo, gx, gy, 2.5, 2.5, 'farbank') || !vis(gx + 1.25, gy + 2.5) || hideLm(gx + 1.25, gy + 1.25)) continue;
+      const lvl = look.k === 'towers' && year >= 1930 ? 2 + Math.floor(r * 4) : 1 + Math.floor(r * 1.8);
+      out.push({ id: `geo31:${gx},${gy}`, lot: { gx: gx + 0.2, gy: gy + 0.2, w: 2.3, d: 2.3 }, kind: r < 0.3 ? 'home' : 'office', lvl, style: fillStyle31(look, year, r) });
+    } else if (at.t === 'land' && !at.w && at.e < 7 && r < 0.4 - at.e * 0.04) {
+      if (!freeOut31(geo, gx, gy, 2.5, 2.5, 'land') || !vis(gx + 1.25, gy + 2.5) || hideLm(gx + 1.25, gy + 1.25)) continue;
+      out.push({ id: `geo31:${gx},${gy}`, lot: { gx: gx + 0.3, gy: gy + 0.3, w: 2.2, d: 2.2 }, kind: 'home', lvl: 1 + Math.floor(r * 3) % 2, style: fillStyle31(look, year, r * 2) });
+    }
+  }
+  return out;
+}
+
+/** Casario da outra margem, subúrbio no campo, favela/mata no morro, palmeiras no calçadão e barcos (fora da grade).
+ *  Cada item tem profundidade (gx + gy) para ir junto com os marcos, de trás para a frente. */
+function deco31(geo: Geo31, look: CityLook27, env: Env18, seed: number, lmAt: LmAt31[]): { d: number; f: (t: T, L: T) => void }[] {
+  const out: { d: number; f: (t: T, L: T) => void }[] = [];
+  const y = env.year, W = G.gw, H = G.gh;
+  const vis = (gx: number, gy: number, up = 0) => { const [x, yy] = iso(gx, gy); return yy - up >= HZ - 2 && yy >= HZ + 3 && yy < G.mh + 2 && x > -12 && x < G.mw + 12; };
+  const nearLm = (gx: number, gy: number) => lmAt.some((q) => Math.abs(q.gx - gx) < 3 && Math.abs(q.gy - gy) < 3);
+  for (let gy = -16; gy < H + 16; gy += 2) for (let gx = -16; gx < W + 16; gx += 2) {
+    if (gx >= -1 && gy >= -1 && gx < W + 1 && gy < H + 1) continue;
+    const cx = gx + 1, cy = gy + 1;
+    const at = terrainAt31(geo, cx, cy, W, H);
+    const r = noise(gx * 3 + 101, gy * 5 + 77, seed + 31), r2 = noise(gx + 7, gy + 3, seed + 37);
+    if (nearLm(cx, cy)) continue;
+    if (at.t === 'land' && at.e < 6 && !at.w && r > 0.82 && vis(cx, cy, 10)) { const [x, yy] = iso(cx + 0.4, cy - 0.3); out.push({ d: cx + cy, f: (t) => tree(t, x, yy, y, env.season, gx * 13 + gy, env) }); }
+    else if (at.t === 'farbank' && r2 < 0.08 && vis(cx, cy, 10)) { const [x, yy] = iso(cx, cy); out.push({ d: cx + cy, f: (t) => tree(t, x, yy, y, env.season, gx * 11 + gy, env) }); }
+    else if (at.t === 'hill') { // morro: favela em degraus (Rio, Salvador, Caracas…) ou mata
+      const fav = (at.hill?.favela ?? false) && look.favela && at.e < 6;
+      if (fav) {
+        for (const [dx, dy] of [[0.1, 0.1], [1.05, 0.15], [0.15, 1.05], [1.05, 1.05]] as [number, number][]) {
+          const q = noise(gx * 2 + dx * 4, gy * 2 + dy * 4, seed + 41);
+          if (q < 0.25 || !vis(gx + dx, gy + dy, 6)) continue;
+          const roof = [C('#c8603c'), C('#e8c070'), C('#f0ece0'), C('#d88a6a'), C('#b8b0a0')][Math.floor(q * 5) % 5];
+          const wall = [C('#e8d8b8'), C('#d8a080'), C('#f0e4cc'), C('#c8b098')][Math.floor(q * 13) % 4];
+          out.push({ d: gx + dx + gy + dy, f: (t, L) => box(t, L, gx + dx, gy + dy, 0.8, 0.75, 4 + Math.floor(q * 3), 0, { st: 'brick', seed: gx + gy, lit: 0.4, noWin: q < 0.5, wall, roof }) });
+        }
+      } else if (r < 0.85) for (const [dx, dy] of [[0.5, 0.4], [1.4, 1.3], [1.3, 0.3]] as [number, number][]) {
+        if (!vis(gx + dx, gy + dy, 10)) continue;
+        const [x, yy] = iso(gx + dx, gy + dy);
+        const bare = env.season === 'winter' && (env.climate === 'cold' || env.climate === 'mild');
+        out.push({ d: gx + dx + gy + dy, f: (t) => (bare ? conifer27(t, x, yy, env.snow) : tree(t, x, yy, y, env.season, gx * 17 + gy + dx * 5, env)) });
+      }
+    } else if (at.t === 'water' && (at.d ?? 0) > 1.4 && r < 0.05 && vis(cx, cy)) { // barco (veleiro antes de 1950; lancha/balsa depois)
+      const [x, yy] = iso(cx, cy);
+      out.push({ d: cx + cy, f: (t) => boat31(t, x, yy, y, r2) });
+    }
+  }
+  // palmeiras e postes no calçadão (litoral tropical) — a cada ~2,5 células ao longo da borda com praia
+  for (const w of geo.water) if (w.shore === 'beach' && w.o < 3) {
+    const L0 = w.side === 'n' || w.side === 's' ? W : H;
+    for (let u = 1; u < L0; u += 2.5) {
+      const e = 0.3;
+      const [gx, gy] = w.side === 'n' ? [u, -e] : w.side === 's' ? [u, H + e] : w.side === 'w' ? [-e, u] : [W + e, u];
+      const at = terrainAt31(geo, gx, gy, W, H);
+      if (at.t !== 'prom' || roadOut31(gx, gy, at) || !vis(gx, gy, 12)) continue;
+      const [x, yy] = iso(gx, gy);
+      if (look.palms) out.push({ d: gx + gy, f: (t) => palm27(t, x, yy, Math.round(u * 7)) });
+      else if (y >= 1900) out.push({ d: gx + gy, f: (t, L) => { t.rect(x, yy - 7, 1, 7, C('#3a3a40')); t.set(x, yy - 8, C('#5a5a60')); L.set(x, yy - 8, C('#ffd77a')); } });
+    }
+  }
+  return out;
+}
+function boat31(t: T, x: number, y: number, year: number, r: number): void {
+  x = Math.round(x); y = Math.round(y);
+  const hull = r < 0.5 ? C('#f0ece4') : C('#a83a2a');
+  t.poly([[x - 4, y - 1], [x + 4, y - 1], [x + 3, y + 1], [x - 3, y + 1]], hull); t.line(x - 3, y + 1, x + 3, y + 1, C('#3a3030'));
+  if (year < 1950 || r < 0.35) { t.line(x, y - 1, x, y - 8, C('#5a4030')); t.poly([[x + 1, y - 8], [x + 1, y - 2], [x + 4, y - 2]], C('#f8f6ee')); }
+  else { t.rect(x - 1, y - 3, 3, 2, C('#e8e4dc')); t.set(x, y - 3, C('#2a3a5a')); }
+  t.set(x - 5, y, withAlpha(C('#e8f6ff'), 200)); t.set(x + 5, y, withAlpha(C('#e8f6ff'), 200));
 }
 
 // ---------------------------------------------------------------- cena
@@ -850,9 +1048,29 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
       e.kind === 'fest' ? e.lot : { gx: e.lot.gx + 0.3, gy: e.lot.gy + 0.3, w: e.lot.w - 0.6, d: e.lot.d - 0.6 }, env.year, seed + Math.round(e.lot.gx * 13 + e.lot.gy * 31), '', { filler: true, snow: env.snow, sign: e.sign ? era.sign : undefined });
     sprites.push(sp);
   }
+  // R31 (GEO): a cidade continua fora da grade (outra margem do rio, subúrbio) com os mesmos prédios de cidade comum
+  const lmAt = lmPlace31(lms, look.geo, env.year);
+  for (const o of outerLots31(look, env.year, seed, lmAt)) {
+    const r = noise(Math.round(o.lot.gx * 3), Math.round(o.lot.gy * 5), seed + 2);
+    const wall = C(look.wall[Math.floor(r * 97) % look.wall.length]);
+    sprites.push(buildingSprite18({ id: o.id, kind: o.kind, name: '', city: '', zone: 'campus', lvl: o.lvl, st: 'open', since: env.year, sy: env.year, style: o.style }, o.lot, env.year, seed + Math.round(o.lot.gx * 13 + o.lot.gy * 31), '',
+      { filler: true, snow: env.snow, wall: o.style === 'glass' ? undefined : mix(wall, MAT[o.style].wall, 0.3) }));
+  }
   sprites.sort((a, b) => a.depth - b.depth);
   const marks: Mark19[] = [];
-  const gr = groundCanvas(env, seed, used, sprites, lms, marks, look, x.sale ?? []);
+  const gr = groundCanvas(env, seed, used, sprites, lmAt, marks, look, x.sale ?? []);
+  // R31 (GEO): marco de água na frente do mapa (ponte, ópera, estátua do porto): sprite com profundidade, não chão
+  for (const q of lmAt) if (q.front) {
+    const QW = 150, QH = 150, AX = 75, AY = 116;
+    const [lx, ly] = iso(q.gx, q.gy);
+    const pc = new Px(QW, QH), pl = new Px(QW, QH);
+    const bx = drawLmIso27(pc, pl, q.lm.id, q.lm.sh, AX, AY, env.year, q.wet, seed, env.city);
+    const ox = Math.round(lx - AX), oy = Math.round(ly - AY);
+    const box: [number, number, number, number] = [bx[0] + ox, bx[1] + oy, bx[2] + ox, bx[3] + oy];
+    marks.push({ id: q.lm.id, box });
+    sprites.push({ id: `lmk:${q.lm.id}`, c: pc.canvas(), lc: pl.canvas(), x: ox, y: oy, depth: q.gx + q.gy, box, door: [lx, ly], top: [lx, box[1]], fp: [q.gx, q.gy, 0, 0], kind: 'museum', st: 'open', filler: true });
+  }
+  sprites.sort((a, b) => a.depth - b.depth);
   // r27: placas "À venda" como sprites com profundidade (não somem atrás do prédio da frente)
   const signs: SaleSign27[] = (x.sale ?? []).filter((sl) => LOTS18[sl.lot]).map((sl) => saleSign27(sl, x.saleTxt ?? 'VENDA'));
   // r27 (I2): se um prédio da FRENTE cobre a placa, ela sobe acima do telhado dele (com haste até o lote)
@@ -1028,6 +1246,7 @@ export function drawFrame18(ctx: CanvasRenderingContext2D, sc: Scene18, t: numbe
     const u = ((noise(i, 5, sc.seed) * 30 + t * sp) % (GW + 6)) - 3;
     const { gx, gy, face } = laneAt31(GW, GH, lh, at, dir, u); // R31 (H): entra e sai pela borda certa, de frente para onde vai
     void fv;
+    if (sc.look && !roadOutAt31(sc.look.geo, gx, gy)) continue; // R31 (GEO): sem carro no mar (a rua acaba no calçadão)
     const [x, yy] = iso(gx, gy);
     items.push({ d: gx + gy, f: () => vehicle(ctx, x, yy, vk, i, face, undefined, t, cars, night) });
   }
