@@ -182,9 +182,9 @@ function ownerOf31(s: GameState, tid: string): Partner31 {
 }
 
 /** Tudo o que existe agora e pode ter dono (só leitura; o que você já tem fica de fora — está em `socio31`). */
-export function targets31(s: GameState): Target31[] {
+export function targets31(s: GameState, withMine = false): Target31[] {
   const out: Target31[] = [];
-  const mine = socio31(s).b;
+  const mine = withMine ? {} : socio31(s).b;
   const push = (t: Omit<Target31, 'owner' | 'never' | 'legend'> & { legend?: boolean; never?: boolean }) => {
     if (mine[t.id]) return;
     out.push({ ...t, legend: t.legend ?? t.prestige >= 88, never: t.never ?? t.prestige >= 94, owner: ownerOf31(s, t.id) });
@@ -208,7 +208,7 @@ export function targets31(s: GameState): Target31[] {
   }
   return out;
 }
-export const target31 = (s: GameState, tid: string): Target31 | undefined => targets31(s).find((t) => t.id === tid);
+export const target31 = (s: GameState, tid: string, withMine = false): Target31 | undefined => targets31(s, withMine).find((t) => t.id === tid);
 
 // ---------------------------------------------------------------- economia de um negócio (média do mês, sem sorte)
 
@@ -260,13 +260,7 @@ function baseOf(s: GameState, b: Biz31): { cap: number; reach?: number; since: n
   return { cap: T?.cap ?? 500, reach: T?.reach, since: T?.since ?? s.year, legend: !!T?.legend, never: !!T?.never };
 }
 /** O alvo original mesmo quando já é seu (para capacidade, ano de fundação e status de lendário). */
-function rawTarget(s: GameState, id: string): Target31 | undefined {
-  const st = socio31(s);
-  const keep = st.b[id];
-  if (!keep) return target31(s, id);
-  delete st.b[id];
-  try { return target31(s, id); } finally { st.b[id] = keep; }
-}
+const rawTarget = (s: GameState, id: string): Target31 | undefined => target31(s, id, true);
 
 // ---------------------------------------------------------------- valor (mesmo modelo da bolsa: partes que somam o total)
 

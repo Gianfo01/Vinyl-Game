@@ -239,10 +239,12 @@ describe('r31 SOC · sócios e compras', () => {
   it('explorar não muda o mundo: listar, cotar, ver quem aceita e travas não sorteiam nem gravam', () => {
     const s = game();
     const t = pick(s);
+    const u = pick(s, 'fest');
+    expect(buy31(s, u.id, 2000, 'label')).toBeNull(); // com uma participação: a ficha do negócio também só lê
     const snap = JSON.stringify(s.x4.socio31 ?? null) + rngSnapshot19(s) + s.player.cash + JSON.stringify((s.x4 as unknown as { op: unknown }).op);
     for (const x of targets31(s)) { bizValue31(s, x.id); quote31(s, x.id, 2500); accept31(s, x.id, x.owner, 2500, 0, x); buyLock31(s, x.id, 2500, 'label'); }
     jvAccept31(s, { kind: 'fest', name: 'Y', pk: 'city', me: 5000 });
-    holdings31(s);
+    holdings31(s); bizValue31(s, u.id); quote31(s, u.id, 1000, 2000); buyLock31(s, u.id, 1000, 'label'); sellLock31(s, u.id, 1000, 'market'); voteLock31(s, u.id, 'price', 2);
     expect(JSON.stringify(s.x4.socio31 ?? null) + rngSnapshot19(s) + s.player.cash + JSON.stringify((s.x4 as unknown as { op: unknown }).op)).toBe(snap);
     expect(t).toBeTruthy();
   });

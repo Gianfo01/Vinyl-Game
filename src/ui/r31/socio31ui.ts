@@ -187,7 +187,7 @@ function bizBody(s: GameState, b: Biz31, redraw: () => void): HTMLElement {
       const opts = optList(tp);
       pick[tp] = tp === 'invest' ? 1 : opts.find((o) => o.value !== cur(tp))?.value ?? 0;
       const btnBox = h('span', null);
-      const draw = () => { btnBox.replaceChildren(lockBtn31(t(l('Propor', 'Propose')), voteLock31(s, b.id, tp, pick[tp]!), () => { const r = propose31(s, b.id, tp, pick[tp]!); toast(t(r.text), r.passed ? 'good' : 'bad'); redraw(); }, { compact: true })); };
+      const draw = () => { btnBox.replaceChildren(lockBtn31(t(l('Propor', 'Propose')), voteLock31(s, b.id, tp, pick[tp]!), () => { const r = propose31(s, b.id, tp, pick[tp]!); toast(t(r.text), r.passed ? 'good' : 'bad'); redraw(); })); };
       draw();
       return h('tr', null,
         h('td', null, h('b', null, t(TOPIC31[tp].name)), h('div', { class: 'muted small' }, `${t(l('agora', 'now'))}: ${tp === 'invest' ? '—' : tp === 'date' ? t(monthL(cur(tp))) : t(TOPIC31[tp].opts[cur(tp)])} · ${t(WHO31[b.rules[tp]])}`)),
