@@ -10,7 +10,7 @@ import { orgPowerBand31, orgSees31 } from '../../sim/know';
 import { opinionRaw } from '../../sim/opinion';
 import { BROKER_KEY31, brokerHire31, brokerList31, brokerLog31, brokerPlace31, brokerQuote31, deals31 } from '../../sim/sys/broker31';
 import { crimeById, nameOf17, orgById, targetsFor, usd } from '../../sim/sys/crime17';
-import { facLog31, facOn31, home31, localOrgs31, opsOf31, power31, wars31 } from '../../sim/sys/fac31';
+import { facOn31, underworldNews31, home31, localOrgs31, opsOf31, power31, wars31 } from '../../sim/sys/fac31';
 import { jobTk29, jobsFor29 } from '../../sim/sys/mob29';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
@@ -94,6 +94,6 @@ export function brokerTab31(s: GameState): HTMLElement {
       h('summary', null, `${T(g.name)} (${g.orgs.length})`),
       h('div', { class: 'cards' }, g.orgs.map((x) => orgRow(s, x.o.id, x.know))))),
     brokerLog31(s).length ? section(T(N('Histórico', 'History')), h('ul', { class: 'small' }, brokerLog31(s).slice(-10).reverse().map((x) => h('li', null, T(x[2]))))) : null,
-    facLog31(s).length ? section(T(N('O submundo pelo mundo', 'The underworld around the world')), h('ul', { class: 'small' }, facLog31(s).slice(-10).reverse().map((x) => h('li', null, `${x[0]} · ${T(orgById(s, x[1])?.name ?? l(x[1]))}: ${T(x[2])}`)))) : null,
+    underworldNews31(s).length ? section(T(N('O submundo pelo mundo', 'The underworld around the world')), h('ul', { class: 'small' }, underworldNews31(s).map((f) => h('li', null, `${f.y} · ${T(f.text)}`)))) : null,
   );
 }

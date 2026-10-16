@@ -20,7 +20,7 @@ import { citiesByCountry31 } from '../../data/fac31';
 import { countryName } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
-import { emitFact } from '../facts17';
+import { emitFact, recentFacts, type Fact } from '../facts17';
 import { shiftOpinion } from '../opinion';
 import { u31On } from '../r31/u31sw';
 import { rng19 } from '../rng19';
@@ -282,4 +282,11 @@ export function coverage31(s: GameState): Record<string, number> {
   for (const a3 of Object.keys(citiesByCountry31())) out[a3] = 0;
   for (const o of orgs17(s, false, true)) if (!isCyber(o) && out[o.a3] !== undefined) out[o.a3]++;
   return out;
+}
+
+/** Notícias do submundo que chegaram a você (fatos, não o estado): o que saiu como boato ou na imprensa sobre facções
+ *  abrindo, fechando, sondando ou em guerra, e a traição do intermediário contra você (é secreta, mas você sabe). */
+export function underworldNews31(s: GameState, limit = 12): Fact[] {
+  return recentFacts(s, { kinds: ['faction_expand', 'faction_withdraw', 'faction_scout', 'faction_war', 'broker_betrayal'], limit: 60 })
+    .filter((f) => f.visibility !== 'secret' || (f.kind === 'broker_betrayal' && f.actors.includes('player'))).slice(0, limit);
 }
