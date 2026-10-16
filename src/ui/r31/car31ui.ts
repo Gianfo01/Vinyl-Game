@@ -13,10 +13,12 @@ import { recentFacts } from '../../sim/facts17';
 import { visibleAct } from '../../sim/future';
 import { band, bandText, know } from '../../sim/know';
 import { car31On, ledger31, ledgerSummary31, relW31, SRC31 } from '../../sim/sys/car31';
-import { FMT_NAME31, ROTS31, addGrid31, answerJaba31, cands31, dropGrid31, fmtsFor31, kindOf31, lawRisk31, mediaVentures31, power31, rotName31, setFmt31, setRot31, slotsOf31, stRo31, used31, BURN_W31, type Rot31 } from '../../sim/sys/car31media';
-import { LISTS31, LIST_NAME31, LIST_SIZE31, addList31, cands31p, dropList31, farmSeen31, moodOn31, platRo31, platVentures31, purgeFarm31, subsShare31 } from '../../sim/sys/car31plat';
-import { NEW_FAME31, setOpener31, stageRo31, venueNow31 } from '../../sim/sys/car31stage';
-import { ASK31, askFor31, askLock31, askOdds31, moreRo31, setTarget31, targetOf31, yearList31, type Ask31k } from '../../sim/sys/car31more';
+import { FMT_NAME31, ROTS31, addGrid31, answerJaba31, cands31, cityBoard31, clipK31, dropGrid31, fmtsFor31, kindOf31, lawRisk31, mediaVentures31, power31, rotName31, setFmt31, setRot31, slotsOf31, stRo31, used31, BURN_W31, type Rot31 } from '../../sim/sys/car31media';
+import { LISTS31, LIST_NAME31, LIST_SIZE31, addList31, answerBoy31, boyCost31, boyWhy31, cands31p, dropList31, farmSeen31, moodOn31, platRo31, platVentures31, purgeFarm31, subsShare31 } from '../../sim/sys/car31plat';
+import { EXCL_KM31, EXCL_WK31, NEW_FAME31, exBlocked31, exclOf31, exclQuote31, setExcl31, setOpener31, stageRo31, venueNow31 } from '../../sim/sys/car31stage';
+import { f12 } from '../../sim/sys/fest12';
+import { liveOf } from '../../sim/sys/live/state';
+import { ASK31, ASKS_BASE31, ASKS_MORE31, askFor31, askLock31, askOdds31, moreRo31, setSyn31, setTarget31, synCands31, synSlots31, targetOf31, vehicles31, yearList31, type Ask31k } from '../../sim/sys/car31more';
 import { CARS31, DEF31, activeCars31, progView31, type Car31 } from '../../sim/sys/car31prog';
 import { countryName, countryOfCity } from '../../data/geo';
 import type { Act, GameState, Release } from '../../sim/types';
@@ -72,6 +74,10 @@ function mediaView(s: GameState): HTMLElement {
         st.ear ? pill(t(fmtL(l('ouvido de ouro ×{n}', 'golden ear ×{n}'), { n: st.ear })), 'good') : null, ' ',
         st.copy ? pill(t(fmtL(l('copiada por rivais ×{n}', 'copied by rivals ×{n}'), { n: st.copy })), 'bad') : null),
       h('p', { class: 'small muted' }, t(l('Sucesso segura a audiência mas não dá prestígio; aposta em artista novo custa audiência agora e, se estourar no país, vira "ouvido de ouro". Rotação pesada cansa depois de 8 semanas. Tocar o seu selo custa audiência e vale menos (conflito de interesse).', 'Hits hold the audience but bring no prestige; betting on a new act costs audience now and, if it breaks nationally, earns a "golden ear". Heavy rotation tires after 8 weeks. Playing your own label costs audience and counts less (conflict of interest).'))),
+      k === 'radio' && car31On(s, 'cities') ? h('details', null, h('summary', null, t(l('Audiência na cidade (contra as rádios de lá)', 'Audience in the city (against the stations there)'))),
+        h('table', { class: 'tbl compact' }, h('tbody', null, ...cityBoard31(s, v.city).map((x) => h('tr', null, h('td', null, x.mine ? h('b', null, x.name) : x.name), h('td', null, t(FMT_NAME31[x.fmt])), h('td', null, pct(x.share)))))),
+        h('p', { class: 'small muted' }, t(l('Só as rádios da mesma cidade disputam os seus ouvintes. Quando você tem mais audiência que a rival do mesmo formato, ela perde alcance.', 'Only stations in the same city fight for your listeners. When you out-draw the rival in your format, it loses reach.')))) : null,
+      k === 'tv' && car31On(s, 'clips') ? h('p', { class: 'small muted' }, t(l('Na era dos clipes, o clipe conta: o do seu disco pesa pela qualidade, clipe banido não entra e disco seu sem clipe rende pouco. Rotação pesada aqui é a rotação pesada do clipe.', 'In the video era the video counts: yours weighs by quality, a banned video stays off and your record without a video does little. Heavy rotation here is the video\'s heavy rotation.'))) : null,
       fmtsFor31(s, v).length > 1 ? h('div', { class: 'row wrap' }, h('b', null, t(l('Formato:', 'Format:'))), ...fmtsFor31(s, v).map((f) => h('button', { type: 'button', class: `btn small${f === st.fmt ? ' primary' : ''}`, title: t(l('Trocar custa credibilidade e parte do público', 'Switching costs credibility and part of the audience')), onclick: () => say(setFmt31(s, v.id, f), l('Formato trocado.', 'Format changed.')) }, t(FMT_NAME31[f])))) : null,
       h('div', { class: 'row wrap small' }, h('b', null, t(l('Diretor de programação:', 'Programme director:'))), ' ', t(MODE31[pd].name), ' ',
         ...(['me', 'rule', 'staff'] as const).map((m) => h('button', { type: 'button', class: `btn small${m === pd ? ' primary' : ''}`, onclick: () => say(setMode31(s, 'radio', m), l('Delegação atualizada.', 'Delegation updated.')) }, t(MODE31[m].name)))),
@@ -100,7 +106,7 @@ function mediaView(s: GameState): HTMLElement {
         h('table', { class: 'tbl compact' }, h('tbody', null, ...cands31(s, v, 24).map((r) => {
           const a = s.acts[r.actId];
           return h('tr', null, h('td', null, relRow(s, r)),
-            h('td', null, ...ROTS31.map((ro) => lockBtn31(t(rotName31(k, ro)), used31(st, ro) >= sl[ro] ? l('Sem vaga nesta rotação', 'No slot in this rotation') : ro === 'bet' && a.fame >= 35 ? l('Aposta é só para artista novo', 'A bet is only for a new act') : null, () => say(addGrid31(s, v.id, r.id, ro), l('Na grade.', 'On the grid.')), { cls: 'btn tiny' }))));
+            h('td', null, ...ROTS31.map((ro) => lockBtn31(t(rotName31(k, ro)), used31(st, ro) >= sl[ro] ? l('Sem vaga nesta rotação', 'No slot in this rotation') : ro === 'bet' && a.fame >= 35 ? l('Aposta é só para artista novo', 'A bet is only for a new act') : clipK31(s, v, r) <= 0 ? l('Clipe banido da TV', 'Video banned from TV') : null, () => say(addGrid31(s, v.id, r.id, ro), l('Na grade.', 'On the grid.')), { cls: 'btn tiny' }))));
         })))));
   }));
 }
@@ -116,12 +122,18 @@ function platView(s: GameState): HTMLElement {
       h('p', { class: 'small' }, t(l('Assinantes por país (fatia entre quem ouve streaming):', 'Subscribers by country (share of streaming listeners):')), ' ', ...sh.slice(0, 6).map((c) => pill(`${t(countryName(c.a3))} ${pct(c.share)}`))),
       h('p', { class: 'small muted' }, t(l('Streams = seguidores × posição × quanto o público salva. Vaga vazia: o algoritmo preenche pelo critério de destaque. Gravadoras grandes exigem vagas; o seu selo nas playlists é conflito.', 'Streams = followers × position × how much people save it. Empty slot: the algorithm fills it by the featuring criterion. Big labels demand slots; your own label on the playlists is a conflict.'))),
       p.dem.length ? h('div', null, ...p.dem.map((d) => h('p', null, pill(t(l('exigência', 'demand')), 'bad'), ' ', t(fmtL(l('{b} quer {n} vagas no Top até a semana {w}.', '{b} wants {n} Top slots by week {w}.'), { b: s.labels[d.lab]?.name ?? '?', n: d.n, w: d.u }))))) : null,
+      ...(car31On(s, 'boycott') ? (p.bq ?? []).map((b) => { const a = s.acts[b.act]; return a ? h('div', { class: 'row wrap' }, pill(t(l('boicote', 'boycott')), 'bad'), ' ',
+        t(fmtL(l('{a} tira o catálogo na semana {w}: {r}.', '{a} pulls their catalog in week {w}: {r}.'), { a: a.name, w: b.u, r: boyWhy31(b) })), ' ',
+        h('button', { type: 'button', class: 'btn small', onclick: () => say(answerBoy31(s, v.id, b.act, 'pay'), l('Bônus pago: fica.', 'Bonus paid: they stay.')) }, t(fmtL(l('Pagar bônus de repasse ({v})', 'Pay a payout bonus ({v})'), { v: $(boyCost31(s, a)) }))),
+        b.why === 'own' ? h('button', { type: 'button', class: 'btn small', onclick: () => say(answerBoy31(s, v.id, b.act, 'fix'), l('Seu selo saiu das playlists.', 'Your label left the playlists.')) }, t(l('Tirar o seu selo das playlists', 'Take your label off the playlists'))) : null,
+        h('button', { type: 'button', class: 'btn small ghost', onclick: () => say(answerBoy31(s, v.id, b.act, 'let'), l('O catálogo saiu.', 'The catalog is gone.')) }, t(l('Deixar sair', 'Let them go')))) : null; }) : []),
+      car31On(s, 'boycott') && Object.keys(p.out ?? {}).length ? h('p', { class: 'small' }, t(l('Fora da plataforma (boicote):', 'Off the platform (boycott):')), ' ', ...Object.keys(p.out ?? {}).filter((id) => s.acts[id]).map((id) => pill(s.acts[id].name, 'bad'))) : null,
       farm.length ? h('p', null, pill(t(l('suspeita de fazenda', 'stream-farm suspicion')), 'bad'), ' ', h('button', { type: 'button', class: 'btn small', onclick: () => say(null, fmtL(l('{n} faixa(s) retirada(s).', '{n} track(s) removed.'), { n: purgeFarm31(s, v.id) })) }, t(l('Tirar as suspeitas', 'Remove suspects')))) : null,
       ...LISTS31.filter((x) => x !== 'mood' || moodOn31(s)).map((list) => h('div', null,
         h('h4', null, `${t(LIST_NAME31[list])} (${p.lists[list].length}/${LIST_SIZE31[list]})`),
         h('ol', { class: 'small' }, ...p.lists[list].map((id) => { const r = s.releases[id]; return r ? h('li', null, relRow(s, r), ' ', h('button', { type: 'button', class: 'btn tiny ghost', onclick: () => { dropList31(s, v.id, list, id); rerender(); } }, t(l('Tirar', 'Drop')))) : null; })))),
       h('details', null, h('summary', null, t(l('Faixas para as playlists', 'Tracks for the playlists'))),
-        h('table', { class: 'tbl compact' }, h('tbody', null, ...cands31p(s, 24).map((r) => h('tr', null, h('td', null, relRow(s, r)),
+        h('table', { class: 'tbl compact' }, h('tbody', null, ...cands31p(s, 24, v.id).map((r) => h('tr', null, h('td', null, relRow(s, r)),
           h('td', null, ...LISTS31.filter((x) => x !== 'mood' || moodOn31(s)).map((list) => lockBtn31(t(LIST_NAME31[list]), p.lists[list].length >= LIST_SIZE31[list] ? l('Playlist cheia', 'Playlist full') : null, () => say(addList31(s, v.id, list, r.id, 0), l('Na playlist (no topo).', 'On the playlist (at the top).')), { cls: 'btn tiny' })))))))));
   }));
 }
@@ -139,13 +151,30 @@ function stageView(s: GameState): HTMLElement {
         h('td', null, st.open[n.id] ? h('span', null, t(l('abre:', 'opens:')), ' ', actLink(s, st.open[n.id]), ' ', h('button', { type: 'button', class: 'btn tiny ghost', onclick: () => say(setOpener31(s, n.id), l('Sem abertura.', 'No opener.')) }, '✕'))
           : h('span', null, ...cands(4).map((a) => h('button', { type: 'button', class: 'btn tiny', title: t(fmtL(l('fama {f}', 'fame {f}'), { f: fameTxt(s, a) })), onclick: () => say(setOpener31(s, n.id, a.id), l('Abertura escalada.', 'Opener booked.')) }, a.name))))))))) : null,
     hasKind(s, 'festival') ? section(t(l('Festivais', 'Festivals')), h('p', { class: 'small' }, t(fmtL(l('Depois de cada edição, cada atração ganha fama no país pela posição no cartaz (tarde → headliner) e pela nota; a revelação ganha um empurrão nas paradas. Revelações até agora: {n}.', 'After each edition, every act gains fame in the country by billing (afternoon → headliner) and by the rating; the breakout gets a chart push. Breakouts so far: {n}.'), { n: st.reveals }))),
-      h('button', { type: 'button', class: 'btn small', onclick: () => goDest31({ area: 'festivals' }) }, t(l('Montar o line-up', 'Build the line-up')))) : null);
+      h('button', { type: 'button', class: 'btn small', onclick: () => goDest31({ area: 'festivals' }) }, t(l('Montar o line-up', 'Build the line-up')))) : null,
+    car31On(s, 'scouts') && (Object.keys(st.sc ?? {}).length || st.stolen || st.kept) ? section(t(l('Olheiros rivais', 'Rival scouts')),
+      h('p', { class: 'small muted' }, t(fmtL(l('A revelação sem selo chama olheiros: faça proposta antes do prazo ou o rival assina. Levadas: {a} · seguradas por você: {b}.', 'An unsigned breakout draws scouts: make an offer before the deadline or the rival signs. Lost: {a} · kept by you: {b}.'), { a: st.stolen ?? 0, b: st.kept ?? 0 }))),
+      ...Object.entries(st.sc ?? {}).map(([id, x]) => s.acts[id] ? h('p', null, actLink(s, id), ' · ', t(fmtL(l('{l} está atrás', '{l} is circling'), { l: s.labels[x.lb]?.name ?? '?' }))) : null)) : null,
+    car31On(s, 'excl') ? exclView(s) : null);
+}
+function exclView(s: GameState): HTMLElement | null {
+  const fests = liveOf(s).fests.filter((f) => Object.keys(f12(s, f).deals).length);
+  if (!fests.length) return null;
+  return section(t(l('Exclusividade nos festivais', 'Festival exclusivity')),
+    h('p', { class: 'small muted' }, t(l('Cláusula com raio e prazo: o artista não toca perto do festival antes nem depois da edição. Quanto maior, mais cara e mais festivais rivais ela bloqueia (mais procura). Se ele tocar dentro do raio, a cláusula cai: festival rival paga multa; show marcado por você mesmo só custa reputação.', 'A clause with radius and term: the act does not play near the festival before or after the edition. The wider, the pricier, and the more rival festivals it blocks (more demand). If they play inside the radius, the clause falls: a rival festival pays a penalty; a show you booked yourself only costs reputation.'))),
+    ...fests.map((f) => h('div', null, h('h4', null, f.name),
+      h('table', { class: 'tbl compact' }, h('tbody', null, ...Object.values(f12(s, f).deals).map((d) => {
+        const c = exclOf31(s, f.id, d.actId);
+        return h('tr', null, h('td', null, actLink(s, d.actId)),
+          h('td', null, c ? (c.broke ? pill(t(l('quebrada', 'broken')), 'bad') : pill(t(fmtL(l('{k} km · {w} semanas · bloqueia {n}', '{k} km · {w} weeks · blocks {n}'), { k: c.km, w: c.wk, n: exBlocked31(s, f.id, c.km, c.wk).length })), 'good')) : d.excl ? pill(t(l('exclusiva (regional)', 'exclusive (regional)'))) : '—'),
+          h('td', null, ...EXCL_KM31.flatMap((km) => EXCL_WK31.map((wk) => { const q = exclQuote31(s, f.id, d.actId, km, wk); return lockBtn31(`${km} km · ${wk} ${t(l('sem.', 'wk'))} · ${$(Math.max(0, q.cost - (c?.paid ?? 0)))}`, q.refuse ?? (c?.broke ? l('Já quebrada nesta edição', 'Already broken this edition') : null), () => say(setExcl31(s, f.id, d.actId, km, wk), l('Cláusula fechada.', 'Clause signed.')), { cls: `btn tiny${c && c.km === km && c.wk === wk ? ' primary' : ''}`, title: t(fmtL(l('Bloqueia {n} festival(is) rival(is)', 'Blocks {n} rival festival(s)'), { n: q.blocked.length })) }); }))));
+      }))))));
 }
 
 // ---------------------------------------------------------------- empresário e agência
 
 function mgrView(s: GameState): HTMLElement {
-  const ks: Ask31k[] = ['radio', 'festival', 'push'];
+  const ks: Ask31k[] = [...ASKS_BASE31, ...(car31On(s, 'asks') ? ASKS_MORE31 : [])];
   const book = vl(s).filter((v) => v.kind === 'booking').flatMap((v) => (v.clients ?? []).map((c) => c.actId));
   const markets = ['USA', 'GBR', 'DEU', 'FRA', 'JPN', 'BRA', 'MEX', 'CAN', 'AUS', 'ESP', 'ITA', 'ARG'];
   return h('div', null,
@@ -154,7 +183,8 @@ function mgrView(s: GameState): HTMLElement {
       h('table', { class: 'tbl compact' }, h('tbody', null, ...mgClients(s).map((id) => { const a = s.acts[id]; return a ? h('tr', null, h('td', null, actLink(s, id)),
         h('td', null, ...ks.map((k) => lockBtn31(`${t(ASK31[k].name)} (${Math.round(askOdds31(s, a, k) * 100)}%)`, askLock31(s, id, k), () => { const r = askFor31(s, id, k); toast(t(r.text), r.ok ? 'good' : 'bad'); rerender(); }, { cls: 'btn tiny', title: t(ASK31[k].desc) })))) : null; })))) : null,
     book.length ? section(t(l('Agência: mercados-alvo', 'Agency: target markets')),
-      h('p', { class: 'small muted' }, t(l('A turnê roteirizada passa por cidades do mercado-alvo (fama no país). Onde o artista é desconhecido, abrir mercado dá prejuízo.', 'The routed tour goes through target-market cities (fame in that country). Where the act is unknown, opening the market loses money.'))),
+      h('p', { class: 'small muted' }, car31On(s, 'agency') ? t(l('A turnê roteirizada vira datas reais no mercado-alvo: casas livres, porte pela força local, cachê negociado e cansaço. Cada show sai com público, comissão e fama no país.', 'The routed tour becomes real dates in the target market: free venues, size by local draw, negotiated fees and fatigue. Each show comes out with a crowd, commission and fame in that country.'))
+        : t(l('A turnê roteirizada passa por cidades do mercado-alvo (fama no país). Onde o artista é desconhecido, abrir mercado dá prejuízo.', 'The routed tour goes through target-market cities (fame in that country). Where the act is unknown, opening the market loses money.'))),
       h('table', { class: 'tbl compact' }, h('tbody', null, ...book.map((id) => { const a = s.acts[id]; return a ? h('tr', null, h('td', null, actLink(s, id)), h('td', null, h('b', null, t(countryName(targetOf31(s, a))))),
         h('td', null, ...markets.map((m) => h('button', { type: 'button', class: `btn tiny${targetOf31(s, a) === m ? ' primary' : ''}`, onclick: () => say(setTarget31(s, id, m), l('Mercado-alvo definido.', 'Target market set.')) }, m)))) : null; })))) : null,
     !mgClients(s).length && !book.length ? h('p', { class: 'muted' }, t(l('Sem clientes ainda.', 'No clients yet.'))) : null);
@@ -164,10 +194,19 @@ function mgrView(s: GameState): HTMLElement {
 
 function critView(s: GameState): HTMLElement {
   const list = yearList31(s);
-  return section(t(l('Lista do ano', 'Best of the year')),
+  return h('div', null, car31On(s, 'outlets') ? vehView(s) : null, section(t(l('Lista do ano', 'Best of the year')),
     h('p', { class: 'small muted' }, t(l('Resenha boa (nota acima de 60) pesa nas vendas no país do seu veículo por três meses. Em dezembro sai a lista do ano: os discos dela voltam a vender em janeiro e fevereiro. Sem escolha, vale a ordem das suas notas.', 'A good review (above 60) weighs on sales in your outlet\'s country for three months. In December the year list comes out: its records sell again in January and February. Without a choice, your scores decide the order.'))),
     h('ol', null, ...list.map((id) => { const r = s.releases[id]; return r ? h('li', null, relRow(s, r)) : null; })),
-    moreRo31(s).yl.length ? pill(t(l('escolhida por você', 'picked by you'))) : pill(t(l('automática pelas suas notas', 'automatic by your scores'))));
+    moreRo31(s).yl.length ? pill(t(l('escolhida por você', 'picked by you'))) : pill(t(l('automática pelas suas notas', 'automatic by your scores')))));
+}
+function vehView(s: GameState): HTMLElement {
+  const vs = vehicles31(s), reach = ((s.x4 as unknown as { press18?: { reach?: number } }).press18?.reach ?? 0), n = synSlots31(reach);
+  const chosen = moreRo31(s).syn ?? [];
+  const toggle = (a3: string) => { const xs = chosen.includes(a3) ? chosen.filter((x) => x !== a3) : [...chosen, a3].slice(-n); say(setSyn31(s, xs), l('Sindicação atualizada.', 'Syndication updated.')); };
+  return section(t(l('Onde a sua resenha sai', 'Where your review runs')),
+    h('p', { class: 'small muted' }, t(fmtL(l('A resenha pesa nas vendas do país de cada veículo. Pelo seu alcance, ela sai em {n} país(es) além da sede (mais alcance, mais países). Escolha os países ou deixe o automático (mesma língua e maiores mercados).', 'A review weighs on sales in each outlet\'s country. With your reach it runs in {n} country(ies) besides home (more reach, more countries). Pick them or leave it automatic (same language and biggest markets).'), { n }))),
+    h('p', null, ...vs.map((v) => pill(`${t(countryName(v.a3))} · ${v.name}`, v.home ? 'good' : ''))),
+    n ? h('div', { class: 'row wrap' }, ...synCands31(s).slice(0, 12).map((a3) => h('button', { type: 'button', class: `btn tiny${chosen.includes(a3) ? ' primary' : ''}`, onclick: () => toggle(a3) }, t(countryName(a3))))) : null);
 }
 
 // ---------------------------------------------------------------- degraus
@@ -201,7 +240,7 @@ function page(s: GameState): HTMLElement {
 }
 /** Diário das carreiras: o que as suas decisões fizeram (fatos do barramento; só leitura). */
 function journal(s: GameState): HTMLElement | null {
-  const fs = recentFacts(s, { months: 24, kinds: ['ibope', 'format_copied', 'format_dead', 'golden_ear', 'payola', 'payola_taken', 'platform_conflict', 'catalog_pulled', 'slot_demand', 'stream_farm', 'own_bill', 'festival_breakout', 'cover_recorded', 'manager_ask_ok', 'manager_ask_no', 'critic_list', 'career_step', 'endgame_start', 'endgame_ok', 'endgame_fail'] })
+  const fs = recentFacts(s, { months: 24, kinds: ['ibope', 'format_copied', 'format_dead', 'golden_ear', 'payola', 'payola_taken', 'platform_conflict', 'catalog_pulled', 'slot_demand', 'stream_farm', 'own_bill', 'festival_breakout', 'cover_recorded', 'manager_ask_ok', 'manager_ask_no', 'critic_list', 'career_step', 'endgame_start', 'endgame_ok', 'endgame_fail', 'studio_trend', 'artist_boycott', 'catalog_exit', 'scout_circling', 'reveal_stolen', 'excl_broken'] })
     .filter((f) => f.visibility !== 'secret' || f.actors.includes('player')).slice(-14).reverse();
   return fs.length ? section(t(l('O que as suas decisões fizeram', 'What your decisions did')), h('ul', { class: 'small' }, ...fs.map((f) => h('li', null, h('span', { class: 'muted' }, `${f.y} · `), t(f.text))))) : null;
 }

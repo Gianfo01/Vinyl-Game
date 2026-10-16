@@ -41,6 +41,7 @@ import './r31/results31ui'; // R31 onda 3 (P): resultados por projeto/artista e 
 import './r31/learn31ui'; // R31 onda 4 (R): resultados e aprendizados — por projeto, coortes e biblioteca (correlação)
 import './r31/socio31ui'; // R31 onda 3 (SOC): sócios e compras (Negócios, ficha da empresa, painel rápido da cidade)
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
+import './r31/city31ui'; // R31 onda 4 (H): loja e casa em cena (áreas 'loja31' e 'casa31')
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
