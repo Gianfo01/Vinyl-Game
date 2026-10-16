@@ -18,7 +18,7 @@ import { addHype } from './hype12';
 import { pressLine17 } from '../outlets17';
 import { actsOfPerson17 } from '../actidx17';
 import { actsNow27 } from '../tickcache27';
-import { band, bandText, know, registerKnowFame } from '../know';
+import { band, bandText, know, registerKnowFame, see } from '../know';
 import { relAdd } from '../opinion';
 
 export const FTIERS: { min: number; name: L; desc: L }[] = [
@@ -114,15 +114,14 @@ export function knownLevel(s: GameState, id: string): Known15 {
   return { mine: k.mine, deg: k.deg, rel: k.rel, exp: k.exp, priv: k.priv, pub: k.pub, tier: k.tier };
 }
 
+// r31 (31.3 · F): a tabela de quais eixos liberam cada campo é KNOW_FIELDS (know.ts); aqui só a leitura antiga.
 const NEED: Record<Field15, [number, 'pub' | 'priv']> = {
   public: [0, 'pub'], bio: [1, 'pub'], fame: [2, 'pub'], fans: [2, 'pub'], image: [2, 'pub'], life: [3, 'pub'], rels: [4, 'pub'],
   health: [4, 'priv'], attrs: [2, 'priv'], potential: [3, 'priv'], traits: [4, 'priv'], mood: [4, 'priv'], contract: [3, 'priv'], songs: [5, 'priv'],
 };
-/** Pode ver este tipo de dado? (ver tabela NEED: públicos melhoram com fama; privados só com olheiros/relação) */
+/** Pode ver este tipo de dado? (regra única: `see` de know.ts — fato público também revela, em rótulo) */
 export function canSee(s: GameState, id: string, f: Field15): boolean {
-  const k = knownLevel(s, id);
-  const [n, w] = NEED[f];
-  return k.mine || k[w] >= n;
+  return see(s, id, f) !== 'hidden';
 }
 export const HINT15 = l('? — descubra com olheiros / relacionamento', '? — find out with scouts / relationships');
 export const HINT15S = l('descubra com olheiros / relacionamento', 'find out with scouts / relationships');
