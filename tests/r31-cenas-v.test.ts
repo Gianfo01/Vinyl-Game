@@ -53,7 +53,7 @@ function pick(s: GameState, kind: SceneKind31, prefer?: string): { t: SceneTarge
 }
 
 /** A função do formulário de sempre para cada mecânica. */
-const FORM: Record<SceneKind31, (s: GameState, t: SceneTarget31, choice: string) => unknown> = {
+const FORM: Partial<Record<SceneKind31, (s: GameState, t: SceneTarget31, choice: string) => unknown>> = { // W (onda 4): o lote 2 tem o próprio teste (r31-w4-wr)
   nego: (s, t) => { const o = defaultOffer(s, s.acts[t.id]); return offerNow(s, rng19(s, 'act'), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined }).result; },
   renew: (s, t) => runAction20(s, 'contract.renew', { act: t.id }).ok,
   rescind: (s, t) => runAction20(s, 'contract.rescind', { act: t.id }).ok,
@@ -72,7 +72,7 @@ describe('V · cenas = o mesmo cálculo do formulário', () => {
       const a = clone(g), b = clone(g);
       const out = decideScene31(a, kind, p!.t, p!.choice);
       expect(filled(out.text)).toBe(true);
-      FORM[kind](b, p!.t, p!.choice);
+      FORM[kind]!(b, p!.t, p!.choice);
       expect(same(a, b)).toEqual([]);
       // e mudou alguma coisa (a decisão foi tomada de fato)
       expect(snap(a)).not.toBe(snap(g));

@@ -390,4 +390,6 @@ import './car31stage'; // R31 onda 3 (CAR): casa de shows (abertura, prestígio,
 import './car31more'; // R31 onda 3 (CAR): estúdio, editora, agenciamento, empresário, crítico e trilhas ligados ao mundo
 import './car31prog'; // R31 onda 3 (CAR): degraus, objetivos e desafio de fim de jogo das 12 carreiras
 import './socio31'; // R31 onda 3 (SOC): sócios e compras — festivais, casas, rádios e estúdios existentes; criar em conjunto; voto e dividendos
+import '../r31/w31'; // R31 onda 4 (W): jabá recusado/denunciado e antitruste nas compras (interruptores w31.*)
+import '../r31/learn31'; // R31 onda 4 (R): amostras duráveis dos lançamentos e biblioteca de aprendizados
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

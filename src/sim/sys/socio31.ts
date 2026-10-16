@@ -358,6 +358,9 @@ const cashLk = (s: GameState, h: Holder, cost: number): Lock31Lite | null => {
     h === 'label' ? l('Junte caixa (receitas, venda, empréstimo) ou compre com o dinheiro pessoal.', 'Raise cash (income, a sale, a loan) or buy with personal money.') : l('Junte dinheiro pessoal ou compre pelo caixa do selo.', 'Raise personal money or buy with label cash.'));
 };
 
+/** R31 onda 4 (W): travas extras de compra (antitruste em r31/w31.ts) — valem no formulário e na cena. */
+export const BUY_GATE31: ((s: GameState, id: string, bp: number, h: Holder) => Lock31Lite | null)[] = [];
+
 /** Trava de compra (null = pode). */
 export function buyLock31(s: GameState, id: string, bp: number, h: Holder): Lock31Lite | null {
   if (!soc31On(s)) return OFF();
@@ -370,6 +373,7 @@ export function buyLock31(s: GameState, id: string, bp: number, h: Holder): Lock
   const o = b ? mainPartner(b) : t!.owner;
   if (!o) return lk(l('Você já tem 100%.', 'You already own 100%.'), l('Nada a comprar.', 'Nothing to buy.'));
   const base = b ? baseOf(s, b) : { legend: t!.legend, never: t!.never };
+  for (const g of BUY_GATE31) { const no = g(s, id, bp, h); if (no) return no; }
   const a = accept31(s, id, o, bp, b?.me ?? 0, base);
   if (!a.ok) return lk(a.why[0].pt.startsWith('Resultado') ? a.why[a.why.length - 1] : a.why[0], l('Melhore a relação com o dono (favores, conhecidos em comum) ou tente uma fatia menor.', 'Improve your relationship with the owner (favours, mutual acquaintances) or try a smaller slice.'));
   return cashLk(s, h, quote31(s, id, bp, b?.me ?? 0));

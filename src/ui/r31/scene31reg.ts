@@ -5,7 +5,8 @@ import { l } from '../../data/world';
 import { registerRunnable } from '../../sim/r31/editor';
 import { playerActs } from '../../sim/util';
 import { registerQuick31 } from './quick31core';
-import { sceneLabel31, sceneModel31, sceneTargets31, SCENE_KINDS31, type SceneKind31 } from './scene31core';
+import { sceneLabel31, sceneModel31, sceneTargets31, SCENE_KINDS_ALL31, type SceneKind31 } from './scene31core';
+import './scene31w'; // W (onda 4): lote 2 — registra antes do laço do editor
 
 /** Preenchido pela interface: abre a cena (ou o modo de 2 cliques, conforme a preferência). `force` = sempre a cena. */
 export const sceneHook31: {
@@ -20,7 +21,7 @@ export function viaScene31(kind: SceneKind31, id: string, direct?: () => void): 
 }
 
 // ---------------------------------------------------------------- editor: "Abrir cena: …" (área Cenas)
-for (const kind of SCENE_KINDS31) {
+for (const kind of SCENE_KINDS_ALL31) {
   registerRunnable({
     id: `scene31.${kind}`, area: 'scenes', label: l(`Abrir cena: ${sceneLabel31(kind).pt}`, `Open scene: ${sceneLabel31(kind).en}`),
     help: l('Abre a cena em pixel art (não decide nada: a decisão continua sendo sua, na cena).', 'Opens the pixel-art scene (decides nothing: the decision is still yours, in the scene).'),
