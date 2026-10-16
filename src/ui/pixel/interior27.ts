@@ -143,13 +143,18 @@ export function interior27(k: IKind27, year: number, n = 4, v?: string): Interio
 
 /** Onde cada pessoa fica: você na porta; artistas no palco/sala de gravação/cabine; equipe no balcão/mesa; o resto no salão. */
 export function placePeople27(m: Interior27, people: Person27[]): [Person27, ISpot27][] {
-  const you = people.filter((x) => x.you), perf = people.filter((x) => !!x.actId && !x.you && !x.staff), rest = people.filter((x) => (!x.actId || x.staff) && !x.you);
+  const you = people.filter((x) => x.you), cell = people.filter((x) => x.cell && !x.you), perf = people.filter((x) => !!x.actId && !x.you && !x.staff && !x.cell), rest = people.filter((x) => (!x.actId || x.staff) && !x.you && !x.cell);
   const free = [...m.spots];
-  const take = (zs: Zone27[]) => { for (const z of zs) { const i = free.findIndex((s0) => s0.z === z); if (i >= 0) return free.splice(i, 1)[0]; } return free.shift(); };
+  let extra = 0;
+  // sem lugar livre na zona certa: um lugar a mais no salão (a equipe nunca sobe ao palco nem entra na cela)
+  const more = (): ISpot27 => sp(0.16 + ((extra++ * 0.17) % 0.6), 'floor', 'stand', extra % 2 ? 'SW' : 'SE');
+  const take = (zs: Zone27[], any = true): ISpot27 | undefined => { for (const z of zs) { const i = free.findIndex((s0) => s0.z === z); if (i >= 0) return free.splice(i, 1)[0]; } return any ? free.shift() : more(); };
   const placed: [Person27, ISpot27][] = [];
   for (const x of you) placed.push([x, sp(m.k === 'police' || m.k === 'backroom' ? 0.24 : 0.06, 'floor', 'stand', 'SE')]);
+  for (const x of cell) placed.push([x, take(['booth'], false) ?? more()]);
   for (const x of perf) { const s0 = take(['stage', 'live', 'booth', 'floor']); if (s0) placed.push([x, s0]); }
-  for (const x of rest) { const s0 = take(['counter', 'desk', 'booth', 'floor', 'live', 'stage']); if (s0) placed.push([x, s0]); }
+  const restZ: Zone27[] = m.k === 'police' ? ['desk', 'counter', 'floor'] : ['counter', 'desk', 'booth', 'floor'];
+  for (const x of rest) placed.push([x, take(restZ, false) ?? more()]);
   return placed.sort((a, b) => a[1].x - b[1].x);
 }
 export const liftOf27 = (m: Interior27, s0: ISpot27): number => (s0.z === 'stage' ? (m.k === 'bar' || m.k === 'baile' ? 5 : 9) : 0);
@@ -338,6 +343,12 @@ export function drawInterior27(canvas: HTMLCanvasElement, m: Interior27, people:
       ctx.drawImage(a.c, fx - a.ax, fyy - a.ay + 1);
       hits.push({ x: fx - 7, y: fyy - 31, w: 14, h: 32, who });
       if (who.you) { ctx.fillStyle = '#ffe070'; ctx.fillRect(fx - 1, fyy - 38, 3, 3); ctx.fillStyle = '#1a1214'; ctx.fillRect(fx, fyy - 37, 1, 1); } // marcador de você
+    }
+    // r31 (S): a grade das celas fica NA FRENTE de quem está preso
+    for (const pr of m.props) if (pr.t === 'cells') {
+      const n = pr.n ?? 3, cw = Math.floor(Wd(pr.w) / n), x1 = X(pr.x);
+      ctx.fillStyle = '#8a8e98';
+      for (let i = 0; i < n; i++) { const cx = x1 + i * cw; for (let bx0 = cx + 3; bx0 < cx + cw - 4; bx0 += 4) ctx.fillRect(bx0, y0 + 8, 1, fy - y0 - 8); ctx.fillRect(cx + 2, y0 + 30, cw - 6, 1); }
     }
     // plateia de costas, em frente ao palco (silhuetas na luz do palco; alguns braços para cima)
     if (crowd && placed.some(([x]) => !!x.actId && !x.staff && !x.you)) { // casa vazia (ninguém no palco) = sem plateia

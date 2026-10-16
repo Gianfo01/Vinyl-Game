@@ -12,6 +12,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { FIRST_NAMES, LAST_NAMES } from '../../data/people';
+import { countryOfCity } from '../../data/geo';
 import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerSimHook } from '../ext4';
 import { addRole, endRole } from '../r31/role';
@@ -124,11 +125,13 @@ export function quitWhy31(s: GameState, sl: Slot31, j: Job31): L | null {
   return null;
 }
 
-/** Ex-artistas e gente da cidade sem banda ativa (donos, equipe sem bico). */
+/** Ex-artistas sem banda ativa (donos, equipe sem bico): primeiro os da cidade, depois os do país que vieram para cá. */
 function townsfolk(s: GameState, employed: Set<string>): string[] {
-  const out: string[] = [];
+  const out: string[] = [], far: string[] = [];
+  const a3 = countryOfCity(s.config.homeCity);
   for (const a of Object.values(s.acts)) {
-    if (a.city !== s.config.homeCity || a.owner === 'player' || a.playerBand) continue;
+    const home = a.city === s.config.homeCity;
+    if ((!home && (!a3 || countryOfCity(a.city) !== a3)) || a.owner === 'player' || a.playerBand) continue;
     if (liveAct(a)) continue;
     for (const pid of a.members) {
       const p = s.persons[pid];
@@ -136,10 +139,10 @@ function townsfolk(s: GameState, employed: Set<string>): string[] {
       const age = s.year - p.born;
       if (age < 20 || age > 78 || liveAct(actOfPid31(s, pid))) continue;
       if (jailUntil31(s, pid) !== undefined) continue;
-      out.push(pid);
+      (home ? out : far).push(pid);
     }
   }
-  return [...new Set(out)];
+  return [...new Set([...out, ...far])];
 }
 function bicoPool(s: GameState, employed: Set<string>): string[] {
   const out: string[] = [];

@@ -194,7 +194,8 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     else if (k === 'info') el = infoPanel(s, m, x, arg);
     else if (k === 'go') el = goPanel(s, x, arg, back);
     else if (k === 'room') { ui31.room = arg === 'enter' ? x0.id : undefined; ui31.panel = undefined; rerender(); return; }
-    if (el) pane.replaceChildren(h('div', { class: 'row in31-ph' }, h('b', { class: 'small' }, t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''))),
+    const head = k === 'who' ? m.people[+arg]?.name ?? '' : t(m.spots.find((y) => y.go.panel === panel)?.label ?? l('', ''));
+    if (el) pane.replaceChildren(h('div', { class: 'row in31-ph' }, h('b', { class: 'small' }, head),
       h('button', { type: 'button', class: 'icon', 'aria-label': t(l('Fechar', 'Close')), onclick: () => show() }, '✕')), el);
   };
   const panels: Record<string, (arg?: string) => void> = {};

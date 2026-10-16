@@ -155,6 +155,17 @@ export function trail31(s: GameState, k: IKind27): L[] {
 
 const actsOfPlace = (s: GameState, x: InsideT31): PAct27[] => (x.place ? placeActs27(s, x.place) : []);
 
+/** Faixa vertical do ponto clicável: o que pende na parede fica em cima, o que fica no chão embaixo, o alto ocupa tudo
+ *  (dois objetos na mesma coluna — cartaz sobre o balcão — não disputam o clique). */
+const WALL31 = new Set<PropT27>(['poster', 'window', 'gold', 'onair', 'cork', 'keys', 'bottles', 'screens', 'typewriters']);
+const FLOOR31 = new Set<PropT27>(['counter', 'tables', 'bins', 'listen', 'desk', 'couch', 'crates', 'drums', 'amp', 'piano', 'safe', 'roulette', 'mic', 'jukebox', 'plant', 'tv']);
+function vband(t: PropT27 | null, G: ReturnType<typeof geom27>): [number, number] {
+  const top = G.y0 + 6, mid = G.y0 + Math.round((G.fy - G.y0) * 0.5);
+  if (t && WALL31.has(t)) return [top, mid - top];
+  if (t && FLOOR31.has(t)) return [mid, G.fy - mid];
+  return [top, G.fy - top];
+}
+
 export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const W = INSIDE_W31;
   const you = youIn31(s, x.name);
@@ -173,11 +184,12 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     if (o.prop && !pr) continue;
     seen.add(o.id);
     const px = pr ? G.X(pr.x) : G.X(o.at?.[0] ?? 0.5), pw = pr ? Math.max(14, pr.w ? G.Wd(pr.w) : 16) : G.Wd(o.at?.[1] ?? 0.1);
+    const [py, ph] = vband(pr?.t ?? null, G);
     const go = o.go;
     const lk = go.startsWith('do:') ? lockOf(go.slice(3)) : undefined;
     if (go.startsWith('do:') && !acts.some((a) => a.id === go.slice(3))) continue; // ação que este lugar não tem (rádio antes de 1922…)
     const badge = badgeOf(s, x, o.id, trail);
-    spots.push({ id: o.id, x: px, y: G.y0 + 6, w: pw, h: G.fy - G.y0 - 6, label: o.label, tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: o.tip, w: lk }) : o.tip, go: { panel: go }, badge, quiet: false });
+    spots.push({ id: o.id, x: px, y: py, w: pw, h: ph, label: o.label, tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: o.tip, w: lk }) : o.tip, go: { panel: go }, badge, quiet: false });
   }
   // gestão do lugar quando é seu
   if (x.own) spots.push({ id: 'mgmt', x: G.X(0.42), y: G.y0 + 2, w: G.Wd(0.16), h: 12, label: l('Gestão', 'Management'), tip: l('Equipe, caixa do lugar e programação.', 'Staff, the place\'s cash and programming.'), go: { panel: 'go:own' } });
@@ -186,7 +198,8 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     const i = people.indexOf(p);
     const fx = G.X(sp0.x), fyy = G.fy - liftOf27(room, sp0);
     const role = p.away ? fmtL(l('{r} (fora: {w})', '{r} (away: {w})'), { r: p.role, w: p.away }) : p.role;
-    spots.push({ id: p.you ? 'you' : `who:${i}`, x: fx - 7, y: fyy - 31, w: 14, h: 32, label: l(p.name.split(' ')[0], p.name.split(' ')[0]),
+    const short = /^[a-zà-ú]/.test(p.name) ? p.role : l(p.name.split(' ')[0], p.name.split(' ')[0]); // "a cúpula de…" vira o papel
+    spots.push({ id: p.you ? 'you' : `who:${i}`, x: fx - 7, y: fyy - 31, w: 14, h: 32, label: p.you ? l('Você', 'You') : short,
       tip: p.you ? you.where : fmtL(l('{n} — {r}', '{n} — {r}'), { n: p.name, r: role }), go: p.you ? { panel: 'you' } : { panel: `who:${i}` },
       quick: p.actId ? { kind: 'act', id: p.actId } : undefined, quiet: true,
       badge: p.bico ? { text: l('bico', 'day job'), level: 'info', sym: '♪' } : p.cell ? { text: l('preso', 'jailed'), level: 'info', sym: '⛓' } : undefined });
