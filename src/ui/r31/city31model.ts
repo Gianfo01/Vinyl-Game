@@ -1,6 +1,7 @@
 // R31 · onda 4 (H) — modelo da camada "cidade de cada época" do mapa (PURO: só lê o estado; sem DOM, sem sorteio).
 // Junta o que sim/r31/city31 calcula (lugares reais nos terrenos reservados, lojas da época, festival do mês,
 // outdoors das paradas, neon) com o que a cena do mapa já tem (lotes de cidade comum, lugares do bairro).
+import { RART31 } from '../pixel/pred31';
 import { l, type L } from '../../data/world';
 import { LANDMARKS19 } from '../../data/landmarks19';
 import {
@@ -29,7 +30,7 @@ export interface CityX31 {
 /** O que a cena precisa acrescentar (PURO). `filler` = lotes de cidade comum já calculados pela página. */
 export function cityX31(s: GameState, filler: number[], year = s.year): CityX31 {
   const real = realLots31(s, year);
-  const extra: Extra31[] = real.map((x) => ({ id: x.p.id, lot: x.lot, kind: RDRAW31[x.p.kind], lvl: x.p.kind === 'arena' ? 4 : x.p.kind === 'tv' || x.p.u ? 3 : x.p.kind === 'theatre' ? 3 : 2, sign: true }));
+  const extra: Extra31[] = real.map((x) => ({ id: x.p.id, lot: x.lot, kind: RDRAW31[x.p.kind], art: RART31[x.p.kind], lvl: x.p.kind === 'arena' ? 4 : x.p.kind === 'tv' || x.p.u ? 3 : x.p.kind === 'theatre' ? 3 : 2, sign: true }));
   const places = real.map((x) => realPlace27(s, x));
   const lmOut = new Set(real.map((x) => x.p.lm).filter((x): x is string => !!x && LANDMARKS19.some((m) => m.id === x)));
   const f = year === s.year ? fest31(s) : null;
@@ -37,7 +38,7 @@ export function cityX31(s: GameState, filler: number[], year = s.year): CityX31 
   const amb: { k: string; at: string }[] = [];
   if (f) {
     festName = f.name;
-    if (f.at) { const e = extra.find((x) => x.id === f.at); if (e) { e.kind = 'fest'; e.lvl = 4; amb.push({ k: 'crowd', at: `fl:${e.id}` }); } }
+    if (f.at) { const e = extra.find((x) => x.id === f.at); if (e) { e.kind = 'fest'; e.art = 'fest'; e.lvl = 4; amb.push({ k: 'crowd', at: `fl:${e.id}` }); } }
     else {
       const lot = festLot31(filler);
       if (lot !== undefined) { fill = filler.filter((x) => x !== lot); extra.push({ id: FEST_ID31, lot: LOTS18[lot], kind: 'fest', lvl: 3 }); amb.push({ k: 'crowd', at: `fl:${FEST_ID31}` }); }
