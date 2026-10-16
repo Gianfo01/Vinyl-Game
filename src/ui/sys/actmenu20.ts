@@ -24,6 +24,7 @@ import { ic, setTab } from '../vis';
 import { actionMenu18 } from './personact18';
 import { ACT_CARD_EXTRA20 } from './hq8';
 import './actmenu20.css';
+import { viaScene31 } from '../r31/scene31reg';
 
 // ---------------------------------------------------------------- favoritos (preferência do jogador, por navegador)
 
@@ -71,8 +72,13 @@ export function chooseAction20(s: GameState, id: string, actId: string, anchor?:
   if (r.block) { toast(t(r.block), 'bad'); return; }
   if (anchor?.isConnected) anchor.focus();
   if (r.def.form !== 'confirm') { applyNav20(s, r.def.nav?.(s, { act: actId }), anchor); return; }
+  // R31 · V: renovar e rescindir passam pela cena quando a preferência pede (senão, a prévia de sempre: 2 cliques)
+  const sc31 = SCENE20[r.def.id];
+  if (sc31) { viaScene31(sc31, actId, () => openPreview20(s, r, actId)); return; }
   openPreview20(s, r, actId);
 }
+
+const SCENE20: Record<string, 'renew' | 'rescind'> = { 'contract.renew': 'renew', 'contract.rescind': 'rescind' };
 
 /** Pré-visualização: alvo, custo, tempo, efeito; confirmar revalida e executa; cancelar não muda nada. */
 function openPreview20(s: GameState, r: Row20, actId: string): void {

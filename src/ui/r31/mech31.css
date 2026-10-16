@@ -1,0 +1,41 @@
+/* R31 · onda 2 (V) — cenas de mecânica: palco em pixel art, balões (pontos clicáveis), números e escolhas. */
+.mc31 { display: flex; flex-direction: column; gap: 0.6rem; min-width: min(42rem, 100%); }
+.mc31-stage { position: relative; width: 100%; max-width: 640px; align-self: center; }
+.mc31-stage .mc31-canvas { display: block; width: 100%; max-width: none; }
+.mc31-pt {
+  position: absolute; transform: translate(-50%, -100%); display: inline-flex; align-items: center; gap: 0.2rem;
+  min-width: 2rem; min-height: 2rem; padding: 0.1rem 0.4rem; border-radius: 0.9rem; border: 2px solid var(--line);
+  background: var(--panel); color: var(--ink); font-size: 0.78rem; line-height: 1.1; cursor: pointer; white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+.mc31-pt::after { content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--line); }
+.mc31-pt:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.mc31-pt .mc31-ico { font-size: 1rem; }
+.mc31-pt .mc31-lbl { max-width: 11em; overflow: hidden; text-overflow: ellipsis; }
+.mc31-pt.tone-warm { border-color: var(--good); }
+.mc31-pt.tone-cool { border-color: var(--warn); }
+.mc31-pt.tone-cold { border-color: var(--bad); }
+.mc31-pt.tone-unknown { border-style: dashed; }
+.mc31-pt.side-watch { opacity: 0.85; font-size: 0.7rem; }
+.mc31-hot .mc31-pt { outline: 2px dashed var(--accent); outline-offset: 3px; }
+.mc31-react { animation: mc31pop 0.6s ease-out 1; }
+@keyframes mc31pop { 0% { transform: translate(-50%, -100%) scale(0.6); } 70% { transform: translate(-50%, -100%) scale(1.12); } 100% { transform: translate(-50%, -100%) scale(1); } }
+.reduced-motion .mc31-react { animation: none; }
+@media (prefers-reduced-motion: reduce) { .mc31-react { animation: none; } }
+
+.mc31-who { min-height: 1.4em; font-size: 0.85rem; }
+.mc31-nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.35rem 0.8rem; margin: 0; }
+.mc31-nums > div { border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.5rem; background: var(--panel-2); }
+.mc31-nums dt { font-size: 0.72rem; color: var(--muted); display: flex; gap: 0.3rem; align-items: center; justify-content: space-between; }
+.mc31-nums dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mc31-choices { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start; }
+.mc31-choice { display: flex; flex-direction: column; gap: 0.15rem; max-width: 22rem; }
+.mc31-choice small { color: var(--muted); }
+.mc31-key { display: inline-block; min-width: 1.2em; padding: 0 0.25em; margin-right: 0.3em; border: 1px solid currentColor; border-radius: 3px; font-size: 0.7rem; text-align: center; opacity: 0.8; }
+.mc31-out { padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--line); }
+.mc31-out.good { border-color: var(--good); }
+.mc31-out.warn { border-color: var(--warn); }
+.mc31-out.bad { border-color: var(--bad); }
+.mc31-foot { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 0.4rem; }
+.mc31-tip { font-size: 0.8rem; border-left: 3px solid var(--accent); padding-left: 0.5rem; }
+.mc31-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }

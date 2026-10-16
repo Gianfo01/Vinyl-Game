@@ -27,6 +27,7 @@ import { feedView, socialDiagram } from './views';
 import { ficha13Btn } from '../persona13';
 import { hireBlock as hireBlock17 } from '../agenda17';
 import { rng19 } from '../../../sim/rng19';
+import { viaScene31 } from '../../r31/scene31reg';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { person: '', promise: 'single' as PromiseKind, detective: '', invest: 0 };
@@ -77,7 +78,7 @@ function personCard(s: GameState, p: Person): HTMLElement {
     h('div', { class: 'pp-talk' },
       h('small', { class: 'muted' }, t(l('Conversa', 'Talk')), talkErr ? ` — ${t(talkErr)}` : ''),
       h('div', { class: 'row wrap' },
-        (['praise', 'demand', 'patience', 'fine'] as TalkKind[]).map((k) => h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => doTalk(k) }, t(TALK_NAME[k]))),
+        (['praise', 'demand', 'patience', 'fine'] as TalkKind[]).map((k) => h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => (k === 'demand' || k === 'fine' ? viaScene31('punish', p.id, () => doTalk(k)) : doTalk(k)) }, t(TALK_NAME[k]))), // R31 · V: cobrar/multar em cena
         select(ui.promise, (Object.keys(PROMISE_INFO) as PromiseKind[]).map((k) => ({ value: k, label: t(PROMISE_INFO[k].name) })), (v) => { ui.promise = v; }, { 'aria-label': t(l('Promessa', 'Promise')) }),
         h('button', { class: 'btn small', disabled: !!talkErr, onclick: () => doTalk('promise') }, t(TALK_NAME.promise))),
     ),

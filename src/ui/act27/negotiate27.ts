@@ -26,6 +26,34 @@ import { offerEligible29 } from '../../sim/contracts';
 import { HOW29, applyModel29, isSide29, isSpecial29, termLabel29, termTxt29 } from '../../sim/terms29';
 import { x29Fields } from '../sys/contracts29';
 import './negotiate27.css';
+import { mood31, sceneModel31, type Mood31 } from '../r31/scene31core';
+import { stage31 } from '../r31/scene31stage';
+
+/** R31 · V: a mesa ganha o palco em pixel art — você e o artista (com quem negocia junto); o gesto sai do estado da
+ *  mesa (última resposta, paciência, acordo ou ruptura). Nada é calculado aqui: só lê a negociação. */
+function negoStage31(actId: string, n: Nego27): HTMLElement | null {
+  const s = store.game;
+  if (!s) return null;
+  const m = sceneModel31(s, 'nego', { id: actId });
+  if (!m) return null;
+  const them = m.cast.filter((c) => c.side === 'them');
+  if (!them.length) return null;
+  const last = [...n.log].reverse().find((x) => x.who === 'them' || x.who === 'rival');
+  const N = (pt: string, en: string) => l(pt, en);
+  const g: Mood31 | null = n.status === 'deal' ? mood31('warm', true, '🤝', N('Aperta a sua mão', 'Shakes your hand'))
+    : n.status === 'sniped' ? mood31('cool', true, '🃏', N('Mostra a carta do rival', 'Shows the rival\'s card'))
+    : n.status === 'walked' || n.status === 'lost' ? mood31('cold', true, '🚪', N('Levanta e sai', 'Gets up and leaves'))
+    : n.patience < 30 && n.log.some((x) => x.who === 'you') ? mood31('cool', true, '🥁', N('Batuca a mesa, impaciente', 'Drums on the table, impatient'))
+    : last?.who === 'rival' ? mood31('cool', true, '🃏', N('Olha a oferta rival', 'Eyes the rival offer'))
+    : last?.tone === 'good' ? mood31('warm', true, '😊', N('Sorri', 'Smiles'))
+    : last?.tone === 'bad' ? mood31('cold', true, '😆', N('Ri da proposta', 'Laughs at the offer'))
+    : last?.tone === 'warn' ? mood31('cool', true, '✍️', N('Risca cláusulas', 'Strikes out clauses'))
+    : null;
+  const react: Record<string, Mood31> = {};
+  if (g) react[them[0].id] = g;
+  if (g && them[1] && n.status === 'open') react[them[1].id] = mood31('ok', true, '🤫', N('Cochicha com o parceiro', 'Whispers to their partner'));
+  return stage31(s, m, { react });
+}
 
 /** Termômetro: faixa revelada do mínimo (sombreada) e onde a sua proposta cai. */
 function thermo(lo: number, hi: number, v: number, d0: number, d1: number, label: L): HTMLElement {
@@ -113,7 +141,8 @@ export function openNego27(actId: string, base?: Draft27, quick?: () => void): v
     const end = !open ? h('div', { class: `n27-end ${n.status === 'deal' ? 'good' : 'bad'}` },
       h('b', null, t(n.status === 'deal' ? (o.model === 'management' ? l('Contrato assinado: você é o empresário.', 'Contract signed: you are the manager.') : l('Contrato assinado.', 'Contract signed.')) : n.status === 'sniped' ? l('O rival levou o ato.', 'The rival signed the act.') : l('Sem acordo.', 'No deal.'))),
       h('button', { class: 'btn primary', onclick: () => close() }, t(l('Fechar', 'Close')))) : null;
-    root.replaceChildren(
+    const st31 = negoStage31(actId, n);
+    root.replaceChildren(...(st31 ? [st31] : []),
       h('div', { class: 'n27-cols' },
         h('div', null, h('h4', null, t(l('Sua proposta', 'Your offer'))), isSpecial29(o.model) ? h('p', { class: 'small muted' }, t(HOW29[o.model]!)) : null, fields, proms, thermoBox, theirs, tactics, end),
         h('div', null, h('h4', null, t(l('O que você sabe', 'What you know'))), know, h('h4', null, t(l('Mesa', 'Table'))), logView(n.log))),

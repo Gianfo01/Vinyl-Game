@@ -53,6 +53,11 @@ export function raiseAmount(s: GameState, pid: string): number {
   return money(s, 1500 + (act?.fame ?? 0) * 60);
 }
 
+/** Valor da multa disciplinar (R31 · V: a cena mostra o mesmo número antes do clique). */
+export function fineAmount(s: GameState, pid: string): number {
+  return money(s, 400 + (actOf(s, pid)?.fame ?? 0) * 25);
+}
+
 /** Conversa um a um. Devolve a reação (texto) ou erro. */
 export function talk(s: GameState, pid: string, kind: TalkKind, promise?: PromiseKind): { ok: boolean; text: L } {
   const err = canTalk(s, pid);
@@ -128,7 +133,7 @@ export function talk(s: GameState, pid: string, kind: TalkKind, promise?: Promis
       break;
     }
     case 'fine': {
-      const amount = money(s, 400 + act.fame * 25);
+      const amount = fineAmount(s, pid);
       const recent = st.breakdowns.some((b) => b.personId === pid && s.week - b.week < 13);
       post(s, `fine:${pid}`, amount, 'other_income', `Multa disciplinar ${p.name}`);
       st.wealth[pid] = (st.wealth[pid] ?? 0) - amount;

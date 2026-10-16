@@ -9,7 +9,7 @@ import { FESTIVALS, MEDIA, VENUES } from '../../data/catalog';
 import { BRANCH_LEVELS, ENDINGS, MUTATORS, EQUIPMENT, HQ_LEVELS, LEGACY_DIMS, STAFF_ROLES, TECHS, VENUE_TIERS } from '../../data/rules';
 import { MARKETS, familyOf, l } from '../../data/world';
 import { S, locale, t } from '../../i18n/strings';
-import { availableEquipment, buyEquipment, fireStaff, loanOffer, managementLoad, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from '../../sim/economy';
+import { availableEquipment, buyEquipment, loanOffer, managementLoad, monthlyCosts, openTerritory, takeLoan, territoryCost, upgradeCost, upgradeHq } from '../../sim/economy';
 import { hqCapacityText, legacyTotal, milestones } from '../../sim/legacy';
 import { festivalSlot, gigEstimate, maxVenueTier } from '../../sim/live';
 import { availableChannels } from '../../sim/market';
@@ -48,6 +48,7 @@ import { chartHeaderImg29 } from '../pixel/badge29';
 import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
 import { askConfirm } from '../ask31';
+import { viaScene31 } from '../r31/scene31reg'; // R31 · V: demitir em cena (ou 2 cliques)
 
 // ---------- Paradas ----------
 export function chartsPanel(s: GameState): HTMLElement {
@@ -418,7 +419,7 @@ function staff(s: GameState): HTMLElement {
     s.player.staff.length ? h('table', { class: 'tbl' }, h('tbody', null, s.player.staff.map((st) => {
       const role = STAFF_ROLES.find((r) => r.id === st.role);
       const years = Math.max(0, (s.week - st.hiredWeek) / 52);
-      return h('tr', null, h('td', null, st.name, h('div', { class: 'muted small' }, t(l('{y} ano(s) de casa', '{y} year(s) here'), { y: years.toFixed(1) }))), h('td', { title: t(role?.desc) }, t(role?.name)), h('td', null, crewProfileCell(s, st, { mine: true })), h('td', null, st.skill), h('td', null, $(st.salary)), h('td', null, crewRespecButton(s, st), ' ', h('button', { class: 'btn small ghost', onclick: () => { fireStaff(s, st.id); rerender(); } }, t(S.fire))));
+      return h('tr', null, h('td', null, st.name, h('div', { class: 'muted small' }, t(l('{y} ano(s) de casa', '{y} year(s) here'), { y: years.toFixed(1) }))), h('td', { title: t(role?.desc) }, t(role?.name)), h('td', null, crewProfileCell(s, st, { mine: true })), h('td', null, st.skill), h('td', null, $(st.salary)), h('td', null, crewRespecButton(s, st), ' ', h('button', { class: 'btn small ghost', onclick: () => viaScene31('fire', st.id) }, t(S.fire))));
     }))) : h('p', { class: 'muted' }, t(l('Sem equipe. Contrate em Mercado → Profissionais.', 'No staff. Hire in Market → Professionals.'))),
     h('h4', null, t(l('Funções', 'Roles'))),
     h('ul', { class: 'small' }, STAFF_ROLES.map((r) => h('li', null, h('b', null, t(r.name)), ' — ', t(r.desc)))),

@@ -25,7 +25,7 @@ import { actionRow20 } from '../actions20';
 
 export type QKind31 = 'act' | 'person' | 'project' | 'city';
 export interface QTarget31 { kind: QKind31; id: string }
-export type QVerb31 = 'sign' | 'record' | 'release' | 'tour' | 'buy' | 'open' | 'pin' | 'more';
+export type QVerb31 = 'sign' | 'record' | 'release' | 'tour' | 'buy' | 'open' | 'pin' | 'more' | 'renew' | 'rescind' | 'lineup';
 
 export interface QAction31 {
   id: string;
@@ -43,6 +43,8 @@ export interface QAction31 {
   dest: (s: GameState, t: QTarget31) => Dest;
   /** ação que só lê / navega (abrir, fixar) */
   passive?: boolean;
+  /** R31 · V: a ação abre uma cena (ou o modo de 2 cliques) em vez de navegar */
+  run?: (s: GameState, t: QTarget31) => void;
 }
 export interface QRow31 { def: QAction31; lock: Lock31 | null; cost: number; dest: Dest }
 
@@ -210,6 +212,9 @@ export const VERBS31: { verb: QVerb31; words: string[] }[] = [
   { verb: 'tour', words: ['turne', 'show', 'shows', 'marcar', 'tour', 'gig', 'book'] },
   { verb: 'buy', words: ['comprar', 'compra', 'buy', 'purchase'] },
   { verb: 'pin', words: ['fixar', 'favoritar', 'favorito', 'pin', 'favourite', 'favorite'] },
+  { verb: 'renew', words: ['renovar', 'renovacao', 'renew', 'renewal'] },
+  { verb: 'rescind', words: ['rescindir', 'rescisao', 'dispensar', 'terminate', 'drop'] },
+  { verb: 'lineup', words: ['formacao', 'integrante', 'lineup', 'member'] },
 ];
 const FILLER = new Set(['com', 'de', 'do', 'da', 'o', 'a', 'os', 'as', 'em', 'no', 'na', 'para', 'with', 'the', 'in', 'at', 'for', 'of', 'to', 'um', 'uma', 'casa', 'venue', 'disco', 'record']);
 
