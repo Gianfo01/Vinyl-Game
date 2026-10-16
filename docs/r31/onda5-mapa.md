@@ -143,6 +143,23 @@ Atributos que guiam essas mecânicas: **custo**, **privacidade** e **alcance**.
 - Com várias carreiras, o botão Sede vira a casa da carreira atual (o chaveiro troca).
 - É diferente do bolso: os botões de viagem são fixos; o bolso é de objetos que o jogador escolhe.
 
+## Artistas do selo e agenda (mecânicas iguais, lugar novo)
+
+As mecânicas de hoje continuam (agenda de bolinhas `agenda17`: 5 pessoais + 2 de expediente, envolvimento por
+carreira, delegação, sobrecarga; ações por artista; contratação). Muda só onde ficam:
+
+| Hoje | Na onda 5 |
+|---|---|
+| Lista do elenco (`artists`, 6 abas: elenco, saúde, relações, segredos, equipe, cartas) | **Mural de cortiça** na sala do A&R: uma polaroid por artista, com selos pequenos de estado (gravando, em turnê, descansando, contrato vencendo, saúde ruim). Clicar = ficha (igual) + "Ações ▾" |
+| Compromissos `plan` e planejamento do elenco | **Quadro de planejamento na parede** (estilo gravadora de verdade): linhas = artistas, colunas = próximos 12 meses, cartões = gravação, lançamento, turnê, férias, divulgação. Clicar num espaço abre o menu de ações; dá para arrastar o cartão para outro mês; conflito aparece em vermelho |
+| Agenda do dono (bolinhas) | **Agenda de couro na sua mesa**: as bolinhas viram horários do mês (manhã e tarde); carreira delegada aparece como "diretor cuida"; sobrecarga = páginas riscadas e o personagem cansado na cena |
+| Delegação e chefe de gabinete | O chefe de gabinete é uma pessoa na sua sala; clicar = relatórios de delegação |
+| Contratação (candidatos, freelancers, músicos de estúdio) | **Anúncio no jornal** abre a vaga; candidatos esperam na recepção para entrevista; freelancers e músicos de estúdio no telefone (fichário) |
+| Saúde, relações e cartas do elenco | Lounge (quem está lá conversa), e na ficha de cada artista |
+
+O que se vê na cena segue a agenda: quem está gravando aparece no estúdio, quem está em turnê não está na sede, quem
+descansa está no lounge.
+
 ## Cidade — prédios (o menu "Cidade" de hoje já tem quase todos como lugares)
 
 | Prédio | Abre |
