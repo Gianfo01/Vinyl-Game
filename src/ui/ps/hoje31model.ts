@@ -67,6 +67,7 @@ export function hoje31(s: GameState): Hoje31 {
   try { for (const r of proj(s)) ongoing.push({ id: `p:${r.id}`, title: r.title, meta: r.meta, aside: r.aside, tone: r.tone === 'bad' ? 'bad' : undefined, go: r.hub ? { hub: r.hub } : goOf(r.go) }); } catch { /* sem projetos */ }
   for (const x of (s as unknown as { sessions?: { id: string; actId: string; days: number; dayDone: number }[] }).sessions ?? []) {
     const left = Math.max(0, x.days - x.dayDone);
+    if (left <= 0) continue; // sessão já gravada: sai do "em andamento"
     ongoing.push({ id: `ses:${x.id}`, title: fmtL(l('Estúdio: {a}', 'Studio: {a}'), { a: s.acts[x.actId]?.name ?? '—' }),
       meta: fmtL(left === 1 ? l('falta 1 dia de gravação', '1 recording day left') : l('faltam {n} dias de gravação', '{n} recording days left'), { n: left }), go: { area: 'studio' } });
   }

@@ -34,11 +34,12 @@ const info = await p.evaluate(async () => {
   return { year: g.year, month: g.month };
 });
 console.log('jogo', JSON.stringify(info));
-const shot = async (name) => { await p.waitForTimeout(1000); document; await p.evaluate(() => document.querySelectorAll('.overlay, .scene-overlay, aside.tutorial, .tip18').forEach((e) => e.remove())); await p.screenshot({ path: `${out}/${name}.png` }); console.log('captura', name); };
+const shot = async (name) => { await p.waitForTimeout(1000); await p.evaluate(() => document.querySelectorAll('.overlay, .scene-overlay, aside.tutorial, .tip18').forEach((e) => e.remove())); await p.screenshot({ path: `${out}/${name}.png` }); console.log('captura', name); };
 const clickEntry = async (id) => { await p.evaluate(() => document.querySelectorAll('.overlay, .scene-overlay').forEach((e) => e.remove())); await p.locator(`[data-entry31="${id}"] > .nav-head`).first().click(); await p.waitForTimeout(900); };
 
 // 1. Hoje
 await clickEntry('hoje');
+await p.evaluate(() => document.querySelector('.h31')?.scrollIntoView({ block: 'start' }));
 await shot('onda1-A-hoje');
 // 2. Sede (cena + faixa Lugares)
 await clickEntry('sede');
@@ -62,6 +63,14 @@ for (const a of ['desk', 'inbox', 'finance', 'tour12', 'identity', 'directory'])
   await p.evaluate((a) => { location.hash = `#/${a}`; }, a);
   await p.waitForTimeout(700);
   console.log('rota', a, '→', await p.evaluate(async () => (await import('/src/ui/store.ts')).store.area));
+}
+// celular (só conferência, fora de docs/): barra de baixo com as 6 entradas
+if (process.env.MOBILE_OUT) {
+  await p.setViewportSize({ width: 390, height: 844 });
+  await p.evaluate(async () => { const st = await import('/src/ui/store.ts'); const c = await import('/src/ui/common.ts'); st.store.area = 'cockpit'; c.rerender(); });
+  await p.waitForTimeout(1200);
+  await p.screenshot({ path: process.env.MOBILE_OUT });
+  console.log('celular', await p.evaluate(() => ({ overflow: document.documentElement.scrollWidth > innerWidth, navBtns: [...document.querySelectorAll('.nav31 .nav-head')].filter((b) => b.offsetParent).length })));
 }
 console.log('erros', errs.length);
 await b.close();

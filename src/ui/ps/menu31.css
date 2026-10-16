@@ -59,7 +59,7 @@ button.h31-go:hover b { text-decoration: underline; }
 .h31-suggest { margin-top: var(--sp-2, 0.5rem); padding-top: var(--sp-2, 0.5rem); border-top: 1px dashed var(--line); }
 .h31-tl-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .h31-filters { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-.h31-filters [aria-pressed=true] { background: var(--accent); color: var(--panel); }
+.h31-filters .btn[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
 .h31-weeks { list-style: none; margin: 0; padding: 0 0 0.3rem; display: flex; gap: var(--sp-2, 0.5rem); overflow-x: auto; }
 .h31-week { flex: 0 0 13rem; border: 1px solid var(--line); border-radius: var(--radius, 4px); padding: 0.4rem; background: var(--panel-2); }
 .h31-week ul { list-style: none; margin: 0.25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; font-size: var(--fs-sm, 0.85rem); }
@@ -80,3 +80,8 @@ button.h31-go:hover b { text-decoration: underline; }
 .tools31-list { position: absolute; z-index: 30; right: 0; top: 110%; display: flex; gap: 0.25rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius, 4px); padding: 0.3rem; }
 main .tabs[role=tablist] .more31 > summary.tab27-more { border: 1px dashed var(--line); color: var(--muted); padding: 0.3rem 0.6rem; border-radius: var(--radius, 4px); display: inline-flex; align-items: center; gap: 0.3rem; }
 main .tabs[role=tablist] .more31[open] > summary.tab27-more { border-color: var(--accent); color: var(--ink); }
+/* a linha do tempo rola dentro do cartão e não alarga a página */
+.h31, .h31-cols, .h31-col { min-width: 0; }
+.h31-tl { min-width: 0; contain: inline-size; }
+.lists31-tabs { font-weight: 600; }
+.h31-changed .h31-go b { font-weight: 500; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

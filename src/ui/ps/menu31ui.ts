@@ -105,7 +105,7 @@ export function placesStrip31(c: Places31Ctx): HTMLElement | null {
       return h('li', { class: `place31 ${n ? 'has-pend' : ''} ${p.career ? 'is-career' : ''}`, 'data-place31': p.id },
         h('button', { type: 'button', class: 'place31-main', onclick: () => c.go(main, p.tab) },
           h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(p.icon, 2)),
-          h('span', { class: 'place31-name' }, p.career ? '★ ' : '', t(p.label)),
+          h('span', { class: 'place31-name' }, p.career && p.entry !== 'sede' ? '★ ' : '', t(p.label)), // ★ = casa de carreira secundária
           n ? h('span', { class: 'badge', title: n === 1 ? t(l('1 coisa espera você aqui', '1 thing waits for you here')) : fmt(l('{n} coisas esperam você aqui', '{n} things wait for you here'), { n }) }, n) : null),
         h('span', { class: 'place31-links' },
           h('button', { type: 'button', class: 'link', onclick: () => c.go(main, p.tab) }, t(l('ver detalhes', 'see details'))),
@@ -156,7 +156,7 @@ function listsBar31(c: Sub31Ctx, cur: ListTab31): HTMLElement {
     h('span', { class: 'ic', 'aria-hidden': 'true' }, ic(x.icon)), h('span', { class: 'lbl' }, t(x.label)));
   const pages = (cur.id === 'other' ? c.extra : cur.areas).filter(c.has);
   return h('div', { class: 'lists31' },
-    h('div', { class: 'tabs25 pages27 lists31-tabs', role: 'tablist', 'aria-label': t(l('Listas', 'Lists')) },
+    h('div', { class: 'tabs25 views27 lists31-tabs', role: 'tablist', 'aria-label': t(l('Listas', 'Lists')) },
       visible.map(tabBtn),
       more.length ? moreMenu31(more.map((x) => ({ label: t(x.label), run: () => { const a = listHome31(x, c.has, c.extra); if (a) c.go(a); } }))) : null),
     pages.length > 1 ? h('div', { class: 'tabs25 views27 sub31', role: 'tablist', 'aria-label': t(cur.label) }, pages.map((a) => chip(c, a))) : null);
