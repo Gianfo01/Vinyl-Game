@@ -25,6 +25,7 @@ import { activeThoughts, thoughtText } from '../sim/sys/people/thoughts';
 import type { Act, GameState, Person } from '../sim/types';
 import { money } from '../sim/util';
 import { $, N, actLink, cityName, cover, actGenre23, kv, labelLink, logo, modal, monthName, pill, rerender, statusName, toast } from './common';
+import { relation31 } from './sys/persona13';
 import { bar, h, rangeBar, select } from './dom';
 import { openOffer, openRelease } from './ficha';
 import { rightsSheet } from './rightsView';
@@ -189,7 +190,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     { id: 'profile', label: l('Perfil', 'Profile'), icon: 'bulb', render: () => profileTab(s, p, vis) },
     { id: 'inst', label: l('Instrumentos', 'Instruments'), icon: 'guitar', render: () => (mine || deg >= 1 ? instrumentsTab(s, p, mine || !!p.isPlayer, redraw) : h('p', { class: 'muted' }, t(HINT15))) },
     mine ? { id: 'mood', label: l('Humor e saúde', 'Mood and health'), icon: 'heart', render: () => moodTab(s, p) } : null,
-    vis.private || mine || canSee(s, p.id, 'rels') ? { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p) } : null,
+    p.isPlayer ? null : { id: 'rel', label: l('Relações', 'Relationships'), icon: 'handshake', render: () => relTab(s, p, mine || vis.private || canSee(s, p.id, 'rels')) }, // r31 F: a relação com você sempre; a dos outros pela regra
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
     mine && !p.isPlayer ? { id: 'train', label: l('Treino', 'Training'), icon: 'sparkle', render: () => trainTab(s, p, redraw) } : null,
     ...PERSON_TABS.map((f) => f(s, p, closeAll)),
@@ -280,7 +281,9 @@ function moodTab(s: GameState, p: Person): HTMLElement {
   );
 }
 
-function relTab(s: GameState, p: Person): HTMLElement {
+function relTab(s: GameState, p: Person, others = true): HTMLElement {
+  const mineRel = relation31(s, `p:${p.id}`, () => rerender());
+  if (!others) return h('div', null, mineRel, h('p', { class: 'muted small' }, t(l('As relações desta pessoa com outras aparecem com convivência, olheiros ou quando são públicas.', 'This person\'s relationships with others show with closeness, scouts or when they are public.'))));
   // r31 F #19: o número da afinidade só com convivência ou olheiro a fundo; pela imprensa, só rótulos das relações fortes
   const exact = see(s, p.id, 'rels') === 'exact' && (knownLevel(s, p.id).mine || knownLevel(s, p.id).priv >= 3);
   const rels = Object.entries(p.rel ?? {}).filter(([id, v]) => s.persons[id] && (exact || Math.abs(v) >= 40)).sort((a, b) => b[1] - a[1]);
@@ -290,13 +293,13 @@ function relTab(s: GameState, p: Person): HTMLElement {
   const rom = (P(s).romances ?? []).filter((r) => r.status === 'together' && (r.a === p.id || r.b === p.id));
   // r25: parentes (grafo kin15 + kin25) também aparecem em Relações
   const kin = seen(s, p.id, 'family') ? kinOf15(s, p.id) : [];
-  return h('div', { class: 'grid2' },
+  return h('div', null, mineRel, h('div', { class: 'grid2' },
     kin.length ? h('div', null, h('h4', null, t(l('Família', 'Family'))), h('ul', { class: 'attr-list' }, kin.slice(0, 12).map((k) => h('li', null,
       h('button', { class: 'link', ...ent27('person', `p:${k.id}`), onclick: () => openPersonPage(k.id) }, k.p.name), ` · ${t(kinLabel15(k))}${k.p.alive ? '' : ` · † ${k.p.died ?? '?'}`}`)))) : null,
     h('div', null, h('h4', null, t(l('Afinidades', 'Friends'))), rels.filter(([, v]) => v > 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v > 0).slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—')),
     h('div', null, h('h4', null, t(l('Atritos', 'Frictions'))), rels.filter(([, v]) => v < 0).length ? h('ul', { class: 'attr-list' }, rels.filter(([, v]) => v < 0).reverse().slice(0, 6).map(row)) : h('p', { class: 'muted small' }, '—'),
       rom.length ? h('p', null, ic('heart'), ' ', t(l('Namorando: ', 'Dating: ')), rom.map((r) => s.persons[r.a === p.id ? r.b : r.a]?.name).join(', ')) : null),
-  );
+  ));
 }
 
 function careerTab(s: GameState, p: Person): HTMLElement {
