@@ -381,4 +381,5 @@ import './mercado31'; // R31 onda 3 (D/Y): mercado e paradas por país — fama 
 import './value31run'; // R31 onda 3 (E · Bolsa): editor do modelo único de valor (sim/r31/value31.ts); sem ganchos
 import '../r31/index'; // R31 onda 0 (W0-CON/W0-ROLE): contratos compartilhados — pendência, destino, papéis, objeto, transação atribuída, interruptores
 import './social31sys'; // R31 onda 3 (F): grafo social de todos com todos — como se conheceram, mês social (sim/social31.ts)
+import './socio31'; // R31 onda 3 (SOC): sócios e compras — festivais, casas, rádios e estúdios existentes; criar em conjunto; voto e dividendos
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último

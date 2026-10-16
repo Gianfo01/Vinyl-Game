@@ -73,12 +73,15 @@ export interface Era31 { crash: number; why?: L }
 const ERA: { f?: (s: GameState) => Era31 } = {};
 /** A bolsa (bolsa10) informa a crise do ano sem que este módulo importe sistema com ganchos. */
 export function registerValueEra31(f: (s: GameState) => Era31): void { ERA.f = f; }
+const STAKES: { f?: (s: GameState) => number } = {};
+/** SOC (socio31): valor das participações do selo em festivais, casas, rádios e estúdios (sem importar o sistema). */
+export function registerStakes31(f: (s: GameState) => number): void { STAKES.f = f; }
 
 // ---------------------------------------------------------------- tipos públicos
 
 export type Basis31 = 'fact' | 'calc' | 'hyp';
 export type PartKey31 = 'cash' | 'assets' | 'relics' | 'advances' | 'debt' | 'suits' | 'masters' | 'pub' | 'image' | 'otherops'
-  | 'roster' | 'results' | 'margin' | 'people' | 'events' | 'era' | 'floor';
+  | 'roster' | 'results' | 'margin' | 'people' | 'events' | 'era' | 'floor' | 'stakes';
 export interface Part31 { k: PartKey31; v: number; basis: Basis31; name: L; why: L }
 export interface Value31 { id: string; total: number; parts: Part31[]; /** o que rende, antes dos ajustes */ earn: number; /** patrimônio líquido */ net: number }
 
@@ -89,7 +92,7 @@ export const PART31: Record<PartKey31, L> = {
   pub: l('Editora', 'Publishing'), image: l('Imagem e marca', 'Image and brand'), otherops: l('Outras operações', 'Other operations'),
   roster: l('Elenco sob contrato', 'Roster under contract'), results: l('Resultado musical', 'Musical results'), margin: l('Margem (12 meses)', 'Margin (12 months)'),
   people: l('Gente e reputação', 'People and reputation'), events: l('Acontecimentos', 'Events'), era: l('Época e mercado', 'Era and market'),
-  floor: l('Piso de liquidação', 'Liquidation floor'),
+  floor: l('Piso de liquidação', 'Liquidation floor'), stakes: l('Participações em negócios', 'Business stakes'),
 };
 
 const mL = (c: number): L => l(formatMoney(Math.round(c), 'pt-BR'), formatMoney(Math.round(c), 'en-US'));
@@ -342,7 +345,9 @@ export function companyValue31(s: GameState, id: string): Value31 {
     const book = (s.assets ?? []).filter((a) => a.kind !== 'catalog' && a.kind !== 'company').reduce((t, a) => t + Math.max(0, a.bookValue), 0);
     add('assets', book, 'fact', l('Sede, salas, fábrica, equipamentos e participações pelo valor contábil (catálogo e empresas entram pelo que rendem).', 'HQ, rooms, plant, equipment and stakes at book value (catalogue and companies count by what they earn).'));
     const rl = relicsOf(s).filter((r) => r.st === 'player');
-    add('relics', rl.reduce((t, r) => t + money(s, r.v) * 0.85, 0), 'calc', fmtL(l('{n} peças pelo valor de venda.', '{n} pieces at sale value.'), { n: rl.length }));
+    add('relics', rl.reduce((t, r) => t + money(s, r.v) * 0.85, 0), 'calc', fmtL(l('{n} peças pelo valor de venda.', '{n} pieces at sale value.'), { n: rl.length }));    // SOC: participações em festivais, casas, rádios e estúdios pelo mesmo modelo de valor (só quando há alguma)
+    const stk = STAKES.f?.(s) ?? 0;
+    if (stk) add('stakes', stk, 'calc', l('Sua parte em festivais, casas, rádios e estúdios, pelo valor de cada negócio.', 'Your share of festivals, venues, radio stations and studios, at each business\'s value.'));
   }
   let rec = 0;
   for (const c of lot.contracts.values()) rec += Math.max(0, c.recoupBalance ?? 0);
@@ -484,7 +489,7 @@ export function companyValue31(s: GameState, id: string): Value31 {
   let sum = P.reduce((t, p) => t + p.v, 0);
   const floor = money(s, 20000);
   if (sum < floor) { add('floor', floor - sum, 'hyp', l('Abaixo disto ninguém vende: marca, contatos e o que sobra numa liquidação.', 'Nobody sells below this: brand, contacts and what is left in a liquidation.')); sum = floor; }
-  const net = P.filter((p) => ['cash', 'assets', 'relics', 'advances', 'debt', 'suits'].includes(p.k)).reduce((t, p) => t + p.v, 0);
+  const net = P.filter((p) => ['cash', 'assets', 'relics', 'advances', 'debt', 'suits', 'stakes'].includes(p.k)).reduce((t, p) => t + p.v, 0);
   return { id, total: sum, parts: P, earn: Math.round(earn0), net };
 }
 
@@ -493,10 +498,11 @@ export function companyValue31(s: GameState, id: string): Value31 {
 /** Preço de uma fatia `share` da empresa pelo mesmo valor (prêmio de controle acima de 25% e de 50%; hostil +25%). */
 export function dealValue31(s: GameState, id: string, share: number, mode: 'friendly' | 'hostile' = 'friendly', held = 0): number {
   const v = companyValue31(s, id).total;
-  const after = held + share;
-  const prem = after > 0.5 ? 1.3 : after >= 0.25 ? 1.1 : 1;
-  return Math.round(v * share * prem * (mode === 'hostile' ? 1.25 : 1));
+  return Math.round(v * share * dealPremium31(held + share) * (mode === 'hostile' ? 1.25 : 1));
 }
+/** Prêmio de controle pela fatia que fica com o comprador depois do negócio (0–1): +10% a partir de 25%, +30% acima de
+ *  50%. O mesmo para empresas listadas e para festivais/casas/rádios/estúdios (socio31). */
+export const dealPremium31 = (after: number): number => (after > 0.5 ? 1.3 : after >= 0.25 ? 1.1 : 1);
 
 // ---------------------------------------------------------------- preço: segue o valor, humor próprio, motivo
 

@@ -78,7 +78,11 @@ export function sceneFam(s: GameState, city: string, fam: string): number {
 export function venuePrice(s: GameState, d: VDef): number { return money(s, d.price * (0.8 + Math.min(30, sceneFam(s, d.city, d.fam)) / 60)); }
 export const marketVenues = (s: GameState): VDef[] => VENUES17.filter((d) => venueOpen(s, d));
 
+/** SOC (socio31): casa em que você já é sócio não se compra de novo por aqui (gancho, sem importar o sistema). */
+export const venueBlock17: { f?: (s: GameState, id: string) => L | null } = {};
 export function buyVenue17(s: GameState, id: string): L | null {
+  const blk = venueBlock17.f?.(s, id);
+  if (blk) return blk;
   const d = vdef(id);
   if (!d || !venueOpen(s, d)) return l('Casa indisponível.', 'Venue unavailable.');
   if (d.buyable === false) return fmtL(l('Não está à venda: {w}.', 'Not for sale: {w}.'), { w: d.note ?? '' });
