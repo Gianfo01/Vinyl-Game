@@ -113,7 +113,9 @@ beforeAll(() => {
   // (Stillwater, Electric Mayhem…) estreiam nesses 8 meses e mudam a trajetória; com `fic31` desligado voltam 257209 / 4026815485 / 68287867 / 205718420.
   expect(s.player.cash).toBe(1132370);
   expect(hashString(JSON.stringify(s.acts))).toBe(4020965551);
-  expect(hashString(rngSnapshot19(s))).toBe(3274579681);
+  // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/DECISOES.md e docs/r31/vit.md): o conteúdo do mês dos lugares
+  // é sorteado no motor no fluxo rng19 próprio 'vit31' (só rng muda: caixa, turnês e acts iguais). Com `vit31` desligado volta 3274579681.
+  expect(hashString(rngSnapshot19(s))).toBe(339331050);
   // R31 onda 4 (I · gente nos lugares, de propósito — docs/r31/DECISOES.md e docs/r31/is.md): donos e equipe dos lugares da
   // cidade são pessoas da base; sem ninguém adequado nasce gente nova (29 pessoas nesta semente em 8 meses), e os sistemas
   // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
