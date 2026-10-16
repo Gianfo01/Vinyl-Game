@@ -83,7 +83,12 @@ const hasWord31 = (s: string, w: string): boolean => {
   return !wc(s[i - 1]) && !wc(s[i + w.length]);
 };
 
-export interface RealPairs31 { names: DispPair31[]; titles: DispPair31[] }
+/** R31 (NOMES): entidade conhecida que troca mesmo coincidindo com uma palavra da interface (gravadoras reais e atos do
+ *  catálogo à mão: a gravadora "Elenco", o sambista "Cartola"); como rótulo da interface, a marca UI31 do t() protege. */
+let KEEP31: Set<string> | null = null;
+export const keep31 = (): ReadonlySet<string> => (KEEP31 ??= new Set([...Object.values(REAL_LABELS), ...Object.values(REAL_ACTS).map((a) => a.name)]));
+
+export interface RealPairs31 { names: DispPair31[]; titles: DispPair31[]; keep: ReadonlySet<string> }
 let STATIC_OFF: RealPairs31 | null = null;
 
 /** Todas as trocas real → homenagem que valem com o interruptor desligado (sem os atos da partida). */
@@ -133,7 +138,7 @@ export function realPairsOff31(): RealPairs31 {
   }
   // 5) cultura pop, memes, bolhas e fracassos (src/data/pop31.ts): homenagem escrita junto da referência
   for (const p of POP31) for (const [real, sub] of p.refs) add(real, sub);
-  return (STATIC_OFF = { names, titles });
+  return (STATIC_OFF = { names, titles, keep: keep31() });
 }
 
 /** Todos os nomes reais conhecidos pelo interruptor (teste de varredura). */
@@ -160,11 +165,11 @@ export function syncRealShow31(s: GameState): void {
         if (real && real !== a.name && inText31(a.name)) names.push([a.name, real]);
       }
     }
-    setDisplay31(names, Object.values(s.acts).flatMap((a) => { const real = a.catalogNo && !s.config.realNames ? (realDataOf(a)?.n ?? REAL_ACTS[a.catalogNo]?.name) : undefined; return real && real !== a.name && !inText31(a.name) ? [[a.name, real] as DispPair31] : []; }));
+    setDisplay31(names, Object.values(s.acts).flatMap((a) => { const real = a.catalogNo && !s.config.realNames ? (realDataOf(a)?.n ?? REAL_ACTS[a.catalogNo]?.name) : undefined; return real && real !== a.name && !inText31(a.name) ? [[a.name, real] as DispPair31] : []; }), keep31());
     return;
   }
   const st = realPairsOff31();
-  if (!s.config.realNames) { setDisplay31(st.names, st.titles); return; }
+  if (!s.config.realNames) { setDisplay31(st.names, st.titles, keep31()); return; }
   // mundo nascido com nomes reais: títulos e integrantes vindos de qualquer base (canções por artista, auditorias…)
   const names = [...st.names], titles = [...st.titles];
   const known = new Set([...names, ...titles].map(([a]) => a));
@@ -182,5 +187,5 @@ export function syncRealShow31(s: GameState): void {
     known.add(r.title);
     titles.push([r.title, homage31(r.title)]);
   }
-  setDisplay31(names, titles);
+  setDisplay31(names, titles, keep31());
 }
