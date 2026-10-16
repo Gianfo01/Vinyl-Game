@@ -218,11 +218,16 @@ export function openAuction19(s: GameState, from: string, name: string, rels: Re
   if (st.auc.length > 16) st.auc.length = 16;
   return a;
 }
+/** R31 (T2 · proposta fechada): com o interruptor 't31.sealed' ligado, o seu lance vira envelope secreto (`bid`) e entra
+ *  na mesa só na abertura (`close`, antes do martelo de sempre), sem que os rivais o vejam; `after` registra a abertura. */
+export const SEAL19: { bid?: (s: GameState, a: Auc19, amt: number) => L | null | undefined; close?: (s: GameState, a: Auc19) => void; after?: (s: GameState, a: Auc19) => void } = {};
 export const topBid19 = (a: Auc19): number => Math.max(a.ask, ...a.bids.map((b) => b.amt));
 export function bidAuc19(s: GameState, id: string, amt: number): L | null {
   const a = m19(s).auc.find((x) => x.id === id && x.st === 'open');
   if (!a) return l('Leilão encerrado.', 'Auction closed.');
   if (!isLabel(s)) return l('Só gravadoras arrematam masters.', 'Only labels buy masters.');
+  const sealed = SEAL19.bid?.(s, a, amt);
+  if (sealed !== undefined) return sealed;
   if (amt <= topBid19(a)) return l('O lance precisa superar o atual.', 'The bid must beat the current one.');
   if (freeCash20(s) < amt) return cashWhy20(s, amt, l('Caixa insuficiente.', 'Not enough cash.'));
   a.bids.push({ who: 'player', name: s.config.companyName, amt, w: s.week });
@@ -244,7 +249,7 @@ function auctionMonth(s: GameState, r: Rng): void {
       const top = topBid19(a), cap = fair * app * r.float(0.85, 1.15);
       if (cap > top * 1.03) { const f = FUNDS19[r.int(0, FUNDS19.length - 1)]; a.bids.push({ who: `fund:${f}`, name: f, amt: Math.round(Math.min(cap, top * r.float(1.04, 1.1))), w: s.week }); }
     }
-    if (s.week >= a.ends) closeAuction(s, a);
+    if (s.week >= a.ends) { SEAL19.close?.(s, a); closeAuction(s, a); SEAL19.after?.(s, a); }
   }
 }
 function closeAuction(s: GameState, a: Auc19): void {

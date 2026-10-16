@@ -373,6 +373,9 @@ import './fac31'; // R31 (U): facções por país — presença e expansão anua
 import './broker31'; // R31 (U): intermediário das facções de fora
 import './auction31'; // R31 (T): casa de leilões
 import './travel31'; // R31 (T): aeroporto, transporte, cruzeiros e holograma
+import './sealed31'; // R31 (T2): proposta fechada de catálogos e masters (envelope)
+import './customs31'; // R31 (T2): alfândega real (declarar, imposto, liberar, apreensão)
+import './bauc31'; // R31 (T2): leilão silencioso do mercado negro
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também os artistas do mundo (NPC decide; feed, ficha, card, selo)
