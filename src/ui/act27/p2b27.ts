@@ -1,7 +1,7 @@
 // r27 (P2B) — estado das mecânicas da fase 2, sem mexer nas telas dos outros (r27 FLOW2: a entrada é o Avançar):
 //   • Cockpit (HOME_EXTRA19): blocos "Crises", "Reunião de diretoria" (começo do mês) e "Na estrada", com o
 //     marcador 🎮 — a sala de crise, a reunião e o diário de estrada chegam como cartão no Avançar.
-//   • Rumo do selo › Políticas (POLICY19): reunião de diretoria (marcador, desligar) e crises.
+//   • Tela de delegação (DELEG_EXTRA31; antes Rumo do selo › Políticas): reunião de diretoria (marcador, desligar) e crises.
 //   • Depois de avançar (AFTER_ADVANCE): aviso de crise nova e de evento de estrada a decidir.
 // No modo "sempre rápido" os blocos do Cockpit somem e o jogo segue como antes.
 
@@ -14,7 +14,7 @@ import { toast } from '../common';
 import { h } from '../dom';
 import { AFTER_ADVANCE } from '../registry';
 import { HOME_EXTRA19 } from '../sys/home18';
-import { POLICY19 } from '../sys/long18';
+import { DELEG_EXTRA31 } from '../sys/deleg31';
 import { card27 } from '../ps/ui27';
 import { boardPending27, boardSection27 } from './board27';
 import { crisesSection27 } from './crisis27';
@@ -47,7 +47,7 @@ HOME_EXTRA19.push((s) => {
   return out;
 });
 
-POLICY19.push((s) => {
+DELEG_EXTRA31.push((s) => {
   const b = boardSection27(s);
   const c = actMode27() === 'quick' ? null : crisesSection27(s);
   return b || c ? h('div', { class: 'p2b-pol' }, b, c) : null;

@@ -163,7 +163,7 @@ describe('r19 0.5 — streaming sem dupla contagem', () => {
 const INBOX_RARE19: Record<string, string> = {
   songmkt27_gift: 'songmkt27: presente de canção só com laço de amizade/parceria com outro ato (7%/mês)',
   rv27_copy: 'rivals27: selo imitador copia um top 10 seu — bots curtos quase nunca emplacam top 10',
-  dlg19: 'budget19: exceção da equipe delegada por carreira — só com delegação de empresário/festival/estúdio ligada (desligada por padrão)',
+  deleg31: 'delegação única (r31 Q; antes dlg19 e policy18): exceções e pedidos só com alguma responsabilidade delegada com diretriz que trava (desligada por padrão)',
   m19_call: 'money19: banco chama a dívida só com empréstimo e covenant quebrado (3 trimestres no prejuízo ou dívida > receita de 12 meses)',
   m19_auc: 'money19: leilão só quando um selo NPC quebra (raro em bots curtos)',
   af19_suit: 'espólio processa pelos masters: exige morte de artista do seu elenco com masters retidos (raro em bots curtos)',
@@ -241,7 +241,6 @@ const INBOX_RARE19: Record<string, string> = {
   soc18_home: 'sociedade: volta do exílio depende de exílio anterior',
   soc18_boycott: 'sociedade: boicote só após declaração polêmica',
   soc18_rent: 'sociedade: aluguel/despejo de espaço cultural (raro)',
-  policy18: 'política: lei nova que afeta o selo (marco histórico)',
   a18_info: 'artista: informação de bastidor do agente (contrato em negociação)',
   a18_ar: 'artista: A&R do selo NPC pede mudança (artista contratado)',
   a18_deliver: 'artista: cobrança de entrega de disco (contrato com selo NPC)',

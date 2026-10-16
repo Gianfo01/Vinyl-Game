@@ -12,19 +12,20 @@ import type { Act, GameState, StaffMember } from '../types';
 import { fmtL, money, nextId, notify, playerActs, post, remember } from '../util';
 import { genStaff } from '../worldgen';
 import { per13, staffAdj13 } from './persona13';
-import { c12, clientsOf, defaultStop, hasAgency, localDraw, npcOffer, rel, suggestTier, tierCap, tiersOpen, validate, type Show } from './tour12';
+import { c12, cancelShow, clientsOf, defaultStop, hasAgency, localDraw, npcOffer, rel, suggestTier, tierCap, tiersOpen, validate, type Show } from './tour12';
 import { ask12, offer12, stagesOf, f12, wantTime } from './fest12';
 import { addHype } from './hype12';
 import { liveOf } from './live/state';
 import { notoTier } from './notoriety14';
+import { UNDO31, addSpent31, autoLog31, logAuto31, modeOf31, spendGate31, type Log31, type Resp31 } from '../deleg31';
 
 export type OrderKind = 'tour' | 'fees' | 'festival' | 'promo' | 'radio' | 'labelnight';
 export interface Order16 { id: string; staffId: string; kind: OrderKind; actId?: string; market: MarketId | ''; tier: number; floor: number; budget: number; per: number; on: boolean; since: number }
-export interface Log16 { w: number; staffId: string; orderId?: string; actId?: string; kind: OrderKind | 'sys'; t: L; tone: 'good' | 'bad' | 'info' }
 export interface Pend16 { staffId: string; lb: string; raise: number; until: number }
-export interface D16 { orders: Order16[]; log: Log16[]; tracked: { show: string; order: string; staff: string }[]; pend: Pend16[]; seen: Record<string, number>; lost: number }
+/** r31 (Q): a prestação de contas (`log`) saiu daqui — vai para o registro único de automação (sim/deleg31.ts). */
+export interface D16 { orders: Order16[]; tracked: { show: string; order: string; staff: string }[]; pend: Pend16[]; seen: Record<string, number>; lost: number }
 declare module '../ext4' { interface Ext4 { deleg16: D16 } }
-const fresh = (): D16 => ({ orders: [], log: [], tracked: [], pend: [], seen: {}, lost: 0 });
+const fresh = (): D16 => ({ orders: [], tracked: [], pend: [], seen: {}, lost: 0 });
 registerExt4('deleg16', fresh);
 export const d16 = (s: GameState): D16 => {
   const x = s.x4 as unknown as { deleg16?: D16 };
@@ -63,11 +64,16 @@ export function handlersOf(s: GameState, actId: string): { st: StaffMember; kind
   return [...m.entries()].map(([id, kinds]) => ({ st: staffOf(s, id)!, kinds }));
 }
 
-function logD(s: GameState, staffId: string, o: Order16 | undefined, kind: OrderKind | 'sys', t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: string): void {
-  const d = d16(s);
-  d.log.unshift({ w: s.week, staffId, orderId: o?.id, actId: actId ?? o?.actId, kind, t, tone });
-  if (d.log.length > 80) d.log.length = 80;
+/** Responsabilidade (delegação única) de cada tipo de ordem. */
+export const respOf16 = (kind: OrderKind | 'sys'): Resp31 => (kind === 'tour' || kind === 'fees' || kind === 'festival' ? 'tour' : kind === 'sys' ? 'people' : 'marketing');
+function logD(s: GameState, staffId: string, o: Order16 | undefined, kind: OrderKind | 'sys', t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: string, extra: { amt?: number; undo?: { k: string; id: string } } = {}): void {
+  logAuto31(s, { r: respOf16(kind), who: staffId, t, tone, act: actId ?? o?.actId, x: kind, amt: extra.amt, undo: extra.undo,
+    why: o ? fmtL(l('ordem: {k}', 'order: {k}'), { k: KINDS[o.kind as OrderKind]?.name ?? l(o.kind, o.kind) }) : undefined });
 }
+/** Prestação de contas de um profissional ou de um ato (vista do registro único; mais novas primeiro). */
+export const log16 = (s: GameState, f: { staffId?: string; actId?: string; n?: number }): Log31[] =>
+  autoLog31(s, { r: ['tour', 'marketing', 'people'], who: f.staffId, act: f.actId, n: f.n }).filter((e) => e.who !== 'player');
+UNDO31.show = (s, id) => cancelShow(s, id);
 
 // ---------------------------------------------------------------- ordens
 
@@ -89,15 +95,31 @@ export function toggleOrder(s: GameState, id: string): void { const o = d16(s).o
 // ---------------------------------------------------------------- qualidade
 
 export interface Qual { q: number; err: number; why: L[] }
+/** r31 (Q): mistura de atributos por função (persona13) — agentes e promotores como antes; A&R pelo ouvido, produtor
+ *  pelo ouvido, jurídico/empresário pela negociação, assessoria pelo carisma, administração pela gestão. */
+const MIX16: Record<string, [Attr, number][]> = {
+  booking_agent: [['neg', 0.6], ['cha', 0.4]], promoter: [['cha', 0.6], ['img', 0.4]],
+  anr: [['ear', 0.7], ['neg', 0.3]], producer: [['ear', 0.8], ['mgmt', 0.2]], legal: [['neg', 0.8], ['mgmt', 0.2]],
+  manager: [['neg', 0.5], ['cha', 0.5]], publicist: [['cha', 0.6], ['img', 0.4]], admin: [['mgmt', 1]], analyst: [['ear', 0.3], ['mgmt', 0.7]],
+};
+type Attr = 'ear' | 'neg' | 'cha' | 'mgmt' | 'img';
+const MIX_NAME: Record<string, L> = {
+  booking_agent: l('negociação/carisma', 'negotiation/charisma'), promoter: l('carisma/imagem', 'charisma/image'), anr: l('ouvido/negociação', 'ear/negotiation'),
+  producer: l('ouvido/gestão', 'ear/management'), legal: l('negociação/gestão', 'negotiation/management'), manager: l('negociação/carisma', 'negotiation/charisma'),
+  publicist: l('carisma/imagem', 'charisma/image'), admin: l('gestão', 'management'), analyst: l('gestão/ouvido', 'management/ear'),
+};
+/** Qualidade de decisão de um funcionário (habilidade + ânimo + atributos + notoriedade do selo). Mesma conta para
+ *  agentes e promotores de antes; as outras funções usam os atributos delas. */
 export function quality(s: GameState, st: StaffMember): Qual {
   const P = per13(s, `s:${st.id}`);
   const adj = staffAdj13(s, st).v;
   const agent = st.role === 'booking_agent';
-  const attr = P ? (agent ? P.attrs.neg * 0.6 + P.attrs.cha * 0.4 : P.attrs.cha * 0.6 + P.attrs.img * 0.4) : 50;
+  const mix = MIX16[st.role] ?? MIX16.promoter;
+  const attr = P ? mix.reduce((t, [k, w]) => t + (P.attrs as Record<Attr, number>)[k] * w, 0) : 50;
   let notoB = 0;
   try { notoB = notoTier(s, agent ? 'booking' : 'label') * 0.02; } catch { notoB = 0; }
   const q = clamp((st.skill + adj) / 100 + (attr - 50) / 250 + notoB, 0.1, 1.1);
-  const why: L[] = [fmtL(l('habilidade {k}{a}', 'skill {k}{a}'), { k: st.skill, a: adj ? ` (${adj > 0 ? '+' : ''}${adj})` : '' }), fmtL(l('{n} {v}', '{n} {v}'), { n: agent ? l('negociação/carisma', 'negotiation/charisma') : l('carisma/imagem', 'charisma/image'), v: Math.round(attr) })];
+  const why: L[] = [fmtL(l('habilidade {k}{a}', 'skill {k}{a}'), { k: st.skill, a: adj ? ` (${adj > 0 ? '+' : ''}${adj})` : '' }), fmtL(l('{n} {v}', '{n} {v}'), { n: MIX_NAME[st.role] ?? MIX_NAME.promoter, v: Math.round(attr) })];
   if (notoB) why.push(fmtL(l('notoriedade do selo +{n}%', 'label notoriety +{n}%'), { n: Math.round(notoB * 100) }));
   if (st.trait === 'lazy') { why.push(l('preguiçoso(a)', 'lazy')); return { q: q * 0.92, err: clamp(0.4 - q * 0.33, 0.04, 0.34), why }; }
   if (st.trait === 'perfectionist') why.push(l('perfeccionista (erra menos)', 'perfectionist (fewer mistakes)'));
@@ -108,7 +130,7 @@ export const qLabel = (q: number): L => (q >= 0.8 ? l('excelente', 'excellent') 
 // ---------------------------------------------------------------- execução
 
 interface Ctx { s: GameState; r: Rng; st: StaffMember; o: Order16; q: Qual }
-const say = (c: Ctx, t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: string) => logD(c.s, c.st.id, c.o, c.o.kind, t, tone, actId);
+const say = (c: Ctx, t: L, tone: 'good' | 'bad' | 'info' = 'info', actId?: string, extra: { amt?: number; undo?: { k: string; id: string } } = {}) => logD(c.s, c.st.id, c.o, c.o.kind, t, tone, actId, extra);
 /** r18 (policy18): políticas de delegação — portões por ordem e por gasto (devolvem o motivo do bloqueio). */
 export const D16_GATES: ((s: GameState, o: Order16, st: StaffMember) => L | null)[] = [];
 export const D16_PAY: ((s: GameState, o: Order16, amt: number) => L | null)[] = [];
@@ -118,7 +140,9 @@ const pay = (c: Ctx, usdN: number, memo: string): boolean => {
   const amt = money(c.s, usdN);
   if (c.s.player.cash < amt) return false;
   for (const g of D16_PAY) { const why = g(c.s, c.o, amt); if (why) { say(c, why, 'bad'); return false; } }
+  { const why = spendGate31(c.s, respOf16(c.o.kind), amt, c.st, c.o.actId); if (why) { say(c, why, 'bad'); return false; } }
   post(c.s, `d16:${c.o.id}:${c.s.year}:${c.s.month}:${memo.length}`, -amt, 'business', memo);
+  addSpent31(c.s, respOf16(c.o.kind), amt);
   return true;
 };
 
@@ -158,7 +182,7 @@ function runTour(c: Ctx): void {
       d16(s).tracked.push({ show: sh.id, order: o.id, staff: c.st.id });
       booked++; done = true;
       const nt: L = notes.reduce<L>((acc, n) => cat(acc, l(` ${n.pt}.`, ` ${n.en}.`)), l('', ''));
-      say(c, cat(fmtL(l('Marcou {a} em {c} ({t}, semana {w}): cachê {f}, público esperado ~{x} de {k} ({p}% de chance de lotar).', 'Booked {a} in {c} ({t}, week {w}): fee {f}, expected crowd ~{x} of {k} ({p}% to sell out).'), { a: act.name, c: cityN(city), t: VENUE_TIERS[tier].name, w, f: usd(st.fee), x: p.att[1], k: tierCap(tier), p: Math.round(p.pSell * 100) }), nt), notes.some((n) => n.pt.startsWith('ERRO')) ? 'bad' : 'good', act.id);
+      say(c, cat(fmtL(l('Marcou {a} em {c} ({t}, semana {w}): cachê {f}, público esperado ~{x} de {k} ({p}% de chance de lotar).', 'Booked {a} in {c} ({t}, week {w}): fee {f}, expected crowd ~{x} of {k} ({p}% to sell out).'), { a: act.name, c: cityN(city), t: VENUE_TIERS[tier].name, w, f: usd(st.fee), x: p.att[1], k: tierCap(tier), p: Math.round(p.pSell * 100) }), nt), notes.some((n) => n.pt.startsWith('ERRO')) ? 'bad' : 'good', act.id, { amt: st.fee, undo: { k: 'show', id: sh.id } });
       // erro: dupla marcação na mesma semana — desfaz uma e paga a conta
       if (r.chance(q.err * 0.7)) {
         const alt = cs.find((x) => x.id !== city && !used.has(x.id));
@@ -168,7 +192,7 @@ function runTour(c: Ctx): void {
           const fine = clamp(Math.round(st.fee * 0.5), money(s, 500), money(s, 15000));
           post(s, `d16:dbl:${sh.id}`, -fine, 'business', 'Multa: dupla marcação');
           c12(s).rel[alt.id] = clamp(rel(s, alt.id) - 5, 0, 100);
-          say(c, fmtL(l('ERRO: {n} marcou {c} na mesma semana por engano e teve de desmarcar: multa de {f} e relação com a cidade −5.', 'MISTAKE: {n} double-booked {c} the same week and had to cancel: {f} fine and city relation −5.'), { n: c.st.name, c: cityN(alt.id), f: usd(fine) }), 'bad', act.id);
+          say(c, fmtL(l('ERRO: {n} marcou {c} na mesma semana por engano e teve de desmarcar: multa de {f} e relação com a cidade −5.', 'MISTAKE: {n} double-booked {c} the same week and had to cancel: {f} fine and city relation −5.'), { n: c.st.name, c: cityN(alt.id), f: usd(fine) }), 'bad', act.id, { amt: -fine });
         }
       }
     }
@@ -287,6 +311,7 @@ export function runStaff(s: GameState, r: Rng, st: StaffMember): void {
   const mine = d.orders.filter((o) => o.staffId === st.id && o.on);
   const q = quality(s, st);
   mine.forEach((o, i) => {
+    if (modeOf31(s, respOf16(o.kind)) === 'me') { logD(s, st.id, o, o.kind, fmtL(l('Ordem parada: "{k}" está em "Eu decido" na delegação.', 'Order held: "{k}" is set to "I decide" in delegation.'), { k: KINDS[o.kind].name }), 'info'); return; }
     if (i >= ORDER_CAP) { logD(s, st.id, o, o.kind, fmtL(l('{n} não deu conta: já tem {c} ordens no mês. Esta ficou parada (contrate mais gente ou pause outra).', '{n} could not cope: already {c} orders this month. This one sat idle (hire more or pause another).'), { n: st.name, c: ORDER_CAP }), 'bad'); return; }
     for (const g of D16_GATES) { const why = g(s, o, st); if (why) { logD(s, st.id, o, o.kind, why, 'bad', o.actId); return; } }
     RUN[o.kind]({ s, r, st, o, q });

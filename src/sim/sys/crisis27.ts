@@ -25,7 +25,7 @@ import { capital, boardConfidence, opinion } from './capital';
 import { ins19 } from './insure19';
 import { l19b, insPrem19 } from './links19b';
 import { careerOf } from './people/staff';
-import { pol18 } from './policy18';
+import { rule31 } from '../deleg31';
 import { overPolicy27 } from './road27';
 import { strikeActive } from './world4/common';
 
@@ -128,7 +128,7 @@ export function openCrisis27(s: GameState, id: string): Crisis27 | L {
   const why: L[] = [];
   if (cand.k === 'bankrupt') {
     t0 += (s.player.insolvencyMonths - 1) * 10;
-    if (pol18(s).reserve > 0) { t0 -= 8; why.push(l('A política de reserva mínima deu credibilidade com os credores (−8).', 'The minimum-reserve policy gave you credibility with creditors (−8).')); }
+    if (rule31(s, 'finance', 'reserve') > 0) { t0 -= 8; why.push(l('A política de reserva mínima deu credibilidade com os credores (−8).', 'The minimum-reserve policy gave you credibility with creditors (−8).')); }
   }
   const weeks = cand.k === 'bankrupt' ? Math.max(2, INSOLVENT_AT - s.player.insolvencyMonths) * 4 : cfg.weeks;
   const per = 2 + (s.player.staff.some((x) => x.role === 'admin') ? 1 : 0);

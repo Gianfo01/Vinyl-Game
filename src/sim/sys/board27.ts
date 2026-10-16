@@ -21,7 +21,8 @@ import { addHype } from './hype12';
 import { ag17 } from './agenda17';
 import { capital } from './capital';
 import { addOrder } from './deleg16';
-import { burn18, goalOf18, pol18, tired18 } from './policy18';
+import { burn18, goalOf18, tired18 } from './policy18';
+import { modeOf31, rule31, setDir31, setMode31 } from '../deleg31';
 import { careerOf, trainCost, trainStaff } from './people/staff';
 import { overPolicy27 } from './road27';
 import { STAFF_ROLES } from '../../data/rules';
@@ -91,9 +92,9 @@ export function agenda27(s: GameState, mk = monthKey27(s)): Prop27[] {
       const actPick = acts.length ? actFor(s, k, acts, r) : undefined;
       if (['tour', 'promo', 'rest', 'studio'].includes(k) && !actPick) continue;
       if ((k === 'raise' || k === 'train') && !d.staff) continue;
-      if (k === 'renew' && pol18(s).renew) continue;
-      if (k === 'reserve' && pol18(s).reserve >= 2) continue;
-      if (k === 'cap' && pol18(s).cap > 0) continue;
+      if (k === 'renew' && modeOf31(s, 'renew') !== 'me') continue;
+      if (k === 'reserve' && rule31(s, 'finance', 'reserve') >= 2) continue;
+      if (k === 'cap' && rule31(s, 'finance', 'cap') > 0) continue;
       const key = `${k}:${actPick?.id ?? ''}`;
       if (used.has(key)) continue;
       used.add(key);
@@ -177,9 +178,9 @@ export function autoDecide27(s: GameState, p: Prop27): { yes: boolean; why: L } 
   const g = goalOf18(s, a?.id);
   if (a && g === 'rest' && (p.k === 'tour' || p.k === 'promo')) return { yes: false, why: l('vetado: artista em "Descansar"', 'vetoed: act set to "Rest"') };
   if (a && g === 'catalog' && p.k === 'tour') return { yes: false, why: l('vetado: artista em "Cuidar do catálogo"', 'vetoed: act set to "Nurture the catalog"') };
-  if (a && g === 'profit' && p.k === 'promo' && pol18(s).cap > 0) return { yes: false, why: l('vetado: objetivo "Dar lucro"', 'vetoed: goal "Turn a profit"') };
-  if (p.k === 'tour' && a && pol18(s).rest > 0 && tired18(s, a).v >= pol18(s).rest) return { yes: false, why: l('vetado: descanso obrigatório', 'vetoed: mandatory rest') };
-  if (p.k === 'rest') return a && tired18(s, a).v >= (pol18(s).rest || 70) ? { yes: true, why: l('aprovado: banda no limite', 'approved: band at the limit') } : { yes: false, why: l('vetado: dá para seguir', 'vetoed: they can keep going') };
+  if (a && g === 'profit' && p.k === 'promo' && rule31(s, 'finance', 'cap') > 0) return { yes: false, why: l('vetado: objetivo "Dar lucro"', 'vetoed: goal "Turn a profit"') };
+  if (p.k === 'tour' && a && rule31(s, 'rest', 'rest') > 0 && tired18(s, a).v >= rule31(s, 'rest', 'rest')) return { yes: false, why: l('vetado: descanso obrigatório', 'vetoed: mandatory rest') };
+  if (p.k === 'rest') return a && tired18(s, a).v >= (rule31(s, 'rest', 'rest') || 70) ? { yes: true, why: l('aprovado: banda no limite', 'approved: band at the limit') } : { yes: false, why: l('vetado: dá para seguir', 'vetoed: they can keep going') };
   if (p.k === 'raise') { const st = s.player.staff.find((m) => m.id === p.by); return st && careerOf(s, st).loyalty < 50 ? { yes: true, why: l('aprovado: para não perder a pessoa', 'approved: to keep them') } : { yes: false, why: l('vetado: salário em dia com o mercado', 'vetoed: pay is in line with the market') }; }
   if (p.k === 'cut') return s.player.cash < 0 ? { yes: true, why: l('aprovado: caixa no vermelho', 'approved: cash in the red') } : { yes: false, why: l('vetado: não há aperto', 'vetoed: no squeeze') };
   if (p.k === 'reserve') return s.player.cash < 3 * burn18(s) ? { yes: true, why: l('aprovado: caixa curto', 'approved: thin cash') } : { yes: false, why: l('vetado: caixa folgado', 'vetoed: cash is comfortable') };
@@ -218,9 +219,9 @@ export function decide27(s: GameState, propId: string, yes: boolean, auto = fals
       case 'promo': if (a) { addHype(s, `a:${a.id}`, 'board27', l('Campanha aprovada na diretoria', 'Campaign approved by the board'), 10); a.fans.casual += Math.round(400 + a.fame * 60); } res = fmtL(l('{a}: campanha na rua (hype +10, fãs casuais).', '{a}: campaign out (hype +10, casual fans).'), { a: a?.name ?? '' }); break;
       case 'rest': if (a) { a.momentum = clamp(a.momentum - 3, 0, 100); for (const id of activeMembers(s, a)) { const pp = s.persons[id]; if (pp) { pp.fatigue = clamp(pp.fatigue - 15, 0, 100); addStress(s, id, -8); } } } res = fmtL(l('{a} folga: cansaço −15, estresse −8, momento −3.', '{a} rests: fatigue −15, stress −8, momentum −3.'), { a: a?.name ?? '' }); break;
       case 'studio': if (a) { a.momentum = clamp(a.momentum + 3, 0, 100); for (const id of activeMembers(s, a)) { const pp = s.persons[id]; if (pp) pp.morale = clamp(pp.morale + 3, 0, 100); } } res = fmtL(l('{a}: pré-produção caprichada (moral +3, momento +3).', '{a}: careful pre-production (morale +3, momentum +3).'), { a: a?.name ?? '' }); break;
-      case 'reserve': pol18(s).reserve = Math.max(pol18(s).reserve, p.amt ?? 2); res = fmtL(l('Política: reserva mínima de {m} meses.', 'Policy: a {m}-month minimum reserve.'), { m: pol18(s).reserve }); break;
-      case 'cap': pol18(s).cap = p.amt ?? 3000; res = fmtL(l('Política: teto de US$ {c} por gasto delegado.', 'Policy: a US$ {c} cap per delegated spend.'), { c: pol18(s).cap }); break;
-      case 'renew': pol18(s).renew = true; res = l('Política: renovação delegada ligada.', 'Policy: delegated renewals on.'); break;
+      case 'reserve': setDir31(s, 'finance', { reserve: Math.max(rule31(s, 'finance', 'reserve'), p.amt ?? 2) }); res = fmtL(l('Política: reserva mínima de {m} meses.', 'Policy: a {m}-month minimum reserve.'), { m: rule31(s, 'finance', 'reserve') }); break;
+      case 'cap': setDir31(s, 'finance', { cap: p.amt ?? 3000 }); res = fmtL(l('Política: teto de US$ {c} por gasto delegado.', 'Policy: a US$ {c} cap per delegated spend.'), { c: rule31(s, 'finance', 'cap') }); break;
+      case 'renew': setMode31(s, 'renew', 'staff', undefined, { force: true }); res = l('Política: renovação delegada ligada.', 'Policy: delegated renewals on.'); break;
       case 'raise': { const st = s.player.staff.find((x) => x.id === p.by); if (st) st.salary += p.amt ?? 0; loy(s, p.by, 6); res = fmtL(l('{n} ganha 10% a mais e fica mais leal.', '{n} gets 10% more and grows more loyal.'), { n: d?.name ?? '' }); break; }
       case 'train': { const e = trainStaff(s, p.by); res = e ? e : fmtL(l('{n} entra em treinamento (4 semanas).', '{n} starts training (4 weeks).'), { n: d?.name ?? '' }); break; }
       case 'audit': { const ok = r.next() < 0.6; const v = ok ? money(s, Math.round(r.float(800, 2600))) : 0; if (v) post(s, `board27a:${mk}`, v, 'other_income', 'Auditoria de royalties'); res = ok ? fmtL(l('A auditoria achou dinheiro esquecido: +{v}.', 'The audit found forgotten money: +{v}.'), { v: `$${Math.round(v / 100)}` }) : l('A auditoria não achou nada desta vez.', 'The audit found nothing this time.'); break; }

@@ -18,7 +18,7 @@ import {
   ACTS27, CFG27, actCrisis27, crisisActs27, crisisById27, crisisCands27, crisisWeek27, delegatePick27, finish27, openCrisis27, type Crisis27,
 } from '../src/sim/sys/crisis27';
 import { agenda27, autoDecide27, board27, closeMeeting27, decide27, directors27, setBoard27 } from '../src/sim/sys/board27';
-import { pol18 } from '../src/sim/sys/policy18';
+import { setDir31 } from '../src/sim/deleg31';
 import { buyIns19 } from '../src/sim/sys/links19b';
 import { ins19 } from '../src/sim/sys/insure19';
 import { careerOf } from '../src/sim/sys/people/staff';
@@ -229,7 +229,7 @@ describe('r27 P2B — turnê no mapa', () => {
 
   it('teto de gasto apertado: a equipe não escolhe a opção cara', () => {
     const { s, tid } = roadFix();
-    pol18(s).cap = 1;
+    setDir31(s, 'finance', { cap: 1 });
     const t = s.tours.find((x) => x.id === tid)!;
     for (const st of t.stops) {
       const ev = roadEvent27(s, t, st);
@@ -334,7 +334,7 @@ describe('r27 P2B — crises com relógio', () => {
     const s = bankrupt();
     s.player.staff.push({ id: 'st-adm', name: 'Adm', role: 'admin', skill: 70, salary: money(s, 2000), hiredWeek: s.week });
     const c = openCrisis27(s, crisisCands27(s).find((x) => x.k === 'bankrupt')!.id) as Crisis27;
-    pol18(s).cap = 1;
+    setDir31(s, 'finance', { cap: 1 });
     const pick = delegatePick27(s, c)!;
     expect(crisisActs27(s, c).find((v) => v.a.id === pick)!.cost).toBe(0);
     for (const k of Object.keys(ACTS27) as (keyof typeof ACTS27)[]) expect(ACTS27[k].length).toBeGreaterThanOrEqual(4);
@@ -385,7 +385,7 @@ describe('r27 P2B — reunião de diretoria', () => {
 
   it('regras de delegação: gasto fora do teto é vetado sozinho', () => {
     const s = withStaff();
-    pol18(s).cap = 1;
+    setDir31(s, 'finance', { cap: 1 });
     for (const p of agenda27(s)) if (p.cost > 0) expect(autoDecide27(s, p).yes).toBe(false);
   });
 

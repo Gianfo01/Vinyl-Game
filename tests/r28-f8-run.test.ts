@@ -12,7 +12,7 @@ import { ch28, chainsMonth28, nextStep28, STALL28 } from '../src/sim/sys/chains2
 import { ux19 } from '../src/sim/sys/ux19';
 import { DOC_K19 } from '../src/sim/sys/session19';
 import { countNew28, delegShare28, makeDecision28, mineCap28, q28, quarterMonth28 } from '../src/sim/sys/quarter28';
-import { pol18 } from '../src/sim/sys/policy18';
+import { setGoal31 } from '../src/sim/deleg31';
 import { P } from '../src/sim/sys/people/state';
 import { DM_MINE18 } from '../src/sim/sys/dm18';
 import { festFee28, festMonth28, stakeValue28 } from '../src/sim/sys/shared28';
@@ -91,7 +91,7 @@ describe('r28 F8 — decisão do trimestre e delegação', () => {
   it('delegação: objetivo de política faz o diretor decidir (sem ações) e baixa o teto de fios do Mestre', () => {
     const s = game('r28q2');
     const cap0 = mineCap28(s);
-    for (const id of Object.keys(s.acts)) if (s.acts[id].owner === 'player') pol18(s).goals[id] = 'profit';
+    for (const id of Object.keys(s.acts)) if (s.acts[id].owner === 'player') setGoal31(s, id, 'profit');
     expect(delegShare28(s)).toBeGreaterThan(0.3);
     expect(mineCap28(s)).toBeLessThan(cap0 + 0.5);
     expect(DM_MINE18.f?.(s)).toBe(mineCap28(s));

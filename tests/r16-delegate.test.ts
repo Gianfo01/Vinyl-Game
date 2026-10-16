@@ -4,7 +4,7 @@ import { defaultConfig } from '../src/sim/bot';
 import { hireStaff } from '../src/sim/economy';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame, spawnProceduralAct } from '../src/sim/worldgen';
-import { addOrder, d16, delegates, handlersOf, matchOffer, ordersOf, quality } from '../src/sim/sys/deleg16';
+import { addOrder, d16, delegates, handlersOf, log16, matchOffer, ordersOf, quality } from '../src/sim/sys/deleg16';
 import { roleLoads } from '../src/sim/sys/capacity14';
 import { c12 } from '../src/sim/sys/tour12';
 import { rng19 } from '../src/sim/rng19';
@@ -34,7 +34,7 @@ describe('delegar 16', () => {
     const n0 = c12(s).shows.length;
     advanceMonth(s);
     expect(c12(s).shows.length).toBeGreaterThan(n0);
-    expect(d16(s).log.some((x) => x.kind === 'tour' && x.t.pt.length > 10 && x.t.en.length > 10)).toBe(true);
+    expect(log16(s, { staffId: ag.id }).some((x) => x.x === 'tour' && x.t.pt.length > 10 && x.t.en.length > 10)).toBe(true);
     expect(handlersOf(s, act.id).length).toBe(1);
     expect(quality(s, ag).q).toBeGreaterThan(0);
   });
@@ -46,7 +46,7 @@ describe('delegar 16', () => {
     expect(addOrder(s, pr.id, 'radio', { actId: act.id, budget: 300 })).not.toBeNull(); // 5 no máximo
     advanceMonth(s);
     expect(s.player.cash).toBeLessThan(cash);
-    expect(d16(s).log.some((x) => x.t.pt.includes('não deu conta'))).toBe(true);
+    expect(log16(s, { staffId: pr.id }).some((x) => x.t.pt.includes('não deu conta'))).toBe(true);
     expect(roleLoads(s).some((r) => r.role === 'promoter' && r.demand === 5)).toBe(true);
     expect(ordersOf(s, pr.id).length).toBe(5);
   });

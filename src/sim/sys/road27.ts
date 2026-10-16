@@ -25,7 +25,8 @@ import type { Tour, TourStop } from '../xtypes';
 import { dateOfDay, fmtL, money, post, staffSkill } from '../util';
 import { cityEcon27 } from './cities27';
 import { PH27, sceneDemand27 } from './scenes27';
-import { pol18, reserveCents18 } from './policy18';
+import { reserveCents18 } from './policy18';
+import { rule31 } from '../deleg31';
 import { registerDeadline, type Deadline19 } from '../calendar19';
 
 export const ROAD27_RNG = 'road27v1';
@@ -231,8 +232,8 @@ export function pendingRoad27(s: GameState, days = 35): { t: Tour; st: TourStop;
 /** Fora da política de gasto? (teto por ordem e reserva mínima do policy18 — leitura, sem registrar exceção) */
 export function overPolicy27(s: GameState, cost: number): L | null {
   if (cost <= 0) return null;
-  const P = pol18(s);
-  if (P.cap > 0 && toReal(cost, s.year) > P.cap) return fmtL(l('acima do teto de gasto (US$ {c})', 'above the spending cap (US$ {c})'), { c: Math.round(P.cap) });
+  const cap = rule31(s, 'finance', 'cap');
+  if (cap > 0 && toReal(cost, s.year) > cap) return fmtL(l('acima do teto de gasto (US$ {c})', 'above the spending cap (US$ {c})'), { c: Math.round(cap) });
   const res = reserveCents18(s);
   if (res > 0 && s.player.cash - cost < res) return l('fura a reserva mínima de caixa', 'breaks the minimum cash reserve');
   return null;

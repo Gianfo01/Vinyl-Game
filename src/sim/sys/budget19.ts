@@ -3,14 +3,14 @@
 //   crises de clientes do empresário + apertos do festival). Narrador, situações e Mestre leem conflicts19.CONFLICTS19.
 // - (r31 UNI-1: o corte de avisos de pouco valor saiu daqui — orçamento único em sim/attention.ts.)
 // - autoResolve19: quais cartões vão valer o padrão ao avançar (o diálogo da UI lista e pergunta).
-// - Delegação por carreira (estende policy18): renovação de mandato, patrocínio e headliner do festival, sessões do
-//   estúdio. A equipe age sozinha e só sobe exceções (fato `deleg_exc` → Caixa + exceções da política).
+// - Delegação por carreira: renovação de mandato, patrocínio e headliner do festival, sessões do estúdio (r31 Q:
+//   configuradas na delegação única, sim/deleg31.ts). A regra age sozinha e só sobe exceções (fato `deleg_exc` → Caixa).
 import { l, type L } from '../../data/world';
 import { CONFLICTS19 } from '../conflicts19';
 import { registerExplain, type WhyPart } from '../explain18';
-import { registerExt4, registerSimHook } from '../ext4';
+import { registerSimHook } from '../ext4';
 import { emitFact, onFact } from '../facts17';
-import { pushInbox18, registerInboxKind } from '../inbox18';
+import { pushInbox18 } from '../inbox18';
 import { rng19 } from '../rng19';
 import type { Decision, GameState } from '../types';
 import { fmtL, playerActs } from '../util';
@@ -21,26 +21,11 @@ import { activeFeuds18 } from './feud18';
 import { ask12, f12, muOf, offer12, proj12, takeSponsor12 } from './fest12';
 import { liveOf } from './live';
 import { c12, negotiateMandate } from './manager12';
-import { pol18 } from './policy18';
+import { dirOf31, exc31, logAuto31, modeOf31, rule31, type Resp31 } from '../deleg31';
 import { festivalQ19, managerQ19 } from './prof19';
 import { registerCockpit18 } from './saga18';
 import { acceptJob, studioOf, studios } from './studio12';
 import { ventures } from './ventures9';
-
-// ---------------------------------------------------------------- estado
-
-export interface Dlg19 { mg: boolean; mgTrust: number; fsp: boolean; fhead: boolean; fcap: number; st: boolean; n: { done: number; exc: number } }
-export interface Bud19 { dlg: Dlg19 }
-declare module '../ext4' { interface Ext4 { bud19: Bud19 } }
-const freshDlg = (): Dlg19 => ({ mg: false, mgTrust: 45, fsp: false, fhead: false, fcap: 0.25, st: false, n: { done: 0, exc: 0 } });
-registerExt4('bud19', () => ({ dlg: freshDlg() }));
-export const bud19 = (s: GameState): Bud19 => {
-  const x = s.x4 as unknown as { bud19?: Bud19 };
-  const b = (x.bud19 ??= { dlg: freshDlg() });
-  b.dlg ??= freshDlg();
-  return b;
-};
-export const dlg19 = (s: GameState): Dlg19 => bud19(s).dlg;
 
 // ---------------------------------------------------------------- orçamento de conflitos
 
@@ -101,59 +86,63 @@ export function autoResolve19(s: GameState, mode: 'week' | 'month' | 'quarter' |
 }
 
 // ---------------------------------------------------------------- delegação por carreira
+// r31 (Q): o estado (`bud19.dlg`: mg/fsp/fhead/st, confiança mínima, teto, contadores) virou as responsabilidades
+// "Mandatos de empresariado", "Festival próprio" e "Estúdio próprio" da delegação única (sim/deleg31.ts). Este trecho
+// é o executor; o que a regra fez e as exceções vão para o registro de automação.
 
-registerInboxKind('dlg19', { label: l('Equipe delegada', 'Delegated staff'), cat: 'staff', prio: 2, goto: () => ({ area: 'long18', tab: ['long18', 'policy'] }) });
+const DLG_R: Record<'mg' | 'fest' | 'studio', Resp31> = { mg: 'mandates', fest: 'fest', studio: 'studio' };
 function exc19(s: GameState, k: 'mg' | 'fest' | 'studio', t: L, act?: string): void {
-  const P = pol18(s);
-  if (P.exc.some((e) => e.t.pt === t.pt && s.week - e.w < 8)) return;
-  P.exc.unshift({ w: s.week, k: 'renew', act, t });
-  if (P.exc.length > 30) P.exc.length = 30;
-  dlg19(s).n.exc++;
+  if (!exc31(s, DLG_R[k], k, t, act, undefined, true)) return;
   emitFact(s, { kind: 'deleg_exc', actors: ['player', ...(act ? [act] : [])], text: t, visibility: 'secret', data: { k } });
 }
 onFact('deleg_exc', (s, f) => {
-  pushInbox18(s, 'dlg19', { from: 'staff', subject: l('A equipe precisa de você', 'Staff needs you'), body: f.text, tone: 'bad' });
+  pushInbox18(s, 'deleg31', { from: 'staff', subject: l('A equipe precisa de você', 'Staff needs you'), body: f.text, tone: 'bad', ref: { acts: f.actors.filter((x) => x !== 'player').join(',') } });
 }, 'budget19:deleg');
+const did = (s: GameState, r: Resp31, t: L, act?: string, amt?: number) => logAuto31(s, { r, who: 'rule', t, tone: 'good', act, amt });
 
 export function delegateMonth(s: GameState): void {
-  const D = dlg19(s);
-  if (D.mg) {
-    const r = rng19(s, 'dlg19');
+  if (modeOf31(s, 'mandates') === 'rule') {
+    const r = rng19(s, 'dlg19'), minTrust = rule31(s, 'mandates', 'minTrust');
     for (const c of ventures(s).mg.clients) {
       const a = s.acts[c.actId], x = c12(s, c.actId), left = x.mandate.until - s.week;
       if (!a || left <= 0 || left > 8) continue;
-      if (x.trust < D.mgTrust) { exc19(s, 'mg', fmtL(l('Mandato de {a} vence em {w} semanas e a confiança ({t}) está abaixo do mínimo ({m}): renovar é com você.', '{a}\'s mandate ends in {w} weeks and trust ({t}) is below the minimum ({m}): renewing is up to you.'), { a: a.name, w: left, t: Math.round(x.trust), m: D.mgTrust }), a.id); continue; }
+      if (x.trust < minTrust) { exc19(s, 'mg', fmtL(l('Mandato de {a} vence em {w} semanas e a confiança ({t}) está abaixo do mínimo ({m}): renovar é com você.', '{a}\'s mandate ends in {w} weeks and trust ({t}) is below the minimum ({m}): renewing is up to you.'), { a: a.name, w: left, t: Math.round(x.trust), m: minTrust }), a.id); continue; }
       const m = { areas: x.mandate.areas, rate: x.mandate.rate, excl: x.mandate.excl, auto: x.mandate.auto };
       const res = negotiateMandate(s, r, a.id, m);
-      if (res.ok) D.n.done++;
+      if (res.ok) did(s, 'mandates', fmtL(l('Mandato de {a} renovado nos mesmos termos (confiança {t}). {w}', '{a}\'s mandate renewed on the same terms (trust {t}). {w}'), { a: a.name, t: Math.round(x.trust), w: res.text }), a.id);
       else if (!/há pouco|recently/.test(res.text.pt)) exc19(s, 'mg', fmtL(l('A equipe tentou renovar o mandato de {a} nos mesmos termos e ouviu não: {w}', 'Staff tried to renew {a}\'s mandate on the same terms and got a no: {w}'), { a: a.name, w: res.text }), a.id);
     }
   }
-  for (const f of liveOf(s).fests) {
-    const x = f12(s, f), mu = muOf(s, f);
-    if (D.fsp) for (const o of [...x.cyc.offers]) {
+  const fest = modeOf31(s, 'fest') === 'rule' ? dirOf31(s, 'fest') : null;
+  if (fest) for (const f of liveOf(s).fests) {
+    const x = f12(s, f), mu = muOf(s, f), fcap = fest.frac ?? 0.25;
+    if (fest.sponsor) for (const o of [...x.cyc.offers]) {
       const p = proj12(s, f), safe = Math.min(p.demand, p.cap) * 0.9;
-      if (o.min <= safe) { if (!takeSponsor12(s, f.id, o.id, true)) D.n.done++; }
+      if (o.min <= safe) { if (!takeSponsor12(s, f.id, o.id, true)) did(s, 'fest', fmtL(l('{f}: patrocínio de {n} aceito (meta de {m} pessoas cabe em 90% da projeção, {p}).', '{f}: {n}\'s sponsorship accepted (the {m}-people target fits 90% of the projection, {p}).'), { f: f.name, n: o.name, m: o.min, p: Math.round(safe) })); }
       else exc19(s, 'fest', fmtL(l('{f}: patrocínio de {n} pede {m} pessoas — acima do que a equipe acha seguro (90% da projeção: {p}).', '{f}: {n}\'s sponsorship requires {m} people — above what staff deems safe (90% of projection: {p}).'), { f: f.name, n: o.name, m: o.min, p: Math.round(safe) }));
     }
-    if (D.fhead && mu >= 0 && mu <= 5 && !Object.values(x.deals).some((d) => d.time === 3)) {
+    if (fest.head && mu >= 0 && mu <= 5 && !Object.values(x.deals).some((d) => d.time === 3)) {
       const cash = Math.max(0, s.player.cash);
       const cands = Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length && !x.deals[a.id]).sort((a, b) => b.fame - a.fame).slice(0, 30);
       let ok = false;
       for (const a of cands) {
         const k = ask12(s, f, a, { time: 3, len: 60, excl: false });
-        if (k.refuse || k.fee * 0.3 > cash * D.fcap) continue;
-        if (offer12(s, f.id, a.id, { stage: 0, time: 3, len: 60, excl: false, fee: k.fee }).res === 'yes') { ok = true; D.n.done++; break; }
+        if (k.refuse || k.fee * 0.3 > cash * fcap) continue;
+        if (offer12(s, f.id, a.id, { stage: 0, time: 3, len: 60, excl: false, fee: k.fee }).res === 'yes') {
+          ok = true;
+          did(s, 'fest', fmtL(l('{f}: {a} fechado como headliner (fama {m}); o adiantamento cabe em {p}% do caixa.', '{f}: {a} booked as headliner (fame {m}); the advance fits {p}% of cash.'), { f: f.name, a: a.name, m: Math.round(a.fame), p: Math.round(fcap * 100) }), a.id, -Math.round(k.fee * 0.3));
+          break;
+        }
       }
-      if (!ok && mu <= 3) exc19(s, 'fest', fmtL(l('{f}: a {m} mês(es) da edição, a equipe não achou headliner dentro do teto ({p}% do caixa no adiantamento).', '{f}: {m} month(s) out, staff found no headliner within the cap ({p}% of cash on the advance).'), { f: f.name, m: mu, p: Math.round(D.fcap * 100) }));
+      if (!ok && mu <= 3) exc19(s, 'fest', fmtL(l('{f}: a {m} mês(es) da edição, a equipe não achou headliner dentro do teto ({p}% do caixa no adiantamento).', '{f}: {m} month(s) out, staff found no headliner within the cap ({p}% of cash on the advance).'), { f: f.name, m: mu, p: Math.round(fcap * 100) }));
     }
   }
-  if (D.st) for (const v of studios(s)) {
+  if (modeOf31(s, 'studio') === 'rule') for (const v of studios(s)) {
     const sx = studioOf(s, v);
     for (const j of sx.jobs.filter((y) => y.state === 'proposal')) {
       const eng = sx.engs.find((e) => !sx.jobs.some((y) => y.state === 'booked' && y.eng === e.id));
       const room = sx.rooms.find((rm) => !sx.jobs.some((y) => y.state === 'booked' && y.room === rm.id));
-      if (eng && room && !acceptJob(s, v.id, j.id, eng.id, room.id)) D.n.done++;
+      if (eng && room && !acceptJob(s, v.id, j.id, eng.id, room.id)) did(s, 'studio', fmtL(l('{v}: sessão de {c} aceita (sala e engenheiro livres).', '{v}: session from {c} accepted (free room and engineer).'), { v: v.name, c: j.client }));
       else { exc19(s, 'studio', fmtL(l('{v}: pedido de sessão de {c} sem sala ou engenheiro livre.', '{v}: session request from {c} with no free room or engineer.'), { v: v.name, c: j.client })); break; }
     }
   }

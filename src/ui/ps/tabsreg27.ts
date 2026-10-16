@@ -164,7 +164,6 @@ export const TABS_REG27: TabRow27[] = [
   ["live19", "live19", "contests", "Concursos", "Contests"],
   ["long18", "long18", "paths", "Caminhos", "Paths"],
   ["long18", "long18", "laws", "Doutrinas e decisões", "Doctrines & decisions"],
-  ["long18", "long18", "policy", "Políticas", "Policies"],
   ["long18", "long18", "pm", "Post-mortems", "Post-mortems"],
   ["long18", "long18", "year", "Ano em revista", "Year in review"],
   ["long18", "long18", "bio", "Biografia", "Biography"],

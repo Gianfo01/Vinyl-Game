@@ -20,7 +20,8 @@ import { fmtL, money, playerActs, post } from '../util';
 import { invOf } from './agenda17';
 import { careers } from './careers12';
 import { DM_MINE18 } from './dm18';
-import { pol18, type Goal18 } from './policy18';
+import { type Goal18 } from './policy18';
+import { goalSet31 } from '../deleg31';
 import { P } from './people/state';
 
 export type Focus28 = 'road' | 'studio' | 'rest';
@@ -42,8 +43,7 @@ export function delegShare28(s: GameState): number {
   const act = careers(s).active ?? [];
   const dc = act.filter((id) => invOf(s, id) === 'deleg').length;
   const mine = playerActs(s);
-  const goals = pol18(s).goals ?? {};
-  const da = mine.filter((id) => goals[id] !== undefined).length;
+  const da = mine.filter((id) => goalSet31(s, id) !== undefined).length;
   const tot = act.length + mine.length;
   return tot ? (dc + da) / tot : 0;
 }
@@ -57,7 +57,7 @@ DM_MINE18.f = (s) => (OFF_Q28.on ? 4 : mineCap28(s));
 
 /** O artista está delegado? (diretor na carreira do seu papel, ou objetivo de política definido para ele) */
 export function delegated28(s: GameState, a: Act): boolean {
-  return ['label', 'manager'].some((id) => (careers(s).active ?? []).includes(id) && invOf(s, id) === 'deleg') || pol18(s).goals?.[a.id] !== undefined;
+  return ['label', 'manager'].some((id) => (careers(s).active ?? []).includes(id) && invOf(s, id) === 'deleg') || goalSet31(s, a.id) !== undefined;
 }
 const GOAL_FOCUS: Record<Goal18, Focus28 | null> = { grow: 'studio', profit: 'road', rest: 'rest', catalog: 'studio', free: null };
 
@@ -132,7 +132,7 @@ export function makeDecision28(s: GameState): QKind28 | null {
   }
   const tired = tiredOf(s, a);
   if (delegated28(s, a)) {
-    const f = GOAL_FOCUS[pol18(s).goals?.[a.id] ?? 'grow'] ?? (tired >= 60 ? 'rest' : 'studio');
+    const f = GOAL_FOCUS[goalSet31(s, a.id) ?? 'grow'] ?? (tired >= 60 ? 'rest' : 'studio');
     const t = applyFocus28(s, a.id, tired >= 75 ? 'rest' : f);
     st.cur.auto = t.pt; report(s, a, t);
     return 'focus';

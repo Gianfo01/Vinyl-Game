@@ -1,5 +1,5 @@
 // Rodada 18 (long18) — interface: três perguntas no Cockpit, área "Rumo do selo" (caminhos de vitória, doutrinas e
-// decisões do selo, políticas de delegação, post-mortems, ano em revista, biografia, Casa/dinastia, dificuldade
+// decisões do selo, post-mortems (r31 Q: as políticas de delegação foram para a tela de delegação, ui/sys/deleg31), ano em revista, biografia, Casa/dinastia, dificuldade
 // adaptativa) e a cena de dezembro "Ano em revista".
 
 import { toReal } from '../../core/money';
@@ -7,7 +7,6 @@ import { l, type L } from '../../data/world';
 import { getLang, t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
-import { GOAL18, pol18, burn18, type Goal18 } from '../../sim/sys/policy18';
 import { rv18 } from '../../sim/sys/review18';
 import {
   DOCTRINES18, LABEL_DECS18, PATHS18, adoptDoc18, allScores18, bigDecisions18, bigTaken18, choosePath18, docBlock18, hasDoc18, labelDecBlock18, legacy18,
@@ -82,33 +81,6 @@ function lawsTab(s: GameState): HTMLElement {
         bigDecisions18().map((d) => { const b = decisionBlocker(s, d); return h('div', { class: `lg18-dec ${b ? 'off' : ''}` }, h('b', null, t(d.name)), bigTaken18(s, d.id) ? h('small', { class: 'good' }, ' ✓') : null, h('p', { class: 'small' }, t(d.desc)), b ? h('p', { class: 'small bad' }, t(b)) : h('button', { class: 'btn small', onclick: () => msg(takeDecision(s, rng19(s, 'act'), d.id), l('Feito.', 'Done.')) }, t(l('Decidir', 'Decide'))) ); }))));
 }
 
-function num(v: number, set: (x: number) => void, step = 1, min = 0, max = 1e9): HTMLElement {
-  return h('input', { type: 'number', value: String(v), step: String(step), min: String(min), max: String(max), class: 'lg18-num', onchange: (e: Event) => { set(Math.max(min, Math.min(max, Number((e.target as HTMLInputElement).value) || 0))); rerender(); } });
-}
-/** r19 (onda 5, B.5): seções extras da aba Políticas (delegação por carreira em advance19). */
-export const POLICY19: ((s: GameState) => HTMLElement | null)[] = [];
-function policyTab(s: GameState): HTMLElement {
-  const P = pol18(s);
-  const row = (label: L, help: L, el: HTMLElement) => h('div', { class: 'lg18-pol' }, h('label', null, h('b', null, t(label)), ' ', el), h('small', { class: 'muted' }, t(help)));
-  return h('div', null,
-    h('p', { class: 'muted' }, t(l('A equipe delegada (agentes de shows, promotores e quem negocia contratos) segue estas regras sozinha. Você só vê as exceções, na Caixa e aqui.', 'Delegated staff (booking agents, promoters and whoever negotiates deals) follows these rules on its own. You only see the exceptions, in the inbox and here.'))),
-    row(l('Teto por gasto (US$ de hoje)', 'Spending cap (today\'s US$)'), l('0 = sem teto. Acima disso a ordem para e pede autorização.', '0 = no cap. Above it the order stops and asks for approval.'), num(P.cap, (x) => (P.cap = x), 500)),
-    row(l('Reserva mínima (meses de custo fixo)', 'Minimum reserve (months of fixed costs)'), { pt: `${t(l('Hoje: ', 'Now: '))}${usd(s, Math.round(P.reserve * burn18(s)))}${hasDoc18(s, 'prudence') ? ' · doutrina "Reserva sagrada": mínimo 4' : ''}`, en: `Now: ${usd(s, Math.round(P.reserve * burn18(s)))}${hasDoc18(s, 'prudence') ? ' · "Sacred reserve" doctrine: min 4' : ''}` }, num(P.reserve, (x) => (P.reserve = hasDoc18(s, 'prudence') ? Math.max(4, x) : x), 1, 0, 24)),
-    row(l('Descanso obrigatório (estresse/cansaço)', 'Mandatory rest (stress/fatigue)'), l('0 = desligado. A turnê delegada para quando alguém da banda passa desse nível.', '0 = off. Delegated touring stops when a band member passes this level.'), num(P.rest, (x) => (P.rest = x), 5, 0, 100)),
-    row(l('Máximo de shows por trimestre', 'Max shows per quarter'), l('0 = sem limite.', '0 = no limit.'), num(P.maxShows, (x) => (P.maxShows = x), 1, 0, 60)),
-    row(l('Renovação delegada', 'Delegated renewals'), l('Jurídico, empresário ou A&R renovam contratos que vencem em 9 semanas, dentro das condições abaixo.', 'Legal, manager or A&R renew deals ending within 9 weeks, within the terms below.'), h('input', { type: 'checkbox', checked: P.renew, onchange: () => { P.renew = !P.renew; rerender(); } })),
-    row(l('Bônus máximo (× adiantamento esperado)', 'Max bonus (× expected advance)'), l('Ex.: 0,3 = até 30% do que o artista espera de adiantamento.', 'E.g. 0.3 = up to 30% of the advance the act expects.'), num(P.renewMax, (x) => (P.renewMax = x), 0.05, 0, 2)),
-    row(l('Prazo da renovação (meses)', 'Renewal term (months)'), l('', ''), num(P.renewMonths, (x) => (P.renewMonths = x), 6, 6, 60)),
-    row(l('Confiança mínima', 'Minimum trust'), l('Abaixo disso a renovação volta para você.', 'Below this, renewal comes back to you.'), num(P.minTrust, (x) => (P.minTrust = x), 5, 0, 100)),
-    ...POLICY19.map((f) => f(s)),
-    section(t(l('Objetivo por artista', 'Goal per act')),
-      h('ul', null, playerActs(s).map((id) => s.acts[id]).filter((a) => a && !a.playerBand).map((a) => h('li', null, h('b', null, a.name), ' ',
-        select<Goal18>(P.goals[a.id] ?? 'grow', (Object.keys(GOAL18) as Goal18[]).map((g) => ({ value: g, label: t(GOAL18[g].name) })), (g) => { P.goals[a.id] = g; rerender(); }),
-        ' ', h('small', { class: 'muted' }, t(GOAL18[P.goals[a.id] ?? 'grow'].desc)))))),
-    section(t(l('Exceções recentes', 'Recent exceptions')), P.exc.length ? h('ul', null, P.exc.slice(0, 12).map((e) => h('li', { class: 'small' }, t(e.t)))) : h('p', { class: 'muted' }, t(l('Nenhuma. A equipe está dentro das regras.', 'None. Staff is within the rules.')))),
-    h('p', { class: 'small muted' }, t(l('Ordens travadas até hoje: ', 'Orders blocked so far: ')), String(P.n.blocked), ' · ', t(l('renovações feitas pela equipe: ', 'renewals done by staff: ')), String(P.n.renewed)));
-}
-
 function pmTab(s: GameState): HTMLElement {
   const pm = rv18(s).pm;
   if (!pm.length) return h('p', { class: 'muted' }, t(l('O primeiro post-mortem chega 12 semanas depois do seu próximo lançamento.', 'The first post-mortem arrives 12 weeks after your next release.')));
@@ -173,11 +145,10 @@ function diffTab(s: GameState): HTMLElement {
 }
 
 registerArea({ id: 'long18', label: l('Rumo do selo', 'Label course'), icon: 'flag', key: '',
-  badge: (s) => pol18(s).exc.filter((e) => e.w > s.week - 5).length || undefined,
+  badge: undefined,
   render: (s) => h('div', { class: 'panel lg18' }, tabs('long18', [
     { id: 'paths', label: t(l('Caminhos', 'Paths')), icon: 'flag', render: () => pathsTab(s) },
     { id: 'laws', label: t(l('Doutrinas e decisões', 'Doctrines & decisions')), icon: 'pen', render: () => lawsTab(s) },
-    { id: 'policy', label: t(l('Políticas', 'Policies')), icon: 'handshake', render: () => policyTab(s) },
     { id: 'pm', label: t(l('Post-mortems', 'Post-mortems')), icon: 'chart-up', render: () => pmTab(s) },
     { id: 'year', label: t(l('Ano em revista', 'Year in review')), icon: 'calendar', render: () => yearsTab(s) },
     { id: 'bio', label: t(l('Biografia', 'Biography')), icon: 'book', render: () => bioTab(s) },
