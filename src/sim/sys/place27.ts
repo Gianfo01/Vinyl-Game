@@ -68,6 +68,8 @@ export interface Place27 {
   /** r31 (S): facção dona da fachada (id do crime17) */ org?: string;
   /** r31 (LOTE): casa (quem mora: chave da pessoa, porte 0 apartamento · 1 casa · 2 mansão) ou terreno (seu ou à venda) */
   lot31?: { k: 'home' | 'sale' | 'own'; who?: string; tier?: number };
+  /** r31 (DECO-L): loja de decoração da cidade (móveis, antiquário, eletrônicos, galeria — sim/r31/decoshop31) */
+  deco31?: 'furniture' | 'antique' | 'hifi' | 'gallery';
 }
 /** r31 (FOS): a casa da família Fossati na cidade de início (sys/fossati31 preenche): ocupa um prédio de moradia. */
 export const FAMHOME27: { fn?: (s: GameState) => { name: L; what: L; owner: string; now: L; people: Person27[] } | null } = {};
@@ -79,6 +81,8 @@ export const LOTS27: {
   acts?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>) => PAct27[];
   run?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>, id: string) => { ok: boolean; text: L };
 } = {};
+/** r31 (DECO-L): as lojas de decoração ocupam prédios da cidade comum (sim/r31/decoshop31 preenche). */
+export const DECO27: { fn?: (s: GameState, out: Place27[]) => void } = {};
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
 
 /** R31 (H): negócio da época num prédio de cidade comum (lojas com ano de abertura e fechamento — sim/r31/city31). */
@@ -325,6 +329,8 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
       if (!p.venue || crew[0].job === 0) p.owner = crew[0].job === 0 ? crew[0].name : p.owner;
     }
   }
+  // r31 (DECO-L): lojas de decoração em prédios da cidade comum (antes dos lotes: a loja é um prédio com função)
+  DECO27.fn?.(s, out);
   // r31 (LOTE): prédio sem função vira casa de quem mora na cidade ou terreno vago (e o terreno comprado é seu)
   LOTS27.fn?.(s, out);
   return out;
