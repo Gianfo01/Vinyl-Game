@@ -1,4 +1,4 @@
-atos aceitos: 165
+atos aceitos: 166
 
 # fora (skip da pesquisa ou reprovado no gerador)
 Catulo da Paixão Cearense — poeta/compositor; fontes só registram gravações de suas obras por outros intérpretes
@@ -584,7 +584,6 @@ Laurindo Almeida — não pesquisado: limite de buscas web do turno (200) esgota
 Bola Sete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
 Toninho Ferragutti — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
 Trio Mossoró — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-LS Jack — pedido do dono — pesquisar no próximo turno (cota de buscas esgotada)
 Dalto — pedido do dono ("e mais") — pesquisar no próximo turno
 Hanói-Hanói — pedido do dono ("e mais") — pesquisar no próximo turno
 Yahoo — pedido do dono ("e mais") — pesquisar no próximo turno

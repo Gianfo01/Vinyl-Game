@@ -1,9 +1,9 @@
-{"n":"LS Jack","status":"skip","motivo":"pedido do dono — pesquisar no próximo turno (cota de buscas esgotada)","sugestao":"rock_br|rio"}
-{"n":"Dalto","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"pop_rock|rio"}
-{"n":"Hanói-Hanói","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"rock_br|rio"}
-{"n":"Yahoo","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"rock_br|rio"}
-{"n":"Byafra","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"mpb|rio"}
-{"n":"Marjorie Estiano","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"pop_rock|curitiba"}
-{"n":"Hori","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"emo|sao_paulo"}
-{"n":"Afrodite se Quiser","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"rock_br|rio"}
-{"n":"Inimigos da HP","status":"skip","motivo":"pedido do dono (\"e mais\") — pesquisar no próximo turno","sugestao":"rock_br|rio"}
+{"n": "LS Jack", "g": "rock_br", "c": "rio", "d": 1999, "f": 1997, "t": 3, "m": [["Marcus Menna", "vocal"]], "al": [["LS Jack", 1999, "lp"], ["Você Chegou", 1999, "single"], ["V.I.B.E.", 2002, "lp"]], "ap": ["f"], "apelidos": [], "fontes": ["https://pt.wikipedia.org/wiki/LS_Jack_(%C3%A1lbum)", "https://dicionariompb.com.br/grupo/ls-jack/", "https://pt.wikipedia.org/wiki/Marcus_Menna"], "confirmar": ["formação: 1997 (Wikipédia) ou 1996 (Cravo Albin)", "demais integrantes e situação atual não conferidos"], "status": "ok"}
+{"n": "Dalto", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "pop_rock|rio"}
+{"n": "Hanói-Hanói", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "rock_br|rio"}
+{"n": "Yahoo", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "rock_br|rio"}
+{"n": "Byafra", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "mpb|rio"}
+{"n": "Marjorie Estiano", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "pop_rock|curitiba"}
+{"n": "Hori", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "emo|sao_paulo"}
+{"n": "Afrodite se Quiser", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "rock_br|rio"}
+{"n": "Inimigos da HP", "status": "skip", "motivo": "pedido do dono (\"e mais\") — pesquisar no próximo turno", "sugestao": "rock_br|rio"}

@@ -1231,6 +1231,7 @@ export const REALNAMES31: Record<string, RealName31> = {
   'br31:bossacucanova': { real: 'Bossacucanova', substituto: 'Bossacmann', tipo: 'artist' },
   'br31:diante_do_trono': { real: 'Diante do Trono', substituto: 'Diaola do Trent', tipo: 'artist' },
   'br31:selma_do_coco': { real: 'Selma do Coco', substituto: 'Selent do Coita', tipo: 'artist' },
+  'br31:ls_jack': { real: 'LS Jack', substituto: 'LS Jaita', tipo: 'artist' },
   'br31:wilson_simoninha': { real: 'Wilson Simoninha', substituto: 'Wilaro Simonino', tipo: 'artist' },
   'br31:ana_paula_valadao': { real: 'Ana Paula Valadão', substituto: 'Anine Pauaro Valent', tipo: 'artist' },
   'br31:max_de_castro': { real: 'Max de Castro', substituto: 'Maix de Casaro', tipo: 'artist' },
