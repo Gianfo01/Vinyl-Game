@@ -70,7 +70,7 @@ export function registerPaper5(id: string, def: PaperDef5, objs: string[] = []):
 export const papers5 = (): string[] => [...REG5.keys()];
 export const paperOfObj5 = (obj: string): string | undefined => BY_OBJ5.get(obj);
 
-let cur: { id: string; tab: string } | null = null;
+let cur: { id: string; tab: string; area: string } | null = null;
 let host: HTMLElement | null = null;
 const TAB5: Record<string, string> = {};
 
@@ -80,7 +80,7 @@ export function openPaper5(id: string, tab?: string): boolean {
   if (!d || !store.game) return false;
   const tabs = d.tabs?.(store.game) ?? [];
   const tb = tab && tabs.some((x) => x.id === tab) ? tab : TAB5[id] && tabs.some((x) => x.id === TAB5[id]) ? TAB5[id] : tabs[0]?.id ?? '';
-  cur = { id, tab: tb };
+  cur = { id, tab: tb, area: store.area };
   TAB5[id] = tb;
   draw();
   return true;
@@ -113,7 +113,8 @@ Object.defineProperty(NAV5, 'go', { configurable: true, enumerable: true, get: (
 let rawRender: () => void = store.rerender;
 Object.defineProperty(store, 'rerender', {
   configurable: true, enumerable: true,
-  get: () => () => { rawRender(); if (cur) { if (store.game && nav5On(store.game)) draw(); else closePaper5(); } },
+  // redesenha o papel aberto depois de cada ação; se a ação levou a outra página (menu "ver…", "mais candidatos →"), o papel fecha
+  get: () => () => { if (cur && cur.area !== store.area) closePaper5(); rawRender(); if (cur) { if (store.game && nav5On(store.game)) draw(); else closePaper5(); } },
   set: (f: () => void) => { rawRender = f; },
 });
 
@@ -139,7 +140,7 @@ const at = (r: Rect5): string => `left:${r.x * SCALE}px;top:${r.y * SCALE}px;wid
 
 function draw(): void {
   const s = store.game;
-  if (!s || !cur || typeof document === 'undefined') return;
+  if (!s || !cur || typeof document === 'undefined' || typeof document.body?.append !== 'function') return;
   const d = REG5.get(cur.id);
   if (!d) return;
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -391,7 +392,8 @@ function fichBody(s: GameState, _tab: string, body: Rect5[]): HTMLElement {
   const set = (p: Partial<Fich5Filter>) => { Object.assign(FICH5, p, 'page' in p ? {} : { page: 0 }); draw(); };
   const sel = (label: L, v: string, opts: { value: string; label: string }[], on: (v: string) => void) => h('div', { class: 'el5-sel' }, h('span', null, `${ui(label)}:`),
     h('select', { 'aria-label': ui(label), onchange: (e: Event) => on((e.target as HTMLSelectElement).value) }, opts.map((o) => h('option', { value: o.value, ...(o.value === v ? { selected: 'selected' } : {}) }, o.label))));
-  const drawers = h('div', { class: 'el5-drawers' }, f.drawers.map((d) => h('button', { type: 'button', class: `el5-dr ${d.key === key ? 'on' : ''}`, disabled: !d.n, title: `${d.n}`, onclick: () => set({ key: d.key }) },
+  // letra crua: o filtro de nomes reais do h() troca textos inteiros iguais a um nome (ex.: uma letra solta)
+  const drawers = h('div', { class: 'el5-drawers' }, f.drawers.map((d) => raw(h('button', { type: 'button', class: `el5-dr ${d.key === key ? 'on' : ''}`, disabled: !d.n, title: `${d.n}`, onclick: () => set({ key: d.key }) }),
     FICH5.drawer === 'country' ? d.key : FICH5.drawer === 'genre' ? genreName(d.key) : d.key)));
   const filters = h('div', { class: 'el5-filters' },
     sel(N('Gaveta', 'Drawer'), FICH5.drawer, [{ value: 'letter', label: t(l('letra', 'letter')) }, { value: 'genre', label: t(l('gênero', 'genre')) }, { value: 'country', label: t(l('país', 'country')) }], (v) => set({ drawer: v as Fich5Filter['drawer'], key: '' })),

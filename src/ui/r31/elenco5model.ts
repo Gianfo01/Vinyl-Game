@@ -379,3 +379,28 @@ export function boardSlotWeek5(b: Board5, col: number): number {
   const wk = (b.cols[col]?.key ?? -1) - b.week0 + 1;
   return wk >= 1 && wk <= 4 ? wk : 0;
 }
+
+/** Onde cada coisa das telas de artistas de hoje fica no jogo explorável (página/aba antiga → papel/marcador ou caminho).
+ *  'ficha' = a ficha do artista (clique na polaroid, no cartão do fichário ou no nome do quadro); 'acoes' = o menu de ações
+ *  de sempre (botão direito / "Ações ▾" na polaroid, clique no quadro). Travado por teste: nada fica de fora. */
+export const REACH5: Record<string, { paper: string; tab?: string; via?: 'ficha' | 'acoes' | 'marcador' | 'pagina' }> = {
+  // Artistas (lista do elenco e subabas do artista)
+  'artists': { paper: 'mural', tab: 'roster' },
+  'artists20/overview': { paper: 'mural', via: 'ficha' }, 'artists20/agenda': { paper: 'mural', via: 'acoes' }, 'artists20/career': { paper: 'mural', via: 'acoes' },
+  'artists20/audience': { paper: 'mural', via: 'ficha' }, 'artists20/members': { paper: 'mural', via: 'acoes' }, 'artists20/full': { paper: 'mural', via: 'ficha' },
+  // Pessoas (as 6 abas viram marcadores do mural)
+  'people/roster': { paper: 'mural', tab: 'roster' }, 'people/health': { paper: 'mural', tab: 'health' }, 'people/relations': { paper: 'mural', tab: 'relations' },
+  'people/secrets': { paper: 'mural', tab: 'secrets' }, 'people/staff': { paper: 'mural', tab: 'staff' }, 'people/feed': { paper: 'mural', tab: 'feed' },
+  // Planejamento (Central): planos e reservas viram o quadro; o resto da Central continua na página de hoje
+  'plan': { paper: 'quadro', tab: 'all' },
+  // Agenda e contratações
+  'agenda17/agenda': { paper: 'agenda', tab: 'month' }, 'agenda17/you': { paper: 'agenda', tab: 'you' }, 'agenda17/hire': { paper: 'contratar', tab: 'jornal' },
+  'agenda17/free': { paper: 'contratar', tab: 'telefone' }, 'agenda17/session': { paper: 'contratar', tab: 'telefone' },
+  'calendar19': { paper: 'agenda', tab: 'month' }, 'cal17': { paper: 'agenda', via: 'pagina' },
+  // Todos os artistas / conhecidos
+  'directory': { paper: 'fichario' }, 'knownacts27': { paper: 'fichario' },
+  // Delegação
+  'deleg31': { paper: 'chefe' },
+};
+/** Subabas da página do artista hoje (actions20.SUB20), para o teste de alcance. */
+export const SUB_IDS5 = ['overview', 'agenda', 'career', 'audience', 'members', 'full'] as const;
