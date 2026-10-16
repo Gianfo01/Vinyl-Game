@@ -372,15 +372,10 @@ function ledgerFirst5(c: PageCtx5, tab: string | undefined): [HTMLElement, HTMLE
 // ---------------------------------------------------------------- caixa de entrada (mesma estrutura em toda época)
 
 /** A caixa de entrada inteira de hoje (mailView27), distribuída nas áreas da aparência da época. */
-export const inboxPaper5: PageRender5 = (c) => {
-  const { s } = c;
-  KIND5.set(c, `inbox-${inbox5Look(s.year)}`);
+interface Mail5 { mail: HTMLElement; tabs: HTMLElement; filters: HTMLElement; list: HTMLElement; read: HTMLElement; notes: HTMLElement; keys: HTMLElement }
+/** As peças da caixa de entrada de hoje (mailView27), presas a ela: a caixa se redesenha sozinha e as peças voltam ao lugar. */
+function mailPieces5(s: GameState): Mail5 {
   const mail = mailView27(s);
-  const tools = mail.querySelector<HTMLElement>('.m27-tools');
-  const flags = mail.querySelector<HTMLElement>('.m27-filters');
-  const split = mail.querySelector<HTMLElement>('.m27-split');
-  const lp = split?.querySelector<HTMLElement>('.m27-lpane'), rp = split?.querySelector<HTMLElement>('.m27-rpane');
-  // a caixa se redesenha sozinha (paint); as peças ficam presas a ela com um observador que as recoloca no lugar
   const list = h('div', { class: 'paper5-mail-list' }), read = h('div', { class: 'paper5-mail-read' });
   const tabs = h('div', { class: 'paper5-mail-tools' }), filters = h('div', { class: 'paper5-mail-flags' });
   const place = (): void => {
@@ -394,10 +389,7 @@ export const inboxPaper5: PageRender5 = (c) => {
       read.classList.toggle('reading', s0.classList.contains('reading'));
     }
   };
-  if (tools) tabs.append(tools);
-  if (flags) filters.append(flags);
-  if (lp) list.append(lp);
-  if (rp) read.append(rp);
+  place();
   // a raiz da caixa continua no documento (escondida) para as teclas J/K/Enter/S dela valerem (live27.root.isConnected)
   mail.classList.add('paper5-mail-root');
   if (typeof MutationObserver !== 'undefined') new MutationObserver(place).observe(mail, { childList: true });
@@ -405,16 +397,54 @@ export const inboxPaper5: PageRender5 = (c) => {
     ...[['J', 'K', l('próxima / anterior', 'next / previous')], ['Enter', '', l('abrir', 'open')], ['A', 'S', l('arquivar · estrela', 'archive · star')], ['1', '4', l('responder', 'reply')], ['Esc', '', l('voltar à sede', 'back to the HQ')]]
       .map(([a, b, x]) => h('div', { class: 'paper5-krow' }, pxKey5(a as string), b ? [b === '4' ? pxText5('-', '#f0e8d8') : null, pxKey5(b as string)] : null, pxText5(t(x as L), '#f0e8d8'))));
   const notes = h('div', { class: 'paper5-notes' }, pendingView18(s, 4));
+  return { mail, tabs, filters, list, read, notes, keys };
+}
+
+export const inboxPaper5: PageRender5 = (c) => {
+  const { s } = c;
+  KIND5.set(c, `inbox-${inbox5Look(s.year)}`);
+  const M = mailPieces5(s);
   const look = inbox5Look(s.year);
-  const unread = (mail.querySelectorAll('.m27-row.unread').length);
   const el = frame5(c, { k: 'inbox', look: inbox5Look }, {
-    head: head5(c, `${s.year} · ${t(INBOX_LOOK5[look])}`), tabs, pages: [list, read], extra: { filters, notes, keys },
+    head: head5(c, `${s.year} · ${t(INBOX_LOOK5[look])}`), tabs: M.tabs, pages: [M.list, M.read], extra: { filters: M.filters, notes: M.notes, keys: M.keys },
   });
   el.dataset.look = look;
-  el.dataset.unread = String(unread);
-  el.append(mail);
+  el.dataset.unread = String(M.mail.querySelectorAll('.m27-row.unread').length);
+  el.append(M.mail);
   return el;
 };
+
+// ---------------------------------------------------------------- miolo para a casca (shell5: ela põe moldura, título e marcadores)
+
+/** Moldura que a casca escolhe para o objeto (mesma regra de shell5.paperKind5), para o miolo vestir as cores certas. */
+const SHELL_KIND5: Record<string, string> = { livro: 'ledger', caderno: 'scout', quadro: 'whiteboard', revista: 'charts', cortica: 'cork', agenda: 'agenda', fichario: 'rolodex' };
+export const shellKind5 = (o: Obj5, year: number): string => (o.id === 'quadroplan' ? 'planning' : o.frame === 'caixa' ? `inbox-${inbox5Look(year)}` : SHELL_KIND5[o.frame] ?? 'form');
+
+/** O miolo do papel: abas internas da página como marcadores em pixel, páginas duplas nos livros, a caixa em suas áreas. */
+export function mioloPaper5(c: PageCtx5): HTMLElement {
+  const kind = shellKind5(c.obj, c.s.year);
+  const root = h('div', { class: `paper5 paper5m paper5-${kind} paper5-o-${c.obj.id.replace(/[^a-z0-9]/gi, '')}`, 'data-paper5': c.obj.id, 'data-area': c.area });
+  if (c.obj.id === 'correspondencia') {
+    const M = mailPieces5(c.s);
+    root.classList.add('paper5m-mail');
+    root.append(h('div', { class: 'paper5-x paper5-tabsrow' }, M.tabs), h('div', { class: 'paper5-x paper5-filtrow' }, M.filters),
+      h('div', { class: 'paper5m-grid' }, h('div', { class: 'paper5-page paper5-p0' }, M.list), h('div', { class: 'paper5-page paper5-p1' }, M.read),
+        h('div', { class: 'paper5m-side' }, h('div', { class: 'paper5-x paper5-notes-w' }, M.notes), h('div', { class: 'paper5-x paper5-keys-w' }, M.keys))), M.mail);
+    return root;
+  }
+  KIND5.set(c, kind);
+  const { key, marks, panel } = liftTabs5(c.page, keepTab5(c));
+  for (const m of marks) pxButton5(m, m.getAttribute('aria-selected') === 'true' ? '#ffffff' : '#2a2018');
+  const tab = key ? getTab(key) ?? marks.find((m) => m.getAttribute('aria-selected') === 'true')?.dataset.tab : undefined;
+  const two = c.obj.frame === 'livro' || c.obj.frame === 'caderno' || c.obj.frame === 'agenda';
+  const own = c.obj.id === 'livrocaixa' ? ledgerFirst5(c, tab) : null;
+  const sp = own ?? (two ? split5(panel) : null);
+  if (marks.length > 1) root.append(h('nav', { class: 'paper5m-marks paper5-marks', 'aria-label': t(l('Abas desta página', 'Tabs of this page')) }, marks));
+  const pages = sp ? [sp[0], sp[1]] : [panel];
+  root.append(h('div', { class: `paper5m-pages ${pages.length === 2 ? 'two' : 'one'}` }, pages.map((p, i) => h('div', { class: `paper5-page paper5-p${i}` }, h('div', { class: 'paper5-in' }, p)))));
+  if (two && pages.length === 1) root.classList.add('wide');
+  return root;
+}
 
 /** Nome curto da aparência (aparece no cabeçalho, como no mock: "1962 · cartas e telegramas"). */
 export const INBOX_LOOK5: Record<Inbox5, L> = {
@@ -427,7 +457,7 @@ export const INBOX_LOOK5: Record<Inbox5, L> = {
 /** Teclas próprias do papel aberto. Devolve true quando tratou. Sem papel na tela: false. */
 export function paperKey5Ev(e: { key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean; target?: EventTarget | null }, s: GameState | undefined): boolean {
   if (!s || !nav5On(s) || e.ctrlKey || e.metaKey || e.altKey || typeof document === 'undefined') return false;
-  const pp = document.querySelector<HTMLElement>('main [data-paper5]');
+  const pp = document.querySelector<HTMLElement>('[data-paper5]');
   if (!pp) return false;
   const tg = e.target as HTMLElement | null;
   if (tg && (/^(INPUT|SELECT|TEXTAREA)$/.test(tg.tagName) || tg.isContentEditable)) return false;
@@ -443,7 +473,7 @@ export function paperKey5Ev(e: { key: string; ctrlKey?: boolean; metaKey?: boole
     }
     if (k === 'Escape' && pp.querySelector('.paper5-mail-read.reading')) return mailKey27('Escape');
   }
-  if (k === 'Escape') { closePaper5(s); return true; }
+  if (k === 'Escape' && !pp.classList.contains('paper5m')) { closePaper5(s); return true; } // na casca, Esc é dela
   return false;
 }
 
@@ -476,8 +506,6 @@ registerPaperPage5('correspondencia', inboxPaper5);
 /** Os objetos desta frente (teste e capturas). */
 export const PAPER_OBJS5 = [...Object.keys(PAPER_FRAMES5), 'correspondencia'];
 
-// na API da casca (nav5): o papel inteiro a partir da página antiga do marcador aberto; sem desenho próprio, null
-for (const id of PAPER_OBJS5) registerPaper5(id, (c) => {
-  const r = PAGES5.get(id);
-  return r ? r({ s: c.s, obj: c.obj, area: c.marker.area, page: c.old(), close: c.close, mark: c.mark }) : null;
-});
+// na API da casca (nav5): o MIOLO do papel (a casca põe moldura, título, tecla, bolso, Esc e os marcadores das páginas);
+// as abas internas da página antiga viram marcadores do próprio miolo. Erro aqui = a casca mostra a página antiga.
+for (const id of PAPER_OBJS5) registerPaper5(id, (c) => mioloPaper5({ s: c.s, obj: c.obj, area: c.marker.area, page: c.old(), close: c.close, mark: c.mark }));

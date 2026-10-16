@@ -259,3 +259,29 @@ main:has(> .paper5) { padding: 12px 16px !important; overflow: hidden; }
 .paper5.wide .paper5-page { padding: 6px 10px; box-sizing: border-box; }
 .paper5.wide .paper5-in { --panel: #fffdf6; background: #fbf6ea; border: 2px solid #2a2018; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); padding-left: 22px !important; padding-right: 22px !important; }
 .paper5.wide .paper5-in .card, .paper5.wide .paper5-in section.card { box-shadow: none; }
+
+/* ---------------------------------------------------------------- miolo dentro da casca (shell5 .p5-body) */
+.p5-body:has(> .paper5m) { background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: hidden !important; }
+.paper5.paper5m { position: relative; height: 100%; min-height: 0; max-width: none; margin: 0; padding: 0; border-radius: 0; background: transparent; display: flex; flex-direction: column; gap: 4px; }
+.paper5m-marks { flex: 0 0 auto; display: flex; gap: 6px; padding: 2px 4px 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; border-bottom: 2px solid rgba(30, 24, 18, 0.55); }
+.paper5m-pages { flex: 1 1 auto; min-height: 0; display: grid; gap: 0; }
+.paper5m-pages.one { grid-template-columns: 1fr; }
+/* duas páginas: o vão do meio fica sobre a lombada/espiral da moldura */
+.paper5m-pages.two { grid-template-columns: 1fr 1fr; column-gap: 16px; }
+.paper5-scout .paper5m-pages.two { column-gap: 24px; }
+.paper5m-pages > .paper5-page { min-height: 0; overflow: auto; }
+/* folhas claras onde a moldura é escura ou ruidosa (cortiça, prancheta, quadro, fichário) */
+.paper5m.paper5-cork .paper5-in, .paper5m.paper5-form .paper5-in, .paper5m.paper5-rolodex .paper5-in, .paper5m.paper5-planning .paper5-in { background: rgba(251, 246, 234, 0.94); box-shadow: inset 0 0 0 2px rgba(30, 24, 18, 0.25); }
+.paper5m.paper5-whiteboard .paper5-in { background: rgba(255, 255, 255, 0.6); }
+.paper5m.wide .paper5-page { padding: 4px 8px; }
+/* caixa de entrada no miolo: faixas em cima, 3 colunas (lista · leitura · pendências e teclas) */
+.paper5m-mail { gap: 6px; }
+.paper5m-mail .paper5-tabsrow { flex: 0 0 auto; display: flex; align-items: center; min-height: 28px; overflow: hidden; }
+.paper5m-mail .paper5-filtrow { flex: 0 0 auto; display: flex; align-items: center; min-height: 26px; overflow: hidden; }
+.paper5m-mail .paper5-tabsrow > .paper5-mail-tools, .paper5m-mail .paper5-filtrow > .paper5-mail-flags { width: 100%; }
+.paper5m-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 40% minmax(0, 1fr) 18%; gap: 8px; }
+.paper5m-grid > .paper5-page { min-height: 0; overflow: auto; }
+.paper5m-side { min-height: 0; display: grid; grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; }
+.paper5m-side > .paper5-x { min-height: 0; overflow: auto; }
+.paper5m-mail .paper5-keys { height: 100%; box-sizing: border-box; }
+.paper5m-mail .paper5-notes { height: 100%; }

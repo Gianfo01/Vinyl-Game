@@ -38,7 +38,7 @@ const open = (id) => p.evaluate(async (id) => {
   const nav = await import('/src/ui/r31/nav5.ts');
   document.querySelectorAll('.overlay, .toast').forEach((e) => e.remove());
   nav.open5(id);
-  return !!document.querySelector(`main [data-paper5="${id}"]`);
+  return !!document.querySelector(`[data-paper5="${id}"]`);
 }, id);
 const shot = async (name) => { await p.waitForTimeout(900); await p.evaluate(() => document.querySelectorAll('.overlay, .toast').forEach((e) => e.remove())); await p.screenshot({ path: `${out}/onda5-papel-${name}.png` }); console.log('captura', name); };
 const PAPERS = ['livrocaixa', 'cofre', 'arquivoaco', 'revista', 'olheiro', 'quadrobranco', 'jornal', 'radiotv', 'secretaria', 'telefone', 'quadrometas', 'diario', 'caderno', 'graficos', 'contador'];
