@@ -24,8 +24,8 @@
 
 import { clamp, hashString, Rng } from '../core/rng';
 import { familyOf, l, type FamilyId, type L } from '../data/world';
-import { emitEvent, registerEvents, type Ctx, type EventDef } from './events';
-import { registerExt4, registerSimHook } from './ext4';
+import { emitEvent, type Ctx, type EventDef } from './events';
+import { deferEvents, registerExt4, registerSimHook } from './ext4';
 import { emitFact } from './facts17';
 import { know, see } from './know';
 import { opine, opinionOf } from './opinion';
@@ -247,10 +247,10 @@ function audW(a: Act): number {
 export function weight31(s: GameState, a: Act, female?: boolean): { k: number; why: L } {
   const fam = familyOf(a.genre);
   let k = GENRE_W31[fam] * audW(a);
-  let why = fmtL(l('gênero ({g}) e público', 'genre ({g}) and audience'), { g: GENRE_W31[fam] >= 1.15 ? l('visual pesa muito', 'looks weigh a lot') : GENRE_W31[fam] <= 0.6 ? l('visual pesa pouco', 'looks weigh little') : l('visual pesa o normal', 'looks weigh as usual') });
+  let why = fmtL(l('o gênero ({g}) e o público contam', 'genre ({g}) and audience count'), { g: GENRE_W31[fam] >= 1.15 ? l('visual pesa muito', 'looks weigh a lot') : GENRE_W31[fam] <= 0.6 ? l('visual pesa pouco', 'looks weigh little') : l('visual pesa o normal', 'looks weigh as usual') });
   if (female && pressure31(s) === 'normal' && s.year >= 1950 && s.year < 2018) {
     k *= 1.15;
-    why = fmtL(l('{w}; pressão estética da época, mais dura com as mulheres', '{w}; the era\'s beauty pressure, harsher on women'), { w: why });
+    why = fmtL(l('{w}; e a pressão estética da época é mais dura com as mulheres', '{w}; and the era\'s beauty pressure is harsher on women'), { w: why });
   }
   return { k, why };
 }
@@ -406,11 +406,12 @@ export function acceptOdds31(s: GameState, pid: string, id: Svc31): { p: number;
   const why: L[] = [];
   let x = SVC31[id].hard ? 0.2 : 0.55;
   x += (so.f.vaidade - 50) / 120;
-  why.push(fmtL(l('vaidade {v}', 'vanity {v}'), { v: so.f.vaidade >= 65 ? l('alta', 'high') : so.f.vaidade <= 35 ? l('baixa', 'low') : l('média', 'average') }));
+  if (so.f.vaidade <= 40) why.push(l('pouca vaidade', 'little vanity'));
   const a = actOfP(s, pid);
   const roots = a && ROOTS31.includes(familyOf(a.genre));
   if (roots && SVC31[id].hard) { x -= 0.18; why.push(l('gênero de raiz: medo de parecer falso', 'roots genre: fear of looking fake')); }
   x -= (so.v.arte - 50) / 300;
+  if (so.v.arte >= 70) why.push(l('quer ser lembrado(a) pela música', 'wants to be remembered for the music'));
   if ((rec31(s, pid)?.ref ?? 0) > 0) { x -= 0.1; why.push(l('já recusou antes', 'refused before')); }
   x += opinionOf(s, `p:${pid}`) / 400;
   return { p: clamp(x, 0.03, 0.97), why };
@@ -749,7 +750,7 @@ export const EVENTS31: EventDef[] = [
       { id: 'makeup', label: l('Maquiagem e seguir', 'Make-up and keep going'), hint: l('Estresse e cansaço sobem.', 'Stress and fatigue rise.'), apply: (s, _r, c) => { mood(P_(s, c), -3, 6, 8); } },
     ]),
 ];
-registerEvents(EVENTS31);
+deferEvents(EVENTS31); // fila até events.ts terminar de carregar (ciclo de imports)
 
 // ---------------------------------------------------------------- avatar: a mudança aparece no sprite (puro)
 

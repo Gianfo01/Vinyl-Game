@@ -50,7 +50,7 @@ export function lookBlock31(s: GameState, key: string, redraw?: () => void): HTM
         own ? row(l('Forma física', 'Fitness'), v.form, true) : null,
         sa ? row(l('Sex appeal', 'Sex appeal'), sa.v, own) : null),
     own && v.parts.length ? h('p', { class: 'small muted' }, v.parts.map((x) => `${t(x.why)} ${x.v > 0 ? '+' : ''}${x.v}`).join(' · ')) : null,
-    sa && own ? h('p', { class: 'small muted' }, t(l('Nesta época e gênero o visual pesa {w}.', 'In this era and genre looks weigh {w}.'), { w: t(sa.w >= 0.15 ? l('muito', 'a lot') : sa.w >= 0.07 ? l('o normal', 'as usual') : l('pouco', 'little')) }), ' ', t(sa.why[1])) : null,
+    sa && own ? h('p', { class: 'small muted' }, t(l('Peso do visual nesta época: {w} ({y}).', 'Weight of looks in this era: {w} ({y}).'), { w: t(sa.w >= 0.15 ? l('muito', 'a lot') : sa.w >= 0.07 ? l('médio', 'medium') : l('pouco', 'little')), y: t(sa.why[1]) })) : null,
     v.marks.length && (own || vis) ? h('p', { class: 'small' }, v.marks.map((m) => pill(t(MARK_TXT[m[0]] ?? l('marca', 'mark')), m[2] >= 0 ? 'good' : 'bad'))) : null,
     sl.secrets.length ? h('p', { class: 'small' }, pill(t(l('procedimento', 'procedure')), 'bad'), ' ', sl.secrets.map((x) => `${t(SVC31[x[3] as Svc31]?.name ?? l('procedimento', 'procedure'))}${x[2] === 2 ? ` (${t(l('público', 'public'))})` : x[2] === 1 ? ` (${t(l('boato', 'rumour'))})` : ` (${t(l('em segredo', 'secret'))})`}`).join(' · ')) : null,
     own ? h('div', { class: 'row wrap' }, h('button', { class: 'btn small', onclick: () => openLook31(s, pid, redraw) }, t(l('Cuidar da aparência…', 'Take care of looks…')))) : null,
