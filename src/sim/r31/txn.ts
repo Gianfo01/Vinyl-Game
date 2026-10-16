@@ -22,7 +22,12 @@ export type TxnCls = 'res' | 'inv' | 'fin';
 export const TXN_CLS: TxnCls[] = ['res', 'inv', 'fin'];
 export const clsOf = (sect: Sect18): TxnCls => (sect === 'inv' ? 'inv' : sect === 'fin' ? 'fin' : 'res');
 
-export interface TxnTags { artist?: string; project?: string; period?: string }
+export interface TxnTags {
+  artist?: string; project?: string; period?: string;
+  /** onda 3 (P): marcas finas gravadas no ato — o lançamento (release) e a turnê que geraram o valor. O projeto (dimensão
+   *  durável) é o lançamento, a turnê ou o projeto musical ainda sem lançamento. */
+  release?: string; tour?: string;
+}
 export interface TxnCtx extends TxnTags { payer?: string; owner?: string; beneficiary?: string }
 export interface Txn { key: string; w: number; amount: number; cat: string; cls: TxnCls; cash: boolean; payer: string; owner: string; beneficiary: string; tags: TxnTags }
 
@@ -56,7 +61,7 @@ export function inferTags(s: GameState, key: string): TxnTags {
   const out: TxnTags = {};
   for (const tok of key.split(':')) {
     if (!out.artist && s.acts[tok]) out.artist = tok;
-    else if (!out.project && s.releases[tok]) { out.project = tok; if (!out.artist && s.releases[tok].actId) out.artist = s.releases[tok].actId; }
+    else if (!out.project && s.releases[tok]) { out.project = tok; out.release = tok; if (!out.artist && s.releases[tok].actId) out.artist = s.releases[tok].actId; }
   }
   return out;
 }
@@ -68,6 +73,9 @@ export function recordTxn(s: GameState, key: string, amount: number, cat: string
   const c = ctxNow();
   const inf = c.artist && c.project ? {} : inferTags(s, key);
   const tags: TxnTags = { artist: c.artist ?? inf.artist, project: c.project ?? inf.project, period: c.period ?? String(s.year) };
+  const rel = c.release ?? (c.project ? undefined : inf.release);
+  if (rel) tags.release = rel;
+  if (c.tour) tags.tour = c.tour;
   const t: Txn = {
     key, w: s.week, amount, cat, cls: clsOf(sect), cash,
     payer: c.payer ?? (amount >= 0 ? 'ext' : 'player'),
@@ -88,7 +96,16 @@ export function recordTxn(s: GameState, key: string, amount: number, cat: string
   st.n++;
   st.last.push(t);
   if (st.last.length > LAST_CAP31) st.last.splice(0, st.last.length - LAST_CAP31);
+  for (const fn of txnObs31()) fn(s, t, sect);
   return t;
+}
+
+/** onda 3 (P): ouvintes de cada transação já atribuída (resultados por projeto, diário com contexto). Só leitura do
+ *  lançamento; função içada como `postObs18`. */
+export type TxnObs31 = (s: GameState, t: Txn, sect: Sect18) => void;
+export function txnObs31(): TxnObs31[] {
+  const f = txnObs31 as unknown as { l?: TxnObs31[] };
+  return (f.l ??= []);
 }
 
 postObs18().push((s, key, amount, cat, sect, cash) => { recordTxn(s, key, amount, cat, sect, cash); });

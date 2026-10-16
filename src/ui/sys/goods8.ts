@@ -22,6 +22,7 @@ import { h, select } from '../dom';
 import { chips, stat, tabs, tile } from '../vis';
 import { investmentsTab } from './bolsa10';
 import { rng19 } from '../../sim/rng19';
+import { freeCash20 } from '../../sim/oblig20';
 import { askConfirm } from '../ask31';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
@@ -101,7 +102,7 @@ function shopTab(s: GameState): HTMLElement {
   return h('div', null,
     wealthChips(s),
     h('div', { class: 'layer-bar', role: 'group' }, cats.map((c) => h('button', { type: 'button', class: `chip-btn ${shopCat === c ? 'on' : ''}`, 'aria-pressed': shopCat === c ? 'true' : 'false', onclick: () => { shopCat = c; rerender(); } }, t(CAT_NAMES[c])))),
-    h('p', { class: 'muted small' }, t(l('Tudo sai do seu patrimônio pessoal, não do caixa do selo. Bens têm manutenção mensal; se faltar dinheiro por três meses, o banco toma e leiloa. Venda quando quiser pelo valor de mercado (menos 6%).', 'Everything comes out of your personal wealth, not the label\'s cash. Belongings have monthly upkeep; three months unpaid and the bank repossesses them. Sell any time at market value (minus 6%).'))),
+    h('p', { class: 'muted small' }, t(l('Sai do seu patrimônio pessoal; se a empresa pagar, o bem continua seu e o valor conta como retirada sua (pró-labore/dividendo), não como custo do selo. Bens têm manutenção mensal; se faltar dinheiro por três meses, o banco toma e leiloa. Venda quando quiser pelo valor de mercado (menos 6%).', 'It comes out of your personal wealth; if the company pays, the item is still yours and the amount counts as your draw (salary/dividend), not a label cost. Belongings have monthly upkeep; three months unpaid and the bank repossesses them. Sell any time at market value (minus 6%).'))),
     h('div', { class: 'cards' }, list.filter((d) => goodAvailable(s, d)).map((d) => {
       const price = goodPrice(s, d);
       const have = goods(s).owned.filter((x) => x.id === d.id).length;
@@ -111,6 +112,8 @@ function shopTab(s: GameState): HTMLElement {
         effects(d),
         have ? pill(t(l('você tem {n}', 'you own {n}'), { n: have }), 'good') : null,
         lockBtn31(t(l('Comprar', 'Buy')), o.wealth < price ? lock31(fmtL(l('Patrimônio pessoal {w}; custa {p}.', 'Personal wealth {w}; costs {p}.'), { w: $(o.wealth), p: $(price) }), l('Junte patrimônio: salário, royalties pessoais ou venda de um bem.', 'Build wealth: salary, personal royalties or selling a belonging.')) : null, () => run(buyGood(s, d.id), l('Comprado!', 'Bought!')), { cls: 'btn small primary' }), // R31 (RN-04)
+        // R31 (B.17): pagar com o caixa da empresa — o bem é seu, então aparece como retirada do dono
+        lockBtn31(t(l('Pela empresa', 'Via the company')), freeCash20(s) < price ? lock31(fmtL(l('Caixa livre da empresa {w}; custa {p}.', 'Company free cash {w}; costs {p}.'), { w: $(freeCash20(s)), p: $(price) }), l('O caixa livre desconta o que já está reservado.', 'Free cash excludes what is already reserved.')) : null, () => run(buyGood(s, d.id, 'label'), l('Comprado pela empresa: lançado como retirada sua.', 'Bought by the company: booked as your draw.')), { cls: 'btn small', title: t(l('O bem fica com você, então o pagamento conta como retirada (pró-labore/dividendo), não como custo da empresa.', 'The item stays with you, so the payment counts as a draw (salary/dividend), not a company cost.')) }),
       ]);
     })),
   );
@@ -125,7 +128,7 @@ function mineTab(s: GameState): HTMLElement {
     const gain = o.value / Math.max(1, o.paid) - 1;
     return h('tr', null,
       h('td', null, h('b', null, d ? t(d.name) : o.id), d ? h('div', { class: 'muted small' }, t(CAT_NAMES[d.cat])) : null),
-      h('td', null, $(o.paid)),
+      h('td', null, $(o.paid), o.by === 'label' ? h('div', null, pill(t(l('pago pela empresa: retirada', 'paid by the company: draw')), 'info')) : null),
       h('td', null, $(o.value), ' ', pill(pct(gain), gain >= 0 ? 'good' : 'bad')),
       h('td', null, d ? `${$(goodUpkeep(s, d))}/${t(l('mês', 'mo'))}` : '—', o.unpaid ? pill(t(l('atrasada', 'overdue')), 'bad') : null),
       h('td', null, h('button', { class: 'btn small', onclick: async () => { if (await askConfirm(t(l('Vender por {v}?', 'Sell for {v}?'), { v: $(saleValue(o)) }))) run(sellGood(s, o.uid), l('Vendido.', 'Sold.')); } }, `${t(l('Vender', 'Sell'))} ${$(saleValue(o))}`)));

@@ -20,7 +20,8 @@ import { P } from './people/state';
 import { gainXp, ownerOf, type OwnerAttr } from './people/owner';
 import { grow } from './talent';
 import { gainTrait } from './vices';
-import { purse, type PCat } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { drawFor, purse, type PCat } from '../r31/purse31';
+import { cashWhy20, freeCash20 } from '../oblig20'; // R31 (P/B.17): dinheiro pessoal com registro
 
 // ---------------------------------------------------------------- catálogo de bens
 
@@ -226,7 +227,7 @@ export const FOUNDATION: Record<FoundationFocus, { name: L; desc: L }> = {
 // ---------------------------------------------------------------- estado
 
 /** `let`: alugado a terceiros (rende aluguel, mas você deixa de usar); `vac`: meses vagos restantes; `rented`: aluguel acumulado. */
-export interface Owned { uid: string; id: string; week: number; paid: number; value: number; unpaid?: number; let?: boolean; vac?: number; rented?: number; since?: number }
+export interface Owned { uid: string; id: string; week: number; paid: number; value: number; /** R31 (B.17): quem pagou ('label' = caixa da empresa, lançado como retirada); o dono é sempre você */ by?: 'label'; unpaid?: number; let?: boolean; vac?: number; rented?: number; since?: number }
 export interface Goods8State {
   seq: number;
   owned: Owned[];
@@ -302,7 +303,9 @@ export function goodAvailable(s: GameState, d: GoodDef): boolean {
 export const goodPrice = (s: GameState, d: GoodDef): number => money(s, d.price);
 export const goodUpkeep = (s: GameState, d: GoodDef): number => money(s, d.upkeep);
 
-export function buyGood(s: GameState, id: string): L | null {
+/** R31 (B.17): `by: 'label'` paga com o caixa da empresa — o bem fica com você, então conta como retirada do dono
+ *  (pró-labore/dividendo, `drawFor`), não como custo da empresa. */
+export function buyGood(s: GameState, id: string, by: 'me' | 'label' = 'me'): L | null {
   const d = goodById[id];
   if (!d) return l('Item desconhecido.', 'Unknown item.');
   if (!goodAvailable(s, d)) return l('Ainda não existe nesta época.', 'Not available in this era.');
@@ -310,10 +313,15 @@ export function buyGood(s: GameState, id: string): L | null {
   if (st.owned.some((x) => x.id === id) && d.cat !== 'art' && d.cat !== 'collect') return l('Você já tem um desses.', 'You already own one.');
   if (st.owned.length >= 24) return l('Bens demais para cuidar: venda algo antes.', 'Too many things to look after: sell something first.');
   const price = goodPrice(s, d);
-  const e = pay(s, price);
-  if (e) return e;
+  if (by === 'label') {
+    if (freeCash20(s) < price) return cashWhy20(s, price, l('A empresa não tem esse caixa livre.', 'The company does not have that free cash.'));
+    drawFor(s, `goodco:${id}:${st.seq + 1}`, price, 'goods', 'misc', `Bem pessoal: ${d.name.pt}`, fmtL(l('{n}, pago pela empresa', '{n}, paid by the company'), { n: d.name }));
+  } else {
+    const e = pay(s, price);
+    if (e) return e;
+  }
   st.seq += 1;
-  st.owned.push({ uid: `g${st.seq}`, id, week: s.week, paid: price, value: price });
+  st.owned.push({ uid: `g${st.seq}`, id, week: s.week, paid: price, value: price, ...(by === 'label' ? { by } : {}) });
   ownerOf(s).stress = clamp(ownerOf(s).stress - 3, 0, 100);
   bumpPerks();
   glog(s, fmtL(l('Comprou: {n}.', 'Bought: {n}.'), { n: d.name }), 'good', price >= money(s, 100000));
