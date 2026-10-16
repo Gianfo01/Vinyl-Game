@@ -1,3 +1,25 @@
+# LOTE (onda 4) — registro de lotes da cidade: resumo da medição
+
+**O que mudou para o jogador:** quase todo prédio do mapa "Nosso mundo" tem função: é um negócio que já existe (lugares do
+bairro, lugares reais e lojas da época da frente H, festival do mês), um terreno à venda ou seu (placa "VENDE-SE"/"SEU" com
+preço e motivo de bloqueio), ou a casa de quem mora na cidade (CEO de gravadora, artista, família Fossati em São Paulo), com
+interior em pixel art (apartamento → casa → mansão) e as ações que já existem (conhecer, pôr no radar, negociar em particular).
+O botão "Funções" marca a função de cada prédio e mostra a cobertura.
+
+**Cobertura (teste `r31-lotes`, 4 cidades × 4 épocas, depois de 1 mês):** 100% em Nova York, São Paulo, Londres e Rio em 1925,
+1975, 2012 e 2036 com `lots31` ligado; desligado: 88–100% (o mapa da frente H já transforma a maioria dos prédios genéricos em
+lojas da época; o que sobra são prédios de moradia genéricos, que viram as casas).
+
+**Números (ligado × desligado, `--sw lots31=false`, 4 sementes × 5 eras × 36 meses):** caixa, patrimônio, fama, atos,
+lançamentos, nº 1, receita e partidas encerradas **idênticos nas 20 partidas** — o robô não compra terreno, e as casas não mexem
+em dinheiro. Só o save cresce ~1 KB (estado `x4.lots31`: moradores e registro de mudanças). A regra econômica (compra de terreno
+como investimento, bem sem depreciação no balanço, obra em terreno seu a 85%) só age quando o jogador compra; está atrás do
+interruptor e coberta por teste (`r31-lotes`: compra, transação atribuída `lot31:<lote>`, bem, placa "SEU").
+
+Arquivos: `lote.json`/`lote.md` (ligado), `lote-off.json`/`lote-off.md` (desligado).
+
+---
+
 # Medição de referência — lote (W0-BASE)
 
 Gerado por `npx tsx scripts/r31/measure.ts` (4 sementes × 5 eras, 36 meses cada, robô `playbot16` perfil equilibrado, selo, rock, base padrão).
