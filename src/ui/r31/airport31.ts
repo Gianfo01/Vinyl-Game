@@ -120,8 +120,8 @@ function paint(cv: HTMLCanvasElement, s: GameState, m: Air31): void {
   ['london', 'new_york', 'paris', 'rio', 'tokyo'].filter((c) => c !== s.config.homeCity && !rows.some((f) => f.city === c)).slice(0, 4 - rows.length)
     .forEach((c, i) => drawText(p, fitText(cityN(c).toUpperCase(), 62), 147, 20 + (rows.length + i) * 7, chalk ? C('#7a8a74') : C('#6a6658')));
   // portas (hangar e cais) e relógio
-  discV(p, 248 - 6, 76, 6, pal.paper);
-  p.line(242, 76, 242, 72, INK); p.line(242, 76, 245, 77, INK);
+  discV(p, 135, 70, 5, pal.paper);
+  p.line(135, 70, 135, 67, INK); p.line(135, 70, 137, 71, INK);
   if (m.hangar) { box(p, 214, 60, 30, 36, tint(pal.metal, -0.1), 0); p.rect(218, 64, 22, 32, C('#2a2e36')); sign(p, 229, 52, T(l('HANGAR', 'HANGAR')), pal.paper, C('#2a3a5a')); }
   box(p, 266, 70, 34, 26, pal.woodDark, 0); p.rect(270, 74, 26, 22, C('#1e2a38')); sign(p, 283, 64, T(l('CAIS', 'PIER')), pal.paper, C('#1a4a6a'));
   // estúdio de holograma (2027+)
@@ -139,7 +139,7 @@ function paint(cv: HTMLCanvasElement, s: GameState, m: Air31): void {
   if (!ctx) return;
   const fur = (k: Parameters<typeof furniture>[0], x: number, y: number, f: 'SW' | 'SE' = 'SW'): void => { const sp = furniture(k, eraOf(m.year), f); ctx.drawImage(sp.c, x - sp.ax, y - sp.ay); };
   fur('sofa', 176, 136); fur('plant', 160, 128); fur('lamp', 212, 126);
-  if (m.holo) { fur('holo', 46, 92); }
+  if (m.holo) { fur('holo', 148, 104); }
   const dude = (id: string, x: number, y: number, dir: 'SE' | 'SW' | 'NE' | 'NW', scale = 1): void => {
     const sp = avatarSprite(lookOf({ id }), { year: m.year, role: null, pose: 'stand', dir });
     ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x - 6 * scale, y, 12 * scale, 2);
