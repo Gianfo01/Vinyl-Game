@@ -69,6 +69,8 @@ const rng = (s: GameState) => rng19(s, 'contests19');
 const mine = (s: GameState, a?: Act): a is Act => !!a && (a.owner === 'player' || !!a.playerBand);
 const npc = (a: Act): boolean => a.owner !== 'player' && !a.playerBand;
 const usd = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
+/** R31: leitura sem criar registro ("explorar não muda o mundo"). */
+export const edPeek19 = (s: GameState, ct: string, y = s.year): Ed19 => ct19(s).ed.find((x) => x.ct === ct && x.y === y) ?? { ct, y };
 export const edOf19 = (s: GameState, ct: string, y = s.year): Ed19 => { const st = ct19(s); let e = st.ed.find((x) => x.ct === ct && x.y === y); if (!e) { e = { ct, y }; st.ed.push(e); if (st.ed.length > 40) st.ed.shift(); } return e; };
 export const entryFee19 = (s: GameState, c: Ct19) => money(s, 600 * c.power);
 export const sponsFee19 = (s: GameState, c: Ct19) => money(s, 9000 * c.power);
@@ -257,7 +259,7 @@ registerConseq18('ib:ct19_sign:pass', { later: [{ in: [4, 12], p: 0.25, tone: 'b
 registerConseq18('ct19:produce', { later: [{ in: [6, 14], p: 0.4, tone: 'good', hint: T('Um formato próprio vira vitrine.', 'An own format becomes a showcase.'), fx: (f) => { f.rep('institutional', 2); return T('O seu concurso entra no calendário nacional da TV.', 'Your contest joins the national TV calendar.'); } }] });
 registerDeadline('contests19', (s, from, to) => ctNow19(s).flatMap((c) => {
   const w = s.week + Math.round((c.m - s.month) * 4.35);
-  return w >= from && w <= to && !edOf19(s, c.id).done ? [{ id: `contests19-${c.id}-${s.year}`, w, kind: 'award' as const, t: fmtL(l('Final: {f}', 'Final: {f}'), { f: ctName19(s, c) }), tone: 'info' as const, goto: { area: 'live19', tab: ['live19', 'contests'] as [string, string] } }] : [];
+  return w >= from && w <= to && !edPeek19(s, c.id).done ? [{ id: `contests19-${c.id}-${s.year}`, w, kind: 'award' as const, t: fmtL(l('Final: {f}', 'Final: {f}'), { f: ctName19(s, c) }), tone: 'info' as const, goto: { area: 'live19', tab: ['live19', 'contests'] as [string, string] } }] : [];
 }));
 registerExplain('ct19.odds', (s, c) => {
   const ct = CT19.find((x) => x.id === String(c.ct ?? '')), a = s.acts[String(c.act ?? '')];
