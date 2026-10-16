@@ -44,6 +44,16 @@ registerSwitch({ id: 'y31.reserve', def: true, scope: 'game',
   desc: l('Paradas: parte de cada parada nacional fica reservada aos artistas do país, conforme a preferência local (último recurso).',
     'Charts: part of each national chart is reserved for the country\'s artists, by local preference (last resort).') });
 
+// R31 onda 3 (bal · equilíbrio da onda junta): tiragem sugerida pela mesma previsão do lançamento (com a verba, o hype e
+// o tipo do plano) e para a vida do disco, não só as 10 primeiras semanas. Medido: com a sugestão antiga (sem verba,
+// 10 semanas) o robô prensava ~1/3 da procura e perdia por falta de estoque quase 2× o que vendia (docs/r31/bal.md).
+registerSwitch({ id: 'bal31.press', def: true, scope: 'game',
+  desc: l('Tiragem sugerida: usa a previsão com a verba e o hype do plano e cobre a vida do disco (não só as 10 primeiras semanas).',
+    'Suggested run: uses the forecast with the plan\'s budget and hype and covers the record\'s life (not just the first 10 weeks).') });
+registerSwitch({ id: 'bal31.pressLife', def: 1.3, scope: 'game',
+  desc: l('Tiragem sugerida: procura da vida do disco ÷ procura das 10 primeiras semanas (1 = só as 10 semanas).',
+    'Suggested run: lifetime demand ÷ first-10-weeks demand (1 = first 10 weeks only).') });
+
 export const on31 = (s: GameState, id: string): boolean => !!sw<boolean>(s, id);
 
 // ---------------------------------------------------------------- D · pressão de mercado

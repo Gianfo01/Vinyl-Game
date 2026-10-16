@@ -297,7 +297,8 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
   const formats = availableFormats(s);
   const per1000 = Math.max(1, pressingCost(s, formats, 1000) - pressingCost(s, formats, 0));
   const affordable = Math.floor((pol ? Math.min(s.player.cash * 0.15, pol.maxSpend * 0.5) : s.player.cash * 0.15) / per1000) * 1000;
-  const press = labelFunded(s, act.id) ? suggestedPress(s, act, type) : Math.min(suggestedPress(s, act, type), affordable);
+  const want = suggestedPress(s, act, type, 50, { marketing: budget > 0 && main ? [{ channel: main.id, budget }] : [], extra: { songs } });
+  const press = labelFunded(s, act.id) ? want : Math.min(want, affordable);
   if (s.player.cash < money(s, 1500)) return;
   const cashBefore = s.player.cash;
   const res = scheduleRelease(s, r, {

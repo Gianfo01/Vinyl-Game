@@ -107,7 +107,7 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
     case 'single': {
       const sid = ph.refId!;
       if (!s.songs[sid] || s.songs[sid].releaseId) break;
-      const res = scheduleRelease(s, r, { actId: act.id, type: 'single', songs: [sid], formats, press: Math.max(300, Math.round(suggestedPress(s, act, 'single') * 0.6)), marketing: ph.budget ? [{ channel: mainChannel(s, 'single'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, rolloutId: ro.id, hype: ro.hype * 0.5 });
+      const res = scheduleRelease(s, r, { actId: act.id, type: 'single', songs: [sid], formats, press: Math.max(300, Math.round(suggestedPress(s, act, 'single', s.songs[sid].q, { marketing: ph.budget ? [{ channel: mainChannel(s, 'single'), budget: ph.budget }] : [], extra: { songs: [sid], hype: ro.hype * 0.5 } }) * 0.6)), marketing: ph.budget ? [{ channel: mainChannel(s, 'single'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, rolloutId: ro.id, hype: ro.hype * 0.5 });
       if ('pt' in res) notify(s, fmtL(l('Single do rollout não saiu: {e}', 'Rollout single failed: {e}'), { e: res }), 'bad');
       else {
         ro.hype += 0.06;
@@ -129,7 +129,7 @@ function runPhase(s: GameState, r: Rng, ro: Rollout, ph: RolloutPhase): void {
     case 'album': {
       const songs = ro.songIds.filter((id) => s.songs[id]?.recorded);
       for (const id of songs) delete s.flags[`ro:${id}`];
-      const res = scheduleRelease(s, r, { actId: act.id, type: 'lp', songs, title: ro.title, formats, press: suggestedPress(s, act, 'lp', 60), marketing: ph.budget ? [{ channel: mainChannel(s, 'album'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, hype: ro.hype, rolloutId: ro.id, kind: 'standard' });
+      const res = scheduleRelease(s, r, { actId: act.id, type: 'lp', songs, title: ro.title, formats, press: suggestedPress(s, act, 'lp', 60, { marketing: ph.budget ? [{ channel: mainChannel(s, 'album'), budget: ph.budget }] : [], extra: { songs, hype: ro.hype } }), marketing: ph.budget ? [{ channel: mainChannel(s, 'album'), budget: ph.budget }] : [], territories: s.player.territories, weeksAhead: 1, hype: ro.hype, rolloutId: ro.id, kind: 'standard' });
       if ('pt' in res) notify(s, fmtL(l('O álbum do rollout não saiu: {e}', 'Rollout album failed: {e}'), { e: res }), 'bad');
       break;
     }

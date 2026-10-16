@@ -9,7 +9,9 @@ import { l, type L, type MarketId } from '../data/world';
 import { actLang, actState, actTalent, songTitle, traitMod } from './people';
 import type { Act, GameState, PendingRelease, Release, Song } from './types';
 import { fmtL, hasTech, money, nextId, notify, post, staffSkill } from './util';
-import { forecastUnits } from './market';
+import { forecastUnits, type ForecastExtra31 } from './market';
+import { on31 } from './r31/market31';
+import { sw } from './r31/switches';
 import { hqCaps } from './branches';
 import { takeIdea } from './repertoire';
 import { applyMods, runSimHooks } from './ext4';
@@ -171,7 +173,16 @@ export function physicalShare(s: GameState, year = s.year): number {
   return p;
 }
 
-export function suggestedPress(s: GameState, act: Act, type: 'single' | 'ep' | 'lp', q = 50): number {
+/** O que o plano do lançamento já sabe (verba, territórios, hype, tipo) para a tiragem sugerida usar a mesma previsão. */
+export interface PressPlan31 { marketing?: { channel: string; budget: number }[]; territories?: MarketId[]; extra?: ForecastExtra31 }
+
+export function suggestedPress(s: GameState, act: Act, type: 'single' | 'ep' | 'lp', q = 50, plan?: PressPlan31): number {
+  // R31 onda 3 (bal31.press): a previsão com a verba e o hype do plano, vezes a vida do disco (bal31.pressLife)
+  if (on31(s, 'bal31.press')) {
+    const f = forecastUnits(s, act, type, q, plan?.marketing ?? [], plan?.territories ?? s.player.territories, plan?.extra);
+    const life = Math.max(1, sw<number>(s, 'bal31.pressLife'));
+    return Math.max(300, Math.round((f.mid * physicalShare(s) * life) / 100) * 100);
+  }
   const f = forecastUnits(s, act, type, q, [], s.player.territories);
   return Math.max(300, Math.round((f.mid * physicalShare(s)) / 100) * 100);
 }
