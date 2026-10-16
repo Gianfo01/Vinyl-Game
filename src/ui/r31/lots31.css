@@ -1,0 +1,11 @@
+/* R31 · onda 4 (LOTE) — lotes da cidade: cobertura, compra de terreno, função marcada no mapa */
+.lt31-cover { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin: 4px 0; }
+.lt31-k { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.lt31-k::before { content: ''; width: 9px; height: 9px; border-radius: 2px; background: var(--k); border: 1px solid rgba(0, 0, 0, 0.35); }
+.lt31-buy { margin: 6px 0; display: grid; gap: 4px; }
+.lt31-own { margin: 6px 0; }
+.lt31-ov { display: grid; gap: 4px; margin: 4px 0 8px; }
+.lt31-list { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 6px; }
+.lt31-list li { line-height: 1.35; }
+.w19-hs .c27-pin.fn31 { outline: 2px solid var(--k); outline-offset: 1px; }
+.w19-hs.sale.own31 .c27-pin { background: #eaf6ee; box-shadow: 0 0 0 1.5px #2a9a5a, 0 2px 4px rgba(0,0,0,0.4); }

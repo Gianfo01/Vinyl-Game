@@ -64,6 +64,7 @@ export const STREAMS19: Record<string, string> = {
   broker31: 'intermediário das facções de fora: prazo, traição, entrega (só quando o jogador contrata) (sys/broker31)',
   socio31: 'sócios e compras: sorte do mês de cada negócio seu (festival, casa, rádio, estúdio) e o que o sócio NPC faz (propor, pedir saída, brigar) — só com participação (sys/socio31)',
   vit31: 'vitrine do mês: o que cada lugar mostra no mês (itens, pessoas, raridades), sorteado na virada (r31/vitrine31)',
+  lots31: 'lotes da cidade: quem subiu de porte se muda para uma casa maior e o paparazzi na porta (só com lots31.press) — sys/lots31',
   bolsa31: 'bolsa: humor do mercado (desvio pequeno e com memória do preço sobre o valor de cada empresa listada) (r31/value31 stepPrice31)',
   // r31 (W0-RNG): chaves que substituíram o fluxo único antigo (rngOf / s.rng)
   world: 'geração do mundo inicial: datas das tecnologias, gêneros, gravadoras, artistas e pessoas (worldgen)',

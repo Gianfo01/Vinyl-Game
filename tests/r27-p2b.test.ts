@@ -129,8 +129,8 @@ describe('r27 P2B — modo rápido intacto', () => {
     expect(AFTER.player.cash).toBe(182589);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(3575668786);
     expect(hashString(JSON.stringify(AFTER.acts))).toBe(1693608899);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(508431984);
-  // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728.
+    expect(hashString(rngSnapshot19(AFTER))).toBe(3302724126);
+  // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(AFTER.tours.some((t) => t.road)).toBe(false); // UNI-4: estrada na própria turnê
