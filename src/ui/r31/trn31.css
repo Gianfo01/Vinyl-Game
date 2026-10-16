@@ -1,0 +1,21 @@
+/* R31 · onda 5 (TRN, EXP-11) — transições entre telas. A arte é um buffer em pixel ampliado sem suavizar; o texto do
+   cartão, da passagem e das pendências vem por cima em HTML (acentos e as duas línguas). */
+.trn31 { position: fixed; inset: 0; z-index: 10050; overflow: hidden; cursor: pointer; }
+.trn31.ghost { pointer-events: auto; background: transparent; }
+.trn31.dim { background: rgba(6, 8, 14, 0.55); }
+.trn31-cv, .trn31-zoom { position: absolute; left: 0; top: 0; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.trn31-card, .trn31-ticket { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 0.35em; padding: 0 1.2em; pointer-events: none; }
+.trn31-card .trn31-t { font-family: var(--pixel, monospace); font-size: clamp(16px, 2.1vw, 30px); letter-spacing: 0.04em; color: #f0c060; font-weight: 400; }
+.trn31-card.m-lamina .trn31-t { color: #ff4fa0; }
+.trn31-card.m-led .trn31-t { color: #4ff0ff; }
+.trn31-card .trn31-w { font: 600 clamp(14px, 1.7vw, 24px) var(--sans, sans-serif); color: #e9e2d0; }
+.trn31-card .trn31-l { font: 400 clamp(13px, 1.45vw, 21px) var(--sans, sans-serif); color: #9aa8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trn31-ticket { justify-content: flex-start; padding-top: 0.4em; gap: 0.25em; }
+.trn31-ticket .trn31-th { font-family: var(--pixel, monospace); font-size: clamp(10px, 1vw, 15px); color: #f4ecd8; margin-bottom: 0.9em; letter-spacing: 0.08em; }
+.trn31-ticket .trn31-tr { font-family: var(--pixel, monospace); font-size: clamp(13px, 1.55vw, 24px); color: #1a1214; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trn31-ticket .trn31-tl { font: 600 clamp(12px, 1.35vw, 20px) var(--sans, sans-serif); color: #3a3040; margin-top: 0.3em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trn31-chips { position: absolute; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.trn31-chips li { font: 600 clamp(14px, 1.5vw, 21px) var(--sans, sans-serif); color: #e9e2d0; background: #1c3048; border-left: 4px solid #f0c060; padding: 6px 16px; max-width: min(80vw, 640px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5); }
+.trn31-chips li.none { color: #9aa8b8; border-left-color: #5d7088; }
+.trn31-route span { position: absolute; transform: translateX(-50%); font: 600 13px var(--sans, sans-serif); color: #1a1214; background: #f0c060; padding: 2px 8px; white-space: nowrap; pointer-events: none; }
+.trn31 [hidden] { display: none !important; }

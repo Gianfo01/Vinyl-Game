@@ -83,9 +83,10 @@ const TINTS: { id: MapTint; name: L }[] = [
 ];
 
 const BLOC_NAMES: Record<string, L> = { west: l('Bloco ocidental', 'Western bloc'), east: l('Bloco socialista', 'Eastern bloc'), nonaligned: l('Não alinhado', 'Non-aligned') };
-const MODE_NAMES: Record<TransportMode, L> = {
+export const MODE_L31: Record<TransportMode, L> = {
   train: l('trem', 'train'), bus: l('ônibus', 'bus'), ship: l('navio', 'ship'), prop_plane: l('avião a hélice', 'prop plane'), jet: l('jato', 'jet'), hyperloop: l('hyperloop', 'hyperloop'),
 };
+const MODE_NAMES = MODE_L31;
 export const transportName = (m: TransportMode) => t(MODE_NAMES[m]);
 
 // ---------------------------------------------------------------- glifos pixel art
@@ -515,6 +516,15 @@ export class WorldMap {
       this.ty += this.hgt / 2 - y;
       this.clampView();
     }
+  }
+
+  /** R31 onda 5 (TRN): posição da cidade na tela (para a rota da transição de viagem); null fora da página. */
+  screenOf(id: string): { x: number; y: number } | null {
+    const c = cityById[id];
+    if (!c || !this.canvas.isConnected || !this.w) return null;
+    const r = this.canvas.getBoundingClientRect();
+    const [x, y] = this.project(c.lon, c.lat);
+    return { x: r.left + x * (r.width / this.w), y: r.top + y * (r.height / this.hgt) };
   }
 
   private project(lon: number, lat: number): [number, number] {
