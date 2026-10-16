@@ -255,7 +255,10 @@ describe('r27 M2 — negociação jogável', () => {
     const s1 = clone(FIX); s1.player.cash += 50_000_00;
     const act = pickAct(s1);
     const n1 = startNego27(s1, act.id, draft(s1, act.id)) as Nego27;
+    // R31 Z (base nova): o ato escolhido mudou e aceita pouco; a proposta cai até ficar abaixo do mínimo dele
     const low = { ...n1.ours, advance: 0, royalty: 0.05 };
+    for (const k of [{ royalty: 0.02 }, { releasesOwed: 8 }, { termMonths: 96 }]) if (evaluateOffer(s1, act, low).score >= n1.res - 0.05) Object.assign(low, k);
+    expect(evaluateOffer(s1, act, low).score).toBeLessThan(n1.res - 0.05);
     propose27(s1, n1, low, 'deadline');
     expect(n1.status === 'walked' || n1.status === 'sniped').toBe(true);
 

@@ -229,7 +229,8 @@ describe('W2-REV · contratos', () => {
 
   it('proposta padrão pela cena: recusada sai das ofertas, como no formulário', () => {
     let seen = 0;
-    for (const seed of ['w2rev-n1', 'w2rev-n2', 'w2rev-n3']) {
+    // R31 onda 3 junta: com a base nova e o mercado por país quase todos aceitam ou são levados por outro selo; 6 sementes
+    for (const seed of ['w2rev-n1', 'w2rev-n2', 'w2rev-n3', 'w2rev-n4', 'w2rev-n5', 'w2rev-n6']) {
       const s0 = game(seed);
       scoutSome(s0, 40);
       for (const t of sceneTargets31(s0, 'nego').slice(0, 25)) {

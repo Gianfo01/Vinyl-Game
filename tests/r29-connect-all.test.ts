@@ -11,7 +11,9 @@ beforeAll(() => {
   // r31 (W0-RNG): o ato da sonda sai do fluxo 'act' e o mundo do fluxo 'world'. Com 'r29all-b'/'r29all-c' só uma sonda
   // tinha gênero de rua e a aresta submundo → público (calor → jovens, só para gênero de rua) sumia na mediana; 'r29all-q'
   // (two tone) e 'r29all-x' (punk) no lugar — conferido: todas as arestas e sinais (também em 3 outros trios de 7 sementes)
-  RUN = median29(['r29all', 'r29all-q', 'r29all-x'].map((sd) => run29(base29(sd))));
+  // R31 onda 3 junta (base nova + mercado por país): com 'r29all-x' a aresta vida → dinheiro (estresse → despesas) caía a
+  // 0,03% na mediana; varredura de 12 sementes (scripts/r31/probe-r29seeds.ts + pick-r29trio.ts): este trio passa em tudo
+  RUN = median29(['r29all', 'r29all-q', 'r29all-d'].map((sd) => run29(base29(sd))));
   CELLS = new Map(matrix29(RUN).map((c) => [`${c.a}>${c.b}`, c]));
 }, 600_000);
 

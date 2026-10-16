@@ -11,4 +11,6 @@ export const LEGACY_FORERUNNERS19: string[] = [
   'Luis Alberto Spinetta', 'Yma Sumac', 'Aquarium', 'Southern All Stars', 'Miyuki Nakajima', 'Abida Parveen',
   'Mory Kanté', 'Olivia Newton-John', 'Sun Ra', 'Ornette Coleman', 'Pete Seeger', 'Emmylou Harris',
   'Ilê Aiyê',
+  // R31 Z (base nova): pais do brega e da balada pop latina, antes do gênero do jogo existir
+  'Waldick Soriano', 'Leo Dan',
 ];
