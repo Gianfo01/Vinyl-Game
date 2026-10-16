@@ -39,6 +39,7 @@ import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista n
 import { paletteBase31, paletteCmds31 } from './r31/quick31'; // R31 (O): busca que abre a ação, favoritos e metas
 import './r31/results31ui'; // R31 onda 3 (P): resultados por projeto/artista e extrato pessoal (Finanças)
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
+import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
 import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)

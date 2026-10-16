@@ -30,7 +30,7 @@ import { lockBtn31 } from './lock31';
 import { goDest31, openQuick31, runQuick31 } from './quick31';
 import { quickRows31, registerQuick31 } from './quick31core';
 import { salaHook31 } from './salahook31';
-import { AREA_SALA31, CAREERS31, ROOMS31, ROOM_SALA31, SALA_NAME31, activeCareers31, auditSala31, salaModel31, SALAS31, type Btn31, type Chip31, type Do31, type Hot31, type SalaId31, type SalaM31 } from './salas31model';
+import { AREA_SALA31, CAREERS31, ROOMS31, ROOM_SALA31, RUN31, SALA_NAME31, activeCareers31, auditSala31, salaModel31, SALAS31, type Btn31, type Chip31, type Do31, type Hot31, type SalaId31, type SalaM31 } from './salas31model';
 import { drawSala31, youSprite31, type Rect31 } from './salas31px';
 import './salas31.css';
 
@@ -70,6 +70,7 @@ export function run31(s: GameState, d: Do31, m?: SalaM31): void {
     case 'release': openRelease(d.id); return;
     case 'you': goDest31({ area: 'you' }); return;
     case 'agg': aggregate(s, m ?? salaModel31(s, 'team')); return;
+    case 'run': { const e = RUN31[d.id]?.(s, d.arg) ?? null; toast(t(e ?? l('Feito.', 'Done.')), e ? 'bad' : 'good'); rerender(); return; }
   }
 }
 
