@@ -24,7 +24,9 @@ for (let i = 0; i < months; i++) {
   for (let k = 0; k < 3; k++) { await p.keyboard.press('Escape'); await p.waitForTimeout(150); }
   await p.locator('.overlay button, .modal button').filter({ hasText: /OK|Fechar|Continuar|Entendi|Pular/i }).first().click({ timeout: 800 }).catch(() => {});
   await p.locator('.topbar .advance .btn.primary').first().click({ timeout: 8000 }).catch(() => p.keyboard.press('Control+Enter'));
-  await p.waitForTimeout(2500);
+  await p.waitForTimeout(1500);
+  await p.getByText(/Aceitar padrões e avançar|Accept defaults and advance/).first().click({ timeout: 1500 }).catch(() => {});
+  await p.waitForTimeout(2000);
 }
 const after = await label();
 await p.screenshot({ path: resolve('dist-single/smoke.png') }).catch(() => {});
