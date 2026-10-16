@@ -13,11 +13,15 @@ import { CO31, ME31, TIER_NAME31, relicMeasure31, tierStars31 } from '../../sim/
 import type { GameState } from '../../sim/types';
 import { $, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
+import { lockBtn31 } from './lock31';
+import { ownerOf } from '../../sim/sys/people/owner';
+import { cashWhy20, freeCash20 } from '../../sim/oblig20';
 
 const UI = { city: '', to: '', pay: 'me' as 'me' | 'co' };
 const CAT: Record<string, L> = { instr: l('Instrumento', 'Instrument'), gift: l('Presente', 'Gift'), garage: l('Garagem', 'Garage') };
 
-function card(s: GameState, r: ShopRow31, ppl: string[]): HTMLElement {
+/** Cartão de um item (usado na lista e nos painéis da cena da loja — city31ui). */
+export function card(s: GameState, r: ShopRow31, ppl: string[]): HTMLElement {
   const buy = (how: BuyHow31) => { const res = buyOffer31(s, r.offer, how); toast(t(res), buyErr31(res) ? 'bad' : 'good'); rerender(); };
   const to = ppl.includes(UI.to) ? UI.to : ppl[0];
   let head: HTMLElement;
@@ -38,8 +42,9 @@ function card(s: GameState, r: ShopRow31, ppl: string[]): HTMLElement {
   const ef = to ? giftEffect31(s, to, r.relic ? r.relic.v : r.def!.price, r.def?.fam, !!r.relic) : null;
   return h('div', { class: 'card' }, head, h('div', null, h('b', null, $(r.price))), ...body,
     h('div', { class: 'row wrap' },
-      h('button', { class: 'btn small primary', onclick: () => buy({ k: 'me' }) }, t(l('Ficar comigo (pessoal)', 'Keep it (personal)'))),
-      h('button', { class: 'btn small', onclick: () => buy({ k: 'co' }) }, t(l('Para a empresa', 'For the company')))),
+      // R31 (H): motivo do bloqueio antes do clique (RN-04)
+      lockBtn31(t(l('Ficar comigo (pessoal)', 'Keep it (personal)')), ownerOf(s).wealth < r.price ? l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.') : null, () => buy({ k: 'me' }), { cls: 'btn small primary' }),
+      lockBtn31(t(l('Para a empresa', 'For the company')), freeCash20(s) < r.price ? cashWhy20(s, r.price, l('Caixa da empresa insuficiente.', 'Not enough company cash.')) : null, () => buy({ k: 'co' }))),
     to ? h('div', { class: 'row wrap' },
       select(to, ppl.map((id) => ({ value: id, label: s.persons[id].name })), (v) => { UI.to = v; rerender(); }),
       select(UI.pay, [{ value: 'me' as const, label: t(l('paga você', 'you pay')) }, { value: 'co' as const, label: t(l('paga a empresa', 'the company pays')) }], (v) => { UI.pay = v; }),
