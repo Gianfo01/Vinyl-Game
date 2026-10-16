@@ -277,6 +277,35 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - 2026-10-16 · 31.4 POL2 · Estados vazios no padrão novo: diretoria r27 vira `scene31px.paintDirectors31` (corte da sede, mesa na frente, cadeira vazia em cada lugar sem ninguém); salas de negociação mostram as cadeiras vazias dos lugares da outra parte (`emptySeats31`); estante de troféus e pedestais vazios com suporte e plaquinha; vaga do elenco = banqueta e microfone; no mapa, letreiro de rádio/TV real nunca some pelo zoom (`planTags31`) · acabamento visual (pedido do dono) · —
 - 2026-10-16 · 31.4 POL2 · Outdoors do mapa: além dos nº 1 das paradas e do seu anúncio pago, artista em alta (maior momento, retrato do sprite), lançamento recente de rival e turnê com show marcado na cidade (30 dias); no máximo 4, cada artista/disco uma vez, só leitura do estado (sem rng); clique abre a ficha do disco ou do artista · acréscimo do dono · goldens iguais (sem sorteio novo)
 
+## Onda 4 · GEO — geografia real da cidade no mapa (só aparência)
+- **Fonte única:** `src/data/geo31.ts` (tabela `GEO31`, ~150 cidades: todas de BAY27/TOWERS27/BRICK27/STONE27 e as jogáveis
+  do mundo). Por cidade: de que lado do mapa fica a água (mar, baía, rio, estreito, lago, lagoa), a margem (praia com
+  calçadão, cais, costão), se o rio tem cidade na outra margem, e de que lado ficam os morros (com ou sem favela).
+  Cidade fora da tabela = terra em volta (campo e subúrbio).
+- **Lados do mapa:** grade +gx = leste, +gy = sul. n = fundo à direita, w = fundo à esquerda, e = frente à direita,
+  s = frente à esquerda. O horizonte (skyline27) mostra água e morros só na metade do lado certo (esquerda = oeste,
+  direita = norte, divisa no canto norte do mapa).
+- **Água sempre fora da grade.** Os lotes (LOTS18) não mudaram de lugar; em todos os tamanhos de mapa (20×16 → 44×32) nenhum
+  lote cai em água/praia/cais (teste `r31-geo`). Rio "cortando a cidade" = rio colado na borda com a outra margem habitada
+  (mesmos prédios de cidade comum, não clicáveis) e pontes onde as ruas cruzam; o rio cresce para fora junto com os bairros.
+- **Ilha só onde é ilha:** Honolulu, Hong Kong (ilha) e Singapura (`ISLANDS31`); o teste trava as outras.
+- **Ruas fora da grade:** continuam pelo campo, morro e outra margem; viram ponte sobre rio/estreito de até 8 células; acabam no
+  calçadão/cais em mar e baía. Carros não entram no mar.
+- **Morros:** com amplitude ≥ 0,6 viram mata (ou favela em degraus, Rio/Salvador/Caracas/Medellín/Porto Príncipe, desde 1940)
+  no chão daquele lado; mais baixos ficam só no horizonte. Preferência por morros no fundo (n/w).
+- **Marcos:** cada marco pede água (pontes, Opera House, Estátua da Liberdade, bondinho do Pão de Açúcar, Torre de Belém),
+  morro (Cristo) ou terra firme; vão para o candidato do fundo mais próximo do bastidor antigo que combina. Em lado de rio o
+  marco de terra vai para a outra margem; marco de terra sem lugar em terra firme fica fora (não vira ilha).
+- **Porto e casas de show junto da água (decisão do dono, 2026-10-16: "sim"):** a posição dos lotes entra na simulação
+  (vizinhança com bônus, `world19.lotGap19`), então os lotes NÃO mudam de lugar. Em vez disso o mapa de cada cidade é
+  orientado (`geo31.mapGeo31`: uma das 8 rotações/espelhamentos da geografia real, escolhida por pontuação): a água do porto
+  (cais) vai para a borda leste, onde ficam os lotes do porto e da estação (31–42); a praia vai para o sul, onde fica a zona
+  das casas de show (boemia); morros vão para o fundo. Sem ganho, fica a bússola real (o Rio já estava assim). A tabela
+  continua na bússola real; só muda de que lado da tela a geografia aparece. Marco de água que cai na frente (ponte,
+  ópera, estátua do porto) vira sprite com profundidade. Simulação e goldens iguais.
+- **Elevador Lacerda (decisão do dono):** desenho próprio (escarpa da Cidade Alta com casario, torre e passarela; art déco
+  desde 1930, ferro antes) no lugar do arranha-céu genérico.
+- Goldens r27-p2a, r27-p2b, r27-m3, r16-playbot sem mudança (só desenho).
 - **Testes mais leves a partir do fim da onda 4 (decisão do dono, 2026-10-16):** como a onda 5 vai mudar muita coisa, as frentes não rodam mais a suíte inteira. Cada uma roda `tsc`, os testes do próprio tema, os goldens (r27-p2a, r27-p2b, r27-m3, r16-playbot) e os testes que tocam os arquivos mexidos. A junção na integração faz o mesmo, mais a fumaça da build (`scripts/r31/smoke.mjs`). As falhas que as frentes já apontaram (r14-db, r17-data, r19-data-base, r29-connect-all, r31-base, r31-w2rev, r31-editor "disparar evento", r29-relics por tempo, r27-m2 "mesma seed") são corrigidas numa passada só no fim, na onda 6 (FIM-5 suíte verde).
 - 2026-10-16 · 31.4 POL2 · Janela dos interiores (`interior27`, peça `window`) = `window31` (cidade e época reais) no lugar de `prim27.backWindow`; vale para o AMOR (descoberta, encontros) e todos os interiores com janela. Coração: plural de 'pessoa sabe' e 'fofoqueiro' · acréscimo do dono · goldens iguais
 - 2026-10-16 · 31.5 INI (EXP-9/EXP-10) · TELA INICIAL E NOVA RUN NOVAS atrás de `exp5.ini` (LIGADO por padrão, pedido do dono). O interruptor vale antes de existir partida: o valor mora no navegador (`swUi`/`setSwUi` em `switches.ts`, chave `vtn:sw31ui`); no editor da partida aparece como `sw.exp5.ini`. Desligado, `titleScreen` volta à tela r27 e a configuração completa volta ao layout antigo. Cena do palco (`ui/r31/stage5px.ts`) só com a arte do jogo; época/cidade/carreira da tela inicial = última partida salva no perfil (`vtn:ini5last:<perfil>`, gravado por `afterSave17`) ou uma da vitrine. A ficha rápida gera a configuração pelo mesmo caminho da Nova run rápida antiga (`quickRunConfig27`) e as escolhas novas pelos setters da configuração completa: traço = clique do `traitPicker`; "nomes reais" = `setRealNames31` (o handler do cartão Mundo virou função exportada, mesmo comportamento); "mundo segue a história real" = `applyWorld17('exact')` (desligado = 'random', o padrão). A configuração completa é a MESMA tela (`newGameScreen`) vestida de prancheta (`skin5`): etapas à esquerda, conteúdo no papel, prévia à direita, teclas { e }; nenhum cartão sai · goldens iguais
