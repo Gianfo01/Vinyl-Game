@@ -491,9 +491,9 @@ export function riskParts31(s: GameState): [L, number][] {
   const out: [L, number][] = [];
   if (!affairOn31(s) || !love17(s).affair) return out;
   const ks = whoKnows31(s);
-  if (ks.length) out.push([fmtL(l('{n} pessoa(s) sabem', '{n} people know'), { n: ks.length }), ks.length * 0.008]);
+  if (ks.length) out.push([fmtL(ks.length === 1 ? l('{n} pessoa sabe', '{n} person knows') : l('{n} pessoas sabem', '{n} people know'), { n: ks.length }), ks.length * 0.008]);
   const g = ks.filter((x) => x.gossip).length;
-  if (g) out.push([fmtL(l('{n} fofoqueiro(s) entre elas', '{n} gossip(s) among them'), { n: g }), g * 0.01]);
+  if (g) out.push([fmtL(g === 1 ? l('{n} fofoqueiro entre elas', '{n} gossip among them') : l('{n} fofoqueiros entre elas', '{n} gossips among them'), { n: g }), g * 0.01]);
   const pe = pressEra31(s.year);
   const pf = playerFame(s);
   if (pf >= 15) out.push([fmtL(l('Imprensa da época: {p}', 'The era\'s press: {p}'), { p: pe.name }), pe.k * (0.5 + pf / 60)]);

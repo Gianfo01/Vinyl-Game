@@ -22,7 +22,8 @@ import { l } from '../../data/world';
 
 export const MW31 = 300, MH31 = 150, MFY31 = 127;
 export interface RoomPx31 { back: Px; front: Px }
-export interface RoomOpts31 { city?: string; month?: number; glass?: boolean; cards?: number; /** onde há gente sentada (cadeira atrás) */ seats?: { x: number; y: number }[] }
+export interface RoomOpts31 { city?: string; month?: number; glass?: boolean; cards?: number; /** onde há gente sentada (cadeira atrás) */ seats?: { x: number; y: number }[];
+  /** POL2: lugares da mesa sem ninguém — a cadeira vazia aparece encostada atrás da mesa (nunca uma mesa solta) */ empty?: { x: number; y: number }[] }
 
 const blk = prim27.blk;
 /** Mesa de lado (tampo com fio de luz, saia e pernas) na camada da frente. */
@@ -37,9 +38,17 @@ function chairBack(p: Px, c: Cut27, x: number): void {
   const col = c.year < 1970 ? c.pal.woodDark : c.year < 1995 ? c.pal.fabric : C('#2a2a32');
   blk(p, x - 6, c.fy - 26, 12, 14, col); p.vline(x - 5, c.fy - 12, c.fy - 1, lv(col, 2)); p.vline(x + 4, c.fy - 12, c.fy - 1, lv(col, 2));
 }
+/** Cadeira vazia atrás da mesa (POL2): encosto inteiro com o assento e o pé à vista entre as pernas da mesa. */
+function emptyChair(p: Px, c: Cut27, x: number): void {
+  chairBack(p, c, x);
+  const col = c.year < 1970 ? c.pal.woodDark : c.year < 1995 ? c.pal.fabric : C('#2a2a32');
+  p.hline(x - 4, x + 3, c.fy - 22, lv(col, 4)); // brilho no alto do encosto (ninguém na frente)
+  blk(p, x - 7, c.fy - 13, 14, 3, lv(col, 3.4)); // assento
+}
 function begin(year: number, o: RoomOpts31, floor: 'office' | 'studio' | 'lounge' | 'lobby', seed: number): { c: Cut27; f: Px } {
   const c = cut27(MW31, year, { floor, dim: false, seed, city: o.city });
   for (const s of o.seats ?? []) chairBack(c.layer, c, s.x);
+  for (const s of o.empty ?? []) emptyChair(c.layer, c, s.x);
   return { c, f: new Px(MW31, MH31) };
 }
 function end(c: Cut27, f: Px, k: 'office' | 'studio' | 'label' = 'office'): RoomPx31 {
@@ -213,6 +222,34 @@ export function spots31(room: Room31, sides: ('you' | 'them' | 'watch')[]): Spot
   });
 }
 
+/** POL2: os lugares da outra parte que a sala tem e ficaram sem ninguém (cadeira vazia atrás da mesa). */
+const SEATS31: Partial<Record<Room31, number>> = { table: 2, board: 4, bank: 1, ceo: 1 };
+export function emptySeats31(room: Room31, sides: ('you' | 'them' | 'watch')[]): { x: number; y: number }[] {
+  const max = SEATS31[room] ?? 0, n = sides.filter((x) => x === 'them').length;
+  if (n >= max) return [];
+  const all = spots31(room, ['you', ...Array<'them'>(max).fill('them')]).slice(1);
+  return all.slice(n).filter((x) => x.pose === 'sit').map((x) => ({ x: x.x, y: x.y }));
+}
+
+/** Reunião de diretoria (r27, POL2): sala da diretoria no corte da sede — janelão com a cidade e a época reais,
+ *  discos de ouro, arquivo e planta; mesa comprida na FRENTE e uma cadeira por lugar (as sem ninguém ficam vazias,
+ *  encostadas atrás da mesa, com o papel da pauta à espera). */
+export const DIR_SEATS31 = 6;
+export const dirSeatX31 = (i: number): number => 88 + i * 25;
+export function paintDirectors31(year: number, n: number, o: RoomOpts31 & { stand?: number } = {}): RoomPx31 {
+  const occ = Array.from({ length: DIR_SEATS31 }, (_, i) => i < n && i !== o.stand);
+  const { c, f } = begin(year, { ...o, seats: occ.flatMap((v, i) => (v ? [{ x: dirSeatX31(i), y: MFY31 }] : [])), empty: occ.flatMap((v, i) => (!v && i >= n ? [{ x: dirSeatX31(i), y: MFY31 }] : [])) }, 'office', 157);
+  const { layer: p, back, g, y0, fy, pal } = c;
+  window31(back, 96, y0 + 8, 132, 40, o.city ?? 'rio', year, o.month ?? 6);
+  for (let i = 0; i < 2; i++) prim27.goldDisc({ ...g, p }, 36 + i * 14, y0 + 14, i === 1);
+  prim27.shelf({ ...g, p }, 30, y0 + 34, 30, fy - y0 - 34, year < 1985 ? 'records' : year < 2005 ? 'cds' : 'books');
+  prim27.filing({ ...g, p }, 246, fy); prim27.plant({ ...g, p }, 270, fy, true);
+  tableFront(f, c, 72, 172, 14, pal.woodDark);
+  for (let i = 0; i < DIR_SEATS31; i++) { const x = dirSeatX31(i); f.poly([[x - 6, fy - 15], [x + 5, fy - 15], [x + 6, fy - 14], [x - 7, fy - 14]], pal.paper); }
+  f.rect(156, fy - 19, 3, 5, mix(pal.glass, C('#ffffff'), 0.3)); f.rect(160, fy - 17, 2, 3, mix(pal.glass, C('#ffffff'), 0.5)); // jarra e copo
+  return end(c, f, 'label');
+}
+
 // ---------------------------------------------------------------- exemplos para a checagem automática (POL)
 const ROOMS31: Room31[] = ['table', 'office', 'rehearsal', 'board', 'bank', 'ceo', 'radio'];
 registerPol31('mech31', () => ROOMS31.flatMap((room) => [1930, 1975, 2024].map((year) => {
@@ -221,4 +258,17 @@ registerPol31('mech31', () => ROOMS31.flatMap((room) => [1930, 1975, 2024].map((
   const r = paintRoom31(room, year, true, 4, { seats: sp.filter((x) => x.pose === 'sit') });
   return { id: `mech31:${room}:${year}`, W: MW31, H: MH31, back: r.back, front: r.front, floors: [MFY31], people: sp, texts: [],
     spots: sp.map((x, i) => ({ id: `p${i}`, x: x.x - 7, y: x.y - (x.pose === 'sit' ? 26 : 32), w: 14, h: x.pose === 'sit' ? 26 : 32, label: l(sides[i], sides[i]), tip: l('-', '-'), go: { panel: 'x' }, quiet: true })) };
+})));
+
+// POL2: estados vazios — só você na sala (cadeiras vazias atrás da mesa) e a diretoria sem ninguém / com três
+registerPol31('mech31empty', () => ROOMS31.flatMap((room) => [1930, 2024].map((year) => {
+  const sides: ('you' | 'them' | 'watch')[] = ['you'];
+  const sp = spots31(room, sides);
+  const r = paintRoom31(room, year, true, 0, { seats: sp.filter((x) => x.pose === 'sit'), empty: emptySeats31(room, sides) });
+  return { id: `mech31empty:${room}:${year}`, W: MW31, H: MH31, back: r.back, front: r.front, floors: [MFY31], people: sp, texts: [], spots: [] };
+})));
+registerPol31('board27', () => [0, 3, 6].flatMap((n) => [1962, 1990, 2030].map((year) => {
+  const r = paintDirectors31(year, n, { stand: n ? 1 : undefined });
+  const people = Array.from({ length: n }, (_, i) => ({ x: dirSeatX31(i), y: MFY31, behind: true }));
+  return { id: `board27:${n}:${year}`, W: MW31, H: MH31, back: r.back, front: r.front, floors: [MFY31], people, texts: [], spots: [] };
 })));
