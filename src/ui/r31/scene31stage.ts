@@ -10,7 +10,7 @@ import { h } from '../dom';
 import { pxEmo31 } from '../pixel/emo31'; // r31 onda 4 (EMO): gesto em pixel art
 import { store } from '../store';
 import type { Cast31, Mood31, SceneModel31 } from './scene31core';
-import { MH31, MW31, paintRoom31, spots31 } from './scene31px';
+import { MH31, MW31, emptySeats31, paintRoom31, spots31 } from './scene31px';
 import './mech31.css';
 
 const W = MW31, H = MH31;
@@ -42,7 +42,7 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
     x: spots[i].x, y: spots[i].y, pose: spots[i].pose, dir: spots[i].dir,
   }));
   try {
-    const r = paintRoom31(m.room, s.year, watchers, m.cards ?? 0, { city: s.config.homeCity, month: s.month, seats: spots.filter((x) => x.pose === 'sit') });
+    const r = paintRoom31(m.room, s.year, watchers, m.cards ?? 0, { city: s.config.homeCity, month: s.month, seats: spots.filter((x) => x.pose === 'sit'), empty: emptySeats31(m.room, m.cast.map((c) => c.side)) });
     drawScene27(cv, r.back, s.year, who, r.front);
   } catch { /* canvas indisponível (testes) */ }
   const showLabels = labels31(s);

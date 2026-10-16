@@ -56,6 +56,7 @@ export const STREAMS19: Record<string, string> = {
   cancel19: 'ondas de cancelamento: resposta de NPCs e contra-ataque (cancel19)',
   culture19: 'cultura caótica: erros de metadados e vazamentos (culture19)',
   dlg19: 'delegação por carreira: renovações de mandato feitas pela regra (budget19; configuradas na delegação única)',
+  amor31: 'amor: divórcio na justiça depois da descoberta e fim do caso pela ficha Coração (sys/amor31)',
   deleg31: 'delegação única: o A&R delegado escolhe a quem propor (leitura com ruído pela qualidade dele) (sys/deleg31run)',
   exch20: 'residência de intercâmbio entre cenas: convites, ecos e parcerias com músicos locais (exch20)',
   union20: 'negociação coletiva de músicos de estúdio e equipe de estrada: pautas, greves e locautes (union20)',

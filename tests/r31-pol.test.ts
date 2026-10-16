@@ -11,6 +11,9 @@ import { UNLOCK31, unlockFor31 } from '../src/sim/r31/lock';
 import { l } from '../src/data/world';
 import { placeLabels31, shortNames31 } from '../src/ui/r31/scene31model';
 import '../src/ui/r31/pol31reg';
+import { emptySeats31, paintDirectors31, spots31, MFY31, dirSeatX31 } from '../src/ui/r31/scene31px';
+import { planTags31 } from '../src/ui/r31/city31px';
+import { textWidth } from '../src/ui/pixel/font';
 
 import { createGame } from '../src/sim/worldgen';
 import { defaultConfig } from '../src/sim/bot';
@@ -25,7 +28,7 @@ const scenes = polScenes31().flatMap((r) => r.build(game));
 describe('R31 POL — acabamento das cenas', () => {
   it('há cenas registradas de todas as frentes', () => {
     const ids = new Set(polScenes31().map((r) => r.id));
-    for (const id of ['loja31', 'casa31', 'mech31', 'inside31', 'fos31', 'salas31']) { expect(ids.has(id), id).toBe(true); expect(scenes.some((x) => x.id.startsWith(`${id}:`)), `${id} sem exemplos`).toBe(true); }
+    for (const id of ['loja31', 'casa31', 'mech31', 'mech31empty', 'board27', 'inside31', 'fos31', 'salas31']) { expect(ids.has(id), id).toBe(true); expect(scenes.some((x) => x.id.startsWith(`${id}:`)), `${id} sem exemplos`).toBe(true); }
     expect(scenes.length).toBeGreaterThan(20);
   });
   it('toda pessoa tem o pé no chão, numa superfície ou atrás de um móvel da frente', () => {
@@ -54,6 +57,30 @@ describe('R31 POL — acabamento das cenas', () => {
     expect(unlockFor31(l('A vaga abre na estreia, em março de 2027.', 'The slot opens at the premiere, in March 2027.'))).toEqual(UNLOCK31.date);
     expect(unlockFor31(l('Agenda cheia este mês.', 'Agenda full this month.'))).toEqual(UNLOCK31.agenda);
     expect(unlockFor31(l('Sem espaço na agenda do artista.', 'No room on the act\'s agenda.'))).toEqual(UNLOCK31.agenda);
+  });
+  it('POL2: sala sem a outra parte mostra as cadeiras vazias atrás da mesa', () => {
+    expect(emptySeats31('table', ['you']).length).toBe(2);
+    expect(emptySeats31('table', ['you', 'them']).length).toBe(1);
+    expect(emptySeats31('board', ['you']).length).toBe(4);
+    expect(emptySeats31('bank', ['you', 'them'])).toEqual([]);
+    for (const e of emptySeats31('ceo', ['you'])) expect(spots31('ceo', ['you', 'them']).some((x) => x.x === e.x)).toBe(true);
+    // diretoria sem ninguém: cada lugar tem cadeira (encosto acima do tampo) e o papel da pauta na mesa da frente
+    const r = paintDirectors31(1962, 0);
+    for (let i = 0; i < 6; i++) {
+      const x = dirSeatX31(i);
+      expect(r.front.get(x, MFY31 - 15) >>> 24, `papel ${i}`).toBeGreaterThan(200);
+      expect(r.back.get(x, MFY31 - 22), `encosto ${i}`).not.toBe(r.back.get(x + 12, MFY31 - 22)); // cadeira, não parede lisa
+    }
+  });
+  it('POL2: letreiros das rádios e TVs reais aparecem mesmo no zoom afastado e com o mapa cheio', () => {
+    const byId = new Map<string, { top: [number, number]; box: [number, number, number, number] }>();
+    const tags: Parameters<typeof planTags31>[0] = [];
+    for (let i = 0; i < 12; i++) { byId.set(`s${i}`, { top: [30 + i * 22, 80], box: [20 + i * 22, 70, 40 + i * 22, 100] }); tags.push({ sprite: `s${i}`, text: `Loja ${i}`, markTxt: '' }); }
+    for (let i = 0; i < 7; i++) { byId.set(`m${i}`, { top: [40 + i * 30, 80], box: [30 + i * 30, 70, 50 + i * 30, 100] }); tags.push({ sprite: `m${i}`, text: `Rádio Nacional ${i}`, real: true, media: true, markTxt: '' }); }
+    const placed: [number, number, number, number][] = [[0, 60, 400, 76]]; // placas e pinos ocupando a faixa natural
+    const got = planTags31(tags, byId as never, placed, 1, textWidth);
+    for (let i = 0; i < 7; i++) expect(got.some((q) => q.g.sprite === `m${i}`), `m${i}`).toBe(true);
+    expect(got.filter((q) => !q.g.media).length).toBeLessThanOrEqual(4);
   });
   it('pré-visualização (POL_DUMP)', () => {
     const dir = process.env.POL_DUMP;

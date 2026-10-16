@@ -86,7 +86,7 @@ fora por falta de dado confirmável.
 - porto_alegre 10 · bh 7 · goiania 5 · curitiba 4
 - brasilia 2 · belem 1 · fortaleza 1
 
-62 fichas têm a cidade real anotada em `lugar`, quando o jogo não tem a cidade. Alguns exemplos:
+61 fichas têm a cidade real anotada em `lugar`, quando o jogo não tem a cidade. Alguns exemplos:
 - Natal → recife
 - Vitória → bh
 - Campo Grande → goiania

@@ -72,7 +72,7 @@ export function choose27(title: string, text: string, opts: { id: string; label:
 }
 
 /** Opções acessíveis já na tela inicial (idioma, tema, texto, tutoriais, contraste, movimento). */
-function options27(redraw: () => void): void {
+export function options27(redraw: () => void): void {
   const p = store.prefs;
   let close = () => {};
   const body = h('div', { class: 'form h27-opts' },

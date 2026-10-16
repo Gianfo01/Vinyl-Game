@@ -60,6 +60,9 @@ export function love17(s: GameState): Love17State {
 const log = (s: GameState, t: L) => { const L0 = love17(s).log; L0.unshift([s.year, t]); if (L0.length > 30) L0.length = 30; };
 const filtered = (s: GameState) => s.config.contentFilters.includes('romance');
 const u01 = (s: GameState, k: string): number => (hashString(`${s.config.seed}:love17:${k}`) % 10000) / 10000;
+/** R31 · onda 4 (AMOR): ganchos do amor31 (desligado/sem gancho = regra antiga). `pm`: o par do mundo é casado(a) com
+ *  outra pessoa? (undefined = regra antiga); `risk`: soma ao risco mensal de descoberta do caso. */
+export const AMOR17: { pm?: (s: GameState, pt: { personId?: string; name: string; since: number }) => boolean | undefined; risk?: (s: GameState, a: Affair17) => number } = {};
 
 // ---------------------------------------------------------------- quem é quem
 
@@ -116,6 +119,14 @@ export function startAffair(s: GameState, candId: string): L | null {
   log(s, t);
   return null;
 }
+/** Risco de descoberta do caso neste mês (o motor sorteia com ele; a ficha mostra o mesmo número). */
+export function affairRisk17(s: GameState, a: Affair17 | undefined = love17(s).affair): number {
+  if (!a) return 0;
+  const months = (s.week - a.since) / 4.3;
+  const base = 0.03 + (100 - a.disc) / 1500 + playerFame(s) / 2500 + months * 0.002 + (love17(s).jeal > 60 ? 0.02 : 0);
+  const add = AMOR17.risk?.(s, a) ?? 0;
+  return clamp(base + add, 0.01, add ? 0.3 : 0.2);
+}
 /** Encerra o caso: o(a) amante pode se vingar contando. */
 export function endAffair(s: GameState, r: Rng): L {
   const L7 = love17(s);
@@ -166,6 +177,16 @@ function discover(s: GameState, a: Affair17, why: L): void {
   if (a.pid) { const act = actsNow27(s).find((x) => x.members.includes(a.pid!)); if (act && act.fame >= 25 && (!act.catalogNo || s.config.history !== 'strict')) scandal(s, act.id, 'sex', 30, text, { person: a.pid, cause: [f.id] }); }
   notify(s, text, 'bad');
   log(s, text);
+}
+
+/** Descoberta do caso atual agora (editor, testes, cena de descoberta do amor31). */
+export function discoverAffair17(s: GameState, why: L): boolean {
+  const L7 = love17(s);
+  const a = L7.affair;
+  if (!a) return false;
+  discover(s, a, why);
+  L7.affair = undefined; L7.past++;
+  return true;
 }
 
 // ---------------------------------------------------------------- casamento: pré-nupcial, divórcio, pensões, reconciliação
@@ -270,7 +291,8 @@ registerSimHook('month', 'love17', (s) => {
     const c = { id: `p${pt.since}:${pt.name}`, name: pt.name, born: pt.born, job: pt.job, trait: pt.trait, chemistry: 50, personId: pt.personId };
     L7.psx = candSex(s, c);
     L7.ss = sameSex(s, L7.psx) ? 1 : undefined;
-    L7.pm = !pt.personId && candMarried(s, c as Candidate) && !L7.exes.some((x) => x.name === pt.name) ? 1 : undefined;
+    const pm = AMOR17.pm?.(s, pt);
+    L7.pm = (pm ?? (!pt.personId && candMarried(s, c as Candidate))) && !L7.exes.some((x) => x.name === pt.name) ? 1 : undefined;
     L7.jeal = 15 + (pt.trait === 'homebody' ? 12 : pt.trait === 'glam' ? -5 : 0);
     if (L7.pm) log(s, fmtL(l('{p} é casado(a) com outra pessoa: você é o(a) amante.', '{p} is married to someone else: you are the lover.'), { p: pt.name }));
   }
@@ -337,8 +359,7 @@ registerSimHook('month', 'love17', (s) => {
   if (a && pt) {
     const pp = playerPerson(s);
     if (pp) addStress(s, pp.id, (soul(s, pp).f.empatia ?? 50) > 55 ? 3 : -1, l('Vida dupla', 'Double life'));
-    const months = (s.week - a.since) / 4.3;
-    const p = clamp(0.03 + (100 - a.disc) / 1500 + playerFame(s) / 2500 + months * 0.002 + (L7.jeal > 60 ? 0.02 : 0), 0.01, 0.2);
+    const p = affairRisk17(s, a);
     if (r.chance(p)) { discover(s, a, l('Um bilhete, um perfume, uma foto — foi o suficiente.', 'A note, a perfume, a photo — that was enough.')); L7.affair = undefined; L7.past++; }
     else if (!a.ss && r.chance(0.012)) {
       L7.sec.push({ kid: '', born: s.year + (s.month >= 3 ? 1 : 0), w: s.week, from: a.name });

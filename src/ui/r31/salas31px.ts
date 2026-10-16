@@ -204,11 +204,12 @@ function prop(g: Ctx27, m: SalaM31, L: Lay31, k: Prop31, f: number, fw: number, 
     case 'plant': prim27.plant(g, x, fy, true); break;
     case 'guitarstand': { const gx = x + w - 6; p.line(gx - 2, fy, gx + 1, fy - 6, C('#3a3a40')); p.line(gx + 4, fy, gx + 1, fy - 6, C('#3a3a40')); prim27.guitar(g, gx - 1, fy - 1, pal.accent2); break; }
     case 'suitcase': { const sx = x + w - 14; blk(p, sx, fy - 11, 13, 11, C('#8a5a30')); p.rect(sx + 4, fy - 13, 5, 2, C('#4a3020')); p.hline(sx, sx + 12, fy - 6, C('#c8a040')); p.rect(sx + 2, fy - 9, 2, 2, C('#e8e0d0')); break; }
-    case 'ghost': { // vaga livre: silhueta tracejada
+    case 'ghost': { // vaga livre (R31 POL2): banqueta vazia sob a luz, microfone no pedestal à espera e a fita no chão
       const cx = x + (w >> 1);
-      for (let yy = fy - 32; yy < fy; yy += 2) { const r = yy < fy - 24 ? 3 : 5; p.put(cx - r, yy, C('#e8e0c8')); p.put(cx + r, yy, C('#e8e0c8')); }
-      for (let xx = cx - 3; xx <= cx + 3; xx += 2) p.put(xx, fy - 33, C('#e8e0c8'));
-      for (let xx = cx - 5; xx <= cx + 5; xx += 2) p.put(xx, fy - 1, C('#e8e0c8'));
+      for (let xx = cx - 9; xx <= cx + 9; xx++) if ((xx + fy) % 2 === 0) p.put(xx, fy - 1, C('#f0e0a0')); // luz no chão
+      blk(p, cx - 5, fy - 13, 10, 3, pal.wood); p.vline(cx - 4, fy - 10, fy - 1, pal.woodDark); p.vline(cx + 3, fy - 10, fy - 1, pal.woodDark); p.hline(cx - 3, cx + 2, fy - 5, pal.woodDark); // banqueta
+      prim27.micStand(g, cx + 9, fy);
+      p.rect(cx - 7, fy - 1, 4, 1, C('#e8c020')); p.rect(cx + 3, fy - 1, 4, 1, C('#e8c020')); // fita de marcação
       break;
     }
     case 'cork': {
@@ -310,12 +311,25 @@ function prop(g: Ctx27, m: SalaM31, L: Lay31, k: Prop31, f: number, fw: number, 
       }
       break;
     }
-    case 'trophies': {
-      const sw = Math.max(36, w);
-      blk(p, x, fy - 36, sw, 3, pal.woodDark); blk(p, x, fy - 18, sw, 3, pal.woodDark);
-      const n = pp?.n ?? 0;
-      for (let i = 0; i < n; i++) { const tx = x + 4 + (i % 3) * Math.floor((sw - 8) / 3), ty = i < 3 ? fy - 36 : fy - 18; p.rect(tx + 1, ty - 3, 4, 3, C('#c09048')); p.rect(tx, ty - 8, 6, 5, C('#e8c45a')); p.put(tx + 1, ty - 7, C('#fff4c0')); }
-      if (!n) for (let i = 0; i < 2; i++) p.rect(x + 6 + i * 14, fy - 21, 8, 3, tint(pal.woodDark, 0.4));
+    case 'trophies': { // R31 (POL2): estante de verdade (laterais, fundo, base no chão); lugar sem troféu = suporte + plaquinha
+      const sw = Math.max(36, w), n = pp?.n ?? 0, top = fy - 50;
+      blk(p, x, top, sw, 50, pal.woodDark); p.rect(x + 2, top + 3, sw - 4, 44, tint(pal.woodDark, -0.25)); // corpo e fundo
+      blk(p, x - 1, top - 2, sw + 2, 3, pal.wood); blk(p, x - 1, fy - 4, sw + 2, 4, pal.wood); // tampo e rodapé
+      const cw = Math.floor((sw - 6) / 3);
+      for (let r = 0; r < 2; r++) {
+        const sy = r ? fy - 5 : fy - 27;
+        p.rect(x + 2, sy, sw - 4, 2, tint(pal.wood, 0.15)); p.hline(x + 2, x + sw - 3, sy, tint(pal.wood, 0.4)); // prateleira
+        for (let c0 = 0; c0 < 3; c0++) {
+          const i = r * 3 + c0, tx = x + 3 + c0 * cw + (cw >> 1);
+          p.rect(tx - 3, sy - 2, 7, 2, C('#2a2026')); // peanha
+          if (i < n) { p.rect(tx - 1, sy - 5, 3, 3, C('#c09048')); p.rect(tx - 3, sy - 11, 7, 6, C('#e8c45a')); p.put(tx - 2, sy - 10, C('#fff4c0')); p.put(tx - 4, sy - 10, C('#c09048')); p.put(tx + 4, sy - 10, C('#c09048')); }
+          else { // suporte vazio à espera (garras douradas) e plaquinha sem nome
+            p.vline(tx - 2, sy - 7, sy - 3, C('#c8b070')); p.vline(tx + 2, sy - 7, sy - 3, C('#c8b070')); p.put(tx - 2, sy - 8, lv(C('#c8b070'), 4.6)); p.put(tx + 2, sy - 8, lv(C('#c8b070'), 4.6));
+          }
+          p.rect(tx - 3, sy + (r ? -0 : 2), 7, 2, C('#e8d8a8')); p.hline(tx - 2, tx + 2, sy + (r ? 1 : 3), i < n ? C('#5a4a3a') : C('#b8a880')); // plaquinha
+        }
+      }
+      p.rect(x + 2, top + 3, sw - 4, 44, withAlpha(C('#c8e8f8'), 34)); p.line(x + 4, top + 5, x + 9, top + 22, withAlpha(C('#ffffff'), 90)); // portas de vidro
       break;
     }
     case 'whiteboard': {
@@ -410,8 +424,11 @@ function pedestal(g: Ctx27, x: number, w: number, fy: number, pp?: Hot31['pp']):
       p.rect(gx, gy, 28, 2, C('#d8e8f0')); p.vline(gx, gy, top - 1, C('#c8dce8')); p.vline(gx + 27, gy, top - 1, C('#a8c0cc'));
       p.line(gx + 4, gy + 4, gx + 8, gy + 14, withAlpha(C('#ffffff'), 200));
     }
-  } else {
-    for (let xx = cx - 6; xx <= cx + 6; xx += 2) p.put(xx, top - 2, C('#c8c0b0'));
+  } else { // R31 (POL2): pedestal vazio de propósito — almofada de veludo com o suporte à espera e a plaquinha sem nome
+    p.rect(cx - 7, top - 3, 14, 3, C('#7a1c2a')); p.hline(cx - 6, cx + 5, top - 3, lv(C('#7a1c2a'), 4));
+    p.vline(cx - 3, top - 11, top - 4, C('#c8b070')); p.vline(cx + 3, top - 11, top - 4, C('#c8b070')); p.hline(cx - 3, cx + 3, top - 4, C('#c8b070'));
+    p.put(cx - 3, top - 12, lv(C('#c8b070'), 4.6)); p.put(cx + 3, top - 12, lv(C('#c8b070'), 4.6));
+    p.rect(cx - 5, top + 2, 10, 3, C('#f0e8d0')); p.hline(cx - 3, cx + 2, top + 3, C('#b8a880'));
   }
 }
 
