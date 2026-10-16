@@ -13,6 +13,8 @@
 //     (estilo Discovery Mode: −30% do royalty), fazendas de streams (crime: derrubada, multa, escândalo) e denúncia
 //     de rivais.
 
+import { uni4On } from '../r31/uni4';
+import { ventures } from './ventures9';
 import { Rng, clamp, seedState } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
 import { cityById, l, marketById, type L, type MarketId } from '../../data/world';
@@ -71,8 +73,8 @@ const streamingEra = (s: GameState): boolean => hasTech(s, 'streaming');
 // ---------------------------------------------------------------- fontes de descoberta
 
 /** quantos "ouvem" de cada fonte voltam (taxa de retorno) e quanto viram fã casual */
-export const RET18: Record<Src18, number> = { pl: 0.1, alg: 0.18, srch: 0.4, vid: 0.12, wom: 0.35, radio: 0.15, store: 0.3 };
-const CAS18: Record<Src18, number> = { pl: 1.15, alg: 1, srch: 0.7, vid: 1.3, wom: 0.9, radio: 1.1, store: 0.8 };
+export const RET18: Record<Src18, number> = { pl: 0.1, alg: 0.18, srch: 0.4, vid: 0.12, wom: 0.35, radio: 0.15, store: 0.3, own: 0.25 };
+const CAS18: Record<Src18, number> = { pl: 1.15, alg: 1, srch: 0.7, vid: 1.3, wom: 0.9, radio: 1.1, store: 0.8, own: 1 };
 /** ouvintes por unidade-equivalente (para leitura) */
 const LPU = 25;
 const RET_NORM = 0.17;
@@ -97,6 +99,8 @@ export function mixOf18(s: GameState, rel: Release): Partial<Record<Src18, numbe
   if (outs.includes('direct')) { add('srch', 0.15); add('wom', 0.1); }
   if (outs.includes('short_video')) { add('vid', 0.15); add('alg', 0.1); }
   if (outs.includes('window') || outs.includes('vinyl_special')) add('store', 0.2);
+  const own = ownPlatShare18(s);
+  if (own && mineRel(s, rel)) add('own', own);
   const a = st18(s).a[rel.actId];
   if (streamingEra(s)) {
     if (a?.strat === 'peak') { add('pl', 0.25); add('alg', 0.1); }
@@ -107,6 +111,14 @@ export function mixOf18(s: GameState, rel: Release): Partial<Record<Src18, numbe
   const tot = Object.values(m).reduce((t, v) => t + (v ?? 0), 0) || 1;
   for (const k of Object.keys(m) as Src18[]) m[k] = (m[k] ?? 0) / tot;
   return m;
+}
+
+/** Peso da(s) sua(s) plataforma(s) como fonte de descoberta (UNI-4/B.21): cresce com os assinantes, teto 0,35.
+ *  Só na era do streaming e com o interruptor uni4.links ligado. */
+export function ownPlatShare18(s: GameState): number {
+  if (!streamingEra(s) || !uni4On(s)) return 0;
+  const subs = ventures(s).list.reduce((t, v) => t + (v.kind === 'platform' ? v.subs ?? 0 : 0), 0);
+  return subs > 0 ? Math.min(0.35, subs / 1_500_000) : 0;
 }
 
 const qf18 = (q: number): number => clamp((q - 25) / 45, 0.3, 1.5);
@@ -187,6 +199,8 @@ registerMod('chartUnits', 'st18', (s, v, c) => {
     if (a?.dm && age < 26) set(1.12, l('Comissão de alcance (algoritmo)', 'Reach commission (algorithm)'));
     if ((st.edit[rel.id] ?? 0) > s.week) set(1.3, l('Playlist editorial', 'Editorial playlist'));
     if ((st.algo[rel.id] ?? 0) > s.week) set(1.12, l('O algoritmo gostou (muita gente salvou)', 'The algorithm liked it (many saves)'));
+    const own = ownPlatShare18(s);
+    if (own > 0.01 && age < 26) set(1 + own * 0.4, l('Em destaque na sua plataforma', 'Featured on your platform'));
     if (a?.drop && a.drop > s.week) set(1 - 0.35 * a.dep, l('Saiu da playlist da qual dependia', 'Dropped from the playlist it depended on'));
   }
   // reativação: disco novo leva quem volta ao catálogo
