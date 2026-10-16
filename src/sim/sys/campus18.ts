@@ -434,8 +434,10 @@ export const PROJ18: Record<Exclude<PKind, 'reno'>, PDef18> = {
 export const renoCost18 = (s: GameState, b: Bld18): number => money(s, (b.kind === 'hq' ? HQ_LEVELS[s.player.hq].upgradeCost * 0.25 + 6000 : 8000 + b.lvl * 9000) * (campus18(s).dmg[b.id] ? 1.3 : 1));
 export const renoMonths18 = (b: Bld18): number => clamp(2 + b.lvl, 3, 8);
 export const lotMult18 = (n: number): number => LOTS18[n]?.pm ?? 1;
+/** r31 (LOTE): obra em terreno que já é seu sai sem a compra do terreno (sys/lots31 registra; sem ciclo de imports). */
+export const LAND18: { mult?: (s: GameState, lot: number) => number } = {};
 export function projCost18(s: GameState, k: PKind, lot: number, q: number, target?: Bld18): number {
-  const base = k === 'reno' ? (target ? renoCost18(s, target) : 0) : money(s, PROJ18[k].cost) * lotMult18(lot);
+  const base = k === 'reno' ? (target ? renoCost18(s, target) : 0) : money(s, PROJ18[k].cost) * lotMult18(lot) * (LAND18.mult?.(s, lot) ?? 1);
   return Math.round(base * CONTRACTORS18[q].cost);
 }
 

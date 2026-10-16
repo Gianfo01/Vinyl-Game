@@ -101,6 +101,20 @@ export function interior27(k: IKind27, year: number, n = 4, v?: string): Interio
       P('guitars', 0.04, 0.36, { n: 5 }); P('piano', 0.44); P('drums', 0.58); P('amp', 0.68); P('counter', 0.78, 0.18);
       spots = [sp(0.86, 'counter', 'stand', 'SW'), sp(0.3, 'floor', 'play'), sp(0.5, 'floor'), sp(0.66, 'floor', 'stand', 'SW')];
       break;
+    // r31 (LOTE): casa de quem mora na cidade — `v` = "<porte>:<quem>" (0 apartamento · 1 casa · 2 mansão; artist/ceo/fam)
+    case 'home': {
+      const [tv, who] = (v ?? '1:artist').split(':'), tier = +tv || 0;
+      floor = 'lounge';
+      P('window', 0.06, tier ? 0.16 : 0.14); P('couch', 0.04, tier >= 2 ? 0.3 : 0.24); P('plant', tier >= 2 ? 0.36 : 0.3);
+      if (year >= 1950) P('tv', tier >= 2 ? 0.42 : 0.36);
+      P('listen', tier >= 2 ? 0.5 : 0.46, undefined, { media: mediaOf(year) });
+      if (who === 'ceo') { P('desk', 0.58, 0.2); P('filing', 0.82); if (tier >= 1) P('gold', 0.6, 0.2, { n: tier >= 2 ? 3 : 1 }); }
+      else if (who === 'fam') { P('tables', 0.56, 0.26, { n: 1 }); P('poster', 0.62, 0.06); if (tier >= 1) P('piano', 0.86); }
+      else { P('guitar', 0.6); if (tier >= 1) P('piano', 0.76); if (tier >= 1) P('poster', 0.66, 0.06); if (tier >= 2) P('gold', 0.58, 0.2, { n: 3 }); }
+      if (tier >= 2) { P('bottles', 0.88, 0.1); if (year >= 1940 && who === 'artist') P('jukebox', 0.92); P('window', 0.74, 0.14); }
+      spots = [sp(0.14, 'floor', 'sit'), sp(0.24, 'floor', 'sit', 'SW'), sp(0.66, 'floor', 'stand', 'SW'), sp(0.5, 'floor')];
+      break;
+    }
     // r31 (S): fachada da facção (restaurante, boate, galpão, cassino, barracão, escritório) — a porta dos fundos leva à sala
     case 'facade':
       dim = v !== 'office' && v !== 'restaurant'; floor = v === 'warehouse' ? 'studio' : v === 'office' ? 'office' : 'lounge';

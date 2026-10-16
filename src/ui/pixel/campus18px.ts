@@ -727,7 +727,8 @@ export interface SceneX27 { /** r27 (LOTS): bairros abertos (índice em DIST18);
 /** Placa À venda; `lift` = subiu acima do prédio da frente (haste até o lote) e vai por cima de tudo. */
 export interface SaleSign27 { lot: number; c: HTMLCanvasElement; x: number; y: number; d: number; base: [number, number]; lift?: boolean }
 /** Placa "À VENDA" (madeira + quadro branco + faixa na cor do tipo sugerido; letra cinza quando não cabe no caixa). */
-function saleSign27(sl: Sale27, txt: string): SaleSign27 {
+function saleSign27(sl: Sale27, txt0: string): SaleSign27 {
+  const txt = sl.txt ?? txt0; // r31 (LOTE): "VENDE-SE" no terreno vago, "SEU" no terreno seu
   const l0 = LOTS18[sl.lot];
   const [bx, by] = signAt27(sl.lot);
   const tw = textWidth(txt) + 4, W = tw + 2, H = 19;
@@ -735,7 +736,7 @@ function saleSign27(sl: Sale27, txt: string): SaleSign27 {
   t.line(x0 + 2, H - 1, x0 + 2, H - 10, C('#6a4a2a')); t.line(x0 + tw - 3, H - 1, x0 + tw - 3, H - 10, C('#6a4a2a'));
   t.rect(0, 0, tw + 2, 10, C('#3a2a1a'));
   t.rect(x0, 1, tw, 8, C('#fbf6ea'));
-  t.text(txt, x0 + 2, 2, sl.dis ? C('#6a6470') : C('#c8302c')); // r27 (LOTS): fora do caixa = letra apagada (a placa continua lá)
+  t.text(txt, x0 + 2, 2, sl.own ? C('#2a7a3a') : sl.dis ? C('#6a6470') : C('#c8302c')); // r27 (LOTS): fora do caixa = letra apagada (a placa continua lá)
   t.rect(x0, 8, tw, 1, C(ICON27[sl.kind]?.col ?? '#c8302c'));
   return { lot: sl.lot, c: p.canvas(), x: Math.round(bx - W / 2), y: Math.round(by - H + 1), d: l0.gx + l0.w / 2 + signGy27(sl.lot), base: [Math.round(bx), Math.round(by)] };
 }

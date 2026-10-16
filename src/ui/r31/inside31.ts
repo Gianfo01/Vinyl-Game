@@ -11,6 +11,8 @@ import { fmtL, playerActs } from '../../sim/util';
 import { doPlace27, GO27, type PAct27, type Person27 } from '../../sim/sys/place27';
 import { jobLog31, jobOf31, meetHere31, scoutHere31 } from '../../sim/sys/gente31';
 import { where31 } from '../../sim/sys/where31';
+import { homeOf31, resInfo31, TIER31 } from '../../sim/sys/lots31';
+import { met31, meNode31, node31 } from '../../sim/social31';
 import {
   BAILE_WAYS31, CASE_WAYS31, PLEA31, ROOM_ACTS31, bail31, baile31, bailCost31, bailes31, bmLock31, bmRows31, buyBm31, caseWay31, cellLock31, cells31, denounce31,
   detective31, facadeOf31, lawyer31, lawyerCost31, myFile31, police31, room31, rowAct31, visitCell31, type BaileWay31,
@@ -136,6 +138,26 @@ function infoPanel(s: GameState, m: InsideM31, x: InsideT31, key: string): HTMLE
       add(h('h4', null, t(fmtL(l('Baile de {o}', '{o} party'), { o: b.o.name }))),
         h('p', { class: 'small' }, t(fmtL(l('Seu artista no palco{a}; o chefe no camarote. Calor da polícia: {h}/100.', 'Your act on stage{a}; the boss in the VIP box. Police heat: {h}/100.'), { a: b.actId && s.acts[b.actId] ? l(` (${s.acts[b.actId].name})`, ` (${s.acts[b.actId].name})`) : l('', ''), h: b.police }))));
       add(h('div', { class: 'row wrap' }, ...(Object.keys(BAILE_WAYS31) as BaileWay31[]).map((w) => h('span', { title: t(BAILE_WAYS31[w].tip) }, btn(BAILE_WAYS31[w].label, null, () => result(baile31(s, b.askId, w)), w === 'play')))));
+      break;
+    }
+    case 'home': { // r31 (LOTE): quem mora aqui e as ações que já existem (conhecer, radar, negociar em particular)
+      const who = x.place?.lot31?.who, r = who ? resInfo31(s, who) : null;
+      if (!r) { add(h('p', { class: 'small muted' }, t(l('Ninguém mora aqui agora.', 'Nobody lives here now.')))); break; }
+      const hm = homeOf31(s, r.who);
+      add(h('h4', null, t(x.place!.name)),
+        li([fmtL(l('{t} — mora aqui desde {y}.', '{t} — has lived here since {y}.'), { t: TIER31[x.place?.lot31?.tier ?? 1], y: s.year - Math.floor((s.week - (hm?.since ?? s.week)) / 52) }),
+          ...m.people.filter((p) => !p.you).map((p) => fmtL(p.away ? l('{n}: fora ({w}).', '{n}: out ({w}).') : l('{n}: em casa.', '{n}: at home.'), { n: p.name, w: p.away ?? l('', '') }))]));
+      const key = r.kind === 'artist' ? `p:${r.pid}` : r.who;
+      const a = r.actId ? s.acts[r.actId] : undefined;
+      const home = m.people.some((p) => !p.you && !p.away);
+      add(h('div', { class: 'row wrap' },
+        r.kind === 'fam' ? btn(l('Ver a família', 'See the family'), null, () => openFicha13('fam:efro'), true)
+          : btn(l('Ver a ficha', 'See the card'), null, () => (r.kind === 'ceo' ? openFicha13(r.who) : r.pid ? inspect.person(r.pid) : undefined), true),
+        r.kind !== 'fam' ? btn(l('Conhecer', 'Meet'), met31(s, meNode31(s), node31(s, key)) ? l('Vocês já se conhecem.', 'You already know each other.') : home ? null : l('Não está em casa agora.', 'Not at home right now.'), () => result(meetHere31(s, key))) : null,
+        a ? btn(l('Pôr no radar', 'Put on the radar'), a.owner === 'player' ? l('Esse artista já é seu.', 'That act is already yours.') : s.knowledge[a.id] ? l('Já está no seu radar.', 'Already on your radar.') : null, () => result(scoutHere31(s, a.id))) : null,
+        a ? quickBtn31({ kind: 'act', id: a.id }, a.name) : null,
+        r.kind === 'ceo' ? btn(l('Negociar em particular', 'Negotiate in private'), null, () => go18({ area: 'labels' })) : null));
+      add(h('p', { class: 'small muted' }, t(l('O que se sabe da pessoa é o que você já sabe (ficha); visitar não revela segredos.', 'What you know about them is what you already know (card); visiting reveals no secrets.'))));
       break;
     }
     default: add(li(infoLines31(s, m, key, x)));
