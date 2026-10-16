@@ -1,79 +1,87 @@
-# Medição de referência — is (W0-BASE)
+# R31 · onda 4 · I (Gente e interiores) + S (Submundo) — resumo e medição
 
-Gerado por `npx tsx scripts/r31/measure.ts` (4 sementes × 5 eras, 36 meses cada, robô `playbot16` perfil equilibrado, selo, rock, base padrão).
-Sementes: `r31-base-0`, `r31-base-1`, `r31-base-2`, `r31-base-3`. Eras de início: 1900, 1955, 1990, 2012, 2030 (antes do rádio, LP, 1990, streaming, futuro).
-Máquina: Intel(R) Xeon(R) Processor @ 2.10GHz (4 núcleos), Node v22.22.0, 3 partidas em paralelo; tempo total 313 s.
+## O que mudou para quem joga
 
-Os números de jogo (caixa, fama, atos, receita, tamanho do save, chaves em `x4`) são determinísticos: rodar de novo dá o mesmo resultado
-(confira com `--compare docs/r31/base30.json`). Os tempos variam com a máquina e a carga: "ms/mês" é relógio (robô + virada do mês),
-"CPU ms/mês" é o tempo de CPU do processo no mesmo trecho (inclui coleta de lixo; menos sensível a outros processos na máquina).
+- **Interiores em cena.** Os 12 interiores do Nosso mundo (casa de shows, loja de discos, rádio, estúdio, bar, jornal,
+  sala de ensaio, gravadora rival, escritórios, prédio, hotel e loja de instrumentos) viraram cenas da onda 2: pessoas
+  **e objetos** clicáveis com dica, rótulos, "mostrar tudo que é clicável", lista acessível e painel rápido no clique
+  direito. A ação se resolve no painel embaixo da cena (palco → marcar data; bilheteria; cartaz → quem toca na semana;
+  prateleira → seus discos e os mais vendidos; balcão → vitrine; cabine → pedir execução; mesa do diretor → parceria;
+  mesa de som → alugar sessão; palquinho/bandas → descobrir talento; balcão do bar → conhecer gente; capa → manchete;
+  parede de discos de ouro → catálogo do rival; recepção do hotel → quem está hospedado; parede de instrumentos → a loja
+  da onda 3 ali dentro). Prédio seu ganha o ponto "Gestão".
+- **Você lá dentro.** O seu personagem aparece em todo interior quando você está na cidade (com marcador); em turnê ou
+  gravando fora, a cena avisa onde você está.
+- **Gente de verdade.** Dono ≠ funcionário: cada lugar tem dono e equipe com funções próprias (vendedor, técnico,
+  bilheteiro, bartender, locutor, recepcionista…), todos pessoas da base. Músicos sem contrato fazem **bico** (a ficha
+  mostra os dois lados: "♪ Bartender na casa de shows · toca em X"); quem assina (com você ou um rival), passa a viver de
+  música, morre ou é preso larga o emprego e a vaga é preenchida na virada do mês — primeiro por gente que já existe
+  (músicos sem contrato, ex-artistas da cidade e do país); sem ninguém, nasce uma pessoa nova que existe de verdade. Na
+  gravadora rival, o CEO (ficha do líder) e os artistas dela que estão na cidade. A presença segue a agenda: turnê fora,
+  prisão e morte tiram a pessoa do lugar; quem tem data na cidade nesta semana está no cartaz da casa de shows.
+- **Seu rastro no mundo.** Seu disco no toca-discos e na prateleira da loja, seu cartaz na porta da casa de shows, sua
+  música no ar na rádio, seu artista no ensaio e no estúdio (com selo ★ no objeto).
+- **Submundo na cidade.** Delegacia (com cadeia), beco do mercado negro e as fachadas das facções do país da sede
+  (restaurante, boate, galpão no porto, cassino, barracão do baile, escritório — pelo tipo, país e época; até 3) ocupam
+  prédios da cidade comum. As do país com base em outra cidade (ou de fora com operação aberta no país, pela regra da
+  onda 3 U) aparecem como emissário no bar. Polícia pelo calor (viaturas e paradas).
+  - **Sala dos fundos** (porta da fachada): chefe e tenentes conhecidos com ficha, a mesa com os pedidos e os envelopes
+    (o que você deve e o que te devem) — aceitar, recusar, negociar prazo, pagar, aproximar-se, pedir empréstimo,
+    denunciar (as funções do mob29/crime17).
+  - **Baile**: com convite aberto, a fachada vira o baile — seu artista no palco, o chefe no camarote — tocar até o fim,
+    sair antes ou chamar a imprensa.
+  - **Delegacia**: as celas mostram quem está preso agora (seus e do mundo) com o tempo que falta — visitar, pagar
+    fiança, advogado —; sua pasta com o detetive do caso, o que a polícia sabe e o calor; no caso indiciado, as saídas de
+    sempre (advogado e julgamento, suborno, colaborar).
+  - **Mercado negro**: estoque que gira na virada do mês — cópias piratas dos sucessos e equipamento roubado (objeto
+    individual com a história) — e a relíquia roubada que já existe (receptador do crime17), com risco de apreensão e
+    escândalo; a relíquia leva "mercado negro" na lista de donos.
+  - **Mural de ligações** (Crime › Na sua cidade): fotos das facções do país e das de fora já contatadas, fios de guerra,
+    laço de rua com artistas, cena/gênero e os seus pedidos, favores e dívidas — cada fio conta a história.
 
-## Desempenho e save por era (medianas das sementes; tempos = média)
+## Arquivos
 
-| Era | Partidas | Criar (ms) | ms/mês média | ms/mês mediana | CPU ms/mês | Save JSON | Save gzip | Serializar (ms) | Chaves x4 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1900 | 4 | 164 | 304 | 267 | 305 | 3,77 MB | 0,72 MB | 44 | 274 |
-| 1955 | 4 | 317 | 702 | 687 | 658 | 6,06 MB | 1,20 MB | 103 | 275 |
-| 1990 | 4 | 663 | 1.412 | 1.459 | 1.282 | 9,59 MB | 1,99 MB | 238 | 275 |
-| 2012 | 4 | 648 | 2.024 | 1.935 | 1.978 | 13,39 MB | 2,62 MB | 383 | 275 |
-| 2030 | 4 | 838 | 2.148 | 2.037 | 2.247 | 13,41 MB | 2,55 MB | 359 | 275 |
+- Motor: `src/sim/sys/gente31.ts` (vagas, bico, troca na virada do mês, conhecer/descobrir talento), `src/sim/sys/where31.ts`
+  (agenda), `src/sim/sys/under31.ts` (submundo), pontes em `src/sim/sys/place27.ts` (`CREW27`, `UNDER27`, tipos `facade`,
+  `police`, `market`), fonte `visit31` em `src/sim/scouting.ts`.
+- Interface: `src/ui/r31/inside31model.ts` (modelo puro), `src/ui/r31/inside31.ts` (+ `.css`), `src/ui/r31/under31ui.ts`
+  (aba Na sua cidade + mural), `src/ui/r31/gente31ui.ts` (linha na ficha), `src/ui/pixel/interior27.ts` (pessoas e
+  geometria puras, salas do submundo, grade das celas), `src/ui/sys/place27ui.ts` e `campus18.ts` (o mapa abre a cena).
+- Testes: `tests/r31-interiores.test.ts`, `tests/r31-submundo.test.ts`. Capturas: `docs/r31/shots/onda4-is-*.png`
+  (`scripts/r31/shots-is.mjs`).
+- Editor (regra 10): `gente31.quitFame`, `gente31.bico`, `gente31.month`; `under31.facades`, `under31.copyResale`,
+  `under31.restock`, `under31.scene`. Interruptores: `gente31`, `under31`.
 
-## Balanço por era (medianas das sementes, US$ de 2020)
+## Medição (ligado × desligado)
 
-| Era | Caixa | Patrimônio | Fama | Atos do jogador | Receita do último ano | Partidas encerradas |
-|---|---:|---:|---:|---:|---:|---:|
-| 1900 | 129 mil | 4,82 mi | 28 | 3 | 1,83 mi | 0 |
-| 1955 | 16 mil | 647 mil | 17 | 3 | 413 mil | 0 |
-| 1990 | -18 mil | 1,20 mi | 16 | 4 | 551 mil | 2 |
-| 2012 | 415 mil | 12,57 mi | 22 | 5 | 3,73 mi | 0 |
-| 2030 | 455 mil | 8,29 mi | 21 | 5 | 3,50 mi | 0 |
+`npx tsx scripts/r31/measure.ts --jobs 3 --out docs/r31/is --label is` e `… --out docs/r31/is-off --label "is desligado" --sw gente31=false,under31=false`
+(4 sementes × 5 eras × 36 meses; tabelas completas em `is.json` / `is-off.json` e `is-off.md`). Linhas sem diferença omitidas.
 
-## Todas as partidas
+| Era | Métrica | Ligado | Desligado | Diferença |
+|---|---|---:|---:|---:|
+| 1900 | Pessoas no mundo | 465.5 | 464.0 | +1.5 |
+| 1900 | ms/mês | 251.5 | 254.0 | -2.5 |
+| 1955 | Caixa (US$ 2020) | 16,123.0 | 1,009.5 | +15,113.5 |
+| 1955 | Patrimônio | 646,609.0 | 710,249.0 | -63,640.0 |
+| 1955 | Fama | 17.0 | 16.5 | +0.5 |
+| 1955 | Atos | 2.5 | 3.0 | -0.5 |
+| 1955 | Receita último ano | 412,682.5 | 434,500.5 | -21,818.0 |
+| 1955 | Pessoas no mundo | 1,025.5 | 1,018.5 | +7.0 |
+| 1955 | Save JSON (MB) | 6.1 | 6.0 | +0.1 |
+| 1955 | ms/mês | 604.0 | 601.0 | +3.0 |
+| 1990 | ms/mês | 1,093.0 | 1,107.0 | -14.0 |
+| 2012 | ms/mês | 1,817.0 | 1,776.0 | +41.0 |
+| 2030 | ms/mês | 2,181.5 | 2,010.5 | +171.0 |
 
-| Era | Semente | Fim | ms/mês (méd/p90/máx) | Save JSON | gzip | x4 | Caixa (US$ 2020) | Patrimônio | Fama | Rep. art./com. | Atos | Lançamentos | Nº 1 | Receita/ano (US$ 2020) | Encerrou |
-|---|---|---|---|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---|---|
-| 1900 | `r31-base-0` | 01/1903 | 333/674/1242 | 3,75 MB | 0,72 MB | 274 | 98 mil | 6,26 mi | 32 | 25/81 | 3 | 23 | 19 | 1900: 66 mil · 1901: 601 mil · 1902: 2,20 mi | não |
-| 1900 | `r31-base-1` | 01/1903 | 315/600/815 | 3,87 MB | 0,74 MB | 274 | 78 mil | 3,84 mi | 27 | 19/66 | 3 | 21 | 9 | 1900: 88 mil · 1901: 295 mil · 1902: 1,46 mi | não |
-| 1900 | `r31-base-2` | 01/1903 | 279/422/565 | 3,65 MB | 0,72 MB | 273 | 194 mil | 2,78 mi | 26 | 31/66 | 3 | 18 | 8 | 1900: 102 mil · 1901: 210 mil · 1902: 976 mil | não |
-| 1900 | `r31-base-3` | 01/1903 | 290/407/544 | 3,79 MB | 0,72 MB | 273 | 161 mil | 5,80 mi | 28 | 20/69 | 3 | 17 | 11 | 1900: 111 mil · 1901: 903 mil · 1902: 2,30 mi | não |
-| 1955 | `r31-base-0` | 01/1958 | 760/968/1164 | 6,14 MB | 1,21 MB | 274 | 31 mil | 222 mil | 15 | 61/37 | 2 | 4 | 0 | 1955: 130 mil · 1956: 229 mil · 1957: 198 mil | não |
-| 1955 | `r31-base-1` | 01/1958 | 706/1045/1171 | 5,92 MB | 1,17 MB | 274 | -34 mil | 1,91 mi | 19 | 62/48 | 3 | 20 | 0 | 1955: 62 mil · 1956: 280 mil · 1957: 824 mil | não |
-| 1955 | `r31-base-2` | 01/1958 | 644/896/1013 | 6,07 MB | 1,20 MB | 275 | 1 mil | 347 mil | 18 | 71/44 | 3 | 13 | 0 | 1955: 57 mil · 1956: 271 mil · 1957: 285 mil | não |
-| 1955 | `r31-base-3` | 01/1958 | 698/1332/1652 | 6,06 MB | 1,19 MB | 276 | 78 mil | 946 mil | 16 | 59/39 | 2 | 14 | 0 | 1955: 102 mil · 1956: 123 mil · 1957: 541 mil | não |
-| 1990 | `r31-base-0` | 01/1993 | 1607/2040/2394 | 10,44 MB | 2,09 MB | 275 | -25 mil | 2,54 mi | 18 | 57/44 | 3 | 18 | 0 | 1990: 239 mil · 1991: 340 mil · 1992: 1,04 mi | não |
-| 1990 | `r31-base-1` | 03/1991 | 1036/1337/1605 | 8,62 MB | 1,86 MB | 274 | -19 mil | -134 mil | 15 | 36/37 | 4 | 10 | 0 | 1990: 91 mil | insolvency |
-| 1990 | `r31-base-2` | 01/1993 | 1480/2020/2228 | 10,48 MB | 2,10 MB | 274 | 86 mil | 2,69 mi | 16 | 54/40 | 3 | 22 | 0 | 1990: 220 mil · 1991: 324 mil · 1992: 1,01 mi | não |
-| 1990 | `r31-base-3` | 04/1991 | 1132/1483/1854 | 8,74 MB | 1,88 MB | 276 | -16 mil | -134 mil | 14 | 37/35 | 4 | 9 | 0 | 1990: 76 mil | insolvency |
-| 2012 | `r31-base-0` | 01/2015 | 1796/2703/3331 | 13,24 MB | 2,61 MB | 275 | 495 mil | 11,59 mi | 22 | 77/55 | 5 | 27 | 0 | 2012: 104 mil · 2013: 546 mil · 2014: 3,57 mi | não |
-| 2012 | `r31-base-1` | 01/2015 | 1762/2536/3410 | 13,29 MB | 2,61 MB | 276 | 106 mil | 9,22 mi | 18 | 71/44 | 3 | 17 | 0 | 2012: 61 mil · 2013: 420 mil · 2014: 2,39 mi | não |
-| 2012 | `r31-base-2` | 01/2015 | 2308/3002/4922 | 13,52 MB | 2,66 MB | 274 | 335 mil | 13,56 mi | 21 | 70/52 | 5 | 28 | 2 | 2012: 113 mil · 2013: 575 mil · 2014: 3,90 mi | não |
-| 2012 | `r31-base-3` | 01/2015 | 2230/3277/3671 | 13,50 MB | 2,64 MB | 275 | 1,33 mi | 18,03 mi | 22 | 81/55 | 5 | 22 | 1 | 2012: 92 mil · 2013: 1,49 mi · 2014: 7,64 mi | não |
-| 2030 | `r31-base-0` | 01/2033 | 2236/3159/4666 | 13,59 MB | 2,58 MB | 275 | 414 mil | 8,53 mi | 21 | 84/54 | 5 | 33 | 0 | 2030: 82 mil · 2031: 3,43 mi · 2032: 3,67 mi | não |
-| 2030 | `r31-base-1` | 01/2033 | 2242/3140/3585 | 13,23 MB | 2,51 MB | 276 | 100 mil | 5,51 mi | 22 | 68/54 | 5 | 34 | 0 | 2030: 49 mil · 2031: 831 mil · 2032: 2,80 mi | não |
-| 2030 | `r31-base-2` | 01/2033 | 2253/3275/3948 | 13,58 MB | 2,59 MB | 275 | 1,07 mi | 12,65 mi | 21 | 82/52 | 5 | 59 | 0 | 2030: 138 mil · 2031: 1,50 mi · 2032: 7,52 mi | não |
-| 2030 | `r31-base-3` | 01/2033 | 1859/2637/4503 | 13,11 MB | 2,50 MB | 275 | 496 mil | 8,06 mi | 21 | 76/53 | 5 | 31 | 0 | 2030: 112 mil · 2031: 887 mil · 2032: 3,33 mi | não |
+Partidas encerradas: ligado 2, desligado 2
 
-## Maiores blocos de `x4` no save (era 2030, mediana em bytes)
-
-| Chave | Bytes |
-|---|---:|
-| `ch7` | 491.097 |
-| `chron9` | 313.503 |
-| `facts17` | 250.926 |
-| `fame15` | 228.260 |
-| `creation` | 150.465 |
-| `leisure14` | 129.493 |
-| `st28` | 128.215 |
-| `ag18` | 120.116 |
-| `attn` | 116.776 |
-| `relics9` | 115.976 |
-| `deleg31` | 108.326 |
-| `fame16` | 95.833 |
-
-## Como medir de novo
-
-```sh
-npx tsx scripts/r31/measure.ts --out docs/r31/base31 --label "versão 31"          # mesma grade, outra saída
-npx tsx scripts/r31/measure.ts --out /tmp/rep --compare docs/r31/base30.json      # confere reprodutibilidade
-node scripts/r31/measure-ui.mjs 5331 docs/r31/base30   # interface (sobe e derruba o vite sozinho)
-```
+Leitura:
+- **1900, 1990, 2012 e 2030: números de jogo idênticos.** O robô não usa o mercado negro nem a fiança, e a troca de vagas
+  só cria gente nova quando falta (aqui, quase nunca) — os atos e o caixa não mudam.
+- **1955:** as pessoas novas (+7 na mediana) entram nos sistemas que percorrem todas as pessoas e mudam o rumo de uma
+  partida do robô (um ato a menos numa semente, caixa +US$ 15 mil e patrimônio −US$ 64 mil na mediana) — efeito de
+  segunda ordem, sem regra econômica nova envolvida.
+- **Desempenho:** igual dentro do ruído (−14 a +41 ms/mês; 2030 +171 ms/mês com a máquina oscilando — a troca de vagas
+  roda uma vez por mês e percorre só os atos da cidade). Save +0,1 MB no máximo.
+- Limite: `--sw` desliga depois de criar a partida, então o "desligado" ainda tem as vagas da nova partida; mede-se a troca
+  mensal e o mercado negro.
