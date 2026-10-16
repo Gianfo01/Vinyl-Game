@@ -13,11 +13,12 @@ import { agendaLoad, monthIndex, planSlots, slotLoad } from '../capacity';
 import { registerExt4 } from '../ext4';
 import { maxVenueTier } from '../live';
 import { actState } from '../people';
-import { unrecorded, unreleasedRecorded } from '../production';
+import { cancelRelease, unrecorded, unreleasedRecorded } from '../production';
 import { advanceWeek } from '../tick';
 import type { Act, AgendaSlot, GameState } from '../types';
 import { fmtL, money, playerActs, staffCount } from '../util';
 import { attnSeq, notes } from '../attention';
+import { EXEC31, UNDO31, actDir31, autoLog31, logAuto31, modeOf31, rule31, setActDir31, setDir31, staffFor31 } from '../deleg31';
 
 export type Prio = 'auto' | 'develop' | 'commercial' | 'tour' | 'rest';
 /** 0 = foco, 1 = normal, 2 = mínimo */
@@ -41,20 +42,19 @@ export interface StopCriteria {
 /** Entrada compacta do registro da equipe: x = o que foi feito, y = motivos (códigos). */
 export interface TeamEntry { w: number; a?: string; k: 'ag' | 'rel' | 'cut' | 'min' | 'hold'; x: string; y: string }
 
+/** r31 (Q): a diretriz por artista (`pol`), o orçamento da equipe (`team`) e o registro (`log`) foram para a
+ *  delegação única (sim/deleg31.ts: diretriz por artista, responsabilidade "Agenda do elenco" e registro de automação).
+ *  Aqui ficam os critérios de "avançar até…" e a conta do gasto do mês. */
 export interface Pace8State {
   stop: StopCriteria;
-  pol: Record<string, ActPolicy>;
-  /** orçamento mensal da equipe para todas as carreiras delegadas (dólares reais; 0 = sem limite) */
-  team: number;
   spent: Record<string, number>;
   spentMonth: number;
-  log: TeamEntry[];
 }
 
 export const DEFAULT_STOP: StopCriteria = { decision: true, offer: true, cash: true, cashFloor: 5000, crisis: true, release: false, chart: true, chartTop: 10, maxMonths: 6 };
 
 declare module '../ext4' { interface Ext4 { pace8: Pace8State } }
-const fresh = (): Pace8State => ({ stop: { ...DEFAULT_STOP }, pol: {}, team: 0, spent: {}, spentMonth: -1, log: [] });
+const fresh = (): Pace8State => ({ stop: { ...DEFAULT_STOP }, spent: {}, spentMonth: -1 });
 registerExt4('pace8', fresh);
 export const pace8 = (s: GameState): Pace8State => {
   const x = s.x4 as unknown as { pace8?: Pace8State };
@@ -77,16 +77,13 @@ export const TIERS: { id: Tier; name: L; desc: L }[] = [
 ];
 
 export function policyOf(s: GameState, actId: string): ActPolicy {
-  return pace8(s).pol[actId] ?? { p: 'auto', cap: 0, tier: 1 };
+  const d = actDir31(s, actId);
+  return { p: d.p, cap: d.cap, tier: d.tier };
 }
-
-export function setPolicy(s: GameState, actId: string, p: Partial<ActPolicy>): void {
-  const st = pace8(s);
-  const cur = { ...policyOf(s, actId), ...p };
-  cur.cap = Math.max(0, Math.round(cur.cap));
-  if (cur.p === 'auto' && cur.cap === 0 && cur.tier === 1) delete st.pol[actId];
-  else st.pol[actId] = cur;
-}
+export function setPolicy(s: GameState, actId: string, p: Partial<ActPolicy>): void { setActDir31(s, actId, p); }
+/** Orçamento mensal da equipe para as agendas delegadas (dólares de hoje; 0 = sem limite) — diretriz da "Agenda do elenco". */
+export const teamBudget8 = (s: GameState): number => rule31(s, 'agenda', 'budget');
+export const setTeamBudget8 = (s: GameState, v: number): void => setDir31(s, 'agenda', { budget: Math.max(0, Math.round(v)) });
 
 /** Quantas carreiras delegadas a equipe acompanha de verdade. */
 export function teamCapacity(s: GameState): number {
@@ -108,11 +105,17 @@ export function overCapacity(s: GameState): Set<string> {
 
 // ---------------------------------------------------------------- registro
 
-const LOG_MAX = 120;
-function log(s: GameState, e: Omit<TeamEntry, 'w'>): void {
-  const st = pace8(s);
-  st.log.push({ w: s.week, ...e });
-  if (st.log.length > LOG_MAX) st.log.splice(0, st.log.length - LOG_MAX);
+/** Grava no registro único de automação (deleg31): agenda e cortes em "Agenda do elenco"; lançamentos em "Produção
+ *  executiva" (quem decidiu: o produtor executivo, quando delegado, ou a regra da equipe). */
+function log(s: GameState, e: Omit<TeamEntry, 'w'>, undo?: { k: string; id: string }, amt?: number): void {
+  const rel = e.k === 'rel' || e.k === 'hold';
+  const ex = rel && (modeOf31(s, 'exec') === 'staff' || modeOf31(s, 'exec') === 'partial') ? staffFor31(s, 'exec') : undefined;
+  const d = describeEntry(s, { w: s.week, ...e });
+  logAuto31(s, { r: rel ? 'exec' : 'agenda', who: ex?.id ?? 'team', t: d.what, why: d.why.pt ? d.why : undefined, tone: e.k === 'cut' || e.k === 'hold' ? 'bad' : e.k === 'rel' ? 'good' : 'info', act: e.a, x: e.k, c: [e.x, e.y], undo, amt: amt || undefined });
+}
+/** O registro da equipe (agenda e lançamentos automáticos), mais antigas primeiro — vista do registro único. */
+export function teamLog8(s: GameState): TeamEntry[] {
+  return autoLog31(s, { r: ['agenda', 'exec'] }).filter((e) => e.c && e.x).reverse().map((e) => ({ w: e.w, a: e.act, k: e.x as TeamEntry['k'], x: e.c![0], y: e.c![1] }));
 }
 
 const actionName = (id: string): L => agendaById[id]?.name ?? l(id);
@@ -169,7 +172,8 @@ export function budgetLeft(s: GameState, actId: string): number {
   const pol = policyOf(s, actId);
   let left = Infinity;
   if (pol.cap > 0) left = money(s, pol.cap) - (st.spent[actId] ?? 0);
-  if (st.team > 0) left = Math.min(left, money(s, st.team) - Object.values(st.spent).reduce((a, b) => a + b, 0));
+  const team = teamBudget8(s);
+  if (team > 0) left = Math.min(left, money(s, team) - Object.values(st.spent).reduce((a, b) => a + b, 0));
   return Math.max(0, left);
 }
 
@@ -262,7 +266,7 @@ function delegatedAgenda(s: GameState, act: Act, base: AgendaSlot[]): AgendaSlot
   const unrec = unrecorded(s, act).length;
   if (unrec) why.push(`unrec:${unrec}`);
   if (pol.cap > 0) why.push(`cap:${pol.cap}`);
-  if (pace8(s).team > 0) why.push(`team:${pace8(s).team}`);
+  if (teamBudget8(s) > 0) why.push(`team:${teamBudget8(s)}`);
   if (pol.tier === 0) why.push('tier:0');
   log(s, { a: act.id, k: 'ag', x: enc(slots), y: why.join('|') });
   return slots;
@@ -275,7 +279,7 @@ setDelegationHooks({
     const ok = cost <= budgetLeft(s, act.id);
     if (!ok) {
       const pol = policyOf(s, act.id);
-      log(s, { a: act.id, k: 'cut', x: what, y: [pol.cap > 0 ? `cap:${pol.cap}` : '', pace8(s).team > 0 ? `team:${pace8(s).team}` : ''].filter(Boolean).join('|') });
+      log(s, { a: act.id, k: 'cut', x: what, y: [pol.cap > 0 ? `cap:${pol.cap}` : '', teamBudget8(s) > 0 ? `team:${teamBudget8(s)}` : ''].filter(Boolean).join('|') });
     }
     return ok;
   },
@@ -288,16 +292,19 @@ setDelegationHooks({
     let ok = pol.p !== 'rest' && (pol.tier !== 2 && !overCapacity(s).has(act.id) ? true : ready >= 8);
     if (left < money(s, 800)) ok = false;
     if (!ok && ready && s.week - act.lastRelease >= gap && s.week % 4 === 0) {
-      log(s, { a: act.id, k: 'hold', x: '', y: [pol.p === 'rest' ? 'p:rest' : '', pol.tier === 2 ? 'tier:2' : '', left < money(s, 800) ? (pol.cap > 0 ? `cap:${pol.cap}` : `team:${pace8(s).team}`) : '', `ready:${ready}`].filter(Boolean).join('|') });
+      log(s, { a: act.id, k: 'hold', x: '', y: [pol.p === 'rest' ? 'p:rest' : '', pol.tier === 2 ? 'tier:2' : '', left < money(s, 800) ? (pol.cap > 0 ? `cap:${pol.cap}` : `team:${teamBudget8(s)}`) : '', `ready:${ready}`].filter(Boolean).join('|') });
     }
-    return { ok, minGap: gap, budgetMult: pol.p === 'commercial' ? 1.4 : pol.p === 'develop' ? 0.7 : 1, maxSpend: left === Infinity ? Number.MAX_SAFE_INTEGER : left };
+    const base = { ok, minGap: gap, budgetMult: pol.p === 'commercial' ? 1.4 : pol.p === 'develop' ? 0.7 : 1, maxSpend: left === Infinity ? Number.MAX_SAFE_INTEGER : left };
+    // r31 (Q): produção executiva (delegação única) — sem diretriz nova, devolve a regra de sempre
+    return EXEC31.release ? EXEC31.release(s, act, base) : base;
   },
   released: (s, act, info) => {
     if (info.error) { log(s, { a: act.id, k: 'hold', x: '', y: 'err' }); return; }
     if (info.cost > 0) addSpent(s, act.id, info.cost);
     const pol = policyOf(s, act.id);
     const real = Math.round(info.budget / Math.max(1, money(s, 1)));
-    log(s, { a: act.id, k: 'rel', x: `${info.type},${real},${info.press}`, y: [pol.p !== 'auto' ? `p:${pol.p}` : '', `ready:${unreleasedRecorded(s, act).length + (info.type === 'lp' ? 8 : 1)}`, `gap:${s.week - act.lastRelease}`].filter(Boolean).join('|') });
+    const pr = s.pendingReleases.filter((x) => x.actId === act.id).pop();
+    log(s, { a: act.id, k: 'rel', x: `${info.type},${real},${info.press}`, y: [pol.p !== 'auto' ? `p:${pol.p}` : '', `ready:${unreleasedRecorded(s, act).length + (info.type === 'lp' ? 8 : 1)}`, `gap:${s.week - act.lastRelease}`, ...(EXEC31.why?.(s, act) ?? [])].filter(Boolean).join('|') }, pr ? { k: 'release', id: pr.id } : undefined, -info.cost);
   },
 });
 
@@ -319,7 +326,7 @@ export interface Digest {
 export interface DigestSnap { week: number; cash: number; totals: Record<string, number>; mem: number; memId: string; notes: number; logLen: number; logWeek: number }
 
 export function digestStart(s: GameState): DigestSnap {
-  return { week: s.week, cash: s.player.cash, totals: { ...s.player.totals }, mem: s.memory.length, memId: s.memory[s.memory.length - 1]?.id ?? '', notes: attnSeq(s), logLen: pace8(s).log.length, logWeek: s.week };
+  return { week: s.week, cash: s.player.cash, totals: { ...s.player.totals }, mem: s.memory.length, memId: s.memory[s.memory.length - 1]?.id ?? '', notes: attnSeq(s), logLen: teamLog8(s).length, logWeek: s.week };
 }
 
 const GROUPS: { id: string; name: L; icon: string; re: RegExp }[] = [
@@ -363,7 +370,7 @@ export function digestEnd(s: GameState, snap: DigestSnap, months: number): Diges
   // fatos importantes primeiro, depois rotina
   for (const m of [...mems.filter((m) => m.important), ...mems.filter((m) => !m.important)]) put(m.kind, m.text);
   for (const n of notes(s).filter((x) => x.week > snap.week || (x.week === snap.week && s.week > snap.week))) put(n.kind === 'bad' ? 'incident' : noteKind(n.text.pt), n.text);
-  const team = pace8(s).log.filter((e) => e.w >= snap.week && (e.k !== 'ag' || e.w > snap.week));
+  const team = teamLog8(s).filter((e) => e.w >= snap.week && (e.k !== 'ag' || e.w > snap.week));
   return { fromWeek: snap.week, toWeek: s.week, months, cashDelta: s.player.cash - snap.cash, cats: cats.slice(0, 10), groups: groups.filter((g) => g.n > 0), team: team.slice(-40) };
 }
 
@@ -424,3 +431,6 @@ export function advanceUntil(s: GameState, crit: StopCriteria = pace8(s).stop): 
   }
   return { weeks, months, stop, reason: STOP_TEXT[stop], digest: digestEnd(s, snap, months) };
 }
+
+// r31 (Q): desfazer um lançamento automático ainda pendente (mesma regra do cancelamento manual)
+UNDO31.release = (s, id) => (cancelRelease(s, id) ? null : l('O lançamento já saiu (ou não existe mais).', 'The release already came out (or no longer exists).'));

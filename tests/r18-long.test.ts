@@ -3,7 +3,8 @@ import { defaultConfig } from '../src/sim/bot';
 import { simulatePlayer } from '../src/sim/playbot16';
 import '../src/sim/sys';
 import { rv18 } from '../src/sim/sys/review18';
-import { gate18, payGate18, pol18 } from '../src/sim/sys/policy18';
+import { gate18, payGate18 } from '../src/sim/sys/policy18';
+import { setDir31, setGoal31 } from '../src/sim/deleg31';
 import { adoptDoc18, allScores18, docBlock18, docById18, hasDoc18, labelDecBlock18, LABEL_DECS18, pa18 } from '../src/sim/sys/paths18';
 import { bio18, cockpit18, setAdapt18, sg18 } from '../src/sim/sys/saga18';
 import { offerMods } from '../src/sim/ext4';
@@ -27,13 +28,12 @@ describe('r18 long18', () => {
   });
   it('políticas travam e explicam; doutrinas travam ações e destravam decisões', () => {
     const act = playerActs(s).map((id) => s.acts[id]).find((a) => a && !a.playerBand)!;
-    const P = pol18(s);
-    P.goals[act.id] = 'rest';
+    setGoal31(s, act.id, 'rest');
     expect(gate18(s, { kind: 'tour', actId: act.id })).not.toBeNull();
-    P.goals[act.id] = 'grow';
-    P.cap = 1;
+    setGoal31(s, act.id, 'grow');
+    setDir31(s, 'finance', { cap: 1 });
     expect(payGate18(s, { kind: 'promo', actId: act.id }, 1_000_000)).not.toBeNull();
-    P.cap = 0;
+    setDir31(s, 'finance', { cap: 0 });
     s.player.cash += 10_000_000;
     pa18(s).docLast = -999;
     expect(docBlock18(s, docById18('clean')!)).toBeNull();

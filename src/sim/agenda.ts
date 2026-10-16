@@ -135,7 +135,7 @@ export interface DelegationHooks {
   canSpend?: (s: GameState, act: Act, cost: number, what: string) => boolean;
   spent?: (s: GameState, act: Act, cost: number, what: string) => void;
   /** política de lançamento delegado */
-  release?: (s: GameState, act: Act) => { ok: boolean; minGap: number; budgetMult: number; maxSpend: number };
+  release?: (s: GameState, act: Act) => { ok: boolean; minGap: number; budgetMult: number; maxSpend: number; type?: 'single' | 'lp'; songs?: string[] };
   released?: (s: GameState, act: Act, info: { type: 'single' | 'lp'; budget: number; press: number; cost: number; error?: L }) => void;
 }
 let deleg: DelegationHooks = {};
@@ -285,8 +285,10 @@ function autoRelease(s: GameState, r: Rng, act: Act): void {
   const ready = unreleasedRecorded(s, act).sort((a, b) => b.q - a.q);
   const since = s.week - act.lastRelease;
   if (!ready.length || since < (pol?.minGap ?? 22)) return;
-  const type: 'single' | 'lp' = ready.length >= 8 ? 'lp' : 'single';
-  const songs = type === 'lp' ? ready.slice(0, 10).map((x) => x.id) : [ready[0].id];
+  // r31 (Q): o produtor executivo pode fixar o formato e escolher as faixas (diretrizes da delegação)
+  const type: 'single' | 'lp' = pol?.type ?? (ready.length >= 8 ? 'lp' : 'single');
+  if (type === 'lp' && ready.length < 8) return;
+  const songs = pol?.songs?.length ? pol.songs : type === 'lp' ? ready.slice(0, 10).map((x) => x.id) : [ready[0].id];
   const budgetCap = Math.max(0, Math.round(s.player.cash * 0.08));
   const ch = availableChannels(s);
   const main = ch.find((c) => c.id === 'playlists') ?? ch.find((c) => c.id === 'music_video') ?? ch.find((c) => c.id === 'tv_show') ?? ch[0];

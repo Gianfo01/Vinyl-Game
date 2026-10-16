@@ -23,7 +23,8 @@ import { capital } from './capital';
 import { DECISIONS, intrigue } from './intrigue';
 import { liveOf } from './live/state';
 import { ownerOf } from './people/owner';
-import { pol18, burn18 } from './policy18';
+import { burn18 } from './policy18';
+import { rule31, setDir31 } from '../deleg31';
 import { catVal18 } from './rights18';
 import { noteLost18 } from './econ18';
 import { catFundBid } from './sale17';
@@ -284,10 +285,10 @@ export const DOCTRINES18: Doctrine18[] = [
     adopt: (s) => { rosterTrust(s, -4); return l('Os empresários espalham o aviso: confiança do elenco −4.', 'Managers spread the word: roster trust −4.'); } },
   { id: 'prudence', branch: 'money', excl: 'growth', cost: 2000, name: l('Reserva sagrada', 'Sacred reserve'), desc: l('Nunca abaixo de 4 meses de custo fixo; sócios e bancos confiam.', 'Never below 4 months of fixed costs; partners and banks trust you.'),
     perks: { valuation: 0.06, appeal: -0.02 }, locks: l('A política de reserva fica travada em no mínimo 4 meses.', 'The reserve policy is locked at 4 months minimum.'), unlocks: ['emergency_fund'],
-    adopt: (s) => { const P = pol18(s); P.reserve = Math.max(P.reserve, 4); return l('A equipe delegada não gasta abaixo de 4 meses de custo fixo.', 'Delegated staff won\'t spend below 4 months of fixed costs.'); } },
+    adopt: (s) => { setDir31(s, 'finance', { reserve: Math.max(rule31(s, 'finance', 'reserve'), 4) }); return l('A equipe delegada não gasta abaixo de 4 meses de custo fixo.', 'Delegated staff won\'t spend below 4 months of fixed costs.'); } },
   { id: 'growth', branch: 'money', excl: 'prudence', cost: 2000, name: l('Crescer a qualquer custo', 'Growth at any cost'), desc: l('Dinheiro parado é dinheiro perdido: mais verba, mais gente, mais risco.', 'Idle money is lost money: more budget, more people, more risk.'),
     perks: { appeal: 0.05, chartUnits: 0.02, staffCost: 0.04, stress: 0.06 }, locks: l('Sem reserva mínima (a política de reserva é zerada).', 'No minimum reserve (the reserve policy is cleared).'), unlocks: ['market_blitz'],
-    adopt: (s) => { pol18(s).reserve = 0; return l('Reserva zerada; a equipe acelera.', 'Reserve cleared; staff speeds up.'); } },
+    adopt: (s) => { setDir31(s, 'finance', { reserve: 0 }); return l('Reserva zerada; a equipe acelera.', 'Reserve cleared; staff speeds up.'); } },
   { id: 'craft', branch: 'art', excl: 'hits', cost: 2500, name: l('Arte primeiro', 'Art first'), desc: l('O disco certo, não o disco rápido.', 'The right record, not the quick one.'),
     perks: { critics: 0.3, songQ: 0.6, appeal: -0.03 }, locks: l('Trava a decisão "Acampamento de hits".', 'Locks the "Hit camp" decision.'), unlocks: ['masterclass'],
     adopt: () => l('A crítica nota a mudança.', 'Critics notice the change.') },
@@ -487,7 +488,7 @@ function firstNarr(s: GameState): void {
 registerSimHook('month', 'paths18', (s) => {
   const P = pa18(s);
   // a lei da reserva trava o mínimo
-  if (hasDoc18(s, 'prudence') && pol18(s).reserve < 4) pol18(s).reserve = 4;
+  if (hasDoc18(s, 'prudence') && rule31(s, 'finance', 'reserve') < 4) setDir31(s, 'finance', { reserve: 4 });
   for (const k of Object.keys(P.tmp)) if (P.tmp[k] < s.week) { delete P.tmp[k]; bumpPerks(); }
   if (s.month % 3 !== 2) return;
   const sc = allScores18(s);

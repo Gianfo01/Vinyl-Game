@@ -216,7 +216,7 @@ export const consumed19 = (r: FactRow19): boolean => r.listeners.length + r.wild
 /** R19 T2 money-b (sys/moneyb19.ts): mercado de contratos, empresário total, disco de cumprimento, briga de gestão. */
 /** Rodada 19 (onda 5, B.5): delegação por carreira (budget19). */
 export const BUDGET19: Record<string, { sys: string; to: string[] }> = {
-  deleg_exc: { sys: 'budget19', to: ['budget19:deleg (mensagem "A equipe precisa de você" na Caixa; exceção na aba Políticas)'] },
+  deleg_exc: { sys: 'budget19', to: ['budget19:deleg (mensagem "A equipe precisa de você" na Caixa; exceção no registro de automação da tela de delegação)'] },
 };
 export const MONEYB19: Record<string, { sys: string; to: string[] }> = {
   contract_sold: { sys: 'moneyb19', to: ['moneyb19:sold (reputação com artistas, confiança do elenco, calor do comprador, diário, manchete)'] },

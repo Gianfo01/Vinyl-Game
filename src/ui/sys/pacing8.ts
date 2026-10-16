@@ -5,7 +5,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import { defaultAgenda } from '../../sim/agenda';
-import { DEFAULT_STOP, PRIOS, TIERS, budgetLeft, describeEntry, overCapacity, pace8, policyOf, setPolicy, teamCapacity, type Digest, type Prio, type StopCriteria, type Tier } from '../../sim/sys/pacing8';
+import { DEFAULT_STOP, PRIOS, TIERS, budgetLeft, describeEntry, overCapacity, pace8, policyOf, setPolicy, setTeamBudget8, teamBudget8, teamCapacity, teamLog8, type Digest, type Prio, type StopCriteria, type TeamEntry, type Tier } from '../../sim/sys/pacing8';
 import type { GameState } from '../../sim/types';
 import { money, playerActs, staffCount } from '../../sim/util';
 import { $, actLink, logo, modal, pill, rerender, section } from '../common';
@@ -82,7 +82,7 @@ export function showDigest(s: GameState, d: Digest, reason?: L, onClose?: () => 
   modal(t(l('Resumo do período', 'Period summary')), body, { wide: true, onClose });
 }
 
-function teamLogList(s: GameState, entries: ReturnType<typeof pace8>['log']): HTMLElement {
+export function teamLogList(s: GameState, entries: TeamEntry[]): HTMLElement {
   return h('ul', { class: 'team-log small' }, [...entries].reverse().map((e) => {
     const d = describeEntry(s, e);
     const icon = e.k === 'rel' ? 'disc' : e.k === 'cut' ? 'money' : e.k === 'min' ? 'sleep' : e.k === 'hold' ? 'lock' : 'calendar';
@@ -92,9 +92,8 @@ function teamLogList(s: GameState, entries: ReturnType<typeof pace8>['log']): HT
 
 // ---------------------------------------------------------------- área "Equipe e ritmo"
 
-let logFilter = '';
-
-function policyRow(s: GameState, id: string, over: Set<string>): HTMLElement {
+/** Linha da diretriz por artista (agenda delegada, prioridade, atenção, teto) — usada na tela de delegação. */
+export function policyRow(s: GameState, id: string, over: Set<string>, ...extra: (HTMLElement | null)[]): HTMLElement {
   const a = s.acts[id];
   const pol = policyOf(s, id);
   const delegated = s.delegated[id] !== false;
@@ -111,6 +110,7 @@ function policyRow(s: GameState, id: string, over: Set<string>): HTMLElement {
     h('td', null, select<Tier>(pol.tier, TIERS.map((x) => ({ value: x.id, label: t(x.name) })), (v) => { setPolicy(s, id, { tier: v }); rerender(); }, { title: t(TIERS[pol.tier].desc) })),
     h('td', null, h('input', { type: 'number', min: 0, step: 100, value: pol.cap, style: 'width:6.5em', 'aria-label': t(l('Teto mensal (dólares de hoje; 0 = sem teto)', 'Monthly cap (today\'s dollars; 0 = no cap)')), onchange: (e: Event) => { setPolicy(s, id, { cap: Number((e.target as HTMLInputElement).value) || 0 }); rerender(); } }),
       h('small', { class: 'muted' }, left === Infinity ? ' ∞' : ` ${t(l('resta', 'left'))} ${$(left)}`)),
+    ...extra,
   );
 }
 
@@ -121,18 +121,15 @@ function teamArea(s: GameState): HTMLElement {
   const cap = teamCapacity(s);
   const delegatedN = ids.filter((id) => s.delegated[id] !== false).length;
   const spent = Object.values(st.spent).reduce((a, b) => a + b, 0);
-  const log = st.log.filter((e) => !logFilter || e.a === logFilter);
+  const team = teamBudget8(s);
+  const log = teamLog8(s);
   return h('div', { class: 'panel team8' },
     h('div', { class: 'col-main' },
-      section(t(l('Delegação por carreira', 'Delegation per career')),
-        h('p', { class: 'muted small' }, t(l('Com poucos artistas, você decide tudo. Com muitos, decide quem é foco, quanto cada carreira pode gastar e o que a equipe deve priorizar — e confere abaixo o que ela fez.', 'With few artists you decide everything. With many, you decide who is the focus, how much each career may spend and what the team should prioritise — then check below what it did.'))),
-        ids.length ? h('table', { class: 'table small team-table' },
-          h('thead', null, h('tr', null, ...[l('Carreira', 'Career'), l('Agenda', 'Agenda'), l('Prioridade', 'Priority'), l('Atenção', 'Attention'), l('Teto/mês', 'Cap/mo')].map((x) => h('th', null, t(x))))),
-          h('tbody', null, ids.map((id) => policyRow(s, id, over)))) : h('p', { class: 'muted' }, t(l('Nenhum artista no elenco ainda.', 'No artists on the roster yet.'))),
-      ),
-      section(t(l('O que a equipe decidiu e por quê', 'What the team decided and why')),
-        h('div', { class: 'row wrap' }, select(logFilter, [{ value: '', label: t(l('Todas as carreiras', 'All careers')) }, ...ids.map((id) => ({ value: id, label: s.acts[id].name }))], (v) => { logFilter = v; rerender(); })),
-        log.length ? teamLogList(s, log.slice(-40)) : h('p', { class: 'muted small' }, t(l('Nada ainda: as decisões aparecem quando o mês abre.', 'Nothing yet: decisions show up when the month opens.'))),
+      section(t(l('Delegação', 'Delegation')),
+        h('p', { class: 'muted small' }, t(l('Quem decide o quê — a diretriz de cada artista (prioridade, atenção, teto), o A&R, a produção executiva, renovações, turnês e o registro de tudo o que a equipe fez — fica numa tela só.', 'Who decides what — each act\'s directive (priority, attention, cap), A&R, executive production, renewals, tours and the log of everything the team did — lives on one screen.'))),
+        h('button', { class: 'btn primary', onclick: () => { store.area = 'deleg31' as typeof store.area; rerender(); } }, ic('handshake'), ' ', t(l('Abrir a tela de delegação', 'Open the delegation screen')))),
+      section(t(l('O que a equipe decidiu por último', 'What the team decided lately')),
+        log.length ? teamLogList(s, log.slice(-12)) : h('p', { class: 'muted small' }, t(l('Nada ainda: as decisões aparecem quando o mês abre.', 'Nothing yet: decisions show up when the month opens.'))),
       ),
     ),
     h('aside', { class: 'col-side' },
@@ -143,8 +140,8 @@ function teamArea(s: GameState): HTMLElement {
       ),
       section(t(l('Orçamento mensal da equipe', 'Monthly team budget')),
         h('label', null, t(l('Dólares de hoje (0 = sem limite)', 'Today\'s dollars (0 = no limit)')), ' ',
-          h('input', { type: 'number', min: 0, step: 500, value: st.team, style: 'width:8em', onchange: (e: Event) => { st.team = Math.max(0, Math.round(Number((e.target as HTMLInputElement).value) || 0)); rerender(); } })),
-        h('p', { class: 'small' }, t(l('Gasto delegado neste mês: {v}', 'Delegated spend this month: {v}'), { v: $(spent) }), st.team ? ` / ${$(money(s, st.team))}` : ''),
+          h('input', { type: 'number', min: 0, step: 500, value: team, style: 'width:8em', onchange: (e: Event) => { setTeamBudget8(s, Number((e.target as HTMLInputElement).value) || 0); rerender(); } })),
+        h('p', { class: 'small' }, t(l('Gasto delegado neste mês: {v}', 'Delegated spend this month: {v}'), { v: $(spent) }), team ? ` / ${$(money(s, team))}` : ''),
         h('p', { class: 'small muted' }, t(l('Vale para ações pagas da agenda e lançamentos automáticos. Carreiras em foco gastam primeiro.', 'Applies to paid agenda actions and automatic releases. Focus careers spend first.'))),
       ),
       section(t(l('Avançar até…', 'Advance until…')), h('p', { class: 'small muted' }, stopSummary(s)), stopForm(s, () => rerender())),
@@ -157,7 +154,7 @@ registerArea({ id: 'team', label: l('Equipe e ritmo', 'Team and pacing'), icon: 
 // resumo curto na mesa
 registerSection('desk', {
   id: 'team8', order: 40, render: (s) => {
-    const last = pace8(s).log.filter((e) => e.k !== 'ag').slice(-4);
+    const last = teamLog8(s).filter((e) => e.k !== 'ag').slice(-4);
     if (!last.length) return null;
     return section(t(l('Equipe: últimas decisões', 'Team: latest decisions')), teamLogList(s, last),
       h('button', { class: 'btn small ghost', onclick: () => { store.area = 'team'; rerender(); } }, ic('contract'), ' ', t(l('Ver tudo em Equipe e ritmo', 'See everything in Team and pacing'))));

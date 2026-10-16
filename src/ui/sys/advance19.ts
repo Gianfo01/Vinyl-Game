@@ -1,20 +1,14 @@
 // Rodada 19 (onda 5, B.5 — auditoria 8 §5): antes de avançar, a lista de cartões que vão valer a resposta padrão
-// ("decidir agora" / "aceitar padrões"), com a opção de não perguntar de novo (Configurações). Também: a seção
-// "Por carreira" da aba Políticas (delegação do empresário, festival e estúdio) e o resumo dos avisos agrupados
+// ("decidir agora" / "aceitar padrões"), com a opção de não perguntar de novo (Configurações). Também: o resumo dos avisos agrupados
 // (r31 UNI-1: vista da fila única de atenção).
 import { l } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { autoResolve19, dlg19 } from '../../sim/sys/budget19';
+import { autoResolve19 } from '../../sim/sys/budget19';
 import { foldedSince } from '../../sim/attention';
-import { isActive } from '../../sim/sys/careers12';
-import { liveOf } from '../../sim/sys/live';
-import { studios } from '../../sim/sys/studio12';
-import { ventures } from '../../sim/sys/ventures9';
 import type { GameState } from '../../sim/types';
-import { modal, rerender, section } from '../common';
+import { modal, rerender } from '../common';
 import { h } from '../dom';
 import { savePrefs, store } from '../store';
-import { POLICY19 } from './long18';
 
 type Mode = 'week' | 'month' | 'quarter' | 'event' | 'until';
 /** true = abriu o diálogo (o avanço espera a resposta e chama `go`). */
@@ -44,18 +38,3 @@ export function folded19View(s: GameState): HTMLElement | null {
   return h('details', { class: 'small' }, h('summary', null, t(l('Agrupados no boletim este mês: {n} item(ns) menor(es)', 'Grouped in the bulletin this month: {n} minor item(s)'), { n: xs.length })), h('ul', null, xs.slice().reverse().map((x) => h('li', null, t(x.title)))));
 }
 
-const chk = (on: boolean, flip: () => void) => h('input', { type: 'checkbox', checked: on, onchange: () => { flip(); rerender(); } });
-const row = (label: string, help: string, el: HTMLElement) => h('div', { class: 'lg18-pol' }, h('label', null, h('b', null, label), ' ', el), h('small', { class: 'muted' }, help));
-POLICY19.push((s) => {
-  const D = dlg19(s);
-  const mg = isActive(s, 'manager') || ventures(s).mg.clients.length > 0, fe = liveOf(s).fests.length > 0, st = studios(s).length > 0;
-  if (!mg && !fe && !st) return null;
-  return section(t(l('Por carreira (a equipe age e só sobe exceções)', 'Per career (staff acts and only raises exceptions)')),
-    mg ? row(t(l('Empresário: renovar mandatos', 'Manager: renew mandates')), t(l('A 8 semanas do fim, a equipe propõe os mesmos termos. Abaixo da confiança mínima, volta para você.', '8 weeks before the end, staff offers the same terms. Below minimum trust, it comes back to you.')), chk(D.mg, () => (D.mg = !D.mg))) : null,
-    mg ? row(t(l('Confiança mínima do cliente', 'Minimum client trust')), '', h('input', { type: 'number', min: 0, max: 100, step: 5, value: D.mgTrust, onchange: (e: Event) => { D.mgTrust = Number((e.target as HTMLInputElement).value) || 0; } })) : null,
-    fe ? row(t(l('Festival: aceitar patrocínios', 'Festival: accept sponsorships')), t(l('Só quando a meta de público do patrocinador cabe em 90% da projeção.', 'Only when the sponsor\'s crowd target fits within 90% of the projection.')), chk(D.fsp, () => (D.fsp = !D.fsp))) : null,
-    fe ? row(t(l('Festival: fechar headliner', 'Festival: book a headliner')), t(l('A 5 meses da edição, sem headliner: a equipe fecha o maior nome cujo adiantamento (30%) caiba no teto do caixa.', '5 months out with no headliner: staff books the biggest name whose 30% advance fits the cash cap.')), chk(D.fhead, () => (D.fhead = !D.fhead))) : null,
-    fe ? row(t(l('Teto do adiantamento (fração do caixa)', 'Advance cap (share of cash)')), '', h('input', { type: 'number', min: 0.05, max: 1, step: 0.05, value: D.fcap, onchange: (e: Event) => { D.fcap = Number((e.target as HTMLInputElement).value) || 0.25; } })) : null,
-    st ? row(t(l('Estúdio: aceitar sessões', 'Studio: accept sessions')), t(l('Com sala e engenheiro livres, a equipe aceita; sem, sobe a exceção.', 'With a free room and engineer staff accepts; otherwise it raises an exception.')), chk(D.st, () => (D.st = !D.st))) : null,
-    h('p', { class: 'small muted' }, t(l('Feito pela equipe: {d} · exceções: {e}', 'Done by staff: {d} · exceptions: {e}'), { d: D.n.done, e: D.n.exc })));
-});

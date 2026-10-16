@@ -106,6 +106,7 @@ export const PLACES31: Place31[] = [
   P('archive', 'sede', l('Arquivo e catálogo', 'Archive and catalog'), 'gold-disc', ['catalog', 'tribute19', 'media19']),
   P('trophy', 'sede', l('Troféus e Hall da Fama', 'Trophies and Hall of Fame'), 'medal', ['awards', 'rockhall']),
   P('meeting', 'sede', l('Sala de reunião', 'Meeting room'), 'signpost', ['long18']),
+  P('board', 'sede', l('Diretoria (delegação)', 'Boardroom (delegation)'), 'handshake', ['deleg31']),
   P('works', 'sede', l('Obras e operação', 'Works and operations'), 'pin', ['hq']),
   // Cidade — prédios do Nosso mundo
   P('city', 'cidade', l('Nosso mundo', 'Our world'), 'skyline', ['campus18'], { home: true }),

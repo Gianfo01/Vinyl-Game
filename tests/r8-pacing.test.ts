@@ -9,7 +9,7 @@ import { resolveDecision } from '../src/sim/events';
 import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
 import { activeStances, chooseStance, currentEra, era8, pivotStance, rivalStances, stanceOf } from '../src/sim/sys/eras8';
-import { advanceUntil, checkStop, DEFAULT_STOP, describeEntry, overCapacity, pace8, policyOf, setPolicy, teamCapacity } from '../src/sim/sys/pacing8';
+import { advanceUntil, checkStop, DEFAULT_STOP, describeEntry, overCapacity, pace8, policyOf, setPolicy, setTeamBudget8, teamCapacity, teamLog8 } from '../src/sim/sys/pacing8';
 import { actStatus, hq8, hqChanges } from '../src/sim/sys/hq8';
 import { agendaById } from '../src/data/people';
 import { money, playerActs, post } from '../src/sim/util';
@@ -138,7 +138,7 @@ describe('delegação com orçamento, prioridade e registro', () => {
     const slots = s.agenda[id] ?? [];
     expect(slots.every((x) => !(agendaById[x.action]?.cost ?? 0))).toBe(true);
     expect(pace8(s).spent[id] ?? 0).toBeLessThanOrEqual(money(s, 1));
-    const e = pace8(s).log.filter((x) => x.a === id && x.k === 'ag').pop();
+    const e = teamLog8(s).filter((x) => x.a === id && x.k === 'ag').pop();
     expect(e?.y).toContain('cap:1');
     expect(e?.y).toContain('p:develop');
     const txt = describeEntry(s, e!);
@@ -171,7 +171,7 @@ describe('delegação com orçamento, prioridade e registro', () => {
     setPolicy(s, ids[0], { tier: 2 });
     expect(policyOf(s, ids[0]).tier).toBe(2);
     advanceMonth(s);
-    expect(pace8(s).log.some((e) => e.a === ids[0] && e.k === 'min')).toBe(true);
+    expect(teamLog8(s).some((e) => e.a === ids[0] && e.k === 'min')).toBe(true);
     expect((s.agenda[ids[0]] ?? []).length).toBeLessThanOrEqual(3);
     // capacidade estourada
     s.player.hq = 0;
@@ -184,7 +184,7 @@ describe('delegação com orçamento, prioridade e registro', () => {
   it('orçamento da equipe é compartilhado e o jogo continua determinístico', () => {
     const run = () => {
       const s = mk('r8-deleg-det', { startYear: 1980 });
-      pace8(s).team = 300;
+      setTeamBudget8(s, 300);
       for (const id of playerActs(s)) { s.delegated[id] = true; setPolicy(s, id, { p: 'commercial' }); }
       for (let i = 0; i < 4; i++) advanceMonth(s);
       const spent = Object.values(pace8(s).spent).reduce((a, b) => a + b, 0);

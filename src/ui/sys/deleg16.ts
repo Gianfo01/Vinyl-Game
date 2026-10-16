@@ -4,7 +4,7 @@
 import { MARKETS, l } from '../../data/world';
 import { VENUE_TIERS } from '../../data/rules';
 import { t } from '../../i18n/strings';
-import { ORDER_CAP, KINDS, addOrder, d16, delegates, eligibleActs, handlersOf, kindsOf, letGo, matchOffer, ordersOf, qLabel, quality, removeOrder, toggleOrder, type Order16, type OrderKind } from '../../sim/sys/deleg16';
+import { ORDER_CAP, KINDS, addOrder, d16, delegates, eligibleActs, handlersOf, kindsOf, letGo, log16, matchOffer, ordersOf, qLabel, quality, removeOrder, toggleOrder, type Order16, type OrderKind } from '../../sim/sys/deleg16';
 import { tiersOpen } from '../../sim/sys/tour12';
 import { liveOf } from '../../sim/sys/live/state';
 import type { GameState, StaffMember } from '../../sim/types';
@@ -55,7 +55,7 @@ function newForm(s: GameState, st: StaffMember): HTMLElement {
 
 function card(s: GameState, st: StaffMember): HTMLElement {
   const d = d16(s), q = quality(s, st), mine = ordersOf(s, st.id), pend = d.pend.find((p) => p.staffId === st.id);
-  const logs = d.log.filter((x) => x.staffId === st.id).slice(0, 8);
+  const logs = log16(s, { staffId: st.id, n: 8 });
   const active = mine.filter((o) => o.on).length;
   return h('div', { class: 'panel' },
     h('div', { class: 'row' }, h('b', null, st.name), ' ', pill(t(st.role === 'promoter' ? l('Promotor', 'Promoter') : l('Agente de shows', 'Booking agent'))), ' ', pill(`${t(l('qualidade', 'quality'))}: ${t(qLabel(q.q))}`, q.q >= 0.6 ? 'good' : q.q < 0.4 ? 'bad' : ''), ' ',
@@ -80,6 +80,7 @@ registerSection('company', {
     const ds = delegates(s);
     return section(t(l('Delegar a agentes e promotores', 'Delegate to agents and promoters')),
       h('p', { class: 'muted small' }, t(l('Contrate "Agente de shows" e "Promotor" na lista de profissionais. Cada um cuida de até 3 ordens permanentes, executadas no fechamento do mês. A qualidade depende de habilidade, atributos e notoriedade do selo; eles erram, e selos rivais tentam levá-los.', 'Hire a "Booking agent" and a "Promoter" from the professionals list. Each handles up to 3 standing orders, run at month close. Quality depends on skill, attributes and label notoriety; they make mistakes, and rival labels try to poach them.'))),
+      h('p', { class: 'small' }, h('button', { class: 'btn small ghost', onclick: () => { store.area = 'deleg31' as typeof store.area; rerender(); } }, t(l('Quem decide o quê: abrir a tela de delegação', 'Who decides what: open the delegation screen')))),
       ds.length ? ds.map((st) => card(s, st)) : h('p', { class: 'muted small' }, t(l('Ninguém contratado ainda para esses cargos.', 'Nobody hired for these roles yet.'))),
       !liveOf(s).fests.length ? h('p', { class: 'muted small' }, t(l('Ordem "Preencher festival" só aparece com festival próprio.', 'The "Fill festival slots" order needs a festival of your own.'))) : null);
   },
@@ -87,9 +88,9 @@ registerSection('company', {
 
 registerPageTab('act', {
   id: 'deleg16', label: l('Agenciado por', 'Handled by'), icon: 'handshake', order: 42,
-  when: (s, id) => eligibleActs(s).some((a) => a.id === id) && (delegates(s).length > 0 || d16(s).log.some((x) => x.actId === id)),
+  when: (s, id) => eligibleActs(s).some((a) => a.id === id) && (delegates(s).length > 0 || log16(s, { actId: id, n: 1 }).length > 0),
   render: (s, id) => {
-    const hs = handlersOf(s, id), logs = d16(s).log.filter((x) => x.actId === id).slice(0, 8);
+    const hs = handlersOf(s, id), logs = log16(s, { actId: id, n: 8 });
     return h('div', null,
       hs.length ? h('p', { class: 'small' }, t(l('Agenciado por', 'Handled by')), ': ', hs.map((x) => `${x.st.name} (${x.kinds.map((k) => t(KINDS[k].name)).join(', ')})`).join(' · '))
         : h('p', { class: 'muted small' }, t(l('Nenhum agente ou promotor cuida deste ato. Delegue em Empresa › Equipe.', 'No agent or promoter handles this act. Delegate in Company › Staff.'))),

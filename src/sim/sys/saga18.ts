@@ -17,7 +17,8 @@ import { dm18, PHASE18 } from './dm18';
 import { heirs } from './heirs8';
 import { items18 } from './inbox18';
 import { allScores18, legacy18, mainPath18, pa18, pathDef18, pathEnding18, pathScore18, type PathId } from './paths18';
-import { burn18, pol18 } from './policy18';
+import { burn18 } from './policy18';
+import { excs31, modeOf31 } from '../deleg31';
 import { ownerOf } from './people/owner';
 import { rv18 } from './review18';
 import { stressOf } from '../stress17';
@@ -187,13 +188,13 @@ export function cockpit18(s: GameState): Cockpit18 {
   if (s.decisions.length) now.push({ tone: 'bad', t: fmtL(l('{n} decisão(ões) na mesa — ignoradas, vale a opção padrão.', '{n} decision(s) on the desk — if ignored, the default applies.'), { n: s.decisions.length }) });
   const ask = items18(s).filter((x) => x.msg?.actions?.length && !x.msg.resolved);
   if (ask.length) now.push({ tone: 'bad', t: fmtL(l('{n} mensagem(ns) pedem resposta: {x}.', '{n} message(s) need a reply: {x}.'), { n: ask.length, x: ask.slice(0, 2).map((x) => x.subject.pt).join('; ') }), goto: { area: 'cockpit' } });
-  const exc = pol18(s).exc.filter((e) => e.w > s.week - 5);
-  if (exc.length) now.push({ tone: 'bad', t: fmtL(l('{n} exceção(ões) às políticas: {x}', '{n} policy exception(s): {x}'), { n: exc.length, x: exc[0].t }), goto: { area: 'long18', tab: ['long18', 'policy'] } });
+  const exc = excs31(s, s.week - 5);
+  if (exc.length) now.push({ tone: 'bad', t: fmtL(l('{n} exceção(ões) às políticas: {x}', '{n} policy exception(s): {x}'), { n: exc.length, x: exc[0].t }), goto: { area: 'deleg31' } });
   const cnt = s.offers.filter((o) => o.status === 'counter').length;
   if (cnt) now.push({ tone: 'bad', t: fmtL(l('{n} contraproposta(s) esperando.', '{n} counter-offer(s) waiting.'), { n: cnt }), goto: { area: 'market' } });
   for (const id of playerActs(s)) {
     const a = s.acts[id], c = a?.contractId ? s.contracts[a.contractId] : undefined;
-    if (c && c.party === 'player' && !a.playerBand && c.endWeek - s.week > 0 && c.endWeek - s.week <= 8 && !pol18(s).renew) now.push({ tone: 'bad', t: fmtL(l('Contrato de {a} vence em {w} semanas (renovação não delegada).', '{a}\'s contract ends in {w} weeks (renewal not delegated).'), { a: a.name, w: c.endWeek - s.week }), goto: { act: id } });
+    if (c && c.party === 'player' && !a.playerBand && c.endWeek - s.week > 0 && c.endWeek - s.week <= 8 && modeOf31(s, 'renew') === 'me') now.push({ tone: 'bad', t: fmtL(l('Contrato de {a} vence em {w} semanas (renovação não delegada).', '{a}\'s contract ends in {w} weeks (renewal not delegated).'), { a: a.name, w: c.endWeek - s.week }), goto: { act: id } });
   }
   const prov = Object.values(COCKPIT18).map((f) => { try { return f(s); } catch { return {}; } });
   for (const p of prov) { now.push(...(p.now ?? [])); works.push(...(p.works ?? [])); }

@@ -375,5 +375,6 @@ import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também 
 import './family29'; // R29 (família): vida familiar de todo artista NPC, filhos da indústria com carreira, estrelas mirins (docs/familia29.md)
 import './demo29'; // R29 (DEMO): público por idade e região, gosto por geração (docs/demo29.md)
 import './npc29'; // R29 (contratos+): empresários, produtoras e selos NPC usam os três modelos; Caixa: masters e JV
+import './deleg31run'; // R31 onda 2 (Q): delegação única — A&R e produtor executivo delegados, desfazer, pedidos (sim/deleg31.ts)
 import '../r31/index'; // R31 onda 0 (W0-CON/W0-ROLE): contratos compartilhados — pendência, destino, papéis, objeto, transação atribuída, interruptores
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
