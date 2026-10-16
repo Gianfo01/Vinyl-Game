@@ -105,16 +105,17 @@ const bs = (s: GameState): BelState => {
   return (x.beliefs10 ??= {});
 };
 
-/** Visão do jogador: ficha de criação (ou derivada) com ajustes ao longo da vida. */
-export function playerViews(s: GameState): Views {
-  const b = bs(s);
-  if (b.player) return b.player;
+/** Visão do jogador: ficha de criação (ou derivada) com ajustes ao longo da vida. R31: ler não grava (deriva da semente). */
+function derivePlayerViews(s: GameState): Views {
   const spec = s.config.character;
   const d = deriveViews(s.config.seed, 'player', { born: s.config.startYear - (spec?.age ?? 35), year: s.config.startYear, city: spec?.hometown ?? s.config.homeCity });
   const pol = (spec?.politics && polById[spec.politics as PolId] ? spec.politics : d.pol) as PolId;
   const rel = (spec?.religion && relById[spec.religion as RelId] ? spec.religion : d.rel) as RelId;
-  b.player = { pol, eng: spec?.politics ? (pol === 'apolitical' ? 8 : Math.max(d.eng, 35)) : d.eng, rel, dev: spec?.religion ? Math.max(d.dev, 30) : d.dev };
-  return b.player;
+  return { pol, eng: spec?.politics ? (pol === 'apolitical' ? 8 : Math.max(d.eng, 35)) : d.eng, rel, dev: spec?.religion ? Math.max(d.dev, 30) : d.dev };
+}
+export function playerViews(s: GameState): Views {
+  const b = (s.x4 as unknown as { beliefs10?: BelState }).beliefs10;
+  return b?.player ?? derivePlayerViews(s);
 }
 
 // r17: cache por partida (um Map global misturava visões de jogos com a mesma semente e o esvaziamento em
@@ -145,7 +146,8 @@ export function viewsOf(s: GameState, id: string): Views {
 
 /** Atualiza a visão do jogador (eventos pessoais, conversão, radicalização). */
 export function shiftPlayerViews(s: GameState, d: { pol?: PolId; eng?: number; rel?: RelId; dev?: number }): void {
-  const v = playerViews(s);
+  const b = bs(s);
+  const v = (b.player ??= derivePlayerViews(s));
   if (d.pol) v.pol = d.pol;
   if (d.rel) v.rel = d.rel;
   if (d.eng) v.eng = clamp(v.eng + d.eng, 0, 100);
