@@ -4,7 +4,8 @@ import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { CITIES } from '../src/data/world';
 import { DIST18, LOTS18 } from '../src/sim/sys/campus18';
-import { GEO31, ISLANDS31, SIDES31, geo31, isIsland31, terrainAt31 } from '../src/data/geo31';
+import { GEO31, ISLANDS31, SIDES31, geo31, isIsland31, mapGeo31, terrainAt31 } from '../src/data/geo31';
+import { hasBespoke27 } from '../src/ui/pixel/lmiso27';
 import { BAY27, BRICK27, STONE27, TOWERS27, cityLook27, mapLms27 } from '../src/ui/pixel/city27';
 import { LM_WET31, geo18, lmPlace31, outerLots31, useGeo18 } from '../src/ui/pixel/campus18px';
 
@@ -20,7 +21,7 @@ describe('R31 GEO: tabela de geografia', () => {
     for (const c of Object.keys(GEO31)) expect(CITIES.some((x) => x.id === c) || sets.has(c), `cidade ${c} existe`).toBe(true);
   });
   it('nenhuma cidade é ilha (água nos quatro lados) salvo as marcadas como ilha', () => {
-    for (const g of Object.values(GEO31)) expect(isIsland31(g), g.city).toBe(ISLANDS31.has(g.city));
+    for (const g of Object.values(GEO31)) { expect(isIsland31(g), g.city).toBe(ISLANDS31.has(g.city)); expect(isIsland31(mapGeo31(g.city)), g.city).toBe(ISLANDS31.has(g.city)); }
     for (const c of ['rio', 'salvador', 'lisbon', 'barcelona', 'miami', 'sydney', 'istanbul']) expect(isIsland31(geo31(c)), c).toBe(false);
   });
   it('exemplos do dono: Rio (praia ao sul, baía, morro com favela), SP sem mar, Londres/Paris com rio, NY com rio dos dois lados', () => {
@@ -43,7 +44,7 @@ describe('R31 GEO: tabela de geografia', () => {
 
 describe('R31 GEO: nada em cima da água', () => {
   it('nenhum lote (em nenhum tamanho de mapa) cai em água, praia, cais ou outra margem', () => {
-    for (const g of Object.values(GEO31)) for (const [gw, gh] of GEOS) for (const lot of LOTS18) {
+    for (const g of [...Object.values(GEO31), ...Object.keys(GEO31).map(mapGeo31)]) for (const [gw, gh] of GEOS) for (const lot of LOTS18) {
       if (lot.gx + lot.w > gw || lot.gy + lot.d > gh) continue;
       for (let y = lot.gy; y < lot.gy + lot.d; y += 1) for (let x = lot.gx; x < lot.gx + lot.w; x += 1)
         expect(terrainAt31(g, x + 0.25, y + 0.25, gw, gh).t, `${g.city} ${gw}x${gh} lote ${lot.gx},${lot.gy}`).toBe('land');
@@ -77,5 +78,24 @@ describe('R31 GEO: nada em cima da água', () => {
     const ch = at.find((q) => q.lm.id === 'rio_christ')!, cab = at.find((q) => q.lm.id === 'rio_cable')!;
     expect(terrainAt31(rio.geo, ch.gx, ch.gy, 44, 32).t).toBe('hill');
     expect(cab.wet).toBe(true);
+  });
+});
+
+describe('R31 GEO: mapa orientado (porto na água, boemia na orla) sem mover lotes', () => {
+  it('toda cidade com porto (cais) tem a água do porto encostada nos lotes do porto (borda leste)', () => {
+    for (const g of Object.values(GEO31)) {
+      if (!g.water.some((w) => w.shore === 'quay' && w.k !== 'lake' && w.o < 3)) continue;
+      const m = mapGeo31(g.city);
+      // lote "Cais do porto"/"Ponta do cais" (gx 39–42, gy 18–23) no mapa 44×32: logo depois da borda leste há água
+      const at = terrainAt31(m, 44 + Math.max(...m.water.filter((w) => w.side === 'e').map((w) => w.o), 0.6) + 0.3, 21, 44, 32);
+      expect(at.t, g.city).toBe('water');
+    }
+  });
+  it('praia ao sul (casas de show na orla) quando a cidade tem praia e porto não briga com isso', () => {
+    for (const c of ['rio', 'salvador', 'recife', 'dakar', 'dar_es_salaam', 'manila']) expect(mapGeo31(c).water.some((w) => w.side === 's' && w.shore === 'beach'), c).toBe(true);
+    expect(mapGeo31('rio').xf).toBe(0); // o Rio já estava certo: Copacabana ao sul, Guanabara no porto
+  });
+  it('Elevador Lacerda tem desenho próprio (não é mais o arranha-céu genérico)', () => {
+    expect(hasBespoke27('ssa_lacerda')).toBe(true);
   });
 });

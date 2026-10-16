@@ -125,8 +125,8 @@ const ROWS: Geo31[] = [
   g('rotterdam', 's:river:quay:Nieuwe Maas~4', '', 'Nieuwe Maas ao sul, porto.'),
   g('brussels', '', '', 'Terra em volta.'),
   g('vienna', 'e:river:quay:Rio Danúbio~3', '', 'Danúbio a leste.'),
-  g('budapest', 'w:river:quay:Rio Danúbio (Buda)~4!hills', 'w:0.5', 'Pest no mapa; Danúbio a oeste com as colinas de Buda do outro lado.'),
-  g('prague', 'w:river:quay:Rio Vltava (Malá Strana)~2', 'w:0.4', 'Vltava a oeste, castelo no alto da outra margem.'),
+  g('budapest', 'w:river:quay:Rio Danúbio (Buda)~4!hills', '', 'Pest no mapa; Danúbio a oeste com as colinas de Buda do outro lado.'),
+  g('prague', 'w:river:quay:Rio Vltava (Malá Strana)~2!hills', '', 'Vltava a oeste, castelo no alto da outra margem.'),
   g('warsaw', 'e:river:quay:Rio Vístula~3', '', 'Vístula a leste.'),
   g('moscow', 's:river:quay:Rio Moscova~2', '', 'Rio Moscova ao sul.'),
   g('st_petersburg', 'n:river:quay:Rio Neva~4; w:bay:quay:Golfo da Finlândia+5', '', 'Neva ao norte, golfo a oeste.'),
@@ -266,3 +266,51 @@ export function terrainAt31(gg: Geo31, gx: number, gy: number, gw: number, gh: n
 /** Lados com água de cada tipo (para o horizonte). */
 export const waterSides31 = (gg: Geo31): Set<Side31> => new Set(gg.water.filter((w) => w.o < 5).map((w) => w.side));
 export const hillOn31 = (gg: Geo31, side: Side31): Hill31 | undefined => gg.hills.find((h) => h.side === side);
+
+// ---------------------------------------------------------------- orientação do mapa por cidade
+// A tabela acima está na bússola real. O mapa do jogo tem bairros fixos (lotes são dado de jogo: a vizinhança entre eles
+// entra na simulação): o PORTO e a estação ficam na borda leste/sudeste (lotes 31–42) e a ZONA DAS CASAS DE SHOW na borda
+// sul/sudoeste (lotes da boemia). Em vez de mover lotes, o mapa de cada cidade é GIRADO/ESPELHADO (8 orientações) para
+// que o porto encoste na água do porto, a boemia fique na orla da praia e os morros fiquem no fundo, onde o horizonte
+// os mostra. A geografia continua a mesma — só muda de que lado da tela ela aparece.
+
+/** Matriz [a, b, c, d] sobre o quadrado do mapa (x de oeste→leste, y de norte→sul): x' = a·x + b·y, y' = c·x + d·y. */
+export type Xf31 = [number, number, number, number];
+export const XF31: Xf31[] = [[1, 0, 0, 1], [0, -1, 1, 0], [-1, 0, 0, -1], [0, 1, -1, 0], [-1, 0, 0, 1], [1, 0, 0, -1], [0, 1, 1, 0], [0, -1, -1, 0]];
+const pt31 = (sd: Side31, t: number): [number, number] => (sd === 'n' ? [2 * t - 1, -1] : sd === 'e' ? [1, 2 * t - 1] : sd === 's' ? [2 * t - 1, 1] : [-1, 2 * t - 1]);
+const ap31 = (m: Xf31, [x, y]: [number, number]): [number, number] => [m[0] * x + m[1] * y, m[2] * x + m[3] * y];
+const sideAt31 = ([x, y]: [number, number]): Side31 => (y <= -0.999 ? 'n' : y >= 0.999 ? 's' : x >= 0.999 ? 'e' : 'w');
+const tOn31 = (sd: Side31, [x, y]: [number, number]): number => Math.round(((sd === 'n' || sd === 's' ? x : y) + 1) * 500) / 1000;
+/** Geografia vista com a matriz m (lados e trechos trocados; o resto igual). */
+export function xfGeo31(g: Geo31, m: Xf31): Geo31 {
+  const side = (sd: Side31) => sideAt31(ap31(m, pt31(sd, 0.5)));
+  return { ...g, water: g.water.map((w) => {
+    const sd = side(w.side), ta = tOn31(sd, ap31(m, pt31(w.side, w.a))), tb = tOn31(sd, ap31(m, pt31(w.side, w.b)));
+    return { ...w, side: sd, a: Math.min(ta, tb), b: Math.max(ta, tb) };
+  }), hills: g.hills.map((h) => ({ ...h, side: side(h.side) })) };
+}
+/** Nota da orientação: o porto (lotes do leste) pede a água do porto a leste no trecho 0,55–0,75; a boemia (sul) pede a
+ *  praia ao sul no trecho 0,1–0,4; morros valem no fundo (n/w) e atrapalham na frente. Sem nada a ganhar, fica a bússola real. */
+export function orientScore31(g: Geo31): number {
+  const cov = (w: Water31, t: number) => w.a <= t && w.b >= t && w.o < 3;
+  let sc = 0;
+  const port = g.water.filter((w) => w.shore === 'quay' && w.k !== 'lake');
+  if (port.some((w) => w.side === 'e' && cov(w, 0.65))) sc += 3;
+  else if (g.water.some((w) => w.side === 'e' && cov(w, 0.65))) sc += 1.5;
+  const beach = g.water.filter((w) => w.shore === 'beach');
+  if (beach.some((w) => w.side === 's' && cov(w, 0.25))) sc += 2;
+  else if (beach.some((w) => w.side === 'e' && cov(w, 0.65))) sc += 0.5;
+  for (const h of g.hills) sc += h.amp < 0.3 ? 0 : h.side === 'n' || h.side === 'w' ? 1 : -2;
+  return sc;
+}
+const ORIENT31 = new Map<string, Geo31 & { xf: number }>();
+/** Geografia como aparece no mapa do jogo (orientada para o porto, a orla e os morros no fundo). */
+export function mapGeo31(city: string): Geo31 & { xf: number } {
+  const hit = ORIENT31.get(city);
+  if (hit) return hit;
+  const g = geo31(city);
+  let best = { ...g, xf: 0 }, bs = orientScore31(g) + 0.6;
+  XF31.forEach((m, i) => { if (!i) return; const x = xfGeo31(g, m), sc = orientScore31(x) + (i < 4 ? 0.3 : 0); if (sc > bs + 1e-9) { bs = sc; best = { ...x, xf: i }; } });
+  ORIENT31.set(city, best);
+  return best;
+}

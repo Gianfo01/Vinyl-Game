@@ -32,7 +32,7 @@ import { bldPop19, lotPop19, upkeep19, type PopAct19 } from '../../sim/sys/world
 import { scandal17 } from '../../sim/scandal17';
 import { LMW27B, LMX27B } from './lmdata27';
 import { ownsLot31 } from '../../sim/sys/lots31';
-import { geo31, waterSides31, type Geo31 } from '../../data/geo31';
+import { mapGeo31, waterSides31, type Geo31 } from '../../data/geo31';
 
 // ---------------------------------------------------------------- utilidades determinísticas
 
@@ -115,7 +115,7 @@ export function cityLook27(city: string, lat: number, year: number): CityLook27 
   const trop = Math.abs(lat) < 30;
   const wall = k === 'brick' ? ['#8a4430', '#7a3a2a', '#9a5a40', '#6a4a40'] : k === 'bay' ? ['#f0d8a8', '#e8a888', '#a8d0c8', '#f4ecdc', '#e8c868'] : k === 'towers' ? (year < 1950 ? ['#a87a5a', '#8a6a5a', '#c8b8a0'] : ['#8a9aa8', '#5a6a80', '#c8ccd0', '#a87a5a']) : k === 'stone' ? ['#e4d6b8', '#d8c8a6', '#ece2cc', '#cdbb98'] : ['#d0c0a0', '#b8a888', '#a0a8b0', '#c89878'];
   // R31 (GEO): água e morros vêm da tabela de geografia (o mapa não é mais cercado de mar por todos os lados)
-  const geo = geo31(city), ws = waterSides31(geo);
+  const geo = mapGeo31(city), ws = waterSides31(geo); // R31 (GEO): orientada (porto na água, boemia na orla)
   const hAmp = (sd: 'n' | 'w') => geo.hills.find((x) => x.side === sd)?.amp ?? 0;
   const hillAmp = Math.max(0, ...geo.hills.map((x) => x.amp));
   const sea = geo.water.some((w) => (w.k === 'sea' || w.k === 'bay') && w.o < 5);

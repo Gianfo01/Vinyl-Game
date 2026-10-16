@@ -695,7 +695,7 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
   // a favela do morro, as palmeiras do calçadão e os barcos — tudo desenhado de trás para a frente
   const deco = deco31(geo, look, env, seed, lmAt);
   const td = new T(p, 0, 0), tl = new T(gl, 0, 0);
-  const lmItems = lmAt.map((q) => ({ d: q.gx + q.gy, f: () => {
+  const lmItems = lmAt.filter((q) => !q.front).map((q) => ({ d: q.gx + q.gy, f: () => {
     const [lx, ly] = iso(q.gx, q.gy);
     marks.push({ id: q.lm.id, box: drawLmIso27(p, gl, q.lm.id, q.lm.sh, lx, ly, y, q.wet, seed, env.city) });
   } }));
@@ -755,13 +755,15 @@ export function roadOutAt31(geo: Geo31, gx: number, gy: number): boolean {
  *  terra firme. Em lado de rio, o marco de terra vai para a outra margem. Puro sobre a geometria da cena. */
 export const LM_WET31 = new Set(['ny_liberty', 'syd_opera', 'syd_bridge', 'rio_cable', 'lis_belem', 'lis_bridge', 'ist_bridge', 'sf_gate', 'lon_tbridge', 'pra_bridge', 'ny_brooklyn']);
 const LM_HILL31 = new Set(['rio_christ', 'rio_corcovado']);
-export interface LmAt31 { lm: Landmark19; gx: number; gy: number; wet: boolean; tall: boolean }
+export interface LmAt31 { lm: Landmark19; gx: number; gy: number; wet: boolean; tall: boolean; /** na frente do mapa (leste/sul): vira sprite com profundidade */ front?: boolean }
 export function lmPlace31(lms: Landmark19[], geo: Geo31, year: number): LmAt31[] {
   void year;
-  const cand: { gx: number; gy: number; side: 'w' | 'n'; i: number }[] = [];
+  const cand: { gx: number; gy: number; side: 'w' | 'n' | 'e' | 's'; i: number }[] = [];
   const along = [3.4, 9.4, 15.4, 21.4, 27.4];
   along.forEach((v, i) => { if (v < G.gh - 1) cand.push({ gx: -2.7, gy: v, side: 'w', i: i * 2 }); if (v + 1.2 < G.gw - 1) cand.push({ gx: v + 1.2, gy: -2.7, side: 'n', i: i * 2 + 1 }); });
-  const vis = (gx: number, gy: number) => { const [x, yy] = iso(gx, gy); return yy >= HZ + 8 && x > 14 && x < G.mw - 14; };
+  // R31 (GEO): na frente (leste/sul) só marcos de água — porto, ponte, ópera — quando a água do mapa está na frente
+  for (const f of [0.3, 0.5, 0.7]) { cand.push({ gx: G.gw + 2.7, gy: f * G.gh, side: 'e', i: 40 + f * 10 }); cand.push({ gx: f * G.gw, gy: G.gh + 2.7, side: 's', i: 41 + f * 10 }); }
+  const vis = (gx: number, gy: number) => { const [x, yy] = iso(gx, gy); return yy >= HZ + 8 && yy < G.mh - 4 && x > 14 && x < G.mw - 14; };
   const used = new Set<number>(), out: LmAt31[] = [];
   const order = lms.map((lm, k) => ({ lm, slot: (lm as Landmark19 & { slot?: number }).slot ?? k })).sort((a, b) => a.slot - b.slot);
   for (const { lm, slot } of order) {
@@ -769,7 +771,8 @@ export function lmPlace31(lms: Landmark19[], geo: Geo31, year: number): LmAt31[]
     let best: { k: number; gx: number; gy: number; wet: boolean; score: number } | null = null;
     cand.forEach((c, k) => {
       if (used.has(k)) return;
-      const out0 = (e: number): [number, number] => (c.side === 'w' ? [-e, c.gy] : [c.gx, -e]);
+      if ((c.side === 'e' || c.side === 's') && want !== 'wet') return;
+      const out0 = (e: number): [number, number] => (c.side === 'w' ? [-e, c.gy] : c.side === 'n' ? [c.gx, -e] : c.side === 'e' ? [G.gw + e, c.gy] : [c.gx, G.gh + e]);
       const at0 = terrainAt31(geo, ...out0(2.7), G.gw, G.gh);
       let e = 2.7, wet = at0.t === 'water';
       if (want === 'wet' && !wet && at0.w && at0.w.o > 2.7 && at0.w.o < 5) { e = at0.w.o + 0.8; wet = true; }
@@ -785,9 +788,10 @@ export function lmPlace31(lms: Landmark19[], geo: Geo31, year: number): LmAt31[]
     });
     if (!best) continue;
     const b = best as { k: number; gx: number; gy: number; wet: boolean };
+    const side = cand[b.k].side;
     if (b.wet && want !== 'wet') continue; // marco de terra sem lugar em terra firme não vira ilha: fica de fora do mapa
     used.add(b.k);
-    out.push({ lm, gx: b.gx, gy: b.gy, wet: b.wet, tall: slot % 4 < 2 });
+    out.push({ lm, gx: b.gx, gy: b.gy, wet: b.wet, tall: slot % 4 < 2 && side !== 'e' && side !== 's', front: side === 'e' || side === 's' });
   }
   return out;
 }
@@ -1055,6 +1059,18 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
   sprites.sort((a, b) => a.depth - b.depth);
   const marks: Mark19[] = [];
   const gr = groundCanvas(env, seed, used, sprites, lmAt, marks, look, x.sale ?? []);
+  // R31 (GEO): marco de água na frente do mapa (ponte, ópera, estátua do porto): sprite com profundidade, não chão
+  for (const q of lmAt) if (q.front) {
+    const QW = 150, QH = 150, AX = 75, AY = 116;
+    const [lx, ly] = iso(q.gx, q.gy);
+    const pc = new Px(QW, QH), pl = new Px(QW, QH);
+    const bx = drawLmIso27(pc, pl, q.lm.id, q.lm.sh, AX, AY, env.year, q.wet, seed, env.city);
+    const ox = Math.round(lx - AX), oy = Math.round(ly - AY);
+    const box: [number, number, number, number] = [bx[0] + ox, bx[1] + oy, bx[2] + ox, bx[3] + oy];
+    marks.push({ id: q.lm.id, box });
+    sprites.push({ id: `lmk:${q.lm.id}`, c: pc.canvas(), lc: pl.canvas(), x: ox, y: oy, depth: q.gx + q.gy, box, door: [lx, ly], top: [lx, box[1]], fp: [q.gx, q.gy, 0, 0], kind: 'museum', st: 'open', filler: true });
+  }
+  sprites.sort((a, b) => a.depth - b.depth);
   // r27: placas "À venda" como sprites com profundidade (não somem atrás do prédio da frente)
   const signs: SaleSign27[] = (x.sale ?? []).filter((sl) => LOTS18[sl.lot]).map((sl) => saleSign27(sl, x.saleTxt ?? 'VENDA'));
   // r27 (I2): se um prédio da FRENTE cobre a placa, ela sobe acima do telhado dele (com haste até o lote)

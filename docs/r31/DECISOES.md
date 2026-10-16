@@ -294,10 +294,14 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - **Marcos:** cada marco pede água (pontes, Opera House, Estátua da Liberdade, bondinho do Pão de Açúcar, Torre de Belém),
   morro (Cristo) ou terra firme; vão para o candidato do fundo mais próximo do bastidor antigo que combina. Em lado de rio o
   marco de terra vai para a outra margem; marco de terra sem lugar em terra firme fica fora (não vira ilha).
-- **Prédios do jogador e da cidade (regra registrada, sem mudar dados):** sede, estúdio, lojas, casas de show e festival
-  continuam nos lotes de sempre (posição é dado de jogo). O que é coerente por construção: tudo fica em terra; os bairros do
-  porto (lotes 31–42, leste/sudeste) encostam na borda leste — nas cidades com água a leste (Rio, Nova York, Barcelona,
-  Istambul, Miami, Xangai…) o cais fica de fato junto da água. Mudar lotes de lugar por cidade (ex.: porto sempre colado
-  à água, casas de show perto da praia) mexeria em LOTS18 → fica como pergunta ao dono.
+- **Porto e casas de show junto da água (decisão do dono, 2026-10-16: "sim"):** a posição dos lotes entra na simulação
+  (vizinhança com bônus, `world19.lotGap19`), então os lotes NÃO mudam de lugar. Em vez disso o mapa de cada cidade é
+  orientado (`geo31.mapGeo31`: uma das 8 rotações/espelhamentos da geografia real, escolhida por pontuação): a água do porto
+  (cais) vai para a borda leste, onde ficam os lotes do porto e da estação (31–42); a praia vai para o sul, onde fica a zona
+  das casas de show (boemia); morros vão para o fundo. Sem ganho, fica a bússola real (o Rio já estava assim). A tabela
+  continua na bússola real; só muda de que lado da tela a geografia aparece. Marco de água que cai na frente (ponte,
+  ópera, estátua do porto) vira sprite com profundidade. Simulação e goldens iguais.
+- **Elevador Lacerda (decisão do dono):** desenho próprio (escarpa da Cidade Alta com casario, torre e passarela; art déco
+  desde 1930, ferro antes) no lugar do arranha-céu genérico.
 - Goldens r27-p2a, r27-p2b, r27-m3, r16-playbot sem mudança (só desenho).
 - **Testes mais leves a partir do fim da onda 4 (decisão do dono, 2026-10-16):** como a onda 5 vai mudar muita coisa, as frentes não rodam mais a suíte inteira. Cada uma roda `tsc`, os testes do próprio tema, os goldens (r27-p2a, r27-p2b, r27-m3, r16-playbot) e os testes que tocam os arquivos mexidos. A junção na integração faz o mesmo, mais a fumaça da build (`scripts/r31/smoke.mjs`). As falhas que as frentes já apontaram (r14-db, r17-data, r19-data-base, r29-connect-all, r31-base, r31-w2rev, r31-editor "disparar evento", r29-relics por tempo, r27-m2 "mesma seed") são corrigidas numa passada só no fim, na onda 6 (FIM-5 suíte verde).
