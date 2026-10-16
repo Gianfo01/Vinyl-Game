@@ -114,13 +114,13 @@ describe('base de sucessos: curadoria e nomes reais', () => {
 describe('base de sucessos: interruptor base31.hits', () => {
   const isHit = (no?: number) => no !== undefined && no >= REAL_BASE + BASE31H_FROM && no < REAL_BASE + BASE31H_TO;
   const hits = (s: ReturnType<typeof createGame>) => Object.values(s.acts).filter((a) => isHit(a.catalogNo)).length;
-  it('ligado por padrão: atos da base estreiam no mundo; desligado depois de criar, quem ainda não surgiu não surge', () => {
+  it('ligado por padrão (só com base Enorme, decisão do dono): atos da base estreiam no mundo; desligado depois de criar, quem ainda não surgiu não surge', () => {
     // uma partida de cada vez (estado de módulo por partida corrente: não intercalar)
-    const on = createGame(defaultConfig('r31hits-a', { startYear: 1990, realNames: true }));
+    const on = createGame(defaultConfig('r31hits-a', { startYear: 1990, realNames: true, dbSize: 'huge' }));
     expect(sw(on, SW_HITS31)).toBe(true);
     for (let i = 0; i < 18; i++) advanceMonth(on);
     const nOn = hits(on);
-    const off = createGame(defaultConfig('r31hits-a', { startYear: 1990, realNames: true }));
+    const off = createGame(defaultConfig('r31hits-a', { startYear: 1990, realNames: true, dbSize: 'huge' }));
     setSw(off, SW_HITS31, false);
     for (let i = 0; i < 18; i++) advanceMonth(off);
     const preOff = hits(off);

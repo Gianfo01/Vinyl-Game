@@ -96,13 +96,14 @@ registerSwitch({
 const it31Ok = (s: GameState, i: number): boolean => i < BASE31IT_FROM || i >= BASE31IT_TO || s.config.base31it !== false;
 /** R31 · onda 4 (BASE-HITS): sucessos de 1992 até hoje (data/base31hits) no FIM, depois das frentes BR e IT (ordem BR, IT, HITS); interruptor 'base31.hits'. */
 export const BASE31H_FROM = REAL_ALL.length;
-for (const a of BASE31_HITS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+// dono (2026-10-16): os hits só entram com base de dados Enorme (z 3) — custam até +60% no mês a partir de 2012
+for (const a of BASE31_HITS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); a.z ??= 3; REAL_ALL.push(a); } }
 export const BASE31H_TO = REAL_ALL.length;
 export const SW_HITS31 = 'base31.hits';
 registerSwitch({
   id: SW_HITS31, def: true, scope: 'game',
-  desc: l('Base de sucessos (1992 em diante): artistas reais do mundo inteiro com hit no top 10 das grandes paradas, inclusive one-hit wonders, estreiam no ano real; desligado, ficam fora do mundo (desligar no meio da partida segura só quem ainda vai surgir).',
-    'Hits database (1992 on): real artists from all over the world with a top-10 hit on major charts, one-hit wonders included, debut in their real year; off, they stay out of the world (switching off mid-game only holds back those still to come).'),
+  desc: l('Base de sucessos (1992 em diante; só com base de dados Enorme): artistas reais do mundo inteiro com hit no top 10 das grandes paradas, inclusive one-hit wonders, estreiam no ano real; desligado, ficam fora do mundo (desligar no meio da partida segura só quem ainda vai surgir).',
+    'Hits database (1992 on; Huge database only): real artists from all over the world with a top-10 hit on major charts, one-hit wonders included, debut in their real year; off, they stay out of the world (switching off mid-game only holds back those still to come).'),
   read: (s) => s.config.base31hits !== false,
   write: (s, v) => { if (v) delete s.config.base31hits; else s.config.base31hits = false; },
 });
