@@ -8,6 +8,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH ?? '/opt/node-tools/nod
 const out = process.argv[2] ?? 'docs/r31/shots';
 const port = process.argv[3] ?? '5873';
 const only = process.argv[4];
+const years = process.argv[5] ? process.argv[5].split(',').map(Number) : null;
 mkdirSync(out, { recursive: true });
 const b = await chromium.launch({ executablePath: process.env.CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const p = await b.newPage({ viewport: { width: 1440, height: 900 }, locale: 'pt-BR' });
@@ -42,7 +43,7 @@ const open = (id) => p.evaluate(async (id) => {
 const shot = async (name) => { await p.waitForTimeout(900); await p.evaluate(() => document.querySelectorAll('.overlay, .toast').forEach((e) => e.remove())); await p.screenshot({ path: `${out}/onda5-papel-${name}.png` }); console.log('captura', name); };
 const PAPERS = ['livrocaixa', 'cofre', 'arquivoaco', 'revista', 'olheiro', 'quadrobranco', 'jornal', 'radiotv', 'secretaria', 'telefone', 'quadrometas', 'diario', 'caderno', 'graficos', 'contador'];
 const LOOK = { 1912: 'escrivaninha', 1962: 'telegrama', 1978: 'fax', 1995: 'tubo', 2005: 'plana', 2025: 'celular' };
-for (const y of [1912, 1962, 1978, 1995, 2005, 2025]) {
+for (const y of [1912, 1962, 1978, 1995, 2005, 2025].filter((y) => !years || years.includes(y))) {
   const yr = await game(y);
   console.log('partida', y, '→', yr);
   if (await open('correspondencia')) {

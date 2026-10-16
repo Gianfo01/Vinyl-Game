@@ -177,7 +177,7 @@ function head5(c: PageCtx5, sub?: string): HTMLElement {
     h('span', { class: 'paper5-sub' }, pxText5(sub0, light ? '#3a3a44' : '#eadfc4'), k ? [pxText5(t(l('tecla', 'key')), light ? '#3a3a44' : '#eadfc4'), pxKey5(k)] : null),
     h('span', { class: 'paper5-sp' }),
     pinBtn,
-    h('button', { type: 'button', class: 'paper5-close', 'aria-label': t(l('Fechar (Esc)', 'Close (Esc)')), onclick: () => (c.close ? c.close() : closePaper5(s)) }, pxKey5('Esc'), pxText5(t(l('fechar', 'close')), '#f0e8d8')));
+    h('button', { type: 'button', class: 'paper5-close bare', 'aria-label': t(l('Fechar (Esc)', 'Close (Esc)')), onclick: () => (c.close ? c.close() : closePaper5(s)) }, pxKey5('Esc'), pxText5(t(l('fechar', 'close')), '#f0e8d8')));
 }
 
 /** Monta o papel: moldura em pixel art (quando há layout) + áreas HTML posicionadas pelas áreas da moldura. */
@@ -190,6 +190,7 @@ function frame5(c: PageCtx5, f: Frame5x, parts: Shell5): HTMLElement {
   const ex = Object.entries(parts.extra ?? {}).map(([k, e]) => h('div', { class: `paper5-x paper5-${k}` }, e));
   root.append(hd, tb, ...pages, ...ex);
   if (pages.length === 1) root.classList.add('one');
+  if (pages.length === 1 && f.k === 'paper' && (f.p === 'ledger' || f.p === 'scout' || f.p === 'agenda')) root.classList.add('wide'); // folha solta por cima do livro
   // a moldura é desenhada no tamanho real (pixels lógicos = tela ÷ 2) assim que o papel ganha tamanho
   if (typeof ResizeObserver === 'undefined') return root;
   let last = '';
@@ -264,6 +265,8 @@ function split5(panel: HTMLElement): [HTMLElement, HTMLElement] | null {
   }
   const kids = [...el.children];
   if (kids.length < 2) return null;
+  // tabela larga (mais de 5 colunas) não cabe em meia página: fica a folha dupla inteira
+  if ([...el.querySelectorAll('table')].some((tb) => (tb.querySelector('tr')?.children.length ?? 0) > 5)) return null;
   const weight = (e: Element): number => Math.max(1, (e.textContent ?? '').length / 400 + e.querySelectorAll('tr, li, .card').length / 6);
   const total = kids.reduce((a, k) => a + weight(k), 0);
   let acc = 0, cut = 1;
@@ -290,6 +293,9 @@ export const paperTabs5 = (id: string, area: string, key: string, tabs: string[]
 function keepTab5(c: { obj: { id: string }; area: string }): (key: string, id: string) => boolean {
   const into = MOVES5.filter((m) => m.to === c.obj.id && m.area === c.area);
   if (into.length) return (key, id) => into.some((m) => m.key === key && (m.tab === undefined || m.tab === id));
+  // objeto-atalho para uma aba (secretária → painel do mês): só essa aba, nada de marcador de outro objeto
+  const link = object5(c.obj.id)?.links?.filter((x) => x.area === c.area && x.tab) ?? [];
+  if (link.length && !object5(c.obj.id)?.opens.some((x) => x.area === c.area)) return (key, id) => link.some((x) => x.tab![0] === key && x.tab![1] === id);
   return (key, id) => {
     const mv = MOVES5.find((m) => m.area === c.area && m.key === key && (m.tab === undefined || m.tab === id));
     return !mv || mv.to === 'pausa' ? !mv : mv.to === c.obj.id;

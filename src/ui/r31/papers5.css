@@ -205,3 +205,57 @@ main:has(> .paper5) { padding: 12px 16px !important; overflow: hidden; }
 /* cartões, caixas e grupos do conteúdo de hoje com cantos retos (pixel) */
 .paper5-in .card, .paper5-in section, .paper5-in details, .paper5-in fieldset, .paper5-in [class*='card'], .paper5-in [class*='box'], .paper5-in [role='radiogroup'] { border-radius: 0 !important; }
 .paper5-in [role='radiogroup'] { background: transparent !important; }
+
+/* ---------------------------------------------------------------- polimento 2: nada fora do lugar */
+/* avatar das mensagens: o ícone no centro do círculo (o CSS antigo põe display:block e o ícone ia para o canto) */
+.paper5 .m27-av .m27-tile, .paper5 .m27-lav .m27-tile, .paper5 .m27-fold .m27-tile { display: flex !important; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; }
+.paper5 .m27-tile > img, .paper5 .m27-tile > .ic-emoji, .paper5 .m27-tile > svg { display: block; margin: 0 !important; flex: 0 0 auto; }
+.paper5 .m27-av .portrait, .paper5 .m27-av .logo { overflow: hidden; }
+.paper5 .m27-dot { right: -1px; top: -1px; }
+/* cabeçalho cabe na faixa da moldura (24 px): botões baixos; fechar = tecla Esc + palavra, sem caixa */
+.paper5-head { overflow: visible; }
+.paper5-hd { height: 100%; gap: 12px; }
+.paper5 .paper5-pin { padding: 2px 6px !important; height: 22px; box-sizing: border-box; }
+.paper5 .paper5-close.bare { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; height: 22px; gap: 6px; }
+.paper5 .paper5-close.bare:hover .pxt5 { filter: brightness(1.3); }
+.paper5 .paper5-close .pxk5 { margin-left: 0; }
+.paper5-whiteboard .paper5-close .pxt5 canvas, .paper5-planning .paper5-close .pxt5 canvas, .paper5-form .paper5-close .pxt5 canvas, .paper5-rolodex .paper5-close .pxt5 canvas,
+.paper5-inbox-fax .paper5-close .pxt5 canvas, .paper5-inbox-phone .paper5-close .pxt5 canvas { filter: invert(0.85); }
+.paper5-title { height: 22px; align-items: center; }
+.paper5-sub { height: 22px; }
+/* marcadores não passam da faixa */
+.paper5.laid > .paper5-tabs { align-items: flex-end; }
+.paper5 .paper5-mk, .paper5 .paper5-folder { height: 20px; box-sizing: border-box; }
+.paper5 .paper5-mk[aria-selected='true'] { height: 22px; }
+/* conteúdo: linhas de etiquetas quebram, campos cabem, listas dentro de "detalhes" não vazam */
+.paper5-in .row, .paper5-in .row.wrap { flex-wrap: wrap; min-width: 0; }
+.paper5-in .row > *, .paper5-in label { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.paper5-in label input, .paper5-in label select { max-width: 100%; }
+.paper5-in details > ul, .paper5-in details > ol, .paper5-in details ul { max-width: 100%; box-sizing: border-box; padding-left: 18px; margin-right: 0; }
+.paper5-in td span:has(> .pill) { display: inline-flex; flex-wrap: wrap; gap: 3px; max-width: 100%; }
+.paper5-in .pill { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.paper5-in td { overflow-wrap: anywhere; }
+.paper5-notes details ul, .paper5-x details ul { padding-left: 14px; }
+.paper5-in details ul, .paper5-x details ul { margin-bottom: 0; }
+/* cabeçalho não cobre os enfeites do canto da moldura (ímãs do quadro, trama da revista, fita do livro) */
+.paper5-whiteboard .paper5-hd { padding-right: 26px; box-sizing: border-box; }
+.paper5-charts .paper5-hd { padding-right: 64px; box-sizing: border-box; }
+.paper5-ledger .paper5-hd, .paper5-agenda .paper5-hd { padding-right: 6px; box-sizing: border-box; }
+/* a página fica dentro da borda de baixo da moldura */
+.paper5.laid > .paper5-page { clip-path: inset(0 0 3px 0); }
+/* filtros e marcadores longos: rolam de lado com um esmaecido na borda (nada cortado no seco) */
+.paper5-mail-flags .m27-filters, .paper5-marks { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); padding-right: 28px; }
+/* botões "fantasma" da caixa (marcar lidas, arquivar lidas) com fundo de papel, legíveis em qualquer moldura */
+.paper5-mail-tools .btn.ghost, .paper5-mail-tools button.ghost { background: #f2e6cc !important; }
+.paper5-mail-tools .m27-q { min-width: 200px; }
+/* revista: listas da coluna da direita sem marcador solto, cada item numa linha arrumada */
+.paper5-charts .paper5-in ul { list-style: none; padding-left: 0; }
+.paper5-charts .paper5-in li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 6px; }
+.paper5-in td .pill, .paper5-in td [class*='chip'] { vertical-align: middle; }
+/* papéis em moldura de aparelho (rádio/TV, secretária): a folha tem fundo de papel, nada solto sobre a madeira */
+.paper5[class*='paper5-inbox-']:not([data-paper5='correspondencia']) .paper5-in { background: #fbf6ea; box-shadow: inset 0 0 0 2px rgba(30, 24, 18, 0.25); }
+.paper5-in h1, .paper5-in .ph27 h1, .paper5-in [class*='hero'] h1, .paper5-in [class*='hero'] h2 { color: #1e1a14 !important; text-shadow: none !important; -webkit-text-stroke: 0 !important; }
+/* livro/caderno com conteúdo largo: uma folha solta, opaca, por cima das duas páginas (a espiral não aparece através) */
+.paper5.wide .paper5-page { padding: 6px 10px; box-sizing: border-box; }
+.paper5.wide .paper5-in { --panel: #fffdf6; background: #fbf6ea; border: 2px solid #2a2018; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); padding-left: 22px !important; padding-right: 22px !important; }
+.paper5.wide .paper5-in .card, .paper5.wide .paper5-in section.card { box-shadow: none; }
