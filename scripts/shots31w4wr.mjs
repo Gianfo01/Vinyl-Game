@@ -66,15 +66,12 @@ for (const [k, pick] of [['release'], ['bank'], ['buy', 'free'], ['jaba'], ['jab
 await clear();
 // cena antiga (compor) com a faixa de elenco
 const okc = await p.evaluate(async () => {
-  const c = await import('/src/ui/act27/compose27.ts');
-  const util = await import('/src/sim/util.ts');
-  const id = util.playerActs(window.__g)[0];
-  if (!id) return false;
-  c.openCompose27(window.__g, id);
+  const c = await import('/src/ui/act27/board27.ts');
+  c.openBoard27();
   return !!document.querySelector('.mc31-cast');
 });
-console.log('faixa de elenco no compor', okc);
-await shot('cena-antiga-compor');
+console.log('faixa de elenco na diretoria', okc);
+await shot('cena-antiga-diretoria');
 await clear();
 // Finanças › Aprendizados
 await p.evaluate(async () => {

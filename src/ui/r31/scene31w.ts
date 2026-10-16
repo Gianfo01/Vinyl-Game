@@ -114,7 +114,7 @@ registerScene31({
       cards: on.size,
       nums: [
         { label: N('Etapa', 'Stage'), value: STAGE_NAMES[stage], basis: 'fact' },
-        { label: N('Linha do tempo', 'Timeline'), value: on.size ? [...on].map((x) => CH[x]?.name.pt ?? x).join(' → ') : N('nenhum cartão: sai sem divulgação', 'no cards: goes out without promotion'), basis: 'fact' },
+        { label: N('Linha do tempo', 'Timeline'), value: on.size ? l([...on].map((x) => CH[x]?.name.pt ?? x).join(' → '), [...on].map((x) => CH[x]?.name.en ?? x).join(' → ')) : N('nenhum cartão: sai sem divulgação', 'no cards: goes out without promotion'), basis: 'fact' },
         { label: N('Previsão de vendas (faixa)', 'Sales forecast (range)'), value: fc ? fmtL(N('{lo}–{hi} unidades', '{lo}–{hi} units'), { lo: fc.lo.toLocaleString('pt-BR'), hi: fc.hi.toLocaleString('pt-BR') }) : N('sem faixas escolhidas', 'no tracks chosen'), hint: N('A mesma previsão da tela do projeto; mais estreita com analista.', 'The same forecast as the project screen; narrower with an analyst.'), basis: 'guess' },
         { label: N('Ainda a gastar', 'Still to spend'), value: usd(c.remaining), basis: 'calc' },
         ...opinions,
