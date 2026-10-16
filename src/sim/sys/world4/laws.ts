@@ -2,6 +2,7 @@ import { deferEvents } from '../../ext4';
 // Leis e indústria: sindicato dos músicos (piso, acordo, greves), sociedades de direitos rivais,
 // associação do setor com votação de leis, selo de conteúdo explícito e pirataria com resposta.
 
+import { on31 } from '../../r31/market31';
 import { clamp, type Rng } from '../../../core/rng';
 import { cityById, familyOf, l, type L } from '../../../data/world';
 import { type EventDef } from '../../events';
@@ -179,7 +180,7 @@ registerMod('appeal', 'w4laws', (s, value, ctx) => {
   const act = ctx.act;
   if (!rel || !act) return null;
   let k = 1;
-  if (passed(s, 'radio_quota')) {
+  if (passed(s, 'radio_quota') && !on31(s, 'y31.laws')) { // R31 Y: com y31.laws a cota vale só no país do jogador (sys/mercado31)
     const home = cityById[s.config.homeCity]?.market;
     const am = cityById[act.city]?.market;
     if (home && rel.territories.includes(home)) k *= am === home ? 1.1 : 0.93;

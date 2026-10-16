@@ -20,6 +20,7 @@ import { fmtL, hasTech, recordAward, remember } from '../util';
 import { boycotting, flushAwards, flushTop10, homeK, juryMemHook, juryRng, queueAward, queueTop10, snub15 } from './awards15';
 import { allReleases17 } from '../relidx17';
 import { DEMO29 } from '../demo29hook';
+import { Y31 } from '../r31/market31';
 
 export type ChartKind = 'songs' | 'albums' | 'stream' | 'sales' | 'video';
 export const CHART_KINDS: ChartKind[] = ['songs', 'albums', 'stream', 'sales', 'video'];
@@ -106,7 +107,20 @@ function weekCache(year: number) {
 const LP = COUNTRY_INFO.map((c) => localPref(c.a3));
 const LPS = LP.map((x) => Math.sqrt(x / 1.6));
 
+/** R31 Y: pesos por país antes dos fatores da onda 3 (fama local, língua, leis, dominó) — base da demanda total. */
+export function baseWeights7(s: GameState, rel: Release, out: number[]): number { return countryWeights0(s, rel, out); }
+
 function countryWeights(s: GameState, rel: Release, out: number[]): number {
+  const sum = countryWeights0(s, rel, out);
+  const act = s.acts[rel.actId];
+  if (!Y31.weights || !act || sum <= 0) return sum;
+  Y31.weights(s, rel, act, out);
+  let t = 0;
+  for (let i = 0; i < out.length; i++) t += out[i];
+  return t;
+}
+
+function countryWeights0(s: GameState, rel: Release, out: number[]): number {
   const act = s.acts[rel.actId];
   const fam = act ? familyOf(act.genre) : 'pop';
   const home = act ? actCountry(s, act.id) : null;
@@ -211,6 +225,10 @@ function rank(prev: Row7[] | undefined, rows: { relId: string; u: number }[]): R
 }
 
 export function weekCharts(s: GameState): void {
+  try { weekCharts0(s); } finally { Y31.end?.(s); }
+}
+
+function weekCharts0(s: GameState): void {
   const st = ch7(s);
   if (st.week === s.week) return;
   st.week = s.week;
@@ -252,6 +270,7 @@ export function weekCharts(s: GameState): void {
       U[j * nC + i] = u;
     }
   }
+  if (Y31.reserve) Y31.reserve(s, fresh.map((x) => x.rel), U, nC); // R31 Y (y31.reserve): parte da parada reservada aos locais
   const ids = fresh.map((x) => x.rel.id);
   // países
   // acumuladores por índice do lançamento em `fresh` (mesma ordem de 1ª aparição e mesmas somas de antes, sem Map por string)

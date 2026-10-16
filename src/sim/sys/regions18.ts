@@ -11,6 +11,7 @@
 // - Você entra num submercado por um LICENCIADO (barato, adiantamento, alcance médio) ou um ESCRITÓRIO próprio (caro,
 //   aluguel, plataformas locais a favor); versões no idioma local; circuitos com regras próprias (circuits18.ts).
 
+import { on31 } from '../r31/market31';
 import { clamp, Rng } from '../../core/rng';
 import { CIRCS18, DIAS18, SHIFTS18, ramp18, subById18, subOfA3_18, SUBS18, subsOf18, type Barrier18, type Partner18, type Plat18, type Sub18 } from '../../data/regions18';
 import { countryOfCity } from '../../data/geo';
@@ -115,6 +116,7 @@ export function barMult18(s: GameState, sub: Sub18, act: Act, shows = false): { 
   const ready = loc && !(loc.until && loc.until > s.week);
   for (const b of bars18(sub, s.year)) {
     if ((b.kind === 'visa') !== shows) continue;
+    if (b.kind === 'quota' && on31(s, 'y31.laws')) continue; // R31 Y: cota vale só no país da lei (sys/mercado31)
     if (b.foreign && home) continue;
     if (!hit18(b, act.genre)) continue;
     let m = b.mult;

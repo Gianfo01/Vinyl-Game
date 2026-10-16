@@ -731,5 +731,5 @@ export interface GameState extends ExtState {
   flags: Record<string, number>;
   ended?: { ending: string; year: number; reason: 'arc' | 'insolvency' };
   undo?: string; // snapshot do início do mês (modo recarga)
-  stats: { weeklyPool: number; marketUnitsYear: number; playerUnitsYear: number; marketShare: number; lastH?: number };
+  stats: { weeklyPool: number; marketUnitsYear: number; playerUnitsYear: number; marketShare: number; lastH?: number; /** R31 D: último fator de escala do selo do jogador (previsão = conta real) */ lastK31?: number };
 }
