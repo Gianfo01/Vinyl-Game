@@ -101,6 +101,8 @@ export interface Campus18 {
   seq: number;
   /** r27 (LOTS): bairros já abertos (índice em DIST18; nunca diminui). Saves antigos: ausente = só o centro. */
   dist?: number;
+  /** R31 (H): lote escolhido para a sua casa (ausente = o residencial de sempre, HOME_LOT18) */
+  home?: number;
 }
 declare module '../ext4' { interface Ext4 { campus18: Campus18 } }
 const fresh = (): Campus18 => ({ born: {}, lvl: {}, ren: {}, lot: {}, dmg: {}, gone: [], built: {}, proj: [], snaps: [], upl: {}, nm: {}, log: [], seq: 0 });
@@ -213,8 +215,39 @@ export const LOTS18: Lot18[] = [
   { gx: 16, gy: 21, w: 4, d: 3, name: l('Beira do trilho', 'By the tracks'), pm: 0.7, vis: 0.6 },
   { gx: 22, gy: 21, w: 4, d: 3, name: l('Conjunto novo', 'New estate'), pm: 0.8, vis: 0.7 },
   { gx: 26, gy: 21, w: 3, d: 3, name: l('Último lote', 'Last plot'), pm: 0.7, vis: 0.55 },
+  // R31 (H · cidade maior): mais 3 bairros, só ACRESCENTANDO (rua nova em gx 29–30, avenida nova em gy 24–25; mapa até
+  // 44×32). A faixa leste de cima (gx 31–43, gy 0–15) fica reservada aos lugares reais da música (src/sim/r31/city31.ts).
+  // Porto e estação (leste da avenida nova e fundo do leste)
+  { gx: 31, gy: 18, w: 4, d: 3, name: l('Cais do porto', 'Harbour quay'), pm: 0.9, vis: 0.9 },
+  { gx: 35, gy: 18, w: 4, d: 3, name: l('Armazém da estação', 'Station warehouse'), pm: 0.8, vis: 0.8 },
+  { gx: 39, gy: 18, w: 4, d: 3, name: l('Pátio dos trens', 'Rail yard'), pm: 0.7, vis: 0.7 },
+  { gx: 31, gy: 21, w: 4, d: 3, name: l('Doca velha', 'Old dock'), pm: 0.75, vis: 0.7 },
+  { gx: 35, gy: 21, w: 4, d: 3, name: l('Galpão do porto', 'Harbour shed'), pm: 0.75, vis: 0.65 },
+  { gx: 39, gy: 21, w: 4, d: 3, name: l('Ponta do cais', 'Quay end'), pm: 0.7, vis: 0.6 },
+  { gx: 22, gy: 26, w: 4, d: 3, name: l('Largo da estação', 'Station square'), pm: 1, vis: 1 },
+  { gx: 26, gy: 26, w: 3, d: 3, name: l('Esquina da plataforma', 'Platform corner'), pm: 0.9, vis: 0.85 },
+  { gx: 22, gy: 29, w: 4, d: 3, name: l('Rua dos estivadores', 'Dockers\' street'), pm: 0.7, vis: 0.6 },
+  { gx: 26, gy: 29, w: 3, d: 3, name: l('Beco do porto', 'Harbour alley'), pm: 0.65, vis: 0.55 },
+  // Zona das casas de show (sul da avenida nova)
+  { gx: 0, gy: 26, w: 4, d: 3, name: l('Rua da boemia', 'Bohemian street'), pm: 1, vis: 1 },
+  { gx: 4, gy: 26, w: 5, d: 3, name: l('Esquina dos palcos', 'Stage corner'), pm: 1.15, vis: 1.15 },
+  { gx: 11, gy: 26, w: 5, d: 3, name: l('Largo do neon', 'Neon square'), pm: 1.2, vis: 1.2 },
+  { gx: 16, gy: 26, w: 4, d: 3, name: l('Travessa dos músicos', 'Musicians\' lane'), pm: 1, vis: 0.95 },
+  { gx: 0, gy: 29, w: 4, d: 3, name: l('Fundos da boemia', 'Bohemian back lot'), pm: 0.8, vis: 0.7 },
+  { gx: 4, gy: 29, w: 5, d: 3, name: l('Beco do ensaio', 'Rehearsal alley'), pm: 0.8, vis: 0.7 },
+  { gx: 11, gy: 29, w: 5, d: 3, name: l('Quadra do samba', 'Dance-hall block'), pm: 0.85, vis: 0.75 },
+  { gx: 16, gy: 29, w: 4, d: 3, name: l('Fim da boemia', 'Bohemian end'), pm: 0.75, vis: 0.65 },
+  // Centro financeiro (sudeste)
+  { gx: 31, gy: 26, w: 4, d: 3, name: l('Esquina dos bancos', 'Banks corner'), pm: 1.3, vis: 1.3 },
+  { gx: 35, gy: 26, w: 4, d: 3, name: l('Torre da bolsa', 'Exchange tower plot'), pm: 1.4, vis: 1.3 },
+  { gx: 39, gy: 26, w: 4, d: 3, name: l('Praça financeira', 'Financial plaza'), pm: 1.3, vis: 1.2 },
+  { gx: 31, gy: 29, w: 4, d: 3, name: l('Rua dos escritórios', 'Office street'), pm: 1.1, vis: 1 },
+  { gx: 35, gy: 29, w: 4, d: 3, name: l('Quadra das seguradoras', 'Insurers\' block'), pm: 1.1, vis: 0.95 },
+  { gx: 39, gy: 29, w: 4, d: 3, name: l('Ponta financeira', 'Financial tip'), pm: 1, vis: 0.85 },
 ];
 export const HOME_LOT18 = 11;
+/** R31 (H): lote da sua casa — o escolhido pelo jogador (city31.chooseHomeLot31) ou o residencial de sempre. */
+export const homeLot18 = (s: GameState): number => { const h = (s as unknown as { x4?: { campus18?: Campus18 } }).x4?.campus18?.home; return h !== undefined && h > 0 && h < LOTS18.length ? h : HOME_LOT18; };
 
 /** r27 (LOTS): bairros da cidade-sede. O centro (lotes 0–13) existe sempre; os outros abrem com a época (`year`), com o
  *  tamanho do selo (nível da sede `hq`) ou quando faltaria terreno: a cidade CRESCE para que sempre sobrem pelo menos
@@ -226,6 +259,10 @@ export const DIST18: Dist18[] = [
   { name: l('Quarteirões do leste', 'East blocks'), end: 22, gw: 29, gh: 16, hq: 2, year: 1960 },
   { name: l('Avenida sul', 'South avenue'), end: 28, gw: 29, gh: 21, hq: 3, year: 1985 },
   { name: l('Bairro novo', 'New quarter'), end: 34, gw: 29, gh: 24, hq: 4, year: 2010 },
+  // R31 (H): só acrescenta (o mapa chega a 44×32; a faixa leste de cima é dos lugares reais)
+  { name: l('Porto e estação', 'Harbour and station'), end: 44, gw: 44, gh: 32, hq: 5, year: 2015 },
+  { name: l('Zona das casas de show', 'Venue district'), end: 52, gw: 44, gh: 32, hq: 6, year: 2025 },
+  { name: l('Centro financeiro', 'Financial district'), end: 58, gw: 44, gh: 32, hq: 6, year: 2035 },
 ];
 export const MIN_FREE18 = 3;
 
@@ -372,14 +409,15 @@ function layoutN(s: GameState, bs: Bld18[], n: number): Map<string, number> {
   const fix = (id: string, n: number) => { m.set(id, n); used.add(n); };
   for (const b of bs) if (b.zone === 'campus') {
     if (b.kind === 'hq') fix(b.id, 0);
-    else if (b.kind === 'home') fix(b.id, HOME_LOT18);
+    else if (b.kind === 'home') fix(b.id, homeLot18(s));
     else if (b.lot !== undefined) fix(b.id, b.lot);
     else if (st.lot[b.id] !== undefined && !used.has(st.lot[b.id])) fix(b.id, st.lot[b.id]);
   }
   for (const p of st.proj) used.add(p.lot);
   const order = bs.filter((b) => b.zone === 'campus' && !m.has(b.id)).sort((a, b) => a.since - b.since || (a.id < b.id ? -1 : 1));
   for (const b of order) {
-    const k = LOTS18.findIndex((_, i) => i < n && !used.has(i) && i !== HOME_LOT18);
+    const hl = homeLot18(s);
+    const k = LOTS18.findIndex((_, i) => i < n && !used.has(i) && i !== hl);
     if (k < 0) break;
     fix(b.id, k);
   }
@@ -387,7 +425,7 @@ function layoutN(s: GameState, bs: Bld18[], n: number): Map<string, number> {
 }
 const freeN = (s: GameState, bs: Bld18[], n: number): number[] => {
   const used = new Set(layoutN(s, bs, n).values());
-  return LOTS18.map((_, i) => i).filter((i) => i < n && i !== 0 && !used.has(i) && !(i === HOME_LOT18 && (P(s).owner?.house ?? -1) >= 0));
+  return LOTS18.map((_, i) => i).filter((i) => i < n && i !== 0 && !used.has(i) && !(i === homeLot18(s) && (P(s).owner?.house ?? -1) >= 0));
 };
 /** r27 (LOTS): bairros abertos agora (índice em DIST18). Puro: o que já abriu (save), a época, o tamanho do selo e
  *  — a regra que garante terreno — a falta de lote livre (abre o próximo bairro até sobrarem MIN_FREE18). */

@@ -17,6 +17,7 @@ import { modal, rerender, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf, portraitCanvas } from '../pixel/avatar';
 import { C, Px, dith, mix, shade, withAlpha, type Col } from '../pixel/px';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const P = (x: number): string => `${Math.round(x * 100)}%`;
@@ -52,7 +53,7 @@ export function openHeist27(s: GameState, cid: string, ctx: Ctx17, quick?: () =>
   if (!playable27(cid)) { quick?.(); return; }
   const ui: UI27 = { s, plan: { cid, ctx: { ...ctx, partners: [...ctx.partners] }, crew: [], risk: 'mid', cover: 'none' }, stage: 'prep', picks: {}, upSig: [], root: h('div', { class: 'hz27' }), quick };
   draw(ui);
-  ui.close = modal(`${T(l('Operação', 'Operation'))}: ${T(crimeById(cid)!.name)}`, ui.root, { wide: true, onClose: () => onClose(ui) });
+  ui.close = modal(`${T(l('Operação', 'Operation'))}: ${T(crimeById(cid)!.name)}`, withCast31(s, [ctx.actor, ctx.target, ...ctx.partners], ui.root, () => ui.close?.()), { wide: true, onClose: () => onClose(ui) });
 }
 
 function onClose(ui: UI27): void {

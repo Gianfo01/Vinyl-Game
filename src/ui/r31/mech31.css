@@ -39,3 +39,11 @@
 .mc31-foot { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 0.4rem; }
 .mc31-tip { font-size: 0.8rem; border-left: 3px solid var(--accent); padding-left: 0.5rem; }
 .mc31-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+
+/* R31 onda 4 (W): faixa de elenco das cenas que já existiam (cast31.ts) */
+.mc31-cast { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin: 0 0 0.5rem; padding: 0.35rem 0.4rem; border: 1px solid var(--line, #8884); border-radius: 6px; background: var(--panel2, #0001); }
+.mc31-who31 { display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.15rem 0.45rem; border-radius: 999px; border: 1px solid var(--line, #8886); background: var(--panel, transparent); color: inherit; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.mc31-who31.tone-warm { border-color: var(--good, #2e8b57); }
+.mc31-who31.tone-cool, .mc31-who31.tone-cold { border-color: var(--bad, #b3261e); }
+.mc31-who31.tone-unknown { border-style: dashed; }
+.mc31-skip31 { margin-left: auto; }

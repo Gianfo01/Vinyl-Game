@@ -28,9 +28,10 @@ import { registerEditable, registerRunnable } from '../r31/editor';
 import { allReleases17 } from '../relidx17';
 import type { Act, GameState, Release } from '../types';
 import { fmtL, hasTech, money } from '../util';
-import { car31On, exec31, registerExec31, touch31 } from './car31';
+import { car31On, careerSw31, exec31, registerExec31, touch31 } from './car31';
 import { board } from './charts7';
-import { FMT18, fmtsNow18, radioWeight18, type Fmt18, type Radio18State } from './radio18';
+import { FMT18, fmtsNow18, radioWeight18, stationReach18, type Fmt18, type Radio18State, type Station18 } from './radio18';
+import { tvHeavy18, type Media18State } from './media18';
 import { MEDIA, MEDIA9X, isConglomerate, ventures, vpay, type Venture } from './ventures9';
 
 // ---------------------------------------------------------------- dados
@@ -61,6 +62,37 @@ export const FMT_NAME31: Record<Fmt31, L> = {
 export const BET_FAME31 = 35;
 /** semanas em rotação pesada antes de cansar */
 export const BURN_W31 = 8;
+
+// ---------------------------------------------------------------- rodada 2 do CAR: clipes e cidades (interruptores)
+
+careerSw31('clips', l('TV: a rotação de clipes da sua TV usa o clipe do jogo (qualidade conta, banido não entra, destaque vira rotação pesada).', 'TV: your TV\'s video rotation uses the game\'s music video (quality counts, banned ones stay off, featured means heavy rotation).'));
+careerSw31('cities', l('Rádio: as rádios rivais têm cidade; a audiência é disputada cidade a cidade e quem perde ouvintes perde alcance.', 'Radio: rival stations have a city; listeners are fought over city by city and whoever loses them loses reach.'));
+
+const vidsRo = (s: GameState): Media18State['vids'] => (s as unknown as { x4?: { media18?: Media18State } }).x4?.media18?.vids ?? {};
+/** Peso do clipe na TV (car31.clips): o clipe que o jogo guarda (media18) — qualidade, banido = fora; disco seu sem clipe
+ *  rende pouco na era dos clipes; faixas dos outros selos têm o clipe do mundo (médio). */
+export function clipK31(s: GameState, v: Venture, rel: Release): number {
+  if (kindOf31(v) !== 'tv' || !car31On(s, 'clips') || !hasTech(s, 'tv_music')) return 1;
+  const vid = vidsRo(s)[rel.id];
+  if (vid?.banned) return 0;
+  if (vid) return 0.7 + vid.v / 100;
+  return mine(s.acts[rel.actId]) ? (hasTech(s, 'clipnet') ? 0.6 : 0.85) : 1;
+}
+const stations = (s: GameState): Station18[] => (s as unknown as { x4?: { radio18?: Radio18State } }).x4?.radio18?.st ?? [];
+/** força de uma estação NPC no formato (a mesma conta de antes) */
+const npcP = (x: Station18, fmt: Fmt31, k: number): number => x.reach * (FMT18[x.fmt]?.reach ?? 1) * (x.fmt === fmt ? 1 : 0.3) * 0.3 * k;
+/** outras rádios pequenas da cidade (sempre há alguma concorrência) */
+export const LOCAL_R31 = 0.45;
+/** Quadro da audiência de uma cidade (car31.cities): as estações NPC de lá e as suas, com a fatia de cada uma. Puro. */
+export function cityBoard31(s: GameState, city: string): { name: string; fmt: Fmt31; share: number; mine: boolean; id: string }[] {
+  const mineV = mediaVentures31(s).filter((v) => kindOf31(v) === 'radio' && v.city === city);
+  const rows = [
+    ...stations(s).filter((x) => x.city === city).map((x) => ({ name: x.call, fmt: x.fmt as Fmt31, p: x.reach * (FMT18[x.fmt]?.reach ?? 1) * 0.3, mine: false, id: x.id })),
+    ...mineV.map((v) => { const st = stRo31(s, v); return { name: v.name, fmt: st.fmt, p: power31(s, v, st).P, mine: true, id: v.id }; }),
+  ];
+  const tot = rows.reduce((t0, x) => t0 + x.p, 0) + LOCAL_R31;
+  return rows.map((x) => ({ name: x.name, fmt: x.fmt, share: x.p / tot, mine: x.mine, id: x.id })).sort((a, b) => b.share - a.share || (a.id < b.id ? -1 : 1));
+}
 
 // ---------------------------------------------------------------- estado
 
@@ -141,7 +173,7 @@ export function power31(s: GameState, v: Venture, st = stRo31(s, v)): Power31 {
     const rel = s.releases[x.rel], a = rel ? s.acts[rel.actId] : undefined;
     if (!rel || !a) continue;
     const f = fitOf(st.fmt, a);
-    let p = ROT_W31[x.rot] * f * tasteOf(s, a3, a) * (x.rot === 'bet' ? 0.55 : hit31(rel, a)) * burn31(s, x);
+    let p = ROT_W31[x.rot] * f * tasteOf(s, a3, a) * (x.rot === 'bet' ? 0.55 : hit31(rel, a)) * burn31(s, x) * clipK31(s, v, rel);
     if (mine(a)) { p *= 0.85; own++; }
     if (x.jab && rel.q < 55) p *= 0.6;
     if (x.rot === 'bet') bets++;
@@ -158,7 +190,11 @@ export function power31(s: GameState, v: Venture, st = stRo31(s, v)): Power31 {
 export function rivals31(s: GameState, v: Venture, st = stRo31(s, v)): number {
   const k = kindOf31(v);
   let R = k === 'tv' ? (s.year > 1980 ? 1.6 : 1.2) : k === 'magazine' ? 1 : k === 'web' ? 1.5 : 0;
-  if (k === 'radio') {
+  if (k === 'radio' && car31On(s, 'cities')) {
+    // só as estações da mesma cidade disputam os ouvintes (mais as pequenas locais)
+    R = LOCAL_R31;
+    for (const x of stations(s)) if (x.city === v.city) R += npcP(x, st.fmt, 1);
+  } else if (k === 'radio') {
     const list = (s as unknown as { x4?: { radio18?: Radio18State } }).x4?.radio18?.st ?? [];
     for (const x of list) R += x.reach * (FMT18[x.fmt]?.reach ?? 1) * (x.fmt === st.fmt ? 1 : 0.3) * 0.3;
     if (R <= 0) R = 0.9;
@@ -168,16 +204,16 @@ export function rivals31(s: GameState, v: Venture, st = stRo31(s, v)): number {
 /** força de cada rival (para o ibope e a tela) */
 export function rivalList31(s: GameState, v: Venture, st = stRo31(s, v)): { name: string; p: number }[] {
   if (kindOf31(v) !== 'radio') return [{ name: '—', p: rivals31(s, v, st) }];
-  const list = (s as unknown as { x4?: { radio18?: Radio18State } }).x4?.radio18?.st ?? [];
   const k = 1 + 0.2 * st.copy;
-  return list.map((x) => ({ name: x.call, p: x.reach * (FMT18[x.fmt]?.reach ?? 1) * (x.fmt === st.fmt ? 1 : 0.3) * 0.3 * k }));
+  const list = car31On(s, 'cities') ? stations(s).filter((x) => x.city === v.city) : stations(s);
+  return list.map((x) => ({ name: x.call, p: npcP(x, st.fmt, k) }));
 }
 
 /** o peso da execução de uma vaga (antes do conflito de interesse) */
 export function slotW31(s: GameState, v: Venture, st: St31, x: Slot31): number {
   const rel = s.releases[x.rel], a = rel ? s.acts[rel.actId] : undefined;
   if (!rel || !a) return 0;
-  return 9 * st.share * coverage31(v) * ROT_W31[x.rot] * eraW31(s, v) * fitOf(st.fmt, a) * burn31(s, x);
+  return 9 * st.share * coverage31(v) * ROT_W31[x.rot] * eraW31(s, v) * fitOf(st.fmt, a) * burn31(s, x) * clipK31(s, v, rel);
 }
 const SRC_OF: Record<MKind31, 'radio' | 'tv' | 'magazine' | 'web'> = { radio: 'radio', tv: 'tv', magazine: 'magazine', web: 'web' };
 registerExec31('media', (s, out) => {
@@ -230,6 +266,7 @@ export function addGrid31(s: GameState, vid: string, relId: string, rot: Rot31):
   if (used31(st, rot) >= slotsOf31(st)[rot]) return fmtL(l('Sem vaga em {r} neste formato: tire uma faixa antes.', 'No {r} slot left in this format: drop a track first.'), { r: rotName31(kindOf31(v), rot) });
   const a = s.acts[rel.actId];
   if (rot === 'bet' && a.fame >= BET_FAME31) return E('Aposta é só para artista novo (ainda pouco conhecido).', 'A bet is only for a new act (still little known).');
+  if (clipK31(s, v, rel) <= 0) return E('O clipe dessa faixa foi banido da TV: não pode entrar na grade.', 'That track\'s video was banned from TV: it cannot go on the grid.');
   st.grid.push({ rel: relId, rot, w: s.week });
   if (rot === 'bet' && !st.bets.some((b) => b.rel === relId)) st.bets.push({ rel: relId, w: s.week, f0: Math.round(a.fame) });
   touch31(s);
@@ -382,6 +419,18 @@ function heatCheck(s: GameState, v: Venture, st: St31): void {
     notify: { kind: 'bad', cat: 'business', prio: 2 }, diary: { important: true } });
 }
 
+/** A briga da cidade (car31.cities): a estação NPC do mesmo formato perde alcance quando você tem mais ouvintes que ela
+ *  na cidade; quem está por cima de você ganha. As estações de outras cidades não sentem nada. */
+function cityFight(s: GameState, v: Venture, st: St31): void {
+  const b = cityBoard31(s, v.city);
+  const me = b.find((x) => x.id === v.id);
+  if (!me) return;
+  for (const x of b) {
+    if (x.mine || x.fmt !== st.fmt) continue;
+    stationReach18(s, x.id, me.share > x.share ? -0.03 : 0.01);
+  }
+}
+
 function monthOne(s: GameState, v: Venture): void {
   const st = stOf(s, v);
   // formato que a época enterrou (rede ao vivo depois de 1956, AOR depois de 2006): adapta sozinho, com custo
@@ -406,6 +455,8 @@ function monthOne(s: GameState, v: Venture): void {
   // credibilidade: aposta dá prestígio; só sucesso não dá; o próprio selo tira
   const n = Math.max(1, st.grid.length);
   v.rep = clamp(v.rep + 1.2 * (pw.bets / n) - 1.5 * (pw.own / n) - 0.6 * (pw.burned / n), 0, 100);
+  if (kindOf31(v) === 'tv' && car31On(s, 'clips') && hasTech(s, 'clipnet')) for (const x of st.grid) if (x.rot === 'heavy') tvHeavy18(s, x.rel, s.week + 5);
+  if (kindOf31(v) === 'radio' && car31On(s, 'cities')) cityFight(s, v, st);
   earCheck(s, v, st);
   st.offers = st.offers.filter((o) => o.u >= s.week);
   if (kindOf31(v) !== 'web') payolaOffer(s, v, st);

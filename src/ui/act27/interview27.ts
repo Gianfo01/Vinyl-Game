@@ -17,6 +17,7 @@ import { cutscene27, playBtn27, reduced27 } from './mode27';
 import { drawScene27, type Who27 } from './scene27';
 import { paintPress27, paintPressFront27 } from './p2apx27';
 import './p2a27.css';
+import { withCast31 } from '../r31/cast31'; // R31 onda 4 (W): pessoas reais com humor e "Pular cena"
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const pc = (x: number) => `${Math.round(x * 100)}%`;
@@ -97,5 +98,5 @@ export function openInterview27(o: Opp27, onDone?: (played: boolean) => void): v
   };
   draw();
   document.addEventListener('keydown', onKey);
-  close = modal(o.ctx === 'press' ? t(l('Entrevista — {a}', 'Interview — {a}'), { a: act?.name ?? s.config.companyName }) : T(o.title), root, { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); const played = iv.ans.length > 0; while (iv.status === 'open') answer27(s, iv, 'deflect'); onDone?.(played); rerender(); } }); // sair no meio = "sem comentários" até o fim
+  close = modal(o.ctx === 'press' ? t(l('Entrevista — {a}', 'Interview — {a}'), { a: act?.name ?? s.config.companyName }) : T(o.title), withCast31(s, [lead?.id, iv.actId], root, () => close()), { wide: true, onClose: () => { document.removeEventListener('keydown', onKey); const played = iv.ans.length > 0; while (iv.status === 'open') answer27(s, iv, 'deflect'); onDone?.(played); rerender(); } }); // sair no meio = "sem comentários" até o fim
 }

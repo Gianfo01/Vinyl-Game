@@ -771,7 +771,7 @@ function sigM(s: GameState, c: Career31): SalaM31 {
 
 // ---------------------------------------------------------------- entrada
 
-export function salaModel31(s: GameState, id: SalaId31): SalaM31 {
+function baseSala31(s: GameState, id: SalaId31): SalaM31 {
   switch (id) {
     case 'studio': return studioM(s);
     case 'roster': return rosterM(s);
@@ -781,6 +781,20 @@ export function salaModel31(s: GameState, id: SalaId31): SalaM31 {
     case 'trophy': return trophyM(s);
     default: return sigM(s, id.slice(4) as Career31);
   }
+}
+
+/** R31 ART2 (ui/r31/salaart31.ts): objetos novos da sala (jukebox, parada, telefone, vitrine…) — pontos, área e pintura. */
+export const SALA_ART31: {
+  hots?: (s: GameState, m: SalaM31) => Hot31[];
+  hit?: (m: SalaM31, lay: unknown, h: Hot31) => { x: number; y: number; w: number; h: number } | null;
+  paint?: (g: unknown, m: SalaM31, lay: unknown) => void;
+} = {};
+
+export function salaModel31(s: GameState, id: SalaId31): SalaM31 {
+  const m = baseSala31(s, id);
+  const extra = SALA_ART31.hots?.(s, m) ?? [];
+  if (extra.length) m.hots.push(...extra);
+  return m;
 }
 
 /** Carreiras ativas (para a faixa "Salas" da sede). */

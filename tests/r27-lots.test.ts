@@ -65,7 +65,7 @@ describe('r27 LOTS: sempre há lotes à venda', () => {
       const all = new Set([0, ...lots.values(), ...nbs.map((q) => q.lot), ...sale.map((x) => x.lot), ...fill, ...campus18(g).proj.map((p) => p.lot)]);
       expect(all.size).toBe(open);
     }
-    if (d0 < DIST18.length - 1) expect(dist18(g)).toBeGreaterThan(d0); // 2010 já começa com a cidade inteira
+    if (d0 < 3) expect(dist18(g)).toBeGreaterThan(d0); // 2010 já começa com os 4 bairros de sempre (R31 H: os 3 novos abrem de 2015 em diante ou com a sede 5–6)
     // a cidade não encolhe: o bairro aberto fica gravado (sync mensal) mesmo quando os prédios somem
     sync18(g);
     const grown = campus18(g).dist!;
@@ -158,7 +158,8 @@ describe('r27 LOTS: mapa maior sem sobreposição', () => {
   });
   it('a cidade cresce com as décadas e com o tamanho do selo', () => {
     expect(dist18(game(1889))).toBe(0);
-    expect(dist18(game(2010))).toBe(DIST18.length - 1);
+    expect(dist18(game(2010))).toBe(3); // R31 (H): os bairros 4–6 abrem em 2015/2025/2035 ou com a sede nível 5–6
+    expect(dist18(game(2036))).toBe(DIST18.length - 1);
     const g = game(1889);
     g.player.hq = 4;
     expect(dist18(g)).toBeGreaterThanOrEqual(3);

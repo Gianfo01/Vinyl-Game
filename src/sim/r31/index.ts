@@ -18,6 +18,7 @@ import './mine'; // R31 · O: favoritos e metas pessoais (my31)
 import './scenesj31'; // R31 onda 2 (J): editáveis/executáveis das cenas (projeto, turnê)
 import './relic31'; // R31 onda 3 (G): relíquia com definição única, níveis pela história, objeto individual, violino do Efro
 import './items31'; // R31 onda 3 (G): itens com história, loja com estoque mensal, comprar para você/empresa/presente
+import './city31'; // R31 onda 4 (H): cidade de cada época — lugares reais, lojas por época, festival no terreno, outdoors, casas
 import '../look31'; // R31 onda 3 (AP): aparência e sex appeal — ficha de aparência, cuidados, piora, acontecimentos
 import './uni4sw'; // R31 onda 4 (UNI-4): interruptor das ligações novas das fusões
 import '../city'; // R31 onda 4 (UNI-4/B.4): relação com a praça, fonte única

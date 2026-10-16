@@ -386,13 +386,15 @@ export function signBooking(s: GameState, r: Rng, id: string, actId: string, rat
 }
 
 /** R31 CAR (sys/car31more.ts): turnê agenciada pelo mercado-alvo do cliente. */
-export const ROUTE31: { f?: (s: GameState, v: Venture, a: Act) => void } = {};
+export const ROUTE31: { f?: (s: GameState, v: Venture, a: Act) => void; /** car31.agency: a turnê vira datas reais no motor de rotas (tour12); null = regra antiga */ book?: (s: GameState, v: Venture, a: Act) => { ok: boolean; text: L } | null } = {};
 export function routeTour(s: GameState, r: Rng, id: string, actId: string): { ok: boolean; text: L } {
   const v = byId(s, id);
   const c = v?.clients?.find((x) => x.actId === actId);
   const a = s.acts[actId];
   if (!v || !c || !a) return { ok: false, text: l('Inválido.', 'Invalid.') };
   if ((c.cool ?? 0) > s.week) return { ok: false, text: l('Esse artista ainda está na estrada.', 'That act is still on the road.') };
+  const bk = ROUTE31.book?.(s, v, a);
+  if (bk) { if (bk.ok) c.cool = s.week + 26; return bk; }
   c.cool = s.week + 26;
   if (r.chance(0.12 - v.staff * 0.01)) {
     vpay(s, v.owner, -money(s, 2000 * v.level), `tourloss:${v.id}:${actId}`, `Turnê cancelada ${a.name}`, v);

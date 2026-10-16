@@ -231,6 +231,7 @@ describe('R31 CAR · estúdio, editora, agência, empresário, crítico e trilha
 
   it('agência: a turnê roteirizada passa pelas cidades do mercado-alvo (fama no país)', () => {
     const s = mk('car-route', 1980);
+    setSw(s, 'car31.agency', false); // regra da primeira rodada (a turnê pelo motor de rotas está em r31-carreiras2)
     expect(foundVenture(s, 'booking', 'label', {})).toBeNull();
     const v = ventures(s).list.find((x) => x.kind === 'booking')!;
     const a = Object.values(s.acts).find((x) => x.owner !== 'player' && x.status !== 'retired' && x.fame > 30)!;

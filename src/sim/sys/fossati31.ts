@@ -19,7 +19,7 @@
 // relics9; correções de texto nas peças antigas; peças de museu nacional fora do comércio.
 
 import { formatMoney } from '../../core/money';
-import { clamp } from '../../core/rng';
+import { clamp, hashString } from '../../core/rng';
 import { FAMILY31, FAM_CITY31, FAM_ERAS31, SONIA_RETIRE31, famErasAt31, famKey31, type FamEra31, type FamId31, type FamMember31 } from '../../data/fossati31';
 import { RELICS31, RELIC_FIX31, RELIC_NOSALE31, RELIC_TIER31 } from '../../data/relics31';
 import { cityById, CITIES, l, type L } from '../../data/world';
@@ -34,6 +34,7 @@ import { registerSwitch, sw } from '../r31/switches';
 import type { GameState } from '../types';
 import { fmtL, money, playerActs, post } from '../util';
 import { pressDefect31 } from './industry/supply';
+import { FAMHOME27 } from './place27';
 import { relicFixed9, relics, type Relic } from './relics9';
 import { EFRO_VIOLIN_ID, ensureEfroViolin31 } from '../r31/relic31';
 
@@ -88,7 +89,8 @@ export function fam31(s: GameState): Fam31St {
 
 export const HOMAGE31: FamId31[] = ['efro', 'lucia', 'sonia', 'antonella'];
 export const famAge31 = (id: FamId31): number => FAMILY31.find((m) => m.id === id)!.age;
-export const famCity31 = (): string => FAM_CITY31.id;
+/** Cidade da família: a fixada no editor de base ou, por padrão, a cidade de início do jogador. */
+export const famCity31 = (s: GameState): string => FAM_CITY31.id || s.config.homeCity;
 
 const sameRole = (r: Role, e: FamEra31) => r.kind === e.kind && (r.org ?? '') === e.org && r.from === e.from;
 
@@ -118,7 +120,7 @@ export function famNow31(s: GameState): FamNow31[] {
     const key = famKey31(m.id);
     const roles = rolesOf(s, key, s.year);
     const eras = famErasAt31(m.id, s.year).filter((e) => !(m.id === 'sonia' && s.year >= SONIA_RETIRE31 && e.kind !== 'family'));
-    return { m, key, age: m.age, city: famCity31(), roles, eras, retired: roles.some((r) => r.kind === 'retired') };
+    return { m, key, age: m.age, city: famCity31(s), roles, eras, retired: roles.some((r) => r.kind === 'retired') };
   });
 }
 /** Rótulo do papel de trabalho atual (o que a ficha mostra), com a marca real só quando o interruptor deixa. */
@@ -147,7 +149,9 @@ export const violin31 = (s: GameState): Relic | undefined => relics(s).list.find
 export type FamRes31 = { ok: boolean; text: L };
 const no = (pt: string, en: string): FamRes31 => ({ ok: false, text: l(pt, en) });
 const off = (s: GameState): FamRes31 | null => (sw<boolean>(s, 'fam31') ? null : no('A família está no mundo, mas os efeitos dela estão desligados nesta partida.', 'The family is in the world, but its effects are switched off in this game.'));
-const cdLeft = (s: GameState, k: string): number => Math.max(0, (fam31(s).cd[k] ?? 0) - s.week);
+/** Leitura sem criar nem completar o estado (explorar não muda o mundo). */
+export const peekFam31 = (s: GameState): Partial<Fam31St> => ((s as unknown as { x4?: { fam31?: Fam31St } }).x4?.fam31 ?? {});
+const cdLeft = (s: GameState, k: string): number => Math.max(0, (peekFam31(s).cd?.[k] ?? 0) - s.week);
 const busy = (s: GameState, k: string): FamRes31 | null => {
   const w = cdLeft(s, k);
   return w > 0 ? { ok: false, text: fmtL(l('Ainda não: dá de novo em {w} semanas.', 'Not yet: available again in {w} weeks.'), { w }) } : null;
@@ -157,7 +161,7 @@ const meet = (s: GameState, id: FamId31): void => {
   if (!st.met.includes(id)) st.met.push(id);
   if (st.famiglia === undefined && HOMAGE31.every((x) => st.met.includes(x))) {
     st.famiglia = s.week;
-    emitFact(s, { kind: 'memory', actors: ['player', ...HOMAGE31.map(famKey31)], place: famCity31(), severity: 25, visibility: 'public', tags: ['family', 'good', 'achievement'], src: 'fam31',
+    emitFact(s, { kind: 'memory', actors: ['player', ...HOMAGE31.map(famKey31)], place: famCity31(s), severity: 25, visibility: 'public', tags: ['family', 'good', 'achievement'], src: 'fam31',
       text: l('Conquista "Famiglia": você conheceu Efro, Lucia, Sonia e Antonella Fossati.', 'Achievement "Famiglia": you met Efro, Lucia, Sonia and Antonella Fossati.'), notify: 'info' });
   }
 };
@@ -165,24 +169,58 @@ const yourPeople = (s: GameState): string[] => [...new Set(playerActs(s).flatMap
 const yourAct = (s: GameState, actId: string) => (playerActs(s).includes(actId) ? s.acts[actId] : undefined);
 const moneyL = (c: number): L => ({ pt: formatMoney(c, 'pt-BR'), en: formatMoney(c, 'en-US') });
 
+/** As ações da família (as mesmas da aba e da casa). */
+export type FamAct31 = 'lunch' | 'lasagna' | 'promo' | 'press' | 'lang' | 'metalmac' | 'flight' | 'tennis';
+const COST31: Partial<Record<FamAct31, [number, L]>> = {
+  promo: [800, l('Falta caixa: o evento custa {v}.', 'Not enough cash: the event costs {v}.')],
+  lang: [1500, l('Falta caixa: o curso custa {v}.', 'Not enough cash: the course costs {v}.')],
+  metalmac: [2500, l('Falta caixa: o contrato custa {v}.', 'Not enough cash: the contract costs {v}.')],
+};
+/** R31 · onda 4 (FOS): MOTIVO do bloqueio de uma ação da família, antes do clique (fonte única: as ações chamam isto
+ *  primeiro). Só lê. `null` = pode. */
+export function famLock31(s: GameState, k: FamAct31, actId = '', lang = ''): L | null {
+  const o = off(s) ?? (k === 'lunch' || k === 'lasagna' || k === 'promo' || k === 'press' || k === 'tennis' ? busy(s, k) : null);
+  if (o) return o.text;
+  const st = peekFam31(s);
+  switch (k) {
+    case 'lunch': if (!yourPeople(s).length) return l('Você ainda não tem artistas para levar ao almoço.', 'You have no artists to bring to lunch yet.'); break;
+    case 'promo': if (s.year >= SONIA_RETIRE31) return l('A Sonia se aposentou; ela manda um abraço.', 'Sonia has retired; she sends her love.'); break;
+    case 'press': if (s.year >= ANTONELLA_SCHOOL31) return l('A Antonella agora cuida da escola de idiomas.', 'Antonella now runs the language school.'); break;
+    case 'lang': if (s.year < ANTONELLA_SCHOOL31) return l('A escola de idiomas da Antonella ainda não existe.', 'Antonella\'s language school does not exist yet.'); break;
+    case 'metalmac': if ((st.mm ?? 0) > s.week) return fmtL(l('O contrato com a Metalmac ainda vale por {w} semanas.', 'The Metalmac contract still runs for {w} weeks.'), { w: st.mm! - s.week }); break;
+    case 'flight':
+      if (s.year < FLIGHT_FROM31) return l('Ainda não há aeroclube na cidade.', 'There is no aeroclub in town yet.');
+      if (st.flight !== undefined) return l('O voo panorâmico do Efro já aconteceu nesta partida.', 'Efro\'s scenic flight already happened this game.');
+      break;
+  }
+  if ((k === 'promo' || k === 'press' || k === 'lang' || k === 'flight') && !yourAct(s, actId)) return l('Escolha um artista seu.', 'Pick one of your artists.');
+  if (k === 'lang') {
+    if (!SCHOOL_LANGS31.some((x) => x.id === lang)) return l('Língua que a escola não ensina.', 'The school does not teach that language.');
+    if ((st.langs?.[actId] ?? []).includes(lang)) return l('Já aprendeu essa língua.', 'Already learned that language.');
+  }
+  const c = COST31[k];
+  if (c) { const v = money(s, c[0]); if (s.player.cash < v) return fmtL(c[1], { v: moneyL(v) }); }
+  return null;
+}
+const famBlock31 = (s: GameState, k: FamAct31, actId = '', lang = ''): FamRes31 | null => { const why = famLock31(s, k, actId, lang); return why ? { ok: false, text: why } : null; };
+
 export const LUNCH_CD31 = 13;
 /** Almoço de domingo na casa da Lucia: alivia o estresse e levanta a moral dos seus artistas. */
 export function luciaLunch31(s: GameState): FamRes31 {
-  const e = off(s) ?? busy(s, 'lunch');
+  const e = famBlock31(s, 'lunch');
   if (e) return e;
   const ppl = yourPeople(s);
-  if (!ppl.length) return no('Você ainda não tem artistas para levar ao almoço.', 'You have no artists to bring to lunch yet.');
   for (const id of ppl) { const p = s.persons[id]; p.stress = clamp(p.stress - 6, 0, 100); p.morale = clamp(p.morale + 3, 0, 100); }
   fam31(s).cd.lunch = s.week + LUNCH_CD31;
   meet(s, 'lucia');
-  emitFact(s, { kind: 'memory', actors: ['player', famKey31('lucia')], place: famCity31(), severity: 10, visibility: 'public', tags: ['family', 'good'], src: 'fam31',
+  emitFact(s, { kind: 'memory', actors: ['player', famKey31('lucia')], place: famCity31(s), severity: 10, visibility: 'public', tags: ['family', 'good'], src: 'fam31',
     text: l('Almoço de domingo na casa da Lucia Fossati: macarrão, conversa e ninguém fala de trabalho.', 'Sunday lunch at Lucia Fossati\'s: pasta, conversation and no talk of work.'), diary: true });
   return { ok: true, text: fmtL(l('{n} pessoas saíram do almoço mais leves (estresse −6, moral +3).', '{n} people left lunch lighter (stress −6, morale +3).'), { n: ppl.length }) };
 }
 
 /** "A lasanha da Lucia": presente que agrada qualquer pessoa (opinião sobre você +4). */
 export function lasagna31(s: GameState, key: string): FamRes31 {
-  const e = off(s) ?? busy(s, 'lasagna');
+  const e = famBlock31(s, 'lasagna');
   if (e) return e;
   opine(s, key, 4, l('ganhou uma lasanha da Lucia Fossati.', 'got a lasagna from Lucia Fossati.'));
   fam31(s).cd.lasagna = s.week + 26;
@@ -192,19 +230,16 @@ export function lasagna31(s: GameState, key: string): FamRes31 {
 
 /** Evento promocional com a Sonia (no veículo da época; como empresária, depois de 2020). */
 export function soniaPromo31(s: GameState, actId: string): FamRes31 {
-  const e = off(s) ?? busy(s, 'promo');
+  const e = famBlock31(s, 'promo', actId);
   if (e) return e;
-  if (s.year >= SONIA_RETIRE31) return no('A Sonia se aposentou; ela manda um abraço.', 'Sonia has retired; she sends her love.');
-  const a = yourAct(s, actId);
-  if (!a) return no('Escolha um artista seu.', 'Pick one of your artists.');
+  const a = yourAct(s, actId)!;
   const cost = money(s, 800);
-  if (s.player.cash < cost) return { ok: false, text: fmtL(l('Falta caixa: o evento custa {v}.', 'Not enough cash: the event costs {v}.'), { v: moneyL(cost) }) };
   post(s, `fam31promo:${actId}`, -cost, 'marketing', 'Evento promocional com Sonia Fossati');
   a.momentum = clamp(a.momentum + 4, 0, 100);
   a.fame = clamp(a.fame + 1, 0, 100);
   fam31(s).cd.promo = s.week + 26;
   meet(s, 'sonia');
-  emitFact(s, { kind: 'show', actors: [a.id, famKey31('sonia')], place: famCity31(), severity: 15, visibility: 'public', tags: ['promo', 'family'], src: 'fam31',
+  emitFact(s, { kind: 'show', actors: [a.id, famKey31('sonia')], place: famCity31(s), severity: 15, visibility: 'public', tags: ['promo', 'family'], src: 'fam31',
     text: fmtL(l('{a} faz um evento promocional organizado por Sonia Fossati ({r}).', '{a} plays a promotional event organised by Sonia Fossati ({r}).'), { a: a.name, r: famRoleLabel31(s, 'sonia') }) });
   return { ok: true, text: fmtL(l('Evento feito por {v}: impulso +4 e fama +1 para {a}.', 'Event done for {v}: momentum +4 and fame +1 for {a}.'), { v: moneyL(cost), a: a.name }) };
 }
@@ -212,16 +247,14 @@ export function soniaPromo31(s: GameState, actId: string): FamRes31 {
 export const ANTONELLA_SCHOOL31 = 1997;
 /** Antonella até 1996: entrevista no jornal / temporada de teatro (fama +1, impulso +2). */
 export function antonellaPress31(s: GameState, actId: string): FamRes31 {
-  const e = off(s) ?? busy(s, 'press');
+  const e = famBlock31(s, 'press', actId);
   if (e) return e;
-  if (s.year >= ANTONELLA_SCHOOL31) return no('A Antonella agora cuida da escola de idiomas.', 'Antonella now runs the language school.');
-  const a = yourAct(s, actId);
-  if (!a) return no('Escolha um artista seu.', 'Pick one of your artists.');
+  const a = yourAct(s, actId)!;
   a.fame = clamp(a.fame + 1, 0, 100);
   a.momentum = clamp(a.momentum + 2, 0, 100);
   fam31(s).cd.press = s.week + 26;
   meet(s, 'antonella');
-  emitFact(s, { kind: 'statement', actors: [a.id, famKey31('antonella')], place: famCity31(), severity: 12, visibility: 'public', tags: ['press', 'family'], src: 'fam31',
+  emitFact(s, { kind: 'statement', actors: [a.id, famKey31('antonella')], place: famCity31(s), severity: 12, visibility: 'public', tags: ['press', 'family'], src: 'fam31',
     text: fmtL(l('Antonella Fossati entrevista {a} e abre espaço numa temporada de teatro.', 'Antonella Fossati interviews {a} and books a theatre season.'), { a: a.name }) });
   return { ok: true, text: fmtL(l('Entrevista publicada: fama +1 e impulso +2 para {a}.', 'Interview published: fame +1 and momentum +2 for {a}.'), { a: a.name }) };
 }
@@ -236,17 +269,12 @@ export const actLangs31 = (s: GameState, actId: string): string[] => fam31(s).la
 /** Escola de idiomas da Antonella (a partir de 1997): o artista aprende a língua e a barreira cai (turnê +4% de demanda
  *  nas cidades dessa língua; as paradas por país podem ler `actLangs31`). */
 export function langSchool31(s: GameState, actId: string, lang: string): FamRes31 {
-  const e = off(s);
+  const e = famBlock31(s, 'lang', actId, lang);
   if (e) return e;
-  if (s.year < ANTONELLA_SCHOOL31) return no('A escola de idiomas da Antonella ainda não existe.', 'Antonella\'s language school does not exist yet.');
-  const a = yourAct(s, actId);
-  if (!a) return no('Escolha um artista seu.', 'Pick one of your artists.');
-  const L0 = SCHOOL_LANGS31.find((x) => x.id === lang);
-  if (!L0) return no('Língua que a escola não ensina.', 'The school does not teach that language.');
+  const a = yourAct(s, actId)!;
+  const L0 = SCHOOL_LANGS31.find((x) => x.id === lang)!;
   const st = fam31(s);
-  if ((st.langs[actId] ?? []).includes(lang)) return no('Já aprendeu essa língua.', 'Already learned that language.');
   const cost = money(s, 1500);
-  if (s.player.cash < cost) return { ok: false, text: fmtL(l('Falta caixa: o curso custa {v}.', 'Not enough cash: the course costs {v}.'), { v: moneyL(cost) }) };
   post(s, `fam31lang:${actId}:${lang}`, -cost, 'other', 'Escola de idiomas de Antonella Fossati');
   (st.langs[actId] ??= []).push(lang);
   meet(s, 'antonella');
@@ -264,12 +292,10 @@ export const METALMAC_W31 = 52;
 export const METALMAC_DEFECT31 = 0.006;
 /** Contrato de um ano com a Metalmac (prensas da época): defeitos de prensagem −0,6 ponto percentual. */
 export function metalmac31(s: GameState): FamRes31 {
-  const e = off(s);
+  const e = famBlock31(s, 'metalmac');
   if (e) return e;
   const st = fam31(s);
-  if ((st.mm ?? 0) > s.week) return { ok: false, text: fmtL(l('O contrato com a Metalmac ainda vale por {w} semanas.', 'The Metalmac contract still runs for {w} weeks.'), { w: st.mm! - s.week }) };
   const cost = money(s, 2500);
-  if (s.player.cash < cost) return { ok: false, text: fmtL(l('Falta caixa: o contrato custa {v}.', 'Not enough cash: the contract costs {v}.'), { v: moneyL(cost) }) };
   post(s, 'fam31:metalmac', -cost, 'production', 'Contrato com a Metalmac');
   st.mm = s.week + METALMAC_W31;
   meet(s, 'efro');
@@ -280,24 +306,21 @@ pressDefect31.f = (s) => (sw<boolean>(s, 'fam31') && (fam31(s).mm ?? 0) > s.week
 export const FLIGHT_FROM31 = 1911;
 /** Voo panorâmico no avião do Efro (aeroclube): uma vez por partida, inspiração +10 para o artista. */
 export function efroFlight31(s: GameState, actId: string): FamRes31 {
-  const e = off(s);
+  const e = famBlock31(s, 'flight', actId);
   if (e) return e;
-  if (s.year < FLIGHT_FROM31) return no('Ainda não há aeroclube na cidade.', 'There is no aeroclub in town yet.');
   const st = fam31(s);
-  if (st.flight !== undefined) return no('O voo panorâmico do Efro já aconteceu nesta partida.', 'Efro\'s scenic flight already happened this game.');
-  const a = yourAct(s, actId);
-  if (!a) return no('Escolha um artista seu.', 'Pick one of your artists.');
+  const a = yourAct(s, actId)!;
   for (const id of a.members) { const p = s.persons[id]; if (p?.alive) p.inspiration = clamp(p.inspiration + 10, 0, 100); }
   st.flight = s.week;
   meet(s, 'efro');
-  emitFact(s, { kind: 'memory', actors: [a.id, famKey31('efro')], place: famCity31(), severity: 15, visibility: 'public', tags: ['family', 'good'], src: 'fam31',
+  emitFact(s, { kind: 'memory', actors: [a.id, famKey31('efro')], place: famCity31(s), severity: 15, visibility: 'public', tags: ['family', 'good'], src: 'fam31',
     text: fmtL(l('Efro Fossati leva {a} num voo panorâmico sobre a cidade.', 'Efro Fossati takes {a} on a scenic flight over the city.'), { a: a.name }), diary: true });
   return { ok: true, text: fmtL(l('Voo inesquecível: inspiração +10 para {a}.', 'Unforgettable flight: inspiration +10 for {a}.'), { a: a.name }) };
 }
 
 /** Clube de tênis do Efro: lugar para conhecer gente importante (reputação institucional +1, uma vez por ano). */
 export function tennisClub31(s: GameState): FamRes31 {
-  const e = off(s) ?? busy(s, 'tennis');
+  const e = famBlock31(s, 'tennis');
   if (e) return e;
   s.player.reputation.institutional = clamp(s.player.reputation.institutional + 1, 0, 100);
   fam31(s).cd.tennis = s.week + 52;
@@ -336,8 +359,63 @@ const famBase = (b: BaseData31 | undefined): FamBase31 | undefined => (b as (Bas
 registerBaseSection31({
   id: 'fam31', label: l('Família Fossati', 'Fossati family'),
   validate: (b) => { const c = famBase(b)?.city; return c !== undefined && !CITIES.some((x) => x.id === c) ? [fmtL(l('Família Fossati: cidade "{c}" não existe.', 'Fossati family: city "{c}" does not exist.'), { c: String(c) })] : []; },
-  apply: (b) => { const c = famBase(b)?.city; FAM_CITY31.id = c && CITIES.some((x) => x.id === c) ? c : 'sao_paulo'; },
+  apply: (b) => { const c = famBase(b)?.city; FAM_CITY31.id = c && CITIES.some((x) => x.id === c) ? c : ''; },
 });
 
 /** Para a interface: membros que você já conheceu e se a conquista saiu. */
 export const famMet31 = (s: GameState): { met: FamId31[]; famiglia: boolean } => ({ met: [...fam31(s).met], famiglia: fam31(s).famiglia !== undefined });
+
+// ---------------------------------------------------------------- R31 · onda 4 (FOS): a casa e a praça em cena (leituras)
+
+/** Conhecer alguém da família (botão "Conhecer" na casa ou na praça): marca como conhecido e, com os quatro, a
+ *  conquista "Famiglia". Não depende do interruptor (conhecer não é efeito econômico). */
+export function famMeet31(s: GameState, id: FamId31): FamRes31 {
+  const m = FAMILY31.find((x) => x.id === id);
+  if (!m) return no('Essa pessoa não é da família.', 'That person is not in the family.');
+  if (peekFam31(s).met?.includes(id)) return no('Vocês já se conhecem.', 'You already know each other.');
+  meet(s, id);
+  return { ok: true, text: fmtL(l('Você conheceu {n}.', 'You met {n}.'), { n: l(m.name, m.name) }) };
+}
+
+/** O que a pessoa diz agora (conversa pelo papel do momento). Só lê. */
+export function famTalk31(s: GameState, id: FamId31): L {
+  const n = famNow31(s).find((x) => x.m.id === id);
+  if (!n) return l('', '');
+  const role = famRoleLabel31(s, id);
+  const work = n.eras.filter((e) => e.kind !== 'family');
+  switch (id) {
+    case 'efro': {
+      const mm = work.find((e) => e.org === 'metalmac');
+      return fmtL(l('"Na Metalmac a gente faz {r}. E o violino? Fica na vitrine — toco no Natal."', '"At Metalmac we make {r}. The violin? It stays in the cabinet — I play it at Christmas."'),
+        { r: mm ? { pt: mm.label.pt.replace(/^Metalmac — /, ''), en: mm.label.en.replace(/^Metalmac — /, '') } : l('peças', 'parts') });
+    }
+    case 'lucia': return l('"Senta, que o macarrão já sai. Domingo é dia de família — e ninguém fala de trabalho na mesa."', '"Sit down, the pasta is nearly ready. Sunday is family day — and nobody talks work at the table."');
+    case 'sonia':
+      if (n.retired) return l('"Aposentada! Agora quem cuida das promoções é o meu jardim."', '"Retired! These days the only promotion I run is my garden."');
+      if (work.some((e) => e.kind === 'manager')) return fmtL(l('"Hoje sou {r}. Artista bom precisa de agenda cheia e de alguém que diga não."', '"These days I\'m {r}. A good artist needs a full calendar and someone who says no."'), { r: { pt: role.pt.toLowerCase(), en: role.en.toLowerCase() } });
+      return fmtL(l('"{r}: me traz o seu artista que a gente faz um evento que a cidade inteira vai ouvir."', '"{r}: bring me your artist and we\'ll put on an event the whole city will hear."'), { r: role });
+    case 'antonella':
+      if (s.year >= ANTONELLA_SCHOOL31) return fmtL(l('"Na escola a gente ensina {n} línguas. Artista que fala a língua do público vende mais ingresso."', '"At the school we teach {n} languages. An artist who speaks the audience\'s language sells more tickets."'), { n: SCHOOL_LANGS31.length });
+      return l('"Estreia no teatro na sexta e a matéria sai no jornal de domingo. Quer uma entrevista?"', '"Opening night at the theatre on Friday and the story runs in Sunday\'s paper. Want an interview?"');
+    case 'gianluca': return l('"Vim para o almoço — a nonna não aceita desculpa. E a Arara? A arara manda lembranças."', '"I came for lunch — nonna takes no excuses. And Arara? The macaw says hi."');
+    default: return role;
+  }
+}
+
+/** Quem da família está na praça neste mês: decidido pela virada do mês (o mês e a semente; sem sorteio do jogo e
+ *  sem estado), nunca ao abrir a cena. Efro e Lucia passeiam juntos (a praça é deles). */
+export function famSquare31(s: GameState): FamId31[] {
+  const h = hashString(`${s.config.seed}|fam31sq|${s.year}|${s.month}`) >>> 0;
+  const out: FamId31[] = [];
+  if (h % 100 < 45) out.push('efro', 'lucia');
+  if ((h >>> 8) % 100 < 25) out.push('sonia');
+  if ((h >>> 16) % 100 < 25) out.push('antonella');
+  return out;
+}
+
+// a casa no "Nosso mundo": um prédio de moradia da cidade de início vira a Casa Fossati (place27 só lê)
+FAMHOME27.fn = (s) => (famCity31(s) !== s.config.homeCity ? null : {
+  name: l('Casa Fossati', 'Fossati home'), what: l('Casa da família Fossati (homenagem, ficção declarada)', 'The Fossati family home (tribute, declared fiction)'),
+  owner: 'Efro e Lucia Fossati', now: l('A família em casa; aos domingos, almoço na mesa comprida.', 'The family at home; on Sundays, lunch at the long table.'),
+  people: FAMILY31.map((m) => ({ name: m.name, role: famRoleLabel31(s, m.id), key: famKey31(m.id) })),
+});

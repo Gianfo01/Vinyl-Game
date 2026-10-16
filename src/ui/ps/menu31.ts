@@ -120,6 +120,8 @@ export const PLACES31: Place31[] = [
   P('under', 'cidade', l('Submundo e delegacia', 'Underworld and police'), 'mask', ['crime', 'fakes19']),
   P('cityhall', 'cidade', l('Prefeitura e sociedade', 'City hall and society'), 'columns', ['society18']),
   P('plant', 'cidade', l('Fábrica e distribuição', 'Plant and distribution'), 'factory', ['supply18']),
+  P('airport', 'cidade', l('Aeroporto e porto', 'Airport and port'), 'globe', ['airport31']), // R31 onda 4 (T)
+  P('auction', 'cidade', l('Casa de leilões', 'Auction house'), 'vault', ['auction31']), // R31 onda 4 (T)
   // Mundo — mapa-múndi e camadas
   P('map', 'mundo', l('Mapa-múndi', 'World map'), 'map', ['world'], { home: true, tab: MAP_TAB31 }),
   P('thismonth', 'mundo', l('Este mês no mundo', 'This month in the world'), 'globe', ['mundo27', 'world17']),

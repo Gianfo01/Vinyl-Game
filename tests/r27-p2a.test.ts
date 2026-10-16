@@ -109,10 +109,13 @@ beforeAll(() => {
   // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
   // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
   // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
+  // R31 onda 4 (N · bandas de ficção no mundo, de propósito — docs/r31/DECISOES.md e docs/r31/nx.md): ~4 bandas de filmes e séries
+  // (Stillwater, Electric Mayhem…) estreiam nesses 8 meses e mudam a trajetória; com `fic31` desligado voltam 257209 / 4026815485 / 68287867 / 205718420.
   // R31 onda 4 (I · gente nos lugares, de propósito — docs/r31/DECISOES.md e docs/r31/is.md): donos e equipe dos lugares da
   // cidade são pessoas da base; sem ninguém adequado nasce gente nova (29 pessoas nesta semente em 8 meses), e os sistemas
   // que percorrem todas as pessoas mudam detalhes de fama, fãs e caixa dos atos (só acts muda; caixa, turnês e rng iguais).
   // Com `gente31` desligado volta acts 68287867.
+  // Junção N + I (integração da onda 4): as duas mudanças juntas dão caixa 1132370 e acts 4020965551 (turnês e rng iguais ao N).
   // R31 onda 4 (UNI-4 · fusões grandes, de propósito — docs/r31/DECISOES.md e docs/r31/uni4.md): relação com a praça numa
   // fonte só (neutro 30), segredos da Intriga e trunfos do livro na camada única (podem vazar), satisfação do cliente = confiança
   // do empresário, shows avulsos/acordos/estrada como papéis em s.tours e registros únicos de festivais, casas e rivais (a
@@ -120,9 +123,10 @@ beforeAll(() => {
   // oscila centenas de milhares de mês a mês (o 8º mês caiu num vale). Com `uni4.links` desligado só acts muda (289804343).
   // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
   // UNI-4 + I juntos: re-medido — só acts muda em relação ao UNI-4 sozinho (4266817177 → 3500990849).
-  expect(s.player.cash).toBe(10093);
-  expect(hashString(JSON.stringify(s.acts))).toBe(3500990849);
-  expect(hashString(rngSnapshot19(s))).toBe(4017770377);
+  // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
+  expect(s.player.cash).toBe(182589);
+  expect(hashString(JSON.stringify(s.acts))).toBe(1693608899);
+  expect(hashString(rngSnapshot19(s))).toBe(103954728);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 

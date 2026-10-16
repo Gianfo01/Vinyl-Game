@@ -15,7 +15,7 @@ import { ventures } from './ventures9';
 import { v12 } from './ventures12';
 import { Rng, clamp, seedState } from '../../core/rng';
 import { countryOfCity } from '../../data/geo';
-import { familyOf, l, type FamilyId, type L } from '../../data/world';
+import { CITIES, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { registerExplain } from '../explain18';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
@@ -54,7 +54,7 @@ export const CONS18: ConsDef18[] = [
 export const consNow18 = (s: GameState, f: Fmt18): ConsDef18 | undefined => CONS18.find((c) => c.fmt === f && s.year >= c.from && s.year <= c.to);
 
 /** `own`: id do seu veículo de mídia (ventures9 kind 'media', media 'radio') — UNI-4/B.21: sua rádio é uma estação do mercado. */
-export interface Station18 { id: string; call: string; fmt: Fmt18; pd: string; adv: number; rel: number; cons?: string; reach: number; lunch?: number; own?: string }
+export interface Station18 { id: string; call: string; fmt: Fmt18; pd: string; adv: number; rel: number; cons?: string; reach: number; lunch?: number; own?: string; /** R31 CAR (car31.cities): cidade da estação; audiência disputada cidade a cidade */ city?: string }
 export interface Rot18 { st: string; lvl: number; w: number }
 export interface Paid18 { w: number; rel: string; act: string; who: string; amt: number; out?: boolean }
 export interface Radio18State { st: Station18[]; rot: Record<string, Rot18[]>; tried: Record<string, number>; paid: Paid18[]; n: { pitch: number; adds: number; heavy: number; exposed: number }; seq: number }
@@ -85,6 +85,8 @@ export function ensureStations18(s: GameState): Station18[] {
       st.st.push({ id: `rs${++st.seq}`, call, fmt: f, pd: `${r.pick(FIRST)} ${r.pick(LAST)}`, adv: r.next(), rel: r.int(10, 35), cons, reach: Math.round((0.6 + r.next() * 0.8) * 100) / 100 });
     }
   }
+  // R31 CAR: cada estação tem cidade (a sede e as maiores cidades do país, em rodízio; sem sorteio)
+  for (const x of st.st) x.city ??= stationCity18(s, x);
   // consultores mudam com as décadas
   for (const x of st.st) { const c = consNow18(s, x.fmt); if (x.cons && (!c || c.id !== x.cons)) x.cons = c?.id; }
   st.st = st.st.filter((x) => x.own || fmtsNow18(s).includes(x.fmt));
@@ -128,6 +130,18 @@ function playOwn18(s: GameState): void {
       (st.rot[rid] ??= []).push({ st: x.id, lvl: sl.kind === 'premiere' ? 3 : sl.kind === 'rotation' ? 2 : 1, w: s.week });
     }
   }
+}
+/** Cidade de uma estação NPC: a sede do jogador e as outras cidades do país dela, em rodízio pelo número da estação. */
+export function stationCity18(s: GameState, x: Station18): string {
+  const home = s.config.homeCity, a3 = countryOfCity(home);
+  const list = [home, ...CITIES.filter((c) => c.id !== home && countryOfCity(c.id) === a3).map((c) => c.id)].slice(0, 3);
+  const n = Number(x.id.replace(/\D/g, '')) || 0;
+  return list[n % list.length];
+}
+/** R31 CAR (car31.cities): a audiência da cidade mexe no alcance da estação (perde para quem lidera; volta devagar). */
+export function stationReach18(s: GameState, id: string, d: number): void {
+  const x = radio18(s).st.find((k) => k.id === id);
+  if (x) x.reach = Math.round(clamp(x.reach + d, 0.3, 1.6) * 1000) / 1000;
 }
 
 /** peso da rádio na época (no streaming conta menos) */

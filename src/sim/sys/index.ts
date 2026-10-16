@@ -370,6 +370,8 @@ import './relics29'; // R29 (relíquias): versões procedurais dos arquétipos d
 import './mob29'; // R29 (Submundo): famílias — interações com consequência, "contratar a família" e favores devidos (gancho só com interação do jogador)
 import './fac31'; // R31 (U): facções por país — presença e expansão anual
 import './broker31'; // R31 (U): intermediário das facções de fora
+import './auction31'; // R31 (T): casa de leilões
+import './travel31'; // R31 (T): aeroporto, transporte, cruzeiros e holograma
 import './contracts29'; // R29 (contratos+): empresariamento, produção e joint venture jogáveis (docs/contratos29.md)
 import './aff29'; // R29 (Submundo): facções × gêneros e cenas (convites, pedágio, pressão; só com ato seu na cena)
 import './aff29npc'; // R29c (Submundo): as facções das cenas abordam também os artistas do mundo (NPC decide; feed, ficha, card, selo)
@@ -389,6 +391,9 @@ import './car31stage'; // R31 onda 3 (CAR): casa de shows (abertura, prestígio,
 import './car31more'; // R31 onda 3 (CAR): estúdio, editora, agenciamento, empresário, crítico e trilhas ligados ao mundo
 import './car31prog'; // R31 onda 3 (CAR): degraus, objetivos e desafio de fim de jogo das 12 carreiras
 import './socio31'; // R31 onda 3 (SOC): sócios e compras — festivais, casas, rádios e estúdios existentes; criar em conjunto; voto e dividendos
+import '../r31/w31'; // R31 onda 4 (W): jabá recusado/denunciado e antitruste nas compras (interruptores w31.*)
+import '../r31/learn31'; // R31 onda 4 (R): amostras duráveis dos lançamentos e biblioteca de aprendizados
+import './extras31'; // R31 onda 4 (N): extras — conquistas novas, ovos do Edison, bandas de ficção no mundo, cultura pop/memes/bolhas, Arara, filme, praça Fossati
 import './gente31'; // R31 onda 4 (I): gente de verdade nos lugares — donos, equipe, músicos fazendo bico (vaga muda de mãos na virada do mês)
 import './under31'; // R31 onda 4 (S): submundo no Nosso mundo — fachadas, sala dos fundos, mural, delegacia, mercado negro, baile
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
