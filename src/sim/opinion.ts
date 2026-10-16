@@ -145,10 +145,11 @@ const weightOf = (s: GameState, key: string, d: number, o: { pol?: boolean }): n
 const KIND_K: Record<string, number> = { c: 0.6 };
 
 /** Ouvintes de mudança (social31 usa para registrar "já se conhecem" quando alguém passa a ter opinião). */
-type OpListener = (s: GameState, key: string, d: number) => void;
+/** `gesture`: veio de opine (um gesto pessoal), não da conta de um sistema. */
+type OpListener = (s: GameState, key: string, d: number, gesture: boolean) => void;
 const LISTEN: OpListener[] = [];
 export function onOpinion(fn: OpListener): void { LISTEN.push(fn); }
-const told = (s: GameState, key: string, d: number): void => { for (const f of LISTEN) f(s, key, d); };
+const told = (s: GameState, key: string, d: number, gesture = false): void => { for (const f of LISTEN) f(s, key, d, gesture); };
 
 /**
  * Muda a opinião de alguém sobre você e guarda o motivo. Devolve o delta efetivamente aplicado (já com
@@ -171,7 +172,7 @@ export function opine(s: GameState, key: string, delta: number, why: L, o: { pol
     const a = s.persons[id] && actsNow27(s).find((x) => x.members.includes(id) && x.owner === 'player');
     if (a) a.trust = clamp(a.trust + v * 0.25, 0, 100);
   }
-  told(s, key, v);
+  told(s, key, v, true);
   return v;
 }
 

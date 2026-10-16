@@ -16,7 +16,7 @@ import { l, type L } from '../../data/world';
 import { registerSimHook } from '../ext4';
 import { onFact, type Fact } from '../facts17';
 import { actsOfPerson17 } from '../actidx17';
-import { hasOpinion, opinionOf } from '../opinion';
+import { hasOpinion, onOpinion, opinionOf } from '../opinion';
 import {
   HOW31, SOC31, SOC31_PERF, closeness31, coolMonth31, edgeCount31, meNode31, meet31, neighbors31, node31, registerTieDeriver, shiftTie31, soc31, storedTie31, tie31,
   type How31, type Tie31,
@@ -177,6 +177,15 @@ function factMeet(s: GameState, f: Fact): void {
       }
   }
 }
+
+// Gestos pessoais (presente, elogio, favor, crítica pública…) mexem na intimidade de quem já se conhece: aproximam
+// devagar quando bons; os ruins pesam na confiança. Notícia sobre você não cria intimidade (só opinião).
+onOpinion((s, key, d, gesture) => {
+  if (!gesture || !(key.startsWith('p:') || key.startsWith('l:'))) return;
+  const me = meNode31(s), n = node31(s, key);
+  if (!storedTie31(s, me, n)) return;
+  shiftTie31(s, me, n, d > 0 ? { i: Math.min(3, d / 4) } : { tBack: Math.max(-4, d / 4) });
+});
 
 // ---------------------------------------------------------------- o mês social
 
