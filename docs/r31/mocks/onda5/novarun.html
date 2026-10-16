@@ -7,7 +7,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
 kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:3px;border-radius:4px;padding:3px 5px;color:#fff}
 .px{image-rendering:pixelated}
-.bg{position:absolute;inset:0;background:url(inicio-bg.png) center/cover;image-rendering:pixelated;filter:brightness(.3)}
+.bg{position:absolute;inset:0;background:url(home-real-1962.png) center/cover;image-rendering:pixelated;filter:brightness(.3)}
 .logo{position:absolute;left:40px;top:26px;font-family:'Press Start 2P';font-size:22px;color:var(--gold);text-shadow:3px 3px 0 #000}
 .logo span{display:block;font-size:9px;color:var(--mute);margin-top:8px;letter-spacing:.1em}
 .toggle{position:absolute;right:40px;top:30px;display:flex;border:2px solid #0a121a;border-radius:6px;overflow:hidden}
@@ -23,7 +23,7 @@ kbd{font-family:'Press Start 2P';font-size:8px;background:#24364d;border:1px sol
 .field small{color:#8a7458;font-size:13px}
 .careers{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .car{background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:6px 2px;text-align:center;font-size:13px;font-weight:600}
-.car img{width:34px;height:34px;image-rendering:pixelated;display:block;margin:0 auto 3px}
+.car img{width:28px;height:28px;image-rendering:pixelated;display:block;margin:0 auto 3px}
 .car.on{background:#f0c060;border-color:#5a3a1e;box-shadow:inset 0 -3px 0 #b08a30}
 .steps{display:flex;gap:0;border:2px solid #a88a60;border-radius:4px;overflow:hidden}
 .steps span{flex:1;text-align:center;padding:7px 2px;font-size:14px;background:#fffaf0;border-right:1px solid #d6c39e}
@@ -75,19 +75,31 @@ details{font-size:14px;color:#5a3a1e;font-weight:700}
 <script>
 const v=new URLSearchParams(location.search).get('v')||'rapido';
 const tog=(on)=>`<div class="toggle"><span class="${on=='r'?'on':''}">Começo rápido</span><span class="${on=='c'?'on':''}">Configuração completa</span></div>`;
-const PREV=(w)=>`<div class="preview" style="${w}"><canvas class="scene pv" style="width:100%;image-rendering:pixelated;border:3px solid #0a121a;display:block"></canvas><div class="muted" style="font-size:12px;margin-top:4px">a prévia muda na hora com a época, a cidade e a carreira</div>
+const PREV=(w)=>`<div class="preview" style="${w}"><img class="scene" src="home-real-1962.png"><div class="muted" style="font-size:12px;margin-top:4px">a prévia muda na hora com a época, a cidade e a carreira</div>
  <h3>SUA HISTÓRIA</h3>
- <div class="char"><img src="p0.png"><div><b style="font-size:17px">Gian Fossa</b><br><span class="muted">dono de selo · 28 anos · Londres</span><br><span class="muted">carisma alto · ouvido bom</span></div></div>
+ <div class="char"><img src="av-gian.png"><div><b style="font-size:17px">Gian Fossa</b><br><span class="muted">dono de selo · 28 anos · Londres</span><br><span class="muted">carisma alto · ouvido bom</span></div></div>
  <p style="margin-top:10px">Londres, <b>1962</b>: o beat está nascendo nos porões. Você abre um <b>selo iniciante</b> com caixa curto e nenhum nome no elenco.</p>
  <p class="muted">25 anos de jogo · fim em 1986 com a sua história e pontuação</p>
  <div style="margin-top:6px"><span class="tagp">Nomes reais</span><span class="tagp">Mundo da história real</span><span class="tagp">Equilibrada</span><span class="tagp">32 gravadoras</span></div>
  <p class="muted" style="margin-top:8px">Começo sorteado: "A crítica gostou de você"</p></div>`;
 const V={
 rapido:()=>tog('r')+`<div class="clip" style="left:60px;top:110px;width:760px;height:760px;padding:30px 30px 20px">
- <h2>FICHA DE INSCRIÇÃO</h2><div style="font-size:15px;color:#6d5a44;margin:6px 0 16px">As escolhas principais. O resto vem pronto e pode ser mudado na configuração completa.</div>
+ <h2>FICHA DE INSCRIÇÃO</h2><div style="font-size:15px;color:#6d5a44;margin:6px 0 12px">As escolhas principais. O resto vem pronto e pode ser mudado na configuração completa.</div>
  <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
-  <div><div class="lab">1 · QUEM É VOCÊ</div><div class="field"><span>Gian Fossa</span><small>sortear · aparência ▸</small></div></div>
-  <div><div class="lab">2 · ONDE <i>cidade inicial</i></div><div class="field"><span>Londres · Reino Unido</span><small>▾</small></div></div></div>
+  <div><div class="lab">1 · QUEM É VOCÊ <i>editor de personagem</i></div>
+   <div style="display:flex;gap:10px;background:#fffaf0;border:2px solid #a88a60;border-radius:4px;padding:8px">
+    <div style="width:84px;background:#2a3a52;border:2px solid #1a1214;display:flex;align-items:flex-end;justify-content:center;height:112px"><img src="av-gian.png" style="height:104px;image-rendering:pixelated"></div>
+    <div style="flex:1;font-size:14px;display:grid;grid-template-columns:62px 1fr;gap:3px 6px;align-items:center">
+     <span style="color:#8a7458">Nome</span><span style="border-bottom:1px solid #a88a60;font-size:16px">Gian Fossa</span>
+     <span style="color:#8a7458">Idade</span><span>◂ 28 ▸</span>
+     <span style="color:#8a7458">Pele</span><span>◂ tom 2 ▸</span>
+     <span style="color:#8a7458">Cabelo</span><span>◂ curto castanho ▸</span>
+     <span style="color:#8a7458">Roupa</span><span>◂ paletó escuro ▸</span>
+     <span style="color:#8a7458">Acessório</span><span>◂ chapéu ▸</span>
+     <span></span><span style="font-weight:700;color:#5a3a1e">⟳ sortear · mais opções ▸</span></div></div></div>
+  <div><div class="lab">2 · ONDE <i>cidade inicial</i></div><div class="field"><span>Londres · Reino Unido</span><small>▾</small></div>
+   <div class="lab" style="margin-top:12px">TRAÇO DE PERSONALIDADE <i>opcional</i></div><div class="steps"><span class="on">Carismático</span><span>Ouvido bom</span><span>Negociador</span></div>
+   <div style="font-size:13px;color:#8a7458;margin-top:6px">Histórico, atributos e família ficam na configuração completa.</div></div></div>
  <div style="margin-bottom:14px"><div class="lab">3 · O QUE VOCÊ FAZ <i>+ 6 carreiras na completa</i></div>
   <div class="careers">${[['gravadora','Gravadora'],['artista','Artista / banda'],['empresario','Empresário'],['estudio','Estúdio'],['festival','Festival'],['agencia','Agência de shows']].map(([k,t],i)=>`<div class="car ${i==0?'on':''}"><img src="ic-${k}.png">${t}</div>`).join('')}</div></div>
  <div style="margin-bottom:14px"><div class="lab">4 · QUANDO <i>ano de início: 1962</i></div>
@@ -98,7 +110,7 @@ rapido:()=>tog('r')+`<div class="clip" style="left:60px;top:110px;width:760px;he
  <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
   <div><div class="lab">6 · DIFICULDADE</div><div class="steps"><span>Tranquila</span><span class="on">Equilibrada</span><span>Dura</span></div></div>
   <div><div class="lab">7 · DURAÇÃO</div><div class="steps"><span class="on">25 anos</span><span>Até 2040</span><span>Sem fim</span></div></div></div>
- <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:20px">
+ <div class="row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
   <div class="sw"><b class="on"></b>Nomes reais (artistas, gravadoras, obras)</div>
   <div class="sw"><b class="on"></b>Mundo segue a história real</div></div>
  <div class="go">▶ COMEÇAR MINHA HISTÓRIA</div>
@@ -123,5 +135,5 @@ completo:()=>tog('c')+`<div class="rail">
  </div>`+PREV('left:1070px;top:110px;width:330px;font-size:14px')
 };
 document.getElementById('app').innerHTML=V[v]();
-document.querySelectorAll('canvas.pv').forEach(c=>drawScene(c,{era:1962,city:'londres'}));
+
 </script></body></html>

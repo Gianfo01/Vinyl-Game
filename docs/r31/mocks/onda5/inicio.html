@@ -5,24 +5,22 @@
 *{box-sizing:border-box}
 body{margin:0;background:#06080e;color:#e9e2d0;font-family:'Barlow Semi Condensed',sans-serif;width:1440px;height:900px;overflow:hidden;position:relative}
 canvas{position:absolute;left:0;top:0;width:1440px;height:810px;image-rendering:pixelated}
-.shade{position:absolute;left:0;right:0;top:700px;height:200px;background:linear-gradient(transparent,#06080e 60%)}
-.logo{position:absolute;left:0;right:0;top:118px;text-align:center;font-family:'Press Start 2P';font-size:64px;color:#f0c060;text-shadow:6px 6px 0 #7a2a10,10px 10px 0 #000;letter-spacing:.06em}
-.tag{position:absolute;left:0;right:0;top:206px;text-align:center;font-family:'Press Start 2P';font-size:12px;color:#ffd9e8;text-shadow:2px 2px 0 #000;letter-spacing:.14em}
-.menu{position:absolute;left:50%;top:600px;transform:translateX(-50%);display:flex;gap:12px}
+.shade{position:absolute;left:0;right:0;top:600px;height:300px;background:linear-gradient(rgba(6,8,14,0),rgba(6,8,14,.75) 35%,#06080e 75%)}
+.logo{position:absolute;left:0;right:0;top:70px;text-align:center;font-family:'Press Start 2P';font-size:64px;color:#f0c060;text-shadow:6px 6px 0 #7a2a10,10px 10px 0 #000;letter-spacing:.06em}
+.tag{position:absolute;left:0;right:0;top:158px;text-align:center;font-family:'Press Start 2P';font-size:12px;color:#ffd9e8;text-shadow:2px 2px 0 #000;letter-spacing:.14em}
+.menu{position:absolute;left:50%;top:690px;transform:translateX(-50%);display:flex;gap:12px}
 .b{white-space:nowrap;font-family:'Press Start 2P';font-size:12px;padding:14px 18px;background:#1c3048;border:3px solid #0a121a;border-radius:6px;box-shadow:inset 0 0 0 2px #3f5f84;color:#e9edf5}
 .b.main{background:#f0c060;color:#1a1214;box-shadow:inset 0 -4px 0 #b08a30}
-.small{position:absolute;left:0;right:0;top:676px;text-align:center;font-size:15px;color:#9aa8b8}
+.small{position:absolute;left:0;right:0;top:760px;text-align:center;font-size:15px;color:#9aa8b8}
 .small span{margin:0 12px}
 .foot{position:absolute;left:24px;right:24px;bottom:16px;display:flex;justify-content:space-between;font-family:'Press Start 2P';font-size:8px;color:#5d7088}
-.ded{position:absolute;left:0;right:0;bottom:44px;text-align:center;font-size:14px;color:#9aa8b8;font-style:italic}
+.ded{position:absolute;left:0;right:0;bottom:36px;text-align:center;font-size:14px;color:#9aa8b8;font-style:italic}
 </style></head><body>
-<canvas id="c"></canvas><div class="shade"></div>
+<img src="home-real-1962.png" style="position:absolute;left:0;top:0;width:1440px;height:810px;image-rendering:pixelated"><div class="shade"></div>
 <div class="logo">MASTERS</div>
 <div class="tag">UM MUNDO VIVE DE MÚSICA · 1889 – 2040</div>
 <div class="menu"><span class="b main">▶ NOVA RUN</span><span class="b">CONTINUAR</span><span class="b">CARREGAR</span><span class="b">CENÁRIOS</span><span class="b">OPÇÕES</span></div>
 <div class="small"><span>Usar código de run</span><span>Conquistas</span><span>Créditos</span><span>PT ▾</span></div>
 <div class="ded">Para Efro, Lucia, Antonella e Sonia.</div>
 <div class="foot"><span>PIXEL STUDIO EDITION</span><span>R31</span></div>
-<script src="title.js"></script>
-<script>const e=+(new URLSearchParams(location.search).get('era')||1962);drawScene(document.getElementById('c'),{era:e,city:'londres'});</script>
 </body></html>
