@@ -29,9 +29,9 @@ import { SONGS27 } from '../../data/audit27_songs';
 import { applyAudit27, applyFix27, applySongs27, type AnyArtist27 } from '../../data/audit27';
 import { NEW27_C1 } from '../../data/new27c1';
 import { BASE31_ACTS } from '../../data/base31acts';
+import { BASE31BR_ACTS } from '../../data/base31br';
 import { BASE31_IT } from '../../data/base31it';
 import { BASE31_HITS } from '../../data/base31hits';
-import { registerSwitch } from '../r31/switches';
 import { frontmanSings27, lineupMonth27, realRoles27 } from '../../data/lineup27';
 import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
 import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
@@ -41,6 +41,7 @@ import { REAL_ACTS } from '../../data/realnames';
 import { atDebut27, firstJoin, inLineupAt, periodsOf, type Prov27, type RealArtist, type RealMember, type RealPeriod, type RealRelease } from '../../data/realtypes';
 import { CITIES, cityById, familyOf, l } from '../../data/world';
 import { personDies } from '../dynasty';
+import { registerSwitch, sw } from '../r31/switches';
 import { computeAppeal } from '../market';
 import { registerExt4, registerSimHook } from '../ext4';
 import { langForCity, makeAct, makePerson, songTitle } from '../people';
@@ -81,6 +82,20 @@ for (const a of [...NEW27_C1, ...NEW27_F]) { const k = dedupKey27(a.n); if (!tak
 /** R31 (Z): base nova (data/base31acts) no FIM — os números de catálogo de quem já existia não mudam; usa o sorteio do acervo. */
 export const BASE31_FROM = REAL_ALL.length;
 for (const a of BASE31_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+/** R31 (BASE-BR): artistas brasileiros (data/base31br) no FIM, depois do lote Z — interruptor 'base31.br' (desligado: não estreiam). */
+export const BASE31BR_FROM = REAL_ALL.length;
+for (const a of BASE31BR_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+export const BASE31BR_TO = REAL_ALL.length;
+registerSwitch({
+  id: 'base31.br', def: true, scope: 'game',
+  desc: l('Base brasileira ampliada (R31): centenas de atos brasileiros reais a mais, de 1889 a hoje, com fontes. Desligado: os atos novos não estreiam.',
+    'Expanded Brazilian database (R31): hundreds more real Brazilian acts, 1889 to today, with sources. Off: the new acts never debut.'),
+  // mora na configuração da partida (decide a composição do mundo já na criação; pode ser preparado antes de createGame)
+  read: (s) => s.config.base31br !== false,
+  write: (s, v) => { if (v) delete s.config.base31br; else s.config.base31br = false; },
+});
+/** R31 (BASE-BR): índice de REAL_ALL do lote brasileiro com o interruptor desligado nesta partida. */
+export const brOff31 = (s: GameState, i: number): boolean => i >= BASE31BR_FROM && i < BASE31BR_TO && !sw<boolean>(s, 'base31.br');
 /** R31 (BASE-IT): base italiana (data/base31it) no FIM, depois do lote BR (ordem BR, IT, HITS); atrás do interruptor base31.it. */
 export const BASE31IT_FROM = REAL_ALL.length;
 for (const a of BASE31_IT) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
@@ -131,18 +146,23 @@ applySongs27(SONGS22);
  *  Só nomes de 2+ palavras (os de uma palavra são ambíguos) e fora dos homônimos conhecidos. */
 export const HARMONIZED27: string[] = [];
 function harmonize27(): void {
-  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string };
+  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string; recv?: boolean };
   const refs = new Map<string, Ref[]>();
-  const put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
+  let put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
   const scan = (a: { n: string; d?: number; m?: RealMember[]; b?: number; x?: number; e?: number }) => {
     if (!a.m?.length) put(a.n, { b: a.b, x: a.x, d: a.d, setB: (v) => { a.b = v; }, setX: (v) => { a.x = v; if (a.e === undefined || a.e > v) a.e = v; }, where: a.n });
     for (const m of a.m ?? []) put(m[0], { b: m[2], x: m[3], d: m[4] ?? a.d, setB: (v) => { m[2] = v; }, setX: (v) => { m[3] = v; }, where: a.n });
   };
-  for (const a of REAL_ALL) scan(a);
+  // R31 (BASE-BR): o lote BR só RECEBE (Pixinguinha nos Oito Batutas ganha a morte de 1973); nunca muda os dados de quem já existia
+  let recv = false;
+  const put0 = put;
+  put = (n, r) => put0(n, recv ? { ...r, recv: true } : r);
+  REAL_ALL.forEach((a, i) => { recv = i >= BASE31BR_FROM && i < BASE31BR_TO; scan(a); });
+  recv = false;
   for (const [no, ex] of Object.entries(REAL_CLASSIC)) { const n = REAL_ACTS[+no]?.name; if (n) scan({ get n() { return n; }, get d() { return ex.d; }, get m() { return ex.m; }, get b() { return ex.b; }, set b(v) { ex.b = v; }, get x() { return ex.x; }, set x(v) { ex.x = v; }, get e() { return ex.e; }, set e(v) { ex.e = v; } }); }
   for (const [k, xs] of refs) {
     if (xs.length < 2) continue;
-    const b = xs.find((r) => r.b !== undefined)?.b, x = xs.find((r) => r.x !== undefined)?.x;
+    const b = xs.find((r) => r.b !== undefined && !r.recv)?.b, x = xs.find((r) => r.x !== undefined && !r.recv)?.x;
     for (const r of xs) {
       if (r.b === undefined && b !== undefined && (r.d === undefined || r.d >= b + 8)) { r.setB(b); HARMONIZED27.push(`${k} @ ${r.where}: nasc. ${b}`); }
       if (r.x === undefined && x !== undefined && (r.d === undefined || r.d <= x + 1)) { r.setX(x); HARMONIZED27.push(`${k} @ ${r.where}: morte ${x}`); }
@@ -823,7 +843,7 @@ function newgame(s: GameState, r: Rng): void {
   for (let i = 0; i < REAL_ALL.length; i++) {
     const r = i >= ACERVO21_FROM ? rAc : rMain;
     const a = REAL_ALL[i];
-    if (!realAllowed(s.config, a) || !it31Ok(s, i) || hitOff31(s, i)) continue;
+    if (!realAllowed(s.config, a) || brOff31(s, i) || !it31Ok(s, i) || hitOff31(s, i)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
     const debut = a.d + jitter(s, r, 2);
@@ -908,6 +928,7 @@ function monthly(s: GameState, r: Rng): void {
       const r = i >= ACERVO21_FROM ? rAc : rMain;
       if (hitOff31(s, i)) { keep.push(i); continue; } // base de sucessos desligada depois de criar a partida: quem ainda não surgiu espera (religar devolve)
       const a = REAL_ALL[i];
+      if (brOff31(s, i)) continue; // R31 (BASE-BR): desligado no meio da partida — sai da fila
       if (a && !it31Ok(s, i)) continue; // R31 (BASE-IT): interruptor desligado no meio da partida — some da fila
       if (!a || s.year < a.d - 1 || (s.year === a.d - 1 && s.month < 6)) { keep.push(i); continue; }
       const act = spawnReal(s, r, i, false);
