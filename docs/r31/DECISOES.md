@@ -352,3 +352,5 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - Provas: `tests/r31-nav5.test.ts` (desligado = igual; toda tecla abre o objeto certo; alcance ≤ 2 cliques ou 1 tecla; nada sobreposto na sede; explorar não muda o estado) e `docs/r31/shots/onda5-nav-*.png` (`scripts/shots31nav5.mjs`) · goldens iguais.
 
 - **Base de sucessos só na base Enorme (decisão do dono, 2026-10-16):** os 1 043 atos de `base31hits` custam até +60% no mês a partir de 2012 e ~40% de save; entram só com base de dados Enorme (`z: 3`, aplicado na carga em `realworld.ts`). Nas outras bases o mundo é o da BASE-IT (goldens p2a/p2b: 2343 / 1382068899 / 3720502148 / 2898923487). A chave `base31.hits` continua valendo dentro da Enorme.
+
+- **Build de teste da onda 5 (2026-10-16):** `VITE_EXP5NAV=1 node scripts/r31/build-single.mjs Masters_31_onda5.html` liga `exp5.nav` por padrão só nas partidas novas dessa build; o padrão do código continua desligado (testes e goldens iguais). Com exp5.nav ligado o tutorial antigo (cartões que falam de menus) não aparece; o tutorial guiado é o EXP-12. A fumaça agora lê o topo da casca (`.t5`) também.

@@ -12,6 +12,7 @@ import { ic } from './vis';
 import { tutorialIntro14 } from './tutorial14';
 import { careers } from '../sim/sys/careers12';
 import { registerOverlay27 } from './ps/queue27';
+import { nav5On } from '../sim/r31/exp5'; // onda 5: o tutorial antigo fala de menus que somem com a navegação nova (o guiado é o EXP-12)
 import { doHint28, tick28 } from './onboard28'; // r28 (F4): o passo se conclui fazendo
 
 export interface Step {
@@ -44,7 +45,7 @@ export function tutSteps23(active: string[]): Step[] {
 export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | null {
   const tu = s.tutorial;
   const STEPS = tutSteps23(careers(s).active);
-  if (tu.done || tu.step >= STEPS.length || !tutAllowed19(store.prefs, 'card')) return null; // r19: "Sem tutoriais"
+  if (tu.done || tu.step >= STEPS.length || !tutAllowed19(store.prefs, 'card') || nav5On(s)) return null; // r19: "Sem tutoriais"
   const st0 = STEPS[tu.step];
   const st: Step = tu.step === 0 ? { ...st0, ...tutorialIntro14(careers(s).active), area: tutorialIntro14(careers(s).active).area as Area } : st0;
   const next = () => {
@@ -70,13 +71,13 @@ export function tutorialCard(s: GameState, rerender: () => void): HTMLElement | 
 }
 
 // r27: fila de janelas — o passo do tutorial está pendente enquanto o tutorial não acabou (as metas de abertura vêm antes)
-registerOverlay27('tutorial', (s) => !s.tutorial?.done && (s.tutorial?.step ?? 0) < tutSteps23(careers(s).active).length && tutAllowed19(store.prefs, 'card'));
+registerOverlay27('tutorial', (s) => !s.tutorial?.done && (s.tutorial?.step ?? 0) < tutSteps23(careers(s).active).length && tutAllowed19(store.prefs, 'card') && !nav5On(s));
 
 /** r28 (F4): depois de cada desenho — conclui o passo atual se o jogador já fez o que ele pede. */
 export function tutorialTick28(s: GameState, area: string, rerender: () => void): void {
   const tu = s.tutorial;
   const steps = tutSteps23(careers(s).active);
-  if (!tu || tu.done || tu.step >= steps.length || !tutAllowed19(store.prefs, 'card')) return;
+  if (!tu || tu.done || tu.step >= steps.length || !tutAllowed19(store.prefs, 'card') || nav5On(s)) return;
   tick28(s, steps[tu.step].area, tu.step, area, () => {
     tu.step += 1;
     if (tu.step >= steps.length) { tu.done = true; toast(t(l('Tutorial concluído — agora é com você.', 'Tutorial complete — over to you.')), 'good'); }
