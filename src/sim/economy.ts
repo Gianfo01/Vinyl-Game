@@ -132,12 +132,24 @@ export function checkInsolvency(s: GameState, r: Rng): void {
 
 // ---------- Ações de empresa ----------
 
-export function hireStaff(s: GameState, proId: string): L | null {
+/** Luvas de contratação (meio salário). R31 (V): a cena de entrevista mostra o mesmo número. */
+export const hireSignOn = (salary: number): number => Math.round(salary * 0.5);
+
+/** Por que não dá para contratar agora (ou null). Só leitura: o formulário e a cena mostram antes do clique. */
+export function hireStaffBlock(s: GameState, proId: string): L | null {
   const pro = s.professionals.find((x) => x.id === proId);
   if (!pro) return l('Profissional indisponível.', 'Professional unavailable.');
   if (s.player.staff.length >= hqCaps(s).staff) return l('Sede sem vagas para equipe. Amplie a sede.', 'No staff room in the HQ. Upgrade it.');
-  const signOn = Math.round(pro.salary * 0.5);
+  const signOn = hireSignOn(pro.salary);
   if (freeCash20(s) < signOn) return cashWhy20(s, signOn, l('Caixa insuficiente.', 'Not enough cash.'));
+  return null;
+}
+
+export function hireStaff(s: GameState, proId: string): L | null {
+  const block = hireStaffBlock(s, proId);
+  if (block) return block;
+  const pro = s.professionals.find((x) => x.id === proId)!;
+  const signOn = hireSignOn(pro.salary);
   post(s, `hire:${pro.id}`, -signOn, 'salaries', `Contratação ${pro.name}`);
   s.professionals = s.professionals.filter((x) => x !== pro);
   s.player.staff.push({ ...pro, hiredWeek: s.week });

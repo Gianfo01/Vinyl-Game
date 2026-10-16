@@ -35,6 +35,7 @@ import type { Act, AgendaSlot, GameState } from '../sim/types';
 import { fmtL, money, playerActs, staffSkill } from '../sim/util';
 import { rng19 } from '../sim/rng19';
 import { cashLock31, lockOf31 } from '../sim/r31/lock';
+import { rescind31, rescindQuote31 } from '../sim/r31/rescind31';
 
 // ---------------------------------------------------------------- tipos
 
@@ -455,6 +456,14 @@ registerAction20({ id: 'contract.royalty', label: N('Subir royalties (+2 p.p.)',
   unlock: () => N('Não sobe mais: 60% é o teto. Negocie outros termos na renovação.', 'It goes no higher: 60% is the cap. Negotiate other terms at renewal.'),
   effect: (s, c) => fmtL(N('Royalty {a}% → {b}% em todas as vendas futuras; confiança sobe.', 'Royalty {a}% → {b}% on all future sales; trust rises.'), { a: Math.round(playerContract(s, s.acts[c.act])!.royalty * 100), b: Math.round(Math.min(0.6, playerContract(s, s.acts[c.act])!.royalty + 0.02) * 100) }),
   run: (s, c) => (raiseRoyalty(s, c.act, 0.02) ? { ok: true, text: fmtL(N('Royalties de {a} renegociados.', '{a} royalties renegotiated.'), { a: s.acts[c.act].name }), nav: { sub: 'career', act: c.act } } : { ok: false, text: N('Sem contrato com você.', 'No contract with you.') }) });
+// R31 · onda 2 (V): rescindir por iniciativa sua — a mesma regra (sim/r31/rescind31) do menu e da cena cara a cara
+registerAction20({ id: 'contract.rescind', label: N('Rescindir contrato', 'Terminate contract'), cat: 'career', icon: 'broken-heart', target: 'act', form: 'confirm', mutates: true,
+  visible: (s, c) => !!playerContract(s, s.acts[c.act]),
+  block: (s, c) => rescindQuote31(s, c.act).lock?.why ?? null,
+  unlock: (s, c) => rescindQuote31(s, c.act).lock?.unlock ?? null,
+  cost: (s, c) => rescindQuote31(s, c.act).fee,
+  effect: () => N('O artista deixa o selo hoje (multa pelo prazo que falta). Reage conforme a relação: aceita, chora, ameaça processo ou vaza para a imprensa.', 'The act leaves the label today (fee for the remaining term). Reacts according to the relationship: accepts, cries, threatens to sue or leaks to the press.'),
+  run: (s, c) => { const r = rescind31(s, c.act); return { ok: r.ok, text: r.text }; } });
 registerAction20({ id: 'contract.market', label: N('Mercado de contratos (opções, adiantamentos, licenças)', 'Contract market (options, advances, licences)'), cat: 'career', icon: 'handshake', target: 'act', form: 'nav', mutates: false,
   nav: () => ({ area: 'contracts19' }) });
 

@@ -45,6 +45,7 @@ export function goDest31(d: Dest): void {
 /** Executa a linha (a regra do dono revalida de novo na hora: o painel só leva até ela). */
 export function runQuick31(s: GameState, r: QRow31, tg: QTarget31): void {
   if (r.lock) { toast(`🔒 ${t(r.lock.why)} → ${t(r.lock.unlock)}`, 'bad'); return; }
+  if (r.def.run) { r.def.run(s, tg); return; } // R31 · V: cenas de mecânica (renovar, rescindir, formação…)
   const a = actOf31(s, tg);
   switch (r.def.id) {
     case 'q.sign': if (a) openOffer(a.id); return;
