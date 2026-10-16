@@ -48,7 +48,7 @@ if (info.renew) {
   await clear();
   await p.evaluate(async (id) => { const m = await import('/src/ui/r31/scene31.ts'); m.openScene31('renew', id, 'scene'); }, info.renew);
   await p.waitForTimeout(600);
-  await p.locator('.sc31-pt.side-them').first().click();
+  await p.locator('.mc31-pt.side-them').first().click();
   await p.locator('[data-choice31="renew"]').first().click({ trial: false }).catch(() => {});
   await shot('onda2-V-renew-decidido');
 }
