@@ -97,10 +97,14 @@ describe('r27 P2B — modo rápido intacto', () => {
     // R31 (W0-RNG, de propósito — docs/r31/DECISOES.md): o fluxo único s.rng saiu; o mundo nasce no fluxo 'world', o motor sorteia
     // em 'tick' e o playbot em 'act': caixa, acts e rng mudam; nesta semente o bot não marca turnê nos 8 meses (tours = []).
     // Antes: 1034775 / 2631883956 / 829002627 / 1362224447.
-    expect(AFTER.player.cash).toBe(178753);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3472429155);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(3703770621);
+    // R31 onda 3 (D/Y, de propósito — docs/r31/DECISOES.md e docs/r31/dy.md): sem a penalização pós-1990 do jogador, pressão
+    // de mercado igual para todos, previsão pela conta real, demanda e paradas por país (fama local, língua, leis no país,
+    // dominó, teto de fama fora de casa, mercado reservado) e transporte por trecho: caixa, acts e rng mudam e o bot passa a
+    // marcar turnê nesses 8 meses. Antes: 178753 / 1382068899 / 3472429155 / 3703770621.
+    expect(AFTER.player.cash).toBe(398956);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3161478615);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1392358860);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(3564147059);
   });
   it('nada de estado P2B criado sem o jogador', () => {
     expect(x4(AFTER).road27).toBeUndefined();

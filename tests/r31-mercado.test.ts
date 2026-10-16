@@ -57,9 +57,14 @@ describe('R31 D · pressão de mercado no lugar da penalização pós-1990', () 
   it('a previsão não sorteia nem grava nada (explorar não muda o mundo) e segue a pressão do mercado', () => {
     const s = game('r31d-f', 2008);
     const a = myAct(s);
-    const before = JSON.stringify(s), rng0 = rngSnapshot19(s);
+    const core = () => JSON.stringify([s.acts, s.releases, s.player, s.persons, s.labels, s.stats, s.week]);
+    const core0 = core(), rng0 = rngSnapshot19(s);
     const f = forecastUnits(s, a, 'single', 70, [], ['na', 'eu']);
+    expect(core()).toBe(core0);
+    // 1ª leitura pode completar estados vazios de sistemas (campos padrão criados por quem lê); daí em diante, nada muda
+    const before = JSON.stringify(s);
     forecastUnits(s, a, 'lp', 80, [], ['na', 'eu', 'br']);
+    expect(forecastUnits(s, a, 'single', 70, [], ['na', 'eu']).mid).toBe(f.mid);
     expect(JSON.stringify(s)).toBe(before);
     expect(rngSnapshot19(s)).toBe(rng0);
     expect(f.mid).toBeGreaterThan(0);

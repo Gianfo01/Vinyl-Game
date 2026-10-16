@@ -213,4 +213,5 @@ describe('r27 M3 — operações jogáveis do Submundo', () => {
 // Antes: "10:0.70/0.34:10331957", "10:0.78/0.34:10332304".
 // R31 (W0-RNG, docs/r31/DECISOES.md): mundo gerado no fluxo 'world' e ações no fluxo 'act' (o fluxo único s.rng saiu):
 // alvo e sorte mudam — re-medido. Antes: "11:0.70/0.34:10331252", "10:0.70/0.34:10331434".
-const QUICK_SNAPSHOT: string[] = ["10:0.70/0.28:10331967", "01:0.70/0.34:9926500"];
+// R31 onda 3 (D/Y: demanda e fama por país mudam o mundo do 1º mês): o alvo do 1º caso muda — re-medido. Antes: "10:0.70/0.28:10331967".
+const QUICK_SNAPSHOT: string[] = ["11:0.70/0.28:10331967", "01:0.70/0.34:9926500"];

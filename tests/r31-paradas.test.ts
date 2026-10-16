@@ -17,7 +17,8 @@ import type { Act, GameState, Release } from '../src/sim/types';
 
 const NC = COUNTRY_INFO.length;
 const IX = (a3: string) => COUNTRY_INFO.findIndex((c) => c.a3 === a3);
-const game = (seed: string, y: number): GameState => createGame(defaultConfig(seed, { startYear: y, scenario: 'established' }));
+// a demanda por país é dividida pela média da semana (s.stats.lastKn31); aqui a média fica neutra para ler o fator cru
+const game = (seed: string, y: number): GameState => { const s = createGame(defaultConfig(seed, { startYear: y, scenario: 'established' })); s.stats.lastKn31 = 1; return s; };
 const actFrom = (s: GameState, a3: string, minFame = 0): Act | undefined =>
   Object.values(s.acts).filter((a) => countryOfCity(a.city) === a3 && a.fame >= minFame).sort((x, y) => y.fame - x.fame || (x.id < y.id ? -1 : 1))[0];
 const rel = (s: GameState, a: Act, id = 'tsty'): Release => ({
@@ -43,6 +44,16 @@ describe('R31 Y · fama local vende', () => {
     }
     delete f16(s).d[a.id];
     expect(Y31.demand!(s, r, a)).toBeCloseTo(1, 6); // sem desvio local: demanda total como antes
+  });
+
+  it('a demanda por país redistribui: a média da semana (pelo apelo) fica em 1', () => {
+    const s = game('r31y-n', 1985);
+    advanceMonth(s);
+    const live = Object.values(s.releases).filter((r) => r.live && s.acts[r.actId] && r.appeal > 0);
+    let num = 0, den = 0;
+    for (const r of live) { num += r.appeal * Y31.demand!(s, r, s.acts[r.actId]); den += r.appeal; }
+    expect(num / den).toBeGreaterThan(0.97);
+    expect(num / den).toBeLessThan(1.03);
   });
 
   it('desligado, nada muda na repartição nem na demanda', () => {
