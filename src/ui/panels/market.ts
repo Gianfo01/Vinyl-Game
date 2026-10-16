@@ -14,6 +14,7 @@ import { staffStars18 } from '../ab18stars';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
 import { a29 } from '../art29ui'; // r29 (arte)
 import { labelMarkImg28 } from '../pixel/extras28';
+import { sceneHook31, viaScene31 } from '../r31/scene31reg';
 
 export function rivals(s: GameState): HTMLElement {
   const labels = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.revenueLastYear - a.revenueLastYear);
@@ -47,7 +48,8 @@ export function professionals(s: GameState): HTMLElement {
           h('td', { title: t(role?.desc) }, t(role?.name), h('div', null, crewProfileCell(s, p))),
           h('td', null, p.skill, ' ', staffStars18(s, p)),
           h('td', null, $(p.salary)),
-          h('td', null, h('button', { class: 'btn small', disabled: s.player.staff.length >= cap, onclick: () => { const e = hireStaff(s, p.id); if (e) toast(t(e), 'bad'); rerender(); } }, t(S.hire))),
+          h('td', null, h('button', { class: 'btn small', disabled: s.player.staff.length >= cap, title: s.player.staff.length >= cap ? t(l('Sede sem vagas para equipe. Amplie a sede.', 'No staff room in the HQ. Upgrade it.')) : undefined, onclick: () => viaScene31('hire', p.id, () => { const e = hireStaff(s, p.id); if (e) toast(t(e), 'bad'); rerender(); }) }, t(S.hire)), // R31 · V: entrevista em cena (ou direto, conforme a preferência)
+          ' ', h('button', { class: 'btn small ghost', title: t(l('Entrevista em cena', 'Interview scene')), 'aria-label': t(l('Entrevista em cena: {n}', 'Interview scene: {n}'), { n: p.name }), onclick: () => sceneHook31.open?.('hire', p.id, 'scene') }, '🎬')),
         );
       })),
     ),

@@ -51,6 +51,10 @@ export interface Prefs {
   noTut19?: boolean;
   /** r20 G4: ações fixadas no cabeçalho do artista (ids do registro ui/actions20.ts) */
   pins20?: string[];
+  /** r31 (V): cenas de mecânica — rótulos curtos nos balões ('auto' = só no começo da partida), mostrar tudo que é clicável e cenas já vistas (a 1ª visita ensina) */
+  sceneLabels31?: 'auto' | 'on' | 'off';
+  sceneHot31?: boolean;
+  sceneSeen31?: string[];
   tut18?: { tours: Record<string, number>; tips: Record<string, number>; visits: Record<string, number>; done: Record<string, number>; noTours?: boolean; noTips?: boolean };
 }
 

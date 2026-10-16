@@ -37,6 +37,7 @@ import { restartTutorial, tutorialCard, tutorialTick28 } from './tutorial';
 import { afterRender18, helpButton18, paletteCmds18, resetTut18, settings18 } from './tutorial18'; // r18 tutorial18
 import { paletteCmds20 } from './sys/actmenu20'; // r20 G4: ações do artista no Ctrl+K (registro único)
 import { paletteBase31, paletteCmds31 } from './r31/quick31'; // R31 (O): busca que abre a ação, favoritos e metas
+import './r31/scene31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
 import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)
 import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
 import { ic, registerIconRenderer, registerPortrait, tabs } from './vis';

@@ -8,7 +8,16 @@ import { registerQuick31 } from './quick31core';
 import { sceneLabel31, sceneModel31, sceneTargets31, SCENE_KINDS31, type SceneKind31 } from './scene31core';
 
 /** Preenchido pela interface: abre a cena (ou o modo de 2 cliques, conforme a preferência). `force` = sempre a cena. */
-export const sceneHook31: { open?: (kind: SceneKind31, id: string, force?: 'scene' | 'quick') => void } = {};
+export const sceneHook31: {
+  open?: (kind: SceneKind31, id: string, force?: 'scene' | 'quick') => void;
+  or?: (kind: SceneKind31, id: string, direct?: () => void) => void;
+} = {};
+
+/** Para os botões de sempre (formulários): passa pela cena quando a preferência pede; senão o caminho direto
+ *  (`direct`, a velocidade da versão 30) ou, sem ele, o painel de 2 cliques. Sem interface carregada: direto. */
+export function viaScene31(kind: SceneKind31, id: string, direct?: () => void): void {
+  if (sceneHook31.or) sceneHook31.or(kind, id, direct); else direct?.();
+}
 
 // ---------------------------------------------------------------- editor: "Abrir cena: …" (área Cenas)
 for (const kind of SCENE_KINDS31) {
