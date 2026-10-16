@@ -12,6 +12,7 @@ import type { RealArtist } from './realtypes';
 import { HITS31_SRC } from './base31hits';
 import { CHART31_SRC, hitSources31, type HitSrc31 } from './hits31types';
 import { homage31 } from './homage31';
+import { REALNAMES31 } from './realnames31';
 
 export type CurTipo31 = 'pessoa' | 'banda' | 'personagem' | 'referencia';
 export type CurArea31 = 'artista' | 'tv' | 'reliquia' | 'ficcao' | 'familia' | 'marca';
@@ -222,7 +223,7 @@ function fromHit(h: HitSrc31): Cur31 {
     ...(h.ca ? ['cidade de origem (o jogo usa a cidade mais próxima)'] : []), ...(h.v ? [] : [`hit ("${h.h[0]}", ${h.h[1]}, ${CHART31_SRC[h.h[2]].split(' (')[0]} nº ${h.h[3]}): conferir no arquivo da parada`])];
   return {
     id: hitId31(h.n), nome: h.n, apelidos: h.nk ?? [], tipo: solo ? 'pessoa' : 'banda', area: 'artista', anos: [solo && h.b ? h.b : h.d, h.e],
-    cidade: h.c, lingua: LANG_HIT31[h.cn] ?? 'en', fontes: hitSources31(h), confirmar, ref: `base31hits:${h.n}`, sub: homage31(h.n),
+    cidade: h.c, lingua: LANG_HIT31[h.cn] ?? 'en', fontes: hitSources31(h), confirmar, ref: `base31hits:${h.n}`, sub: REALNAMES31[`hit:${hitId31(h.n)}`]?.substituto ?? homage31(h.n),
   };
 }
 /** Fichas da base de sucessos (espaço 'hit:<id>' no registro de nomes reais). */

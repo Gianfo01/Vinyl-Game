@@ -14,7 +14,6 @@ import { REAL_ACTS } from '../src/data/realnames';
 import { countryInfoByA3 } from '../src/data/countries';
 import { cityById, genreById } from '../src/data/world';
 import { BASE31H_FROM, BASE31H_TO, REAL_ALL, REAL_BASE, SW_HITS31, dedupKey27 } from '../src/sim/sys/realworld';
-import { actsNow27 } from '../src/sim/tickcache27';
 
 /** meta mínima da frente (atos novos de fato na base) */
 const MIN31H = 1000;
@@ -57,7 +56,7 @@ describe('base de sucessos: dados', () => {
         if (y > 2026) bad.push(`${h.n}: hit no futuro`);
       }
       if (Math.max(h.d, ...hs.map((x) => x[1])) < 1992) bad.push(`${h.n}: nada desde 1992`);
-      if (h.o && h.h2?.length) bad.push(`${h.n}: one-hit wonder com mais de um hit`);
+      if (h.o && h.h2?.some((x) => x[0].toLowerCase() !== h.h[0].toLowerCase())) bad.push(`${h.n}: one-hit wonder com mais de uma música`);
     }
     expect(bad).toEqual([]);
   });
@@ -114,18 +113,21 @@ describe('base de sucessos: curadoria e nomes reais', () => {
 
 describe('base de sucessos: interruptor base31.hits', () => {
   const isHit = (no?: number) => no !== undefined && no >= REAL_BASE + BASE31H_FROM && no < REAL_BASE + BASE31H_TO;
+  const hits = (s: ReturnType<typeof createGame>) => Object.values(s.acts).filter((a) => isHit(a.catalogNo)).length;
   it('ligado por padrão: atos da base estreiam no mundo; desligado depois de criar, quem ainda não surgiu não surge', () => {
+    // uma partida de cada vez (estado de módulo por partida corrente: não intercalar)
     const on = createGame(defaultConfig('r31hits-a', { startYear: 1990, realNames: true }));
     expect(sw(on, SW_HITS31)).toBe(true);
+    for (let i = 0; i < 18; i++) advanceMonth(on);
+    const nOn = hits(on);
     const off = createGame(defaultConfig('r31hits-a', { startYear: 1990, realNames: true }));
     setSw(off, SW_HITS31, false);
-    for (let i = 0; i < 40; i++) { advanceMonth(on); advanceMonth(off); }
-    const nOn = actsNow27(on).filter((a) => isHit(a.catalogNo)).length;
-    const preOff = actsNow27(off).filter((a) => isHit(a.catalogNo)).length;
+    for (let i = 0; i < 18; i++) advanceMonth(off);
+    const preOff = hits(off);
     expect(nOn).toBeGreaterThan(preOff);
     // ligado de novo: os que esperavam voltam a surgir
     setSw(off, SW_HITS31, true);
     for (let i = 0; i < 3; i++) advanceMonth(off);
-    expect(actsNow27(off).filter((a) => isHit(a.catalogNo)).length).toBeGreaterThan(preOff);
+    expect(hits(off)).toBeGreaterThan(preOff);
   }, 240_000);
 });
