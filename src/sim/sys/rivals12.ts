@@ -30,6 +30,7 @@ import { standingOf, standingScore } from './standing9';
 import { skipBlockedLog } from './gate14';
 import { allReleases17 } from '../relidx17';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { shiftOpinion } from '../opinion';
 
 export type ContestKind = 'bid' | 'auction' | 'date' | 'producer' | 'market' | 'catalog' | 'fest' | 'deal' | 'deal_end' | 'info';
 export type Screen = 'market' | 'releases' | 'studio' | 'world' | 'catalog' | 'shows' | 'hq';
@@ -106,7 +107,7 @@ function add(s: GameState, c: Omit<Contest, 'id' | 'w'>, tone: 'bad' | 'event' |
 /** Tensão com o parceiro de distribuição (e relação do líder com você). */
 export function tension(s: GameState, lbId: string, d: number): void {
   const ld = leaderOf(s, lbId);
-  if (ld) ld.rel.player = clamp((ld.rel.player ?? 0) - d / 4, -100, 100);
+  if (ld) shiftOpinion(s, `l:${ld.id}`, -d / 4);
   const deal = dealWith(s, lbId);
   if (!deal) return;
   deal.ten = clamp(deal.ten + d, 0, 100);
@@ -538,7 +539,7 @@ export function respond(s: GameState, id: string, opt: string): L | null {
       if (opt === 'accept') {
         d.st = 'on'; d.from = s.week; d.until = s.week + 104;
         const ld = leaderOf(s, d.lb);
-        if (ld) ld.rel.player = clamp((ld.rel.player ?? 0) + 10, -100, 100);
+        if (ld) shiftOpinion(s, `l:${ld.id}`, 10, { why: l('fechamos parceria de distribuição.', 'we closed a distribution partnership.') });
       } else d.st = 'off';
       break;
     }

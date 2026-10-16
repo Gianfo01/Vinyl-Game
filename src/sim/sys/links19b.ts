@@ -50,6 +50,7 @@ import { REP_NOTES19 } from './report18';
 import { hbMaxQ18, sess18 } from './session18';
 import { spawnProceduralAct } from '../worldgen';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { addStaffLoyalty, staffLoyalty } from '../opinion';
 
 // ---------------------------------------------------------------- estado
 
@@ -432,8 +433,9 @@ function monthCampus(s: GameState): void {
   if (v) for (const m of s.player.staff) {
     const cr = careerAt(s, m.id), tgt = clamp(55 + v * 4, 30, 85);
     if (!cr) continue;
-    if (v > 0 && cr.loyalty < tgt) cr.loyalty = clamp(cr.loyalty + 0.5, 0, 100);
-    else if (v < 0 && cr.loyalty > tgt) cr.loyalty = clamp(cr.loyalty - 0.5, 0, 100);
+    const loy = staffLoyalty(s, m.id);
+    if (v > 0 && loy < tgt) addStaffLoyalty(s, m.id, 0.5);
+    else if (v < 0 && loy > tgt) addStaffLoyalty(s, m.id, -0.5);
   }
   st.cv = v;
   // investimento entregue → fato (o ouvinte destrava o bônus)
@@ -459,7 +461,7 @@ function monthCampus(s: GameState): void {
 onFact('campus_invest', (s, f) => {
   const k = f.tags.includes('studio') ? 'campus19:studio' : 'campus19:scout';
   dec18(s).unl[k] = s.week;
-  for (const m of s.player.staff) { const cr = careerAt(s, m.id); if (cr) cr.loyalty = clamp(cr.loyalty + 3, 0, 100); }
+  for (const m of s.player.staff) if (careerAt(s, m.id)) addStaffLoyalty(s, m.id, 3, { why: l('o campus ganhou investimento.', 'the campus got investment.') });
 }, 'links19b:campus');
 registerExplain('l19b.campus', (s) => {
   const c = campusScore19(s);

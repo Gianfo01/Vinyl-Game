@@ -25,6 +25,7 @@ import { life, playerAct, playerPerson } from './life';
 import { queueScene, type PlaceKind } from './scenes/state';
 import { ownerOf } from './people/owner';
 import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { rel0 } from '../opinion';
 
 /** Centavos → texto nos dois idiomas. */
 export const usd17 = (c: number): L => l(`$${formatMoney(Math.round(c), 'pt-BR')}`, `$${formatMoney(Math.round(c), 'en-US')}`);
@@ -452,7 +453,7 @@ registerSimHook('month', 'scene17', (s) => {
     if (!a || a.members.length < 2 || a.status === 'retired') continue;
     const ps = a.members.map((x) => s.persons[x]).filter((p) => p?.alive);
     const sore = ps.reduce((m, p) => Math.max(m, p.resentment), 0);
-    const feud = ps.some((p) => ps.some((q) => q !== p && (p.rel[q.id] ?? 0) < -30));
+    const feud = ps.some((p) => ps.some((q) => q !== p && (rel0(s, p.id, q.id)) < -30));
     if ((sore > 45 || feud) && r.chance(0.25)) { queue17(s, 'backstage17', ctx17(s, { act: id, pid: ps.slice().sort((x, y) => y.resentment - x.resentment)[0]?.id })); break; }
   }
   // reunião do conselho: trimestral, quando há algo para discutir

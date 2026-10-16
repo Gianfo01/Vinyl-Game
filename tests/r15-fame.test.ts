@@ -1,5 +1,6 @@
 // Rodada 15: fama por pessoa/ato com degraus e efeitos, histórico, e visibilidade (knownLevel).
 import { describe, expect, it } from 'vitest';
+import { fameHere31 } from '../src/sim/know';
 import { defaultConfig } from '../src/sim/bot';
 import { estimate } from '../src/sim/scouting';
 import { advanceMonth } from '../src/sim/tick';
@@ -40,8 +41,9 @@ describe('fama 15', () => {
     expect(canSee(s, big.id, 'life')).toBe(true);
     expect(canSee(s, big.id, 'attrs')).toBe(false);
     expect(canSee(s, big.id, 'potential')).toBe(false);
-    expect(fameText(s, big.id)).toBe('78');
-    expect(estimate(s, big.id, 'fame')?.mid).toBe(78);
+    // r31 F #4: a fama mostrada é a vista do país do jogador (fameHere31), não o número global
+    expect(fameText(s, big.id)).toBe(String(Math.round(fameHere31(s, big.id))));
+    expect(estimate(s, big.id, 'fame')?.mid).toBe(Math.round(fameHere31(s, big.id)));
     expect(canSee(s, small.id, 'bio')).toBe(false);
     expect(fameText(s, small.id)).toBe('?');
     s.knowledge[small.id] = { actId: small.id, degree: 3, stage: 'investigating', bias: 0, updatedWeek: s.week, source: 'watch' };

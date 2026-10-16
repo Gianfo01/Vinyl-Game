@@ -11,7 +11,7 @@ import { CONTRACT_MODELS } from '../data/rules';
 import { hqCaps } from './branches';
 import { perk } from './perks';
 import { offerMods } from './ext4';
-import { freeCash20 } from './oblig20';
+import { cashWhy20, freeCash20 } from './oblig20';
 import { armPromises28, promiseMet28, PROM28_NAME, settlePromise28 } from './sys/promises28';
 import { rivalContest28, usd28 } from './sys/rivalsense28';
 export { registerOfferMod } from './ext4';
@@ -36,6 +36,7 @@ import { renewalAdj, rightsScore, scopeTerritories, signingTrust } from './right
 import { advFactor29, isSide29, royTerms29 } from './terms29';
 import type { ContractModel } from '../data/rules';
 import { rng19 } from './rng19';
+import { joinDelegated31 } from './deleg31';
 
 /** R29 (contratos+): ganchos dos modelos novos (empresariamento, produção, joint venture) — sys/contracts29 registra.
  *  `accept` assume o aceite inteiro (empresariamento: o ato não muda de selo); `signed` completa um contrato normal
@@ -325,6 +326,18 @@ export function withdrawCounter(s: GameState, offerId: string): void {
   s.offers = s.offers.filter((x) => x.id !== offerId);
 }
 
+/** Por que a contraproposta não pode ser aceita agora (null = pode). Só leitura — o mesmo filtro de `acceptCounter`. */
+export function counterWhy(s: GameState, offerId: string): L | null {
+  const o = s.offers.find((x) => x.id === offerId && x.status === 'counter');
+  if (!o) return l('A contraproposta não está mais de pé.', 'The counter-offer is no longer on the table.');
+  const act = s.acts[o.actId];
+  if (!act || taken29(act, o.model)) return l('Tarde demais: outro selo fechou antes.', 'Too late: another label closed first.');
+  const el = offerEligible29(s, act, o.model);
+  if (!el.ok) return el.why ?? l('O artista não pode assinar agora.', 'The act cannot sign right now.');
+  if (freeCash20(s) < o.advance) return cashWhy20(s, o.advance, l('Caixa insuficiente para o adiantamento.', 'Not enough cash for the advance.'));
+  return null;
+}
+
 export function acceptCounter(s: GameState, offerId: string): boolean {
   const o = s.offers.find((x) => x.id === offerId && x.status === 'counter');
   if (!o) return false;
@@ -385,7 +398,7 @@ export function acceptOffer(s: GameState, act: Act, o: Offer): boolean {
   post(s, `advance:${act.id}`, -o.advance, 'advances', `Adiantamento ${act.name}`);
   const k = s.knowledge[act.id];
   if (k) k.stage = 'negotiation';
-  s.delegated[act.id] = s.delegated[act.id] ?? true;
+  s.delegated[act.id] = s.delegated[act.id] ?? joinDelegated31(s, act); // W2-REV: "Agenda do elenco: Eu decido" vale para quem assina depois
   special29().signed?.(s, act, o, c); // R29: produção e joint venture completam o contrato normal (sys/contracts29)
   s.player.stats.signed += 1;
   notify(s, fmtL(l('{act} assinou com você!', '{act} signed with you!'), { act: act.name }), 'good');
@@ -414,8 +427,9 @@ export function signWithRival(s: GameState, act: Act, labelId: string, r: Rng, f
   if (k && k.stage !== 'signal') k.stage = 'monitoring';
 }
 
-/** Libera o ato do contrato (vencimento, rescisão ou saída negociada). */
-export function endContract(s: GameState, act: Act, reason: 'expired' | 'terminated' | 'left'): void {
+/** Libera o ato do contrato (vencimento, rescisão ou saída negociada). `quiet`: quem chama escreve o próprio aviso e a
+ *  entrada do diário (W2-REV: a rescisão do jogador gerava duas entradas). */
+export function endContract(s: GameState, act: Act, reason: 'expired' | 'terminated' | 'left', o: { quiet?: boolean } = {}): void {
   const c = act.contractId ? s.contracts[act.contractId] : undefined;
   if (c) c.endWeek = Math.min(c.endWeek, s.week);
   if (act.owner && act.owner !== 'player') {
@@ -428,8 +442,10 @@ export function endContract(s: GameState, act: Act, reason: 'expired' | 'termina
   if (wasPlayer && !act.playerBand) {
     delete s.agenda[act.id];
     const why = { expired: l('fim do contrato', 'contract ended'), terminated: l('rescisão', 'termination'), left: l('saída por insatisfação', 'left unhappy') }[reason];
-    notify(s, fmtL(l('{act} deixou o selo ({reason}).', '{act} left the label ({reason}).'), { act: act.name, reason: why }), reason === 'expired' ? 'info' : 'bad');
-    remember(s, 'left', fmtL(l('{act} saiu do selo: {reason}.', '{act} left the label: {reason}.'), { act: act.name, reason: why }), { actId: act.id, important: true });
+    if (!o.quiet) {
+      notify(s, fmtL(l('{act} deixou o selo ({reason}).', '{act} left the label ({reason}).'), { act: act.name, reason: why }), reason === 'expired' ? 'info' : 'bad');
+      remember(s, 'left', fmtL(l('{act} saiu do selo: {reason}.', '{act} left the label: {reason}.'), { act: act.name, reason: why }), { actId: act.id, important: true });
+    }
     if (reason === 'left') s.player.stats.leftUnhappy += 1;
   }
 }

@@ -24,6 +24,7 @@ import { ownerOf } from '../people/owner';
 import { P } from '../people/state';
 import { OFF_AUD27 } from './off';
 import { purse } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { addStaffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
 
@@ -145,7 +146,7 @@ export function bringKidIn27(s: GameState, i: number): L | null {
   m.co = s.year; x.path = 'label';
   kx.bond = clamp(kx.bond + 8, 0, 100);
   k.aptitude = clamp(k.aptitude + 3, 0, 99);
-  for (const sf of s.player.staff) { const c = P(s).career[sf.id]; if (c) c.loyalty = clamp(c.loyalty + (sf.skill > k.aptitude ? -3 : 1), 0, 100); }
+  for (const sf of s.player.staff) if (P(s).career[sf.id]) addStaffLoyalty(s, sf.id, sf.skill > k.aptitude ? -3 : 1);
   hist(s, i, N('Começou a trabalhar no selo da família.', 'Started working at the family label.'));
   return null;
 }

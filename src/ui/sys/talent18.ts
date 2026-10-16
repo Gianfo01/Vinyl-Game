@@ -12,7 +12,7 @@ import { CAMP_SIZE18, campCost18, campModel18, camps18, holdCamp18, pitchable18,
 import { CH18, chCost18, chNoise18, chNow18, demoMedium18, dig18, disc18, showsNow18, watchShow18 } from '../../sim/sys/discover18';
 import { playerPerson } from '../../sim/sys/life';
 import { actOfPerson17 } from '../../sim/sys/love17';
-import { ORIGIN18, WING18, authFee18, authenticate18, buildWing18, legacy18, rel18, shown18, tourExhibit18, wingYield18 } from '../../sim/sys/relics18';
+import { ORIGIN18, WING18, authFee18, authenticate18, buildWing18, legacy18, meta18, rel18, shown18, tourExhibit18, wingYield18 } from '../../sim/sys/relics18';
 import { RELIC_KIND, RELIC_ST, relics, toggleExhibit } from '../../sim/sys/relics9';
 import { relicImg28 } from '../pixel/relic28'; // r28 (arte)
 import { story29 } from '../../sim/sys/relics29';
@@ -28,6 +28,7 @@ import { why18 } from '../explain18';
 import { registerArea } from '../registry';
 import { setTab, tabs } from '../vis';
 import { store } from '../store';
+import { fameText } from '../../sim/sys/fame15';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null | string, ok?: L) => { if (r) toast(T(r), 'info'); else if (ok) toast(T(ok), 'good'); rerender(); };
@@ -56,14 +57,16 @@ function discTab(s: GameState): HTMLElement {
         muted(c.desc), muted(fmtLs(l('Você aprende: {w}', 'You learn: {w}'), { w: t(c.sees) })),
         btn(l('Ir atrás', 'Go looking'), () => { const r = dig18(s, c.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); })))),
     section(t(l('Ir a um show e ver quem abre', 'Go to a show and watch the opener')),
-      ...(showsNow18(s).length ? showsNow18(s).map((a) => row(actLink(s, a.id), pill(`${Math.round(a.fame)}★`), btn(l('Ir ao show (1●)', 'Go to the show (1●)'), () => { const r = watchShow18(s, a.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); }))) : [muted(l('Nenhum cabeça de cartaz no seu mercado agora.', 'No headliners in your market right now.'))])),
+      ...(showsNow18(s).length ? showsNow18(s).map((a) => row(actLink(s, a.id), pill(`${fameText(s, a.id)}★`), // r31 F: fama pela regra única
+ btn(l('Ir ao show (1●)', 'Go to the show (1●)'), () => { const r = watchShow18(s, a.id); toast(t(r.text), r.ok ? 'good' : 'info'); rerender(); }))) : [muted(l('Nenhum cabeça de cartaz no seu mercado agora.', 'No headliners in your market right now.'))])),
     hot.length ? section(t(l('Disputas com rivais', 'Bidding against rivals')), ...hot.map(([id, x]) => row(actLink(s, id), pill(s.labels[x.lb]?.name ?? '?', 'bad'), pill(fmtLs(l('{w} sem.', '{w} wk'), { w: Math.max(0, x.w - s.week) }), 'warn'), muted(l('Faça a proposta na ficha do artista antes do prazo.', 'Make the offer on the artist page before the deadline.'))))) : null,
     section(t(l('Seus achados', 'Your finds')),
       leads.length ? h('table', { class: 'table small' }, h('tr', null, ...[l('Artista', 'Artist'), l('Canal', 'Channel'), l('Agora / potencial', 'Now / potential'), l('Situação', 'Status'), l('Nota', 'Note')].map((x) => h('th', null, t(x)))),
         ...leads.map((x) => { const a = s.acts[x.a]; return a ? h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, t(chName(x.ch))), h('td', { title: t(estTxt18(s, a)) }, abilityCell18(s, a) ?? '?'),
           h('td', null, a.owner === 'player' ? pill(t(l('seu', 'yours')), 'good') : a.owner ? pill(s.labels[a.owner]?.name ?? '?', 'bad') : st.hot[a.id] ? pill(t(l('disputado', 'contested')), 'warn') : pill(t(l('livre', 'free')))), h('td', { class: 'muted' }, t(x.note))) : null; }))
         : muted(l('Ninguém ainda. Use um canal acima, vá a um show ou ouça as demos da Caixa.', 'Nobody yet. Use a channel above, go to a show or listen to the Inbox demos.'))),
-    gone.length ? section(t(l('Os que escaparam', 'The ones that got away')), ...gone.map((a) => row(actLink(s, a.id), pill(`${Math.round(a.fame)}★`), pill(s.labels[a.owner ?? '']?.name ?? '?'), st.passed[a.id] !== undefined ? pill(t(l('você recusou a demo', 'you passed on the demo')), 'bad') : null))) : null);
+    gone.length ? section(t(l('Os que escaparam', 'The ones that got away')), ...gone.map((a) => row(actLink(s, a.id), pill(`${fameText(s, a.id)}★`), // r31 F: fama pela regra única
+ pill(s.labels[a.owner ?? '']?.name ?? '?'), st.passed[a.id] !== undefined ? pill(t(l('você recusou a demo', 'you passed on the demo')), 'bad') : null))) : null);
 }
 function fmtLs(x: L, p: Record<string, string | number>): string { return t(x).replace(/\{(\w+)\}/g, (_, k) => String(p[k] ?? '')); }
 
@@ -185,13 +188,13 @@ registerArea({ id: 'talent18', label: l('Talentos e formação', 'Talent & train
 export function relics18Tab(s: GameState): HTMLElement {
   const st = rel18(s);
   const list = relics(s).list.filter((x) => x.st !== 'lost');
-  const born = list.filter((x) => st.m[x.id] && !['base', 'real'].includes(st.m[x.id].o)).sort((a, b) => b.y - a.y); // R29: todas, com filtros e páginas
+  const born = list.filter((x) => { const o = meta18(x)?.o; return !!o && !['base', 'real'].includes(o); }).sort((a, b) => b.y - a.y); // R29: todas, com filtros e páginas
   const mine = list.filter((x) => x.st === 'player');
   const auc = list.filter((x) => x.st === 'auction' && !x.rr);
   const w = WING18[st.wing], nx = WING18[st.wing + 1];
   const y = wingYield18(s);
   const relRow = (x: typeof list[number]) => {
-    const m = st.m[x.id];
+    const m = meta18(x);
     const lg = legacy18(s, x);
     return card(row(relicImg28(x.k, x.n.en, x.y, x.rr ?? x.id, 48, t(RELIC_KIND[x.k])), h('b', null, t(x.n)), pill(t(RELIC_KIND[x.k])), pill(String(x.y)), m && m.o !== 'real' ? pill(t(ORIGIN18[m.o] ?? ORIGIN18.base)) : null, pill(t(RELIC_ST[x.st])),
       why18(s, 'relic.value', { id: x.id }, pill($(money(s, x.v)), 'good')), pill(`×${lg.m.toFixed(2)}`), m?.auth ? pill(t(l('autenticada', 'authenticated')), 'good') : null, x.a ? actLink(s, x.a) : null),

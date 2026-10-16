@@ -224,6 +224,18 @@ function build(s: GameState): KnownAct27[] {
   return res;
 }
 
+/** r31 (F, #1/#2): os atos que a sua empresa conhece (o diretório só lista estes; obscuro sem laço não aparece). */
+export function knownActIds31(s: GameState): Set<string> {
+  const list = knownArtists27(s);
+  const c = KIDS.get(list);
+  if (c) return c;
+  const ids = new Set(list.map((k) => k.id));
+  for (const a of Object.values(s.acts)) if (a.owner === 'player' || a.playerBand) ids.add(a.id);
+  KIDS.set(list, ids);
+  return ids;
+}
+const KIDS = new WeakMap<object, Set<string>>();
+
 /** Contagem por motivo (para os números do topo e os filtros). */
 export function countWhy27(list: KnownAct27[]): Record<Why27, number> {
   const out = Object.fromEntries(Object.keys(WHY27).map((k) => [k, 0])) as Record<Why27, number>;

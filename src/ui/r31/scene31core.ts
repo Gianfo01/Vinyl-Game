@@ -20,12 +20,13 @@
 //   decideScene31(s, 'renew', { id }, 'renew')   // executa (mesmo resultado do formulário)
 //   sceneMode31(s, 'renew', { id }, 'key')       // 'scene' ou 'quick' (preferência flow27 + importância)
 
+import { formatMoney } from '../../core/money';
 import { l, type L } from '../../data/world';
 import { staffRoleById } from '../../data/rules';
 import { defaultOffer, evaluateOffer, offerEligible29, offerNow } from '../../sim/contracts';
 import { fireStaff, hireSignOn, hireStaffBlock, hireStaff } from '../../sim/economy';
 import { know, know3 } from '../../sim/know';
-import { loyaltyOf, opinionOf } from '../../sim/opinion';
+import { loyaltyOf, opinionOf, rel0 } from '../../sim/opinion';
 import { lock31, lockOf31, UNLOCK31, type Lock31 } from '../../sim/r31/lock';
 import { leaderOf31, myContract31, REACTION31, rescind31, rescindQuote31 } from '../../sim/r31/rescind31';
 import { rng19 } from '../../sim/rng19';
@@ -113,7 +114,8 @@ export const sceneLabel31 = (k: SceneKind31): L => REG.get(k)?.label ?? l(k, k);
 export const sceneIcon31 = (k: SceneKind31): string => REG.get(k)?.icon ?? 'eye';
 
 const N = (pt: string, en: string): L => l(pt, en);
-const usd = (_s: GameState, c: number): string => `$${Math.round(Math.max(0, c) / 100).toLocaleString('en-US')}`;
+/** Dinheiro pelo formatador do jogo; a tela mostra no idioma atual (W2-REV: antes, sempre en-US). */
+const usd = (_s: GameState, c: number): L => l(formatMoney(Math.max(0, c), 'pt-BR'), formatMoney(Math.max(0, c), 'en-US'));
 const GONE = (): Lock31 => lock31(N('Não está mais disponível.', 'No longer available.'), UNLOCK31.generic);
 
 // ---------------------------------------------------------------- humor (opinião + o quanto você conhece)
@@ -209,8 +211,10 @@ reg({
     const lk = signLock31(s, a);
     if (lk) return { ok: false, text: lk.why, tone: 'bad' };
     const o = defaultOffer(s, a);
-    const { result } = offerNow(s, rng19(s, 'act'), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined });
+    const { offer, result } = offerNow(s, rng19(s, 'act'), { ...o, promises: [...o.promises], rights: o.rights ? { ...o.rights } : undefined });
     const name = a.name;
+    // W2-REV: igual ao formulário (ficha.ts) — a proposta recusada sai das ofertas em aberto
+    if (offer && result !== 'accepted' && result !== 'thinking' && result !== 'counter' && result !== 'sniped') s.offers = s.offers.filter((x) => x.id !== offer.id);
     if (result === 'accepted') return { ok: true, text: fmtL(N('{a} aceitou na hora! Contrato assinado.', '{a} accepted on the spot! Contract signed.'), { a: name }), tone: 'good', react: mood31('warm', true, '🤝', N('Aperta a sua mão', 'Shakes your hand')) };
     if (result === 'thinking') return { ok: true, text: fmtL(N('{a} pediu um tempo para pensar.', '{a} asked for time to think.'), { a: name }), tone: 'warn', react: mood31('ok', true, '🤫', N('Cochicha com o parceiro', 'Whispers to their partner')) };
     if (result === 'counter') return { ok: true, text: fmtL(N('{a} fez uma contraproposta (veja as ofertas em aberto).', '{a} made a counter-offer (see open offers).'), { a: name }), tone: 'warn', react: mood31('cool', true, '✍️', N('Risca uma cláusula', 'Strikes out a clause')) };
@@ -445,9 +449,20 @@ export function bandChem31(s: GameState, actId: string): number {
 /** Química do candidato com a banda (relações já existentes; sem relação = neutro). */
 export function chemistry31(s: GameState, actId: string, pid: string): number {
   const a = s.acts[actId];
-  const rs = (a?.members ?? []).map((m) => s.persons[m]).filter((q): q is Person => !!q?.alive && !q.isPlayer).map((q) => q.rel[pid] ?? 0);
+  const rs = (a?.members ?? []).map((m) => s.persons[m]).filter((q): q is Person => !!q?.alive && !q.isPlayer).map((q) => rel0(s, q.id, pid));
   return rs.length ? Math.round(rs.reduce((t, v) => t + v, 0) / rs.length) : 0;
 }
+
+/** W2-REV: as teclas 1–9 só valem com a cena na janela de CIMA e o foco dentro dela (uma Ficha aberta por cima não
+ *  dispara escolhas da cena embaixo). Puro: recebe a janela da cena, as janelas abertas (em ordem) e o alvo. */
+export function sceneKeyOk31(own: { contains(n: unknown): boolean } | null, overlays: readonly unknown[], target: unknown): boolean {
+  if (!own || !overlays.length || overlays[overlays.length - 1] !== own) return false;
+  return !!target && own.contains(target);
+}
+
+/** A opção de integrante é de entrar NESTA banda? (`mo.join:<ato>` ou `mo.join:<ato>:<substituído>`; W2-REV: o prefixo
+ *  solto casava `a1` com `a1z`) */
+export const joinOf31 = (optId: string, actId: string): boolean => optId === `mo.join:${actId}` || optId.startsWith(`mo.join:${actId}:`);
 
 reg({
   kind: 'lineup', label: N('Montar formação', 'Shape the lineup'), icon: 'people', room: 'rehearsal',
@@ -459,7 +474,7 @@ reg({
     const cands = lineupCandidates31(s, a.id, 12);
     let choices: Choice31[] = [];
     for (const p of cands) {
-      for (const o of memberOptions29(s, p.id).filter((x) => x.k === 'join' && x.id.startsWith(`mo.join:${a.id}`)).slice(0, 1)) {
+      for (const o of memberOptions29(s, p.id).filter((x) => x.k === 'join' && joinOf31(x.id, a.id)).slice(0, 1)) {
         const ch = chemistry31(s, a.id, p.id);
         choices.push({ id: `${p.id}|${o.id}`, label: fmtL(N('{n}: {o}', '{n}: {o}'), { n: p.name, o: o.label }), lock: lockOf31(o.block), cost: o.cost,
           effect: fmtL(N('{n} · {r} · nível {k}{c}{q}', '{n} · {r} · level {k}{c}{q}'), { n: p.name, r: roleName29(p.role), k: skillOf(p),
@@ -483,7 +498,7 @@ reg({
   },
   decide: (s, t, choice) => {
     const [pid, opt] = choice.split('|');
-    if (!pid || !opt?.startsWith(`mo.join:${t.id}`)) return { ok: false, text: N('Escolha inválida.', 'Invalid choice.'), tone: 'bad' };
+    if (!pid || !opt || !joinOf31(opt, t.id)) return { ok: false, text: N('Escolha inválida.', 'Invalid choice.'), tone: 'bad' };
     const ch = chemistry31(s, t.id, pid);
     const r = runMemberOption29(s, pid, opt);
     return { ok: r.ok, text: r.text, tone: r.ok ? 'good' : 'bad',

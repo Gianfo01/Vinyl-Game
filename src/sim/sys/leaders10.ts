@@ -17,6 +17,7 @@ import { fmtL, notify, remember } from '../util';
 import { KIND_IMP } from './chron9';
 import { logMove, PLAYBOOKS, playbookOf, type PlaybookId } from './rivals8';
 import { FACETS, FACET_TXT, type Facet } from './soul9';
+import { opinionRaw, putOpinion } from '../opinion';
 
 export type LeaderBg = 'artist' | 'lawyer' | 'promoter' | 'heir' | 'banker' | 'engineer' | 'producer' | 'dj' | 'journalist' | 'accountant';
 export type LeaderStyle = 'autocrat' | 'mentor' | 'dealmaker' | 'visionary' | 'numbers' | 'showman' | 'consensus';
@@ -49,7 +50,7 @@ export interface Leader {
   real?: string;
   realDied?: number;
   note?: L;
-  /** relações −100..100 com outros líderes (id) e com o jogador ('player') */
+  /** relações −100..100 com outros líderes (id). A opinião sobre VOCÊ mora em opinion.ts (`l:<id>`). */
   rel: Record<string, number>;
 }
 
@@ -151,8 +152,8 @@ export function newLeader(s: GameState, r: Rng, lb: Label, o: { founder?: boolea
     pref: founder || r.chance(0.45) ? cur : r.pick(pool),
     amb: r.int(15, 95), risk: r.int(10, 95), jobs: [], st: 'free', retireAge: r.int(62, 80), bad: 0, founder, rel: {},
   };
-  L0.rel.player = r.int(-15, 25);
   st.L[id] = L0;
+  putOpinion(s, `l:${id}`, r.int(-15, 25)); // opinião inicial sobre você (opinion.ts)
   return L0;
 }
 
@@ -382,7 +383,8 @@ registerSimHook('year', 'leaders10', (s) => {
   for (const L0 of Object.values(st.L)) {
     if (L0.st !== 'active' || !L0.label) continue;
     const rv = s.rivalries[L0.label] ?? 0;
-    L0.rel.player = Math.round(clamp((L0.rel.player ?? 0) * 0.92 - rv * 0.08 + (rv < 5 ? 1 : 0), -100, 100));
+    const k = `l:${L0.id}`;
+    putOpinion(s, k, Math.round(clamp(opinionRaw(s, k) * 0.92 - rv * 0.08 + (rv < 5 ? 1 : 0), -100, 100)));
   }
   // livres velhos demais se aposentam
   for (const L0 of Object.values(st.L)) if (L0.st === 'free' && s.year - L0.born >= L0.retireAge) L0.st = 'retired';

@@ -189,7 +189,8 @@ describe('casa de shows, residência e megaevento', () => {
   });
 
   it('megaevento de 1985 convida o ato mais famoso; aceitar dá impulso ao catálogo', () => {
-    const { s, act } = withAct('live-mega', { startYear: 1985 }, 60);
+    // R31 onda 3 (D/Y): em 'live-mega' o único ato do jogador sai do elenco antes de junho no mundo novo; 'live-mega2' mede o mesmo
+    const { s, act } = withAct('live-mega2', { startYear: 1985 }, 60);
     for (let i = 0; i < 6; i++) advanceMonth(s);
     const lv = liveOf(s);
     expect(lv.mega.some((x) => x.year === 1985)).toBe(true);

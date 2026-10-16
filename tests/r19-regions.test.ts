@@ -1,5 +1,6 @@
 // Rodada 19 (Frente 6, T5): regiões, sociedade e política + 9.9 celeiros. Cada mecânica: regra, decisão com eco, fato com
 // ouvinte, porquê e (quando datada) calendário. Cadeia 3, passo 1: formando do coro vira ghostwriter (writers19).
+import { setSw } from '../src/sim/r31/switches';
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/rng';
 import { defaultConfig } from '../src/sim/bot';
@@ -117,7 +118,11 @@ describe('r19 T5 — vistos (M11), needle time (M9), leis', () => {
     expect(lawOn19(s, 'cancon')).toBe(true);
     expect(reg19(s).laws.cancon).toBe(1970);
     expect(facts(s, 'law').some((f) => f.tags.includes('cancon'))).toBe(true);
+    // R31 onda 3 (y31.laws): a CanCon vale só no Canadá (sys/mercado31, peso do país); o apelo global fica sem ela
+    expect(lawAppeal19(s, rel, a).length).toBe(0);
+    setSw(s, 'y31.laws', false);
     expect(lawAppeal19(s, rel, a).map(([k]) => k)).toContain(1.08);
+    setSw(s, 'y31.laws', true);
     const rm = s.economy.rightsMult;
     fireMilestone(s, Rng.fromSeed('x'), milestoneById.law_mma);
     expect(s.economy.rightsMult).toBeCloseTo(rm * 1.03);

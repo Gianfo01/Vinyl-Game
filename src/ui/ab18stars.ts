@@ -7,6 +7,7 @@ import type { Act, GameState, StaffMember } from '../sim/types';
 import { fmtL } from '../sim/util';
 import { abilityStaff18, actEst18, est18 } from '../sim/sys/ability18';
 import { pill } from './common';
+import { band } from '../sim/know';
 import { h } from './dom';
 import { why18 } from './explain18';
 import './sys/ability18.css';
@@ -34,7 +35,9 @@ export function actStars18(s: GameState, a: Act): HTMLElement | null {
 }
 export function staffStars18(s: GameState, st: StaffMember): HTMLElement {
   const v = abilityStaff18(s, st);
-  return stars18(v.ca, Math.max(v.ca, v.pa - 15), Math.min(200, v.pa + 15));
+  // r31 F #9: a faixa do teto da equipe também tem desvio (antes pa ± 15 centrado entregava o valor)
+  const b = band(s, `s:${st.id}`, 'pa18', v.pa / 2, 15)!;
+  return stars18(v.ca, Math.max(v.ca, b.lo * 2), Math.min(200, Math.max(b.hi * 2, v.ca + 2)));
 }
 
 /** Linha compacta para listas (elenco, mercado, scouting). */

@@ -30,6 +30,7 @@ import { vices } from '../vices';
 import { OFF_AUD27 } from './off';
 import { actsNow27 } from '../../tickcache27';
 import { purse } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { addStaffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
 
@@ -146,7 +147,7 @@ function playerMonth(s: GameState): void {
     const v = money(s, 1500 + r.int(0, 4) * 500);
     post(s, `shark27rev:${oid}:${s.week}`, -v, 'misc', 'Vandalismo na sede (vingança)');
     ownerOf(s).stress = clamp(ownerOf(s).stress + 10, 0, 100);
-    for (const m of s.player.staff) { const c = P(s).career[m.id]; if (c) c.loyalty = clamp(c.loyalty - 2, 0, 100); }
+    for (const m of s.player.staff) if (P(s).career[m.id]) addStaffLoyalty(s, m.id, -2);
     const t = fmtL(N('Vidros quebrados e um recado na porta da sede: {o} não esqueceu a denúncia.', 'Smashed windows and a note on HQ\'s door: {o} has not forgotten the tip-off.'), { o: orgName(s, oid) });
     notify(s, t, 'bad');
     logIt(s, t);
@@ -215,7 +216,7 @@ export const SHARK_EVS27: EventDef[] = [{
         const take = Math.round(Math.max(0, s.player.cash) * 0.15);
         const ln = loanOf(s, String(c.loan));
         if (take > 0) { post(s, `shark27take:${c.loan}:${s.week}`, -take, 'misc', 'Cobrança do agiota (levaram do caixa)'); if (ln) ln.set(ln.bal() - take); }
-        for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr) cr.loyalty = clamp(cr.loyalty - 3, 0, 100); }
+        for (const m of s.player.staff) if (P(s).career[m.id]) addStaffLoyalty(s, m.id, -3);
         s.player.reputation.institutional = clamp(s.player.reputation.institutional - 2, 0, 100);
         const org = orgOfLoan(s, String(c.loan));
         const t = fmtL(N('Cobradores de {o} levam dinheiro da sede de {c} na frente da equipe.', 'Collectors from {o} take cash from {c}\'s HQ in front of the staff.'), { o: org?.name ?? N('um agiota', 'a loan shark'), c: s.config.companyName });

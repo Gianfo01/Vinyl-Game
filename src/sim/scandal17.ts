@@ -22,6 +22,7 @@ import { addStress } from './stress17';
 import type { Act, GameState } from './types';
 import type { Fame16 } from './sys/fame16';
 import { fmtL, notify } from './util';
+import { relAdd } from './opinion';
 
 export type ScandalKind = 'drugs' | 'sex' | 'violence' | 'blasphemy' | 'politics' | 'money' | 'conduct' | 'offense' | 'meltdown' | 'crime';
 export const SCANDAL_NAME: Record<ScandalKind, L> = {
@@ -149,7 +150,7 @@ export function scandal(s: GameState, who: string, kind: ScandalKind, severity: 
     for (const m of act.members) {
       const p = s.persons[m];
       if (!p?.alive || p.isPlayer) continue;
-      if (pid && m !== pid) p.rel[pid] = clamp((p.rel[pid] ?? 0) - R.eff / 6, -100, 100);
+      if (pid && m !== pid) relAdd(s, p.id, pid, -R.eff / 6);
       if (moral && m !== pid && isStrict(viewsOf(s, m))) { p.resentment = clamp(p.resentment + R.eff / 12, 0, 100); p.morale = clamp(p.morale - R.eff / 15, 0, 100); }
       addStress(s, m, m === pid ? R.eff / 4 : R.eff / 10, fmtL(l('Escândalo ({k}) de {a}', 'Scandal ({k}) of {a}'), { k: SCANDAL_NAME[kind], a: act.name }));
     }

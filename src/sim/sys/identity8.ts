@@ -14,6 +14,7 @@ import { registerExt4, registerOfferMod, registerSimHook } from '../ext4';
 import { songProfile } from '../repertoire';
 import type { Act, GameState, Person, Release } from '../types';
 import { fmtL, money, notify, playerActs, remember } from '../util';
+import { rel0, relTouch } from '../opinion';
 
 // ---------------------------------------------------------------- tipos e estado
 
@@ -97,13 +98,13 @@ export function prefsOf(s: GameState, a: Act): Prefs {
   const ms = a.members.map((id) => s.persons[id]).filter((p): p is Person => !!p && p.alive);
   if (!ms.length) return { art: 50, freedom: 40, loyalty: 50, restless: 40 };
   let w = 0;
-  const acc = { art: 0, freedom: 0, loyalty: 0, restless: 0 };
+  const acc = { art: 0, freedom: 0, loy: 0, restless: 0 }; // loy: traço de fidelidade do ato (não é opinião sobre você)
   for (const p of ms) {
     const k = p.id === a.leaderId ? 2 : 1;
     const pe = p.persona;
     acc.art += k * (50 + (AMB_ART[p.ambition] ?? 0) + sumT(p, TR_ART) + (pe ? (pe.openness - 50) / 5 : 0));
     acc.freedom += k * (40 + (p.ambition === 'freedom' ? 25 : p.ambition === 'art' ? 10 : p.ambition === 'security' ? -8 : 0) + sumT(p, TR_FREE));
-    acc.loyalty += k * (50 + sumT(p, TR_LOYAL) + (pe ? (pe.sociability - 50) / 6 : 0) - p.resentment / 5);
+    acc.loy += k * (50 + sumT(p, TR_LOYAL) + (pe ? (pe.sociability - 50) / 6 : 0) - p.resentment / 5);
     acc.restless += k * (40 + sumT(p, TR_REST) + (pe ? (pe.openness - 50) / 4 : 0));
     w += k;
   }
@@ -112,7 +113,7 @@ export function prefsOf(s: GameState, a: Act): Prefs {
   return {
     art: clamp(Math.round(acc.art / w), 0, 100),
     freedom: clamp(Math.round(acc.freedom / w), 0, 100),
-    loyalty: clamp(Math.round(acc.loyalty / w + (mine ? (a.trust - 50) / 3 : 0)), 0, 100),
+    loyalty: clamp(Math.round(acc.loy / w + (mine ? (a.trust - 50) / 3 : 0)), 0, 100),
     restless: clamp(Math.round(acc.restless / w + (ph === 'wear' ? 15 : ph === 'peak' ? 5 : 0)), 0, 100),
   };
 }
@@ -258,9 +259,9 @@ function lineupChanged(s: GameState, a: Act, m: ActMem): void {
   for (const id of now) {
     const p = s.persons[id];
     if (!p?.alive || p.isPlayer || added.includes(id)) continue;
-    const d = (p.traits.includes('loyal') ? -4 : 0) + (p.traits.includes('experimental') || p.traits.includes('chameleon') ? 3 : 0) + (gone.some((g) => (p.rel[g] ?? 0) > 40) ? -3 : 0);
+    const d = (p.traits.includes('loyal') ? -4 : 0) + (p.traits.includes('experimental') || p.traits.includes('chameleon') ? 3 : 0) + (gone.some((g) => rel0(s, p.id, g) > 40) ? -3 : 0);
     if (d) p.morale = clamp(p.morale + d, 0, 100);
-    for (const n of added) p.rel[n] ??= 10;
+    for (const n of added) relTouch(s, p.id, n, 10);
   }
   if (big) {
     m.rv = s.week;

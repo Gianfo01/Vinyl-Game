@@ -20,6 +20,7 @@ import type { StudioSession } from '../xtypes';
 import { electronicCap } from './sound';
 import { TIMBRES } from './sound/timbre';
 import { fmtL, money, post } from '../util';
+import { relAdd } from '../opinion';
 
 export type RecMove27 = 'keep' | 'another' | 'musician' | 'arrange' | 'fight' | 'relax';
 export type Mix27 = 'radio' | 'raw' | 'modern';
@@ -195,7 +196,7 @@ export function moveRecord27(s: GameState, rc: Rec27, move: RecMove27): RecTake2
       if (good) { rc.mods.perf += 6; for (const p of ms) p.morale = clamp(p.morale + 2, 0, 100); rc.log.push(l('A briga virou catarse: todo mundo tocou com raiva boa.', 'The fight turned into catharsis: everyone played with good anger.')); }
       else {
         rc.mods.perf -= 5;
-        for (const p of ms) { p.morale = clamp(p.morale - 5, 0, 100); for (const q of ms) if (q !== p) p.rel[q.id] = clamp((p.rel[q.id] ?? 0) - 4, -100, 100); }
+        for (const p of ms) { p.morale = clamp(p.morale - 5, 0, 100); for (const q of ms) if (q !== p) relAdd(s, p.id, q.id, -4); }
         rc.log.push(l('A briga azedou: portas batendo e um take nervoso.', 'The fight soured: doors slammed and a nervous take.'));
       }
       return take(s, rc);

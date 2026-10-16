@@ -18,8 +18,9 @@ function box(s: GameState, p: Person): HTMLElement | null {
     const o = orgById(s, m.o);
     return section(t(l('Crime organizado', 'Organized crime')), h('div', { class: 'small' },
       h('p', null, pill(m.k === 2 ? t(l('confirmado', 'confirmed')) : t(l('boato', 'rumor')), m.k === 2 ? 'bad' : 'warn'), ' ',
-        `${o ? t(o.name) : m.o} · ${t(RANK23[m.rk])} · ${t(ROLE23[m.ro])} · ${t(l('crimes bem-sucedidos', 'successful jobs'))}: ${m.n}`),
-      h('p', { class: 'muted' }, `${t(l('Por quê', 'Why'))}: ${m.why.map((w) => t(w)).join(' · ')}`),
+        // r31 F #23: no boato só a organização; patente, função, número de crimes e o porquê só quando confirmado
+        m.k === 2 ? `${o ? t(o.name) : m.o} · ${t(RANK23[m.rk])} · ${t(ROLE23[m.ro])} · ${t(l('crimes bem-sucedidos', 'successful jobs'))}: ${m.n}` : `${t(l('dizem que anda com', 'said to run with'))} ${o ? t(o.name) : m.o}`),
+      m.k === 2 ? h('p', { class: 'muted' }, `${t(l('Por quê', 'Why'))}: ${m.why.map((w) => t(w)).join(' · ')}`) : null,
       h('p', { class: 'muted' }, t(m.k === 2
         ? l('Confirmado (caso, prisão ou delação): escândalo possível; apelo de rua em trap/drill/funk/corridos, fama de bandido nos outros gêneros.', 'Confirmed (case, prison or informant): scandal possible; street appeal in trap/drill/funk/corridos, gangster image in other genres.')
         : l('Boato: ninguém prova nada — mas o público já comenta (apelo de rua ou fama de bandido).', 'Rumor: nobody proves anything — but the public talks (street appeal or gangster image).'))),

@@ -24,6 +24,7 @@ import { investmentsTab } from './bolsa10';
 import { rng19 } from '../../sim/rng19';
 import { freeCash20 } from '../../sim/oblig20';
 import { askConfirm } from '../ask31';
+import { shop31Tab } from '../r31/shop31';
 
 const isL = (x: unknown): x is L => !!x && typeof x === 'object' && 'pt' in (x as object) && 'en' in (x as object);
 
@@ -184,6 +185,7 @@ function staffTab(s: GameState): HTMLElement {
 /** Aba "Bens e investimentos" da área Você. */
 export function possessionsTab(s: GameState): HTMLElement {
   return tabs('goods8', [
+    { id: 'store31', label: t(l('Loja da cidade', 'City shop')), icon: 'money', render: () => shop31Tab(s) },
     { id: 'shop', label: t(l('Loja', 'Shop')), icon: 'money', render: () => shopTab(s) },
     { id: 'mine', label: t(l('Seus bens', 'Your belongings')), icon: 'house', badge: goods(s).owned.filter((x) => x.unpaid).length || undefined, render: () => mineTab(s) },
     { id: 'invest', label: t(l('Investimentos', 'Investments')), icon: 'chart-up', render: () => investmentsTab(s) },

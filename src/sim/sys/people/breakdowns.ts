@@ -13,6 +13,7 @@ import { fmtL, money, notify, post, remember } from '../../util';
 import { P, actOf, addMsg, addPost, clamp01, healthOf, socialEra, today, trackedPersons } from './state';
 import { addThought, moodOf } from './thoughts';
 import { medSkill } from './health';
+import { rel0 } from '../../opinion';
 
 export type BreakKind = 'vanish' | 'smash' | 'binge' | 'quit_stage' | 'post' | 'relapse';
 
@@ -190,7 +191,7 @@ const QUIT: EventDef[] = [
         const a = s.acts[String(c.act)];
         if (!p || !a) return;
         const leader = a.leaderId ? s.persons[a.leaderId] : undefined;
-        const chance = 0.5 + (leader && leader.id !== p.id ? (leader.rel[p.id] ?? 0) / 200 : 0) + (p.rel[a.leaderId ?? ''] ?? 0) / 300;
+        const chance = 0.5 + (leader && leader.id !== p.id ? (rel0(s, leader.id, p.id)) / 200 : 0) + (rel0(s, p.id, a.leaderId ?? '')) / 300;
         if (r.chance(Math.max(0.2, Math.min(0.85, chance))) || a.members.length < 2) {
           p.morale = clamp01(p.morale + 10);
           remember(s, 'mediation', fmtL(l('{p} aceita ficar em {a} depois de uma conversa longa.', '{p} agrees to stay in {a} after a long talk.'), { p: p.name, a: a.name }), { actId: a.id });

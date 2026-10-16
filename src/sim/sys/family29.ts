@@ -60,6 +60,7 @@ import { EST_HEIRS29 } from './post18';
 import { canonKey } from './realworld';
 import { addProd18, w18 } from './world18';
 import { DEFS17, def17, mineOf17, queue17, ctx17 } from './scene17';
+import { relAdd, relTouch } from '../opinion';
 
 // ---------------------------------------------------------------- estado (compacto)
 
@@ -344,7 +345,7 @@ function lifeOf(s: GameState, r: Rng, p: Person, a: Act, pool: { pid: string; a:
       const G = setF(s, q.id);
       F[0] = q.name; F[1] = q.id; F[2] = 0; F[3] = 1;
       G[0] = p.name; G[1] = p.id; G[2] = 0; G[3] = 1;
-      p.rel[q.id] = clamp((p.rel[q.id] ?? 0) + 30, -100, 100); q.rel[p.id] = clamp((q.rel[p.id] ?? 0) + 30, -100, 100);
+      relAdd(s, p.id, q.id, 30); relAdd(s, q.id, p.id, 30);
       if (inv.sim) markSim(s, p.id);
       if (canInvent29(s, q, mate.a).sim) markSim(s, q.id);
       const big = a.fame + mate.a.fame >= 70;
@@ -409,7 +410,7 @@ function separate(s: GameState, r: Rng, p: Person, a: Act, F: F29, q?: Person): 
     const G = setF(s, q.id);
     G[3] = 3; G[2] = 0;
     q.stress = clamp(q.stress + (married ? 18 : 8), 0, 100); q.morale = clamp(q.morale - (married ? 12 : 5), 0, 100);
-    p.rel[q.id] = clamp((p.rel[q.id] ?? 0) - 35, -100, 100); q.rel[p.id] = clamp((q.rel[p.id] ?? 0) - 35, -100, 100);
+    relAdd(s, p.id, q.id, -35); relAdd(s, q.id, p.id, -35);
     if (married) { const kg = kin15(s); for (const x of kg.g) if ((x[0] === p.id && x[1] === q.id) || (x[0] === q.id && x[1] === p.id)) x[2] = 'ex'; }
   }
   if (married) count(s, 3);
@@ -472,7 +473,7 @@ function affair(s: GameState, p: Person, a: Act): void {
   p.stress = clamp(p.stress + 10, 0, 100);
   const F = fam29(s).f[p.id];
   const q = F?.[1] ? s.persons[F[1]] : undefined;
-  if (q) q.rel[p.id] = clamp((q.rel[p.id] ?? 0) - 30, -100, 100);
+  if (q) relAdd(s, q.id, p.id, -30);
   say(s, t);
   const vis = a.fame >= 45 ? 'public' : 'rumor';
   emitFact(s, { kind: 'affair', actors: [p.id, ...(q ? [q.id] : []), a.id], place: a.city, severity: clamp(15 + a.fame / 2, 15, 70), visibility: vis, tags: ['bad', 'romance', 'family29'], text: t, src: 'family29' });
@@ -608,7 +609,7 @@ function onDebut(s: GameState, kid: Person, act: Act, o: Debut15): void {
   count(s, 2);
   // contatos herdados: as melhores relações do pai/mãe viram portas para o filho
   const par = o.par;
-  if (par) for (const [id, v] of Object.entries(par.rel).filter(([, v]) => v > 30).sort((x, y) => y[1] - x[1]).slice(0, 6)) if (id !== kid.id) kid.rel[id] ??= Math.round(v / 2);
+  if (par) for (const [id, v] of Object.entries(par.rel).filter(([, v]) => v > 30).sort((x, y) => y[1] - x[1]).slice(0, 6)) if (id !== kid.id) relTouch(s, kid.id, id, Math.round(v / 2));
   if (kid.potential < 70 && (par || o.boost)) kid.potential = Math.min(95, kid.potential + 4);
   const age = s.year - kid.born;
   if (age < ADULT29) addMinor(s, kid, act, 'family', par);
@@ -746,7 +747,7 @@ export function careerOf(s: GameState, key: string, k: { id: string; name: strin
 function inheritContacts(s: GameState, key: string, kid: Person): void {
   const op = opinionOf(s, key);
   if (Math.abs(op) >= 6) opine(s, `p:${kid.id}`, Math.round(op / 2), l('o que ouviu de casa sobre você', 'what they heard about you at home'));
-  if (key.startsWith('p:')) { const par = s.persons[key.slice(2)]; if (par) for (const [id, v] of Object.entries(par.rel).filter(([, v]) => v > 30).slice(0, 6)) kid.rel[id] ??= Math.round(v / 2); }
+  if (key.startsWith('p:')) { const par = s.persons[key.slice(2)]; if (par) for (const [id, v] of Object.entries(par.rel).filter(([, v]) => v > 30).slice(0, 6)) relTouch(s, kid.id, id, Math.round(v / 2)); }
 }
 
 // nepotismo na sucessão de selo: quando ninguém da família do líder herda, um "executivo da casa" pode ser filho de gente da indústria
@@ -872,14 +873,14 @@ function minorsYear(s: GameState, r: Rng): void {
       const v = m.tr;
       m.tr = 0;
       const g = m.gk ? s.persons[m.gk] : undefined;
-      if (g) { p.rel[g.id] = clamp((p.rel[g.id] ?? 0) - 45, -100, 100); }
+      if (g) { relAdd(s, p.id, g.id, -45); }
       const t = T(l('{g}, responsável e empresário(a) de {p}, some com o fundo do menor ({v}).', '{g}, guardian and manager of {p}, vanishes with the minor\'s trust fund ({v}).'), { g: m.g, p: p.name, v: `$${Math.round(v / 100).toLocaleString('en-US')}` });
       say(s, t);
       emitFact(s, { kind: 'scandal', actors: [pid, ...(a ? [a.id] : [])], place: a?.city, severity: clamp(25 + (a?.fame ?? 0) / 2, 25, 75), visibility: 'public', tags: ['bad', 'money', 'family29', 'guardian'], text: t, src: 'family29' });
       if (a && mine(a)) notify(s, t, 'bad');
     } else if (m.pm && age < ADULT29 && r.chance(0.12)) {
       p.stress = clamp(p.stress + 8, 0, 100);
-      if (m.gk) p.rel[m.gk] = clamp((p.rel[m.gk] ?? 0) - 10, -100, 100);
+      if (m.gk) relAdd(s, p.id, m.gk, -10);
     }
     // NPC: selo que explora o menor (agenda pesada) — escândalo e reputação do selo
     // (só gente inventada: denúncia contra criança real e selo real seria afirmar um fato que não existe)

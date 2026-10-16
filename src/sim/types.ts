@@ -398,6 +398,10 @@ export interface Release {
   coverChoice?: string;
   /** rodada 8: previsão de unidades em 10 semanas guardada no lançamento, unidades reais nessas 10 semanas e leitura já enviada */
   fc?: number;
+  /** R31 D: procura das 10 primeiras semanas (antes do estoque) — o que a previsão `fc` tenta acertar */
+  dem10?: number;
+  /** R31 Y: demanda por país do mês [ano·12 + mês, fator] (refeita uma vez por mês, dentro do mercado) */
+  y31k?: [number, number];
   fa?: number;
   expl?: boolean;
 }
@@ -731,5 +735,5 @@ export interface GameState extends ExtState {
   flags: Record<string, number>;
   ended?: { ending: string; year: number; reason: 'arc' | 'insolvency' };
   undo?: string; // snapshot do início do mês (modo recarga)
-  stats: { weeklyPool: number; marketUnitsYear: number; playerUnitsYear: number; marketShare: number; lastH?: number };
+  stats: { weeklyPool: number; marketUnitsYear: number; playerUnitsYear: number; marketShare: number; lastH?: number; /** R31 D: último fator de escala do selo do jogador (previsão = conta real) */ lastK31?: number; /** R31 Y: média da demanda por país na última semana (a demanda redistribui, não infla o mercado) */ lastKn31?: number };
 }

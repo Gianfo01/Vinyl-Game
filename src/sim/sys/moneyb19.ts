@@ -40,6 +40,8 @@ import { LINKS18, lk18 } from './links18';
 import { goSolo16, l16, leaveBand16, newBand16 } from './lineup16';
 import { activeMgrs, mgrName } from './managers14';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { relAdd } from '../opinion';
+import { joinDelegated31 } from '../deleg31';
 
 // ---------------------------------------------------------------- estado
 export interface Sold19 { act: string; lb: string; w: number; y: number; price: number; pct: number; until: number; fame0: number; n10: number; u: Record<string, number>; paid: number; regret?: 1 }
@@ -104,7 +106,7 @@ function moveAct19(s: GameState, a: Act, to: string): void {
   if (a.owner && a.owner !== 'player') { const lb = s.labels[a.owner]; if (lb) lb.roster = lb.roster.filter((x) => x !== a.id); }
   if (k) k.party = to;
   a.owner = to;
-  if (to === 'player') s.delegated[a.id] = true;
+  if (to === 'player') s.delegated[a.id] = joinDelegated31(s, a);
   else { const lb = s.labels[to]; if (lb && !lb.roster.includes(a.id)) lb.roster.push(a.id); delete s.agenda[a.id]; }
 }
 /** Comprador: selo ativo com caixa, preferindo quem tem o ato na mira (rivalmind18). */
@@ -548,7 +550,7 @@ registerInboxKind('mb19_klein', { label: l('Briga de gestão', 'Management fight
       return v.yes.length ? l('A banda inteira queria ele: você vira o vilão.', 'The whole band wanted him: you become the villain.') : l('Ele vai embora; a banda fica unida.', 'He walks away; the band stays united.');
     }
     if (!v.no.length) { takeover(s, a, name, Math.round(tkPrice19(s, a, rels.length) * 0.9)); return l('Unanimidade: ele leva os masters por um preço justo.', 'Unanimous: he takes the masters at a fair price.'); }
-    for (const x of v.yes) for (const y of v.no) { const p = s.persons[x], q = s.persons[y]; if (p) p.rel[y] = clamp((p.rel[y] ?? 0) - 10, -100, 100); if (q) q.rel[x] = clamp((q.rel[x] ?? 0) - 10, -100, 100); }
+    for (const x of v.yes) for (const y of v.no) { const p = s.persons[x], q = s.persons[y]; if (p) relAdd(s, p.id, y, -10); if (q) relAdd(s, q.id, x, -10); }
     return l('Sem unanimidade, nada se assina — e a banda sai da reunião sem se olhar.', 'No unanimity, nothing is signed — and the band leaves the meeting without looking at each other.');
   } });
 function locksMonth(s: GameState): void {

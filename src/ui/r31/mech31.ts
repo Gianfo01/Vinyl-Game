@@ -12,6 +12,7 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
+import { askConfirm } from '../ask31';
 import { $, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { openOffer, openPerson } from '../ficha';
@@ -21,13 +22,14 @@ import { savePrefs, store } from '../store';
 import { basisTag31, lockBtn31 } from './lock31';
 import { goDest31 } from './quick31';
 import {
-  decideScene31, sceneMode31, sceneModel31,
+  decideScene31, sceneKeyOk31, sceneMode31, sceneModel31,
   type Cast31, type Choice31, type Mood31, type SceneKind31, type SceneModel31, type SceneOut31,
 } from './scene31core';
 import { sceneHook31 } from './scene31reg';
 import { hot31, labels31, stage31 } from './scene31stage';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
+const fmtL0 = (x: L, c: L, e?: L): L => ({ pt: x.pt.replace('{c}', c.pt).replace('{e}', e?.pt ?? ''), en: x.en.replace('{c}', c.en).replace('{e}', e?.en ?? '') });
 
 /** "Ver detalhes": o formulário completo de sempre de cada mecânica. */
 function details31(s: GameState, kind: SceneKind31, id: string): void {
@@ -69,9 +71,17 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
   const root = h('div', { class: 'mc31', 'data-scene31': kind });
   let close = () => {};
 
-  const choose = (c: Choice31): void => {
-    if (out || c.lock) return;
+  let asking = false;
+  const choose = async (c: Choice31): Promise<void> => {
+    if (out || c.lock || asking) return;
     if (c.opens === 'nego-table') { close(); openNego27(id); return; }
+    // W2-REV: escolha perigosa (rescindir, demitir, multar) pede confirmação no painel do jogo
+    if (c.danger) {
+      asking = true;
+      const ok = await askConfirm(fmtL0(l('{c}? {e}', '{c}? {e}'), c.label, c.effect), { title: m.title, ok: c.label, danger: true });
+      asking = false;
+      if (!ok || out || !root.isConnected) return;
+    }
     out = decideScene31(s, kind, { id }, c.id);
     const them = m.cast.find((x) => x.side === 'them');
     if (them && out.react) react = { [them.id]: out.react };
@@ -83,7 +93,7 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
   const choicesView = (): HTMLElement => h('div', { class: 'mc31-choices', role: 'group', 'aria-label': t(l('Escolhas', 'Choices')) },
     m.choices.length ? m.choices.map((c, i) => h('div', { class: 'mc31-choice' },
       lockBtn31(h('span', null, i < 9 ? h('span', { class: 'mc31-key', 'aria-hidden': 'true' }, String(i + 1)) : null, t(c.label)), out ? null : c.lock,
-        () => choose(c), { cls: `btn${c.primary ? ' primary' : ''}${c.danger ? ' danger' : ''}`, attrs: { disabled: !!out, 'data-choice31': c.id } }),
+        () => { void choose(c); }, { cls: `btn${c.primary ? ' primary' : ''}${c.danger ? ' danger' : ''}`, attrs: { disabled: !!out, 'data-choice31': c.id } }),
       c.cost ? h('small', null, '≈ ', $(c.cost)) : null,
       c.effect ? h('small', null, t(c.effect)) : null))
       : h('p', { class: 'muted small' }, t(l('Nada a decidir aqui agora.', 'Nothing to decide here right now.'))));
@@ -132,8 +142,9 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     const tg = e.target as HTMLElement | null;
     if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'SELECT' || tg.tagName === 'TEXTAREA')) return;
+    if (!sceneKeyOk31(root.closest('.overlay'), [...document.querySelectorAll('.overlay')], tg)) return;
     const n = Number(e.key);
-    if (n >= 1 && n <= 9 && m.choices[n - 1] && !m.lock) { e.preventDefault(); choose(m.choices[n - 1]); }
+    if (n >= 1 && n <= 9 && m.choices[n - 1] && !m.lock) { e.preventDefault(); void choose(m.choices[n - 1]); }
   };
   document.addEventListener('keydown', onKey);
   draw();

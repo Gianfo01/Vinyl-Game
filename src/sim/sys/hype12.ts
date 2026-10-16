@@ -5,6 +5,7 @@
 // ingressos, preço de relíquias e atenção da imprensa. Expectativa alta com disco fraco → reação (backlash);
 // disco ótimo sem expectativa → sucesso tardio (sleeper). Alavancas do jogador com custo e risco, por época.
 
+import { FORECAST31, isForecast31 } from '../r31/market31';
 import { Rng, clamp } from '../../core/rng';
 import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -155,8 +156,9 @@ export function pendingExpect(s: GameState, actId: string): { exp: number; q: nu
   return { exp, q: Math.round(upcomingQ(s, pr.songs)), need: needQ(exp) };
 }
 
-registerSimHook('launch', 'hype12', (s, _r, { release: rel }) => {
-  if (!rel || rel.reissueOf || rel.hist) return;
+/** O que a estreia vai carregar de expectativa (sem gravar nada): fator de apelo e o estado da semana de estreia.
+ *  Usado no lançamento e, pela mesma conta, na previsão de vendas (R31 D). */
+export function hypePreview12(s: GameState, rel: Release): { k: number; extra: number; exp: number; rh: RelH } {
   const st = hy(s);
   const act = s.acts[rel.actId];
   const n = st.e[`n:${rel.actId}`];
@@ -164,16 +166,24 @@ registerSimHook('launch', 'hype12', (s, _r, { release: rel }) => {
   // a parte "rollout" já entrou no apelo pelo market.ts (hypeBoost); aqui só o que é deste sistema
   const derived = Math.max(0, ((rel.hypeBoost ?? 1) - 1) * 80) + (act ? actBase(s, act) * 0.4 + act.fame * 0.25 : 0) + (rel.owner === 'player' && w4(s).hype >= 10 ? w4(s).hype * 0.1 : 0);
   const exp = clamp(Math.round(extra + derived), 0, 100);
-  if (extra > 2) {
-    const k = 1 + Math.min(0.25, extra / 300);
-    rel.appeal *= k;
-    (rel.autopsy ??= []).push({ key: 'hype12', label: l('Expectativa (teasers, audição, imprensa)', 'Anticipation (teasers, listening party, press)'), value: k, confidence: 'medium' });
-  }
+  const k = extra > 2 ? 1 + Math.min(0.25, extra / 300) : 1;
   const p = st.pend[rel.actId] ?? {};
   const rh: RelH = { a: rel.actId, w: rel.week, exp, q: Math.round(rel.q), need: needQ(exp), ...p };
   const gap = rel.q - rh.need;
   if (exp >= 40 && gap < -6) rh.bl = Math.round(clamp((-gap - 6) / 22, 0.15, 1) * (p.party ? 0.7 : 1) * 100) / 100;
   else if (exp < 22 && rel.q >= 80) rh.sl = Math.round(clamp((rel.q - 74) / 20, 0.15, 1) * 100) / 100;
+  return { k, extra, exp, rh };
+}
+FORECAST31.appeal.push((s, rel) => (rel.reissueOf || rel.hist ? 1 : hypePreview12(s, rel).k));
+
+registerSimHook('launch', 'hype12', (s, _r, { release: rel }) => {
+  if (!rel || rel.reissueOf || rel.hist) return;
+  const st = hy(s);
+  const { k, extra, exp, rh } = hypePreview12(s, rel);
+  if (extra > 2) {
+    rel.appeal *= k;
+    (rel.autopsy ??= []).push({ key: 'hype12', label: l('Expectativa (teasers, audição, imprensa)', 'Anticipation (teasers, listening party, press)'), value: k, confidence: 'medium' });
+  }
   st.rel[rel.id] = rh;
   if (exp >= 5) st.e[`r:${rel.id}`] = { s: [{ k: 'exp', t: launchText17(s, rel, exp), v: exp }] };
   delete st.e[`n:${rel.actId}`];
@@ -183,7 +193,7 @@ registerSimHook('launch', 'hype12', (s, _r, { release: rel }) => {
 const wkOf = (s: GameState, rel: Release) => s.week - rel.week;
 /** Hype vira vendas da 1ª semana (e queima depois); backlash derruba rápido; sleeper cresce devagar. */
 registerMod('chartUnits', 'hype12', (s, v, { release: rel }) => {
-  const rh = rel && hy(s).rel[rel.id];
+  const rh = rel && (hy(s).rel[rel.id] ?? (isForecast31(rel) && !rel.reissueOf ? hypePreview12(s, { ...rel, week: s.week }).rh : undefined)); // R31 D: previsão = mesma conta
   if (!rel || !rh) return null;
   const wk = wkOf(s, rel);
   let m = 1;

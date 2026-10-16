@@ -15,6 +15,7 @@ import type { Act, GameState, Song, StaffMember } from '../types';
 import { fmtL, money, notify, playerActs, post, remember } from '../util';
 import { careerOf } from './people/staff';
 import { cashWhy20, freeCash20 } from '../oblig20';
+import { addStaffLoyalty } from '../opinion';
 
 export type SpecId = 'auteur' | 'facilitator' | 'signature' | 'technician' | 'safety' | 'lean' | 'hardball' | 'mediator' | 'independent' | 'company' | 'local' | 'global';
 export type Ambition = 'stable' | 'star' | 'mentor' | 'founder';
@@ -172,8 +173,8 @@ export function respec(s: GameState, staffId: string): L | null {
   if (freeCash20(s) < cost) return cashWhy20(s, cost, l('Caixa insuficiente.', 'Not enough cash.'));
   post(s, `respec:${st.id}`, -cost, 'staff_training', `Reorientação ${st.name}`);
   crew(s).over[st.id] = pair[0] === cur ? pair[1] : pair[0];
-  const c = careerOf(s, st);
-  c.loyalty = clamp(c.loyalty - 8, 0, 100);
+  careerOf(s, st);
+  addStaffLoyalty(s, st.id, -8, { why: l('teve de mudar de estilo.', 'had to switch styles.') });
   st.skill = Math.max(15, st.skill - 4); // recomeça um pouco no estilo novo
   log(s, fmtL(l('{n} muda de estilo: agora {x}.', '{n} switches style: now {x}.'), { n: st.name, x: SPECS[crew(s).over[st.id]].name }));
   return null;
@@ -185,8 +186,8 @@ export function matchPoach(s: GameState): L | null {
   const st = c.poach && s.player.staff.find((x) => x.id === c.poach!.id);
   if (!st) return l('Não há proposta em aberto.', 'No open offer.');
   st.salary = Math.round(st.salary * 1.25);
-  const car = careerOf(s, st);
-  car.loyalty = clamp(car.loyalty + 15, 0, 100);
+  careerOf(s, st);
+  addStaffLoyalty(s, st.id, 15, { why: l('você cobriu a proposta do rival.', 'you matched the rival offer.') });
   c.poach = undefined;
   log(s, fmtL(l('{n} fica: salário +25%.', '{n} stays: salary +25%.'), { n: st.name }), 'good');
   return null;

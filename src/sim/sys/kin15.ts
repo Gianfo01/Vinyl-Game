@@ -22,6 +22,7 @@ import { spawnProceduralAct } from '../worldgen';
 import { canonKey } from './realworld';
 import { actsNow27 } from '../tickcache27';
 import { actsTouched17 } from '../actidx17';
+import { rel0, relAdd, relPut, relTouch } from '../opinion';
 
 export type Rel15 = 'parent' | 'child' | 'sibling' | 'spouse' | 'ex' | 'cousin' | 'uncle' | 'nephew' | 'grandparent' | 'grandchild';
 export const REL15: Record<Rel15, L> = {
@@ -196,7 +197,7 @@ function grief(s: GameState, p: Person): void {
     const close = CLOSE.has(k.rel) && k.sub !== 'in_law' && k.sub !== 'step'; // r27 (F)
     q.morale = clamp(q.morale - (close ? 10 : 4), 0, 100);
     q.stress = clamp(q.stress + (close ? 10 : 3), 0, 100);
-    q.rel[p.id] = clamp((q.rel[p.id] ?? 0) + 5, -100, 100);
+    relAdd(s, q.id, p.id, 5);
     // luto também une: irmãos em rixa fazem as pazes
     for (const o of kinOf15(s, q.id)) if (o.rel === 'sibling') delete kin15(s).feud[pairKey(q.id, o.id)];
     const a = actOf15(s, q.id);
@@ -219,19 +220,19 @@ function feuds(s: GameState, r: Rng): void {
       const A = ms[i], B = ms[j];
       if (!kinOf15(s, A.id).some((k) => k.id === B.id && k.rel === 'sibling')) continue;
       const key = pairKey(A.id, B.id), since = st.feud[key];
-      const tense = (A.resentment + B.resentment) / 2 > 45 || (A.rel[B.id] ?? 0) < -20 || (B.rel[A.id] ?? 0) < -20 || (A.stress + B.stress) / 2 > 70;
+      const tense = (A.resentment + B.resentment) / 2 > 45 || (rel0(s, A.id, B.id)) < -20 || (rel0(s, B.id, A.id)) < -20 || (A.stress + B.stress) / 2 > 70;
       const roll = r.next(), roll2 = r.next();
       if (since === undefined) {
         if (roll < 0.003 + (tense ? 0.02 : 0) + (a.fame > 60 ? 0.004 : 0)) {
           st.feud[key] = now;
-          A.rel[B.id] = clamp((A.rel[B.id] ?? 0) - 30, -100, 100); B.rel[A.id] = clamp((B.rel[A.id] ?? 0) - 30, -100, 100);
+          relAdd(s, A.id, B.id, -30); relAdd(s, B.id, A.id, -30);
           A.morale = clamp(A.morale - 6, 0, 100); B.morale = clamp(B.morale - 6, 0, 100);
           const t = fmtL(l('Briga entre os irmãos {a} e {b} em {x}: a imprensa já fala nisso.', 'Siblings {a} and {b} of {x} are feuding: the press has noticed.'), { a: A.name, b: B.name, x: a.name });
           remember(s, 'feud', t, { actId: a.id, important: a.fame > 40 }); say(s, t);
           if (a.owner === 'player') notify(s, t, 'event');
         }
       } else if (roll < 0.035) { // pazes
-        delete st.feud[key]; A.rel[B.id] = clamp((A.rel[B.id] ?? 0) + 25, -100, 100); B.rel[A.id] = clamp((B.rel[A.id] ?? 0) + 25, -100, 100);
+        delete st.feud[key]; relAdd(s, A.id, B.id, 25); relAdd(s, B.id, A.id, 25);
         const t = fmtL(l('{a} e {b} fizeram as pazes.', '{a} and {b} made up.'), { a: A.name, b: B.name }); say(s, t);
         if (a.owner === 'player') notify(s, t, 'info');
       } else if (now - since >= 8 && !realSafe(s, a) && !a.catalogNo && roll2 < 0.06) {
@@ -323,9 +324,9 @@ export function debutKid15(s: GameState, r: Rng, o: Debut15): Person | undefined
     kid.origin = 'family';
     s.persons[kid.id] = kid;
     o.band.members.push(kid.id); actsTouched17(s);
-    for (const id of o.band.members) { const q = s.persons[id]; if (q && q.id !== kid.id) { q.rel[kid.id] ??= 25; kid.rel[q.id] ??= 25; } }
+    for (const id of o.band.members) { const q = s.persons[id]; if (q && q.id !== kid.id) { relTouch(s, q.id, kid.id, 25); relTouch(s, kid.id, q.id, 25); } }
     st.g.push([par.id, kid.id, 'child']);
-    kid.rel[par.id] = BASE.parent; par.rel[kid.id] = BASE.child;
+    relPut(s, kid.id, par.id, BASE.parent); relPut(s, par.id, kid.id, BASE.child);
     const t = fmtL(l('{k} entra em {x}, a banda de {p}: agora é banda de família.', '{k} joins {x}, {p}\'s band: it is a family band now.'), { k: kid.name, p: par.name, x: o.band.name });
     say(s, t);
     remember(s, 'dynasty', t, { actId: o.band.id, pid: kid.id, important: o.band.fame >= 40 || o.band.owner === 'player' });
@@ -343,7 +344,7 @@ export function debutKid15(s: GameState, r: Rng, o: Debut15): Person | undefined
   act.fame = clamp(act.fame + (pa ? Math.min(14, 3 + pa.fame * 0.12) : 0) + (o.boost ?? 0), 0, 100);
   if (pa) { const tot = pa.fans.casual + pa.fans.active + pa.fans.core; act.fans.casual += Math.round(tot * 0.02); act.fans.active += Math.round(tot * 0.004); }
   st.inh.push(kid.id);
-  if (par) { kid.rel[par.id] = BASE.parent; par.rel[kid.id] = BASE.child; }
+  if (par) { relPut(s, kid.id, par.id, BASE.parent); relPut(s, par.id, kid.id, BASE.child); }
   const t = par && pa
     ? fmtL(l('{k}, filho(a) de {p} ({a}), estreia como {x}. O sobrenome abre portas, mas a comparação pesa.', '{k}, child of {p} ({a}), debuts as {x}. The surname opens doors, but the comparison weighs.'), { k: kid.name, p: par.name, a: pa.name, x: act.name })
     : fmtL(l('{k} estreia como {x}{n}.', '{k} debuts as {x}{n}.'), { k: kid.name, x: act.name, n: o.note ?? '' });
@@ -391,7 +392,7 @@ function tips(s: GameState, r: Rng): void {
 }
 
 function seedRel(s: GameState): void {
-  for (const [pid, ks] of Object.entries(graph(s))) { const p = s.persons[pid]; if (p) for (const [o, rel] of ks) if (p.rel[o] === undefined) p.rel[o] = BASE[rel]; }
+  for (const [pid, ks] of Object.entries(graph(s))) { const p = s.persons[pid]; if (p) for (const [o, rel] of ks) relTouch(s, pid, o, BASE[rel]); }
 }
 
 export function kinMonth15(s: GameState): void {

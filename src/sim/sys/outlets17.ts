@@ -7,6 +7,7 @@
 // (segurar o streaming: físico vende mais, jovens reclamam), exclusiva de plataforma, vídeo curto e
 // edição especial em vinil. Sem canais escolhidos = comportamento antigo.
 
+import { isForecast31 } from '../r31/market31';
 import { clamp } from '../../core/rng';
 import { familyOf, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
@@ -96,7 +97,7 @@ export function setPreset(s: GameState, ids: OutId[]): void { out17(s).preset = 
 registerMod('chartUnits', 'outlets17', (s, v, c) => {
   const rel = c.release;
   if (!rel || rel.owner !== 'player') return null;
-  const ids = out17(s).rel[rel.id];
+  const ids = out17(s).rel[rel.id] ?? (isForecast31(rel) ? out17(s).preset : undefined); // R31 D: a previsão conta os canais padrão
   if (!ids?.length) return null;
   const e = estimate(s, rel, ids);
   // janela: o efeito acaba depois de 4 semanas

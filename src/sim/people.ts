@@ -7,6 +7,7 @@ import { cityById, familyOf, type FamilyId, type NameGroup } from '../data/world
 import type { Act, GameState, Person } from './types';
 import { hasMutator, nextId } from './util';
 import { actsTouched17 } from './actidx17';
+import { relPut } from './opinion';
 
 const ROLE_SETS: Partial<Record<FamilyId, Person['role'][]>> = {
   blues_jazz: ['vocal', 'horns', 'keys', 'bass', 'drums', 'strings'],
@@ -162,7 +163,7 @@ export function makeAct(s: GameState, r: Rng, o: MakeActOpts): Act {
     s.persons[p.id] = p;
   }
   // relações iniciais
-  for (const a of members) for (const b of members) if (a !== b) a.rel[b.id] = r.int(-10, 50);
+  for (const a of members) for (const b of members) if (a !== b) relPut(s, a.id, b.id, r.int(-10, 50));
   const name = o.name ?? (o.members === 1 ? members[0].name : bandName(r, lang, family, o.members, synthetic));
   const act: Act = {
     id: nextId(s, 'a'),

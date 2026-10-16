@@ -17,6 +17,7 @@ import { energyLeft, spendEnergy } from './life';
 import { ownerOf } from './people/owner';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { value31On } from '../r31/value31';
 
 // ---------------------------------------------------------------- tipos de investidor
 
@@ -131,7 +132,8 @@ export function valuation(s: GameState): number {
   const base = ipoTerms(s).valuation;
   const floor = money(s, 25000) + Math.max(0, s.player.cash) + playerActs(s).length * money(s, 6000);
   const rep = 1 + (s.player.reputation.commercial - 50) / 250;
-  const model = Math.round(base * rep * (1 + perk(s, 'valuation')));
+  // r31 (E · Bolsa): com o valor da bolsa ligado, a reputação já está na conta por parte (não multiplica de novo)
+  const model = Math.round(base * (value31On(s) ? 1 : rep) * (1 + perk(s, 'valuation')));
   // listada: metade do valor vem da cotação no pregão (rodada 11)
   return Math.max(floor, s.listing.listed ? Math.round(model * 0.5 + s.listing.price * s.listing.shares * 0.5) : model);
 }

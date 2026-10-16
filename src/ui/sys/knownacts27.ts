@@ -19,6 +19,7 @@ import { store } from '../store';
 import { getSort27, page27, setSort27, sortHead27, sortSpec27, sortTable27 } from '../sort27';
 import { ic, tabs } from '../vis';
 import './knownacts27.css';
+import { seen } from '../../sim/know';
 
 export const KNOWNACTS27 = 'knownacts27';
 const PAGE = 30;
@@ -78,7 +79,7 @@ function matches(s: GameState, k: KnownAct27, q: string, group: 'all' | Group27)
   if (F.status === 'off' && live(a) && a.status !== 'hiatus') return false;
   if (!q) return true;
   return a.name.toLowerCase().includes(q) || genreName(a.genre).toLowerCase().includes(q) || cityName(a.city).toLowerCase().includes(q)
-    || a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q));
+    || (seen(s, a.id, 'members') && a.members.some((m) => s.persons[m]?.name.toLowerCase().includes(q))); // r31 F #2: nomes só de quem você sabe quem é
 }
 
 function table(s: GameState, all: KnownAct27[], group: 'all' | Group27): HTMLElement {

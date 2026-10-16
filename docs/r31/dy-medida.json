@@ -1,0 +1,4234 @@
+{
+ "meta": {
+  "label": "onda 3 · D+Y (padrão)",
+  "generatedBy": "scripts/r31/measure.ts",
+  "seeds": [
+   "r31-base-0",
+   "r31-base-1",
+   "r31-base-2",
+   "r31-base-3"
+  ],
+  "starts": [
+   1900,
+   1955,
+   1990,
+   2012,
+   2030
+  ],
+  "months": 36,
+  "jobs": 2,
+  "cpus": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "node": "v22.22.0",
+  "wallSec": 409,
+  "errors": [],
+  "sw": {}
+ },
+ "byEra": [
+  {
+   "start": 1900,
+   "n": 4,
+   "msPerMonthMean": 273,
+   "msPerMonthMedian": 258,
+   "cpuMsPerMonthMean": 275,
+   "createMsMean": 165,
+   "saveJsonBytesMedian": 3735668,
+   "saveGzipBytesMedian": 709893,
+   "stringifyMsMean": 50,
+   "x4Keys": 266,
+   "cashRealMedian": 129824,
+   "worthRealMedian": 4620390,
+   "fameMedian": 30,
+   "actsMedian": 3,
+   "revenueLastYearRealMedian": 1786618,
+   "ended": 0
+  },
+  {
+   "start": 1955,
+   "n": 4,
+   "msPerMonthMean": 629,
+   "msPerMonthMedian": 628,
+   "cpuMsPerMonthMean": 616,
+   "createMsMean": 238,
+   "saveJsonBytesMedian": 6030395,
+   "saveGzipBytesMedian": 1189493,
+   "stringifyMsMean": 65,
+   "x4Keys": 266,
+   "cashRealMedian": 43774,
+   "worthRealMedian": 658443,
+   "fameMedian": 17,
+   "actsMedian": 3,
+   "revenueLastYearRealMedian": 473723,
+   "ended": 1
+  },
+  {
+   "start": 1990,
+   "n": 4,
+   "msPerMonthMean": 1247,
+   "msPerMonthMedian": 1222,
+   "cpuMsPerMonthMean": 1200,
+   "createMsMean": 418,
+   "saveJsonBytesMedian": 10168776,
+   "saveGzipBytesMedian": 2024116,
+   "stringifyMsMean": 111,
+   "x4Keys": 266,
+   "cashRealMedian": -4014,
+   "worthRealMedian": 5000987,
+   "fameMedian": 18,
+   "actsMedian": 3,
+   "revenueLastYearRealMedian": 1674618,
+   "ended": 1
+  },
+  {
+   "start": 2012,
+   "n": 4,
+   "msPerMonthMean": 1672,
+   "msPerMonthMedian": 1592,
+   "cpuMsPerMonthMean": 1672,
+   "createMsMean": 548,
+   "saveJsonBytesMedian": 12690684,
+   "saveGzipBytesMedian": 2501745,
+   "stringifyMsMean": 146,
+   "x4Keys": 267,
+   "cashRealMedian": 144736,
+   "worthRealMedian": 8431197,
+   "fameMedian": 18,
+   "actsMedian": 3,
+   "revenueLastYearRealMedian": 2160217,
+   "ended": 0
+  },
+  {
+   "start": 2030,
+   "n": 4,
+   "msPerMonthMean": 1782,
+   "msPerMonthMedian": 1768,
+   "cpuMsPerMonthMean": 2015,
+   "createMsMean": 795,
+   "saveJsonBytesMedian": 12622436,
+   "saveGzipBytesMedian": 2402343,
+   "stringifyMsMean": 212,
+   "x4Keys": 267,
+   "cashRealMedian": 210426,
+   "worthRealMedian": 5627998,
+   "fameMedian": 19,
+   "actsMedian": 4,
+   "revenueLastYearRealMedian": 1955158,
+   "ended": 0
+  }
+ ],
+ "runs": [
+  {
+   "seed": "r31-base-0",
+   "start": 1900,
+   "months": 36,
+   "game": {
+    "endYear": 1903,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 382095,
+    "cashReal": 133881,
+    "worthReal": 4421041,
+    "liquidReal": 41121,
+    "debt": 185367,
+    "fame": 29,
+    "repArtistic": 23,
+    "repCommercial": 72,
+    "acts": 3,
+    "songs": 106,
+    "releases": 23,
+    "number1s": 13,
+    "revenueLastYear": 4830516,
+    "revenueLastYearReal": 1715382,
+    "persons": 421,
+    "worldActs": 225,
+    "labels": 54,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1900,
+      "cash": 72362,
+      "cashReal": 26048,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 157672,
+      "revenueReal": 57545,
+      "finRev": 157672,
+      "finNet": -211665
+     },
+     {
+      "year": 1901,
+      "cash": 82731,
+      "cashReal": 29379,
+      "acts": 3,
+      "fame": 19,
+      "revenue": 2096620,
+      "revenueReal": 754723,
+      "finRev": 2096620,
+      "finNet": 689928
+     },
+     {
+      "year": 1902,
+      "cash": 382095,
+      "cashReal": 133881,
+      "acts": 3,
+      "fame": 29,
+      "revenue": 4830516,
+      "revenueReal": 1715382,
+      "finRev": 4830516,
+      "finNet": 1081002
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 3661490,
+    "gzipBytes": 701223,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      297114
+     ],
+     [
+      "facts17",
+      211645
+     ],
+     [
+      "st28",
+      135226
+     ],
+     [
+      "attn",
+      93825
+     ],
+     [
+      "people",
+      80244
+     ],
+     [
+      "deleg31",
+      60949
+     ],
+     [
+      "chron9",
+      56596
+     ],
+     [
+      "media17",
+      50985
+     ],
+     [
+      "fame15",
+      50933
+     ],
+     [
+      "creation",
+      45390
+     ],
+     [
+      "review18",
+      41090
+     ],
+     [
+      "ag18",
+      40455
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 171,
+    "monthMs": {
+     "mean": 279,
+     "median": 244,
+     "p90": 450,
+     "max": 536
+    },
+    "cpuMonthMs": {
+     "mean": 293,
+     "median": 260
+    },
+    "perMonth": [
+     155,
+     111,
+     115,
+     162,
+     173,
+     183,
+     164,
+     227,
+     252,
+     241,
+     233,
+     241,
+     208,
+     199,
+     315,
+     210,
+     233,
+     244,
+     182,
+     185,
+     337,
+     211,
+     358,
+     536,
+     340,
+     369,
+     518,
+     315,
+     450,
+     337,
+     343,
+     458,
+     358,
+     280,
+     420,
+     389
+    ],
+    "cpuPerMonth": [
+     189,
+     121,
+     108,
+     216,
+     174,
+     306,
+     249,
+     226,
+     238,
+     260,
+     220,
+     222,
+     215,
+     191,
+     316,
+     209,
+     254,
+     260,
+     200,
+     178,
+     264,
+     256,
+     348,
+     699,
+     415,
+     415,
+     566,
+     320,
+     294,
+     360,
+     341,
+     462,
+     423,
+     310,
+     389,
+     339
+    ],
+    "stringifyMs": 36,
+    "gzipMs": 88
+   }
+  },
+  {
+   "seed": "r31-base-1",
+   "start": 1900,
+   "months": 36,
+   "game": {
+    "endYear": 1903,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 358938,
+    "cashReal": 125767,
+    "worthReal": 3647007,
+    "liquidReal": 46895,
+    "debt": 124376,
+    "fame": 22,
+    "repArtistic": 23,
+    "repCommercial": 56,
+    "acts": 3,
+    "songs": 75,
+    "releases": 17,
+    "number1s": 8,
+    "revenueLastYear": 3773638,
+    "revenueLastYearReal": 1340070,
+    "persons": 437,
+    "worldActs": 228,
+    "labels": 56,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1900,
+      "cash": 263636,
+      "cashReal": 94901,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 250247,
+      "revenueReal": 91331,
+      "finRev": 250247,
+      "finNet": -247769
+     },
+     {
+      "year": 1901,
+      "cash": 17092,
+      "cashReal": 6070,
+      "acts": 2,
+      "fame": 20,
+      "revenue": 1306972,
+      "revenueReal": 470472,
+      "finRev": 1306972,
+      "finNet": 140204
+     },
+     {
+      "year": 1902,
+      "cash": 358938,
+      "cashReal": 125767,
+      "acts": 3,
+      "fame": 22,
+      "revenue": 3773638,
+      "revenueReal": 1340070,
+      "finRev": 3773638,
+      "finNet": 1444812
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 3764499,
+    "gzipBytes": 718562,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      294942
+     ],
+     [
+      "facts17",
+      216821
+     ],
+     [
+      "st28",
+      167939
+     ],
+     [
+      "attn",
+      93150
+     ],
+     [
+      "people",
+      83906
+     ],
+     [
+      "media17",
+      64445
+     ],
+     [
+      "chron9",
+      61590
+     ],
+     [
+      "fame15",
+      53188
+     ],
+     [
+      "ag18",
+      52779
+     ],
+     [
+      "leisure14",
+      50715
+     ],
+     [
+      "creation",
+      46669
+     ],
+     [
+      "review18",
+      39171
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 165,
+    "monthMs": {
+     "mean": 263,
+     "median": 266,
+     "p90": 377,
+     "max": 468
+    },
+    "cpuMonthMs": {
+     "mean": 253,
+     "median": 260
+    },
+    "perMonth": [
+     132,
+     148,
+     122,
+     141,
+     147,
+     174,
+     182,
+     190,
+     195,
+     181,
+     345,
+     252,
+     229,
+     266,
+     291,
+     254,
+     177,
+     468,
+     208,
+     248,
+     265,
+     369,
+     309,
+     300,
+     300,
+     289,
+     272,
+     234,
+     302,
+     307,
+     288,
+     343,
+     385,
+     377,
+     454,
+     340
+    ],
+    "cpuPerMonth": [
+     176,
+     141,
+     106,
+     138,
+     126,
+     158,
+     179,
+     146,
+     185,
+     165,
+     344,
+     261,
+     263,
+     259,
+     271,
+     250,
+     171,
+     556,
+     210,
+     244,
+     275,
+     301,
+     267,
+     249,
+     275,
+     275,
+     245,
+     229,
+     289,
+     279,
+     289,
+     313,
+     346,
+     414,
+     407,
+     317
+    ],
+    "stringifyMs": 54,
+    "gzipMs": 89
+   }
+  },
+  {
+   "seed": "r31-base-2",
+   "start": 1900,
+   "months": 36,
+   "game": {
+    "endYear": 1903,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 223093,
+    "cashReal": 78169,
+    "worthReal": 4819738,
+    "liquidReal": -5366,
+    "debt": 116208,
+    "fame": 30,
+    "repArtistic": 9,
+    "repCommercial": 75,
+    "acts": 3,
+    "songs": 127,
+    "releases": 28,
+    "number1s": 13,
+    "revenueLastYear": 5231715,
+    "revenueLastYearReal": 1857853,
+    "persons": 456,
+    "worldActs": 235,
+    "labels": 56,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1900,
+      "cash": 44169,
+      "cashReal": 15900,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 296752,
+      "revenueReal": 108304,
+      "finRev": 296752,
+      "finNet": -71065
+     },
+     {
+      "year": 1901,
+      "cash": 40602,
+      "cashReal": 14418,
+      "acts": 3,
+      "fame": 22,
+      "revenue": 987636,
+      "revenueReal": 355521,
+      "finRev": 987636,
+      "finNet": 207981
+     },
+     {
+      "year": 1902,
+      "cash": 223093,
+      "cashReal": 78169,
+      "acts": 3,
+      "fame": 30,
+      "revenue": 5231715,
+      "revenueReal": 1857853,
+      "finRev": 5231715,
+      "finNet": 1440861
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 3910267,
+    "gzipBytes": 740142,
+    "x4Keys": 265,
+    "x4Top": [
+     [
+      "ch7",
+      260859
+     ],
+     [
+      "facts17",
+      212465
+     ],
+     [
+      "st28",
+      188295
+     ],
+     [
+      "attn",
+      109999
+     ],
+     [
+      "deleg31",
+      80889
+     ],
+     [
+      "people",
+      74937
+     ],
+     [
+      "fame15",
+      57224
+     ],
+     [
+      "media17",
+      56888
+     ],
+     [
+      "chron9",
+      56740
+     ],
+     [
+      "creation",
+      50117
+     ],
+     [
+      "review18",
+      47349
+     ],
+     [
+      "regions18",
+      35037
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 206,
+    "monthMs": {
+     "mean": 304,
+     "median": 306,
+     "p90": 409,
+     "max": 655
+    },
+    "cpuMonthMs": {
+     "mean": 307,
+     "median": 286
+    },
+    "perMonth": [
+     147,
+     113,
+     147,
+     183,
+     193,
+     199,
+     279,
+     395,
+     360,
+     213,
+     310,
+     360,
+     409,
+     351,
+     550,
+     340,
+     243,
+     257,
+     200,
+     223,
+     232,
+     256,
+     209,
+     254,
+     320,
+     438,
+     306,
+     251,
+     366,
+     266,
+     405,
+     655,
+     376,
+     401,
+     401,
+     354
+    ],
+    "cpuPerMonth": [
+     179,
+     132,
+     164,
+     189,
+     213,
+     196,
+     271,
+     406,
+     352,
+     222,
+     297,
+     354,
+     374,
+     254,
+     543,
+     320,
+     240,
+     269,
+     205,
+     261,
+     246,
+     264,
+     225,
+     312,
+     327,
+     306,
+     295,
+     260,
+     307,
+     277,
+     411,
+     761,
+     366,
+     442,
+     432,
+     394
+    ],
+    "stringifyMs": 70,
+    "gzipMs": 89
+   }
+  },
+  {
+   "seed": "r31-base-3",
+   "start": 1900,
+   "months": 36,
+   "game": {
+    "endYear": 1903,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 860151,
+    "cashReal": 301384,
+    "worthReal": 5671480,
+    "liquidReal": 238486,
+    "debt": 126870,
+    "fame": 30,
+    "repArtistic": 15,
+    "repCommercial": 75,
+    "acts": 3,
+    "songs": 70,
+    "releases": 15,
+    "number1s": 13,
+    "revenueLastYear": 6099860,
+    "revenueLastYearReal": 2166143,
+    "persons": 426,
+    "worldActs": 213,
+    "labels": 55,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1900,
+      "cash": 194904,
+      "cashReal": 70160,
+      "acts": 3,
+      "fame": 18,
+      "revenue": 303939,
+      "revenueReal": 110927,
+      "finRev": 303939,
+      "finNet": -193910
+     },
+     {
+      "year": 1901,
+      "cash": 210088,
+      "cashReal": 74605,
+      "acts": 3,
+      "fame": 24,
+      "revenue": 2310337,
+      "revenueReal": 831655,
+      "finRev": 2310337,
+      "finNet": 452031
+     },
+     {
+      "year": 1902,
+      "cash": 860151,
+      "cashReal": 301384,
+      "acts": 3,
+      "fame": 30,
+      "revenue": 6099860,
+      "revenueReal": 2166143,
+      "finRev": 6099860,
+      "finNet": 2329083
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 3706836,
+    "gzipBytes": 692843,
+    "x4Keys": 265,
+    "x4Top": [
+     [
+      "ch7",
+      333391
+     ],
+     [
+      "facts17",
+      224148
+     ],
+     [
+      "st28",
+      169739
+     ],
+     [
+      "attn",
+      97462
+     ],
+     [
+      "people",
+      73470
+     ],
+     [
+      "media17",
+      56513
+     ],
+     [
+      "fame15",
+      56391
+     ],
+     [
+      "chron9",
+      47239
+     ],
+     [
+      "review18",
+      45474
+     ],
+     [
+      "creation",
+      44644
+     ],
+     [
+      "dm18",
+      33467
+     ],
+     [
+      "deleg31",
+      33181
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 117,
+    "monthMs": {
+     "mean": 246,
+     "median": 250,
+     "p90": 316,
+     "max": 459
+    },
+    "cpuMonthMs": {
+     "mean": 245,
+     "median": 237
+    },
+    "perMonth": [
+     93,
+     113,
+     135,
+     181,
+     145,
+     142,
+     232,
+     250,
+     312,
+     283,
+     208,
+     459,
+     267,
+     204,
+     260,
+     279,
+     181,
+     203,
+     209,
+     311,
+     314,
+     236,
+     259,
+     292,
+     250,
+     241,
+     316,
+     284,
+     212,
+     246,
+     264,
+     275,
+     188,
+     260,
+     406,
+     340
+    ],
+    "cpuPerMonth": [
+     90,
+     109,
+     123,
+     129,
+     130,
+     137,
+     201,
+     245,
+     307,
+     228,
+     168,
+     575,
+     312,
+     206,
+     237,
+     308,
+     203,
+     206,
+     185,
+     281,
+     236,
+     224,
+     246,
+     293,
+     233,
+     246,
+     278,
+     286,
+     235,
+     282,
+     302,
+     313,
+     214,
+     292,
+     412,
+     364
+    ],
+    "stringifyMs": 40,
+    "gzipMs": 83
+   }
+  },
+  {
+   "seed": "r31-base-0",
+   "start": 1955,
+   "months": 36,
+   "game": {
+    "endYear": 1958,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 1120853,
+    "cashReal": 96625,
+    "worthReal": 3505859,
+    "liquidReal": 40682,
+    "debt": 463606,
+    "fame": 19,
+    "repArtistic": 70,
+    "repCommercial": 46,
+    "acts": 3,
+    "songs": 84,
+    "releases": 15,
+    "number1s": 0,
+    "revenueLastYear": 15874686,
+    "revenueLastYearReal": 1392516,
+    "persons": 1034,
+    "worldActs": 540,
+    "labels": 40,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1955,
+      "cash": 45062,
+      "cashReal": 4023,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 1535846,
+      "revenueReal": 139622,
+      "finRev": 1535846,
+      "finNet": -697161
+     },
+     {
+      "year": 1956,
+      "cash": 359259,
+      "cashReal": 31514,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 7460457,
+      "revenueReal": 666112,
+      "finRev": 7460457,
+      "finNet": 1046911
+     },
+     {
+      "year": 1957,
+      "cash": 1120853,
+      "cashReal": 96625,
+      "acts": 3,
+      "fame": 19,
+      "revenue": 15874686,
+      "revenueReal": 1392516,
+      "finRev": 15874686,
+      "finNet": 2909275
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 6371701,
+    "gzipBytes": 1245286,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      387029
+     ],
+     [
+      "facts17",
+      232348
+     ],
+     [
+      "chron9",
+      129705
+     ],
+     [
+      "st28",
+      114975
+     ],
+     [
+      "attn",
+      89916
+     ],
+     [
+      "deleg31",
+      88187
+     ],
+     [
+      "creation",
+      81960
+     ],
+     [
+      "people",
+      75545
+     ],
+     [
+      "fame15",
+      72203
+     ],
+     [
+      "media17",
+      68187
+     ],
+     [
+      "leisure14",
+      62492
+     ],
+     [
+      "fame16",
+      59353
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 257,
+    "monthMs": {
+     "mean": 653,
+     "median": 693,
+     "p90": 907,
+     "max": 1009
+    },
+    "cpuMonthMs": {
+     "mean": 651,
+     "median": 661
+    },
+    "perMonth": [
+     283,
+     263,
+     263,
+     362,
+     320,
+     420,
+     517,
+     568,
+     540,
+     732,
+     605,
+     693,
+     955,
+     520,
+     550,
+     659,
+     538,
+     772,
+     776,
+     577,
+     587,
+     779,
+     924,
+     768,
+     835,
+     752,
+     713,
+     633,
+     686,
+     907,
+     733,
+     781,
+     850,
+     1009,
+     865,
+     768
+    ],
+    "cpuPerMonth": [
+     329,
+     253,
+     261,
+     366,
+     336,
+     475,
+     506,
+     497,
+     535,
+     711,
+     571,
+     685,
+     1111,
+     492,
+     574,
+     762,
+     584,
+     778,
+     719,
+     586,
+     573,
+     626,
+     1051,
+     731,
+     726,
+     778,
+     662,
+     658,
+     661,
+     833,
+     793,
+     712,
+     1041,
+     871,
+     853,
+     723
+    ],
+    "stringifyMs": 77,
+    "gzipMs": 143
+   }
+  },
+  {
+   "seed": "r31-base-1",
+   "start": 1955,
+   "months": 36,
+   "game": {
+    "endYear": 1958,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 736759,
+    "cashReal": 63514,
+    "worthReal": 535876,
+    "liquidReal": 16532,
+    "debt": 395948,
+    "fame": 17,
+    "repArtistic": 66,
+    "repCommercial": 43,
+    "acts": 3,
+    "songs": 87,
+    "releases": 18,
+    "number1s": 0,
+    "revenueLastYear": 4761964,
+    "revenueLastYearReal": 417716,
+    "persons": 975,
+    "worldActs": 527,
+    "labels": 40,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1955,
+      "cash": 479505,
+      "cashReal": 42813,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 825514,
+      "revenueReal": 75047,
+      "finRev": 825514,
+      "finNet": -917903
+     },
+     {
+      "year": 1956,
+      "cash": 194727,
+      "cashReal": 17081,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 2711025,
+      "revenueReal": 242056,
+      "finRev": 2711025,
+      "finNet": 305687
+     },
+     {
+      "year": 1957,
+      "cash": 736759,
+      "cashReal": 63514,
+      "acts": 3,
+      "fame": 17,
+      "revenue": 4761964,
+      "revenueReal": 417716,
+      "finRev": 4761964,
+      "finNet": -545441
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 5879522,
+    "gzipBytes": 1162591,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      376378
+     ],
+     [
+      "facts17",
+      222502
+     ],
+     [
+      "chron9",
+      119787
+     ],
+     [
+      "attn",
+      92443
+     ],
+     [
+      "creation",
+      78435
+     ],
+     [
+      "st28",
+      77480
+     ],
+     [
+      "people",
+      73025
+     ],
+     [
+      "media17",
+      69161
+     ],
+     [
+      "fame15",
+      68003
+     ],
+     [
+      "fame16",
+      58280
+     ],
+     [
+      "leisure14",
+      54852
+     ],
+     [
+      "review18",
+      44338
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 175,
+    "monthMs": {
+     "mean": 616,
+     "median": 644,
+     "p90": 911,
+     "max": 995
+    },
+    "cpuMonthMs": {
+     "mean": 599,
+     "median": 593
+    },
+    "perMonth": [
+     231,
+     211,
+     208,
+     279,
+     364,
+     301,
+     418,
+     373,
+     430,
+     410,
+     959,
+     690,
+     683,
+     628,
+     556,
+     413,
+     619,
+     494,
+     510,
+     644,
+     558,
+     832,
+     816,
+     770,
+     827,
+     587,
+     781,
+     825,
+     932,
+     672,
+     821,
+     710,
+     896,
+     822,
+     911,
+     995
+    ],
+    "cpuPerMonth": [
+     258,
+     251,
+     213,
+     276,
+     325,
+     276,
+     386,
+     314,
+     388,
+     412,
+     1043,
+     705,
+     612,
+     568,
+     522,
+     447,
+     507,
+     513,
+     527,
+     639,
+     519,
+     930,
+     751,
+     787,
+     805,
+     574,
+     710,
+     748,
+     946,
+     670,
+     727,
+     711,
+     1051,
+     771,
+     864,
+     830
+    ],
+    "stringifyMs": 74,
+    "gzipMs": 171
+   }
+  },
+  {
+   "seed": "r31-base-2",
+   "start": 1955,
+   "months": 36,
+   "game": {
+    "endYear": 1956,
+    "endMonth": 9,
+    "monthsPlayed": 21,
+    "ended": "insolvency",
+    "cash": -200198,
+    "cashReal": -17875,
+    "worthReal": -122877,
+    "liquidReal": -122877,
+    "debt": 1083779,
+    "fame": 14,
+    "repArtistic": 59,
+    "repCommercial": 36,
+    "acts": 2,
+    "songs": 41,
+    "releases": 5,
+    "number1s": 0,
+    "revenueLastYear": 610137,
+    "revenueLastYearReal": 55467,
+    "persons": 805,
+    "worldActs": 463,
+    "labels": 37,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1955,
+      "cash": 413380,
+      "cashReal": 36909,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 610137,
+      "revenueReal": 55467,
+      "finRev": 610137,
+      "finNet": -1023060
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 5280784,
+    "gzipBytes": 1151195,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      733122
+     ],
+     [
+      "facts17",
+      213030
+     ],
+     [
+      "chron9",
+      99636
+     ],
+     [
+      "attn",
+      85902
+     ],
+     [
+      "creation",
+      79167
+     ],
+     [
+      "media17",
+      65327
+     ],
+     [
+      "people",
+      61003
+     ],
+     [
+      "fame16",
+      59302
+     ],
+     [
+      "y31",
+      57925
+     ],
+     [
+      "fame15",
+      48321
+     ],
+     [
+      "leisure14",
+      39949
+     ],
+     [
+      "st28",
+      39797
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 308,
+    "monthMs": {
+     "mean": 528,
+     "median": 537,
+     "p90": 660,
+     "max": 835
+    },
+    "cpuMonthMs": {
+     "mean": 513,
+     "median": 525
+    },
+    "perMonth": [
+     323,
+     238,
+     319,
+     451,
+     433,
+     446,
+     544,
+     509,
+     595,
+     450,
+     537,
+     660,
+     835,
+     472,
+     571,
+     595,
+     805,
+     641,
+     547,
+     525,
+     594
+    ],
+    "cpuPerMonth": [
+     369,
+     265,
+     342,
+     460,
+     405,
+     399,
+     544,
+     463,
+     541,
+     433,
+     525,
+     609,
+     896,
+     480,
+     598,
+     530,
+     696,
+     624,
+     534,
+     536,
+     525
+    ],
+    "stringifyMs": 50,
+    "gzipMs": 125
+   }
+  },
+  {
+   "seed": "r31-base-3",
+   "start": 1955,
+   "months": 36,
+   "game": {
+    "endYear": 1958,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 278779,
+    "cashReal": 24033,
+    "worthReal": 781010,
+    "liquidReal": -29278,
+    "debt": 382581,
+    "fame": 17,
+    "repArtistic": 67,
+    "repCommercial": 43,
+    "acts": 2,
+    "songs": 53,
+    "releases": 11,
+    "number1s": 0,
+    "revenueLastYear": 6038924,
+    "revenueLastYearReal": 529730,
+    "persons": 991,
+    "worldActs": 548,
+    "labels": 40,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1955,
+      "cash": 74068,
+      "cashReal": 6613,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 1296515,
+      "revenueReal": 117865,
+      "finRev": 1296515,
+      "finNet": -400180
+     },
+     {
+      "year": 1956,
+      "cash": 24596,
+      "cashReal": 2158,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 4843403,
+      "revenueReal": 432447,
+      "finRev": 4843403,
+      "finNet": -412085
+     },
+     {
+      "year": 1957,
+      "cash": 278779,
+      "cashReal": 24033,
+      "acts": 2,
+      "fame": 17,
+      "revenue": 6038924,
+      "revenueReal": 529730,
+      "finRev": 6038924,
+      "finNet": 198015
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 6181268,
+    "gzipBytes": 1216394,
+    "x4Keys": 268,
+    "x4Top": [
+     [
+      "ch7",
+      384051
+     ],
+     [
+      "facts17",
+      222524
+     ],
+     [
+      "chron9",
+      132345
+     ],
+     [
+      "attn",
+      94018
+     ],
+     [
+      "creation",
+      83494
+     ],
+     [
+      "people",
+      77376
+     ],
+     [
+      "fame15",
+      76533
+     ],
+     [
+      "deleg31",
+      74398
+     ],
+     [
+      "media17",
+      70841
+     ],
+     [
+      "st28",
+      68065
+     ],
+     [
+      "fame16",
+      58584
+     ],
+     [
+      "leisure14",
+      55342
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 210,
+    "monthMs": {
+     "mean": 678,
+     "median": 715,
+     "p90": 992,
+     "max": 1142
+    },
+    "cpuMonthMs": {
+     "mean": 658,
+     "median": 651
+    },
+    "perMonth": [
+     281,
+     196,
+     203,
+     350,
+     528,
+     416,
+     456,
+     407,
+     586,
+     546,
+     507,
+     545,
+     592,
+     681,
+     645,
+     616,
+     600,
+     1047,
+     631,
+     856,
+     853,
+     1135,
+     827,
+     740,
+     951,
+     716,
+     1142,
+     796,
+     889,
+     760,
+     992,
+     896,
+     823,
+     738,
+     736,
+     715
+    ],
+    "cpuPerMonth": [
+     280,
+     192,
+     201,
+     358,
+     676,
+     448,
+     463,
+     454,
+     538,
+     567,
+     487,
+     563,
+     623,
+     610,
+     616,
+     597,
+     575,
+     1227,
+     586,
+     739,
+     833,
+     1061,
+     782,
+     759,
+     841,
+     701,
+     1185,
+     747,
+     771,
+     743,
+     907,
+     871,
+     687,
+     659,
+     643,
+     711
+    ],
+    "stringifyMs": 60,
+    "gzipMs": 344
+   }
+  },
+  {
+   "seed": "r31-base-0",
+   "start": 1990,
+   "months": 36,
+   "game": {
+    "endYear": 1993,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": -115041,
+    "cashReal": -2015,
+    "worthReal": 5005515,
+    "liquidReal": -47247,
+    "debt": 1447583,
+    "fame": 20,
+    "repArtistic": 63,
+    "repCommercial": 49,
+    "acts": 3,
+    "songs": 136,
+    "releases": 24,
+    "number1s": 0,
+    "revenueLastYear": 93261977,
+    "revenueLastYearReal": 1683429,
+    "persons": 2210,
+    "worldActs": 1079,
+    "labels": 38,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1990,
+      "cash": 842221,
+      "cashReal": 15684,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 7518340,
+      "revenueReal": 144583,
+      "finRev": 7518340,
+      "finNet": -4613204
+     },
+     {
+      "year": 1991,
+      "cash": 1199675,
+      "cashReal": 21655,
+      "acts": 3,
+      "fame": 17,
+      "revenue": 17124529,
+      "revenueReal": 318893,
+      "finRev": 17124529,
+      "finNet": 2399205
+     },
+     {
+      "year": 1992,
+      "cash": -115041,
+      "cashReal": -2015,
+      "acts": 3,
+      "fame": 20,
+      "revenue": 93261977,
+      "revenueReal": 1683429,
+      "finRev": 93261977,
+      "finNet": 20847452
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 10128503,
+    "gzipBytes": 2019180,
+    "x4Keys": 267,
+    "x4Top": [
+     [
+      "ch7",
+      446037
+     ],
+     [
+      "chron9",
+      308271
+     ],
+     [
+      "facts17",
+      247927
+     ],
+     [
+      "fame15",
+      163465
+     ],
+     [
+      "creation",
+      140319
+     ],
+     [
+      "leisure14",
+      130622
+     ],
+     [
+      "ag18",
+      94237
+     ],
+     [
+      "fame16",
+      91758
+     ],
+     [
+      "attn",
+      86010
+     ],
+     [
+      "relics9",
+      84817
+     ],
+     [
+      "people",
+      79579
+     ],
+     [
+      "st28",
+      73470
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 379,
+    "monthMs": {
+     "mean": 1268,
+     "median": 1273,
+     "p90": 1683,
+     "max": 2437
+    },
+    "cpuMonthMs": {
+     "mean": 1224,
+     "median": 1195
+    },
+    "perMonth": [
+     602,
+     454,
+     544,
+     841,
+     729,
+     832,
+     1065,
+     775,
+     1078,
+     1154,
+     1042,
+     1198,
+     1245,
+     1013,
+     1516,
+     1044,
+     1527,
+     1220,
+     1527,
+     1136,
+     1144,
+     1307,
+     1683,
+     1353,
+     1365,
+     1273,
+     1638,
+     1469,
+     1918,
+     1514,
+     1654,
+     1477,
+     1600,
+     1468,
+     1801,
+     2437
+    ],
+    "cpuPerMonth": [
+     667,
+     435,
+     605,
+     745,
+     776,
+     801,
+     989,
+     755,
+     1007,
+     1184,
+     1193,
+     1149,
+     1110,
+     1052,
+     1487,
+     1010,
+     1585,
+     1178,
+     1468,
+     923,
+     1056,
+     1197,
+     1782,
+     1401,
+     1253,
+     1223,
+     1381,
+     1337,
+     1996,
+     1458,
+     1634,
+     1468,
+     1396,
+     1342,
+     1583,
+     2440
+    ],
+    "stringifyMs": 130,
+    "gzipMs": 294
+   }
+  },
+  {
+   "seed": "r31-base-1",
+   "start": 1990,
+   "months": 36,
+   "game": {
+    "endYear": 1993,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": -3099765,
+    "cashReal": -54287,
+    "worthReal": 4996459,
+    "liquidReal": -96240,
+    "debt": 1336574,
+    "fame": 17,
+    "repArtistic": 56,
+    "repCommercial": 41,
+    "acts": 2,
+    "songs": 85,
+    "releases": 17,
+    "number1s": 0,
+    "revenueLastYear": 92285643,
+    "revenueLastYearReal": 1665806,
+    "persons": 2266,
+    "worldActs": 1072,
+    "labels": 38,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1990,
+      "cash": 730567,
+      "cashReal": 13605,
+      "acts": 3,
+      "fame": 12,
+      "revenue": 9162354,
+      "revenueReal": 176199,
+      "finRev": 9162354,
+      "finNet": -4448546
+     },
+     {
+      "year": 1991,
+      "cash": 4151407,
+      "cashReal": 74935,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 32553634,
+      "revenueReal": 606213,
+      "finRev": 32553634,
+      "finNet": 1400910
+     },
+     {
+      "year": 1992,
+      "cash": -3099765,
+      "cashReal": -54287,
+      "acts": 2,
+      "fame": 17,
+      "revenue": 92285643,
+      "revenueReal": 1665806,
+      "finRev": 92285643,
+      "finNet": 11578008
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 10209049,
+    "gzipBytes": 2029389,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      439196
+     ],
+     [
+      "chron9",
+      293508
+     ],
+     [
+      "facts17",
+      247943
+     ],
+     [
+      "fame15",
+      164598
+     ],
+     [
+      "creation",
+      134051
+     ],
+     [
+      "ag18",
+      116119
+     ],
+     [
+      "leisure14",
+      114347
+     ],
+     [
+      "attn",
+      94369
+     ],
+     [
+      "fame16",
+      90985
+     ],
+     [
+      "relics9",
+      85131
+     ],
+     [
+      "st28",
+      80857
+     ],
+     [
+      "people",
+      79394
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 464,
+    "monthMs": {
+     "mean": 1354,
+     "median": 1377,
+     "p90": 1947,
+     "max": 2327
+    },
+    "cpuMonthMs": {
+     "mean": 1317,
+     "median": 1271
+    },
+    "perMonth": [
+     572,
+     457,
+     678,
+     773,
+     734,
+     891,
+     942,
+     1039,
+     913,
+     1447,
+     1245,
+     1461,
+     1064,
+     1269,
+     1241,
+     1315,
+     1573,
+     1197,
+     1377,
+     1429,
+     1077,
+     1223,
+     1587,
+     1852,
+     1562,
+     1673,
+     1347,
+     1453,
+     1570,
+     2178,
+     1755,
+     2090,
+     1646,
+     1947,
+     2327,
+     1858
+    ],
+    "cpuPerMonth": [
+     648,
+     488,
+     697,
+     796,
+     733,
+     888,
+     794,
+     896,
+     866,
+     1523,
+     1061,
+     1467,
+     1056,
+     1076,
+     1208,
+     1229,
+     1718,
+     1207,
+     1343,
+     1237,
+     1104,
+     1200,
+     1500,
+     2044,
+     1501,
+     1567,
+     1305,
+     1407,
+     1409,
+     2290,
+     1708,
+     1950,
+     1466,
+     1824,
+     2165,
+     2026
+    ],
+    "stringifyMs": 120,
+    "gzipMs": 348
+   }
+  },
+  {
+   "seed": "r31-base-2",
+   "start": 1990,
+   "months": 36,
+   "game": {
+    "endYear": 1992,
+    "endMonth": 0,
+    "monthsPlayed": 24,
+    "ended": "insolvency",
+    "cash": -333135,
+    "cashReal": -6013,
+    "worthReal": -91670,
+    "liquidReal": -91670,
+    "debt": 4009684,
+    "fame": 15,
+    "repArtistic": 41,
+    "repCommercial": 38,
+    "acts": 3,
+    "songs": 88,
+    "releases": 7,
+    "number1s": 0,
+    "revenueLastYear": 9821922,
+    "revenueLastYearReal": 182904,
+    "persons": 2113,
+    "worldActs": 987,
+    "labels": 37,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1990,
+      "cash": 611995,
+      "cashReal": 11397,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 7143896,
+      "revenueReal": 137383,
+      "finRev": 7143896,
+      "finNet": -5011356
+     },
+     {
+      "year": 1991,
+      "cash": -333135,
+      "cashReal": -6013,
+      "acts": 3,
+      "fame": 15,
+      "revenue": 9821922,
+      "revenueReal": 182904,
+      "finRev": 9821922,
+      "finNet": -495392
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 8757514,
+    "gzipBytes": 1749236,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      416539
+     ],
+     [
+      "chron9",
+      296048
+     ],
+     [
+      "facts17",
+      238383
+     ],
+     [
+      "fame15",
+      129770
+     ],
+     [
+      "creation",
+      113818
+     ],
+     [
+      "fame16",
+      95599
+     ],
+     [
+      "leisure14",
+      89035
+     ],
+     [
+      "attn",
+      84591
+     ],
+     [
+      "ag18",
+      80617
+     ],
+     [
+      "media17",
+      67100
+     ],
+     [
+      "people",
+      64595
+     ],
+     [
+      "relics9",
+      56913
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 453,
+    "monthMs": {
+     "mean": 1060,
+     "median": 1088,
+     "p90": 1380,
+     "max": 1692
+    },
+    "cpuMonthMs": {
+     "mean": 1029,
+     "median": 1012
+    },
+    "perMonth": [
+     611,
+     602,
+     800,
+     780,
+     773,
+     791,
+     1042,
+     1015,
+     1279,
+     965,
+     1394,
+     1106,
+     1054,
+     1120,
+     1204,
+     1265,
+     1149,
+     1088,
+     1191,
+     932,
+     1282,
+     928,
+     1692,
+     1380
+    ],
+    "cpuPerMonth": [
+     692,
+     585,
+     872,
+     743,
+     768,
+     792,
+     842,
+     910,
+     1385,
+     948,
+     1187,
+     1036,
+     1025,
+     1091,
+     1066,
+     1377,
+     1199,
+     1000,
+     1103,
+     894,
+     1089,
+     894,
+     1819,
+     1387
+    ],
+    "stringifyMs": 92,
+    "gzipMs": 227
+   }
+  },
+  {
+   "seed": "r31-base-3",
+   "start": 1990,
+   "months": 36,
+   "game": {
+    "endYear": 1993,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 9557300,
+    "cashReal": 167378,
+    "worthReal": 7856874,
+    "liquidReal": 119298,
+    "debt": 1735824,
+    "fame": 18,
+    "repArtistic": 47,
+    "repCommercial": 45,
+    "acts": 3,
+    "songs": 146,
+    "releases": 25,
+    "number1s": 0,
+    "revenueLastYear": 141161259,
+    "revenueLastYearReal": 2548037,
+    "persons": 2243,
+    "worldActs": 1063,
+    "labels": 37,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 1990,
+      "cash": 1063119,
+      "cashReal": 19797,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 3739081,
+      "revenueReal": 71905,
+      "finRev": 3739081,
+      "finNet": -6737484
+     },
+     {
+      "year": 1991,
+      "cash": 4542550,
+      "cashReal": 81995,
+      "acts": 3,
+      "fame": 15,
+      "revenue": 44420349,
+      "revenueReal": 827195,
+      "finRev": 44420349,
+      "finNet": 9673530
+     },
+     {
+      "year": 1992,
+      "cash": 9557300,
+      "cashReal": 167378,
+      "acts": 3,
+      "fame": 18,
+      "revenue": 141161259,
+      "revenueReal": 2548037,
+      "finRev": 141161259,
+      "finNet": 27738181
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 10220650,
+    "gzipBytes": 2029051,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      436504
+     ],
+     [
+      "chron9",
+      300634
+     ],
+     [
+      "facts17",
+      247821
+     ],
+     [
+      "fame15",
+      157602
+     ],
+     [
+      "creation",
+      139945
+     ],
+     [
+      "leisure14",
+      123338
+     ],
+     [
+      "ag18",
+      110112
+     ],
+     [
+      "fame16",
+      92613
+     ],
+     [
+      "relics9",
+      88931
+     ],
+     [
+      "attn",
+      88332
+     ],
+     [
+      "people",
+      78152
+     ],
+     [
+      "deleg31",
+      76241
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 374,
+    "monthMs": {
+     "mean": 1243,
+     "median": 1179,
+     "p90": 1768,
+     "max": 2416
+    },
+    "cpuMonthMs": {
+     "mean": 1173,
+     "median": 1091
+    },
+    "perMonth": [
+     548,
+     502,
+     644,
+     737,
+     924,
+     941,
+     1085,
+     925,
+     960,
+     1179,
+     1298,
+     1163,
+     1041,
+     932,
+     823,
+     733,
+     1493,
+     1372,
+     1062,
+     985,
+     1329,
+     1096,
+     1714,
+     1740,
+     1486,
+     1140,
+     1339,
+     1271,
+     1792,
+     1695,
+     1571,
+     1469,
+     1768,
+     1410,
+     2416,
+     2177
+    ],
+    "cpuPerMonth": [
+     583,
+     444,
+     580,
+     725,
+     815,
+     948,
+     1053,
+     873,
+     922,
+     1271,
+     1051,
+     1130,
+     1002,
+     928,
+     826,
+     732,
+     1681,
+     1246,
+     1021,
+     938,
+     1249,
+     1017,
+     1783,
+     1667,
+     1291,
+     988,
+     1246,
+     1221,
+     1928,
+     1454,
+     1349,
+     1299,
+     1585,
+     1143,
+     2226,
+     2021
+    ],
+    "stringifyMs": 100,
+    "gzipMs": 239
+   }
+  },
+  {
+   "seed": "r31-base-0",
+   "start": 2012,
+   "months": 36,
+   "game": {
+    "endYear": 2015,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 5984145,
+    "cashReal": 64002,
+    "worthReal": 15264400,
+    "liquidReal": 14827,
+    "debt": 3289607,
+    "fame": 19,
+    "repArtistic": 84,
+    "repCommercial": 48,
+    "acts": 3,
+    "songs": 89,
+    "releases": 21,
+    "number1s": 0,
+    "revenueLastYear": 269766532,
+    "revenueLastYearReal": 2925884,
+    "persons": 2872,
+    "worldActs": 1380,
+    "labels": 39,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2012,
+      "cash": 1501549,
+      "cashReal": 16519,
+      "acts": 3,
+      "fame": 12,
+      "revenue": 15609302,
+      "revenueReal": 174211,
+      "finRev": 15609302,
+      "finNet": -4043080
+     },
+     {
+      "year": 2013,
+      "cash": 7347605,
+      "cashReal": 79692,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 100856597,
+      "revenueReal": 1109534,
+      "finRev": 100856597,
+      "finNet": 22670615
+     },
+     {
+      "year": 2014,
+      "cash": 5984145,
+      "cashReal": 64002,
+      "acts": 3,
+      "fame": 19,
+      "revenue": 269766532,
+      "revenueReal": 2925884,
+      "finRev": 269766532,
+      "finNet": 31780418
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12905806,
+    "gzipBytes": 2525349,
+    "x4Keys": 267,
+    "x4Top": [
+     [
+      "ch7",
+      508281
+     ],
+     [
+      "chron9",
+      327971
+     ],
+     [
+      "facts17",
+      248850
+     ],
+     [
+      "fame15",
+      228528
+     ],
+     [
+      "creation",
+      181229
+     ],
+     [
+      "ag18",
+      168465
+     ],
+     [
+      "st28",
+      165205
+     ],
+     [
+      "leisure14",
+      129534
+     ],
+     [
+      "attn",
+      125198
+     ],
+     [
+      "fame16",
+      105083
+     ],
+     [
+      "relics9",
+      101101
+     ],
+     [
+      "fest8",
+      91484
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 527,
+    "monthMs": {
+     "mean": 1552,
+     "median": 1493,
+     "p90": 2297,
+     "max": 2850
+    },
+    "cpuMonthMs": {
+     "mean": 1661,
+     "median": 1636
+    },
+    "perMonth": [
+     730,
+     566,
+     817,
+     899,
+     823,
+     1129,
+     1058,
+     1564,
+     1416,
+     1260,
+     1597,
+     1493,
+     1208,
+     1331,
+     1215,
+     1206,
+     1169,
+     1271,
+     1213,
+     1580,
+     1446,
+     1315,
+     1916,
+     2058,
+     2704,
+     1995,
+     1801,
+     1574,
+     2051,
+     2297,
+     2313,
+     2245,
+     2038,
+     1634,
+     2103,
+     2850
+    ],
+    "cpuPerMonth": [
+     999,
+     699,
+     942,
+     920,
+     949,
+     1336,
+     1381,
+     1627,
+     1506,
+     1179,
+     1707,
+     1674,
+     1505,
+     1920,
+     1494,
+     1514,
+     1416,
+     1375,
+     1426,
+     2328,
+     1862,
+     1546,
+     1957,
+     1884,
+     2605,
+     1938,
+     1783,
+     1555,
+     2019,
+     2081,
+     2400,
+     2111,
+     1895,
+     1644,
+     2021,
+     2586
+    ],
+    "stringifyMs": 148,
+    "gzipMs": 326
+   }
+  },
+  {
+   "seed": "r31-base-1",
+   "start": 2012,
+   "months": 36,
+   "game": {
+    "endYear": 2015,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 11769079,
+    "cashReal": 125873,
+    "worthReal": 9538836,
+    "liquidReal": 77966,
+    "debt": 2784672,
+    "fame": 17,
+    "repArtistic": 71,
+    "repCommercial": 42,
+    "acts": 3,
+    "songs": 123,
+    "releases": 26,
+    "number1s": 0,
+    "revenueLastYear": 175851426,
+    "revenueLastYearReal": 1907282,
+    "persons": 2952,
+    "worldActs": 1398,
+    "labels": 39,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2012,
+      "cash": 3112211,
+      "cashReal": 34238,
+      "acts": 3,
+      "fame": 12,
+      "revenue": 4794991,
+      "revenueReal": 53516,
+      "finRev": 4794991,
+      "finNet": -9094371
+     },
+     {
+      "year": 2013,
+      "cash": -4479482,
+      "cashReal": -48584,
+      "acts": 3,
+      "fame": 15,
+      "revenue": 45368748,
+      "revenueReal": 499106,
+      "finRev": 45368748,
+      "finNet": 16059721
+     },
+     {
+      "year": 2014,
+      "cash": 11769079,
+      "cashReal": 125873,
+      "acts": 3,
+      "fame": 17,
+      "revenue": 175851426,
+      "revenueReal": 1907282,
+      "finRev": 175851426,
+      "finNet": 38315689
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12697103,
+    "gzipBytes": 2503600,
+    "x4Keys": 267,
+    "x4Top": [
+     [
+      "ch7",
+      500640
+     ],
+     [
+      "chron9",
+      328467
+     ],
+     [
+      "facts17",
+      265628
+     ],
+     [
+      "fame15",
+      221688
+     ],
+     [
+      "creation",
+      184957
+     ],
+     [
+      "ag18",
+      154440
+     ],
+     [
+      "leisure14",
+      138713
+     ],
+     [
+      "fame16",
+      100804
+     ],
+     [
+      "attn",
+      98871
+     ],
+     [
+      "st28",
+      98424
+     ],
+     [
+      "relics9",
+      95954
+     ],
+     [
+      "fest8",
+      90381
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 417,
+    "monthMs": {
+     "mean": 1556,
+     "median": 1433,
+     "p90": 2368,
+     "max": 3824
+    },
+    "cpuMonthMs": {
+     "mean": 1627,
+     "median": 1537
+    },
+    "perMonth": [
+     670,
+     591,
+     712,
+     912,
+     727,
+     1279,
+     1372,
+     1180,
+     1137,
+     1116,
+     1257,
+     1266,
+     1586,
+     1053,
+     1007,
+     969,
+     1134,
+     1318,
+     1437,
+     1433,
+     1122,
+     1482,
+     1924,
+     2052,
+     2402,
+     1822,
+     2194,
+     1787,
+     2187,
+     2583,
+     2127,
+     2052,
+     1783,
+     2169,
+     3824,
+     2368
+    ],
+    "cpuPerMonth": [
+     977,
+     698,
+     848,
+     952,
+     824,
+     1274,
+     1702,
+     1317,
+     1235,
+     1098,
+     1442,
+     1539,
+     2140,
+     1224,
+     1257,
+     1220,
+     1291,
+     1485,
+     2010,
+     1635,
+     1447,
+     1534,
+     1880,
+     2405,
+     2117,
+     1838,
+     1903,
+     1501,
+     2072,
+     2440,
+     1936,
+     1857,
+     1678,
+     2069,
+     3479,
+     2231
+    ],
+    "stringifyMs": 128,
+    "gzipMs": 309
+   }
+  },
+  {
+   "seed": "r31-base-2",
+   "start": 2012,
+   "months": 36,
+   "game": {
+    "endYear": 2015,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 15296482,
+    "cashReal": 163599,
+    "worthReal": 3404097,
+    "liquidReal": 107612,
+    "debt": 3372096,
+    "fame": 16,
+    "repArtistic": 67,
+    "repCommercial": 40,
+    "acts": 3,
+    "songs": 113,
+    "releases": 27,
+    "number1s": 0,
+    "revenueLastYear": 129093553,
+    "revenueLastYearReal": 1400147,
+    "persons": 2913,
+    "worldActs": 1409,
+    "labels": 37,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2012,
+      "cash": 790568,
+      "cashReal": 8697,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 5441091,
+      "revenueReal": 60726,
+      "finRev": 5441091,
+      "finNet": -7395381
+     },
+     {
+      "year": 2013,
+      "cash": 319697,
+      "cashReal": 3467,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 33922026,
+      "revenueReal": 373180,
+      "finRev": 33922026,
+      "finNet": 3204610
+     },
+     {
+      "year": 2014,
+      "cash": 15296482,
+      "cashReal": 163599,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 129093553,
+      "revenueReal": 1400147,
+      "finRev": 129093553,
+      "finNet": 26051654
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12684265,
+    "gzipBytes": 2499890,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      485780
+     ],
+     [
+      "chron9",
+      329741
+     ],
+     [
+      "facts17",
+      255715
+     ],
+     [
+      "fame15",
+      221791
+     ],
+     [
+      "creation",
+      180966
+     ],
+     [
+      "ag18",
+      150488
+     ],
+     [
+      "leisure14",
+      130064
+     ],
+     [
+      "attn",
+      107413
+     ],
+     [
+      "relics9",
+      104430
+     ],
+     [
+      "fame16",
+      102919
+     ],
+     [
+      "st28",
+      95623
+     ],
+     [
+      "fest8",
+      91714
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 481,
+    "monthMs": {
+     "mean": 1782,
+     "median": 1887,
+     "p90": 2408,
+     "max": 3477
+    },
+    "cpuMonthMs": {
+     "mean": 1631,
+     "median": 1654
+    },
+    "perMonth": [
+     871,
+     694,
+     993,
+     1016,
+     1218,
+     1428,
+     1222,
+     1455,
+     1909,
+     1489,
+     1876,
+     1887,
+     1425,
+     1227,
+     1929,
+     1901,
+     1658,
+     1626,
+     1344,
+     2150,
+     2327,
+     1485,
+     2015,
+     1746,
+     1752,
+     2408,
+     2431,
+     2078,
+     2192,
+     1945,
+     1929,
+     3477,
+     2554,
+     2044,
+     2292,
+     2156
+    ],
+    "cpuPerMonth": [
+     804,
+     679,
+     952,
+     933,
+     861,
+     1071,
+     975,
+     1147,
+     1782,
+     1334,
+     1502,
+     1784,
+     1329,
+     1194,
+     1954,
+     1630,
+     1470,
+     1459,
+     1383,
+     1946,
+     2472,
+     1311,
+     1819,
+     1581,
+     1678,
+     2525,
+     2059,
+     1795,
+     2008,
+     1709,
+     1815,
+     3505,
+     2158,
+     1956,
+     2138,
+     2004
+    ],
+    "stringifyMs": 143,
+    "gzipMs": 525
+   }
+  },
+  {
+   "seed": "r31-base-3",
+   "start": 2012,
+   "months": 36,
+   "game": {
+    "endYear": 2015,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 23820058,
+    "cashReal": 254760,
+    "worthReal": 7323557,
+    "liquidReal": 217905,
+    "debt": 2630803,
+    "fame": 19,
+    "repArtistic": 76,
+    "repCommercial": 47,
+    "acts": 4,
+    "songs": 113,
+    "releases": 25,
+    "number1s": 0,
+    "revenueLastYear": 222492526,
+    "revenueLastYearReal": 2413151,
+    "persons": 2892,
+    "worldActs": 1387,
+    "labels": 38,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2012,
+      "cash": 996891,
+      "cashReal": 10967,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 6565149,
+      "revenueReal": 73272,
+      "finRev": 6565149,
+      "finNet": -9607634
+     },
+     {
+      "year": 2013,
+      "cash": 9590738,
+      "cashReal": 104021,
+      "acts": 3,
+      "fame": 16,
+      "revenue": 45758010,
+      "revenueReal": 503388,
+      "finRev": 45758010,
+      "finNet": 3943352
+     },
+     {
+      "year": 2014,
+      "cash": 23820058,
+      "cashReal": 254760,
+      "acts": 4,
+      "fame": 19,
+      "revenue": 222492526,
+      "revenueReal": 2413151,
+      "finRev": 222492526,
+      "finNet": 53009414
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12672329,
+    "gzipBytes": 2496739,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      499860
+     ],
+     [
+      "chron9",
+      323634
+     ],
+     [
+      "facts17",
+      246568
+     ],
+     [
+      "fame15",
+      221801
+     ],
+     [
+      "creation",
+      177597
+     ],
+     [
+      "ag18",
+      151077
+     ],
+     [
+      "leisure14",
+      141223
+     ],
+     [
+      "st28",
+      122648
+     ],
+     [
+      "fame16",
+      105516
+     ],
+     [
+      "attn",
+      102757
+     ],
+     [
+      "relics9",
+      102227
+     ],
+     [
+      "fest8",
+      92115
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 768,
+    "monthMs": {
+     "mean": 1797,
+     "median": 1776,
+     "p90": 2367,
+     "max": 2711
+    },
+    "cpuMonthMs": {
+     "mean": 1771,
+     "median": 1757
+    },
+    "perMonth": [
+     1367,
+     970,
+     1343,
+     1224,
+     1157,
+     1349,
+     1271,
+     1470,
+     1776,
+     1354,
+     1634,
+     1699,
+     1554,
+     1325,
+     2091,
+     1563,
+     1711,
+     1360,
+     1501,
+     2214,
+     1504,
+     1800,
+     2225,
+     2238,
+     2254,
+     2489,
+     2026,
+     2042,
+     1955,
+     2711,
+     2381,
+     2293,
+     2192,
+     2089,
+     2367,
+     2202
+    ],
+    "cpuPerMonth": [
+     1481,
+     1293,
+     1345,
+     1434,
+     1323,
+     1275,
+     1338,
+     1484,
+     1992,
+     1367,
+     1594,
+     1739,
+     1385,
+     1310,
+     2222,
+     1578,
+     1573,
+     1387,
+     1423,
+     2254,
+     1507,
+     1799,
+     2128,
+     2133,
+     2250,
+     2618,
+     2076,
+     1839,
+     1776,
+     2335,
+     2217,
+     2318,
+     1929,
+     1991,
+     2047,
+     1996
+    ],
+    "stringifyMs": 166,
+    "gzipMs": 553
+   }
+  },
+  {
+   "seed": "r31-base-0",
+   "start": 2030,
+   "months": 36,
+   "game": {
+    "endYear": 2033,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 39417609,
+    "cashReal": 297491,
+    "worthReal": 4727275,
+    "liquidReal": 250906,
+    "debt": 4516202,
+    "fame": 14,
+    "repArtistic": 75,
+    "repCommercial": 36,
+    "acts": 3,
+    "songs": 114,
+    "releases": 27,
+    "number1s": 0,
+    "revenueLastYear": 227708810,
+    "revenueLastYearReal": 1751606,
+    "persons": 3120,
+    "worldActs": 1522,
+    "labels": 37,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2030,
+      "cash": 1363534,
+      "cashReal": 10694,
+      "acts": 3,
+      "fame": 12,
+      "revenue": 6688466,
+      "revenueReal": 53508,
+      "finRev": 6688466,
+      "finNet": -1728815
+     },
+     {
+      "year": 2031,
+      "cash": 6943971,
+      "cashReal": 53415,
+      "acts": 3,
+      "fame": 15,
+      "revenue": 57353603,
+      "revenueReal": 449832,
+      "finRev": 57353603,
+      "finNet": 9300623
+     },
+     {
+      "year": 2032,
+      "cash": 39417609,
+      "cashReal": 297491,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 227708810,
+      "revenueReal": 1751606,
+      "finRev": 227708810,
+      "finNet": 44910146
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12734986,
+    "gzipBytes": 2420061,
+    "x4Keys": 266,
+    "x4Top": [
+     [
+      "ch7",
+      497979
+     ],
+     [
+      "chron9",
+      313205
+     ],
+     [
+      "facts17",
+      246587
+     ],
+     [
+      "fame15",
+      215514
+     ],
+     [
+      "ag18",
+      146344
+     ],
+     [
+      "creation",
+      144743
+     ],
+     [
+      "leisure14",
+      122702
+     ],
+     [
+      "relics9",
+      116220
+     ],
+     [
+      "attn",
+      110080
+     ],
+     [
+      "fame16",
+      95938
+     ],
+     [
+      "fest8",
+      94122
+     ],
+     [
+      "st28",
+      94115
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 1129,
+    "monthMs": {
+     "mean": 1826,
+     "median": 1769,
+     "p90": 2382,
+     "max": 2611
+    },
+    "cpuMonthMs": {
+     "mean": 2111,
+     "median": 2039
+    },
+    "perMonth": [
+     1682,
+     1411,
+     1656,
+     2000,
+     1769,
+     1517,
+     1610,
+     1355,
+     1229,
+     1325,
+     1540,
+     2611,
+     2185,
+     1736,
+     2010,
+     1681,
+     2352,
+     2441,
+     1767,
+     1606,
+     1698,
+     1797,
+     1970,
+     2382,
+     1806,
+     1947,
+     2110,
+     1700,
+     1626,
+     2586,
+     1822,
+     1877,
+     1265,
+     1571,
+     1876,
+     2219
+    ],
+    "cpuPerMonth": [
+     2131,
+     1611,
+     1798,
+     2252,
+     1906,
+     1458,
+     1707,
+     1569,
+     1507,
+     1716,
+     1689,
+     2966,
+     2456,
+     2142,
+     2424,
+     1995,
+     2699,
+     2968,
+     2023,
+     1874,
+     1888,
+     1793,
+     2054,
+     2802,
+     2205,
+     2072,
+     2139,
+     1781,
+     1723,
+     3021,
+     2259,
+     2285,
+     1643,
+     1908,
+     2341,
+     3181
+    ],
+    "stringifyMs": 203,
+    "gzipMs": 305
+   }
+  },
+  {
+   "seed": "r31-base-1",
+   "start": 2030,
+   "months": 36,
+   "game": {
+    "endYear": 2033,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 9061650,
+    "cashReal": 68390,
+    "worthReal": 2808491,
+    "liquidReal": 12634,
+    "debt": 4793339,
+    "fame": 19,
+    "repArtistic": 63,
+    "repCommercial": 47,
+    "acts": 3,
+    "songs": 148,
+    "releases": 31,
+    "number1s": 0,
+    "revenueLastYear": 172716342,
+    "revenueLastYearReal": 1328587,
+    "persons": 3048,
+    "worldActs": 1496,
+    "labels": 38,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2030,
+      "cash": 4238923,
+      "cashReal": 33246,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 12098874,
+      "revenueReal": 96791,
+      "finRev": 12098874,
+      "finNet": -6352358
+     },
+     {
+      "year": 2031,
+      "cash": -357256,
+      "cashReal": -2748,
+      "acts": 3,
+      "fame": 17,
+      "revenue": 65791529,
+      "revenueReal": 516012,
+      "finRev": 65791529,
+      "finNet": 11494073
+     },
+     {
+      "year": 2032,
+      "cash": 9061650,
+      "cashReal": 68390,
+      "acts": 3,
+      "fame": 19,
+      "revenue": 172716342,
+      "revenueReal": 1328587,
+      "finRev": 172716342,
+      "finNet": 25685101
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12377808,
+    "gzipBytes": 2355021,
+    "x4Keys": 268,
+    "x4Top": [
+     [
+      "ch7",
+      477495
+     ],
+     [
+      "chron9",
+      297709
+     ],
+     [
+      "facts17",
+      228151
+     ],
+     [
+      "fame15",
+      211758
+     ],
+     [
+      "creation",
+      144648
+     ],
+     [
+      "leisure14",
+      122805
+     ],
+     [
+      "relics9",
+      116220
+     ],
+     [
+      "ag18",
+      105790
+     ],
+     [
+      "attn",
+      96904
+     ],
+     [
+      "fest8",
+      94626
+     ],
+     [
+      "deleg31",
+      91637
+     ],
+     [
+      "fame16",
+      88531
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 1055,
+    "monthMs": {
+     "mean": 1855,
+     "median": 1784,
+     "p90": 2687,
+     "max": 3002
+    },
+    "cpuMonthMs": {
+     "mean": 2122,
+     "median": 1935
+    },
+    "perMonth": [
+     1621,
+     1509,
+     1692,
+     1969,
+     1877,
+     1390,
+     1560,
+     1599,
+     1262,
+     1253,
+     1305,
+     2687,
+     2718,
+     1853,
+     1682,
+     1829,
+     1806,
+     2281,
+     2121,
+     1552,
+     1941,
+     1609,
+     1784,
+     2687,
+     1941,
+     1593,
+     1780,
+     1787,
+     1771,
+     2456,
+     2020,
+     1734,
+     1560,
+     1707,
+     1851,
+     3002
+    ],
+    "cpuPerMonth": [
+     1933,
+     1772,
+     1880,
+     2284,
+     2161,
+     1696,
+     1834,
+     1805,
+     1498,
+     1719,
+     1458,
+     3066,
+     3100,
+     2228,
+     1884,
+     1913,
+     1907,
+     2999,
+     2293,
+     1793,
+     1995,
+     1808,
+     1787,
+     2914,
+     2275,
+     1744,
+     1962,
+     1813,
+     2077,
+     2545,
+     2302,
+     2136,
+     1798,
+     1938,
+     2268,
+     3790
+    ],
+    "stringifyMs": 303,
+    "gzipMs": 408
+   }
+  },
+  {
+   "seed": "r31-base-2",
+   "start": 2030,
+   "months": 36,
+   "game": {
+    "endYear": 2033,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 107497739,
+    "cashReal": 811304,
+    "worthReal": 12320038,
+    "liquidReal": 756462,
+    "debt": 5508800,
+    "fame": 21,
+    "repArtistic": 75,
+    "repCommercial": 54,
+    "acts": 5,
+    "songs": 99,
+    "releases": 49,
+    "number1s": 0,
+    "revenueLastYear": 623183901,
+    "revenueLastYearReal": 4793722,
+    "persons": 3086,
+    "worldActs": 1496,
+    "labels": 38,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2030,
+      "cash": 2171811,
+      "cashReal": 17034,
+      "acts": 2,
+      "fame": 13,
+      "revenue": 5966293,
+      "revenueReal": 47730,
+      "finRev": 5966293,
+      "finNet": -8142888
+     },
+     {
+      "year": 2031,
+      "cash": 54309269,
+      "cashReal": 417764,
+      "acts": 4,
+      "fame": 17,
+      "revenue": 294839568,
+      "revenueReal": 2312467,
+      "finRev": 294839568,
+      "finNet": 94923472
+     },
+     {
+      "year": 2032,
+      "cash": 107497739,
+      "cashReal": 811304,
+      "acts": 5,
+      "fame": 21,
+      "revenue": 623183901,
+      "revenueReal": 4793722,
+      "finRev": 623183901,
+      "finNet": 56674125
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12991940,
+    "gzipBytes": 2494864,
+    "x4Keys": 267,
+    "x4Top": [
+     [
+      "ch7",
+      497742
+     ],
+     [
+      "chron9",
+      307753
+     ],
+     [
+      "facts17",
+      269709
+     ],
+     [
+      "fame15",
+      227740
+     ],
+     [
+      "creation",
+      154241
+     ],
+     [
+      "st28",
+      143013
+     ],
+     [
+      "leisure14",
+      137927
+     ],
+     [
+      "attn",
+      118688
+     ],
+     [
+      "relics9",
+      115035
+     ],
+     [
+      "ag18",
+      113506
+     ],
+     [
+      "fame16",
+      97951
+     ],
+     [
+      "fest8",
+      93214
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 444,
+    "monthMs": {
+     "mean": 1772,
+     "median": 1794,
+     "p90": 2634,
+     "max": 2966
+    },
+    "cpuMonthMs": {
+     "mean": 1996,
+     "median": 1879
+    },
+    "perMonth": [
+     1115,
+     1144,
+     1098,
+     984,
+     1172,
+     1111,
+     1194,
+     1101,
+     1142,
+     1575,
+     1549,
+     2072,
+     1347,
+     1403,
+     1557,
+     1794,
+     1851,
+     1733,
+     1479,
+     1456,
+     1515,
+     1870,
+     1871,
+     2560,
+     2243,
+     1920,
+     1935,
+     2634,
+     2966,
+     2063,
+     2279,
+     2261,
+     1826,
+     2759,
+     2554,
+     2669
+    ],
+    "cpuPerMonth": [
+     1540,
+     1242,
+     1271,
+     1305,
+     1216,
+     1146,
+     1421,
+     1199,
+     1263,
+     1886,
+     1616,
+     1997,
+     1439,
+     1633,
+     1742,
+     2269,
+     1872,
+     1686,
+     1704,
+     1605,
+     1732,
+     2297,
+     2240,
+     2624,
+     2432,
+     2021,
+     2338,
+     3295,
+     3160,
+     2311,
+     2708,
+     2596,
+     2061,
+     3263,
+     2799,
+     2914
+    ],
+    "stringifyMs": 204,
+    "gzipMs": 315
+   }
+  },
+  {
+   "seed": "r31-base-3",
+   "start": 2030,
+   "months": 36,
+   "game": {
+    "endYear": 2033,
+    "endMonth": 0,
+    "monthsPlayed": 36,
+    "ended": null,
+    "cash": 16345265,
+    "cashReal": 123360,
+    "worthReal": 6528720,
+    "liquidReal": 62649,
+    "debt": 5141748,
+    "fame": 18,
+    "repArtistic": 67,
+    "repCommercial": 44,
+    "acts": 4,
+    "songs": 103,
+    "releases": 19,
+    "number1s": 0,
+    "revenueLastYear": 280632148,
+    "revenueLastYearReal": 2158709,
+    "persons": 3141,
+    "worldActs": 1500,
+    "labels": 37,
+    "ledger": 0,
+    "years": [
+     {
+      "year": 2030,
+      "cash": 3448380,
+      "cashReal": 27046,
+      "acts": 3,
+      "fame": 13,
+      "revenue": 12326087,
+      "revenueReal": 98609,
+      "finRev": 12326087,
+      "finNet": -6187144
+     },
+     {
+      "year": 2031,
+      "cash": 18320087,
+      "cashReal": 140924,
+      "acts": 3,
+      "fame": 14,
+      "revenue": 121904186,
+      "revenueReal": 956111,
+      "finRev": 121904186,
+      "finNet": 23009271
+     },
+     {
+      "year": 2032,
+      "cash": 16345265,
+      "cashReal": 123360,
+      "acts": 4,
+      "fame": 18,
+      "revenue": 280632148,
+      "revenueReal": 2158709,
+      "finRev": 280632148,
+      "finNet": 41270511
+     }
+    ]
+   },
+   "save": {
+    "jsonBytes": 12509886,
+    "gzipBytes": 2384624,
+    "x4Keys": 267,
+    "x4Top": [
+     [
+      "ch7",
+      486779
+     ],
+     [
+      "chron9",
+      316429
+     ],
+     [
+      "facts17",
+      238199
+     ],
+     [
+      "fame15",
+      219177
+     ],
+     [
+      "ag18",
+      143465
+     ],
+     [
+      "creation",
+      142412
+     ],
+     [
+      "leisure14",
+      131395
+     ],
+     [
+      "relics9",
+      114758
+     ],
+     [
+      "attn",
+      99949
+     ],
+     [
+      "fest8",
+      93323
+     ],
+     [
+      "fame16",
+      91508
+     ],
+     [
+      "st28",
+      91421
+     ]
+    ]
+   },
+   "perf": {
+    "createMs": 552,
+    "monthMs": {
+     "mean": 1675,
+     "median": 1686,
+     "p90": 2326,
+     "max": 2543
+    },
+    "cpuMonthMs": {
+     "mean": 1833,
+     "median": 1772
+    },
+    "perMonth": [
+     1090,
+     860,
+     1006,
+     1519,
+     1141,
+     1120,
+     1286,
+     1387,
+     1086,
+     1090,
+     1939,
+     1900,
+     1669,
+     1398,
+     1686,
+     1050,
+     2051,
+     1538,
+     1450,
+     1695,
+     1651,
+     1535,
+     2515,
+     1973,
+     1847,
+     1963,
+     2067,
+     2182,
+     2391,
+     1778,
+     1614,
+     1825,
+     2260,
+     1864,
+     2543,
+     2326
+    ],
+    "cpuPerMonth": [
+     1502,
+     1248,
+     1146,
+     1774,
+     1309,
+     1133,
+     1366,
+     1253,
+     1205,
+     1252,
+     2234,
+     2142,
+     1770,
+     1569,
+     1679,
+     1351,
+     2346,
+     1650,
+     1645,
+     1776,
+     1564,
+     1515,
+     2918,
+     2322,
+     2023,
+     2087,
+     2100,
+     2266,
+     2766,
+     1823,
+     1687,
+     1815,
+     2365,
+     2015,
+     2770,
+     2590
+    ],
+    "stringifyMs": 137,
+    "gzipMs": 296
+   }
+  }
+ ]
+}

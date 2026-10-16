@@ -10,9 +10,9 @@
 
 import { cityById, l, type L } from '../../data/world';
 import { calendar19 } from '../../sim/calendar19';
-import { acceptCounter, withdrawOffer } from '../../sim/contracts';
+import { acceptCounter, counterWhy, withdrawOffer } from '../../sim/contracts';
 import { resolveDecision } from '../../sim/events';
-import { answerMsg } from '../../sim/sys/people/inbox';
+import { ACT27 } from '../sys/inbox27';
 import { pendingList, type Pending } from '../../sim/r31/pending';
 import { items18 } from '../../sim/sys/inbox18';
 import { playerAct, playerPerson } from '../../sim/sys/life';
@@ -90,9 +90,13 @@ export const DESK_ACTS31 = {
   /** decisão: igual ao botão da Mesa do mês / Caixa */
   decide: (s: GameState, decisionId: string, optionId: string): boolean => resolveDecision(s, decisionId, optionId),
   /** mensagem que pede resposta: igual ao botão da Caixa (ACT27.reply) */
-  reply: (s: GameState, msgId: string, action: string): L => answerMsg(s, msgId, action),
+  reply: (s: GameState, msgId: string, action: string): L => ACT27.answer(s, msgId, action),
   /** contraproposta: iguais aos botões da Mesa do mês */
-  acceptCounter: (s: GameState, offerId: string): boolean => acceptCounter(s, offerId),
+  /** W2-REV: devolve o motivo quando não fecha (null = fechado) */
+  acceptCounter: (s: GameState, offerId: string): L | null => {
+    const why = counterWhy(s, offerId);
+    return acceptCounter(s, offerId) ? null : why ?? l('A contraproposta não pôde ser aceita.', 'The counter-offer could not be accepted.');
+  },
   withdraw: (s: GameState, offerId: string): void => { withdrawOffer(s, offerId); s.offers = s.offers.filter((x) => x.id !== offerId); },
 };
 

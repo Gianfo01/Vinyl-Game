@@ -36,6 +36,7 @@ import { vices } from '../vices';
 import { OFF_AUD27 } from './off';
 import { shark27 } from './shark27';
 import { purse } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { addStaffLoyalty, staffLoyalty } from '../../opinion';
 
 const N = (pt: string, en: string): L => l(pt, en);
 
@@ -173,14 +174,14 @@ export function reliefContext27(s: GameState, kind: Relief27, d: number, ref?: s
     return null;
   }
   if (kind === 'trip') {
-    const ls = s.player.staff.map((m) => P(s).career[m.id]?.loyalty).filter((x): x is number => x !== undefined);
+    const ls = s.player.staff.map((m) => (P(s).career[m.id] ? staffLoyalty(s, m.id) : undefined)).filter((x): x is number => x !== undefined);
     const loy = ls.length ? avgLoy19(s) : 50;
     if (ls.length && loy < 40 && r.chance(0.5)) {
       post(s, `relief27:office:${s.week}`, -money(s, 1200), 'misc', 'Escritório sem o dono: cheque perdido');
       return say(N('Na sua ausência ninguém assinou os cheques certos: multa e fornecedor bravo.', 'While you were away nobody signed the right cheques: a fine and an angry supplier.'), 'bad');
     }
     if (ls.length && loy >= 55 && r.chance(0.35)) {
-      for (const m of s.player.staff) { const c = P(s).career[m.id]; if (c) c.loyalty = clamp(c.loyalty + 1, 0, 100); }
+      for (const m of s.player.staff) if (P(s).career[m.id]) addStaffLoyalty(s, m.id, 1, { why: N('confiou a casa à equipe numa viagem.', 'trusted the staff with the house during a trip.') });
       return say(N('A equipe segurou tudo sem você — e gostou de ser confiada.', 'The staff ran everything without you — and liked being trusted.'), 'good');
     }
     const pt = life(s).partner;

@@ -39,9 +39,9 @@ import { chron, cityL, nameOf } from './chron9';
 import { crime17, fences } from './crime17';
 import { est19, suit19 } from './afterlife19';
 import { realAct17 } from './realidx17';
-import { COLLECTORS, MUSEUMS, addRelic, relicGone9, relicKeep9, relics, type Relic, type RelicKind } from './relics9';
+import { COLLECTORS, MUSEUMS, addRelic, archiveRelic9, myTrail9, relMeta, relicKeep9, relics, type Relic, type RelicKind } from './relics9';
 import { per13 } from './persona13';
-import { ORIGIN18, rel18, statuette18 } from './relics18';
+import { ORIGIN18, meta18, statuette18 } from './relics18';
 import { VENUES17 } from './venues17';
 
 // ---------------------------------------------------------------- arquétipos
@@ -128,9 +128,9 @@ Object.assign(ORIGIN18, {
 
 // ---------------------------------------------------------------- estado (compacto)
 
+/** O registro compacto "arq|estado|proc|cidade|casa|flags" (flags: F falsa, S processo dos herdeiros já aberto) mora na
+ *  própria peça (`rl.meta.q`, definição única em relics9); aqui fica só a fila e os contadores. */
 export interface Relics29State {
-  /** id da peça → "arq|estado|proc|cidade|casa|flags" (flags: F falsa, S processo dos herdeiros já aberto) */
-  m: Record<string, string>;
   /** fila do mês: [arq, ato, pessoa, cidade, gravidade, origem, título, chave do fato, id do fato] */
   q: [number, string, string, string, number, string, string, string, string][];
   /** [ano, peças nascidas no ano] */
@@ -143,26 +143,26 @@ export interface Relics29State {
   seq: number;
   /** peças que cada ato ganhou no ano corrente (zera na virada do ano) */
   ay: Record<string, number>;
-  /** acervo histórico: peças antigas e baratas arquivadas por ato → [quantas, valor somado em US$ reais] ('' = sem ato) */
-  arc: Record<string, [number, number]>;
 }
 declare module '../ext4' { interface Ext4 { relics29: Relics29State } }
-const fresh = (): Relics29State => ({ m: {}, q: [], yc: [0, 0], n: [], fk: 0, seq: 0, ay: {}, arc: {} });
+const fresh = (): Relics29State => ({ q: [], yc: [0, 0], n: [], fk: 0, seq: 0, ay: {} });
 registerExt4('relics29', fresh);
 export function rel29(s: GameState): Relics29State {
   const x = ((s as unknown as { x4: Record<string, unknown> }).x4 ??= {});
   const st = (x.relics29 ??= fresh()) as Relics29State;
-  st.m ??= {}; st.q ??= []; st.yc ??= [0, 0]; st.n ??= []; st.fk ??= 0; st.seq ??= 0; st.ay ??= {}; st.arc ??= {};
+  st.q ??= []; st.yc ??= [0, 0]; st.n ??= []; st.fk ??= 0; st.seq ??= 0; st.ay ??= {};
   return st;
 }
 export interface Meta29 { arch: Arch29; cond: number; prov: Prov29; city: string; vi: number; fake: boolean; suit: boolean }
-export function meta29(s: GameState, id: string): Meta29 | null {
-  const raw = rel29(s).m[id];
+/** Arquétipo procedural da peça (pela peça ou pelo id). */
+export function meta29(s: GameState, x: string | Relic): Meta29 | null {
+  const raw = (typeof x === 'string' ? relics(s).list.find((r) => r.id === x) : x)?.meta?.q;
   if (!raw) return null;
   const [a, c, p, city, vi, fl] = raw.split('|');
   return { arch: ARCH29[+a] ?? 'personal', cond: +c, prov: p as Prov29, city, vi: +vi, fake: fl.includes('F'), suit: fl.includes('S') };
 }
 const nid29 = (s: GameState): string => `rq${(++rel29(s).seq).toString(36)}`;
+const setQ = (rl: Relic, m: Meta29): void => { relMeta(rl).q = pack(m); };
 const pack = (m: Meta29): string => `${ARCH29.indexOf(m.arch)}|${m.cond}|${m.prov}|${m.city}|${m.vi}|${m.fake ? 'F' : ''}${m.suit ? 'S' : ''}`;
 
 /** Densidade (config.relicDensity; ausente = 'many', o pedido do autor). 'few' = os tetos da primeira versão.
@@ -198,9 +198,7 @@ export function actCaps29(s: GameState, a: Act, c = DENS29[dens29(s)] ?? DENS29.
   return { live: Math.max(1, Math.round(c.actLive * tier)), year: Math.max(1, Math.round(c.actYear * tier)) };
 }
 // as procedurais têm teto e poda próprios (room): a poda do teto de 90 do relics9 passa por cima delas
-relicKeep9.f = (s, rl) => !!rel29(s).m[rl.id];
-// e quando a poda tira uma procedural (perdida), o registro compacto sai junto
-relicGone9.f = (s, rl) => { const st = rel29(s); if (st.m[rl.id]) { delete st.m[rl.id]; delete rel18(s).m[rl.id]; } };
+relicKeep9.f = (_s, rl) => !!rl.meta?.q;
 /** Para testes: ignora o sorteio de nascimento (os tetos continuam valendo). */
 export const R29 = { force: false };
 
@@ -359,7 +357,7 @@ export function story29(s: GameState, rl: Relic): L | null {
 
 const lead = (a: Act): string | undefined => (a.leaderId && a.members.includes(a.leaderId) ? a.leaderId : a.members[0]);
 const mine = (a?: Act) => !!a && (a.owner === 'player' || !!a.playerBand);
-const live29 = (s: GameState) => { const m = rel29(s).m; return relics(s).list.filter((x) => m[x.id] && x.st !== 'lost'); };
+const live29 = (s: GameState) => relics(s).list.filter((x) => x.meta?.q && x.st !== 'lost');
 
 /** Tipos de peça que o catálogo real documenta para este ato (nomes reais): procedural não repete o tipo. */
 export function realKinds29(s: GameState, a: Act): Set<RelicKind> {
@@ -386,10 +384,10 @@ export function canBorn29(s: GameState, arch: Arch29, a: Act | undefined, k?: Re
   const ac = actCaps29(s, a, c);
   const mineL = live29(s).filter((x) => x.a === a.id);
   if (mineL.length >= ac.live) return false;
-  if (mineL.filter((x) => meta29(s, x.id)?.arch === arch).length >= c.archAct) return false;
+  if (mineL.filter((x) => meta29(s, x)?.arch === arch).length >= c.archAct) return false;
   const thisYear = Math.max(mineL.filter((x) => x.y === s.year).length, st.yc[0] === s.year ? st.ay[a.id] ?? 0 : 0);
   if (thisYear >= ac.year) return false;
-  if (k && relics(s).list.some((x) => x.a === a.id && x.k === k && x.y === s.year && !st.m[x.id])) return false; // relics9/18/28 já fizeram
+  if (k && relics(s).list.some((x) => x.a === a.id && x.k === k && x.y === s.year && !x.meta?.q)) return false; // relics9/18/28 já fizeram
   return true;
 }
 
@@ -518,7 +516,7 @@ export function flush29(s: GameState): Relic[] {
     const ctx: Ctx29 = { a, pid, y: s.year, city, vi, title: arch === 'fixture' ? undefined : title || undefined, lab: lab ?? l('um selo independente', 'an independent label').pt, farewell };
     let made = make29(s, arch, ctx, r);
     // repetições do mesmo arquétipo no mesmo ato: nome distinto (outro modelo, apelido, peça, cidade…)
-    const taken = (n: L) => relics(s).list.some((x) => x.a === a?.id && x.n.pt === n.pt && !!st.m[x.id]);
+    const taken = (n: L) => relics(s).list.some((x) => x.a === a?.id && x.n.pt === n.pt && !!x.meta?.q);
     for (let i = 0; i < 4 && taken(made.n); i++) made = make29(s, arch, ctx, r);
     if (taken(made.n)) continue;
     if (!canBorn29(s, arch, a, made.k)) continue;
@@ -528,8 +526,7 @@ export function flush29(s: GameState): Relic[] {
     const fame = a?.fame ?? 30;
     const v = Math.round(ARCHDEF29[arch].base * (0.35 + fame / 45) * (0.8 + sev / 150) / (1 + 0.2 * nAct) * CONDM[made.cond]);
     const rl = addRelic(s, made.k, made.n, a?.id, pid, v, s.year, nid29(s));
-    st.m[rl.id] = pack({ arch, cond: made.cond, prov, city, vi, fake: false, suit: false });
-    rel18(s).m[rl.id] = { o, b: rl.v };
+    Object.assign(relMeta(rl), { q: pack({ arch, cond: made.cond, prov, city, vi, fake: false, suit: false }), o, b: rl.v });
     place(s, rl, prov, pid, lab, city, vi, r);
     st.yc[1]++;
     if (a) st.ay[a.id] = (st.ay[a.id] ?? 0) + 1;
@@ -546,15 +543,12 @@ export function flush29(s: GameState): Relic[] {
 function room(s: GameState): boolean {
   const list = live29(s);
   if (list.length < (DENS29[dens29(s)] ?? DENS29.many).total) return true;
-  const st = rel29(s);
   const stash = new Set(crime17(s).stash);
-  let pool = list.filter((x) => x.st === 'kept' || x.st === 'museum');
-  if (!pool.length) pool = list.filter((x) => x.st === 'stolen' && !stash.has(x.id)); // sumiu no submundo de vez
+  let pool = list.filter((x) => (x.st === 'kept' || x.st === 'museum') && !myTrail9(s, x));
+  if (!pool.length) pool = list.filter((x) => x.st === 'stolen' && !stash.has(x.id) && !myTrail9(s, x)); // sumiu no submundo de vez
   const victim = (pool.some((x) => x.y < s.year) ? pool.filter((x) => x.y < s.year) : pool).sort((a, b) => a.v - b.v)[0];
   if (!victim) return false;
-  relics(s).list.splice(relics(s).list.indexOf(victim), 1);
-  delete st.m[victim.id];
-  delete rel18(s).m[victim.id];
+  archiveRelic9(s, victim); // R31 G: arquiva (compacto), nunca descarta
   return true;
 }
 function provOf(s: GameState, arch: Arch29, a: Act | undefined, pid: string | undefined, r: Rng): Prov29 {
@@ -593,16 +587,15 @@ function place(s: GameState, rl: Relic, prov: Prov29, pid: string | undefined, l
 function onDeath(s: GameState, f: Fact): void {
   const dead = f.actors.map(actorId).filter((x) => s.persons[x] && !s.persons[x].alive);
   if (!dead.length) return;
-  const st = rel29(s);
   for (const rl of live29(s)) {
     if (!rl.p || !dead.includes(rl.p)) continue;
     rl.v = Math.round(rl.v * 1.25);
-    const m18 = rel18(s).m[rl.id];
-    if (m18) m18.b = Math.round(m18.b * 1.1);
-    const m = meta29(s, rl.id)!;
+    const mm = meta18(rl);
+    if (mm) mm.b = Math.round(mm.b * 1.1);
+    const m = meta29(s, rl)!;
     if (rl.st === 'kept' && m.prov === 'a') {
       rl.own.push([`herdeiros de ${s.persons[rl.p].name}`, s.year, 'herança']);
-      st.m[rl.id] = pack({ ...m, prov: 'h' });
+      setQ(rl, { ...m, prov: 'h' });
     }
   }
 }
@@ -611,7 +604,7 @@ function shift(s: GameState, f: Fact, how: 'scandal' | 'up'): void {
   const ids = new Set(f.actors.map(actorId));
   for (const rl of live29(s)) {
     if (!rl.a || !ids.has(rl.a)) continue;
-    const m = meta29(s, rl.id)!;
+    const m = meta29(s, rl)!;
     rl.v = Math.round(rl.v * (how === 'up' ? 1.08 : m.arch === 'infamous' ? 1.2 : 0.95));
   }
 }
@@ -622,14 +615,13 @@ function shift(s: GameState, f: Fact, how: 'scandal' | 'up'): void {
  *  (authenticate18, Lendas → Acervo vivo) ou o tempo revelam. Devolve a cópia. */
 export function forge29(s: GameState, src: Relic, r: Rng): Relic | null {
   const st = rel29(s);
-  const m = meta29(s, src.id);
+  const m = meta29(s, src);
   if (!m || m.fake || !room(s) || !relics(s).list.includes(src)) return null; // a cópia conta no teto total
   const copy = addRelic(s, src.k, src.n, src.a, src.p, src.v, src.y, nid29(s));
   copy.own = [...src.own.map((o) => [...o] as [string, number, string]), [l('vendedor anônimo', 'anonymous seller').pt, s.year, 'mercado negro']];
   copy.st = 'stolen';
   crime17(s).fake[copy.id] = 1;
-  st.m[copy.id] = pack({ ...m, prov: 'b', fake: true, suit: false });
-  rel18(s).m[copy.id] = { o: rel18(s).m[src.id]?.o ?? 'base', b: rel18(s).m[src.id]?.b ?? src.v };
+  Object.assign(relMeta(copy), { q: pack({ ...m, prov: 'b', fake: true, suit: false }), o: meta18(src)?.o ?? 'base', b: meta18(src)?.b ?? src.v });
   st.fk++;
   const fs = fences(s);
   const cm = crime17(s);
@@ -643,10 +635,6 @@ export function forge29(s: GameState, src: Relic, r: Rng): Relic | null {
 
 registerSimHook('month', 'relics29', (s) => {
   if (rel29(s).q.length) flush29(s);
-  // compacta todo mês: a poda do relics9 (peças perdidas) pode tirar uma procedural da lista no meio do ano
-  const st = rel29(s);
-  const ids = new Set(relics(s).list.map((x) => x.id));
-  for (const id in st.m) if (!ids.has(id)) { delete st.m[id]; delete rel18(s).m[id]; }
   const c = DENS29[dens29(s)] ?? DENS29.many;
   if (!c.flat) blackMarket29(s);
 });
@@ -657,8 +645,7 @@ function blackMarket29(s: GameState): void {
   if (cm.market.length >= 8) return;
   const r = Rng.fromSeed(`${s.config.seed}|relics29bm|${s.week}`);
   if (!r.chance(0.4)) return;
-  const st = rel29(s);
-  const pool = relics(s).list.filter((rl) => st.m[rl.id] && rl.st === 'stolen' && !cm.stash.includes(rl.id) && !cm.market.some((x) => x.rl === rl.id));
+  const pool = relics(s).list.filter((rl) => rl.meta?.q && rl.st === 'stolen' && !cm.stash.includes(rl.id) && !cm.market.some((x) => x.rl === rl.id));
   const fs = fences(s);
   if (!pool.length || !fs.length) return;
   const rl = r.pick(pool);
@@ -666,15 +653,12 @@ function blackMarket29(s: GameState): void {
   cm.market.push({ id: `bm${rl.id}w${s.week}`, rl: rl.id, fence: r.pick(fs).i, price: Math.round(money(s, rl.v) * r.float(0.3, 0.55)), auth, until: s.week + 12, seller: '' });
 }
 registerSimHook('year', 'relics29', (s) => {
-  const st = rel29(s);
   const r = Rng.fromSeed(`${s.config.seed}|relics29y|${s.year}`);
-  const ids = new Set(relics(s).list.map((x) => x.id));
-  for (const id of Object.keys(st.m)) if (!ids.has(id)) { delete st.m[id]; delete rel18(s).m[id]; } // compacta: peça que saiu da lista do relics9
   // o relics18 (gancho anual antes deste) guarda o multiplicador de legado com todas as casas; 3 bastam nas procedurais
-  for (const id of Object.keys(st.m)) { const m18 = rel18(s).m[id]; if (m18?.lg) m18.lg = Math.round(m18.lg * 1000) / 1000; }
+  for (const x of relics(s).list) if (x.meta?.q && x.meta.lg) x.meta.lg = Math.round(x.meta.lg * 1000) / 1000;
   const list = live29(s);
   for (const rl of list) {
-    const m = meta29(s, rl.id)!;
+    const m = meta29(s, rl)!;
     const age = s.year - rl.y;
     // aniversário (10/25/40/50 anos): a peça volta à conversa e vale mais; colecionador aproveita e leiloa
     if (age === 10 || age === 25 || age === 40 || age === 50) {
@@ -687,14 +671,14 @@ registerSimHook('year', 'relics29', (s) => {
     }
     // herdeiros brigam pela peça (afterlife19): uma vez por peça, se o espólio existe
     if (m.prov === 'h' && !m.suit && rl.p && rl.st === 'kept' && est19(s, rl.p) && r.chance(0.3)) {
-      st.m[rl.id] = pack({ ...m, suit: true });
+      setQ(rl, { ...m, suit: true });
       suit19(s, rl.p, 'relic');
     }
   }
   const c = DENS29[dens29(s)] ?? DENS29.many;
   // falsários: as peças procedurais mais valiosas atraem cópias (teto de falsas vivas)
-  let fakes = list.filter((x) => meta29(s, x.id)!.fake && x.st !== 'lost').length;
-  const tgts = list.filter((x) => !meta29(s, x.id)!.fake && x.st !== 'lost' && x.v >= 40000 && s.year - x.y >= 2).sort((a, b) => b.v - a.v).slice(0, c.forge * 2);
+  let fakes = list.filter((x) => meta29(s, x)!.fake && x.st !== 'lost').length;
+  const tgts = list.filter((x) => !meta29(s, x)!.fake && x.st !== 'lost' && x.v >= 40000 && s.year - x.y >= 2).sort((a, b) => b.v - a.v).slice(0, c.forge * 2);
   for (let i = 0; i < c.forge && tgts.length && fakes < c.fakes; i++) if (r.chance(0.15)) { const tg = tgts.splice(r.int(0, tgts.length - 1), 1)[0]; if (forge29(s, tg, r)) fakes++; }
   // o leilão famoso do ano: a peça mais cobiçada com colecionador ou herdeiros vai a pregão (evento, manchete)
   if (c.famous && r.chance(c.famous)) famousAuction29(s, live29(s));
@@ -703,7 +687,7 @@ registerSimHook('year', 'relics29', (s) => {
 
 /** Leilão famoso: a peça procedural mais valiosa com colecionador/herdeiros vai a pregão, com fato e crônica. */
 export function famousAuction29(s: GameState, list = live29(s)): Relic | null {
-  const rl = list.filter((x) => { const m = meta29(s, x.id)!; return x.st === 'kept' && !m.fake && (m.prov === 'c' || m.prov === 'h') && s.year - x.y >= 3; }).sort((a, b) => b.v - a.v)[0];
+  const rl = list.filter((x) => { const m = meta29(s, x)!; return x.st === 'kept' && !m.fake && (m.prov === 'c' || m.prov === 'h') && s.year - x.y >= 3; }).sort((a, b) => b.v - a.v)[0];
   if (!rl) return null;
   rl.st = 'auction'; rl.au = s.week + 13;
   const t = fmtL(l('Leilão do ano: {n} vai a pregão (lance inicial ${v}).', 'Auction of the year: {n} goes under the hammer (opening bid ${v}).'), { n: rl.n, v: Math.round(money(s, rl.v)).toLocaleString('en-US') });
@@ -717,7 +701,6 @@ export function famousAuction29(s: GameState, list = live29(s)): Relic | null {
  *  vira contagem por ato. As notáveis (o quarto mais valioso, de lendas, do seu elenco, em museu, leilão, acervo,
  *  roubadas) ficam. Mantém o save pequeno com centenas de peças por partida. */
 export function archive29(s: GameState, age: number): number {
-  const st = rel29(s);
   const list = live29(s);
   if (list.length < 40) return 0;
   const vs = list.map((x) => x.v).sort((a, b) => a - b);
@@ -727,14 +710,11 @@ export function archive29(s: GameState, age: number): number {
     // com dono comum, ou roubada há muito tempo sem aparecer no mercado (sumiu no submundo)
     const gone = rl.st === 'stolen' && !crime17(s).stash.includes(rl.id) && !crime17(s).market.some((o) => o.rl === rl.id);
     if ((rl.st !== 'kept' && !gone) || s.year - rl.y < age || rl.v >= p75) continue;
-    if (meta29(s, rl.id)?.fake) continue; // falsa não entra no acervo histórico do ato
+    if (meta29(s, rl)?.fake) continue; // falsa não entra no acervo histórico do ato
+    if (myTrail9(s, rl)) continue; // R31 G: peça com trajetória sua fica na lista viva
     const a = rl.a ? s.acts[rl.a] : undefined;
     if (a && (a.legend || mine(a))) continue;
-    const k = rl.a ?? '';
-    const cur = (st.arc[k] ??= [0, 0]);
-    cur[0]++; cur[1] += rl.v;
-    relics(s).list.splice(relics(s).list.indexOf(rl), 1);
-    delete st.m[rl.id]; delete rel18(s).m[rl.id];
+    archiveRelic9(s, rl); // R31 G: arquivo único e compacto do relics9 (antes: contagem por ato só aqui)
     n++;
   }
   return n;
@@ -742,6 +722,10 @@ export function archive29(s: GameState, age: number): number {
 /** Resumo do acervo histórico (interface). */
 export function arc29(s: GameState): { n: number; v: number; acts: number } {
   let n = 0, v = 0, acts = 0;
-  for (const [k, [c, x]] of Object.entries(rel29(s).arc)) { n += c; v += x; if (k) acts++; }
+  const st = relics(s);
+  const ks = new Set<string>();
+  for (const x of st.arc) { n++; v += x.v; if (x.a) ks.add(x.a); }
+  for (const [k, [c, x]] of Object.entries(st.arcN)) { n += c; v += x; if (k) ks.add(k); }
+  acts = ks.size;
   return { n, v, acts };
 }

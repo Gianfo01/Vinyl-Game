@@ -48,7 +48,7 @@ export const HUBS27: Hub27[] = [
   hub('course', 'admin', l('Rumo e direitos', 'Course and rights'), 'flag', l('Estratégia de longo prazo, calendário e direitos.', 'Long-term strategy, calendar and rights.'), ['long18', 'calendar19', 'rights18']),
   hub('ventures', 'admin', l('Carreiras e sócios', 'Careers and partners'), 'star', l('Outras carreiras, empreendimentos e sócios.', 'Other careers, ventures and partners.'), ['careers', 'ventures', 'shared18']),
   // Você (6 → 3)
-  hub('life', 'you', l('Você e família', 'You and family'), 'star', l('Perfil, vida pessoal e patrimônio.', 'Profile, personal life and wealth.'), ['you', 'personal', 'wealth']),
+  hub('life', 'you', l('Você e família', 'You and family'), 'star', l('Perfil, vida pessoal e patrimônio.', 'Profile, personal life and wealth.'), ['you', 'personal', 'known31', 'wealth']),
   hub('nights', 'you', l('Noite e cenas', 'Nights and scenes'), 'sparkle', l('Saídas, encontros e o álbum de cenas.', 'Nights out, encounters and the scene album.'), ['night14', 'scenes17']),
 ];
 

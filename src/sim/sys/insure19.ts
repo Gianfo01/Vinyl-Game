@@ -24,6 +24,8 @@ import { cnt19, link19, log19, mineA19, usd19, xs19, type Log19 , off19 } from '
 import { P } from './people/state';
 import { post18 } from './post18';
 import { schedule18 } from './decide18';
+import { addStaffLoyalty, staffLoyalty } from '../opinion';
+import { shiftOpinion } from '../opinion';
 
 export interface Pol19 { act: string; pid: string; tier: 1 | 2 | 3; cover: number; prem: number; since: number; claims: number; lastIll: number; paid: number }
 export interface Ins19 extends Log19 { pol: Pol19[]; plan: boolean; planSince: number; planPaid: number; out: number }
@@ -120,7 +122,7 @@ onFact('keyman_claim', (s, f) => {
   if (!f.tags.includes('death')) return;
   const e = post18(s).est[f.actors[1]];
   if (e) { e.unity = clamp(e.unity - 6, 0, 100); e.dispute = clamp((e.dispute ?? 0) + 8, 0, 100); }
-  for (const h of e?.heirs ?? []) { const hp = h.pid ? s.persons[h.pid] : undefined; if (hp) hp.rel.player = clamp((hp.rel.player ?? 0) - 15, -100, 100); }
+  for (const h of e?.heirs ?? []) { const hp = h.pid ? s.persons[h.pid] : undefined; if (hp) shiftOpinion(s, `p:${hp.id}`, -15, { why: l('a herança virou briga com o seguro.', 'the estate turned into an insurance fight.') }); }
   if (f.visibility === 'public') headline19(s, f.text, 1);
   link19(s, 'insure', l('Indenização paga: os herdeiros acham que o selo lucrou com a morte (união do espólio −6).', 'Payout made: the heirs feel the label profited from the death (estate unity −6).'));
 }, 'insure19:heirs');
@@ -146,7 +148,7 @@ export function insureMonth19(s: GameState): void {
       if ((p.health === 'burnout' || p.health === 'ill') && (s.week + pid.length) % 6 === 0) p.health = 'recovering';
     }
   }
-  for (const m of s.player.staff) { const cr = P(s).career[m.id]; if (cr && cr.loyalty < 75) cr.loyalty = clamp(cr.loyalty + 0.3, 0, 100); }
+  for (const m of s.player.staff) if (P(s).career[m.id] && staffLoyalty(s, m.id) < 75) addStaffLoyalty(s, m.id, 0.3);
 }
 registerSimHook('month', 'insure19', (s) => off19('insure19') || insureMonth19(s));
 

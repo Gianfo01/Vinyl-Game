@@ -141,6 +141,68 @@ export function transportAt(year: number, km: number, sameContinent: boolean): T
   return { mode: 'jet', days: km > 11000 ? 2 : 1, costReal: Math.round(100 + km * perKm) };
 }
 
+// ---------------------------------------------------------------- R31 D: escolha de transporte por trecho
+
+/** Cansaço por dia de viagem (a regra antiga era 0,8 para todo meio): navio descansa, avião a jato cansa mais por dia. */
+export const FATIGUE_PER_DAY31: Record<TransportMode, number> = { bus: 0.9, train: 0.7, ship: 0.35, prop_plane: 1.0, jet: 1.2, hyperloop: 0.5 };
+export const MODE_NAME31: Record<TransportMode, L> = {
+  bus: l('Ônibus', 'Bus'), train: l('Trem', 'Train'), ship: l('Navio', 'Ship'), prop_plane: l('Avião a hélice', 'Propeller plane'), jet: l('Avião a jato', 'Jet'), hyperloop: l('Hyperloop', 'Hyperloop'),
+};
+
+/** Um meio específico para o trecho, se existir na época (null = indisponível). Mesmas contas de transportAt. */
+export function transportBy(mode: TransportMode, year: number, km: number, sameContinent: boolean): Transport | null {
+  if (km < 40) return mode === 'bus' || mode === 'train' ? { mode, days: 0.5, costReal: Math.round(10 + km * 0.2) } : null;
+  switch (mode) {
+    case 'hyperloop':
+      return year >= 2035 && sameContinent && km >= 250 && km <= 2500 ? { mode, days: 0.5, costReal: Math.round(25 + km * 0.11) } : null;
+    case 'jet': {
+      if (year < 1958) return null;
+      if (sameContinent) {
+        const perKm = lerp([[1958, 0.5], [1970, 0.3], [1980, 0.2], [2000, 0.12], [2020, 0.09], [2040, 0.08]], year);
+        const base = lerp([[1958, 160], [1980, 110], [2000, 70], [2040, 55]], year);
+        return { mode, days: km > 6000 ? 1.5 : 1, costReal: Math.round(base + km * perKm) };
+      }
+      const perKm = lerp([[1958, 0.55], [1970, 0.35], [1980, 0.22], [2000, 0.12], [2020, 0.09], [2040, 0.075]], year);
+      return { mode, days: km > 11000 ? 2 : 1, costReal: Math.round(100 + km * perKm) };
+    }
+    case 'prop_plane': {
+      if (year < 1919 || year >= 1975) return null;
+      const perKm = lerp([[1946, 0.85], [1957, 0.6]], year) * (year < 1946 ? 3 : 1); // antes de 1946: rara e caríssima
+      return sameContinent ? { mode, days: halfDays(1 + km / 6000), costReal: Math.round(150 + km * perKm) } : { mode, days: halfDays(1 + Math.floor(km / 6000)), costReal: Math.round(200 + km * perKm) };
+    }
+    case 'ship': {
+      if (sameContinent && km < 800) return null;
+      const perDay = lerp([[1920, 620], [1939, 760], [1970, 800]], year);
+      const perKm = lerp([[1920, 0.45], [1945, 0.38], [1960, 0.45], [2000, 0.6]], year); // depois do jato, travessia vira cruzeiro
+      return { mode, days: halfDays(1 + (km * 1.25) / perDay), costReal: Math.round(km * perKm + 200) };
+    }
+    case 'train': {
+      if (!sameContinent) return null;
+      const speed = lerp([[1920, 700], [1950, 900], [1990, 1200], [2040, 1500]], year);
+      const days = halfDays(km / speed);
+      return { mode, days, costReal: Math.round(km * lerp([[1920, 0.3], [1960, 0.18], [2000, 0.12], [2040, 0.1]], year) + days * 40) };
+    }
+    case 'bus': {
+      if (!sameContinent || year < 1950) return null;
+      const perDay = year >= 1980 ? 750 : 600;
+      return { mode, days: halfDays(km / perDay), costReal: Math.round(km * lerp([[1950, 0.12], [2000, 0.09], [2040, 0.07]], year)) };
+    }
+  }
+  return null;
+}
+
+/** Opções reais da época para o trecho; a primeira é a automática (a de transportAt). */
+export function transportOptions(year: number, km: number, sameContinent: boolean): Transport[] {
+  const auto = transportAt(year, km, sameContinent);
+  const out = [auto];
+  for (const m of ['bus', 'train', 'ship', 'prop_plane', 'jet', 'hyperloop'] as TransportMode[]) {
+    if (m === auto.mode) continue;
+    const t = transportBy(m, year, km, sameContinent);
+    if (t) out.push(t);
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------- vistos
 
 const inY = (y: number, a: number, b: number) => y >= a && y < b;
@@ -240,10 +302,11 @@ export function visaBetween(ua: PoliticalUnit | null, ub: PoliticalUnit | null, 
  * Um trecho de turnê entre duas cidades no ano, para uma equipe de `crewSize` pessoas.
  * O visto depende da nacionalidade da equipe: `homeCityId` (padrão: a cidade de origem do trecho).
  */
-export function travelLeg(fromCityId: string, toCityId: string, year: number, crewSize: number, homeCityId = fromCityId): Leg {
+export function travelLeg(fromCityId: string, toCityId: string, year: number, crewSize: number, homeCityId = fromCityId, mode?: TransportMode): Leg {
   const crew = Math.max(1, Math.round(crewSize));
   const km = Math.round(cityDistanceKm(fromCityId, toCityId));
-  const tr = transportAt(year, km, sameLandmass(fromCityId, toCityId));
+  const same = sameLandmass(fromCityId, toCityId);
+  const tr = (mode && transportBy(mode, year, km, same)) || transportAt(year, km, same); // R31 D: meio escolhido, se existir na época
   const ua = unitOfCity(homeCityId, year);
   const ub = unitOfCity(toCityId, year);
   const v = visaBetween(ua, ub, year);

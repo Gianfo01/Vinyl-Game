@@ -16,9 +16,11 @@ import { genreById, l, type L } from '../../data/world';
 import { hqCaps } from '../branches';
 import { careerSlotsUsed, defaultOffer, expectedAdvance, makeOffer, offerEligible29, withdrawOffer } from '../contracts';
 import {
-  ASK31, EXEC31, MODE31, OPINE31, RESP31, UNDO31, allowOnce31, askFor31, d31, dirOf31, exc31, logAuto31, modeOf31, onceOk31, applyPreset31,
-  setDir31, setMode31, staffFor31, PRESET31, type Mode31, type Preset31,
+  ASK31, EXEC31, MODE31, OPINE31, RESP31, UNDO31, addSpent31, allowOnce31, askFor31, blocked31, d31, dirOf31, exc31, logAuto31, modeOf31, onceOk31, applyPreset31,
+  setDir31, setMode31, staffFor31, usd31, PRESET31, type Mode31, type Preset31,
 } from '../deleg31';
+import { freeCash20 } from '../oblig20';
+import { payGate18 } from './policy18';
 import { registerSimHook } from '../ext4';
 import { opine } from '../opinion';
 import { unreleasedRecorded } from '../production';
@@ -32,7 +34,7 @@ import { cap14, meetingCap } from './gate14';
 
 OPINE31.f = (s, key, d, why) => { opine(s, key, d, why); };
 
-const usd = (v: number): string => `$${Math.round(v).toLocaleString('en-US')}`;
+const usd = usd31; // dólares de hoje pelo formatador do jogo, nas duas línguas
 
 // ---------------------------------------------------------------- A&R
 
@@ -48,6 +50,7 @@ export function anrRead31(s: GameState, r: Rng | null): AnrPick31[] {
     if (!a || !offerEligible29(s, a, 'classic').ok) continue;
     if (s.offers.some((o) => o.actId === a.id && (o.status === 'pending' || o.status === 'counter'))) continue;
     if (D.genres?.length && !D.genres.includes(a.genre)) continue;
+    if (blocked31(s, 'anr', a.id)) continue; // W2-REV: você desfez a proposta a este ato há pouco — não repete
     const e = estimate(s, a.id, 'potential');
     const mid = e?.mid ?? 50;
     // ouvido: o A&R fraco erra mais na leitura (ruído some com a qualidade)
@@ -74,7 +77,7 @@ export function anrMonth31(s: GameState): void {
   const D = dirOf31(s, 'anr');
   const r = rng19(s, 'deleg31');
   const picks = anrRead31(s, r);
-  if (!picks.length) { logAuto31(s, { r: 'anr', who: st.id, t: fmtL(l('{n} não achou ninguém para propor: nenhum ato conhecido e livre dentro do escopo{g}.', '{n} found nobody to offer: no known, unsigned act within scope{g}.'), { n: st.name, g: D.genres?.length ? fmtL(l(' ({x})', ' ({x})'), { x: D.genres.map((g) => genreById[g]?.name.pt ?? g).join(', ') }) : '' }), tone: 'info', x: 'none' }); return; }
+  if (!picks.length) { logAuto31(s, { r: 'anr', who: st.id, t: fmtL(l('{n} não achou ninguém para propor: nenhum ato conhecido e livre dentro do escopo{g}.', '{n} found nobody to offer: no known, unsigned act within scope{g}.'), { n: st.name, g: D.genres?.length ? fmtL(l(' ({x})', ' ({x})'), { x: D.genres.map((g) => genreById[g]?.name ?? l(g, g)).reduce((a, b) => l(`${a.pt}, ${b.pt}`, `${a.en}, ${b.en}`)) }) : '' }), tone: 'info', x: 'none' }); return; }
   let made = 0;
   for (const p of picks) {
     if (made >= (D.per ?? 1)) break;
@@ -86,6 +89,11 @@ export function anrMonth31(s: GameState): void {
     }
     if (cap14(s).meet >= meetingCap(s)) { logAuto31(s, { r: 'anr', who: st.id, x: 'meet', tone: 'info', t: fmtL(l('{n} parou: a equipe já usou as {c} reuniões de oferta do mês (não gasta o seu tempo).', '{n} stopped: the team already used its {c} offer meetings this month (does not spend your time).'), { n: st.name, c: meetingCap(s) }) }); break; }
     const why = fmtL(l('leitura de {n}: potencial {lo}–{hi}{g}; adiantamento {v}{c}', '{n}\'s read: potential {lo}–{hi}{g}; advance {v}{c}'), { n: st.name, lo: p.lo, hi: p.hi, g: D.genres?.length ? fmtL(l(', gênero {x}', ', genre {x}'), { x: genreById[p.act.genre]?.name ?? l(p.act.genre, p.act.genre) }) : '', v: usd(adv), c: cap ? fmtL(l(' (teto {x})', ' (cap {x})'), { x: usd(cap) }) : '' });
+    // W2-REV: "Gastos da equipe" vale para o A&R: teto por gasto e reserva mínima sobre o caixa LIVRE (adiantamentos já
+    // reservados por outras propostas descontados) — o que travar vira exceção, como nas ordens dos agentes
+    const advC = money(s, Math.round(adv / 100) * 100);
+    const gate = payGate18(s, { kind: 'anr', actId: p.act.id }, advC, { cash: freeCash20(s) });
+    if (gate) { logAuto31(s, { r: 'anr', who: st.id, act: p.act.id, x: 'gate', tone: 'bad', why, t: fmtL(l('{n} não propôs a {a}: {w}', '{n} did not offer to {a}: {w}'), { n: st.name, a: p.act.name, w: gate }) }); continue; }
     if (m === 'partial' && (D.ask ?? 0) > 0 && adv > (D.ask ?? 0)) {
       askFor31(s, { r: 'anr', who: st.id, until: s.week + 4, amt: money(s, adv), act: p.act.id, k: 'anr', data: { adv: Math.round(adv) },
         t: fmtL(l('{n} quer oferecer {v} de adiantamento a {a} (acima do seu limite de {x}).', '{n} wants to offer a {v} advance to {a} (above your {x} limit).'), { n: st.name, v: usd(adv), a: p.act.name, x: usd(D.ask ?? 0) }) });
@@ -95,14 +103,16 @@ export function anrMonth31(s: GameState): void {
     const off = makeOffer(s, offerFor(s, p.act, adv));
     if (!off) { logAuto31(s, { r: 'anr', who: st.id, act: p.act.id, x: 'fail', tone: 'bad', t: fmtL(l('{n} não conseguiu propor a {a} (caixa livre para o adiantamento ou reunião indisponível).', '{n} could not offer to {a} (free cash for the advance or no meeting available).'), { n: st.name, a: p.act.name }), why }); continue; }
     made++;
+    addSpent31(s, 'anr', off.advance);
     logAuto31(s, { r: 'anr', who: st.id, act: p.act.id, x: 'offer', tone: 'good', amt: -off.advance, undo: { k: 'offer', id: off.id }, why,
       t: fmtL(l('{n} propôs contrato a {a}: {v} de adiantamento, {r}% de royalty, {m} meses. Resposta no fechamento do mês.', '{n} offered {a} a deal: {v} advance, {r}% royalty, {m} months. Answer at month close.'), { n: st.name, a: p.act.name, v: usd(toReal(off.advance, s.year)), r: Math.round(off.royalty * 100), m: off.termMonths }) });
   }
 }
-UNDO31.offer = (s, id) => {
+UNDO31.offer = (s, id, e) => {
   const o = s.offers.find((x) => x.id === id);
   if (!o || o.status !== 'pending') return l('A proposta já foi respondida.', 'The offer was already answered.');
   withdrawOffer(s, id);
+  if (e.m === s.year * 12 + s.month) addSpent31(s, 'anr', -o.advance); // estorna o gasto do mês
   return null;
 };
 ASK31.anr = (s, a) => {
@@ -110,6 +120,7 @@ ASK31.anr = (s, a) => {
   if (!act || !offerEligible29(s, act, 'classic').ok) return l('O ato não está mais disponível.', 'The act is no longer available.');
   const off = makeOffer(s, offerFor(s, act, Number(a.data.adv) || 0));
   if (!off) return l('Não deu para propor agora (caixa livre ou reuniões do mês).', 'Could not offer now (free cash or this month\'s meetings).');
+  addSpent31(s, 'anr', off.advance);
   logAuto31(s, { r: 'anr', who: a.who, act: act.id, x: 'offer', tone: 'good', amt: -off.advance, undo: { k: 'offer', id: off.id }, t: fmtL(l('Proposta aprovada por você: {v} de adiantamento a {a}.', 'Offer approved by you: {v} advance to {a}.'), { v: usd(toReal(off.advance, s.year)), a: act.name }) });
   return null;
 };

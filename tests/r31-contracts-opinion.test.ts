@@ -11,12 +11,13 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { l } from '../src/data/world';
 import { defaultConfig } from '../src/sim/bot';
+import { playMonth } from '../src/sim/playbot16';
+import { advanceMonth } from '../src/sim/tick';
 import { createGame } from '../src/sim/worldgen';
-import { OP_WHY_MAX, decayOpinions, hasOpinion, opine, opinionOf, opinionWhy, opState, setOpinion } from '../src/sim/opinion';
+import { OP_WHY_MAX, critRelOf, critRelPut, decayOpinions, hasOpinion, opine, opinionOf, opinionRaw, opinionWhy, opState, meId, relOf, setOpinion, staffLoyalty } from '../src/sim/opinion';
 import { leaders } from '../src/sim/sys/leaders10';
 import { careerOf } from '../src/sim/sys/people/staff';
 import { staffAdj13 } from '../src/sim/sys/persona13';
-import { critRel } from '../src/sim/criticrel';
 
 const ROOT = join(__dirname, '..');
 const OWNER = 'src/sim/opinion.ts';
@@ -35,38 +36,13 @@ const ALWAYS: RegExp[] = [
 const CRITIC_FILE = /critRel\(/;
 const CRITIC = /\.rel\[[^\]]+\]\s*(?:\+|-)?=(?!=)/g;
 
-/** Estado no fim da onda 0 (só diminui). */
-const ALLOW: Record<string, number> = {
-  'src/sim/criticrel.ts': 4,
-  'src/sim/scandal17.ts': 1,
-  'src/sim/sys/aud27/burnout27.ts': 1,
-  'src/sim/sys/aud27/critic27.ts': 1,
-  'src/sim/sys/aud27/culture27.ts': 1,
-  'src/sim/sys/aud27/kin27.ts': 1,
-  'src/sim/sys/aud27/shark27.ts': 2,
-  'src/sim/sys/board27.ts': 1,
-  'src/sim/sys/crew8.ts': 2,
-  'src/sim/sys/crimenpc17.ts': 1,
-  'src/sim/sys/crisis27.ts': 1,
-  'src/sim/sys/culture19.ts': 3,
-  'src/sim/sys/favors27.ts': 1,
-  'src/sim/sys/featp29.ts': 1,
-  'src/sim/sys/heist27.ts': 1,
-  'src/sim/sys/identity8.ts': 1,
-  'src/sim/sys/insure19.ts': 2,
-  'src/sim/sys/leaders10.ts': 2,
-  'src/sim/sys/leisure14.ts': 1,
-  'src/sim/sys/links16.ts': 1,
-  'src/sim/sys/links19b.ts': 3,
-  'src/sim/sys/links23.ts': 1,
-  'src/sim/sys/manager12.ts': 3,
-  'src/sim/sys/media17.ts': 10,
-  'src/sim/sys/member29.ts': 1,
-  'src/sim/sys/people/staff.ts': 8,
-  'src/sim/sys/rivals12.ts': 2,
-  'src/sim/sys/songmkt27.ts': 2,
-  'src/sim/sys/writers19.ts': 1,
-};
+/** Fim da 31.3 (F/UNI-3): nenhuma escrita direta sobra — todos os escritores passaram por opine/setOpinion/shiftOpinion/
+ *  putOpinion (ou relAdd/relPut para pessoa → pessoa). A lista fica vazia de propósito: arquivo novo = teste falha. */
+const ALLOW: Record<string, number> = {};
+/** Pessoa → pessoa: só o roteador de opinion.ts escreve `Person.rel` quando pode ser o jogador; aqui contamos a forma
+ *  crua mais comum (`x.rel[y] = clamp((x.rel[y] ?? 0) ± d, −100, 100)`) em pessoas para não voltar. */
+const PERSON_CLAMP = /\b(?!L0\b|LL\b|st\b|c\b|x\b|cr\b|cs\b|lead\b|Lb\b|La\b|bossOld\b)[A-Za-z_]\w*\.rel\[[^\]]+\]\s*=\s*clamp\(/g;
+const PERSON_FILES_EXEMPT = /sys\/(media17|tour12|exch20|venue12|services12|hype12|supply18|outlets17|links16|press27|leaders10)\.ts|supply13|camp27/;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const f of readdirSync(dir)) {
@@ -86,6 +62,7 @@ function scanOpinionWrites(): Record<string, number> {
     let n = 0;
     for (const re of ALWAYS) n += src.match(re)?.length ?? 0;
     if (CRITIC_FILE.test(src)) n += src.match(CRITIC)?.length ?? 0;
+    if (!PERSON_FILES_EXEMPT.test(rel)) n += src.match(PERSON_CLAMP)?.length ?? 0;
     if (n) res[rel] = n;
   }
   return res;
@@ -113,21 +90,22 @@ describe('r31 contrato — opinião em fonte única', () => {
     const lk = `l:${lid}`;
     setOpinion(s, lk, 20, l('teste', 'test'));
     expect(opinionOf(s, lk)).toBe(20);
-    expect(leaders(s).L[lid].rel.player).toBe(20);
+    expect(leaders(s).L[lid].rel.player).toBeUndefined(); // o campo nativo deixou de existir
     for (let i = 0; i < 10; i++) opine(s, lk, -1, l('gesto', 'gesture'));
     expect(opinionWhy(s, lk).length).toBe(OP_WHY_MAX);
     expect(opinionOf(s, lk)).toBeLessThan(20);
-    expect(opState(s)[lk].v).toBe(leaders(s).L[lid].rel.player);
+    expect(opState(s)[lk].v).toBe(opinionRaw(s, lk));
     // equipe: lealdade = 50 + op/2, e o rendimento (staffAdj13) lê a mesma opinião que a ficha
     if (!s.player.staff.length) s.player.staff.push({ id: 'st31', name: 'Ana', role: 'admin', skill: 50, salary: 1, hiredWeek: 0 });
     const st = s.player.staff[0];
     {
       setOpinion(s, `s:${st.id}`, -60);
-      expect(careerOf(s, st).loyalty).toBe(20);
+      expect(staffLoyalty(s, st.id)).toBe(20);
+      expect((careerOf(s, st) as unknown as { loyalty?: number }).loyalty).toBeUndefined();
       expect(opinionOf(s, `s:${st.id}`)).toBe(-60);
       expect(staffAdj13(s, st).why.some((w) => /demotivated/.test(w.en))).toBe(true);
       setOpinion(s, `s:${st.id}`, 40);
-      expect(careerOf(s, st).loyalty).toBe(70);
+      expect(staffLoyalty(s, st.id)).toBe(70);
       expect(staffAdj13(s, st).why.some((w) => /demotivated/.test(w.en))).toBe(false);
     }
     // chave só do registro (grupo, empresário…): limites −100..100
@@ -143,13 +121,13 @@ describe('r31 contrato — opinião em fonte única', () => {
     expect(hasOpinion(s, ck)).toBe(false);
     expect(opinionOf(s, ck)).toBe(0);
     setOpinion(s, ck, 60, l('teste', 'test'));
-    expect(critRel(s).rel['Crítico Teste']).toBe(30);
+    expect(critRelOf(s, 'Crítico Teste')).toBe(30);
     expect(opinionOf(s, ck)).toBe(60);
     expect(hasOpinion(s, ck)).toBe(true);
     setOpinion(s, ck, 300);
-    expect(critRel(s).rel['Crítico Teste']).toBe(50);
+    expect(critRelOf(s, 'Crítico Teste')).toBe(50);
     expect(opinionOf(s, ck)).toBe(100);
-    critRel(s).rel['Outro'] = -20; // escrita nativa crua (criticrel.ts)
+    critRelPut(s, 'Outro', -20); // a escala do sistema de críticos (−50..50)
     expect(opinionOf(s, 'c:Outro')).toBe(-40);
     for (let i = 0; i < 24; i++) decayOpinions(s, 0.985);
     expect(opinionOf(s, ck)).toBeLessThan(100);
@@ -160,12 +138,26 @@ describe('r31 contrato — opinião em fonte única', () => {
     expect(me).toBeTruthy();
     if (me) {
       setOpinion(s, `p:${a.id}`, 50, l('teste', 'test'));
-      expect(a.rel[me.id]).toBe(50);
+      expect(a.rel[me.id]).toBeUndefined(); // não mora mais em Person.rel
+      expect(relOf(s, a.id, me.id)).toBe(50);
       a.rel[b.id] = 40;
       for (let i = 0; i < 12; i++) decayOpinions(s, 0.985);
-      expect(a.rel[me.id]).toBeCloseTo(50 * 0.985 ** 12, 0);
-      expect(opinionOf(s, `p:${a.id}`)).toBe(Math.round(a.rel[me.id]));
+      expect(opinionRaw(s, `p:${a.id}`)).toBeCloseTo(50 * 0.985 ** 12, 0);
+      expect(opinionOf(s, `p:${a.id}`)).toBe(Math.round(relOf(s, a.id, me.id)!));
       expect(a.rel[b.id]).toBe(40); // NPC↔NPC intocado
     }
   });
+
+  it('Person.rel nunca guarda a opinião sobre o jogador (12 meses de robô, banda e selo)', () => {
+    for (const role of ['artist', 'label'] as const) {
+      const s = createGame(defaultConfig(`r31-op-rt-${role}`, { startYear: 1990, role, bandGenre: 'rnr', bandName: 'Banda Teste' }));
+      for (let i = 0; i < 12; i++) { playMonth(s, 'balanced'); advanceMonth(s); }
+      const me = meId(s);
+      expect(me).toBeTruthy();
+      const bad = Object.values(s.persons).filter((p) => p.id !== me && Object.prototype.hasOwnProperty.call(p.rel, me!)).map((p) => p.id);
+      expect(bad).toEqual([]);
+      for (const L0 of Object.values(leaders(s).L)) expect(Object.prototype.hasOwnProperty.call(L0.rel, 'player')).toBe(false);
+    }
+  }, 120000);
 });
+

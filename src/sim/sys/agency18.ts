@@ -27,6 +27,7 @@ import { activeFeuds18, feudOf18, feudsOf18, heatFeud18, leadOf18, setFeudMine18
 import { addHype } from './hype12';
 import { leaders } from './leaders10';
 import { opine, opinionOf, per13 } from './persona13';
+import { rel0, relAdd } from '../opinion';
 
 // ---------------------------------------------------------------- chaves
 
@@ -97,14 +98,14 @@ export function ag18(s: GameState): Ag18State {
 /** Relação A→T (−100..100) lida da melhor fonte disponível. */
 export function relOf18(s: GameState, A: string, T: string): number {
   if (isPlayerKey(s, T) && !isPlayerKey(s, A)) return opinionOf(s, A);
-  if (A.startsWith('p:') && T.startsWith('p:')) return s.persons[A.slice(2)]?.rel[T.slice(2)] ?? 0;
+  if (A.startsWith('p:') && T.startsWith('p:')) return rel0(s, A.slice(2), T.slice(2));
   if (A.startsWith('l:') && T.startsWith('l:')) return leaders(s).L[A.slice(2)]?.rel[T.slice(2)] ?? 0;
   return ag18(s).rel[`${A}>${T}`] ?? 0;
 }
 export function adjRel18(s: GameState, A: string, T: string, d: number, why: L): void {
   if (isPlayerKey(s, A)) return;
   if (isPlayerKey(s, T)) { opine(s, A, d, why); return; }
-  if (A.startsWith('p:') && T.startsWith('p:') && s.persons[A.slice(2)]) { const p = s.persons[A.slice(2)]; p.rel[T.slice(2)] = clamp((p.rel[T.slice(2)] ?? 0) + d, -100, 100); return; }
+  if (A.startsWith('p:') && T.startsWith('p:') && s.persons[A.slice(2)]) { const p = s.persons[A.slice(2)]; relAdd(s, p.id, T.slice(2), d); return; }
   if (A.startsWith('l:') && T.startsWith('l:') && leaders(s).L[A.slice(2)]) { const L0 = leaders(s).L[A.slice(2)]; L0.rel[T.slice(2)] = clamp((L0.rel[T.slice(2)] ?? 0) + d, -100, 100); return; }
   const st = ag18(s);
   const k = `${A}>${T}`;

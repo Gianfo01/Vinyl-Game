@@ -7,7 +7,7 @@ import { CONTRACT_MODELS } from '../../data/rules';
 import { active29, isSpecial29, npcParty29, partyName29, termTxt29 } from '../../sim/terms29';
 import { l, marketById, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
-import { bolsa, change12, holders } from '../../sim/sys/bolsa10';
+import { bolsa, change12, holders, insider31 } from '../../sim/sys/bolsa10';
 import { ch7 } from '../../sim/sys/charts7';
 import {
   actContracts, actLabelHistory, actMilestones, actRelics, isPlayerLabel, labelAlumni, labelAwards, labelName13, labelRoster13, labelScenes,
@@ -33,6 +33,7 @@ import './map13.css';
 import { HINT15, canSee, fameText, knownLevel } from '../../sim/sys/fame15';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
 import { labelMarkImg28 } from '../pixel/extras28';
+import { publicKinds, see, seen } from '../../sim/know';
 
 const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const why = (x: L) => h('p', { class: 'dos13-why' }, t(x));
@@ -180,8 +181,8 @@ function financeTab(s: GameState, id: string, close: () => void): HTMLElement {
       : h('div', null,
         kv(t(l('Receita do último ano (pública)', 'Last year revenue (public)')), $(lb.revenueLastYear)),
         kv(t(l('Receita do ano até agora', 'Revenue so far this year')), $(lb.revenueYear)),
-        lb.debt ? kv(t(l('Dívida', 'Debt')), $(lb.debt)) : null,
-        why(l('Caixa e contas internas só aparecem com participação acionária (assento no conselho).', 'Cash and internal accounts only show with an equity stake (board seat).'))),
+        lb.debt && (insider31(s, id) || publicKinds(s, id).has('debt_called')) ? kv(t(l('Dívida', 'Debt')), $(lb.debt)) : null, // r31 F #25
+        why(l('Caixa, dívida e contas internas só aparecem com participação a partir de 5% (bolsa ou compra direta), salvo dívida cobrada em público.', 'Cash, debt and internal accounts only show with a stake of 5% or more (exchange or direct), except debt called in public.'))),
     q && !me ? h('div', null, h('h4', null, t(l('Ações', 'Stock'))),
       q.dead ? pill(`${t(q.dead.text)} (${q.dead.y})`, 'bad') : chips(stat('money', `$${q.p.toFixed(2)}`, l('cotação', 'price')), stat(change12(q) >= 0 ? 'chart-up' : 'chart-down', `${change12(q) >= 0 ? '+' : ''}${Math.round(change12(q) * 100)}%`, l('em 12 meses', 'over 12 months')), ipo ? stat('calendar', ipo, l('abriu capital', 'went public')) : null),
       q.hist.length > 1 ? sparkline(q.hist.slice(-48), 260, 40, t(l('Cotação (48 meses)', 'Share price (48 months)'))) : null,
@@ -250,7 +251,7 @@ ACT_TABS.push((s, a) => ({
     const m = actMilestones(s, a);
     return h('div', null,
       chips(stat('trophy', m.no1, l('números 1', 'number ones')), stat('chart-up', m.top10, l('no top 10', 'top 10s')), stat('star', m.peak < 999 ? `#${m.peak}` : '—', l('melhor posição', 'best position')),
-        stat('gold-disc', m.certs.length, l('certificações', 'certifications')), stat('trophy', m.awards.length, l('prêmios', 'awards')), stat('fire', Math.round(actHype(s, a.id)), l('hype agora', 'hype now'))),
+        stat('gold-disc', m.certs.length, l('certificações', 'certifications')), stat('trophy', m.awards.length, l('prêmios', 'awards')), stat('fire', seen(s, a.id, 'hype') ? Math.round(actHype(s, a.id)) : '?', l('hype agora', 'hype now'))),
       h('h4', null, t(l('Definiu uma época?', 'Did they define an era?'))),
       m.defined.length ? h('ul', { class: 'dos13-list small' }, m.defined.map((d) => h('li', null, ic('star'), ` ${t(d.what)} (${d.y0}–${d.y1}) · #${d.rank} ${t(l('entre as figuras que definiram o período', 'among the figures who defined the period'))}`)))
         : empty(l('Ainda não: entre as 3 figuras mais marcantes de uma era ou década (pela crônica do mundo) o artista "define a época".', 'Not yet: being among the 3 most notable figures of an era or decade (by the world chronicle) means "defining the era".')),
@@ -298,6 +299,7 @@ export const LIFE_EXTRAS13: ((s: GameState, p: Person, open?: boolean) => HTMLEl
 
 function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
   const lf = personLife(s, p);
+  const hs = see(s, p.id, 'health'); // r31 F #15: escândalo público de vício mostra o vício (em rótulo)
   const healthName: Record<string, L> = { ok: l('bem', 'fine'), voice_strain: l('voz desgastada', 'voice strain'), burnout: l('esgotamento', 'burnout'), addiction: l('dependência', 'addiction'), recovering: l('em recuperação', 'recovering'), ill: l('doente', 'ill') };
   return h('div', { class: 'dos13-person' },
     h('div', { class: 'row wrap' }, open ? h('button', { class: 'link', ...ent27('person', `p:${p.id}`), onclick: () => openPersonPage(p.id) }, h('b', null, p.name)) : h('b', null, p.name),
@@ -305,9 +307,10 @@ function lifeBlock(s: GameState, p: Person, open: boolean): HTMLElement {
     h('ul', { class: 'dos13-list small' },
       // relacionamento, ex e filhos ficam no bloco único "Família" (rodada 15)
       !canSee(s, p.id, 'life') ? h('li', { class: 'muted' }, t(HINT15)) : null,
-      !canSee(s, p.id, 'health') ? null : h('li', { class: p.health === 'ok' ? '' : 'bad' }, ic('heart'), ` ${t(l('Saúde', 'Health'))}: ${t(healthName[p.health] ?? l(p.health))}`,
+      hs === 'hidden' ? null : hs === 'label' ? h('li', { class: p.health === 'ok' ? '' : 'bad' }, ic('heart'), ` ${t(l('Saúde', 'Health'))}: ${t(healthName[p.health] ?? l(p.health))} `, h('small', { class: 'muted' }, t(l('(o que saiu na imprensa)', '(what the press reported)'))))
+        : h('li', { class: p.health === 'ok' ? '' : 'bad' }, ic('heart'), ` ${t(l('Saúde', 'Health'))}: ${t(healthName[p.health] ?? l(p.health))}`,
         lf.voice !== undefined ? ` · ${t(l('voz', 'voice'))} ${Math.round(lf.voice)}` : '', lf.hearing !== undefined ? ` · ${t(l('audição', 'hearing'))} ${Math.round(lf.hearing)}` : ''),
-      lf.dependency !== undefined && lf.dependency > 5 && canSee(s, p.id, 'health') ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
+      lf.dependency !== undefined && lf.dependency > 5 && hs === 'exact' ? h('li', { class: lf.dependency > 60 ? 'bad' : '' }, ic('skull'), ` ${t(l('Vícios / dependência', 'Vices / dependency'))}: ${Math.round(lf.dependency)}/100`) : null,
     ),
     ...(canSee(s, p.id, 'life') ? LIFE_EXTRAS13.map((f) => f(s, p, open)) : []),
     // R29: os campos internos crus ("Mais dados · person / ability18.p", real27, roles27…) não aparecem mais para o jogador —

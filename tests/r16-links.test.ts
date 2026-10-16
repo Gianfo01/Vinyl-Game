@@ -13,9 +13,9 @@ import { aw15 } from '../src/sim/sys/awards15';
 import { kin15 } from '../src/sim/sys/kin15';
 import { cap14, roleLoads } from '../src/sim/sys/capacity14';
 import { crew } from '../src/sim/sys/crew8';
-import { careerOf } from '../src/sim/sys/people/staff';
 import { fameToNoto, friendTips, juryMem16, kinLinks, labelDemos, lk16, prodFit16, snubLinks, staffStrain } from '../src/sim/sys/links16';
 import { Rng } from '../src/core/rng';
+import { staffLoyalty } from '../src/sim/opinion';
 
 const free = (s: GameState): Act => Object.values(s.acts).find((x) => x.status !== 'retired' && x.status !== 'split' && x.members.length >= 2 && !x.owner)!;
 function adopt(s: GameState): Act {
@@ -104,9 +104,9 @@ describe('r16 conexões', () => {
     cap14(s).strain[rl.role] = 3;
     const m = rl.staff[0];
     m.skill = 80;
-    const l0 = careerOf(s, m).loyalty;
+    const l0 = staffLoyalty(s, m.id);
     for (let i = 0; i < 25 && !crew(s).poach; i++) staffStrain(s, Rng.fromSeed(`p${i}`));
-    expect(careerOf(s, m).loyalty).toBeLessThan(l0);
+    expect(staffLoyalty(s, m.id)).toBeLessThan(l0);
     expect(crew(s).poach?.id).toBeTruthy();
   });
 

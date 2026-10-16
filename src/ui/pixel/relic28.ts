@@ -81,6 +81,7 @@ export function relicArtOf28(kind: string, name: string, year: number, seed = ''
     case 'car': return has(/bus|ônibus|onibus|\bvan\b|coach/, n) ? 'bus' : 'car';
     case 'glasses': return 'glasses';
     case 'prop':
+      if (has(/violin|violino/, n)) return 'violin'; // R31 G: o violino do Efro
       if (has(/pig|porco/, n)) return 'pig';
       if (has(/jukebox/, n)) return 'jukebox';
       if (has(/amp|amplif/, n)) return 'amp';

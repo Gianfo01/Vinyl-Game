@@ -11,10 +11,9 @@
 //  • TEMPO: todo mês a relação volta 3% para o zero (rancores e simpatias esfriam).
 // Cruzar ±25 vira manchete ("passa a defender" / "vira desafeto"). Os porquês ficam no persona13 (opine 'c:').
 
-import { opinionWhy } from '../../opinion';
+import { critRelNames, critRelOf, critRelPut, forgetOpinion, opinionWhy } from '../../opinion';
 import { Rng } from '../../../core/rng';
 import { familyOf, l, type L } from '../../../data/world';
-import { critRel } from '../../criticrel';
 import { registerExt4, registerSimHook } from '../../ext4';
 import { factSeedKey17, onFact, type Fact } from '../../facts17';
 import { activeCritics, criticByName } from '../../media';
@@ -67,13 +66,14 @@ export function reviewHistory27(s: GameState): number {
 /** Tempo: relação volta 3% ao zero; cruzar ±25 vira manchete (uma vez por faixa). */
 export function critMonth27(s: GameState): void {
   reviewHistory27(s);
-  const cr = critRel(s), st = crit27(s);
-  for (const [k, v] of Object.entries(cr.rel)) {
-    const nv = Math.round(v * 0.97 * 10) / 10;
-    if (Math.abs(nv) < 0.5) delete cr.rel[k]; else cr.rel[k] = nv;
+  const st = crit27(s);
+  for (const k of critRelNames(s)) {
+    const nv = Math.round(critRelOf(s, k) * 0.97 * 10) / 10;
+    // voltou ao zero: sem motivo guardado o registro some; com motivo, fica em 0 (a história continua na ficha)
+    if (Math.abs(nv) < 0.5) { if (opinionWhy(s, `c:${k}`).length) critRelPut(s, k, 0); else forgetOpinion(s, `c:${k}`); } else critRelPut(s, k, nv);
   }
   for (const c of activeCritics(s)) {
-    const v = cr.rel[c.name] ?? 0, b: -1 | 0 | 1 = v >= 25 ? 1 : v <= -25 ? -1 : 0, was = st.band[c.name] ?? 0;
+    const v = critRelOf(s, c.name), b: -1 | 0 | 1 = v >= 25 ? 1 : v <= -25 ? -1 : 0, was = st.band[c.name] ?? 0;
     if (b === was) continue;
     st.band[c.name] = b;
     if (!b) continue;

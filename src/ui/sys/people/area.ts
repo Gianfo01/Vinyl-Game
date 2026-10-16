@@ -28,6 +28,7 @@ import { ficha13Btn } from '../persona13';
 import { hireBlock as hireBlock17 } from '../agenda17';
 import { rng19 } from '../../../sim/rng19';
 import { viaScene31 } from '../../r31/scene31reg';
+import { staffLoyalty } from '../../../sim/opinion';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const ui = { person: '', promise: 'single' as PromiseKind, detective: '', invest: 0 };
@@ -190,7 +191,7 @@ function staffTab(s: GameState): HTMLElement {
       const c = careerOf(s, st);
       const paths = ROLE_PATHS[st.role] ?? [];
       return h('tr', null,
-        h('td', null, st.name), h('td', null, t(STAFF_ROLES.find((r) => r.id === st.role)?.name)), h('td', null, t(LEVEL_NAME[c.level])), h('td', null, `${st.skill}`), h('td', null, `${t(l('lealdade', 'loyalty'))} ${Math.round(c.loyalty)}`),
+        h('td', null, st.name), h('td', null, t(STAFF_ROLES.find((r) => r.id === st.role)?.name)), h('td', null, t(LEVEL_NAME[c.level])), h('td', null, `${st.skill}`), h('td', null, `${t(l('lealdade', 'loyalty'))} ${Math.round(staffLoyalty(s, st.id))}`),
         h('td', null, c.trainingUntil && c.trainingUntil > s.week ? pill(t(l('em treinamento', 'training')), 'warn') : h('button', { class: 'btn small', onclick: () => say(trainStaff(s, st.id), l('Treinamento iniciado.', 'Training started.')) }, `${t(l('Treinar', 'Train'))} ${$(trainCost(s, st))}`)),
         h('td', null, promoteReady(s, st) ? h('button', { class: 'btn small primary', onclick: () => say(promote(s, st.id), l('Promovido!', 'Promoted!')) }, t(l('Promover', 'Promote'))) : ''),
         h('td', null, paths.length ? select('', [{ value: '', label: t(l('Mudar função…', 'Change role…')) }, ...paths.map((p) => ({ value: p, label: t(STAFF_ROLES.find((r) => r.id === p)?.name) ?? p }))], (v) => { if (v) say(changeRole(s, st.id, v), l('Função alterada.', 'Role changed.')); }) : ''),

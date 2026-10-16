@@ -25,6 +25,8 @@ import { withCatalogSums } from '../business';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { actsNow27 } from '../tickcache27';
 import { purse } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
+import { INSIDE31 } from '../know';
+import { companyValue31, registerValueEra31, stepPrice31, value31On, valueWhy31 } from '../r31/value31';
 
 // ---------------------------------------------------------------- catálogo
 
@@ -232,7 +234,8 @@ const nice = (n: number): number => { const f = Math.pow(10, Math.floor(Math.log
 export const MAX_STAKE = 0.2;
 const FEE = 0.005;
 const DRIFT = 0.04;
-export const INSIGHT_AT = 0.05;
+/** r31 F #25: o limiar único de informação interna mora em know.ts (INSIDE31); mesmo valor de antes no pregão. */
+export const INSIGHT_AT = INSIDE31;
 export const CONFLICT_AT = 0.1;
 
 // ---------------------------------------------------------------- nomes e universo
@@ -280,6 +283,11 @@ function macroOf(y: number): number {
   const rb = c === 0 && crashOf(y - 1) < 0 ? -crashOf(y - 1) * 0.45 : 0;
   return c + rb;
 }
+// r31 (E · Bolsa): a crise do ano (com a retomada) entra no valor das empresas pelo modelo único
+registerValueEra31((s) => {
+  const c = macroOf(s.year);
+  return { crash: c, why: c < 0 ? fmtL(l('crise na bolsa em {y}', 'market crisis in {y}'), { y: s.year }) : undefined };
+});
 const techExtra = (y: number, tags: Tag[]): number => (y >= 2000 && y <= 2002 && (tags.includes('tech') || tags.includes('stream')) ? -0.4 : y === 2003 && tags.includes('tech') ? 0.3 : 0);
 const yearGrowth = (d: { beta: number; tags: Tag[] }, y: number): number => DRIFT + d.beta * macroOf(y) + techExtra(y, d.tags);
 
@@ -384,6 +392,7 @@ const revenueOf = (lb: Label): number => Math.max(lb.revenueLastYear, lb.revenue
 
 /** Valor do selo (mesmo cálculo das participações) ajustado pelo prestígio e momento. */
 function labelWorth(s: GameState, lb: Label): number {
+  if (value31On(s)) return companyValue31(s, lb.id).total;
   const v = labelValue(s, lb).value;
   const st = standingOf(s, lb.id);
   return v * clamp(0.78 + (st.mom - 50) / 220 + (st.rec - 50) / 420, 0.5, 1.3);
@@ -408,7 +417,7 @@ function ipoLabel(s: GameState, lb: Label, year: number, announce: boolean): voi
   const st = bolsa(s);
   const id = `lb:${lb.id}`;
   st.lbl[lb.id] = year;
-  st.lsh[lb.id] = nice(labelValue(s, lb).value / 4000);
+  st.lsh[lb.id] = nice((value31On(s) ? companyValue31(s, lb.id).total : labelValue(s, lb).value) / 4000);
   st.lref[lb.id] = labelWorth(s, lb);
   const q = newQuote(s, labelTarget(s, lb));
   q.ceo = lb.ceo;
@@ -456,7 +465,22 @@ function rivalIpos(s: GameState, r: Rng): void {
 const priceTxt = (cents: number): string => `$${(cents / 100).toFixed(2)}`;
 const sumScandals = (s: GameState, lb: Label): number => lb.roster.reduce((t, id) => t + (s.acts[id]?.scandals ?? 0), 0);
 
+/** r31 (E · Bolsa): pregão do selo pelo valor único — sem solavancos por notícia (cada fato já está no valor, uma vez). */
+function stepLabel31(s: GameState, lb: Label, q: Quote): void {
+  const id = `lb:${lb.id}`;
+  const st = stepPrice31(s, lb.id, q.p, sharesOf(s, id));
+  q.p = st.p;
+  q.chg = st.chg;
+  if (st.why) q.note = st.why;
+  q.evY = s.year;
+  q.hits = chartTop(s, lb.id); q.sc = sumScandals(s, lb); q.ros = lb.roster.length;
+  if (lb.ceo) q.ceo = lb.ceo;
+  pushHist(q);
+  if (st.why && Math.abs(q.chg) >= 0.08) news(s, fmtL(l('{n} {w}', '{n} {w}'), { n: lb.name, w: st.why }), q.chg > 0 ? 'good' : 'bad', id);
+}
+
 function stepLabel(s: GameState, lb: Label, q: Quote, r: Rng): void {
+  if (value31On(s)) { stepLabel31(s, lb, q); return; }
   const y = s.year;
   const prev = q.p;
   const notes: { w: number; t: L }[] = [];
@@ -693,6 +717,14 @@ function syncOwn(s: GameState): void {
   q.p = p;
   q.chg = prev ? p / prev - 1 : 0;
   q.hist = s.listing.history.length ? s.listing.history.slice(-60) : [p];
+  // r31 (E · Bolsa): o motivo da alta/queda do seu selo é a parte do valor que mais mudou
+  if (value31On(s) && q.hist.length > 1 && prev !== p) {
+    const why = valueWhy31(s, 'player');
+    if (why && Math.abs(q.chg) >= 0.02) {
+      q.note = why;
+      if (Math.abs(q.chg) >= 0.08) news(s, fmtL(l('{n} {w}', '{n} {w}'), { n: s.config.companyName, w: why }), q.chg > 0 ? 'good' : 'bad', OWN);
+    }
+  }
 }
 
 /** Sua fatia de controle no seu selo: a parte do dono mais as ações em circulação que você comprou no pregão. */
@@ -884,7 +916,9 @@ export function listed(s: GameState): Row[] {
     if (id === OWN) {
       if (!s.listing.listed) continue;
       kind = 'label'; tags = ['label'];
-      blurb = l('O seu selo: o preço segue lucro, crescimento e o conselho. Você pode comprar ações em circulação (reforça o controle); o caixa do selo não negocia a própria ação.', 'Your label: the price follows profit, growth and the board. You can buy floating shares (strengthens control); label cash cannot trade its own stock.');
+      blurb = value31On(s)
+        ? l('O seu selo: o preço segue o valor da empresa (veja "Por que vale isso"). Você pode comprar ações em circulação (reforça o controle); o caixa do selo não negocia a própria ação.', 'Your label: the price follows the company\'s value (see "Why it is worth this"). You can buy floating shares (strengthens control); label cash cannot trade its own stock.')
+        : l('O seu selo: o preço segue lucro, crescimento e o conselho. Você pode comprar ações em circulação (reforça o controle); o caixa do selo não negocia a própria ação.', 'Your label: the price follows profit, growth and the board. You can buy floating shares (strengthens control); label cash cannot trade its own stock.');
     } else if (isLbl(id)) {
       const lb = s.labels[id.slice(3)];
       if (!lb) continue;
@@ -933,7 +967,7 @@ export const stocksValue = (s: GameState, acct: Acct = 'p'): number => holdingsO
 export function insight(s: GameState, id: string): { revenue: number; cash: number; roster: number; ceo?: string; standing: number } | null {
   if (!isLbl(id)) return null;
   const lb = s.labels[id.slice(3)];
-  if (!lb || playerFrac(s, id) < INSIGHT_AT) return null;
+  if (!lb || !insider31(s, lb.id)) return null; // r31 F #25: limiar único, somando bolsa e compra direta
   return { revenue: revenueOf(lb), cash: lb.cash, roster: lb.roster.length, ceo: lb.ceo, standing: Math.round(standingOf(s, lb.id).mom) };
 }
 
@@ -1016,4 +1050,9 @@ function crossing(s: GameState, id: string, from: number, to: number): void {
     s.rivalries[lb.id] = (s.rivalries[lb.id] ?? 0) + 5;
     news(s, fmtL(l('A imprensa pergunta se {c} tem conflito de interesses: acionista de peso de {n}.', 'The press asks whether {c} has a conflict of interest: a major shareholder of {n}.'), { c: s.config.companyName, n: lb.name }), 'info', id, true);
   }
+}
+
+/** r31 F #25: você vê os números internos de um selo? Participação (bolsa OU compra direta) a partir do limiar único. */
+export function insider31(s: GameState, labelId: string): boolean {
+  return Math.max(stakeOf(s, labelId), playerFrac(s, `lb:${labelId}`)) >= INSIDE31;
 }

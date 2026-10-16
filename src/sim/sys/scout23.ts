@@ -27,6 +27,7 @@ import { cashWhy20, freeCash20 } from '../oblig20';
 import { CH18, disc18 } from './discover18';
 import { energyLeft, spendEnergy } from './life';
 import { actsNow27 } from '../tickcache27';
+import { guessPot31 } from '../know';
 
 export interface Trip23 {
   id: string;
@@ -351,7 +352,8 @@ export function rivalWatch23(s: GameState, actId: string): Rival23 | null {
   if (au && rb) return { label: s.labels[rb.party]?.name, hard: true, text: fmtL(l('{l} disputa no leilão (até sem. {w}).', '{l} is bidding (until wk {w}).'), { l: s.labels[rb.party]?.name ?? '?', w: au.endsWeek }) };
   const k = s.knowledge[actId];
   const src = k?.origin?.src ?? k?.source ?? '';
-  if (PUBLIC.has(src) && (a.fame >= 8 || a.potential >= 60)) return { hard: false, text: l('Achado em canal público: rivais podem ter visto.', 'Found on a public channel: rivals may have seen it.') };
+  // r31 F: pelo burburinho público, não pelo potencial real
+  if (PUBLIC.has(src) && (a.fame >= 8 || guessPot31(s, a.id, 'market') >= 60)) return { hard: false, text: l('Achado em canal público: rivais podem ter visto.', 'Found on a public channel: rivals may have seen it.') };
   return null;
 }
 

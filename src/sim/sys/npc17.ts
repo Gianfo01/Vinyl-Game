@@ -39,6 +39,7 @@ import { bump } from './social8';
 import { SIGN_VETO } from './gate14';
 import { actsNow27, releasesNow27 } from '../tickcache27';
 import { actsOfPerson17 } from '../actidx17';
+import { rel0, relAdd } from '../opinion';
 
 // ---------------------------------------------------------------- estado
 
@@ -438,7 +439,7 @@ function mgrClients(s: GameState, r: Rng): void {
     if (!mgrActive(s, m) || rosterOf(s, m.id).length >= mgrCap(m) || !r.chance(0.12)) continue;
     const pid = m.id.slice(4);
     const pool = actsNow27(s).filter((a) => okAct17(s, a) && !st.rep[a.id] && a.fame >= 8 && mkOf(a.city) === mkOf(m.city) && (histMode(s) !== 'strict' || !a.catalogNo));
-    const pals = pool.filter((a) => a.members.some((x) => (s.persons[x]?.rel[pid] ?? 0) > 20));
+    const pals = pool.filter((a) => a.members.some((x) => (rel0(s, x, pid)) > 20));
     const a = (pals.length ? pals : pool.filter((x) => m.fam.includes(fam(x) as never))).sort((x, y) => y.fame - x.fame)[r.int(0, 2)];
     if (!a) continue;
     st.rep[a.id] = { m: m.id, y: s.year };
@@ -670,7 +671,7 @@ function solos(s: GameState, r: Rng, W: number): void {
   const solo = goSolo16(s, r, p, a);
   const ws = l('ego e ambição maiores que a banda', 'ego and ambition bigger than the band');
   career(s, `p:${p.id}`, 'artist', 'artist', fmtL(l('saiu de {a} para a carreira solo: {w}', 'left {a} to go solo: {w}'), { a: a.name, w: ws }));
-  for (const m of a.members) if (s.persons[m]) { s.persons[m].rel[p.id] = clamp((s.persons[m].rel[p.id] ?? 0) - 25, -100, 100); addStress(s, m, 6, l('Vocalista saiu', 'The singer left')); }
+  for (const m of a.members) if (s.persons[m]) { relAdd(s, s.persons[m].id, p.id, -25); addStress(s, m, 6, l('Vocalista saiu', 'The singer left')); }
   move(s, { k: 'solo', a: a.id, p: `p:${p.id}`, t: fmtL(l('{p} saiu de {a} e lançou carreira solo ({s}): {w}.', '{p} left {a} and launched a solo career ({s}): {w}.'), { p: p.name, a: a.name, s: solo?.name ?? '?', w: ws }) },
     { kind: 'split', actors: [a.id, p.id, solo?.id ?? ''], sev: 30 + a.fame / 4, vis: 'public', tags: ['band', 'solo'], place: a.city });
 }

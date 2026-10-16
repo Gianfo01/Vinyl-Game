@@ -29,6 +29,7 @@ import { fameText } from '../../sim/sys/fame15';
 import { kinLabel15, kinOf15 } from '../../sim/sys/kin15';
 import { personKey27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
+import { insider31 } from '../../sim/sys/bolsa10';
 
 const say = (e: L | null, ok: L) => { toast(t(e ?? ok), e ? 'bad' : 'good'); rerender(); };
 const band = (p: number) => (p >= 0.6 ? 'likely' : p >= 0.3 ? 'uncertain' : 'unlikely') as 'likely' | 'uncertain' | 'unlikely';
@@ -152,7 +153,8 @@ function ownershipBlock(s: GameState, labelId: string, close: () => void): HTMLE
     h('table', { class: 'tbl compact' }, h('tbody', null,
       h('tr', null, h('td', null, lb.ceo ? `${lb.ceo} (${t(l('fundador/CEO', 'founder/CEO'))})` : t(l('Fundadores', 'Founders'))), h('td', null, pct(founderShare(s, labelId)))),
       ...list.map((x) => h('tr', null, h('td', null, x.holder === 'player' ? h('b', null, s.config.companyName) : labelLink(s, x.holder)), h('td', null, pct(x.share)))))),
-    h('p', { class: 'small' }, t(l('Avaliação', 'Valuation')), `: ${$(v.value)} · ${t(l('passivos', 'liabilities'))} ${$(v.liabilities)}`, mine >= BOARD_SEAT ? ` · ${t(l('caixa', 'cash'))} ${$(lb.cash)}` : ''),
+    insider31(s, labelId) ? h('p', { class: 'small' }, t(l('Avaliação', 'Valuation')), `: ${$(v.value)} · ${t(l('passivos', 'liabilities'))} ${$(v.liabilities)} · ${t(l('caixa', 'cash'))} ${$(lb.cash)}`)
+      : h('p', { class: 'small' }, t(l('Avaliação de mercado', 'Market valuation')), `: ~${$(Math.round(v.value / 10 ** Math.max(0, Math.floor(Math.log10(Math.max(1, v.value))) - 1)) * 10 ** Math.max(0, Math.floor(Math.log10(Math.max(1, v.value))) - 1))} `, h('small', { class: 'muted' }, t(l('(caixa e passivos só com participação)', '(cash and liabilities only with a stake)')))), // r31 F #25
     mine > 0 ? h('p', null, pill(`${t(l('Sua fatia', 'Your stake'))}: ${pct(mine)}`, mine > CONTROL ? 'gold' : mine >= BOARD_SEAT ? 'good' : ''), ' ',
       h('small', { class: 'muted' }, t(mine > CONTROL ? l('Controle: você manda no selo.', 'Control: you run the label.') : mine >= BOARD_SEAT ? l('Assento no conselho: o selo não alicia seu elenco e libera feats.', 'Board seat: the label will not poach your roster and clears features.') : l('Minoritário: dividendos anuais.', 'Minority: annual dividends.')))) : null,
     canBuy ? h('div', { class: 'row wrap' },

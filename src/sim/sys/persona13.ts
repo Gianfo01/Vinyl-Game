@@ -16,8 +16,7 @@ import { countryOfCity } from '../../data/geo';
 import { STAFF_ROLES } from '../../data/rules';
 import { cityById, familyOf, l, type FamilyId, type L } from '../../data/world';
 import { compatOf, deriveViews, viewsOf, playerViews, shiftPlayerViews, type Views } from '../beliefs';
-import { critRel } from '../criticrel';
-import { registerOpinionWeight, decayOpinions, hasOpinion, opine, opinionOf, opinionWhy, type OpEntry } from '../opinion';
+import { registerOpinionWeight, critRelNames, decayOpinions, hasOpinion, opine, opinionOf, opinionWhy, type OpEntry } from '../opinion';
 import { emitEvent, type EventDef } from '../events';
 import { deferEvents, registerExt4, registerMod, registerOfferMod, registerSimHook } from '../ext4';
 import type { Act, Appearance, GameState, Person, StaffMember } from '../types';
@@ -562,7 +561,7 @@ rememberListeners().push((s, e) => {
       politicalWave(s, T('sua posição pública em {y}.', 'your public stance in {y}.', { y: s.year }), 7);
       return;
     case 'payola': case 'chart_rig': case 'scheme_caught': case 'payola9':
-      for (const name of Object.keys(critRel(s).rel).slice(0, 15)) opine(s, `c:${name}`, -5, T('escândalo de bastidores ({y}).', 'backroom scandal ({y}).', { y: s.year }));
+      for (const name of critRelNames(s).slice(0, 15)) opine(s, `c:${name}`, -5, T('escândalo de bastidores ({y}).', 'backroom scandal ({y}).', { y: s.year }));
       return;
     case 'promise_broken': case 'broken_promise':
       if (a) actOpine(s, a, -10, T('você não cumpriu o que prometeu.', 'you broke your promise.'));

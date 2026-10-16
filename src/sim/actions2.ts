@@ -8,6 +8,7 @@ import type { Act, AgendaSlot, GameState } from './types';
 import { fmtL, money, notify, post, remember } from './util';
 import { fandomOf } from './fandom';
 import { ensureFamily } from './dynasty';
+import { relAdd } from './opinion';
 
 function members(s: GameState, act: Act) {
   return act.members.map((id) => s.persons[id]).filter((p) => p && p.alive);
@@ -96,7 +97,7 @@ export function runExtraAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot,
       for (const p of ms) {
         p.resentment = clamp(p.resentment - 25, 0, 100);
         p.stress = clamp(p.stress - 10, 0, 100);
-        for (const q of ms) if (q.id !== p.id) p.rel[q.id] = clamp((p.rel[q.id] ?? 0) + 10, -100, 100);
+        for (const q of ms) if (q.id !== p.id) relAdd(s, p.id, q.id, 10);
       }
       const f = s.factions[act.id];
       if (f) f.tension = Math.max(0, f.tension - 30);
@@ -112,8 +113,8 @@ export function runExtraAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot,
       if (best) {
         s.mentors[p.id] = best.id;
         for (const k of ['comp', 'stage', 'voice'] as const) if (best.skills[k] > p.skills[k]) growPerson(p, k, 1.4 * dim);
-        p.rel[best.id] = clamp((p.rel[best.id] ?? 0) + 6, -100, 100);
-        best.rel[p.id] = clamp((best.rel[p.id] ?? 0) + 4, -100, 100);
+        relAdd(s, p.id, best.id, 6);
+        relAdd(s, best.id, p.id, 4);
       }
       break;
     }
@@ -163,7 +164,7 @@ export function runExtraAction(s: GameState, r: Rng, act: Act, slot: AgendaSlot,
       if (!p) break;
       p.inspiration = clamp(p.inspiration + 15, 0, 100);
       p.morale = clamp(p.morale + 6, 0, 100);
-      for (const q of ms) if (q.id !== p.id) q.rel[p.id] = clamp((q.rel[p.id] ?? 0) - 3, -100, 100);
+      for (const q of ms) if (q.id !== p.id) relAdd(s, q.id, p.id, -3);
       if (p.goal === 'solo') p.morale = clamp(p.morale + 6, 0, 100);
       break;
     }
