@@ -107,6 +107,8 @@ const SOURCES: { id: string; name: L; from?: string; fromYear?: number }[] = [
   { id: 'scene23', name: l('viagem de olheiro', 'scouting trip'), fromYear: 99999 },
   // r27: noite de olheiro jogável (night27) — só por ação ativa
   { id: 'night27', name: l('noite de olheiro', 'scouting night'), fromYear: 99999 },
+  // r31 (I): visita a um lugar da cidade (bar, sala de ensaio, loja) — só por ação ativa
+  { id: 'visit31', name: l('visita a um lugar da cidade', 'a visit to a place in town'), fromYear: 99999 },
 ];
 
 export function sourceName(id: string): L {
