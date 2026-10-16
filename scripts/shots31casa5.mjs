@@ -29,6 +29,8 @@ await p.evaluate(async () => {
 });
 const shot = async (name, sel) => {
   await p.waitForTimeout(1300);
+  // o aviso "Nova época" (estilo da interface) é do jogo, não da casa: fecha para a captura
+  await p.evaluate(() => { for (const e of document.querySelectorAll('body *')) if (/^Nova época/.test(e.textContent ?? '') && getComputedStyle(e).position === 'fixed') e.remove(); });
   const el = sel ? await p.$(sel) : null;
   if (el) { await el.scrollIntoViewIfNeeded(); await el.screenshot({ path: `${out}/onda5-casa-${name}.png` }); }
   else await p.screenshot({ path: `${out}/onda5-casa-${name}.png` });

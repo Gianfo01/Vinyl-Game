@@ -24,7 +24,7 @@ import { avatarSprite, lookOf } from '../pixel/avatar';
 import { obj5Canvas, type Obj5 as Art5 } from '../pixel/exp5px';
 import { paint27, plan27 } from '../ps/hqpx27';
 import { store } from '../store';
-import { setTab } from '../vis';
+import { ic, setTab } from '../vis';
 import { houseList31 } from './city31ui';
 import {
   DWELL5_L, ROOM5_L, SEDE_ART5, STAGE5, STAGE5_L, casaObjs5, houses5, mainHome5, maquete5, nextKey5, sedeObjs5, units5, vehicles5,
@@ -56,15 +56,29 @@ export function chord5(id?: string): string {
 }
 const keyChip = (k: string) => (k ? h('kbd', { class: 'k5' }, k) : null);
 
-/** Bilhete com os marcadores de um objeto (2º clique), perto do objeto. */
-function slip5(host: HTMLElement, title: L, tip: L, gos: Go5[], at: { x: number; y: number }): void {
-  host.querySelector('.slip5')?.remove();
-  const el = h('div', { class: 'slip5', role: 'dialog', 'aria-label': t(title), style: `left:${at.x}%;top:${at.y}%` },
+/** Põe um bilhete/cartão fixo na tela ao lado do objeto clicado (fora da moldura da cena, nunca cortado). */
+function pin5(el: HTMLElement, at: DOMRect | undefined): void {
+  document.querySelectorAll('.slip5').forEach((x) => x.remove());
+  el.style.position = 'fixed';
+  document.body.append(el);
+  const r = el.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const a = at ?? new DOMRect(vw / 2, vh / 3, 0, 0);
+  const left = a.right + 8 + r.width <= vw - 8 ? a.right + 8 : Math.max(8, a.left - 8 - r.width);
+  const top = Math.max(8, Math.min(vh - r.height - 8, a.top + a.height / 2 - r.height / 2));
+  el.style.left = `${Math.round(left)}px`; el.style.top = `${Math.round(top)}px`;
+  const off = (e: Event) => { if (!el.contains(e.target as Node)) { el.remove(); document.removeEventListener('pointerdown', off, true); } };
+  setTimeout(() => document.addEventListener('pointerdown', off, true), 0);
+  el.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Escape') { e.stopPropagation(); el.remove(); } });
+}
+
+/** Bilhete com os marcadores de um objeto (2º clique), ao lado do objeto. */
+function slip5(at: DOMRect | undefined, title: L, tip: L, gos: Go5[]): void {
+  const el = h('div', { class: 'slip5', role: 'dialog', 'aria-label': t(title) },
     h('div', { class: 'slip5-h' }, h('b', null, t(title)), h('button', { type: 'button', class: 'slip5-x', 'aria-label': t(l('Fechar', 'Close')), onclick: () => el.remove() }, '×')),
     h('p', { class: 'slip5-t' }, t(tip)),
     h('div', { class: 'slip5-l' }, gos.map((g, i) => h('button', { type: 'button', class: `slip5-b${i === 0 ? ' main' : ''}`, onclick: () => { el.remove(); go5(g); } }, t(g.label)))));
-  el.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Escape') { e.stopPropagation(); el.remove(); } });
-  host.append(el);
+  pin5(el, at);
   (el.querySelector('.slip5-b') as HTMLElement | null)?.focus();
 }
 
@@ -127,7 +141,7 @@ export function casaView5(s: GameState): HTMLElement {
     ctx.drawImage(sp.c, d.you.x - sp.ax, d.you.y - sp.ay + 1);
   }, spots.map((sp) => {
     const o = by.get(sp.id)!;
-    return { sp, label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (host: HTMLElement) => act5(s, host, o, sp, d.W, d.H) };
+    return { sp, label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
   }), [d.top, d.H - 12]));
   const sc = root.lastElementChild as HTMLElement;
   sc.querySelector('.r5-view')!.append(roomsBar5(d.rooms.map((r) => ({ label: ROOM5_L[r.id], x: r.x, w: r.w })), d.W));
@@ -137,17 +151,17 @@ export function casaView5(s: GameState): HTMLElement {
   return root;
 }
 
-function act5(s: GameState, host: HTMLElement, o: CasaObj5, sp: CasaSpot5, W: number, H: number): void {
+function act5(s: GameState, at: DOMRect | undefined, o: CasaObj5): void {
   if (o.panel === 'janela') return janela5(s);
   if (o.panel === 'garagem') return garagem5(s);
   if (o.panel === 'chaveiro') return chaveiro5(s);
   if (o.go.length === 1) return go5(o.go[0]);
-  slip5(host, o.label, o.tip, o.go, { x: Math.min(78, ((sp.x + sp.w) / W) * 100), y: Math.max(2, Math.min(60, (sp.y / H) * 100)) });
+  slip5(at, o.label, o.tip, o.go);
 }
 
 // ---------------------------------------------------------------- palco comum (canvas + pontos + rótulos)
 
-interface Pt5 { sp: CasaSpot5; label: L; tip: L; key: string; bang: boolean; act: (host: HTMLElement) => void }
+interface Pt5 { sp: CasaSpot5; label: L; tip: L; key: string; bang: boolean; act: (at: DOMRect | undefined) => void; /** rótulo dentro do ponto, no alto (salas da sede) */ inside?: boolean }
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
 
 /** Palco: canvas + pontos + rótulos. `crop` = faixa vertical mostrada [y0, y1) (corta céu e rua para a casa ter
@@ -158,16 +172,16 @@ function stage5(W: number, H: number, paint: (cv: HTMLCanvasElement) => void, pt
   const ch = crop[1] - crop[0];
   const st = h('div', { class: 'r5-stage', style: `top:${pct(-crop[0], ch)};height:${pct(H, ch)}` }, cv);
   // altura: cômodos (casa, garagem) ~50vh; prédio alto cresce com os andares (até 82vh) para as salas não ficarem miúdas
-  const hv = ch > 190 ? `min(82vh, ${Math.round(ch * 2.4)}px)` : 'var(--r5-h)';
+  const hv = ch > 190 ? `min(70vh, ${Math.round(ch * 2.2)}px)` : 'var(--r5-h)';
   const view = h('div', { class: 'r5-view', style: `height:${hv};width:calc(${hv} * ${(W / ch).toFixed(4)})` }, st);
   const layer = h('div', { class: 'r5-layer' });
   for (const p of pts) {
     const b = h('button', { type: 'button', class: `r5-spot${p.bang ? ' bang' : ''}`, title: `${t(p.label)}: ${t(p.tip)}${p.key ? ` (${p.key})` : ''}`, 'aria-label': `${t(p.label)}: ${t(p.tip)}`,
-      style: `left:${pct(p.sp.x, W)};top:${pct(p.sp.y, H)};width:${pct(p.sp.w, W)};height:${pct(p.sp.h, H)}`, onclick: () => p.act(view) });
+      style: `left:${pct(p.sp.x, W)};top:${pct(p.sp.y, H)};width:${pct(p.sp.w, W)};height:${pct(p.sp.h, H)}`, onclick: (e: Event) => p.act((e.currentTarget as HTMLElement | null)?.getBoundingClientRect()) });
     layer.append(b);
   }
   // rótulos no padrão do mock ("Espelho [V]"), sem sobrepor (placeLabels31, na escala da tela)
-  const labs = placeLabels31(pts.map((p) => ({ id: p.sp.id, x: p.sp.x, y: p.sp.y, w: p.sp.w, h: p.sp.h, label: p.label, tip: p.tip, go: {} } as unknown as Spot31)), W, H, 3.6,
+  const labs = placeLabels31(pts.map((p) => ({ id: p.sp.id, x: p.sp.x, y: p.sp.y + (p.inside ? 1 : 0), w: p.sp.w, h: p.inside ? 0 : p.sp.h, label: p.label, tip: p.tip, go: {} } as unknown as Spot31)), W, H, 3.6,
     (sp) => { const p = pts.find((x) => x.sp.id === sp.id)!; return `${t(p.label)}${p.key ? `  ${p.key}` : ''}`; });
   const lab = h('div', { class: 'r5-labels', 'aria-hidden': 'true' }, labs.map((b) => {
     const p = pts.find((x) => x.sp.id === b.id)!;
@@ -202,7 +216,7 @@ export function sedeView5(s: GameState, has?: (area: string) => boolean): HTMLEl
     const r = rooms[i];
     const n = r.objs.length;
     pts.push({ sp: { id: `room:${i}`, x: c.x, y: c.y, w: c.w, h: c.h }, label: r.name, tip: r.open ? (n ? l(`${n} objeto(s)`, `${n} object(s)`) : l('sala', 'room')) : r.lock === 'building' ? l('em obra', 'under construction') : l('fechada: veja a maquete', 'closed: see the model'),
-      key: '', bang: r.objs.some((o) => badge5(s, o.id) > 0), act: (host) => (r.open ? roomCard5(s, host, r, c.x + c.w / 2 > pl.W / 2) : goDest31({ area: 'hq' })) });
+      key: '', inside: true, bang: r.objs.some((o) => badge5(s, o.id) > 0), act: (at) => (r.open ? roomCard5(s, at, r) : goDest31({ area: 'hq' })) });
   });
   const root = h('section', { class: 'r5 sede5-root', 'aria-label': t(l('Sua sede', 'Your HQ')) }, sedeHead5(s));
   root.append(stage5(pl.W, pl.H, (cv) => { blitPx31(cv, px.d, pl.W, pl.H); }, pts, [Math.max(0, pl.top - 34), pl.H]));
@@ -210,22 +224,26 @@ export function sedeView5(s: GameState, has?: (area: string) => boolean): HTMLEl
 }
 
 /** Cartão de uma sala: os objetos que existem nela (desenho ART5, nome e tecla); clicar abre. */
-function roomCard5(s: GameState, host: HTMLElement, r: SedeRoom5, right: boolean): void {
-  host.querySelector('.slip5')?.remove();
-  const el = h('div', { class: `slip5 room5${right ? ' left' : ''}`, role: 'dialog', 'aria-label': t(r.name) },
+function roomCard5(s: GameState, at: DOMRect | undefined, r: SedeRoom5): void {
+  const el = h('div', { class: 'slip5 room5', role: 'dialog', 'aria-label': t(r.name) },
     h('div', { class: 'slip5-h' }, h('b', null, t(r.name)), h('button', { type: 'button', class: 'slip5-x', 'aria-label': t(l('Fechar', 'Close')), onclick: () => el.remove() }, '×')),
     h('div', { class: 'room5-g' }, r.objs.map((o) => {
       const art = SEDE_ART5[o.id] as Art5 | undefined;
       const n = badge5(s, o.id);
       const tgt = o.opens[0] ?? o.links?.[0];
       return h('button', { type: 'button', class: 'room5-o', onclick: () => { el.remove(); if (tgt) go5({ area: tgt.area, tabs: tgt.tab ? [tgt.tab] : undefined, label: o.label }); } },
-        h('span', { class: 'room5-a' }, art ? obj5Canvas(art, s.year, n > 0 ? 'new' : 'idle', 2) : h('span', { class: 'room5-dot' })),
+        h('span', { class: 'room5-a' }, art ? obj5Canvas(art, s.year, n > 0 ? 'new' : 'idle', 2) : ic(ICON5[o.id] ?? 'star', 2)),
         h('span', { class: 'room5-n' }, t(o.label)), keyChip(chord5(o.id)));
     })));
-  el.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Escape') { e.stopPropagation(); el.remove(); } });
-  host.append(el);
+  pin5(el, at);
   (el.querySelector('.room5-o') as HTMLElement | null)?.focus();
 }
+
+/** Ícone (icons.ts) dos objetos que são gente ou a própria sala (sem desenho ART5). */
+const ICON5: Record<string, string> = {
+  chefe: 'handshake', contador: 'money', quadrofunc: 'contract', graficos: 'chart-up', prateleiras: 'gold-disc', lounge: 'guitar', mesasom: 'mic',
+  piano: 'note', salagravacao: 'cassette', palco: 'drums', secretaria: 'clock',
+};
 
 // ---------------------------------------------------------------- maquete (tecla 2)
 
