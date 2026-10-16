@@ -24,7 +24,7 @@
 .c29-chip:hover:not(:disabled) { border-color: var(--gold); }
 .c29-chip.on { background: #edbc65; color: #15212e; border-color: #edbc65; font-weight: 600; }
 .c29-chip.main { box-shadow: inset 0 0 0 2px #15212e55; }
-.c29-chip.main::before { content: '★ '; }
+.c29-chip.main::before { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; background: var(--pxi-fame) center / contain no-repeat; image-rendering: pixelated; content: ''; margin-right: 0.3em; } /* r31 EMO */
 .c29-chip:disabled { cursor: not-allowed; }
 .c29-chip:disabled:not(.on) { opacity: 0.45; }
 .c29-chip:focus-visible { outline: 3px solid #f5d38e; outline-offset: 2px; }

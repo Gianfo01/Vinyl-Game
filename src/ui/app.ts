@@ -84,6 +84,8 @@ import { personRoute16, searchRoute16 } from './route16';
 import { ALIAS17, CAREER_PAGE17, ICON17, KEY17, areaOfKey17, careerOfPage17, groupOf17, navGroups17, pushRecent17, resolve17, togglePin17 } from './nav17';
 import { careerPages17 } from './sys/careerpages17';
 import { icon17 } from './pixel/icons17';
+import { installEmo31, pxEmoImg31 } from './pixel/emo31'; // r31 onda 4 (EMO): emojis → ícones em pixel art
+import { isIcon31 } from './pixel/icons31';
 import { askAdvance19, settings19 } from './sys/advance19'; // r19 B.5
 import { PURPOSE23 } from './sys/journey23'; // r23: propósito de cada tela da jornada do disco
 import { advanceToasts20, settings20 } from './sys/ui20'; // r20 G6
@@ -115,7 +117,7 @@ import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, se
 import { pendingList } from '../sim/r31/pending';
 import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
 
-registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale))); // r17: + ícones do menu
+registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale) ?? (isIcon31(name) ? pxEmoImg31(name, undefined, scale) : null))); // r17: + ícones do menu; r31 EMO: + icons31
 registerPortrait((p, size) => {
   const img = document.createElement('img');
   img.src = portraitDataUrl(p, 64, store.game?.year ?? 1960);
@@ -156,6 +158,7 @@ const AREAS: { id: Area; label: keyof typeof S; icon: string; key: string }[] = 
 let root: HTMLElement;
 
 export function boot(el: HTMLElement): void {
+  installEmo31(); // r31 onda 4 (EMO): todo emoji que entrar na tela vira ícone em pixel art
   root = el;
   applyPrefs();
   registerInspect();

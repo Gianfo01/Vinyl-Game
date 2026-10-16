@@ -7,6 +7,7 @@ import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { drawScene27, type Who27 } from '../act27/scene27';
 import { h } from '../dom';
+import { pxEmo31 } from '../pixel/emo31'; // r31 onda 4 (EMO): gesto em pixel art
 import { store } from '../store';
 import type { Cast31, Mood31, SceneModel31 } from './scene31core';
 import { paintRoom31, spots31 } from './scene31px';
@@ -53,7 +54,7 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
       style: `left:${(sp.x / W) * 100}%;top:${Math.max(8, ((sp.y - (sp.pose === 'sit' ? 34 : 40)) / H) * 100 - lift)}%`,
       title: bubbleText(c, md), 'aria-label': bubbleText(c, md), 'data-mc31': c.id,
       onclick: () => o.onPick?.(c),
-    }, h('span', { class: 'mc31-ico', 'aria-hidden': 'true' }, md.icon), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: 'mc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
+    }, h('span', { class: 'mc31-ico', 'aria-hidden': 'true' }, pxEmo31(md.icon, 1, md.label)), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: 'mc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
   });
   return h('div', { class: `mc31-stage${hot31() ? ' mc31-hot' : ''}` }, cv, ...pts);
 }

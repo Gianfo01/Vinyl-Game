@@ -9,6 +9,7 @@ import { t } from '../../i18n/strings';
 import { actOf } from '../../sim/sys/people/state';
 import type { GameState } from '../../sim/types';
 import { h } from '../dom';
+import { pxEmo31 } from '../pixel/emo31'; // r31 onda 4 (EMO)
 import { openPerson } from '../ficha';
 import { mood31, personMood31, staffMood31, type Mood31 } from './scene31core';
 import './mech31.css';
@@ -51,7 +52,7 @@ export function castBar31(s: GameState, ids: (string | undefined | null)[], skip
       type: 'button', class: `mc31-who31 tone-${w.mood.tone}`, 'data-cast31': w.id,
       title: `${w.name} · ${w.mood.icon} ${t(w.mood.label)}${w.mood.clear ? '' : ` — ${t(l('leitura ambígua: você conhece pouco esta pessoa', 'ambiguous read: you know this person little'))}`}`,
       onclick: () => { if (w.person) openPerson(w.id); },
-    }, h('span', { 'aria-hidden': 'true' }, w.mood.icon), ' ', h('b', null, w.name), w.part ? h('small', { class: 'muted' }, ` · ${w.part}`) : null,
+    }, h('span', { 'aria-hidden': 'true' }, pxEmo31(w.mood.icon, 1, w.mood.label)), ' ', h('b', null, w.name), w.part ? h('small', { class: 'muted' }, ` · ${w.part}`) : null,
       h('small', null, ` · ${t(w.mood.label)}`), w.mood.clear ? null : h('small', { class: 'muted' }, ' (?)'))),
     skip ? h('button', { type: 'button', class: 'btn small ghost mc31-skip31', 'data-skip31': '', title: t(SKIP_TIP), onclick: skip }, '⏭ ', t(l('Pular cena', 'Skip scene'))) : null);
 }
