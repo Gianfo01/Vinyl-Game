@@ -106,9 +106,12 @@ beforeAll(() => {
   // dominó, teto de fama fora de casa, mercado reservado) e transporte por trecho: caixa, acts e rng mudam e o bot passa a
   // marcar turnê nesses 8 meses. Antes (com a Bolsa E): 178753 / 1382068899 / 1746594873 / 3786914192.
   // R31 onda 3 (integração D/Y + Z): as duas mudanças juntas re-medidas. Antes (só D/Y): 581243 / 4153284673 / 754530152.
-  expect(s.player.cash).toBe(40406);
-  expect(hashString(JSON.stringify(s.acts))).toBe(1531685321);
-  expect(hashString(rngSnapshot19(s))).toBe(3382588419);
+  // R31 onda 3 (AP · aparência, de propósito — docs/r31/DECISOES.md e docs/r31/ap.md): a imagem passa a ler a ficha de aparência
+  // (idade, estresse, forma, estilo), o peso da imagem no apelo ganha gênero/público/pressão histórica e a aparência entra em
+  // clipe, marcas, merch, entrevistas e valor; caixa, turnês, acts e rng mudam. Com `look31` desligado voltam 40406 / 2734588704 / 1531685321 / 3382588419.
+  expect(s.player.cash).toBe(257209);
+  expect(hashString(JSON.stringify(s.acts))).toBe(68287867);
+  expect(hashString(rngSnapshot19(s))).toBe(205718420);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
 
