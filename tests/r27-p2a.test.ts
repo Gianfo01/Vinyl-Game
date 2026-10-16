@@ -119,9 +119,9 @@ beforeAll(() => {
   // ordem de carga dos módulos mudou a ordem dos ganchos): caixa, turnês, acts e rng mudam; o caixa do bot nesta semente
   // oscila centenas de milhares de mês a mês (o 8º mês caiu num vale). Com `uni4.links` desligado só acts muda (289804343).
   // Antes: 257209 / 4026815485 (p2b) / 68287867 / 205718420.
-  // UNI-4 + I juntos: re-medido (acima, valores com as duas mudanças).
+  // UNI-4 + I juntos: re-medido — só acts muda em relação ao UNI-4 sozinho (4266817177 → 3500990849).
   expect(s.player.cash).toBe(10093);
-  expect(hashString(JSON.stringify(s.acts))).toBe(4266817177);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3500990849);
   expect(hashString(rngSnapshot19(s))).toBe(4017770377);
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);
