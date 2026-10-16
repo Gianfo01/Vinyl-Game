@@ -20,6 +20,8 @@ function hash31(s: string): number {
 }
 
 const bump31 = (c: string): string => {
+  const base = c.normalize('NFD')[0]; // R31 (BASE-IT): letra acentuada ("Al di là") avança pela letra-base — antes saía igual ao real
+  if (base !== c && /[a-z]/i.test(base)) return bump31(base);
   const z = c === c.toUpperCase() ? 'Z' : 'z', a = c === c.toUpperCase() ? 'A' : 'a';
   return c === z ? a : /\p{L}/u.test(c) && /[a-z]/i.test(c) ? String.fromCharCode(c.charCodeAt(0) + 1) : /\d/.test(c) ? String((Number(c) + 1) % 10) : c;
 };
