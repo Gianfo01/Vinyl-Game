@@ -6,7 +6,7 @@
 .sc31-opt { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; color: var(--muted); }
 .sc31-note { margin: 0; padding: 0.3rem 0.6rem; border-left: 3px solid var(--accent); background: var(--panel-2, transparent); font-size: 0.88rem; }
 .sc31-scroll { overflow-x: auto; }
-.sc31-stage { position: relative; width: 100%; max-width: 1280px; min-width: 300px; border: 2px solid #170e12; border-radius: 4px; background: #170e12; line-height: 0; }
+.sc31-stage { position: relative; width: 100%; max-width: 980px; min-width: 300px; border: 2px solid #170e12; border-radius: 4px; background: #170e12; line-height: 0; }
 .sc31-cv { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
 .sc31-layer { position: absolute; inset: 0; line-height: normal; }
 .sc31-spot { position: absolute; padding: 0; margin: 0; background: transparent; border: 2px solid transparent; border-radius: 3px; cursor: pointer; color: inherit; font: inherit; }

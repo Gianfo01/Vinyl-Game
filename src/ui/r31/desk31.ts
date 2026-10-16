@@ -139,7 +139,7 @@ function paintDesk(cv: HTMLCanvasElement, s: GameState, m: Desk31): void {
   if (!m.me.away) {
     const pr = m.me.personId ? s.persons[m.me.personId] : undefined;
     const sp = avatarSprite(lookOf(pr ?? { id: 'player' }), { year, role: pr?.role ?? null, pose: 'sit', dir: 'SE' });
-    ctx.drawImage(sp.c, 163 - sp.ax, top + 12 - sp.ay);
+    ctx.drawImage(sp.c, 163 - sp.ax, top + 3 - sp.ay);
   } else {
     ctx.fillStyle = '#f4ecd8'; ctx.fillRect(156, 96, 14, 9); ctx.fillStyle = '#3a6ad0'; ctx.fillRect(158, 98, 10, 1); ctx.fillRect(158, 101, 7, 1); // bilhete "fui viajar"
   }

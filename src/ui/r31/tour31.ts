@@ -21,7 +21,7 @@ import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
 import { blitPx31, moreBtn31, runGo31, sceneView31 } from './scene31';
 import { MON31 } from './scene31model';
-import { CAL_CH31, CAL_CW31, CAL_X31, CAL_Y31, TOUR_ACTS31, TOUR_LEGEND31, tour31, type Day31, type Tour31 } from './tour31model';
+import { CAL_CH31, CAL_CW31, CAL_X31, CAL_Y31, TOUR_ACTS31, busX31, TOUR_LEGEND31, tour31, type Day31, type Tour31 } from './tour31model';
 
 const ui31 = { tourId: '', mon: null as null | { year: number; month: number } };
 
@@ -78,12 +78,21 @@ function paintTour(cv: HTMLCanvasElement, s: GameState, m: Tour31, repaint: () =
     if (d.status === 'played') p.disc(d.x, d.y, Math.max(1, d.r - 3), C('#fff4e0'));
     else if (d.status === 'todo') p.ring(d.x, d.y, Math.max(1, d.r - 2), C('#ffffff'));
     if (d.status === 'cancelled') { p.line(d.x - d.r, d.y - d.r, d.x + d.r, d.y + d.r, INK); }
-    const nm = t(d.name).toUpperCase();
-    const tx = d.x + d.r + 3 + textWidth(nm) < W ? d.x + d.r + 3 : d.x - d.r - 3 - textWidth(nm);
-    drawTextOutlined(p, nm, tx, d.y - 2, C('#ffffff'), INK);
+  }
+  // nomes: à direita do ponto; se bater em outro nome, à esquerda; se ainda bater, fica só na dica (sem sobrepor)
+  const boxes: [number, number, number, number][] = [];
+  const hit = (b: [number, number, number, number]) => boxes.some((o) => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
+  for (const d of m.dots) {
+    const nm = t(d.name).toUpperCase(), tw = textWidth(nm) + 2;
+    const right: [number, number, number, number] = [d.x + d.r + 2, d.y - 3, d.x + d.r + 2 + tw, d.y + 4];
+    const left: [number, number, number, number] = [d.x - d.r - 2 - tw, d.y - 3, d.x - d.r - 2, d.y + 4];
+    const b = [right, left].find((x) => x[0] >= 0 && x[2] <= W && !hit(x));
+    if (!b) continue;
+    boxes.push(b);
+    drawTextOutlined(p, nm, b[0] + 1, d.y - 2, C('#ffffff'), INK);
   }
   // título do mapa
-  const title = m.tour ? `${t(l('TURNÊ', 'TOUR'))} · ${m.tour.name}` : m.draft ? t(l('ROTA EM RASCUNHO', 'DRAFT ROUTE')) : t(l('SEM TURNÊ MARCADA', 'NO TOUR BOOKED'));
+  const title = m.tour ? `${s.acts[m.tour.actId]?.name ?? ''} · ${m.tour.name}` : m.draft ? t(l('ROTA EM RASCUNHO', 'DRAFT ROUTE')) : t(l('SEM TURNÊ MARCADA', 'NO TOUR BOOKED'));
   p.rect(0, 0, Math.min(W, textWidth(title) + 8), 9, C('#170e12')); drawText(p, title, 4, 2, C('#ffe9b0'));
   // calendário: faixa de madeira com um bloco por dia
   p.rect(0, MH, W, H - MH, C('#3a2418'));
@@ -112,7 +121,7 @@ function paintTour(cv: HTMLCanvasElement, s: GameState, m: Tour31, repaint: () =
   if (m.bus) {
     const move = ((m.tour?.move ?? KIT0.move) as Move29);
     const v = vehiclePx29(move, m.year, m.tour?.id ?? '');
-    const bx = Math.min(W - v.w, m.bus.x + 6), by = Math.max(0, m.bus.y - v.h);
+    const bx = busX31(m.bus.x, v.w), by = Math.max(0, m.bus.y - v.h - 2);
     const c = v.canvas(); const cx = c.getContext('2d'); if (cx) { const img = cx.getImageData(0, 0, v.w, v.h); for (let i = 0; i < v.w * 3; i++) img.data[(v.w * (v.h - 3)) * 4 + i * 4 + 3] = 0; cx.putImageData(img, 0, 0); }
     ctx.drawImage(c, bx, by);
   }

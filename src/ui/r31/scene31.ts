@@ -17,7 +17,7 @@ import { store } from '../store';
 import { setTab } from '../vis';
 import { goToHub } from '../sys/project12';
 import { quickHook31 } from './lock31';
-import { ALERT31, labelsDefault31, type Go31s, type Spot31 } from './scene31model';
+import { ALERT31, badgeSym31, labelsDefault31, type Go31s, type Spot31 } from './scene31model';
 import './scene31.css';
 
 const lsGet = (k: string): string | null => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -86,15 +86,16 @@ function spotEl(o: SceneOpts31, sp: Spot31, labels: boolean): HTMLElement {
   const x = sp.x - PAD, y = sp.y - PAD, w = sp.w + PAD * 2, hh = sp.h + PAD * 2;
   const b = sp.badge;
   const lv = b ? ALERT31[b.level] : null;
-  const say = [t(sp.label), b ? `${lv!.sym} ${typeof b.text === 'string' ? b.text : t(b.text)} (${t(lv!.name)})` : '', t(sp.tip)].filter(Boolean).join(' — ');
+  const btxt = b ? (typeof b.text === 'string' ? b.text : t(b.text)) : '';
+  const say = [t(sp.label), b ? `${[badgeSym31(b), btxt].filter(Boolean).join(' ')} (${t(lv!.name)})` : '', t(sp.tip)].filter(Boolean).join(' — ');
   const btn = h('button', {
     type: 'button', class: `sc31-spot${b ? ` lvl-${b.level}` : ''}`, 'data-spot': sp.id, 'aria-label': say, title: say,
     style: `left:${pct(x, o.W)};top:${pct(y, o.H)};width:${pct(w, o.W)};height:${pct(hh, o.H)}`,
     onclick: (e: Event) => { e.stopPropagation(); runGo31(sp.go, o.panels as Record<string, () => void>); },
     oncontextmenu: (e: Event) => { e.preventDefault(); e.stopPropagation(); if (sp.quick) quickHook31.open?.(sp.quick); else runGo31(sp.go, o.panels as Record<string, () => void>); },
   },
-  b ? h('span', { class: `sc31-badge lvl-${b.level}`, 'aria-hidden': 'true' }, h('i', null, lv!.sym), ' ', typeof b.text === 'string' ? b.text : t(b.text)) : null,
-  labels ? h('span', { class: 'sc31-label', 'aria-hidden': 'true' }, t(sp.label)) : null,
+  b ? h('span', { class: `sc31-badge lvl-${b.level}`, 'aria-hidden': 'true' }, badgeSym31(b) ? h('i', null, badgeSym31(b)) : null, badgeSym31(b) && btxt ? ' ' : '', btxt) : null,
+  labels && !sp.quiet ? h('span', { class: 'sc31-label', 'aria-hidden': 'true' }, t(sp.label)) : null,
   h('span', { class: 'sc31-tip', 'aria-hidden': 'true' }, t(sp.tip)));
   return btn;
 }
@@ -128,7 +129,7 @@ export function sceneView31(s: GameState, o: SceneOpts31): HTMLElement {
     const pts = h('details', { class: 'sc31-pts' },
       h('summary', null, t(l('Pontos desta cena ({n})', 'Points in this scene ({n})'), { n: o.spots.length })),
       h('ul', null, o.spots.map((sp) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => runGo31(sp.go, o.panels as Record<string, () => void>) },
-        sp.badge ? `${ALERT31[sp.badge.level].sym} ${typeof sp.badge.text === 'string' ? sp.badge.text : t(sp.badge.text)} · ` : '', h('b', null, t(sp.label))), ' ', h('small', { class: 'muted' }, t(sp.tip))))));
+        sp.badge ? `${[badgeSym31(sp.badge), typeof sp.badge.text === 'string' ? sp.badge.text : t(sp.badge.text)].filter(Boolean).join(' ')} · ` : '', h('b', null, t(sp.label))), ' ', h('small', { class: 'muted' }, t(sp.tip))))));
     root.replaceChildren(...[bar, o.note ? h('p', { class: 'sc31-note', role: 'status' }, t(o.note)) : null, intro, h('div', { class: 'sc31-scroll' }, stage), o.legend ?? null, pts].filter((x): x is HTMLElement => !!x));
   };
   draw();

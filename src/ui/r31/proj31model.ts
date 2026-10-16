@@ -167,10 +167,10 @@ export function proj31(s: GameState, p: MusicProject): Proj31 {
     const stTxt = st.state === 'done' ? l('feito', 'done') : st.state === 'now' ? l('agora', 'now') : l('depois', 'later');
     spots.push({ id: `stage:${st.id}`, x: st.x + 1, y: ST_TOP31 - 14, w: st.w - 2, h: WALK_Y31 - ST_TOP31 + 14,
       label: st.name, tip: fmtL(l('{n} ({s}): {t}', '{n} ({s}): {t}'), { n: st.name, s: stTxt, t: st.tip }),
-      badge: { text: st.state === 'now' && st.bar ? st.bar.label : st.when, level: st.state === 'now' ? 'normal' : 'info' }, go: { panel: `stage:${st.id}` } });
+      badge: { text: st.state === 'now' && st.bar ? st.bar.label : st.when, level: st.state === 'now' ? 'normal' : 'info', sym: st.state === 'now' ? '▶' : undefined }, go: { panel: `stage:${st.id}` }, quiet: true });
   }
   for (const f of flags) spots.push({ id: `flag:${f.id}`, x: f.x - 5, y: WALK_Y31 - 26, w: 10, h: 28, label: f.name, tip: fmtL(l('Marco: {n}{w}{d}. Abre marketing e rollout.', 'Milestone: {n}{w}{d}. Opens marketing and rollout.'), { n: f.name, w: f.when ? fmtL(l(' ({m})', ' ({m})'), { m: f.when }) : l('', ''), d: f.done ? l(' — feito', ' — done') : l('', '') }),
-    badge: f.done ? { text: '✓', level: 'info' } : undefined, go: f.kind === 'tour' ? { area: 'shows', tab: ['showsHub', 'tours'] } : { area: 'releases', tab: ['creation-release', p.type === 'lp' ? 'rollout' : 'launch'] } });
+    badge: f.done ? { text: '✓', level: 'info' } : undefined, quiet: true, go: f.kind === 'tour' ? { area: 'shows', tab: ['showsHub', 'tours'] } : { area: 'releases', tab: ['creation-release', p.type === 'lp' ? 'rollout' : 'launch'] } });
   spots.push({ id: 'van', x: van.x - 24, y: ROAD_Y31 - 2, w: 48, h: 24, label: l('Van do projeto', 'Project van'), tip: fmtL(l('O projeto está em: {s}. Ações rápidas do projeto.', 'The project is at: {s}. Project quick actions.'), { s: cs.name }), go: { quick: { kind: 'project', id: p.id } }, quick: { kind: 'project', id: p.id } });
   spots.push({ id: 'me', x: me.x - 7, y: WALK_Y31 - 32, w: 14, h: 32, label: l('Você', 'You'), tip: l('Você, acompanhando o disco. Abre o seu painel.', 'You, following the record. Opens your panel.'), go: { area: 'you' } });
 

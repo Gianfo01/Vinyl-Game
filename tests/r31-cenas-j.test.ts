@@ -69,7 +69,7 @@ describe('R31 J · Mesa do chefe', () => {
     const pin = m2.pins.find((x) => x.pid === p.id)!;
     expect(pin).toBeTruthy();
     expect(Object.keys(PIN31)).toContain(pin.status);
-    expect(m2.spots.some((x) => x.id === `pin:${p.id}` && x.badge?.text === PIN31[pin.status].sym)).toBe(true);
+    expect(m2.spots.some((x) => x.id === `pin:${p.id}` && x.badge?.sym === PIN31[pin.status].sym)).toBe(true);
   });
 
   it('toda área tem destino e cabe na cena; "você" aparece', () => {

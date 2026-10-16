@@ -35,7 +35,7 @@ export interface Go31s {
   /** foco da ação no painel rápido */
   focus?: string;
 }
-export interface Badge31 { text: string | L; level: Alert31 }
+export interface Badge31 { text: string | L; level: Alert31; /** símbolo próprio (senão o do nível; informação não leva símbolo) */ sym?: string }
 /** Uma área clicável da cena (coordenadas em pixels lógicos do desenho). */
 export interface Spot31 {
   id: string;
@@ -48,6 +48,8 @@ export interface Spot31 {
   go: Go31s;
   /** alvo do painel rápido (clique direito / tecla de menu) */
   quick?: QuickTarget31;
+  /** sem rótulo por cima (o nome já está desenhado ou o ponto é miúdo) */
+  quiet?: boolean;
 }
 
 /** Rótulos curtos: sempre no primeiro ano da partida, opcionais depois. */
@@ -58,6 +60,9 @@ export const MON31: L[] = [
   l('JAN', 'JAN'), l('FEV', 'FEB'), l('MAR', 'MAR'), l('ABR', 'APR'), l('MAI', 'MAY'), l('JUN', 'JUN'),
   l('JUL', 'JUL'), l('AGO', 'AUG'), l('SET', 'SEP'), l('OUT', 'OCT'), l('NOV', 'NOV'), l('DEZ', 'DEC'),
 ];
+
+/** Símbolo mostrado no selo. */
+export const badgeSym31 = (b: Badge31): string => b.sym ?? (b.level === 'info' ? '' : ALERT31[b.level].sym);
 
 export const plural31 = (n: number, one: L, many: L): L => fmtL(n === 1 ? one : many, { n });
 

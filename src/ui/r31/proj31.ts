@@ -61,7 +61,7 @@ function paintStreet(cv: HTMLCanvasElement, s: GameState, m: Proj31): void {
   const p = new Px(W, H);
   // céu ao entardecer com estrelas
   for (let y = 0; y < WALK_Y31; y++) { const k = y / WALK_Y31; const c = mix(C('#1e1a3c'), C('#e08a5a'), Math.max(0, k * k * 1.2)); for (let x = 0; x < W; x++) p.put(x, y, c); }
-  for (let i = 0; i < 40; i++) p.put((i * 71) % W, (i * 29) % 26, C('#f4ecd8'));
+  for (let i = 0; i < 40; i++) p.put((i * 97 + i * i * 13) % W, (i * 53 + i * i * 7) % 28, C('#f4ecd8'));
   p.disc(W - 30, 12, 5, C('#f4ecd8')); p.disc(W - 28, 11, 5, C('#2a2448'));
   // casas da rua
   const layer = new Px(W, H);

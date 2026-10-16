@@ -173,7 +173,7 @@ export function desk31(s: GameState): Desk31 {
   pins.slice(0, PIN_MAX31).forEach((p, i) => {
     const b = pinBox31(i);
     spots.push({ id: `pin:${p.pid}`, ...b, label: l(p.title, p.title), tip: fmtL(l('{t} — {s}: {w}.', '{t} — {s}: {w}.'), { t: p.title, s: p.stage, w: p.why }),
-      badge: { text: PIN31[p.status].sym, level: p.status === 'stuck' ? 'crit' : p.status === 'late' ? 'soon' : 'info' }, go: { quick: { kind: 'project', id: p.pid } }, quick: { kind: 'project', id: p.pid } });
+      badge: { text: '', sym: PIN31[p.status].sym, level: p.status === 'stuck' ? 'crit' : p.status === 'late' ? 'soon' : 'info' }, go: { quick: { kind: 'project', id: p.pid } }, quick: { kind: 'project', id: p.pid }, quiet: true });
   });
   spots.push({ id: 'news', x: 180, y: 98, w: 36, h: 18, label: l('Jornal', 'Paper'),
     tip: news.length ? plural31(news.length, l('1 novidade desde o último avanço.', '1 change since the last advance.'), l('{n} novidades desde o último avanço.', '{n} changes since the last advance.')) : l('Nada mudou ainda: avance o tempo.', 'Nothing changed yet: advance time.'),

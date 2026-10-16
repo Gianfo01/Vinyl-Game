@@ -15,11 +15,11 @@ import { cancelTour } from '../../sim/tours';
 import { dateOfDay, dayOfDate, fmtL, playerActs } from '../../sim/util';
 import { MON31, plural31, type Spot31 } from './scene31model';
 
-export const TOUR_W31 = 320;
+export const TOUR_W31 = 400;
 export const TOUR_MAP_H31 = 150;
 export const TOUR_H31 = 200;
 /** Calendário: faixa de dias embaixo do mapa. */
-export const CAL_Y31 = 158, CAL_X31 = 5, CAL_CW31 = 10, CAL_CH31 = 34;
+export const CAL_Y31 = 158, CAL_X31 = 14, CAL_CW31 = 12, CAL_CH31 = 34;
 
 export type DotStatus31 = 'played' | 'todo' | 'cancelled' | 'draft';
 export interface TourDot31 { cityId: string; name: L; x: number; y: number; r: number; cap: number; sold: number; status: DotStatus31; day?: number; order: number }
@@ -48,6 +48,9 @@ export const TOUR_ACTS31 = {
   /** "Cancelar (devolve metade)": igual ao botão de Shows › Turnês */
   cancel: (s: GameState, tourId: string): L | null => cancelTour(s, tourId),
 };
+
+/** Ônibus à esquerda da cidade (os nomes ficam à direita); encosta na borda quando não cabe. */
+export const busX31 = (x: number, w: number): number => (x - w - 8 >= 0 ? x - w - 8 : Math.min(TOUR_W31 - w, x + 8));
 
 /** Porte do ponto pela lotação (1 bar … 4 estádio). */
 export const dotR31 = (cap: number): number => (cap >= 15000 ? 7 : cap >= 3000 ? 5 : cap >= 600 ? 4 : 3);
@@ -78,7 +81,11 @@ export function tour31(s: GameState, o: { tourId?: string; draft?: string[]; mon
     ? tr.stops.filter((st) => !!cityById[st.cityId]).map((st, i) => ({ cityId: st.cityId, name: cityById[st.cityId]?.name ?? l('—'), cap: st.capacity, sold: st.sold, status: st.status === 'played' ? 'played' : st.status === 'cancelled' ? 'cancelled' : 'todo', day: st.day, order: i }))
     : draftIds.map((id, i) => ({ cityId: id, name: cityById[id].name, cap: 0, sold: 0, status: 'draft' as const, order: i }));
   const homeId = s.config.homeCity && cityById[s.config.homeCity] ? s.config.homeCity : undefined;
-  const pts = [...raw.map((r) => cityById[r.cityId]), ...(homeId ? [cityById[homeId]] : [])].filter(Boolean);
+  // a caixa do mapa é a da rota; a sede só entra quando está perto (senão "você" fica num canto, com a dica)
+  const route = raw.map((r) => cityById[r.cityId]).filter(Boolean);
+  const hc = homeId ? cityById[homeId] : undefined;
+  const near = !!hc && (!route.length || (Math.max(...route.map((c) => c.lon), hc.lon) - Math.min(...route.map((c) => c.lon), hc.lon) < 40 && Math.max(...route.map((c) => c.lat), hc.lat) - Math.min(...route.map((c) => c.lat), hc.lat) < 30));
+  const pts = [...route, ...(hc && near ? [hc] : [])];
   // projeção equiretangular na caixa das cidades (com folga); mantém a proporção (graus de longitude encolhem com a latitude)
   let lon0 = Math.min(...pts.map((c) => c.lon)), lon1 = Math.max(...pts.map((c) => c.lon));
   let lat0 = Math.min(...pts.map((c) => c.lat)), lat1 = Math.max(...pts.map((c) => c.lat));
@@ -92,7 +99,7 @@ export function tour31(s: GameState, o: { tourId?: string; draft?: string[]; mon
   const X = (lon: number) => Math.round(((lon - bbox[0]) / (bbox[2] - bbox[0])) * TOUR_W31);
   const Y = (lat: number) => Math.round(((bbox[3] - lat) / (bbox[3] - bbox[1])) * TOUR_MAP_H31);
   const dots: TourDot31[] = raw.map((r) => { const c = cityById[r.cityId]; return { ...r, x: X(c.lon), y: Y(c.lat), r: r.status === 'draft' ? 3 : dotR31(r.cap) }; });
-  const home = homeId ? { cityId: homeId, x: X(cityById[homeId].lon), y: Y(cityById[homeId].lat) } : undefined;
+  const home = homeId && near ? { cityId: homeId, x: X(cityById[homeId].lon), y: Y(cityById[homeId].lat) } : undefined;
 
   // mês do calendário: o pedido; senão o da próxima data (ou o atual)
   const next = tr?.stops.find((x) => x.status === 'scheduled' && x.day >= s.day);
@@ -158,8 +165,8 @@ export function tour31(s: GameState, o: { tourId?: string; draft?: string[]; mon
   const onRoad = !!(tr && pa && pa.id === tr.actId && tr.status === 'running');
   const personId = (() => { try { return playerPerson(s)?.id; } catch { return undefined; } })();
   const cl = (v: number, a: number, b: number): number => Math.max(a, Math.min(b, v));
-  const me = { onRoad, x: cl(onRoad && bus ? bus.x + 26 : home?.x ?? 24, 8, TOUR_W31 - 8), y: cl(onRoad && bus ? bus.y + 4 : (home?.y ?? 40) + 2, 34, TOUR_MAP_H31 - 2),
-    tip: onRoad ? l('Você está na estrada com a banda. Abre o seu painel.', 'You are on the road with the band. Opens your panel.') : home ? fmtL(l('Você está na sede, em {c}. Abre o seu painel.', 'You are at the HQ, in {c}. Opens your panel.'), { c: cityById[home.cityId].name }) : l('Você. Abre o seu painel.', 'You. Opens your panel.') };
+  const me = { onRoad, x: cl(onRoad && bus ? bus.x + 26 : home?.x ?? 14, 8, TOUR_W31 - 8), y: cl(onRoad && bus ? bus.y + 4 : home ? home.y + 2 : TOUR_MAP_H31 - 4, 34, TOUR_MAP_H31 - 2),
+    tip: onRoad ? l('Você está na estrada com a banda. Abre o seu painel.', 'You are on the road with the band. Opens your panel.') : homeId ? fmtL(l('Você está na sede, em {c}. Abre o seu painel.', 'You are at the HQ, in {c}. Opens your panel.'), { c: cityById[homeId].name }) : l('Você. Abre o seu painel.', 'You. Opens your panel.') };
 
   // áreas clicáveis
   const spots: Spot31[] = [];
@@ -170,13 +177,13 @@ export function tour31(s: GameState, o: { tourId?: string; draft?: string[]; mon
       : fmtL(l('{c}: falta tocar — casa para {p}. Ações da cidade.', '{c}: still to play — {p}-capacity venue. City actions.'), { c: d.name, p: d.cap });
     const pad = Math.max(6, d.r + 3);
     spots.push({ id: `city:${d.order}:${d.cityId}`, x: cl(d.x - pad, 0, TOUR_W31 - pad * 2), y: cl(d.y - pad, 0, TOUR_MAP_H31 - pad * 2), w: pad * 2, h: pad * 2, label: d.name, tip: tipCity,
-      badge: d.status === 'played' ? { text: '✓', level: 'info' } : undefined, go: { quick: { kind: 'city', id: d.cityId } }, quick: { kind: 'city', id: d.cityId } });
+      badge: d.status === 'played' ? { text: '✓', level: 'info' } : undefined, go: { quick: { kind: 'city', id: d.cityId } }, quick: { kind: 'city', id: d.cityId }, quiet: true });
   }
-  if (bus && tr) spots.push({ id: 'bus', x: Math.min(TOUR_W31 - 46, bus.x + 6), y: Math.max(0, bus.y - 22), w: 40, h: 20, label: l('Ônibus', 'Bus'),
+  if (bus && tr) spots.push({ id: 'bus', x: busX31(bus.x, 48), y: Math.max(0, bus.y - 26), w: 48, h: 24, label: l('Ônibus', 'Bus'),
     tip: fmtL(l('{t}: {d}. Logística, custo e operação da turnê.', '{t}: {d}. Logistics, cost and tour operation.'), { t: tr.name, d: bus.label }),
     badge: { text: bus.label, level: 'info' }, go: { panel: 'bus' } });
   for (const d of days) {
-    const x = CAL_X31 + (d.dom - 1) * CAL_CW31, base = { x, y: CAL_Y31, w: CAL_CW31, h: CAL_CH31 };
+    const x = CAL_X31 + (d.dom - 1) * CAL_CW31, base = { x, y: CAL_Y31, w: CAL_CW31, h: CAL_CH31, quiet: true };
     const date = fmtL(l('{d} de {m}', '{m} {d}'), { d: d.dom, m: MON31[month.month] });
     const city = d.cityId ? cityById[d.cityId]?.name ?? l('—') : undefined;
     if (d.kind === 'conflict') spots.push({ id: `day:${d.dom}`, ...base, label: date, tip: fmtL(l('{d}: CONFLITO — {w} Clique para resolver.', '{d}: CONFLICT — {w} Click to resolve.'), { d: date, w: d.why ?? l('', '') }), badge: { text: '!', level: 'crit' }, go: { panel: `conflict:${d.dom}` } });

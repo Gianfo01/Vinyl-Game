@@ -220,7 +220,7 @@ function projectView(s: GameState, p: MusicProject): HTMLElement {
     h('div', null, h('h3', null, p.title || t(l('(sem título)', '(untitled)'))), h('small', { class: 'muted' }, `${act?.name ?? '—'} · ${p.type.toUpperCase()} · ${t(c.name)} · ${p.songIds.length}/${needSongs(p.type)}+ ${t(l('faixas', 'tracks'))}`)),
     pill(t(STAGE_NAMES[st]), st === 'followup' || st === 'released' ? 'good' : st === 'finishing' ? 'gold' : ''));
   const locked13 = !!(p.pendingId || p.rolloutId || p.releaseId);
-  if (!pl || ui.edit) return h('div', { class: 'p12-view' }, head, commitPanel(s, p), p13Panel(s, p, locked13), contextLinks(s, p));
+  if (!pl || ui.edit) return h('div', { class: 'p12-view' }, head, projView31(s, p), commitPanel(s, p), p13Panel(s, p, locked13), contextLinks(s, p));
   // r23: o próximo passo recomendado vem logo depois do cabeçalho — um botão principal por etapa
   return h('div', { class: 'p12-view' }, head, projView31(s, p) /* R31 onda 2 (J): a rua do lançamento */, journey23(s, p.actId, p, nextAction(s, p, st)), timeline(s, p, st), problemCard(s, p), phaseReview20(s, p, st) /* r20 Protótipo B: revisão da fase */, results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
 }
