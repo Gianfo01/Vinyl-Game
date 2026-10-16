@@ -35,6 +35,7 @@ import { journey23 } from './journey23';
 import { ent27 } from '../ps/ent27';
 import { rng19 } from '../../sim/rng19';
 import { projView31 } from '../r31/proj31'; // R31 onda 2 (J): projeto musical em cena
+import { projResult31 } from '../r31/results31mini'; // R31 onda 3 (P): resultado do projeto
 
 const ui = { sel: '', type: 'lp' as ReleaseType, concept: CONCEPTS[0].id, edit: false, draft: null as null | { pid: string; intent: Intent; dir: Dir; aud: Aud12; budget: BudgetLvl; deadline: Deadline } };
 const say = (x: L | null, ok: L) => { toast(t(x ?? ok), x ? 'bad' : 'good'); rerender(); };
@@ -222,7 +223,7 @@ function projectView(s: GameState, p: MusicProject): HTMLElement {
   const locked13 = !!(p.pendingId || p.rolloutId || p.releaseId);
   if (!pl || ui.edit) return h('div', { class: 'p12-view' }, head, projView31(s, p), commitPanel(s, p), p13Panel(s, p, locked13), contextLinks(s, p));
   // r23: o próximo passo recomendado vem logo depois do cabeçalho — um botão principal por etapa
-  return h('div', { class: 'p12-view' }, head, projView31(s, p) /* R31 onda 2 (J): a rua do lançamento */, journey23(s, p.actId, p, nextAction(s, p, st)), timeline(s, p, st), problemCard(s, p), phaseReview20(s, p, st) /* r20 Protótipo B: revisão da fase */, results(s, p), st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
+  return h('div', { class: 'p12-view' }, head, projView31(s, p) /* R31 onda 2 (J): a rua do lançamento */, journey23(s, p.actId, p, nextAction(s, p, st)), timeline(s, p, st), problemCard(s, p), phaseReview20(s, p, st) /* r20 Protótipo B: revisão da fase */, results(s, p), projResult31(s, p) /* R31 onda 3 (P) */, st !== 'released' && st !== 'followup' ? projHype12(s, p.actId) : null, commitSummary(s, p), p13Panel(s, p, locked13), contextLinks(s, p), st !== 'released' && st !== 'followup' ? studioFit(s, p) : null, diary(s, p));
 }
 
 function hub(s: GameState): HTMLElement {
