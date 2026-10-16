@@ -1,5 +1,5 @@
 // Mini-helper de DOM sem framework.
-import { disp31 } from '../data/realdisp31';
+import { disp31, plain31 } from '../data/realdisp31';
 import { emoPlain31, hasEmo31, pxNodes31 } from './pixel/emo31'; // r31 onda 4 (EMO): emoji → ícone em pixel art
 
 type Child = Node | string | number | null | undefined | false | Child[];
@@ -14,11 +14,11 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs | 
         el.addEventListener(k.slice(2).toLowerCase(), v as EventListener);
       } else if (k === 'class') el.className = String(v);
       else if (k === 'style') el.setAttribute('style', String(v));
-      else if (k === 'value' && 'value' in el) (el as HTMLInputElement).value = String(v);
+      else if (k === 'value' && 'value' in el) (el as HTMLInputElement).value = plain31(String(v));
       else if (k === 'checked' && 'checked' in el) (el as HTMLInputElement).checked = !!v;
       else if (k === 'disabled') (el as HTMLButtonElement).disabled = !!v;
       else if (k === 'selected' && 'selected' in el) (el as HTMLOptionElement).selected = !!v;
-      else el.setAttribute(k, v === true ? '' : k === 'title' || k === 'aria-label' || k === 'placeholder' ? emoPlain31(disp31(String(v))) : String(v));
+      else el.setAttribute(k, v === true ? '' : k === 'title' || k === 'aria-label' || k === 'placeholder' ? emoPlain31(disp31(String(v))) : plain31(String(v)));
     }
   }
   append(el, children);

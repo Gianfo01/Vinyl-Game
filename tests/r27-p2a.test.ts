@@ -127,6 +127,7 @@ beforeAll(() => {
   // R31 onda 4 (BASE-IT · base italiana, de propósito — docs/r31/DECISOES.md e docs/r31/base-it.md): 564 artistas italianos reais (284 + 280 do MusicBrainz)
   // no fim de REAL_ALL (nascem no início e estreiam nesses 8 meses): caixa, turnês, acts e rng mudam. Com `base31.it` desligado
   // (config.base31it = false) voltam 182589 / 3575668786 / 1693608899 / 3302724126.
+  // R31 onda 4 (BASE-HITS · sucessos de 1992 em diante, de propósito — docs/r31/base-hits.md): 1 043 atos novos depois da base italiana; Tom Cochrane (estreia 1974) já está no mundo no início (um ato e uma pessoa a mais deslocam os ids de tudo que nasce depois) e o sorteio de estreia dos outros muda a trajetória. Decisão do dono (2026-10-16): os hits só entram com base Enorme (z 3); o golden usa a base padrão, então os valores são os da BASE-IT. Com base Enorme ligada mediu-se 305463 / 2782225819 / 4616992 / 962726072.
   expect(s.player.cash).toBe(29440);
   expect(hashString(JSON.stringify(s.acts))).toBe(2826741028);
   expect(hashString(rngSnapshot19(s))).toBe(3278152341);

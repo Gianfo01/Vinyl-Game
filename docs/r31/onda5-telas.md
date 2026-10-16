@@ -7,8 +7,8 @@ Padrão aprovado (PLANO, onda 5): cada tela é um objeto do mundo aberto por cim
 próprio objeto; topo fixo (data, caixa, fama, avançar); embaixo os botões de viagem e o bolso; Esc fecha; cada objeto tem tecla própria.
 Nesta etapa (TEC) o objeto ainda abre a página antiga (`open5`); a lista abaixo é o endereço de cada página no mundo novo.
 
-Inventário: **107 páginas** registradas hoje (base + `registerArea` + virtuais) e **314 abas** (`TABS_REG27`).
-81 objetos; 3 páginas ficam no menu de pausa; 32 páginas não estavam no mapa (marcadas com ⚑).
+Inventário: **108 páginas** registradas hoje (base + `registerArea` + virtuais) e **314 abas** (`TABS_REG27`).
+81 objetos; 3 páginas ficam no menu de pausa; 33 páginas não estavam no mapa (marcadas com ⚑).
 
 Como ler: **Lugar** = região › cômodo/prédio; **Papel** = a moldura que abre; **Marcadores** = abas que ficam no papel
 (as que chegam de outra página vêm marcadas com ←); **"!"** = o que acende o ponto de novidade (por padrão, pendências únicas
@@ -609,11 +609,11 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 ### Mapa-múndi · tecla W
 - **Lugar:** Mundo › Mapa-múndi
 - **Papel:** mapa
-- **Páginas (dono):** `world` (Mundo), `regions18` (Mercados), `regions19` (Regiões e política)
+- **Páginas (dono):** `world` (Mundo), `regions18` (Mercados), `regions19` (Regiões e política), `cidade5` (Cidade (visita)) ⚑
 - **Marcadores:** Mapa e cenas · História, leis e lugares · Países · Cenas locais · Marcos da história · Regiões · Submercado · Circuitos · K-pop · Japão e idols · Afinidades · Selos regionais · Comuna e exílio · Vistos e rádio · Greves · Campanhas e leis · Celeiros
 - **"!":** pendências com dono nestas páginas
 - **Sai daqui:** América do Norte → Revista de paradas · Europa → Revista de paradas · Brasil → Revista de paradas · América Latina e Caribe → Revista de paradas · Ásia e Oriente Médio → Revista de paradas · África → Revista de paradas · Oceania → Revista de paradas · Blues e jazz → Revista de paradas · Country e folk → Revista de paradas · R&B, soul, funk e disco → Revista de paradas · Rock → Revista de paradas · Pop → Revista de paradas · Latina → Revista de paradas · Sagrado e clássico → Revista de paradas · Hip hop → Revista de paradas · Eletrônica → Revista de paradas · Caribe e reggae → Revista de paradas
-- **Nota:** Clicar no país = mercado e política do país.
+- **Nota:** Clicar no país = mercado, cidades e cultura; clicar numa cidade = o mapa dela (cidade5, onda 5 MAPA).
 
 ### Telex na borda · tecla ⇧W
 - **Lugar:** Mundo › Borda do mapa
@@ -660,6 +660,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 | `casa31` Sua casa | Casa | Casa › Casa (cena inteira) | cena em pixel art | ⇧2 (viagem: casa) | ⚑ não | 0/0 |
 | `catalog` Catálogo | Prateleiras de masters | Sede › Arquivo | cena em pixel art | 7 | sim | 4/0 |
 | `charts` Paradas | Revista de paradas | Sede › Sua sala | revista | 3 | sim | 12/0 |
+| `cidade5` Cidade (visita) | Mapa-múndi | Mundo › Mapa-múndi | mapa | W | ⚑ não | 0/0 |
 | `cockpit` Hoje | Mesa do mês | Sede › Sua sala | cena em pixel art | 1 | ⚑ não | 1/2 |
 | `company` Empresa | Quadro de funcionários | Sede › RH | quadro na parede | T | sim | 0/0 |
 | `contracts19` Mercado de contratos | Arquivo de aço | Sede › Sua sala | pasta do arquivo | ⇧C | sim | 5/0 |

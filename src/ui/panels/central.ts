@@ -29,7 +29,7 @@ export function actionLabel(id: string): string {
 
 const PLANNABLE = ['train', 'workshop', 'rehearse', 'networking', 'interview', 'residency_art', 'rest', 'social', 'reposition', 'compose', 'record', ...EXTRA_ACTIONS.map((x) => x.id)];
 
-function reserveDialog(s: GameState, actId: string): void {
+export function reserveDialog(s: GameState, actId: string): void {
   const act = s.acts[actId];
   const now = monthIndex(s);
   const state = { action: 'workshop', start: now + 1, person: act.members[0] };

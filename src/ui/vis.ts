@@ -130,7 +130,7 @@ export function tabs(key: string, items: { id: string; label: string; icon?: str
   const shown = new Set(shownTabs31(items.length, ci));
   const hidden = items.filter((_, k) => !shown.has(k));
   const pick = (i: { id: string }) => { tabState[key] = i.id; rerender(); };
-  const bar = h('div', { class: 'tabs', role: 'tablist' }, items.map((i, k) => h('button', { role: 'tab', 'aria-selected': i.id === cur ? 'true' : 'false', class: `${i.id === cur ? 'on' : ''} ${shown.has(k) ? '' : 'tab27-x'}`, onclick: () => pick(i) }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null)),
+  const bar = h('div', { class: 'tabs', role: 'tablist' }, items.map((i, k) => h('button', { role: 'tab', 'data-tab': i.id, 'aria-selected': i.id === cur ? 'true' : 'false', class: `${i.id === cur ? 'on' : ''} ${shown.has(k) ? '' : 'tab27-x'}`, onclick: () => pick(i) }, i.icon ? ic(i.icon) : null, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null)),
     hidden.length ? h('details', { class: 'more31' },
       h('summary', { class: 'tab27-more', 'aria-label': t(l('Mais abas', 'More tabs')), title: hidden.map((i) => i.label).join(' · ') }, t(l('Mais', 'More')), hidden.some((i) => i.badge) ? h('span', { class: 'badge' }, hidden.reduce((a, i) => a + (i.badge ?? 0), 0)) : null, ' ▾'),
       h('div', { class: 'more31-list', role: 'menu' }, hidden.map((i) => h('button', { type: 'button', role: 'menuitem', onclick: () => pick(i) }, i.label, i.badge ? h('span', { class: 'badge' }, i.badge) : null)))) : null);
