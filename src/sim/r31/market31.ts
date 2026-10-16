@@ -54,6 +54,10 @@ registerSwitch({ id: 'bal31.pressLife', def: 1.3, scope: 'game',
   desc: l('Tiragem sugerida: procura da vida do disco ÷ procura das 10 primeiras semanas (1 = só as 10 semanas).',
     'Suggested run: lifetime demand ÷ first-10-weeks demand (1 = first 10 weeks only).') });
 
+registerSwitch({ id: 'bal31.pressCash', def: 0.1, scope: 'game',
+  desc: l('Tiragem sugerida: o que passa da sugestão antiga só entra até esta fração do caixa livre (0 = nunca passa).',
+    'Suggested run: anything above the old suggestion only goes in up to this share of free cash (0 = never above).') });
+
 registerSwitch({ id: 'bal31.hold', def: false, scope: 'game',
   desc: l('Lançamento delegado: sem caixa para metade da tiragem sugerida, o disco espera (não sai com 200 cópias), até um ano e meio sem lançar.',
     'Delegated release: without cash for half the suggested run, the record waits (it does not ship with 200 copies), up to a year and a half without releasing.') });

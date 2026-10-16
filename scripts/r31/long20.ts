@@ -17,7 +17,7 @@ const prof = (process.argv[3] ?? 'balanced') as Profile;
 const pairs = process.argv.slice(4).length ? process.argv.slice(4) : [1960, 1963, 1966, 1969, 1972, 1975].map((y, i) => `bal20-${i}@${y}`);
 for (const p of pairs) {
   const [seed, ys] = p.split('@');
-  const s = createGame(defaultConfig(seed, { startYear: Number(ys), realNames: true }));
+  const s = createGame(defaultConfig(seed, process.env.MEAS ? { startYear: Number(ys), role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' } : { startYear: Number(ys), realNames: true }));
   if (process.env.R31_SW) for (const kv of process.env.R31_SW.split(',')) {
     const [id, raw] = kv.split('='); const d = switchDef(id); if (!d) throw new Error(id);
     setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);

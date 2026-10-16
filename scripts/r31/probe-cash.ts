@@ -13,7 +13,8 @@ const seed = process.argv[2] ?? 'r29rel-bot';
 const start = Number(process.argv[3] ?? 1970);
 const months = Number(process.argv[4] ?? 240);
 const prof = (process.argv[5] ?? 'balanced') as Profile;
-const s = createGame(defaultConfig(seed, { startYear: start, realNames: true }));
+// MEAS=1: a mesma configuração do measure.ts (selo, rock, base padrão, sem nomes reais)
+const s = createGame(defaultConfig(seed, process.env.MEAS ? { startYear: start, role: 'label', bandGenre: 'rnr', bandName: 'Banda Teste' } : { startYear: start, realNames: true }));
 if (process.env.R31_SW) for (const kv of process.env.R31_SW.split(',')) {
   const [id, raw] = kv.split('='); const d = switchDef(id); if (!d) throw new Error(id);
   setSw(s, id, typeof d.def === 'boolean' ? raw === 'true' : typeof d.def === 'number' ? Number(raw) : raw);

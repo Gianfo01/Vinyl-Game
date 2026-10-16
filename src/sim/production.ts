@@ -181,7 +181,14 @@ export function suggestedPress(s: GameState, act: Act, type: 'single' | 'ep' | '
   if (on31(s, 'bal31.press')) {
     const f = forecastUnits(s, act, type, q, plan?.marketing ?? [], plan?.territories ?? s.player.territories, plan?.extra);
     const life = Math.max(1, sw<number>(s, 'bal31.pressLife'));
-    return Math.max(300, Math.round((f.mid * physicalShare(s) * life) / 100) * 100);
+    const want = f.mid * physicalShare(s) * life;
+    // bal31.pressCash: o que passa da sugestão antiga só entra se cabe numa fração do caixa livre — sem isso a tiragem
+    // maior esvaziava o caixa do 1º ano e o robô quebrava (r29rel-bot, 1971; docs/r31/bal.md)
+    const old = forecastUnits(s, act, type, q, [], s.player.territories).mid * physicalShare(s);
+    const fmts = availableFormats(s);
+    const perUnit = Math.max(1e-6, (pressingCost(s, fmts, 1000) - pressingCost(s, fmts, 0)) / 1000);
+    const room = Math.max(0, freeCash20(s) * Math.max(0, sw<number>(s, 'bal31.pressCash'))) / perUnit;
+    return Math.max(300, Math.round(Math.min(want, Math.max(old, old + room)) / 100) * 100);
   }
   const f = forecastUnits(s, act, type, q, [], s.player.territories);
   return Math.max(300, Math.round((f.mid * physicalShare(s)) / 100) * 100);
