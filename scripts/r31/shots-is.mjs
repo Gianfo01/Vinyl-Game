@@ -44,7 +44,8 @@ const info = await p.evaluate(async () => {
   return { year: g.year, org: o?.id };
 });
 console.log('jogo', JSON.stringify(info));
-const shot = async (name) => { await p.waitForTimeout(900); await p.screenshot({ path: `${out}/onda4-is-${name}.png` }); console.log('captura', name); };
+const PREFIX = process.env.SHOT_PREFIX ?? 'onda4-is-';
+const shot = async (name) => { await p.waitForTimeout(900); await p.screenshot({ path: `${out}/${PREFIX}${name}.png` }); console.log('captura', name); };
 const area = async (a, sub) => p.evaluate(async ([a, sub]) => {
   const st = await import('/src/ui/store.ts');
   const c = await import('/src/ui/common.ts');
