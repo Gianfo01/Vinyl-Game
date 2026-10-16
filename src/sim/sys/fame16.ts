@@ -19,7 +19,7 @@ import { setFameAt } from '../famehook16';
 import type { Act, GameState } from '../types';
 import { fmtL, notify } from '../util';
 import { board, ch7 } from './charts7';
-import { FTIERS, fameTier, f15, feeMult, mainActOf, personFame } from './fame15';
+import { FTIERS, fameTier, f15, feeMult, mainActOf, personFameV } from './fame15';
 import { addHype } from './hype12';
 import { mapx } from './mapx8';
 import { scene12 } from './scenes12';
@@ -193,7 +193,7 @@ export function worldFame16(s: GameState, a: Act): number {
 
 /** Fama de uma pessoa num país: a fama dela escalada pela fama local do ato principal. */
 export function personFameIn(s: GameState, pid: string, a3: string): number {
-  const v = personFame(s, pid).v;
+  const v = personFameV(s, pid);
   const a = mainActOf(s, pid);
   if (!a || a.fame <= 0) return v;
   return Math.round(clamp(v * (fameIn(s, a, a3) / a.fame), 0, 100) * 10) / 10;
