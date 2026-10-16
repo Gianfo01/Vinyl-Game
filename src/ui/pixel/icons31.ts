@@ -21,6 +21,7 @@ export const ICON31_NAMES = [
   'speech', 'hand', 'thumbs-up', 'flex', 'shush',
   'face-happy', 'face-smile', 'face-neutral', 'face-wry', 'face-think', 'face-sad', 'face-angry', 'face-stress', 'face-no',
   'face-money',
+  'anchor',
 ] as const;
 export type Icon31 = (typeof ICON31_NAMES)[number];
 
@@ -236,6 +237,10 @@ const DRAW: Record<Icon31, (p: Px) => void> = {
   'face-no': (p) => {
     p.disc(8, 5, 4, K.skin); p.rect(5, 4, 2, 1, K.ink); p.rect(9, 4, 2, 1, K.ink); p.hline(6, 9, 7, K.ink);
     p.rect(2, 9, 12, 6, K.purple); p.line(2, 10, 13, 14, K.skin); p.line(2, 14, 13, 10, K.skin); p.line(3, 10, 13, 13, K.dskin);
+  },
+  anchor: (p) => {
+    p.ring(8, 2.5, 1.8, K.dsilver); p.vline(7, 4, 13, K.silver); p.vline(8, 4, 13, K.silver); p.hline(4, 11, 6, K.dsilver);
+    p.line(2, 9, 6, 14, K.silver); p.line(13, 9, 9, 14, K.silver); p.hline(6, 9, 14, K.silver); p.put(1, 9, K.dsilver); p.put(14, 9, K.dsilver);
   },
   'face-money': (p) => face(p, (q) => { drawText(q, '$', 4, 4, K.dgreen); drawText(q, '$', 10, 4, K.dgreen); q.poly([[4, 10], [12, 10], [8, 13]], K.dred); q.hline(6, 10, 10, K.green); }),
 };

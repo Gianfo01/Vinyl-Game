@@ -140,6 +140,7 @@ const TABLE: [string, string, string, string][] = [
   ['✈', 'plane', 'viagem', 'trip'],
   ['🚌🚐', 'tour-bus', 'turnê', 'tour'],
   ['🚢', 'ship', 'navio', 'ship'],
+  ['⚓', 'anchor', 'porto', 'port'],
   ['🚆', 'train', 'trem', 'train'],
   ['🚀', 'rocket', 'decolando', 'taking off'],
   ['☕', 'coffee', 'café', 'coffee'],
