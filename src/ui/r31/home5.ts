@@ -24,6 +24,7 @@ import { quickDefaults27, quickRunConfig27 } from '../ps/home27model';
 import type { StageOpts5 } from './stage5px';
 import { logo5, mountStage5 } from './stage5ui';
 import { quickRun5Screen } from './newrun5';
+import { tut5Enabled, tutEraPicker5 } from './tut5entry'; // R31 onda 5 (TUT): "Aprender a jogar" (só com exp5.tut)
 import './home5.css';
 
 /** Épocas e cidades da vitrine quando não há partida salva (sorteio só de interface). */
@@ -77,6 +78,7 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
     h('nav', { class: 'h5-menu', 'aria-label': t(l('Menu inicial', 'Main menu')) },
       btn(t(S.newGame).toUpperCase(), () => quickRun5Screen(root, onStart), 'h5-main', { 'data-h5': 'new' }),
       cont,
+      tut5Enabled() ? btn(t(l('APRENDER A JOGAR', 'LEARN TO PLAY')), () => tutEraPicker5(onStart), '', { 'data-h5': 'tut' }) : null,
       btn(t(l('CARREGAR', 'LOAD')), () => loadModal5(root, onStart, play, loadSlot), '', { 'data-h5': 'load' }),
       btn(t(l('CENÁRIOS', 'SCENARIOS')), () => { scenarioScreen(root, onStart, redraw); top5(); }, '', { 'data-h5': 'scen' }),
       btn(t(l('OPÇÕES', 'OPTIONS')), () => options27(redraw), '', { 'data-h5': 'opts' })),

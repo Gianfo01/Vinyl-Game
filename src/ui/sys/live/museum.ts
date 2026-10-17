@@ -6,7 +6,7 @@ import { t } from '../../../i18n/strings';
 import type { GameState, Person } from '../../../sim/types';
 import { N, actLink, cover, section } from '../../common';
 import { h } from '../../dom';
-import { C, Px } from '../../pixel/px';
+import { C, Px, discV, inked, lv, rectV, volume } from '../../pixel/px';
 import { chips, stat } from '../../vis';
 import { relicImg28, roleImg28 } from '../../pixel/relic28'; // r28 (arte): discos emoldurados e instrumentos desenhados
 import { relics } from '../../../sim/sys/relics9';
@@ -26,30 +26,32 @@ const INSTRUMENT: Record<Person['role'], { icon: string; name: { pt: string; en:
   synthetic: { icon: '💠', name: l('núcleo neural', 'neural core') },
 };
 
+/** Parede do museu no estilo das salas da onda 5: papel de parede em rampa, rodapé e piso de tábuas, quadros dos discos
+ *  de ouro/platina e troféus em volume (luz de cima à esquerda, contorno escuro quente). */
 function hallCanvas(gold: number, platinum: number, awards: number): HTMLCanvasElement {
   const W = 192;
   const H = 64;
   const p = new Px(W, H);
-  p.rect(0, 0, W, 44, C('#5a3a4a'));
-  for (let x = 0; x < W; x += 12) p.vline(x, 0, 43, C('#4e3240'));
-  p.rect(0, 44, W, 20, C('#8a6034'));
-  for (let x = 0; x < W; x += 8) p.vline(x, 44, 63, C('#7a5228'));
-  p.rect(0, 42, W, 2, C('#3a2430'));
+  const wall = C('#5a3a4a');
+  for (let y = 0; y < 42; y++) for (let x = 0; x < W; x++) p.set(x, y, (x >> 3) % 2 ? lv(wall, 3) : lv(wall, 2.6));
+  rectV(p, 0, 40, W, 4, C('#6a3a22'));
+  for (let y = 44; y < H; y++) for (let x = 0; x < W; x++) p.set(x, y, (x + (y % 2 ? 0 : 5)) % 12 === 0 ? C('#5e3a1e') : y === 44 ? C('#a8743e') : C('#8a6034'));
   const discs = Math.min(14, gold + platinum);
   for (let i = 0; i < discs; i++) {
     const x = 10 + i * 13;
-    p.rect(x - 5, 8, 11, 14, C('#2a1a20'));
-    p.disc(x, 15, 4, i < platinum ? C('#d8dce8') : C('#f0c040'));
-    p.put(x, 15, C('#2a1a20'));
+    inked(p, (q) => { rectV(q, x - 5, 7, 11, 15, C('#3a2430')); discV(q, x, 14, 4, i < platinum ? C('#d8dce8') : C('#f0c040'), { spec: true }); });
+    p.put(x, 14, C('#2a1a20'));
   }
   const tro = Math.min(10, awards);
   for (let i = 0; i < tro; i++) {
     const x = 14 + i * 17;
-    p.rect(x - 6, 34, 13, 4, C('#3a2430'));
-    p.rect(x - 1, 28, 3, 6, C('#f0c040'));
-    p.rect(x - 3, 25, 7, 3, C('#f0c040'));
+    inked(p, (q) => {
+      rectV(q, x - 6, 34, 13, 5, C('#3a2430'));
+      rectV(q, x - 1, 28, 3, 6, C('#f0c040'), { spec: true });
+      volume(q, x - 4, 22, 9, 7, (xx, yy) => (xx + 0.5 - x) ** 2 / 16 + (yy + 0.5 - 22) ** 2 / 36 <= 1, C('#f0c040'), { spec: true, r: 2 });
+    });
   }
-  if (!discs && !tro) for (let i = 0; i < 5; i++) p.rect(16 + i * 36, 10, 16, 18, C('#3a2430'));
+  if (!discs && !tro) for (let i = 0; i < 5; i++) inked(p, (q) => rectV(q, 16 + i * 36, 10, 16, 18, C('#3a2430'), { bias: -1 }));
   return p.canvas();
 }
 

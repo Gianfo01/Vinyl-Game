@@ -18,6 +18,7 @@ import { chips, meter, stat, tabs } from '../../vis';
 import { museumView } from './museum';
 import { scenarioBrowser22 } from '../../scen22';
 import { gameAch27 } from '../../ach27';
+import { tutScenarioCard5 } from '../../r31/tut5entry'; // R31 onda 5 (TUT): cartão "Primeiro selo" (só com exp5.tut)
 
 void $;
 
@@ -122,6 +123,7 @@ export function scenarioScreen(root: HTMLElement, onStart: () => void, back: () 
       h('div', null, h('h1', null, t(l('Cenários históricos', 'Historical scenarios'))),
         h('p', { class: 'muted small' }, t(l('{n} cenários · {m} com medalha. Cada um tem ano, cidade, ponto de partida, meta com medalhas e regras da época.', '{n} scenarios · {m} with a medal. Each has a year, city, starting point, a medal goal and period rules.'), { n: SCENARIOS.length, m: done })))),
     h('label', { class: 'lv-name' }, t(l('Nome do selo', 'Label name')), ' ', h('input', { type: 'text', value: screen.company, placeholder: t(l('Selo Agulha', 'Needle Records')), oninput: (e: Event) => (screen.company = (e.target as HTMLInputElement).value) })),
+    tutScenarioCard5(onStart, () => screen.company),
     scenarioBrowser22({ pickLabel: l('Jogar cenário', 'Play scenario'), onPick: play, medals, redraw }),
   ));
 }
