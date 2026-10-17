@@ -28,6 +28,7 @@ import { h } from '../dom';
 import { registerArea } from '../registry';
 import { store } from '../store';
 import { ic } from '../vis';
+import { cityBuyBlock33 } from '../r33/cityBuy33ui'; // BUGS33 item 4
 import {
   CITY_LAYERS5, bangText5, country5, countryInfo5, defaultLayers5, find5, next5, telex5, worldCountries5,
   type Country5, type Dir5, type Layer5, type Pin5, type Pt5,
@@ -354,7 +355,7 @@ export const CITY_AREA5 = 'cidade5';
 /** Sheet completo da cidade (o mesmo da ficha do mapa-múndi), ligado por mundo27 para não duplicar. */
 export const CITY5_SHEET: { fn?: (s: GameState, id: string) => HTMLElement | null } = {};
 
-interface VisitSpot5 { id: string; box: [number, number, number, number]; name: string; what: string; kind: 'venue' | 'radio' | 'lm' | 'fest' }
+interface VisitSpot5 { id: string; box: [number, number, number, number]; name: string; what: string; kind: 'venue' | 'radio' | 'lm' | 'fest' | 'sale' }
 /** O mapa isométrico de uma cidade que não é a sua: marcos da época e os lugares reais (casas de show, rádios). Só leitura. */
 export function visitCity5(s: GameState, id: string): HTMLElement {
   const c = cityById[id];
@@ -367,6 +368,8 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
   for (const v of sh.venues.slice(0, 5)) { const lot = free.shift(); if (lot !== undefined) named.push({ lot, name: v.name, what: `${T(l('Casa de shows', 'Venue'))} · ${v.cap} ${T(l('lugares', 'seats'))}`, kind: 'venue' }); }
   for (const r of sh.radios.slice(0, 4)) { const lot = free.shift(); if (lot !== undefined) named.push({ lot, name: r.name, what: T(r.kind === 'tv' ? l('TV', 'TV') : l('Rádio', 'Radio')), kind: 'radio' }); }
   for (const f of sh.festivals.slice(0, 1)) { const lot = free.shift(); if (lot !== undefined) named.push({ lot, name: f, what: T(l('Festival da cidade', 'City festival')), kind: 'fest' }); }
+  // BUGS33 item 4: dois prédios comuns viram "imóvel à venda" — o cartão deles compra imóvel e abre filial na cidade
+  for (const lot of free.slice(-2)) named.push({ lot, name: T(LOTS18[lot].name), what: T(l('Imóvel à venda', 'Property for sale')), kind: 'sale' });
   const fillKind = new Map(named.map((x) => [x.lot, x.kind === 'venue' ? 'venue' as const : x.kind === 'fest' ? 'fest' as const : 'media' as const]));
   let seed = 7; for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
   const lms = mapLms27(id, s.year);
@@ -383,6 +386,7 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
   const showSheet = () => {
     const el = CITY5_SHEET.fn?.(s, id) ?? h('p', { class: 'muted' }, T(sh.name));
     el.querySelector('.sheet27-h > button')?.remove(); // QA5: o ✕ da ficha não fazia nada aqui; sair é "Voltar ao mundo"/Esc
+    el.querySelector('.sheet27-h')?.after(cityBuyBlock33(s, id, showSheet)); // BUGS33 item 4: comprar imóvel / abrir filial aqui
     side.replaceChildren(el);
   };
   const pick = (sp: VisitSpot5) => side.replaceChildren(h('aside', { class: 'card sheet27', 'data-m5': 'vspot' },
@@ -391,8 +395,9 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
     h('p', { class: 'small' }, sp.kind === 'venue' ? T(l('Palco da cidade: marque shows e turnês por aqui na agenda do artista.', 'A stage in town: book shows and tours here from the artist\'s planner.'))
       : sp.kind === 'radio' ? T(l('Emissora da cidade: tocar aqui leva o disco ao público local.', 'A local station: airplay here takes the record to the local audience.'))
         : sp.kind === 'fest' ? T(l('Festival que acontece aqui: inscreva seus artistas no circuito.', 'A festival held here: enter your acts on the circuit.'))
+        : sp.kind === 'sale' ? T(l('Prédio com placa de vende-se: compre um imóvel na cidade (base de turnê) ou instale aqui uma filial do selo.', 'A building with a for-sale sign: buy a home in town (tour base) or set up a branch of the label here.'))
         : T(l('Cartão-postal da época.', 'A postcard sight of the era.'))),
-    h('div', { class: 'row wrap' }, h('button', { type: 'button', class: 'btn small', onclick: () => goArea5(sp.kind === 'radio' ? 'media' : sp.kind === 'venue' ? 'shows' : sp.kind === 'fest' ? 'festivals' : 'world') },
+    sp.kind === 'sale' ? cityBuyBlock33(s, id, () => pick(sp)) : h('div', { class: 'row wrap' }, h('button', { type: 'button', class: 'btn small', onclick: () => goArea5(sp.kind === 'radio' ? 'media' : sp.kind === 'venue' ? 'shows' : sp.kind === 'fest' ? 'festivals' : 'world') },
       T(sp.kind === 'radio' ? l('Mídia', 'Media') : sp.kind === 'venue' ? l('Shows', 'Shows') : sp.kind === 'fest' ? l('Festivais', 'Festivals') : l('Voltar ao mundo', 'Back to the world')), ' →'))));
   const layer = h('div', { class: 'w19-hot m5-vhot' }, spots.map((sp) => h('button', {
     type: 'button', class: `w19-hs fill m5-vs m5-${sp.kind}`, 'data-id': sp.id, 'aria-label': `${sp.name} · ${sp.what}`, title: `${sp.name} · ${sp.what}`,

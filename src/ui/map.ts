@@ -55,7 +55,7 @@ export interface WorldMapOptions {
   /** camadas extras desenhadas entre a rota e as cidades */
   overlays?: () => MapOverlay[];
   /** sombreamento por país (ex.: censura, guerra, embargo) */
-  countryShade?: (a3: string) => { color: string; hatch?: boolean } | undefined;
+  countryShade?: (a3: string) => { color: string; hatch?: boolean; alpha?: number } | undefined;
   /** linhas extras no balão de uma cidade */
   cityTipExtra?: (id: string) => HTMLElement | null;
   /** linhas extras no balão de um país */
@@ -838,7 +838,7 @@ export class WorldMap {
         ctx.restore();
       }
       const shade = this.opts.countryShade?.(c.a3);
-      if (shade) { ctx.globalAlpha = 0.32; fillIt(this.resolveColor(shade.color) ?? shade.color); ctx.globalAlpha = 1; if (shade.hatch && hatch) fillIt(hatch); }
+      if (shade) { ctx.globalAlpha = shade.alpha ?? 0.32; fillIt(this.resolveColor(shade.color) ?? shade.color); ctx.globalAlpha = 1; if (shade.hatch && hatch) fillIt(hatch); }
       if (c.idx === this.hoverCountry) fillIt('rgba(255,255,255,0.18)');
     }
 

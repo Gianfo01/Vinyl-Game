@@ -265,7 +265,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     const short = /^[a-zà-ú]/.test(p.name) ? p.role : l(p.name.split(' ')[0], p.name.split(' ')[0]); // "a cúpula de…" vira o papel
     spots.push({ id: p.you ? 'you' : `who:${i}`, x: fx - 7, y: fyy - 31, w: 14, h: 32, label: p.you ? l('Você', 'You') : short,
       tip: p.you ? you.where : fmtL(l('{n} — {r}', '{n} — {r}'), { n: p.name, r: role }), go: p.you ? { panel: 'you' } : p.vit ? { panel: `vit:${p.vit}` } : { panel: `who:${i}` },
-      quick: p.actId ? { kind: 'act', id: p.actId } : undefined, quiet: true,
+      quick: p.actId ? { kind: 'act', id: p.actId } : undefined, quiet: true, person: true,
       badge: p.vit ? { text: l('no mês', 'this month'), level: 'info', sym: '✦' } : p.bico ? { text: l('bico', 'day job'), level: 'info', sym: '♪' } : p.cell ? { text: l('preso', 'jailed'), level: 'info', sym: '⛓' } : undefined });
   });
   const city = cityById[x.city]?.name;

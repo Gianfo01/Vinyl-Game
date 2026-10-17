@@ -5,10 +5,10 @@
 // "Perfis e saves" abre a lista completa dela.
 
 import { l } from '../../data/world';
-import { S, locale, t, type Lang } from '../../i18n/strings';
+import { S, locale, t } from '../../i18n/strings';
 import { formatMoney } from '../../core/money';
 import { SaveError20 } from '../../core/save20';
-import { h, select } from '../dom';
+import { h } from '../dom';
 import { modal, toast } from '../common';
 import { importSave, importSaveText, lastLoadErr20, loadGame, saveCompatible27, savePrefs, store, type SaveMeta } from '../store';
 import { lastSave17, mySaves17, saveErrText20 } from '../saves17';
@@ -17,7 +17,7 @@ import { pasteCode20 } from '../newgame17';
 import { newGameScreen, randomSeed } from '../newgame';
 import { scenarioScreen } from '../sys/live/goals';
 import { homeAch27 } from '../ach27';
-import { dedication31, openCredits31 } from './credits31';
+import { dedication31 } from './credits31';
 import { baseEditorScreen31 } from '../base31ui';
 import { homeScreen27, options27 } from '../ps/home27';
 import { quickDefaults27, quickRunConfig27 } from '../ps/home27model';
@@ -25,6 +25,7 @@ import type { StageOpts5 } from './stage5px';
 import { logo5, mountStage5 } from './stage5ui';
 import { quickRun5Screen } from './newrun5';
 import { tut5Enabled, tutEraPicker5 } from './tut5entry'; // R31 onda 5 (TUT): "Aprender a jogar" (só com exp5.tut)
+import { langToggle5 } from './lang5';
 import './home5.css';
 
 /** Épocas e cidades da vitrine quando não há partida salva (sorteio só de interface). */
@@ -53,6 +54,7 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const sc = homeScene5();
   const lang5 = (): 'pt' | 'en' => (store.prefs.lang === 'en' ? 'en' : 'pt');
+  // R33: o dono prefere o vídeo de show na tela inicial; a rua animada (intro33) fica só na intro da partida
   const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: lang5() }, 'h5-stage');
   cycleShow5(stage, sc.i, lang5);
 
@@ -67,14 +69,14 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   }, () => { cont.title = t(l('Não foi possível ler os saves deste navegador.', 'Could not read this browser\'s saves.')); });
 
   const link = (label: string, fn: () => void, extra: Record<string, string> = {}) => h('button', { type: 'button', class: 'h5-l', onclick: fn, ...extra }, label);
-  const lang = select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'PT' }, { value: 'en' as Lang, label: 'EN' }], (v) => { store.prefs.lang = v; savePrefs(); redraw(); }, { 'aria-label': t(S.language), class: 'h5-lang' });
+  const lang = langToggle5((v) => { store.prefs.lang = v; savePrefs(); redraw(); }, 'h5-lang');
   root.replaceChildren(h('div', { class: 'h5', id: 'main', role: 'main', tabindex: '-1' },
     stage.el,
     h('div', { class: 'h5-shade', 'aria-hidden': 'true' }),
     h('header', { class: 'h5-head' },
       h('h1', { class: 'h5-h1', 'aria-label': `${t(S.gameTitle)}: ${t(S.gameSubtitle)}` }, logo5(t(S.gameTitle).toUpperCase())),
       h('p', { class: 'h5-sub' }, t(S.gameSubtitle).toUpperCase()),
-      h('p', { class: 'h5-tag' }, t(l('UM MUNDO VIVE DE MÚSICA · 1889 – 2040', 'A WORLD THAT RUNS ON MUSIC · 1889 – 2040')))),
+      h('p', { class: 'h5-tag' }, t(l('UM MUNDO VIVE DE MÚSICA', 'A WORLD THAT RUNS ON MUSIC')))),
     h('nav', { class: 'h5-menu', 'aria-label': t(l('Menu inicial', 'Main menu')) },
       btn(t(S.newGame).toUpperCase(), () => quickRun5Screen(root, onStart), 'h5-main', { 'data-h5': 'new' }),
       cont,
@@ -85,11 +87,11 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
     h('div', { class: 'h5-links' },
       link(t(l('Usar código de run', 'Use a run code')), runCode),
       link(t(l('Conquistas', 'Achievements')), () => { let close = () => {}; close = modal(t(l('Conquistas', 'Achievements')), homeAch27(() => { close(); redraw(); }), { wide: true }); }, { 'data-link': 'ach' }),
-      link(t(l('Créditos', 'Credits')), openCredits31, { 'data-link': 'credits31' }),
+      link(t(l('Editor de base', 'Database editor')), () => { baseEditorScreen31(root, redraw); top5(); }, { 'data-link': 'base31' }),
       lang),
     dedication31('h5-ded'),
     h('footer', { class: 'h5-foot' },
-      h('span', null, 'PIXEL STUDIO EDITION', ' · ', link(t(l('Editor de base', 'Database editor')), () => { baseEditorScreen31(root, redraw); top5(); }, { 'data-link': 'base31' })),
+      h('span', null, ''),
       h('span', null, 'R32'))));
   fitHead5(root, stage);
   top5();
@@ -173,3 +175,4 @@ function loadModal5(root: HTMLElement, onStart: () => void, play: (g: NonNullabl
       h('button', { type: 'button', class: 'btn small ghost', onclick: () => void pasteSave() }, t(l('Colar save', 'Paste save'))),
       h('button', { type: 'button', class: 'btn small', onclick: () => { close(); homeScreen27(root, onStart, 'saves'); } }, t(l('Perfis e saves (renomear, apagar, exportar)…', 'Profiles and saves (rename, delete, export)…'))))));
 }
+

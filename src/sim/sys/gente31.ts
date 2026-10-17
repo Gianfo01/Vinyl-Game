@@ -190,6 +190,17 @@ function fire(s: GameState, sl: Slot31, why: L): void {
   if (s.persons[j.p]) { endRole(s, j.p, 'owner', s.year, ORG31(k, copy)); endRole(s, j.p, 'business', s.year, ORG31(k, copy)); }
 }
 
+/** R33 (GENTE33 B): quem trabalha para o jogador noutro papel (diretor, CEO, equipe pessoal) não volta para uma vaga da
+ *  cidade enquanto estiver lá. Cada regra devolve os ids; sem nada registrado, a virada do mês é a de antes. */
+export const BUSY31: ((s: GameState) => string[])[] = [];
+/** R33 (GENTE33 B): a pessoa larga a vaga agora (foi trabalhar com o jogador); a vaga é preenchida na virada do mês. */
+export function leaveJob31(s: GameState, pid: string, why: L): boolean {
+  const sl = Object.keys(peekGente31(s)?.j ?? {}).find((x) => gente31(s).j[x].p === pid);
+  if (!sl) return false;
+  fire(s, sl, why);
+  return true;
+}
+
 /** Virada do mês: quem saiu larga a vaga e a vaga é preenchida (gente que existe primeiro). Determinístico. */
 export function staffMonth31(s: GameState, cap = GENTE31.newPerMonth): { quit: number; hired: number; born: number } {
   const out = { quit: 0, hired: 0, born: 0 };
@@ -202,6 +213,7 @@ export function staffMonth31(s: GameState, cap = GENTE31.newPerMonth): { quit: n
     if (why) { fire(s, sl, why); out.quit++; }
   }
   const employed = new Set(Object.values(st.j).map((x) => x.p));
+  for (const f of BUSY31) for (const p of f(s)) employed.add(p);
   const ym = `${s.year}-${s.month}`;
   const r = Rng.fromSeed(`${s.config.seed}|gente31|${ym}`);
   // ordem estável dos candidatos (por semente e pessoa), para a mesma vaga não pegar sempre o mesmo perfil

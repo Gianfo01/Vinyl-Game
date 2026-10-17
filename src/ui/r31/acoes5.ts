@@ -22,7 +22,7 @@ import { card5, route5, type Card5, type CardAct5, type ActCtx5 } from './acoes5
 import type { Open5 } from './objects5';
 
 /** Cartão aberto agora (só interface). */
-const CUR5: { id?: string; el?: HTMLElement; at?: DOMRect; mark?: Open5 } = {};
+const CUR5: { id?: string; el?: HTMLElement; at?: DOMRect; mark?: Open5; redo?: () => Card5 | undefined } = {};
 /** Quando true, a casca abre o papel (ver tudo, abrir ▸) em vez do cartão. */
 let PASS5 = false;
 
@@ -77,7 +77,7 @@ function place5(el: HTMLElement, a: DOMRect | undefined): void {
 
 export function close5(): void {
   CUR5.el?.remove();
-  CUR5.el = undefined; CUR5.id = undefined; CUR5.mark = undefined;
+  CUR5.el = undefined; CUR5.id = undefined; CUR5.mark = undefined; CUR5.redo = undefined;
 }
 
 /** "ver tudo ▸": a página antiga inteira do objeto (o marcador pedido, se veio de um "ir até lá"). */
@@ -92,7 +92,7 @@ function ctx5(id: string): ActCtx5 {
     all: () => all5(id, CUR5.mark),
     open: (obj, m) => { close5(); passThrough5(() => { const c = store.game ? card5(store.game, obj) : undefined; const tg = m ?? c?.all; if (tg && NAV5.open) NAV5.open(obj, tg); }); },
     say: (msg, kind = 'good') => toast(t(msg), kind),
-    refresh: () => { rerender(); queueMicrotask(() => { if (CUR5.id === id && store.game) show5card(store.game, id, CUR5.at, CUR5.mark); }); },
+    refresh: () => { rerender(); queueMicrotask(() => { if (CUR5.id !== id || !store.game) return; if (CUR5.redo) { const c = CUR5.redo(); if (c) draw5(store.game, c, CUR5.at, CUR5.mark, CUR5.redo); else close5(); } else show5card(store.game, id, CUR5.at, CUR5.mark); }); },
   };
 }
 
@@ -110,6 +110,17 @@ function actBtn5(s: GameState, id: string, a: CardAct5, i: number): HTMLElement 
 export function show5card(s: GameState, id: string, at?: DOMRect, mark?: Open5): HTMLElement | undefined {
   const c: Card5 | undefined = card5(s, id);
   if (!c) return undefined;
+  return draw5(s, c, at, mark);
+}
+
+/** R33 (REDES): cartão avulso (matéria do Jornal, post do feed): a mesma casca e os mesmos botões do cartão do objeto, com
+ *  o conteúdo montado por quem chama. `redo` remonta o cartão depois de uma ação (ou devolve undefined para fechar). */
+export function showAdhoc5(s: GameState, c: Card5, at?: DOMRect, redo?: () => Card5 | undefined): HTMLElement | undefined {
+  return draw5(s, c, at, undefined, redo);
+}
+
+function draw5(s: GameState, c: Card5, at: DOMRect | undefined, mark?: Open5, redo?: () => Card5 | undefined): HTMLElement | undefined {
+  const id = c.id;
   const keep = CUR5.el?.isConnected && CUR5.id === id;
   CUR5.el?.remove();
   const chord = key5(`obj:${id}`)?.chord;
@@ -145,7 +156,7 @@ export function show5card(s: GameState, id: string, at?: DOMRect, mark?: Open5):
   el.style.position = 'fixed';
   el.style.visibility = 'hidden';
   document.body.append(el);
-  CUR5.el = el; CUR5.id = id; CUR5.at = at; CUR5.mark = mark;
+  CUR5.el = el; CUR5.id = id; CUR5.at = at; CUR5.mark = mark; CUR5.redo = redo;
   place5(el, at);
   el.style.visibility = '';
   if (!keep) (el.querySelector<HTMLElement>('.ac5-a:not([disabled]), .ac5-all') ?? el.querySelector<HTMLElement>('.ac5-x'))?.focus();
