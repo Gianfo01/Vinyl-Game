@@ -142,13 +142,13 @@ export function casaView5(s: GameState): HTMLElement {
   }, spots.map((sp) => {
     const o = by.get(sp.id)!;
     return { sp, label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
-  }), [d.top, d.H - 12]));
+  }), [0, d.H - 12])); // POL5: mostra o céu e o horizonte da cena (antes: só a faixa do cômodo e a sobra lisa)
   const sc = root.lastElementChild as HTMLElement;
   // POL5: a sobra da tela em volta da casa continua o céu (em cima) e o chão (embaixo), sem faixa preta
   try {
     const cx = sc.querySelector<HTMLCanvasElement>('canvas.r5-cv')?.getContext('2d');
     const px = (y: number) => { const v = cx!.getImageData(1, y, 1, 1).data; return `rgb(${v[0]},${v[1]},${v[2]})`; };
-    if (cx) { root.style.setProperty('--r5-sky', px(Math.max(0, d.top))); root.style.setProperty('--r5-ground', px(Math.max(0, d.H - 13))); }
+    if (cx) { root.style.setProperty('--r5-sky', px(0)); root.style.setProperty('--r5-ground', px(Math.max(0, d.H - 13))); }
   } catch { /* sem canvas (testes) */ }
   sc.querySelector('.r5-view')!.append(roomsBar5(d.rooms.map((r) => ({ label: ROOM5_L[r.id], x: r.x, w: r.w })), d.W));
   // cômodos: um botão por cômodo rola a cena até ele (casa larga não cabe inteira na tela)

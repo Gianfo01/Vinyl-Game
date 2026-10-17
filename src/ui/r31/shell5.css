@@ -87,10 +87,15 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 /* POL5: a casa enche a região (céu em cima, chão embaixo, cena maior quando cabe na largura) */
 .reg5-casa > .casa5-root { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--r5-sky, transparent); }
 .reg5-casa > .casa5-root::before { content: ''; flex: 1; }
-.reg5-casa > .casa5-root::after { content: ''; flex: 1; background: var(--r5-ground, transparent); }
+.reg5-casa > .casa5-root::after { content: ''; flex: 0 0 10px; background: var(--r5-ground, transparent); } /* dono: nada de faixa de chão na frente da casa; a sobra fica no céu */
 .reg5-casa > .casa5-root > .r5-head { padding: 0 16px; }
 .reg5-casa .r5-scroll { flex: none; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
-.reg5-casa .r5-view { --hv: max(min(50vh, 400px), min(calc((100vw - 32px) / var(--ar)), calc(100dvh - 260px))) !important; }
+.reg5-casa .r5-view { --hv: min(max(min(50vh, 400px), calc((100vw - 32px) / var(--ar))), calc(100dvh - 260px)) !important; }
+/* casa larga: sem barra de rolagem; os cômodos viram páginas (botões do topo e setas ◂ ▸) */
+.reg5-casa .r5-scroll { overflow-x: hidden; position: relative; scroll-behavior: smooth; }
+.r5-pg { position: absolute; top: 50%; z-index: 4; transform: translateY(-50%); width: 34px; height: 58px; border: 2px solid var(--c5-gold, #f0c040); background: rgba(13, 21, 32, 0.88); color: var(--c5-gold2, #ffd868); font: 700 18px/1 var(--pixel, monospace); }
+.r5-pg.l { left: 6px; } .r5-pg.r { right: 6px; }
+.r5-pg:disabled { opacity: 0; pointer-events: none; }
 .rc5 { position: absolute; right: 12px; top: 30px; flex: none; width: 270px; max-height: calc(100% - 40px); overflow: auto; font-size: 13px; padding: 8px; background: rgba(13, 21, 32, 0.94); border: 1px solid var(--c5-line); box-shadow: 3px 3px 0 rgba(0,0,0,.5); z-index: 5; }
 .rc5-h { display: block; width: 100%; padding: 2px 4px 6px; border: 0; background: none; text-align: left; font: 700 11px/1.3 var(--pixel, monospace); color: var(--c5-mut); text-transform: uppercase; letter-spacing: 0.06em; }
 .rc5-h small { text-transform: none; letter-spacing: 0; font-family: var(--sans, sans-serif); }
@@ -141,15 +146,15 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .b5-tr:hover, .b5-tr:focus-visible { border-color: #6a7ea6; }
 .b5-tr.on { border-color: var(--c5-gold); background: #5a3a14; box-shadow: inset 0 0 0 2px #8a5a20; }
 .b5-tr.on span { color: var(--c5-gold2); }
-.b5-pocket { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.b5-pocket { display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 4px 6px; min-width: 0; max-height: 100%; overflow: hidden; } /* POL5: 8 itens cabem (duas linhas), sem rolagem */
 .b5-pl { font: 700 11px/1 var(--pixel, monospace); color: var(--c5-mut); letter-spacing: 0.08em; text-transform: uppercase; margin-right: 4px; }
 .b5-pi { display: inline-flex; align-items: stretch; border: 1px solid #34465f; background: #18243a; box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
 .b5-pi.on { border-color: var(--c5-gold); }
 .b5-pi.on .b5-pb { color: var(--c5-gold2); }
-.b5-pb { display: inline-flex; align-items: center; gap: 6px; max-width: 190px; overflow: hidden; text-overflow: ellipsis; padding: 6px 7px 6px 8px; border: 0; background: none; font-size: 13px; white-space: nowrap; }
+.b5-pb { display: inline-flex; align-items: center; gap: 6px; max-width: 170px; overflow: hidden; text-overflow: ellipsis; padding: 4px 7px 4px 8px; border: 0; background: none; font-size: 13px; white-space: nowrap; }
 .b5-px { padding: 0 6px; border: 0; border-left: 1px solid #2a3a52; background: none; color: var(--c5-mut); }
 .b5-px:hover { color: #fff; background: #3a2030; }
-.b5-pin { padding: 8px 10px; border: 1px dashed #3a4c66; background: none; color: var(--c5-mut); font-size: 13px; white-space: nowrap; }
+.b5-pin { padding: 8px 10px; border: 1px dashed #6a7ea6; background: #16223a; color: var(--c5-ink); font-size: 13px; white-space: nowrap; }
 .b5-pin:not(:disabled):hover { border-color: var(--c5-gold); color: var(--c5-ink); }
 .b5-pin:disabled { opacity: 0.6; }
 
@@ -188,4 +193,62 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .hk5-ch li { grid-template-columns: 70px 1fr; }
 .hk5-ch li small { grid-column: 2; }
 .hk5 .muted { color: #8a9ab0; }
-@media (max-width: 1100px) { .pz5 { grid-template-columns: 1fr; } .pz5-ix { display: none; } .t5-k span { display: none; } .rc5 { display: none; } }
+@media (max-width: 1100px) { .pz5 { grid-template-columns: 1fr; } .pz5-ix { display: none; } .t5-k span { display: none; } }
+
+/* POL5 (pedido do dono, janela baixa): Cidade e Mundo cabem na área da casca, sem rolar a região. O mapa-múndi
+   ganha a altura que sobra (map.ts lê .wmap-fit5); listas laterais e o painel do prédio rolam por dentro. */
+.reg5-mundo > .hub, .reg5-mundo .tabs-wrap, .reg5-mundo .tabs-wrap > div:not(.tabs):has(.map27), .reg5-mundo .map27,
+.reg5-mundo .map27-map, .reg5-mundo .wmap { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.reg5-mundo:has(.map27) { overflow: hidden; }
+.reg5-mundo .map27-body { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+.reg5-mundo .map27-body > aside { max-height: 100%; overflow: auto; align-self: start; }
+.reg5-mundo .map27-map .wmap-stage.wmap-fit5 { flex: 1 1 auto; min-height: 150px; position: relative; }
+.reg5-mundo .wmap-fit5 > .wmap-canvas { position: absolute; left: 2px; top: 2px; }
+.reg5-mundo .m5-cbar, .reg5-mundo .m5-whint, .reg5-mundo .map27-bar, .reg5-mundo .tabs-wrap > .tabs { flex: none; }
+.reg5-cidade:has(.c27-main) { overflow: hidden; }
+.reg5-cidade > .c18 { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.reg5-cidade > .c18 > section.card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; margin-bottom: 0; }
+.reg5-cidade > .c18 > section.card > * { flex: none; }
+.reg5-cidade .c27-main { flex: 1 1 auto !important; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+.reg5-cidade .c27-mapcol { min-height: 0; overflow: hidden; }
+.reg5-cidade .c27-side { position: static; max-height: 100%; overflow: auto; scrollbar-width: thin; }
+.reg5-mundo .map27-map { align-self: stretch; }
+.reg5-cidade .c27-mapcol { container-type: size; }
+.reg5-cidade .c27-mapcol .w19-vp { width: min(100cqw, calc((100cqh - 54px) * var(--ar, 1.3274))); min-width: 0; }
+.rc5-top { display: flex; align-items: flex-start; gap: 4px; }
+.rc5-top .rc5-h { flex: 1; }
+.rc5-tog { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border: 1px solid var(--c5-line); background: #172234; color: var(--c5-ink); font: 700 11px/1.4 var(--pixel, monospace); }
+.rc5-tog:hover, .rc5-tog:focus-visible { border-color: var(--c5-gold); }
+.rc5-n { min-width: 12px; text-align: center; color: var(--c5-gold); }
+.rc5.min { width: auto; padding: 6px 8px; }
+.rc5.min > ul, .rc5.min > .rc5-none { display: none; }
+.rc5.min .rc5-h { padding-bottom: 2px; }
+.rc5.min .rc5-ch { display: inline-block; transform: rotate(-90deg); }
+.r5-tight .r5-lab { display: none; }
+body.alt5 .r5-tight .r5-lab { display: inline-flex; }
+.r5-tight .r5-spot:hover, .r5-tight .r5-spot:focus-visible { outline-width: 3px; }
+.up5 { position: absolute; left: 12px; top: 8px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 2px solid var(--c5-gold);
+  background: #1a2638; color: var(--c5-ink); font: 700 12px/1.2 var(--pixel, monospace); text-transform: uppercase; letter-spacing: 0.06em; box-shadow: 2px 2px 0 rgba(0,0,0,.5); }
+.up5:hover, .up5:focus-visible { background: #24344e; }
+.up5-a { color: var(--c5-gold2); }
+.reg5.has-up5 > :not(.up5):first-of-type { padding-top: 40px; }
+/* cidade visitada (dentro do Mundo) também cabe: o mapa da cidade encolhe para a altura que sobra */
+.reg5-mundo:has(.m5-visit) { overflow: hidden; }
+.reg5-mundo > .m5-visit { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.reg5-mundo .m5-visit > .m5-vhead { flex: none; }
+.reg5-mundo .m5-visit > .m5-vbody { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+.reg5-mundo .m5-vside { align-self: start; }
+.reg5-mundo .m5-vmap { container-type: size; min-height: 0; overflow: hidden; }
+.reg5-mundo .m5-vmap .m5-vvp { width: min(100cqw, calc((100cqh - 40px) * var(--ar))); margin: 0 auto; }
+.reg5-mundo .m5-vside { min-height: 0; max-height: 100%; overflow: auto; scrollbar-width: thin; }
+.has-up5 .m5-vhead > .btn { display: none; } /* a volta é o "◂ Mundo" da casca */
+.b5-pinw { position: relative; display: inline-flex; }
+.b5-pin.full { border-style: solid; color: var(--c5-mut); }
+.b5-drawer { position: fixed; left: 400px; bottom: 100px; z-index: 20; width: 300px; max-height: 60vh; overflow: auto; padding: 8px; background: #121c2a; border: 2px solid var(--c5-gold); box-shadow: 3px 3px 0 rgba(0,0,0,.6); }
+.b5-drawer[hidden] { display: none; }
+.b5-dh { display: block; margin-bottom: 6px; font: 700 11px/1.3 var(--pixel, monospace); color: var(--c5-gold); text-transform: uppercase; }
+.b5-dh small { color: var(--c5-mut); text-transform: none; font-family: var(--sans, sans-serif); }
+.b5-drawer ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.b5-drawer li button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 6px; border: 1px solid #2a3a52; background: #18243a; text-align: left; font-size: 13px; }
+.b5-drawer li button:hover, .b5-drawer li button:focus-visible { border-color: var(--c5-gold); background: #20304a; }
+.reg5-cidade .c27-side { padding-bottom: 26px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); } /* rola por dentro com esmaecido, sem corte seco */

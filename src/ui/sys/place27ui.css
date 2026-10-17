@@ -30,3 +30,7 @@ button.c2-hit { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .c2-in.enter { animation: none; } }
 :root.reduced-motion .c2-in.enter { animation: none; }
 .c2-acts-btn { margin-left: auto; }
+/* R31 onda 5 (POL5): motivo do bloqueio junto do botão bloqueado (selo de papel), não numa lista solta */
+.c27-actw { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.c27-why { display: flex; align-items: flex-start; gap: 4px; padding: 3px 6px; border-left: 3px solid var(--warn, #c08020); background: rgba(240, 192, 96, 0.08); color: var(--muted, #a99); font-size: 11px; line-height: 1.3; }
+.c27-why .ic, .c27-why svg, .c27-why canvas { flex: none; width: 12px; height: 12px; }

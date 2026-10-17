@@ -61,8 +61,21 @@ Olhado e deixado como está (sem defeito ou fora do escopo da interface):
 | `casa5.ts` `AREA5`/`area5Of` + `panel()` de `app.ts` (casa31, sede25, maquete por cima de 'hq') | A casa é a região registrada; a sede é da casca; a maquete é papel registrado | Removido |
 | `menu31` `MenuCtx31.nav5` (Você → Casa) | Com a casca, a Casa é o botão de viagem | Removido (teste da CASA ajustado) |
 
+## 5. Pedidos do dono repassados pelo coordenador (durante a frente)
+
+| Pedido | Correção | Prova |
+|---|---|---|
+| Janela baixa (≈1574×674): barras de rolagem, cena cortada, topo/recados somem | A sede usa a largura toda e escala em quartos de pixel; Cidade e Mundo cabem na área da casca (mapa-múndi com a altura que sobra e o mundo inteiro à vista; mapa da cidade e da cidade visitada encolhem pela altura; listas laterais rolam por dentro com esmaecido); casa larga sem barra (cômodos viram páginas: botões do topo e setas ◂ ▸); recados viram aba recolhida ("Recados N ▸") quando cobririam a sede, com botão para abrir/recolher | `onda5-pol5-janela-sede-`, `-janela-regioes-antes-depois.png` |
+| Teste que falhe com rolagem horizontal | `scripts/r31/check-pol5-janela.mjs` (navegador): 1280×720, 1366×768, 1440×900, 1600×700, 1920×1080, 2560×1440 × sede/casa (inclusive a moradia mais larga)/cidade/mundo × 1985 e 2025: sem rolagem horizontal, topo e barra de viagem à vista, recados sem cobrir a sede. Antes: 5 falhas (casa larga); depois: 48/48 | — |
+| Mundo → cidade sem volta | Botão "◂ Mundo" no topo da cidade visitada; ⇧4 (viajar ao lugar em que já se está) sobe ao mapa; Esc/Backspace sobem um nível antes da pausa; vale também para a cidade da sede aberta a partir do mapa (`travel5go(r, 'scene')` guarda de onde se veio); API `UP5` na casca para qualquer região com níveis | `onda5-pol5-mundo-cidade-antes-depois.png` |
+| Clicar na cidade entrava direto | Cartão da cidade em papel de ficha pixel (país, público e mercado da época, gêneros em alta, casas, rádios, festivais, seus artistas e fãs lá, custo e dias de viagem) com "Ir para a cidade" (transição de viagem) e "Fechar"; o mesmo pelas cidades do painel do país. Teste `scripts/r31/check-pol5-mundo.mjs` (clique, ⇧4, Esc, cartão antes de entrar): 6/6 | idem |
+| "O fixar não está funcionando" | "+ fixar" sempre clicável: sem papel abre a gaveta com os objetos do lugar; com papel fixa ele; o "fixar no bolso" do cabeçalho avisa quando não dá; o bolso cabe em duas linhas (8 itens sem rolagem); cheio = aviso claro "O bolso está cheio (8)…". Todo papel (PAPEL, ELENCO, CASA) passa pela casca e registra `SH5.paper` (o desvio do ELENCO saiu). Teste `scripts/r31/check-pol5-bolso.mjs`: 12/12 (gaveta, cabeçalho em 3 frentes, abrir pelo bolso, ×, salvar/carregar, limite 8) | `onda5-pol5-bolso-antes-depois.png` |
+| Painel do prédio na cidade corta o texto | Painel com a altura da área útil, rolagem interna discreta com esmaecido (nunca corte seco); motivo do bloqueio junto do botão bloqueado (selo com cadeado), sem a lista solta no fim; "Abrir a tela ↗" vira "Abrir o papel do lugar ▸" (com exp5.nav; desligado = igual) | `onda5-pol5-cidade-painel-antes-depois.png` |
+| (dono, no chat) "não deixe todo esse espaço verde na frente" da casa | O chão na frente da casa saiu (tira de 10 px); a cena mostra o céu e o horizonte de verdade em cima | `onda5-pol5-casa-antes-depois.png` |
+
 ## Testes
 
+Navegador: `check-pol5-janela.mjs` 48/48, `check-pol5-mundo.mjs` 6/6, `check-pol5-bolso.mjs` 12/12, `audit-pol5.mjs` sem achado de contraste/corte/vazamento.
 `npx tsc --noEmit` limpo; `r31-nav5`, `r31-papel5`, `r31-elenco5`, `r31-casa5`, `r31-mapa5`, `r31-pol` verdes; goldens
 `r27-p2a`, `r27-p2b`, `r27-m3`, `r16-playbot` iguais. Ajustes de teste: `r31-elenco5` (ligado, o objeto abre pela casca
 `NAV5.open`, não pelo embrulho) e `r31-casa5` (sem o desvio do menu).

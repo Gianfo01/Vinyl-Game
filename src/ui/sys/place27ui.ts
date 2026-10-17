@@ -20,6 +20,7 @@ import { ic } from '../vis';
 import { go18 } from './inbox18';
 import './place27ui.css';
 import { insideView31 } from '../r31/inside31';
+import { nav5On } from '../../sim/r31/exp5';
 
 /** Ícone e cor por tipo de lugar. */
 export const PLACE_IC27: Record<PlaceK27, { ic: string; col: string }> = {
@@ -68,9 +69,13 @@ export function placePanel27(s: GameState, p: Place27, o: PlaceCtx27): HTMLEleme
   if (sel27.act && !mine.some((a) => a.id === sel27.act)) sel27.act = undefined;
   const acts = placeActs27(s, p, sel27.act);
   const needAct = acts.some((a) => a.act) && mine.length > 1;
-  const btn = (a: PAct27) => h('button', { type: 'button', class: `btn small c27-act ${a.dis ? 'ghost c27-dis' : a.go || a.lot ? 'ghost' : 'primary'}`, disabled: !!a.dis, 'aria-disabled': a.dis ? 'true' : undefined, title: t(a.dis ?? a.desc),
+  // R31 onda 5 (POL5, com exp5.nav): o motivo do bloqueio fica junto do botão (não numa lista solta no fim) e
+  // "Abrir a tela ↗" vira o papel do lugar (a casca abre a página como papel do objeto dono)
+  const n5 = nav5On(s);
+  const btn0 = (a: PAct27) => h('button', { type: 'button', class: `btn small c27-act ${a.dis ? 'ghost c27-dis' : a.go || a.lot ? 'ghost' : 'primary'}`, disabled: !!a.dis, 'aria-disabled': a.dis ? 'true' : undefined, title: t(a.dis ?? a.desc),
     onclick: () => runP27(s, p, a, o) },
-    h('span', { class: 'c27-al' }, t(a.label), a.go ? ' ↗' : null), a.cost !== undefined ? h('span', { class: 'c27-ac' }, $(a.cost)) : null);
+    h('span', { class: 'c27-al' }, n5 && a.id === 'go' ? t(l('Abrir o papel do lugar', 'Open the place\'s paper')) : t(a.label), a.go ? (n5 ? ' ▸' : ' ↗') : null), a.cost !== undefined ? h('span', { class: 'c27-ac' }, $(a.cost)) : null);
+  const btn = (a: PAct27) => (n5 && a.dis ? h('div', { class: 'c27-actw' }, btn0(a), h('small', { class: 'c27-why' }, ic('lock'), ' ', t(a.dis))) : btn0(a));
   return h('div', { class: 'c27-pn c2-pn' },
     h('header', { class: 'c27-ph' }, chip(p.k, p.ownerK === 'rival' ? 'nb' : ''), h('div', null, h('b', null, t(p.name)), h('small', { class: 'muted' }, `${t(p.what)}${p.sale !== undefined ? ` · ${t(l('à venda', 'for sale'))}` : ''}`)),
       h('button', { type: 'button', class: 'icon w19-x', 'aria-label': t(l('Fechar', 'Close')), onclick: o.close }, '✕')),
@@ -84,7 +89,7 @@ export function placePanel27(s: GameState, p: Place27, o: PlaceCtx27): HTMLEleme
     needAct ? h('label', { class: 'small c2-actsel' }, t(l('Artista: ', 'Act: ')), h('select', { onchange: (e: Event) => { sel27.act = (e.target as HTMLSelectElement).value; rerender(); } },
       mine.map((a) => h('option', { value: a.id, selected: (sel27.act ?? mine[0].id) === a.id ? true : undefined }, a.name)))) : null,
     acts.length ? h('div', { class: 'w19-acts c2-acts' }, acts.map(btn)) : null,
-    acts.some((a) => a.dis) ? h('ul', { class: 'w19-notes small muted' }, acts.filter((a) => a.dis).map((a) => h('li', null, `${t(a.label)}: ${t(a.dis!)}`))) : null,
+    !n5 && acts.some((a) => a.dis) ? h('ul', { class: 'w19-notes small muted' }, acts.filter((a) => a.dis).map((a) => h('li', null, `${t(a.label)}: ${t(a.dis!)}`))) : null,
     o.more ? h('details', { class: 'c27-more' }, h('summary', null, t(l('Mais opções (comprar o imóvel…)', 'More options (buy the property…)'))), o.more) : null);
 }
 

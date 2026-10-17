@@ -426,6 +426,8 @@ export class WorldMap {
   // ------------------------------------------------------------ viewport
 
   private kMin(): number {
+    // na casca da onda 5 o mundo inteiro cabe no palco (janela baixa não corta a Europa); fora dela, enche o palco
+    if (this.stage?.classList.contains('wmap-fit5')) return Math.min(this.w / WORLD_W, this.hgt / WORLD_H);
     return Math.max(this.w / WORLD_W, this.hgt / WORLD_H);
   }
   private clampK(k: number): number {
@@ -444,7 +446,9 @@ export class WorldMap {
     if (this.destroyed) return;
     const cw = Math.round(this.stage.clientWidth);
     if (!cw) return;
-    const ch = Math.round(Math.max(240, Math.min(cw * (WORLD_H / WORLD_W), window.innerHeight * 0.72)));
+    // na casca da onda 5 (exp5.nav) o palco tem a altura que sobra na tela: o mapa se ajusta a ela, sem rolar a região
+    const fit = this.stage.classList.contains('wmap-fit5') ? Math.round(this.stage.clientHeight) : 0;
+    const ch = fit > 120 ? fit : Math.round(Math.max(240, Math.min(cw * (WORLD_H / WORLD_W), window.innerHeight * 0.72)));
     const dpr = window.devicePixelRatio || 1;
     if (cw === this.w && ch === this.hgt && dpr === this.dpr) return;
     const first = this.w === 0;

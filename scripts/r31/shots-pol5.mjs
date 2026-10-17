@@ -12,7 +12,8 @@ const p = await b.newPage({ viewport: { width: 1440, height: 900 }, locale: 'pt-
 p.on('pageerror', (e) => console.error('PAGEERR', e.message));
 await p.goto(`http://127.0.0.1:${port}/`); await p.waitForTimeout(3000);
 p.setDefaultTimeout(120000);
-const start = (y, sc, hq, months = 2) => p.evaluate(async ([y, sc, hq, months]) => {
+const vp = (w, hh) => p.setViewportSize({ width: w, height: hh });
+const start = (y, sc, hq, months = 2, house) => p.evaluate(async ([y, sc, hq, months, house]) => {
   const wg = await import('/src/sim/worldgen.ts'); const botc = await import('/src/sim/bot.ts');
   const st = await import('/src/ui/store.ts'); const tick = await import('/src/sim/tick.ts');
   const bot = await import('/src/sim/playbot16.ts'); const sw = await import('/src/sim/r31/switches.ts');
@@ -23,11 +24,13 @@ const start = (y, sc, hq, months = 2) => p.evaluate(async ([y, sc, hq, months]) 
   off.setTutorials19(st.store.prefs, false);
   for (let i = 0; i < months; i++) { bot.playMonth(g, 'balanced'); tick.advanceMonth(g); }
   if (hq) g.player.hq = hq;
+  if (house) { const ow = await import('/src/sim/sys/people/owner.ts'); ow.ownerOf(g).house = ow.HOUSES.findIndex((x) => x.id === house); }
   sw.setSw(g, 'exp5.nav', true);
   Object.assign(sh.SH5, { region: 'sede', paper: null, pause: false, help: false });
+  document.querySelectorAll('.m5-ccard').forEach((e) => e.remove());
   st.store.game = g; c.rerender();
   document.querySelectorAll('.overlay').forEach((e) => e.remove());
-}, [y, sc, hq, months]);
+}, [y, sc, hq, months, house]);
 const shot = async (name, wait = 1300) => { await p.waitForTimeout(wait); await p.evaluate(() => document.querySelectorAll('.overlay, .toast').forEach((e) => e.remove())); await p.mouse.move(2, 890); await p.screenshot({ path: `${out}/${name}.png` }); console.log('captura', name); };
 const keys = async (...ks) => { for (const k of ks) { await p.keyboard.press(k); await p.waitForTimeout(500); } };
 const SC = {
@@ -55,6 +58,15 @@ const SC = {
   'papel-antigo-cofrecasa-1985': async () => { await start(1985, 'established', 3); await keys('x'); },
   'fichario-2025': async () => { await start(2025, 'established', 4); await keys('a'); },
   'mapa-marcador-2025': async () => { await start(2025, 'established', 4); await keys('w'); },
+  // pedidos do dono repassados pelo coordenador (janela baixa, mundo → cidade, bolso, painel do prédio)
+  'janela-sede-1574x674': async () => { await vp(1574, 674); await start(1962, 'established', 2); },
+  'janela-sede-1280x720': async () => { await vp(1280, 720); await start(1985, 'established', 3); },
+  'janela-casa-larga-1280x720': async () => { await vp(1280, 720); await start(2025, 'established', 4, 2, 'ranch'); await keys('Shift+Digit2'); },
+  'janela-mundo-1600x700': async () => { await vp(1600, 700); await start(1985, 'established', 3); await keys('Shift+Digit4'); },
+  'janela-cidade-predio-1600x700': async () => { await vp(1600, 700); await start(1975, 'established', 2); await keys('Shift+Digit3'); await p.waitForTimeout(1200); await p.evaluate(() => document.querySelector('.w19-hs[data-id="pl:lon_bbc_radio"]')?.click()); },
+  'mundo-clique-na-cidade': async () => { await vp(1440, 900); await start(1975, 'established', 2); await keys('Shift+Digit4'); await p.waitForTimeout(1200); await p.evaluate(async () => { const m = await import('/src/ui/r31/map5ui.ts'); const st = await import('/src/ui/store.ts'); m.pointWorld5(st.store.game, 'FRA'); }); await p.waitForTimeout(1200); await p.locator('.m5-cbtn:not(.primary)').first().click(); },
+  'mundo-cidade-visitada': async () => { await vp(1440, 900); await start(1975, 'established', 2); await keys('Shift+Digit4'); await p.waitForTimeout(1200); await p.evaluate(async () => { const m = await import('/src/ui/r31/map5ui.ts'); const st = await import('/src/ui/store.ts'); m.pointWorld5(st.store.game, 'FRA'); }); await p.waitForTimeout(1200); await p.locator('.m5-cbtn:not(.primary)').first().click(); await p.waitForTimeout(700); if (await p.locator('.m5-cc-go').count()) await p.locator('.m5-cc-go').click(); },
+  'bolso-fixar-sem-papel': async () => { await vp(1440, 900); await start(1962, 'established', 2); await p.locator('.b5-pin').click({ force: true }).catch(() => {}); },
 };
 for (const [k, f] of Object.entries(SC)) { if (only && !only.includes(k)) continue; await f(); await shot(k); }
 await b.close();
