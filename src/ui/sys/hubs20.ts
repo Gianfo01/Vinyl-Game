@@ -68,7 +68,7 @@ const intro = (txt: L) => h('p', { class: 'muted small hub20-intro' }, T(txt));
 export const SHOWS_TABS20: Record<'tours' | 'ops' | 'biz', string[]> = {
   tours: ['route8'],
   ops: ['live18-pm', 'live18-pol', 'live-notes', 'live-tickets'],
-  biz: ['live-festival', 'live18-fest', 'live-venue', 'live-venue12', 'live-residency', 'live-mega'],
+  biz: ['fest33-open', 'live-festival', 'live18-fest', 'live-venue', 'live-venue12', 'live-residency', 'live-mega'],
 };
 const CLAIMED_SHOWS = Object.values(SHOWS_TABS20).flat();
 

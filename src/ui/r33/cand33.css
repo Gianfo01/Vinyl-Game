@@ -1,0 +1,60 @@
+/* R33 · POL33-A item 6 — tela de ESCOLHER CANDIDATO (diretor de filial, CEO, equipe pessoal) no papel da casca:
+   pasta de aço sobre a mesa de madeira, papel creme com foto presa, títulos pontilhados, barras, carimbos inclinados,
+   recortes de jornal, e o cartão de ações numerado ao lado. Pixel art: bordas duras, sombras em degrau, sem cantos redondos. */
+.c33 { position: fixed; inset: 0; z-index: 90; overflow: auto; background: #3a2616 repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 3px, transparent 3px 22px); color: #1c1612; font: 14px var(--sans); }
+.c33-wrap { position: relative; max-width: 1480px; margin: 0 auto; padding: 18px 18px 28px; box-sizing: border-box; min-height: 100%; }
+.c33-plate { display: inline-flex; flex-direction: column; gap: 3px; padding: 6px 12px; background: #fffdf6; border: 3px solid #170e12; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4); }
+.c33-plate b { font: 700 18px var(--pixel); letter-spacing: 0.18em; text-transform: uppercase; }
+.c33-plate small { font: 700 10px var(--pixel); letter-spacing: 0.12em; text-transform: uppercase; color: #5a4a3a; }
+.c33-close { position: absolute; right: 18px; top: 18px; color: #1c1612; background: #fffdf6; border: 2px solid #170e12; padding: 3px 10px; font: 13px var(--sans); cursor: pointer; box-shadow: 2px 2px 0 #170e12; }
+.c33-close kbd { font: 700 10px var(--pixel); background: #2a3a5a; color: #fff; padding: 1px 5px; margin-right: 4px; }
+.c33-close:hover, .c33-close:focus-visible { background: #f0c060; outline: none; }
+.c33-body { display: grid; grid-template-columns: 236px minmax(0, 1fr) 300px; gap: 16px; margin-top: 14px; align-items: start; }
+@media (max-width: 1100px) { .c33-body { grid-template-columns: 1fr; } }
+/* índice: uma ficha por candidato */
+.c33-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.c33-it { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 52px 1fr; gap: 8px; width: 100%; padding: 6px; cursor: pointer; background: #d8c49a; border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4); }
+.c33-it:hover, .c33-it:focus-visible { background: #e8d4a8; }
+.c33-it[aria-selected='true'] { background: #f0c060; transform: translateX(8px); }
+.c33-it canvas { width: 52px; height: 52px; image-rendering: pixelated; background: #2a2236; border: 2px solid #170e12; }
+.c33-it b { display: block; font: 700 13px var(--sans); line-height: 1.15; }
+.c33-it small { display: block; font-size: 11px; color: #4a3a2a; margin-top: 2px; }
+.c33-it i { font-style: normal; font: 700 10px var(--pixel); letter-spacing: 0.06em; color: #7a2a1a; }
+/* o papel */
+.c33-paper { position: relative; background: #f0dca8; border: 4px solid #170e12; box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.4); padding: 14px; min-height: 520px; }
+.c33-paper::before { content: ''; position: absolute; inset: 8px; border: 2px solid #b89860; pointer-events: none; }
+.c33-sheet { position: relative; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 22px; padding: 20px 22px; }
+@media (max-width: 760px) { .c33-sheet { grid-template-columns: 1fr; } }
+.c33-pol { position: relative; width: 206px; padding: 10px 10px 34px; background: #fffdf6; border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3); transform: rotate(-2deg); }
+.c33-pol::before { content: ''; position: absolute; left: 80px; top: -10px; width: 44px; height: 16px; background: #b8bcc4; border: 2px solid #170e12; }
+.c33-pol canvas { display: block; width: 186px; height: 186px; image-rendering: pixelated; background: #2a2236; border: 2px solid #170e12; }
+.c33-pol span { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font: 700 15px Georgia, 'Iowan Old Style', serif; }
+.c33-stamps { display: flex; flex-wrap: wrap; gap: 8px 6px; margin-top: 16px; }
+.c33-st { font: 700 10px var(--pixel); letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; border: 3px solid currentColor; background: #fffdf6; transform: rotate(-3deg); }
+.c33-st.g { color: #2a7a3a; } .c33-st.r { color: #b02a22; transform: rotate(2deg); } .c33-st.b { color: #2a4a9a; } .c33-st.y { color: #8a6a10; transform: rotate(-1deg); }
+.c33-name { margin: 0; font: 700 34px/1.05 Georgia, 'Iowan Old Style', serif; color: #2a1c10; }
+.c33-sub { margin: 4px 0 14px; color: #5a4a3a; font-size: 14px; }
+.c33-h { margin: 14px 0 6px; padding-bottom: 4px; font: 700 11px var(--pixel); letter-spacing: 0.16em; text-transform: uppercase; border-bottom: 2px dotted #8a6a40; }
+.c33-rows { display: grid; gap: 6px; }
+.c33-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; align-items: center; gap: 8px; font-size: 13px; color: #4a3a2a; }
+.c33-row em { font: 700 12px var(--mono, monospace); font-style: normal; text-align: right; color: #1c1612; }
+.c33-bar { height: 12px; background: #fffdf6; border: 2px solid #170e12; }
+.c33-bar > i { display: block; height: 100%; background: #4a9a3a; }
+.c33-bar.y > i { background: #d8a030; } .c33-bar.b > i { background: #3a6ac8; } .c33-bar.r > i { background: #c0402c; }
+.c33-clip { margin: 10px 0 0; padding: 8px 12px; background: #fffdf6; border: 1px solid #c8b898; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25); transform: rotate(-0.6deg); max-width: 520px; }
+.c33-clip small { display: block; font: 700 9px var(--pixel); letter-spacing: 0.1em; text-transform: uppercase; color: #6a5a4a; margin-bottom: 3px; }
+.c33-clip p { margin: 0; font: 15px/1.3 Georgia, 'Iowan Old Style', serif; }
+.c33-empty { padding: 40px; text-align: center; color: #5a4a3a; font: 15px Georgia, serif; }
+/* cartão de ações numerado (igual ao do jogo) */
+.c33-card { padding: 8px 10px 10px; background: #f6efdc; border: 2px solid #170e12; box-shadow: 0 0 0 2px #f6efdc, 0 0 0 4px #170e12, 6px 6px 0 4px rgba(0, 0, 0, 0.35); }
+.c33-card > b { display: block; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 2px dashed #c8b898; font: 700 14px var(--sans); }
+.c33-acts { display: grid; gap: 5px; }
+.c33-a { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; text-align: left; padding: 5px 6px; border: 2px solid #170e12; background: #fffdf6; color: #1c1612; font: 13px var(--sans); cursor: pointer; box-shadow: 2px 2px 0 #170e12; }
+.c33-a:hover, .c33-a:focus-visible { background: #f0c060; outline: none; }
+.c33-a.first { background: #fbe9a8; }
+.c33-a[disabled] { opacity: 0.7; cursor: not-allowed; border-style: dashed; box-shadow: none; }
+.c33-a kbd { min-width: 16px; padding: 0 4px; border: 1px solid #170e12; background: #fffdf6; box-shadow: 1px 1px 0 #170e12; font: 700 11px/15px var(--mono, monospace); text-align: center; }
+.c33-why { margin: 0 0 2px 4px; font-size: 11px; color: #7a3a2a; }
+.c33-how { margin-top: 16px; padding: 10px 12px; background: #c8dcf2; border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3); font-size: 12.5px; }
+.c33-how b { display: block; margin-bottom: 4px; font: 700 10px var(--pixel); letter-spacing: 0.14em; text-transform: uppercase; }
+@media (prefers-reduced-motion: no-preference) { .c33-it { transition: transform 0.08s steps(2); } }

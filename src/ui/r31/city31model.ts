@@ -11,6 +11,7 @@ import { LOTS18, type BKind } from '../../sim/sys/campus18';
 import type { Place27 } from '../../sim/sys/place27';
 import type { GameState } from '../../sim/types';
 import type { Extra31 } from '../pixel/campus18px';
+import { boards33, outOn, style33 } from '../../sim/r33/outdoor33'; // R33 (POL33-A): outdoors espalhados, aluguel e compra (exp33.pol.outdoors)
 
 export const FEST_ID31 = 'fx31';
 
@@ -56,7 +57,8 @@ export interface CityOv31 {
   neon: { k: 'none' | 'neon' | 'led'; f: number };
   neons: { sprite: string; k: number }[];
   boardStyle: Board31Style;
-  boards: (Billboard31 & { sprite: string; rank: number; /** POL2: marca curta no painel (N1, NOVO, TURNÊ, HOT) */ tagTxt: string; cover?: HTMLCanvasElement })[];
+  boards: (Billboard31 & { sprite: string; rank: number; /** POL2: marca curta no painel (N1, NOVO, TURNÊ, HOT) */ tagTxt: string; cover?: HTMLCanvasElement;
+    /** R33 (POL33-A): ponto do outdoor (aluguel/compra), ponto livre, cor da marca, ponto seu */ site?: string; vacant?: boolean; col?: string; own?: boolean })[];
   fest?: { sprite: string; name: string; acts: string[] };
   tags: { sprite: string; text: string; real?: boolean; /** POL2: rádio/TV real — letreiro sempre visível, em qualquer zoom */ media?: boolean; mark?: 'open' | 'closed'; markTxt: string }[];
 }
@@ -87,9 +89,10 @@ export function cityOv31(s: GameState, x: CityX31, places: Place27[], sprites: {
   const tall = sprites.filter((sp) => sp.id.startsWith('fl:') && sp.kind !== 'fest' && sp.kind !== 'park').sort((a, b) => a.top - b.top || (a.id < b.id ? -1 : 1));
   const bb = billboards31(s);
   const TAG: Record<string, [string, string]> = { chart: ['N1', 'N1'], hot: ['HOT', 'HOT'], release: ['NOVO', 'NEW'], paid: ['NOVO', 'NEW'], tour: ['TOUR', 'TOUR'] };
-  const boards = bb.slice(0, Math.min(bb.length, tall.length)).map((b, i) => ({ ...b, sprite: tall[i].id, rank: 1, tagTxt: TAG[b.kind ?? 'chart'][pt ? 0 : 1] }));
+  let boards: CityOv31['boards'] = bb.slice(0, Math.min(bb.length, tall.length)).map((b, i) => ({ ...b, sprite: tall[i].id, rank: 1, tagTxt: TAG[b.kind ?? 'chart'][pt ? 0 : 1] }));
+  if (outOn(s)) boards = boards33(s, new Set(sprites.map((q) => q.id))).map((b, i) => ({ relId: b.relId, title: b.title, act: b.act, label: b.label, mine: b.mine, kind: b.kind === 'brand' ? undefined : b.kind, actId: b.actId, sprite: b.sprite, rank: i, tagTxt: b.tag[pt ? 0 : 1], site: b.site, vacant: b.vacant, col: b.col, own: b.own })); // R33 (POL33-A)
   const fs = x.extra.find((e) => e.kind === 'fest');
-  return { labels, neon: nn, neons: nn.f > 0 ? neons : [], boardStyle: boardStyle31(year), boards, tags,
+  return { labels, neon: nn, neons: nn.f > 0 ? neons : [], boardStyle: outOn(s) ? style33(year) : boardStyle31(year), boards, tags,
     fest: fs && x.festName ? { sprite: `fl:${fs.id}`, name: x.festName, acts: fest31(s)?.acts ?? [] } : undefined };
 }
 /** Texto curto para leitores de tela e para o painel do festival. */

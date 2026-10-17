@@ -39,24 +39,24 @@ const W = (f: number): number => G.Wd(f);
 
 // ---------------------------------------------------------------- peças novas (na camada de adereços: o contorno INK vem da casca)
 
-const post = (p: Px, x: number, y: number, h: number, c: Col): void => { p.rect(x, y, 2, h, c); p.vline(x, y, y + h - 1, lv(c, 4)); };
+export const post = (p: Px, x: number, y: number, h: number, c: Col): void => { p.rect(x, y, 2, h, c); p.vline(x, y, y + h - 1, lv(c, 4)); };
 function clock(g: Ctx27, cx: number, cy: number, r = 6): void { const { p, pal } = g; p.disc(cx, cy, r, pal.metal); p.disc(cx, cy, r - 2, C('#efe6cc')); p.line(cx, cy, cx, cy - r + 3, INK); p.line(cx, cy, cx + r - 3, cy + 1, INK); }
-function sign(g: Ctx27, cx: number, y: number, text: string, bg: Col, fg: Col): void { const { p } = g, w = textWidth(text) + 6; B(p, cx - (w >> 1), y, w, 9, bg); drawText(p, text, cx - (w >> 1) + 3, y + 2, fg); }
+export function sign(g: Ctx27, cx: number, y: number, text: string, bg: Col, fg: Col): void { const { p } = g, w = textWidth(text) + 6; B(p, cx - (w >> 1), y, w, 9, bg); drawText(p, text, cx - (w >> 1) + 3, y + 2, fg); }
 function glowRect(g: Ctx27, x: number, y: number, w: number, h: number, c: Col, a = 60): void { g.p.rect(x - 1, y - 1, w + 2, h + 2, withAlpha(c, 26)); g.p.rect(x, y, w, h, withAlpha(c, a)); }
 function bed(g: Ctx27, x: number, fy: number, sheet: Col): void { const { p, pal } = g; B(p, x, fy - 9, 34, 4, pal.metal); B(p, x + 1, fy - 14, 32, 6, C('#e8eef0')); B(p, x + 1, fy - 17, 9, 4, C('#f6f8f8')); p.rect(x + 12, fy - 14, 20, 3, sheet); p.rect(x + 2, fy - 5, 2, 5, pal.metalDark); p.rect(x + 30, fy - 5, 2, 5, pal.metalDark); }
 function trainCar(g: Ctx27, x: number, y: number, w: number, body: Col, stripe: Col): void { const { p, pal } = g; B(p, x, y, w, 30, body); for (let i = 0; i < Math.floor((w - 8) / 20); i++) B(p, x + 6 + i * 20, y + 5, 14, 11, C('#a8d8f0')); p.rect(x, y + 20, w, 3, stripe); p.disc(x + 14, y + 31, 4, pal.metalDark); p.disc(x + w - 14, y + 31, 4, pal.metalDark); }
-function tent(g: Ctx27, x: number, y: number, w: number, c: Col, label: string): void { const { p, pal } = g; p.poly([[x, y], [x + w, y], [x + w + 4, y + 9], [x - 4, y + 9]], c); for (let i = 0; i < Math.floor(w / 6); i++) p.rect(x - 4 + i * 6 + 2, y + 1, 3, 8, C('#f4f0e4')); post(p, x, y + 9, 22, pal.woodDark); post(p, x + w - 2, y + 9, 22, pal.woodDark); B(p, x, y + 22, w, 8, pal.wood); sign(g, x + (w >> 1), y - 11, label, tint(c, -0.25), C('#ffffff')); }
+export function tent(g: Ctx27, x: number, y: number, w: number, c: Col, label: string): void { const { p, pal } = g; p.poly([[x, y], [x + w, y], [x + w + 4, y + 9], [x - 4, y + 9]], c); for (let i = 0; i < Math.floor(w / 6); i++) p.rect(x - 4 + i * 6 + 2, y + 1, 3, 8, C('#f4f0e4')); post(p, x, y + 9, 22, pal.woodDark); post(p, x + w - 2, y + 9, 22, pal.woodDark); B(p, x, y + 22, w, 8, pal.wood); sign(g, x + (w >> 1), y - 11, label, tint(c, -0.25), C('#ffffff')); }
 function cabinet(g: Ctx27, x: number, fy: number, w: number, h: number, c: Col): void { const { p } = g; B(p, x, fy - h, w, h, c); p.vline(x + (w >> 1), fy - h + 2, fy - 2, tint(c, -0.3)); p.rect(x + (w >> 1) - 2, fy - (h >> 1), 1, 3, C('#d8d0b8')); p.rect(x + (w >> 1) + 1, fy - (h >> 1), 1, 3, C('#d8d0b8')); }
 /** Telão/LED: grade de painéis acesos (a luz em volta fica na própria camada, sem contorno extra). */
-function ledWall(g: Ctx27, x: number, y: number, w: number, h: number, a: Col, b: Col): void { const { p } = g; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) p.put(x + i, y + j, i % 8 === 7 || j % 8 === 7 ? C('#14142a') : ((i >> 3) + (j >> 3)) % 2 ? lv(a, 3) : lv(b, 3)); glowRect(g, x, y, w, h, a, 18); }
+export function ledWall(g: Ctx27, x: number, y: number, w: number, h: number, a: Col, b: Col): void { const { p } = g; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) p.put(x + i, y + j, i % 8 === 7 || j % 8 === 7 ? C('#14142a') : ((i >> 3) + (j >> 3)) % 2 ? lv(a, 3) : lv(b, 3)); glowRect(g, x, y, w, h, a, 18); }
 /** Pano de fundo ao ar livre: céu, colinas e campo cobrindo a sala toda. */
 function outdoor(g: Ctx27, o: { sky?: Col; field?: Col; horizon?: number; hills?: Col } = {}): void {
   const { p, pal } = g, hz = o.horizon ?? RY + 50, sky = o.sky ?? pal.sky, field = o.field ?? C('#4a8a3a');
   for (let y = RY; y < RB; y++) for (let x = RX; x < RX + RW; x++) p.put(x, y, y < hz ? lv(sky, 3.5 - (y - RY) / 90) : lv(field, 2.7 + ((x >> 4) % 2) * 0.28 + (y - hz) / 70));
   if (o.hills !== undefined) for (let x = RX; x < RX + RW; x++) { const h = hz - 10 + Math.round(Math.sin(x / 38) * 4 + Math.sin(x / 13) * 2); for (let y = h; y < hz; y++) p.put(x, y, lv(o.hills, 2.4 - (y - h) / 30)); }
 }
-function treeLine(g: Ctx27, y: number, step = 23): void { const { p, pal } = g; for (let x = RX + 4; x < RX + RW - 6; x += step) { const k = x % 3; p.rect(x + 3, y, 3, 14, pal.woodDark); p.disc(x + 4.5, y - 3, 7, lv(C('#3f7a3a'), 2.8 + k * 0.3)); } }
-function bunting(g: Ctx27, y: number): void { const { p } = g; for (let x = RX; x < RX + RW; x += 12) p.rect(x, y + Math.round(Math.sin(x / 30) * 2), 6, 7, [C('#d8483a'), C('#e0b040'), C('#2a8a4a'), C('#3a6ac8'), C('#c070a0')][((x - RX) / 12) % 5 | 0]); }
+export function treeLine(g: Ctx27, y: number, step = 23): void { const { p, pal } = g; for (let x = RX + 4; x < RX + RW - 6; x += step) { const k = x % 3; p.rect(x + 3, y, 3, 14, pal.woodDark); p.disc(x + 4.5, y - 3, 7, lv(C('#3f7a3a'), 2.8 + k * 0.3)); } }
+export function bunting(g: Ctx27, y: number): void { const { p } = g; for (let x = RX; x < RX + RW; x += 12) p.rect(x, y + Math.round(Math.sin(x / 30) * 2), 6, 7, [C('#d8483a'), C('#e0b040'), C('#2a8a4a'), C('#3a6ac8'), C('#c070a0')][((x - RX) / 12) % 5 | 0]); }
 
 // ---------------------------------------------------------------- os 15 lugares
 

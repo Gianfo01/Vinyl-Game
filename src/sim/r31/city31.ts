@@ -218,7 +218,7 @@ export const festLot31 = (fillers: number[]): number | undefined => { const sz =
 
 // ---------------------------------------------------------------- outdoors e neon
 
-export type Board31Style = 'painted' | 'neon' | 'backlit' | 'led';
+export type Board31Style = 'painted' | 'neon' | 'backlit' | 'led' | 'paste' | 'lit' | 'holo'; // r33 (POL): paste, lit e holo só com exp33.pol.outdoors
 export const boardStyle31 = (y: number): Board31Style => (y < 1950 ? 'painted' : y < 1990 ? 'neon' : y < 2000 ? 'backlit' : 'led');
 /** `kind` (R31 POL2): chart = nº 1 de uma parada (capa do disco); paid = seu lançamento em campanha; release = lançamento
  *  recente de rival/seu; hot = artista em alta (retrato); tour = turnê com show marcado na sua cidade (retrato). Todo
