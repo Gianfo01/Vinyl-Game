@@ -63,3 +63,21 @@ describe('QA33 · desafios de fim de carreira cumprem o texto', () => {
     expect(ok(s, e)).toBe(true);
   });
 });
+
+describe('QA33 · degraus também por desempenho (não só por escala)', () => {
+  it('gravadora pequena chega a major pelos sucessos; empresário com poucos clientes grandes sobe', async () => {
+    const { tierOf31, progView31 } = await import('../src/sim/sys/car31prog');
+    const s = game();
+    expect(tierOf31(s, 'label')).toBe(0);
+    s.player.stats.number1s = 12; // 12 nº 1 com um elenco pequeno
+    expect(tierOf31(s, 'label')).toBe(2);
+    const [a, b] = actIds(s, 2);
+    s.acts[a].fame = 80; s.acts[b].fame = 80;
+    ventures(s).mg.clients = [a, b].map((actId) => ({ actId }) as never); // 2 clientes (a escala pede 3 e 6)
+    expect(tierOf31(s, 'manager')).toBe(1); // fama somada 160 ≥ 150
+    expect(progView31(s, 'manager').next?.pt).toMatch(/6 clientes.*ou clientes somando fama 320/);
+  });
+  it('todo caminho alternativo tem o mesmo número de degraus da escala', () => {
+    for (const [c, d] of Object.entries(DEF31)) if (d.alt) { expect(d.alt.at.length, c).toBe(d.at.length); expect(d.alt.goal.length, c).toBe(d.goal.length); }
+  });
+});

@@ -49,6 +49,8 @@ export interface Def31 {
   goal: L[];
   /** tensão central (RN-22) */
   tension: L;
+  /** QA33: caminho EQUIVALENTE por desempenho/especialização (crescer não é só ter mais): o degrau sobe pelo que for maior */
+  alt?: { score: (s: GameState) => number; at: number[]; goal: L[] };
   end: {
     name: L; desc: L; metric: (s: GameState) => number; shock: (s: GameState) => void;
     /** QA33: `e` traz a fotografia do início (`keep`: quem tinha de continuar) e a semana de início (`w0`) */
@@ -66,6 +68,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Selo pequeno', 'Small label'), l('Independente forte', 'Strong indie'), l('Major', 'Major')], at: [0, 6, 14],
     score: (s) => playerActs(s).length,
     goal: [l('', ''), l('Ter 6 artistas no elenco', 'Have 6 acts on the roster'), l('Ter 14 artistas no elenco', 'Have 14 acts on the roster')],
+    alt: { score: (s) => s.player.stats.number1s + Object.values(s.releases).filter((r) => r.owner === 'player' && r.peak > 0 && r.peak <= 10).length, at: [0, 4, 12],
+      goal: [l('', ''), l('ou 4 sucessos no top 10 (catálogo influente)', 'or 4 top-10 hits (influential catalog)'), l('ou 12 sucessos no top 10', 'or 12 top-10 hits')] },
     tension: l('Arte × mercado: o disco que você ama ou o que vende.', 'Art × market: the record you love or the one that sells.'),
     end: { name: l('Segurar as estrelas', 'Keep the stars'), desc: l('Rivais atacam o seu elenco e o formato muda: o embalo cai. Termine o ano com tantos artistas fortes quanto tem hoje.', 'Rivals go after your roster and the format shifts: momentum drops. End the year with as many strong acts as you have today.'),
       metric: (s) => playerActs(s).filter((id) => (s.acts[id]?.fame ?? 0) >= 50).length,
@@ -85,6 +89,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Um cliente', 'One client'), l('Escritório', 'Office'), l('Agência com vários empresários', 'Agency with several managers')], at: [0, 3, 6],
     score: (s) => mg(s).clients.length,
     goal: [l('', ''), l('Representar 3 clientes', 'Represent 3 clients'), l('Representar 6 clientes', 'Represent 6 clients')],
+    alt: { score: (s) => mg(s).clients.reduce((t, c) => t + (s.acts[c.actId]?.fame ?? 0), 0), at: [0, 150, 320],
+      goal: [l('', ''), l('ou clientes somando fama 150 (poucos e grandes)', 'or clients adding up to 150 fame (few and big)'), l('ou clientes somando fama 320', 'or clients adding up to 320 fame')] },
     tension: l('O interesse do cliente × o seu: comissão, agenda e lealdade.', 'Client\'s interest × yours: commission, schedule and loyalty.'),
     end: { name: l('Clientes disputando a mesma vaga', 'Clients fighting for the same slot'), desc: l('O cliente menos satisfeito recebe proposta de um empresário rival. Não perca ninguém em 12 meses.', 'Your least satisfied client gets an offer from a rival manager. Lose no one in 12 months.'),
       metric: (s) => mg(s).clients.length,
@@ -98,6 +104,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Rotas regionais', 'Regional routes'), l('Rotas nacionais', 'National routes'), l('Rotas mundiais', 'World routes')], at: [0, 3, 6],
     score: (s) => vk(s, 'booking').reduce((t, v) => t + (v.clients?.length ?? 0), 0) + new Set(Object.values(((x4(s).car31x as { tgt?: Record<string, string> } | undefined)?.tgt) ?? {})).size,
     goal: [l('', ''), l('Clientes e mercados-alvo somando 3', 'Clients and target markets adding up to 3'), l('Clientes e mercados-alvo somando 6', 'Clients and target markets adding up to 6')],
+    alt: { score: (s) => vk(s, 'booking').reduce((t, v) => t + (v.clients ?? []).reduce((u, c) => u + (s.acts[c.actId]?.fame ?? 0), 0), 0), at: [0, 150, 320],
+      goal: [l('', ''), l('ou clientes somando fama 150', 'or clients adding up to 150 fame'), l('ou clientes somando fama 320', 'or clients adding up to 320 fame')] },
     tension: l('Encher a agenda × cansar o artista; casa cheia × cambismo.', 'Fill the schedule × wear out the act; full rooms × scalping.'),
     end: { name: l('A promotora gigante', 'The giant promoter'), desc: l('Uma promotora gigante fecha casas exclusivas: sua agência perde prestígio. Mantenha todos os clientes em 12 meses.', 'A giant promoter locks venues into exclusives: your agency loses standing. Keep every client for 12 months.'),
       metric: (s) => vk(s, 'booking').reduce((t, v) => t + (v.clients?.length ?? 0), 0), shock: (s) => { for (const v of vk(s, 'booking')) v.rep = clamp(v.rep - 10, 0, 100); },
@@ -118,6 +126,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Festival de bairro', 'Neighbourhood festival'), l('Festival nacional', 'National festival'), l('Festival lendário', 'Legendary festival')], at: [0, 20000, 60000],
     score: (s) => { let m = 0; for (const v of vk(s, 'festival')) for (const e of v.editions ?? []) m = Math.max(m, e.crowd + (e.verdict === 'legend' ? 60000 : 0)); return m; },
     goal: [l('', ''), l('Uma edição com 20 mil pessoas', 'An edition with 20,000 people'), l('Uma edição lendária (ou 60 mil pessoas)', 'A legendary edition (or 60,000 people)')],
+    alt: { score: (s) => Math.max(0, ...vk(s, 'festival').flatMap((v) => (v.editions ?? []).filter((e) => e.verdict !== 'disaster').map((e) => e.rating ?? 0))), at: [0, 70, 85],
+      goal: [l('', ''), l('ou uma edição com nota 70 (pequeno e respeitado)', 'or an edition rated 70 (small and respected)'), l('ou uma edição com nota 85', 'or an edition rated 85')] },
     tension: l('Headliner caro vende ingresso; revelação barata dá prestígio e arrisca a procura.', 'An expensive headliner sells tickets; a cheap breakout brings prestige and risks demand.'),
     end: { name: l('A edição que dá errado', 'The edition that goes wrong'), desc: l('Clima, segurança e um line-up disputado: faça a próxima edição sem desastre e com nota 60 ou mais.', 'Weather, security and a contested line-up: run the next edition with no disaster and a rating of 60 or more.'),
       metric: (s) => s.year, shock: () => {},
@@ -139,6 +149,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Poucos compositores', 'A few writers'), l('Catálogo grande', 'Big catalog'), l('Comprador de catálogos históricos', 'Buyer of historic catalogs')], at: [0, 15, 40],
     score: (s) => vk(s, 'publisher').reduce((t, v) => t + (v.cat?.length ?? 0), 0),
     goal: [l('', ''), l('15 obras no catálogo', '15 works in the catalog'), l('40 obras no catálogo', '40 works in the catalog')],
+    alt: { score: (s) => vk(s, 'publisher').reduce((t, v) => t + ((v.cat ?? []) as { actId?: string }[]).filter((c) => (s.acts[c.actId ?? '']?.fame ?? 0) >= 60).length, 0), at: [0, 4, 10],
+      goal: [l('', ''), l('ou 4 obras gravadas por nomes de fama 60+', 'or 4 works recorded by names with fame 60+'), l('ou 10 obras com nomes de fama 60+', 'or 10 works with names of fame 60+')] },
     tension: l('Dar a canção a um nome grande (vende, pode estragar) × a um novo (arrisca, cria parceiro).', 'Give the song to a big name (sells, may ruin it) × to a newcomer (risky, builds a partner).'),
     end: { name: l('Disputa de direitos', 'Rights dispute'), desc: l('Um herdeiro contesta autorias e o catálogo envelhece. Cresça o catálogo em 5 obras em 12 meses.', 'An heir contests authorship and the catalog ages. Grow the catalog by 5 works in 12 months.'),
       metric: (s) => DEF31.publisher.score(s), shock: (s) => { for (const v of vk(s, 'publisher')) v.rep = clamp(v.rep - 8, 0, 100); },
@@ -148,6 +160,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Uma rádio', 'One station'), l('Rede', 'Network'), l('Grupo de mídia', 'Media group')], at: [0, 5, 9],
     score: (s) => vk(s, 'media').length * 2 + Math.max(0, ...vk(s, 'media').map((v) => v.level)),
     goal: [l('', ''), l('Dois veículos ou um em nível alto (rede)', 'Two outlets or one at a high level (network)'), l('Vários veículos grandes (grupo de mídia)', 'Several big outlets (media group)')],
+    alt: { score: (s) => Math.round(avgShare(s) * 100), at: [0, 20, 35],
+      goal: [l('', ''), l('ou 20% de audiência média (uma rádio que manda)', 'or 20% average audience (a station that rules)'), l('ou 35% de audiência média', 'or 35% average audience')] },
     tension: l('Sucesso segura audiência; aposta dá prestígio; jabá dá dinheiro e cadeia.', 'Hits hold the audience; bets bring prestige; payola brings money and jail.'),
     end: { name: l('A queda do rádio', 'Radio\'s decline'), desc: l('A nova mídia leva ouvintes e uma lei aperta a programação: a audiência cai. Recupere pelo menos 85% dela em 12 meses.', 'New media takes listeners and a law tightens programming: the audience falls. Win back at least 85% of it in 12 months.'),
       metric: avgShare, shock: (s) => { const m = (x4(s).car31m as { st?: Record<string, { share: number }> } | undefined)?.st ?? {}; for (const k of Object.keys(m)) m[k].share = Math.round(m[k].share * 0.8 * 10000) / 10000; touch31(s); },
@@ -157,6 +171,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Startup', 'Startup'), l('Plataforma nacional', 'National platform'), l('Plataforma global', 'Global platform')], at: [0, 1_000_000, 20_000_000],
     score: (s) => vk(s, 'platform').reduce((t, v) => t + (v.subs ?? 0), 0),
     goal: [l('', ''), l('1 milhão de assinantes', '1 million subscribers'), l('20 milhões de assinantes', '20 million subscribers')],
+    alt: { score: (s) => vk(s, 'platform').reduce((t, v) => t + (v.deals?.length ?? 0), 0), at: [0, 3, 8],
+      goal: [l('', ''), l('ou 3 acordos de catálogo (curadoria de nicho)', 'or 3 catalog deals (niche curation)'), l('ou 8 acordos de catálogo', 'or 8 catalog deals')] },
     tension: l('Repasse justo × margem; curadoria × gravadoras que exigem vagas.', 'Fair payouts × margin; curation × labels demanding slots.'),
     end: { name: l('Gravadoras e regulação', 'Labels and regulation'), desc: l('Um regulador questiona os repasses e a confiança dos artistas cai. Não perca acordos de catálogo em 12 meses.', 'A regulator questions payouts and artists\' trust drops. Lose no catalog deal in 12 months.'),
       metric: (s) => vk(s, 'platform').reduce((t, v) => t + (v.deals?.length ?? 0), 0),
@@ -178,6 +194,8 @@ export const DEF31: Record<Car31, Def31> = {
     tiers: [l('Comerciais', 'Commercials'), l('Filmes', 'Films'), l('Grandes estúdios', 'Big studios')], at: [0, 3, 8],
     score: (s) => (screen(s)?.list ?? []).filter((c) => c.st === 'done').length,
     goal: [l('', ''), l('3 trilhas entregues', '3 scores delivered'), l('8 trilhas entregues', '8 scores delivered')],
+    alt: { score: (s) => { const x = screen(s) as { wins?: number; noms?: number } | undefined; return (x?.wins ?? 0) * 2 + (x?.noms ?? 0); }, at: [0, 2, 6],
+      goal: [l('', ''), l('ou prêmios e indicações somando 2 (indicação 1, prêmio 2)', 'or awards and nominations adding to 2 (nomination 1, award 2)'), l('ou somando 6', 'or adding to 6')] },
     tension: l('O diretor quer a trilha; o selo quer o single; o prazo não espera.', 'The director wants the score; the label wants the single; the deadline won\'t wait.'),
     end: { name: l('Diretor × selo', 'Director × label'), desc: l('Um grande estúdio exige prazo curto e música de catálogo. Entregue mais uma trilha em 12 meses.', 'A big studio demands a tight deadline and catalog music. Deliver one more score within 12 months.'),
       metric: (s) => DEF31.screen.score(s), shock: (s) => { const x = screen(s); if (x) x.rep = clamp(x.rep - 8, 0, 100); },
@@ -203,16 +221,16 @@ export const activeCars31 = (s: GameState): Car31[] => ((x4(s).careers12 as { ac
 
 /** degrau atual (0..n−1), pela pontuação. */
 export function tierOf31(s: GameState, c: Car31): number {
-  const d = DEF31[c], v = d.score(s);
+  const d = DEF31[c], v = d.score(s), a = d.alt ? d.alt.score(s) : -Infinity;
   let t = 0;
-  for (let i = 1; i < d.at.length; i++) if (v >= d.at[i]) t = i;
+  for (let i = 1; i < d.at.length; i++) if (v >= d.at[i] || (d.alt && a >= d.alt.at[i])) t = i; // QA33: qualquer dos dois caminhos
   return t;
 }
 export interface View31 { c: Car31; tier: number; name: L; next?: L; score: number; top: boolean; end?: End31; tension: L }
 export function progView31(s: GameState, c: Car31): View31 {
   const d = DEF31[c], t = tierOf31(s, c);
   const end = progRo31(s).end.find((e) => e.c === c && !e.res);
-  return { c, tier: t, name: d.tiers[t], next: d.goal[t + 1], score: d.score(s), top: t === d.tiers.length - 1, end, tension: d.tension };
+  return { c, tier: t, name: d.tiers[t], next: d.goal[t + 1] && d.alt?.goal[t + 1] ? fmtL(l('{a} {b}', '{a} {b}'), { a: d.goal[t + 1], b: d.alt.goal[t + 1] }) : d.goal[t + 1], score: d.score(s), top: t === d.tiers.length - 1, end, tension: d.tension };
 }
 
 // ---------------------------------------------------------------- mês
