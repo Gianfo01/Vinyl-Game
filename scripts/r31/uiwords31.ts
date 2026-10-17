@@ -43,6 +43,15 @@ export function uiLiterals31(root = process.cwd()): UiLits31 {
   return { all: [...all], translated: [...tr] };
 }
 
+/** Todo texto entre aspas das bases (src/data): títulos e nomes que a partida pode pôr na tabela na hora (discos e
+ *  canções dos atos reais num mundo nascido com nomes reais), além dos pares estáticos. */
+export function dataLiterals31(root = process.cwd()): string[] {
+  const out = new Set<string>();
+  const walk = (d: string) => { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) walk(p); else if (p.endsWith('.ts') && !p.endsWith('uiwords31.ts')) for (const m of fs.readFileSync(p, 'utf8').matchAll(new RegExp(STR, 'g'))) { const v = unq(m[0]).trim(); if (v && /\p{L}/u.test(v)) out.add(v); } } };
+  walk(path.join(root, 'src', 'data'));
+  return [...out];
+}
+
 const WORD = /[\p{L}\p{N}]+/gu;
 const isW = (c: string | undefined) => !!c && /[\p{L}\p{N}]/u.test(c);
 
@@ -80,13 +89,13 @@ export async function entityOk31(): Promise<Set<string>> {
  *    numa frase) — "Nome", "Telefone", "Status"; nome próprio escrito num texto ("MTV", "Woodstock") continua trocando;
  *  - intext: nome "em frase" de uma palavra que é palavra comum (em minúsculas numa frase: "Fazer", "Total") ou que
  *    aparece com maiúscula num texto da interface sem ser citação de propósito (fora de `ok`: "Neto", "Mobile"). */
-export function uiCollisions31(names: [string, string][], titles: [string, string][], lits: UiLits31, ok: ReadonlySet<string>): { whole: string[]; intext: string[] } {
+export function uiCollisions31(names: [string, string][], titles: [string, string][], lits: UiLits31, ok: ReadonlySet<string>, data: string[] = []): { whole: string[]; intext: string[] } {
   const lower = lowerIndex31(lits.all);
   const text = lits.all.join('\n');
   const cap = (a: string): boolean => { for (let i = text.indexOf(a); i >= 0; i = text.indexOf(a, i + 1)) if (!isW(text[i - 1]) && !isW(text[i + a.length])) return true; return false; };
   const all = new Set(lits.all), tr = new Set(lits.translated);
   const whole = new Set<string>();
-  for (const [a] of [...names, ...titles]) {
+  for (const a of [...names.map(([x]) => x), ...titles.map(([x]) => x), ...data]) {
     const k = a.trim(); // texto inteiro: maiúsculas exatas, como a troca ("The band" da interface não é "The Band")
     if (all.has(k) && (tr.has(k) || lower(k))) whole.add(k);
   }
@@ -117,7 +126,7 @@ if (process.argv[1] && /uiwords31\.ts$/.test(process.argv[1])) {
   await import('../../src/sim/worldgen'); // primeiro: ordem de carga dos sistemas
   const { realPairsOff31 } = await import('../../src/sim/r31/realshow31');
   const p = realPairsOff31();
-  const c = uiCollisions31(p.names, p.titles, uiLiterals31(), await entityOk31());
+  const c = uiCollisions31(p.names, p.titles, uiLiterals31(), await entityOk31(), dataLiterals31());
   fs.writeFileSync('src/data/uiwords31.ts', render31(c));
   console.log(`uiwords31: ${c.whole.length} textos inteiros, ${c.intext.length} nomes em frase`);
 }

@@ -7,7 +7,7 @@ import { defaultConfig } from '../src/sim/bot';
 import fs from 'node:fs';
 import { disp31, notEntity31, plain31, setDisplay31 } from '../src/data/realdisp31';
 import { UI_WHOLE31 } from '../src/data/uiwords31';
-import { entityOk31, render31, uiCollisions31, uiLiterals31 } from '../scripts/r31/uiwords31';
+import { dataLiterals31, entityOk31, render31, uiCollisions31, uiLiterals31 } from '../scripts/r31/uiwords31';
 import { l } from '../src/data/world';
 import { S, getLang, setLang, t } from '../src/i18n/strings';
 import { DEPT31 } from '../src/sim/deleg31';
@@ -127,13 +127,13 @@ describe('NOMES · só nomes de entidades trocam', () => {
 
   it('src/data/uiwords31.ts está em dia com o código (npx tsx scripts/r31/uiwords31.ts)', async () => {
     const p = realPairsOff31();
-    expect(render31(uiCollisions31(p.names, p.titles, uiLiterals31(), await entityOk31()))).toBe(fs.readFileSync('src/data/uiwords31.ts', 'utf8'));
+    expect(render31(uiCollisions31(p.names, p.titles, uiLiterals31(), await entityOk31(), dataLiterals31()))).toBe(fs.readFileSync('src/data/uiwords31.ts', 'utf8'));
   });
 
   it('mundo com nomes reais e exibição desligada: rótulos intactos, atos e discos reais trocados', () => {
     const s = createGame(defaultConfig('x31-nomes', { startYear: 1985, realNames: true }));
     setRealShown31(s, false);
-    for (const x of ['Nome', 'Telefone', 'Z', '5', '1984', 'Status', 'Enter', 'Rio de Janeiro']) expect(disp31(x), x).toBe(x);
+    for (const x of ['Nome', 'Telefone', 'Z', '5', '1984', 'Status', 'Enter', 'Rio de Janeiro', 'Balanço', 'Lightning']) expect(disp31(x), x).toBe(x);
     const a = Object.values(s.acts).find((x) => x.name === 'The Beatles' || x.name === 'Queen' || x.name === 'Michael Jackson');
     expect(a).toBeTruthy();
     expect(disp31(a!.name)).not.toBe(a!.name);
