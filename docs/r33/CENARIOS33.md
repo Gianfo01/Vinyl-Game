@@ -148,3 +148,30 @@ Cada serviço gera **laço** (gente31/social31) e **fato** (facts17) — a pesso
 
 Ordem: depois do POL33 e do GENTE33-B (usa as camadas de pessoas). Testes: `r33-cenarios` (cada lugar aparece só na
 época/país certos; cada verbo chama a função existente; dívida/lavagem/apostas com Rng fixo) + uiwords + goldens.
+
+## 8. Minijogos do cassino e dos lugares
+
+Mesmo motor de minijogos do APARELHOS33 (a cobrinha), na arte do jogo, curtos (30 s a 2 min), sempre opcionais
+(dá para "resolver rápido" com o resultado sorteado pelas mesmas chances). O dinheiro sai do caixa pessoal; quem
+joga muito ganha o traço "Jogador" (vices). Sorte própria por partida (Rng.fromSeed('cas33|…')).
+
+| Minijogo | Onde / época | Como joga | Liga com |
+|---|---|---|---|
+| Blackjack | cassino, 1930+ | pedir/parar/dobrar contra a banca; a banca segue regra fixa | dívida, agiota, baleia (sentar na mesa dele = conversa de investimento) |
+| Caça-níquel | cassino 1900+; vídeo-pôquer 1975+; app 2010+ | alavanca de 3 rolos com símbolos da época (frutas → discos → ícones de app) | vício, patrocínio de bets |
+| Roleta | cassino, qualquer época | apostar em número, cor ou faixa | apostas grandes chamam atenção (calor, imprensa) |
+| Pôquer | sala dos fundos (under31) | mão contra NPCs com personalidade (temper/persona: blefa, foge, aposta alto) | ganhar = favor ou informação; perder = dívida com a facção |
+| Dados (craps) | calçadão anos 20, bar clandestino | rolar e manter o ponto | Lei Seca, polícia pode chegar (crime17) |
+| Bingo | salão de igreja/clube, 1930+ | cartela com sorteio | público mais velho, show beneficente (charity19) |
+| Pinball e fliperama | fliperama 1970–95 | máquinas da época, recorde fica no placar com seu nome | público jovem; artistas frequentadores (leisure14) |
+| Jukebox | lanchonete 1950+ | escolher a música e ver a pista reagir | qual faixa sua toca mais (tração local, charts) |
+| Karaokê | bar 1985+ | acertar o tempo das notas | descobrir talento (o frequentador que canta bem) |
+| Sinuca | bar de estrada | mesa vista de cima, tacada com força e ângulo | aposta contra NPC; ganhar respeito = laço |
+| Dardos | bar do bairro | mira que treme (mais se bebeu) | laço com o dono do bar |
+| Corrida de cavalos / galgos | hipódromo, 1900+ | escolher e torcer | apostas da indústria (o mesmo painel), baleia |
+| Bolsa de apostas da indústria | cassino/app | apostar em parada, prêmio, programa de talentos | charts7, awards, tv18; informação de dentro = risco de escândalo |
+| Cozinha sob pressão | restaurante (The Bear) | montar pratos na ordem antes do tempo | jantar de negócios melhora a negociação (nego27) |
+| Ritmo no palco | casa de shows | apertar no tempo da batida | nota do show (show27) — só se o jogador quiser tocar |
+
+Regras: nada de dinheiro real nem compra no jogo; ganhar demais no mesmo cassino faz a casa te barrar; as chances
+aparecem na tela (odds19) e são as mesmas do sorteio.
