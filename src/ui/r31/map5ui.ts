@@ -171,7 +171,7 @@ export function cityKeys5(vp: HTMLElement, layer: HTMLElement, o: { zoom: (f: nu
     if (e.key === '+' || e.key === '=') { e.preventDefault(); e.stopPropagation(); o.zoom(1.4); return; }
     if (e.key === '-' || e.key === '_') { e.preventDefault(); e.stopPropagation(); o.zoom(1 / 1.4); return; }
     if (e.key === '0' || e.key === 'Home') { e.preventDefault(); e.stopPropagation(); o.reset(); return; }
-    if (e.key === 'n' || e.key === 'N' || e.key === '!') { e.preventDefault(); e.stopPropagation(); nextBang5(layer, o.show); }
+    if (e.key === 'n' || e.key === 'N' || (e.key === '!' && e.code !== 'Digit1')) { /* QA5: ⇧1 (= "!") é a viagem para a sede, não "próxima novidade" */ e.preventDefault(); e.stopPropagation(); nextBang5(layer, o.show); }
   });
 }
 

@@ -40,6 +40,8 @@ Estado: ✅ resolvido · ⏳ com a frente dona (ainda não chegou) · ❌ aberto
 | 26 | Pedido do dono: tirar também o título "Nosso mundo — Selo Agulha" da cidade | ⇧3 | `qa5-18-cidade-sem-titulo.png` | QA5 | ✅ (`shell5.css`, só com a casca) |
 | 25 | Pergunta do dono: o que é "Vizinhanças boas"? | ⇧3, chip do topo | — | — | ℹ️ bônus de vizinhança entre os SEUS prédios (`world19.ts`, ADJ19: estúdio ao lado da sede, loja em esquina movimentada, casa dos artistas perto do estúdio…; fábrica barulhenta é negativa). Fica 0 enquanto só há a sede |
 | 27 | Pedido da integração: janela da cena do modo Arrumar (DECO-M) com prédios cinza genéricos | Casa → ⇧O | — | DECO-A | ✅ (já corrigido no 971a04de: `window31` com a cidade e a época à noite; conferido 1962 casa e sede) · Arrumar entrou no robô (abrir, cômodo, casa/sede, gaveta, Esc) |
+| 28 | ⇧1 (Sede) não respondia na cidade com o mapa em foco: o mapa tratava "!" (= Shift+1) como "próxima novidade" | ⇧3 → clicar no mapa → ⇧1 | — | QA5 (MAPA terminou) | ✅ (`map5ui.ts`: "!" só quando não vem do Shift+1; N continua) |
+| 29 | Cena de história (ex.: escadaria do tribunal, 2015): Esc fechava a cena e abria a pausa atrás; teclas da casca valiam com a cena aberta; escolhas abaixo da dobra sem barra à vista | 2015 → avançar meses até a cena → Esc | `qa5-19-cena-tribunal.png` | QA5 | ✅ (`openScene` marca o Esc; casca ignora teclas com cena aberta; barra visível no miolo) |
 
 ## Robô (`scripts/r31/qa5.mjs` + `tests/r31-qa5.test.ts`)
 `node scripts/r31/qa5.mjs [--quick] [--out x.json] [--shots pasta]` sobe o vite com `VITE_EXP5NAV=1`, começa pela Nova

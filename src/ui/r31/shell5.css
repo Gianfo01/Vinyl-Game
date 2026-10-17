@@ -203,3 +203,5 @@ body:has(.app5) .overlay .modal-body { flex: 1 1 auto; min-height: 0; overflow-y
 
 /* QA5 (pedido do dono): a cidade na casca nova sem o título "Nosso mundo — <selo>" (o botão Cidade embaixo já diz onde está) */
 .app5 .m5-city > .card > h3:first-child { display: none; }
+/* QA5: cena de história com escolhas abaixo da dobra — a barra de rolagem fica à vista */
+body:has(.app5) .scene-body { scrollbar-width: thin; scrollbar-color: #6a7a96 transparent; scrollbar-gutter: stable; }

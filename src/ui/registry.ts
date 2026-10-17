@@ -168,7 +168,7 @@ export function openScene(title: L | string, render: (close: () => void) => HTML
     opts.onClose?.();
     prev?.focus?.();
   };
-  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { close(); e.preventDefault(); } }; // QA5: a casca nova não usa o mesmo Esc
   const label = typeof title === 'string' ? title : t(title);
   root = h('div', { class: 'scene-overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': label },
     h('div', { class: `scene-box ${opts.wide === false ? '' : 'wide'}` },

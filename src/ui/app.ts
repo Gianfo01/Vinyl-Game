@@ -227,6 +227,7 @@ function onKey(e: KeyboardEvent): void {
   if (!ck && (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') && !(nav5 && e.key === 'Escape')) return;
   if (document.querySelector('.overlay')) return;
   if (nav5 && e.key === 'Escape' && e.defaultPrevented) return; // QA5: o Esc já fechou uma janela antiga
+  if (nav5 && document.querySelector('.scene-overlay')) return; // QA5: cena aberta (tribunal, show…): as teclas são dela, não da casca
   if (paperKey5Ev(e, store.game)) { e.preventDefault(); return; } // R31 onda 5 (PAPEL): A, 1–4 e Esc do papel aberto
   if (keyNav5(store.game, e)) { e.preventDefault(); return; } // R31 onda 5 (TEC): só com exp5.nav ligado
   if (nav5) {

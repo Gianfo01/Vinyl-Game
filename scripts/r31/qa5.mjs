@@ -61,7 +61,7 @@ const RUNS = QUICK
 
 const browser = await pw.chromium.launch(exe ? { executablePath: exe } : {});
 let p;
-const OPEN = '.p5, .pz5, .overlay, .slip5, .hk5, .ac5, .c2-in';
+const OPEN = '.p5, .pz5, .overlay, .scene-overlay, .slip5, .hk5, .ac5, .c2-in';
 const wait = (ms) => p.waitForTimeout(ms);
 const region = () => p.evaluate(() => document.querySelector('.b5-tr.on')?.getAttribute('data-travel') ?? null);
 const anyOpen = () => p.evaluate((sel) => [...document.querySelectorAll(sel)].some((e) => e.isConnected && (e.offsetParent !== null || getComputedStyle(e).position === 'fixed')), OPEN);
@@ -219,12 +219,14 @@ async function sweepSystem() {
   if (!(await p.locator('.overlay').count())) flag('sem-efeito', 'pausa>Carregar');
   await escBack('carregar');
   await p.keyboard.press('Escape'); await wait(500);
-  const rows = await p.locator('.pz5-row').count();
-  const every = QUICK ? Math.max(1, Math.floor(rows / 12)) : 1;
-  for (let i = 0; i < rows; i += every) {
+  const areas = await p.locator('.pz5-row').evaluateAll((es) => es.map((e) => e.getAttribute('data-area')));
+  const every = QUICK ? Math.max(1, Math.floor(areas.length / 12)) : 1;
+  for (let i = 0; i < areas.length; i += every) {
+    const area = areas[i];
     if (!(await p.locator('.pz5').count())) { await escBack('indice', { pauseOk: true }); await p.keyboard.press('Escape'); await wait(450); }
-    const row = p.locator('.pz5-row').nth(i);
-    const area = await row.getAttribute('data-area');
+    if (!(await p.locator('.pz5').count())) { flag('sem-efeito', `indice.depois-de.${areas[i - every] ?? ''}`, 'Esc não abre a pausa'); await p.keyboard.press('Shift+Digit1'); await wait(900); await escBack('indice', { pauseOk: true }); await p.keyboard.press('Escape'); await wait(450); }
+    const row = p.locator(`.pz5-row[data-area="${area}"]`).first();
+    if (!(await row.count())) continue;
     try { await row.click({ timeout: 2500 }); } catch { flag('sem-efeito', `indice.${area}`, 'clique bloqueado'); continue; }
     await wait(700);
     if (await p.locator('.pz5').count()) flag('sem-efeito', `indice.${area}`);
@@ -286,7 +288,14 @@ async function advance(n) {
       break;
     }
     await escBack('mes', { pauseOk: true });
-    const d1 = await p.locator('.t5-chip').first().textContent();
+    let d1 = await p.locator('.t5-chip').first().textContent();
+    if (d0 === d1) { // uma janela (decisão, aviso) segurou a virada: o jogador fecha e aperta de novo
+      await p.locator('.t5-go').click(); await wait(1500);
+      const acc = p.getByRole('button', { name: /Aceitar padrões e avançar/ });
+      if (await acc.count()) { await acc.first().click(); await wait(1500); }
+      await escBack('mes', { pauseOk: true });
+      d1 = await p.locator('.t5-chip').first().textContent();
+    }
     if (d0 === d1) flag('sem-efeito', 'Avançar mês', d0);
     await checkScroll('mes');
   }
