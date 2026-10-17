@@ -56,7 +56,7 @@ export function rowOfBtn33(b: HTMLButtonElement, id: string, label?: string): Ro
   const t0 = (b.getAttribute('title') ?? '').replace(/^\S*🔒\S*\s*/u, '');
   const lock: Lock31 | L | null = !b.disabled ? null
     : why ? { why: l(txt33(why), txt33(why)), unlock: l(txt33(cond ?? why).replace(/^→\s*/, ''), txt33(cond ?? why).replace(/^→\s*/, '')) }
-      : l(t0 || t(l('Indisponível agora.', 'Unavailable now.')), t0 || t(l('Indisponível agora.', 'Unavailable now.')));
+      : { why: t0 ? l(t0, t0) : l('Indisponível agora.', 'Unavailable now.'), unlock: l('Libera quando a condição mostrada na página mudar.', 'Unlocks when the condition shown on the page changes.') };
   return { id, label: label ?? txt33(b), lock, primary: b.classList.contains('primary'), run: () => { if (b.isConnected && !b.disabled) b.click(); } };
 }
 

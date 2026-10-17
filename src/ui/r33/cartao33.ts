@@ -152,9 +152,10 @@ function closer33(b: HTMLButtonElement): void {
   b.replaceChildren(h('kbd', null, 'Esc'), ' ', t(l('fechar', 'close')));
 }
 function scan33(root: ParentNode): void {
+  root.querySelectorAll<HTMLButtonElement>('.navsheet27-x').forEach(closer33);
   if (!document.querySelector('.app5')) return;
   root.querySelectorAll<HTMLElement>(PANELS33).forEach(panel33);
-  root.querySelectorAll<HTMLButtonElement>('.c27-pn .w19-x, .c27-sheet .w19-x, .in31-ph > button.icon').forEach(closer33);
+  root.querySelectorAll<HTMLButtonElement>('.c27-pn .w19-x, .c27-sheet .w19-x, .in31-ph > button.icon, .deco5-x').forEach(closer33);
 }
 if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
   let q = false;
@@ -168,7 +169,11 @@ if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') 
 }
 
 /** Linhas numeradas à vista, por ordem de prioridade: papel aberto, painel do lugar, cartão da cidade no mapa. */
-function digitRows33(): HTMLButtonElement[] {
+function digitRows33(): HTMLElement[] {
+  const deco = document.querySelector('.deco5 .deco5-side');
+  if (deco) return [...deco.querySelectorAll<HTMLElement>('.deco5-it')].filter((x) => x.offsetParent);
+  const menu = document.querySelector('.am20, .cx27');
+  if (menu) return [...menu.querySelectorAll<HTMLElement>('.am20-item, .cx27-item')].filter((x) => x.offsetParent);
   const col = document.querySelector('.p5 .ob33-col') ?? [...document.querySelectorAll<HTMLElement>('.ob33-pcol')].find((x) => x.offsetParent);
   if (col) return [...col.querySelectorAll<HTMLButtonElement>('.ac5-a')];
   const cc = document.querySelector<HTMLButtonElement>('.m5-ccard .m5-cc-go');
@@ -179,9 +184,16 @@ if (typeof window !== 'undefined') window.addEventListener('keydown', (e) => {
   if (!/^[1-9]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey) return;
   const tg = e.target as HTMLElement | null;
   if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
-  if (!document.querySelector('.app5') || document.querySelector('.overlay, .pz5-back, .am20, .cx27, .ac5[data-card]')) return;
+  const pick = [...document.querySelectorAll('.overlay')].pop()?.querySelector('.tu5-picks'); // escolha da época do tutorial (tela inicial)
+  if (pick) {
+    const r = pick.querySelectorAll<HTMLElement>('.tu5-pick')[Number(e.key) - 1];
+    if (r) { e.preventDefault(); e.stopImmediatePropagation(); r.click(); }
+    return;
+  }
+  if (!document.querySelector('.app5') || document.querySelector('.pz5-back, .ac5[data-card]')) return;
+  if (document.querySelector('.overlay') && !document.querySelector('.am20, .cx27')) return;
   const b = digitRows33()[Number(e.key) - 1];
   if (!b) return;
   e.preventDefault(); e.stopImmediatePropagation();
-  if (!b.disabled) b.click();
+  if (!(b as HTMLButtonElement).disabled) b.click();
 }, true);

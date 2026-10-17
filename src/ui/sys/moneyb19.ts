@@ -19,7 +19,7 @@ import { specialDeals29 } from '../../sim/sys/contracts29';
 
 const T = (x: L | string) => (typeof x === 'string' ? x : t(x));
 const say = (r: L | null, ok: L = l('Feito.', 'Done.')) => { toast(T(r ?? ok), r ? 'info' : 'good'); rerender(); };
-const btn = (label: L | string, fn: () => void, dis = false) => h('button', { class: 'btn small', disabled: dis, onclick: fn }, T(label));
+const btn = (label: L | string, fn: () => void, dis = false, why?: L) => h('button', { class: 'btn small', disabled: dis, title: dis && why ? T(why) : undefined, onclick: fn }, T(label));
 const row = (...k: (Node | string | null)[]) => h('div', { class: 'row wrap', style: 'gap:6px;align-items:center;margin:4px 0' }, ...k);
 const muted = (x: L | string) => h('p', { class: 'muted small' }, T(x));
 const fm = (x: L, p: Record<string, string | number>) => t(x).replace(/\{(\w+)\}/g, (_, k) => String(p[k] ?? ''));
@@ -37,7 +37,7 @@ function windowTab(s: GameState): HTMLElement {
     section(t(l('Astros dos rivais', 'Rival stars')), h('table', { class: 'table small' },
       h('tr', null, ...[l('Ato', 'Act'), l('Selo', 'Label'), l('Valor', 'Value'), l('Cláusula', 'Clause'), ''].map((x) => h('th', null, T(x)))),
       ...rivalStars19(s).map((a) => h('tr', null, h('td', null, actLink(s, a.id)), h('td', null, s.labels[a.owner!]?.name ?? '?'), h('td', null, val(s, a.id)), h('td', null, $(npcClause19(s, a))),
-        h('td', null, btn(l('Pagar a cláusula', 'Pay the clause'), () => say(payClause19(s, a.id)), freeCash20(s) < npcClause19(s, a))))))));
+        h('td', null, btn(l('Pagar a cláusula', 'Pay the clause'), () => say(payClause19(s, a.id)), freeCash20(s) < npcClause19(s, a), l('Caixa livre menor que a cláusula.', 'Free cash is below the clause.'))))))));
 }
 
 function clauseTab(s: GameState): HTMLElement {

@@ -22,6 +22,9 @@ const S = {
   'elenco-agenda': async () => { await openOld(p, 'agenda17'); },
   'elenco-fichario': async () => { await openOld(p, 'directory'); },
   'elenco-chefe': async () => { await openOld(p, 'deleg31'); },
+  'menu-artista': async () => { await openOld(p, 'people'); await p.waitForTimeout(700); const r = await ev(() => { const e = document.querySelector('.el5-pol, [data-act], .el5-card'); const q = e?.getBoundingClientRect(); return q ? [q.x + q.width / 2, q.y + q.height / 3] : null; }); if (r) await p.mouse.click(r[0], r[1], { button: 'right' }); },
+  'menu-sede': async () => { await p.waitForTimeout(500); const r = await ev(() => { const e = document.querySelector('.s5-person, [data-person], .s5-obj[data-obj^="car:"], .s5-act'); const q = e?.getBoundingClientRect(); return q ? [q.x + q.width / 2, q.y + q.height / 2] : null; }); if (r) await p.mouse.click(r[0], r[1], { button: 'right' }); },
+  'menu-contexto': async () => { await openOld(p, 'contracts19'); await p.waitForTimeout(700); const r = await ev(() => { const e = document.querySelector('.p5-body [data-ent]'); const q = e?.getBoundingClientRect(); return q ? [q.x + 4, q.y + q.height / 2] : null; }); if (r) await p.mouse.click(r[0], r[1], { button: 'right' }); },
   'pausa': async () => { await p.keyboard.press('Escape'); },
   'teclas': async () => { await ev(async () => (await import('/src/ui/r31/shell5.ts')).help5()); },
   'cidade': async () => { await travel('cidade'); },
@@ -33,10 +36,11 @@ const S = {
   'celular': async () => { await ev(() => document.querySelector('[data-travel="celular"]')?.click()); },
   'casa': async () => { await travel('casa'); },
   'arrumar': async () => { await travel('casa'); await p.waitForTimeout(900); await ev(() => [...document.querySelectorAll('button')].find((b) => /^Arrumar|^Arrange|^Decorate/.test(b.textContent.trim()))?.click()); },
+  'arrumar-gaveta': async () => { await S.arrumar(); await p.waitForTimeout(800); await ev(() => document.querySelector('.deco5-spot:not(.full)')?.click()); },
 };
 for (const [k, fn] of Object.entries(S)) {
   if (only && !only.includes(k)) continue;
-  await closeAll(p); await p.waitForTimeout(300);
+  await closeAll(p); await p.evaluate(() => document.querySelectorAll('.am20, .cx27, .deco5, .ap33').forEach((x) => x.remove())); await p.keyboard.press('Escape'); await closeAll(p); await p.waitForTimeout(300);
   try { await fn(); await shot(k); } catch (e) { console.error('falhou', k, e.message); }
 }
 await b.close();

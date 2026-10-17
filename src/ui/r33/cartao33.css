@@ -55,9 +55,9 @@
 .app5 .ob33-pn .ob33-moved { display: none !important; }
 .app5 .ob33-pn .ob33-it { cursor: pointer; }
 .app5 .ob33-pn .ob33-it.ob33-sel { outline: 2px solid #170e12; background: var(--p33-hi-lt, #f8e4a0); color: #1c1612; }
-.app5 button.ob33-x { width: auto !important; height: auto !important; display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px !important; border: 2px solid #170e12 !important; background: var(--p33-plate, #fbf6e8) !important;
+button.ob33-x { width: auto !important; height: auto !important; display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px !important; border: 2px solid #170e12 !important; background: var(--p33-plate, #fbf6e8) !important;
   color: #1c1612 !important; font: 12px var(--sans, sans-serif); white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
-.app5 button.ob33-x kbd, .app5 .m5-cc-x2 kbd { padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px var(--pixel, monospace); border: 1px solid #0c121c; }
+button.ob33-x kbd, .app5 .m5-cc-x2 kbd { padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px var(--pixel, monospace); border: 1px solid #0c121c; }
 /* cartão da cidade no mapa-múndi: "Ir para a cidade" é a linha 1 do cartão */
 .app5 .m5-ccard .m5-cc-h h3 { font-family: var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; }
 .app5 .m5-ccard .m5-cc-go::before { content: '1'; display: inline-block; min-width: 16px; margin-right: 6px; padding: 0 4px; border: 1px solid #170e12; background: #fffdf6; box-shadow: 1px 1px 0 #170e12;
@@ -71,3 +71,88 @@
 .app5 .in31-ph > b { padding: 3px 10px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); color: #170e12;
   font: 700 13px/1.15 var(--pixel, monospace) !important; letter-spacing: 0.08em; text-transform: uppercase; }
 .app5 .in31-pane:has(> .in31-pn) .in31-pn > h4:first-child { display: none; } /* o nome já está na plaqueta */
+
+/* ==== menus de ações (am20: menu do artista; cx27: menu de contexto) na casca: o mesmo cartão de ações em papel —
+   plaqueta em fonte de pixel, linhas numeradas com borda tracejada, trava com o motivo. As teclas 1–9 escolhem. ==== */
+body:has(.app5) :is(.am20, .cx27) { --panel: #fbf6e8; --panel-2: #f8e4a0; --ink: #1c1612; --muted: #5f584c; --line: #c8b898; --warn: #9a3a1a; --gold: #7a5a10; --accent: #2a5ab0; color-scheme: light;
+  background: #fbf6e8; color: #1c1612; border: 2px solid #170e12; border-radius: 0; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5); font-family: var(--sans, sans-serif); }
+body:has(.app5) :is(.am20-head, .cx27-head) { padding: 8px 10px 6px; border-bottom: 2px dashed #c8b898; }
+body:has(.app5) :is(.am20-head, .cx27-head) b { font: 700 13px/1.2 var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; color: #170e12; }
+body:has(.app5) :is(.am20-gh) { font: 700 10px var(--pixel, monospace); letter-spacing: 0.12em; color: #5a4a3a; padding: 6px 10px 2px; }
+body:has(.app5) :is(.am20-menu, .cx27-menu) { counter-reset: ob33n; padding: 4px 8px 8px; }
+body:has(.app5) :is(.am20-item, .cx27-item) { counter-increment: ob33n; position: relative; margin: 4px 0; padding: 5px 8px 5px 34px; min-height: 30px; border: 2px dashed #8a7458; background: #fffdf6; color: #1c1612; border-radius: 0; padding-left: 42px; }
+body:has(.app5) :is(.am20-item, .cx27-item)::before { content: counter(ob33n); position: absolute; left: 8px; top: 7px; min-width: 16px; padding: 0 3px; border: 1px solid #170e12; background: #fffdf6; box-shadow: 1px 1px 0 #170e12;
+  font: 700 10px/1.4 var(--pixel, monospace); text-align: center; color: #170e12; }
+body:has(.app5) :is(.am20-item, .cx27-item):is(:hover, :focus) { background: var(--p33-hi-lt, #f8e4a0); border-style: solid; border-color: #170e12; }
+body:has(.app5) :is(.am20-item, .cx27-item).off { background: #f1e8d2; }
+body:has(.app5) :is(.am20-item, .cx27-item) small { padding-left: 0; color: #5f584c; }
+body:has(.app5) :is(.am20-why, .cx27-why) { color: #9a3a1a !important; }
+body:has(.app5) :is(.am20-why, .cx27-why)::before { content: '→ '; }
+body:has(.app5) .cx27-shead { background: #f1e8d2; border-bottom: 2px solid #c8b898; }
+body:has(.app5) .cx27-shead b { color: #170e12; font: 700 11px var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; }
+body:has(.app5) :is(.am20-grp + .am20-grp, .cx27-sec + .cx27-sec) { border-top: 0; }
+body:has(.app5) :is(.am20-head, .cx27-head) { position: relative; padding-right: 48px; }
+body:has(.app5) :is(.am20-head, .cx27-head)::after { content: 'Esc'; position: absolute; right: 10px; top: 8px; padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px/1.6 var(--pixel, monospace); border: 1px solid #0c121c; }
+
+/* ==== folha de navegação (celular, navsheet27): papel com plaqueta; abas em pílula viram marcadores ==== */
+.navsheet27 { --panel: #fbf6e8; --panel-2: #f1e8d2; --ink: #1c1612; --muted: #5f584c; --line: #c8b898; --accent: var(--p33-mk, #2a5ab0); --accent-ink: #fff; color-scheme: light;
+  background: var(--p33-paper, #f6eedb) !important; color: #1c1612 !important; border: 2px solid #170e12 !important; border-radius: 0 !important; box-shadow: 0 -4px 0 rgba(0, 0, 0, 0.4) !important; }
+.navsheet27-head { border-bottom: 2px dashed #c8b898; }
+.navsheet27-head b { flex: 0 1 auto !important; padding: 4px 10px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); font: 700 14px/1.2 var(--pixel, monospace) !important; letter-spacing: 0.1em; text-transform: uppercase; }
+.navsheet27-head::after { content: ''; flex: 1 1 auto; order: 2; }
+.navsheet27-head .navsheet27-x { order: 3; }
+.navsheet27-head .btn { border-radius: 0 !important; border: 2px solid #170e12 !important; }
+.navsheet27-pg { border-radius: 0 !important; color: #1c1612; }
+.navsheet27-pg.on { background: var(--p33-mk, #2a5ab0) !important; color: #fff !important; }
+.navsheet27-tab, .navsheet27-simple .navsheet27-view { border-radius: 0 !important; border: 2px solid #170e12 !important; border-bottom-width: 3px !important; background: #f8f2e2 !important; color: #1e1a16 !important; font-weight: 600; }
+.navsheet27-tab.d2, .navsheet27-tab.d3 { border-style: solid !important; border-width: 1px 1px 2px !important; }
+.navsheet27-tab.on, .navsheet27-simple .navsheet27-view.on { background: var(--p33-mk, #2a5ab0) !important; color: #fff !important; border-color: var(--p33-mk-dk, #14306a) !important; }
+.navsheet27-theme h4 { font-family: var(--pixel, monospace); color: #5a4a3a !important; }
+
+/* ==== celular e computador (ap33): por fora do aparelho, a plaqueta do papel e o "Esc fechar" do papel (a tela do
+   aparelho continua com a arte dele) ==== */
+.ap33 .ap33-cap { gap: 14px; padding: 5px 6px 6px 12px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); color: #3a2e24;
+  font: 700 10px/1.2 var(--pixel, monospace); letter-spacing: 0.12em; text-transform: uppercase; }
+.ap33 .ap33-cap b { color: #170e12; font: 700 17px/1.1 var(--pixel, monospace); letter-spacing: 0.16em; }
+.ap33 .ap33-x { margin-left: 10px; padding: 3px 10px; border: 2px solid #170e12; background: #fffdf6; color: #1c1612; font: 13px var(--sans, sans-serif); letter-spacing: 0; text-transform: none; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); }
+.ap33 .ap33-x:hover, .ap33 .ap33-x:focus-visible { background: var(--p33-hi, #f0c060); color: #1c1612; outline: none; }
+.ap33 .ap33-x .kb5 { padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px var(--pixel, monospace); border: 1px solid #0c121c; box-shadow: none; }
+
+/* ==== Arrumar (deco5): mesa de madeira, plaqueta, marcadores no lugar das pílulas, lateral = cartão numerado ==== */
+.deco5 .deco5-card { border: 4px solid var(--p33-wood-dk, #2a1a10); border-radius: 0; box-shadow: inset 0 0 0 2px var(--p33-wood-lt, #7a5232), 6px 6px 0 rgba(0, 0, 0, 0.5);
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 46px, rgba(0, 0, 0, 0.22) 46px 48px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 6px, rgba(0, 0, 0, 0.03) 6px 14px), var(--p33-wood, #5b3b22); color: #f6eedb; }
+.deco5 .deco5-t { padding: 5px 12px 6px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); color: #170e12; font: 700 17px/1.1 var(--pixel, monospace); letter-spacing: 0.16em; }
+.deco5 .deco5-t .kb5 { font-size: 9px; letter-spacing: 0; vertical-align: middle; }
+.deco5 :is(.deco5-tab, .deco5-room) { padding: 2px 12px 3px; border: 2px solid #170e12; border-bottom-width: 3px; border-radius: 0; background: #f8f2e2; color: #1e1a16; font: 600 13px/1.2 var(--sans, sans-serif); }
+.deco5 :is(.deco5-tab, .deco5-room):hover { background: var(--p33-hi, #f0c060); }
+.deco5 :is(.deco5-tab, .deco5-room).on { background: var(--p33-mk, #2a5ab0); color: #fff; border-color: var(--p33-mk-dk, #14306a); }
+.deco5 .deco5-yr { padding: 2px 8px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; color: #3a2e24; }
+.deco5 .deco5-scroll { border-radius: 0; border: 2px solid #170e12; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4); }
+.deco5 .deco5-side { counter-reset: ob33n; border: 2px solid #170e12; border-radius: 0; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4); background: #fbf6e8; color: #1c1612; }
+.deco5 .deco5-side h4 { color: #170e12; font: 700 13px/1.2 var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; padding-bottom: 4px; border-bottom: 2px dashed #c8b898; }
+.deco5 .deco5-side :is(.deco5-hint, small) { color: #5f584c !important; }
+.deco5 .deco5-dr-h { color: #5a4a3a; }
+.deco5 .deco5-cur { border: 2px solid #170e12; border-radius: 0; background: #fffdf6; color: #1c1612; }
+.deco5 .deco5-side .deco5-it { counter-increment: ob33n; position: relative; padding: 5px 8px 5px 38px; border: 2px dashed #8a7458; border-radius: 0; background: #fffdf6; color: #1c1612; }
+.deco5 .deco5-side .deco5-it::before { content: counter(ob33n); position: absolute; left: 8px; top: 50%; transform: translateY(-50%); min-width: 16px; padding: 0 3px; border: 1px solid #170e12; background: #fffdf6; box-shadow: 1px 1px 0 #170e12;
+  font: 700 10px/1.4 var(--pixel, monospace); text-align: center; color: #170e12; }
+.deco5 .deco5-side .deco5-it:hover, .deco5 .deco5-side .deco5-it:focus-visible { background: var(--p33-hi-lt, #f8e4a0); border-style: solid; border-color: #170e12; outline: none; }
+.deco5 .deco5-side .btn { border-radius: 0; }
+.deco5 .deco5-fx .deco5-hint { color: #f6eedb; text-shadow: 1px 1px 0 #000; }
+.deco5 .deco5-open { border-radius: 0; }
+
+/* ==== tutorial: escolha da época (no papel) — linhas numeradas legíveis (antes: texto escuro sobre azul-marinho) ==== */
+.pp33-body .tu5-picks { counter-reset: ob33n; gap: 6px; }
+.pp33-body .tu5-pick { counter-increment: ob33n; position: relative; padding: 6px 12px 6px 44px; border: 2px dashed #8a7458; background: #fffdf6; color: #1c1612; box-shadow: none; }
+.pp33-body .tu5-pick::before { content: counter(ob33n); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); min-width: 16px; padding: 0 3px; border: 1px solid #170e12; background: #fffdf6; box-shadow: 1px 1px 0 #170e12;
+  font: 700 10px/1.4 var(--pixel, monospace); text-align: center; color: #170e12; }
+.pp33-body .tu5-pick:hover, .pp33-body .tu5-pick:focus-visible { background: var(--p33-hi-lt, #f8e4a0); border-style: solid; border-color: #170e12; outline: none; }
+.pp33-body .tu5-pick b { color: #7d2214; }
+.pp33-body .tu5-pick small { color: #3a2e24; font-size: 13px; }
+.pp33-body .tu5-pick small.muted { color: #5f584c; font-size: 12px; }
+
+/* ==== tour das páginas (tour18): balão em papel com plaqueta ==== */
+.tour18-hl { border-radius: 0 !important; border: 3px solid #170e12 !important; outline: 2px solid var(--p33-hi, #f0c060); }
+.tour18-bub { --panel: #fbf6e8; --ink: #1c1612; --muted: #5f584c; --line: #c8b898; color-scheme: light; background: #fbf6e8 !important; color: #1c1612 !important; border: 2px solid #170e12 !important; border-radius: 0 !important; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5) !important; }
+.tour18-bub :is(b, h3, h4, strong):first-child { display: inline-block; align-self: flex-start; padding: 2px 8px; border: 2px solid #170e12; background: #fffdf6; font: 700 12px/1.2 var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; }
+.tour18-bub .btn { border-radius: 0 !important; border: 2px solid #170e12 !important; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
