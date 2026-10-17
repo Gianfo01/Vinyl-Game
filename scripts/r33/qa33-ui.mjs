@@ -57,7 +57,8 @@ async function prep() {
   return p.evaluate(async () => {
     const sw = await import('/src/sim/r31/switches.ts');
     const s = window.__vtn19.store.game;
-    for (const d of sw.switchDefs()) if (d.id.startsWith('exp33.') && typeof d.def === 'boolean') sw.setSw(s, d.id, true);
+    // QA33: a 33 nasce ligada (padrão); confere em vez de ligar
+    for (const d of sw.switchDefs()) if (d.id.startsWith('exp33.') && typeof d.def === 'boolean' && !sw.sw(s, d.id)) throw new Error(`desligado: ${d.id}`);
     s.player.cash += 5e9; const own = await import('/src/sim/sys/people/owner.ts'); own.ownerOf(s).wealth += 5e9;
     const out = {};
     const tryF = async (k, f) => { try { const r = await f(); out[k] = r ? (r.pt ?? String(r)) : 'ok'; } catch (e) { out[k] = `erro ${e.message}`; } };
@@ -127,9 +128,19 @@ for (const y of YEARS) {
   // INT-1: prédios próprios (rótulo começa pelo nome do prédio) e lugares com ações (hotel, escritório, apartamentos, rival)
   const own = labels.filter((x) => / · (Escola|Fábrica|Museu|Plataforma|Agência|Filial)[^·]* · /.test(x));
   for (const x of own) await enterBy(y, x.split(' · ')[0] + ' · ', `int1-${x.split(' · ')[1].split(' ')[0].toLowerCase()}`);
-  for (const [re, tag] of [[/ · Hotel/, 'int1-hotel'], [/ · Escritórios/, 'int1-escritorio'], [/ · (Prédio de apartamentos|Casa de cômodos)/, 'int1-apartamentos'], [/ · Sede de gravadora| \(escritório\) — /, 'int1-rival']]) {
-    const x = labels.find((l) => re.test(l)); if (x) await enterBy(y, x.split(' — ')[0], tag); else row(y, tag, 'AUSENTE');
+  // hotel, escritório e apartamentos pelo TIPO do lugar (o nome varia: lojas da época, nomes de prédio) — QA33
+  const byK = await p.evaluate(async () => {
+    const { cityLots31 } = await import('/src/ui/pixel/lots31map.ts');
+    const ps = cityLots31(window.__vtn19.store.game).places;
+    const lab = (id) => document.querySelector(`.w19-hs[data-id="${id}"]`)?.getAttribute('aria-label') ?? null;
+    const out = {};
+    for (const k of ['hotel', 'office', 'apartments']) out[k] = ps.filter((x) => x.k === k).map((x) => lab(x.id)).find(Boolean) ?? null;
+    return out;
+  });
+  for (const [k, tag] of [['hotel', 'int1-hotel'], ['office', 'int1-escritorio'], ['apartments', 'int1-apartamentos']]) {
+    if (byK[k]) await enterBy(y, byK[k].split(' — ')[0], tag); else row(y, tag, 'AUSENTE');
   }
+  { const x = labels.find((l) => / · Sede de gravadora| \(escritório\) — /.test(l)); if (x) await enterBy(y, x.split(' — ')[0], 'int1-rival'); else row(y, 'int1-rival', 'AUSENTE'); }
 }
 writeFileSync(resolve(SHOTS, 'qa33-ui.json'), JSON.stringify({ rows, errs }, null, 1));
 console.log(`erros de página: ${errs.length}`); for (const e of [...new Set(errs)].slice(0, 20)) console.log(e);

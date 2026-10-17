@@ -1,0 +1,587 @@
+{
+ "rows": [
+  {
+   "y": 1889,
+   "what": "prep",
+   "st": "OK",
+   "note": "{\"escola\":\"ok\",\"museu\":\"ok\",\"fabrica\":\"ok\",\"plataforma\":\"Ainda não existe nesta época (a partir de 2005).\",\"agencia\":\"Ainda não existe nesta época (a partir de 1930).\",\"filial\":\"Abra filiais a partir do Loft.\"}"
+  },
+  {
+   "y": 1889,
+   "what": "int2-banco",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Empréstimo aprovado: 13% ao ano em 36 meses."
+  },
+  {
+   "y": 1889,
+   "what": "int2-cartório",
+   "st": "OK",
+   "note": "8 pontos · ação ok: Registrar obras: feito."
+  },
+  {
+   "y": 1889,
+   "what": "int2-hospital",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Consulta feita: saúde +8 e estresse −8."
+  },
+  {
+   "y": 1889,
+   "what": "int2-estádio",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-clube",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-boate",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-igreja",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Missa e coral: feito."
+  },
+  {
+   "y": 1889,
+   "what": "int2-estúdio",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-agência",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-escola",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-gráfica",
+   "st": "OK",
+   "note": "5 pontos · ação ok: capa fica pronta para o seu próximo lançamento físico (+5%)."
+  },
+  {
+   "y": 1889,
+   "what": "int2-rádio",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int2-estação",
+   "st": "OK",
+   "note": "5 pontos · ação ok: ca no trem para Sevilha: três semanas fora e menos estresse."
+  },
+  {
+   "y": 1889,
+   "what": "int2-porto",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Passagem de navio: feito."
+  },
+  {
+   "y": 1889,
+   "what": "int2-festival",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 1889,
+   "what": "int1-museu",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 1889,
+   "what": "int1-escola",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 1889,
+   "what": "int1-fábrica",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 1889,
+   "what": "int1-hotel",
+   "st": "AUSENTE",
+   "note": ""
+  },
+  {
+   "y": 1889,
+   "what": "int1-escritorio",
+   "st": "OK",
+   "note": "4 pontos · ação bloqueada"
+  },
+  {
+   "y": 1889,
+   "what": "int1-apartamentos",
+   "st": "OK",
+   "note": "14 pontos · ação bloqueada"
+  },
+  {
+   "y": 1889,
+   "what": "int1-rival",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "prep",
+   "st": "OK",
+   "note": "{\"escola\":\"ok\",\"museu\":\"ok\",\"fabrica\":\"ok\",\"plataforma\":\"Ainda não existe nesta época (a partir de 2005).\",\"agencia\":\"ok\",\"filial\":\"Abra filiais a partir do Loft.\"}"
+  },
+  {
+   "y": 1962,
+   "what": "int2-banco",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Empréstimo aprovado: 11% ao ano em 36 meses."
+  },
+  {
+   "y": 1962,
+   "what": "int2-cartório",
+   "st": "OK",
+   "note": "8 pontos · ação ok: Registrar obras: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-hospital",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Consulta feita: saúde +8 e estresse −8."
+  },
+  {
+   "y": 1962,
+   "what": "int2-estádio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Reservar show de estádio: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-clube",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Tocar uma noite: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-boate",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1962,
+   "what": "int2-igreja",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Missa e coral: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-estúdio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Programa de calouros: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-agência",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Encomendar um jingle: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-escola",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 1962,
+   "what": "int2-gráfica",
+   "st": "OK",
+   "note": "5 pontos · ação ok: capa fica pronta para o seu próximo lançamento físico (+5%)."
+  },
+  {
+   "y": 1962,
+   "what": "int2-rádio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Tocar na rádio pirata: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-estação",
+   "st": "OK",
+   "note": "5 pontos · ação ok: arca no trem para Milão: três semanas fora e menos estresse."
+  },
+  {
+   "y": 1962,
+   "what": "int2-porto",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Passagem de navio: feito."
+  },
+  {
+   "y": 1962,
+   "what": "int2-festival",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-escola",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-fábrica",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-museu",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-agência",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-hotel",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-escritorio",
+   "st": "OK",
+   "note": "6 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-apartamentos",
+   "st": "OK",
+   "note": "14 pontos · ação bloqueada"
+  },
+  {
+   "y": 1962,
+   "what": "int1-rival",
+   "st": "OK",
+   "note": "10 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "prep",
+   "st": "OK",
+   "note": "{\"escola\":\"ok\",\"museu\":\"ok\",\"fabrica\":\"ok\",\"plataforma\":\"ok\",\"agencia\":\"ok\",\"filial\":\"Abra filiais a partir do Loft.\"}"
+  },
+  {
+   "y": 2025,
+   "what": "int2-banco",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Empréstimo aprovado: 12% ao ano em 36 meses."
+  },
+  {
+   "y": 2025,
+   "what": "int2-cartório",
+   "st": "OK",
+   "note": "8 pontos · ação ok: Registrar obras: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-hospital",
+   "st": "OK",
+   "note": "6 pontos · ação ok: Consulta feita: saúde +8 e estresse −8."
+  },
+  {
+   "y": 2025,
+   "what": "int2-estádio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Reservar show de estádio: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-clube",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 2025,
+   "what": "int2-boate",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Tocar na pista: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-igreja",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Missa e coral: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-estúdio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Programa de calouros: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-agência",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Encomendar um jingle: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-escola",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 2025,
+   "what": "int2-gráfica",
+   "st": "OK",
+   "note": "5 pontos · ação ok: capa fica pronta para o seu próximo lançamento físico (+5%)."
+  },
+  {
+   "y": 2025,
+   "what": "int2-rádio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Tocar na rádio pirata: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-estação",
+   "st": "OK",
+   "note": "5 pontos · ação ok: arca no trem para Leeds: três semanas fora e menos estresse."
+  },
+  {
+   "y": 2025,
+   "what": "int2-porto",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Passagem de navio: feito."
+  },
+  {
+   "y": 2025,
+   "what": "int2-festival",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-escola",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-fábrica",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-museu",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-agência",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-plataforma",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-hotel",
+   "st": "OK",
+   "note": "6 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-escritorio",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-apartamentos",
+   "st": "OK",
+   "note": "14 pontos · ação bloqueada"
+  },
+  {
+   "y": 2025,
+   "what": "int1-rival",
+   "st": "OK",
+   "note": "abre a ficha (janela), sem interior"
+  },
+  {
+   "y": 2035,
+   "what": "prep",
+   "st": "OK",
+   "note": "{\"escola\":\"ok\",\"museu\":\"ok\",\"fabrica\":\"ok\",\"plataforma\":\"ok\",\"agencia\":\"ok\",\"filial\":\"Abra filiais a partir do Loft.\"}"
+  },
+  {
+   "y": 2035,
+   "what": "int2-banco",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Empréstimo aprovado: 11% ao ano em 36 meses."
+  },
+  {
+   "y": 2035,
+   "what": "int2-cartório",
+   "st": "OK",
+   "note": "8 pontos · ação ok: Registrar obras: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-hospital",
+   "st": "OK",
+   "note": "6 pontos · ação ok: Consulta feita: saúde +8 e estresse −8."
+  },
+  {
+   "y": 2035,
+   "what": "int2-estádio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Reservar show de estádio: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-clube",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 2035,
+   "what": "int2-boate",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Tocar na pista: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-igreja",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Missa e coral: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-estúdio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Programa de calouros: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-agência",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Encomendar um jingle: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-escola",
+   "st": "fora da época/cidade",
+   "note": ""
+  },
+  {
+   "y": 2035,
+   "what": "int2-gráfica",
+   "st": "OK",
+   "note": "5 pontos · ação ok: capa fica pronta para o seu próximo lançamento físico (+5%)."
+  },
+  {
+   "y": 2035,
+   "what": "int2-rádio",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Tocar na rádio pirata: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-estação",
+   "st": "OK",
+   "note": "5 pontos · ação ok: a no trem para Sarajevo: três semanas fora e menos estresse."
+  },
+  {
+   "y": 2035,
+   "what": "int2-porto",
+   "st": "OK",
+   "note": "5 pontos · ação ok: Passagem de navio: feito."
+  },
+  {
+   "y": 2035,
+   "what": "int2-festival",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-escola",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-fábrica",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-museu",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-agência",
+   "st": "OK",
+   "note": "7 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-plataforma",
+   "st": "OK",
+   "note": "8 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-hotel",
+   "st": "AUSENTE",
+   "note": ""
+  },
+  {
+   "y": 2035,
+   "what": "int1-escritorio",
+   "st": "OK",
+   "note": "6 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-apartamentos",
+   "st": "OK",
+   "note": "9 pontos · ação bloqueada"
+  },
+  {
+   "y": 2035,
+   "what": "int1-rival",
+   "st": "OK",
+   "note": "10 pontos · ação bloqueada"
+  }
+ ],
+ "errs": []
+}
