@@ -108,9 +108,8 @@ export function applyPrefs(): void {
   root.setAttribute('data-cb', p.colorblind ?? 'none');
   root.setAttribute('data-era-skin', resolveSkin31(skinPref31(p), store.game?.year ?? NaN)); // r31 (C): estilo efetivo
   // r25: o atributo sempre diz o tema resolvido ('auto' segue o sistema), para o CSS ter uma única fonte
-  let th = p.theme;
-  if (th !== 'light' && th !== 'dark') { try { th = window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch { th = 'dark'; } }
-  root.setAttribute('data-theme', th);
+  // dono (2026-10-17): sem escolha de tema; o jogo é sempre escuro (a arte foi feita para ele)
+  root.setAttribute('data-theme', 'dark');
 }
 
 // ---------- IndexedDB ----------

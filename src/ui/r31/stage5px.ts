@@ -18,6 +18,8 @@ import { avatarSprite, randomLook, type Dir, type Pose } from '../pixel/avatar';
 import { drawTextOutlined, textWidth } from '../pixel/font';
 import { cityById } from '../../data/world';
 import type { Appearance } from '../../sim/types';
+import { holoRgb5 } from '../pixel/holo5col';
+export { holoRgb5 };
 
 export interface StageOpts5 {
   year: number;
@@ -249,8 +251,8 @@ export function scene5(o: StageOpts5): Scene5 {
   // 1889–1899: ribalta a gás (bicos com chama) na beira do palco
   const lamps: [number, number][] = [];
   if (year < 1900) for (let x = L + 10; x < R - 4; x += 22) { inked(P, (q) => { q.rect(x - 1, fy - 2, 3, 2, C('#6a5a3a')); q.put(x, fy - 3, C('#3a3020')); }); lamps.push([x, fy - 4]); }
-  // hologramas (2030+): a vocal e o guitarrista viram projeções, cada um com o projetor no chão
-  if (year >= HOLO5) for (const a of actors) if (a.role === 'vocal' || a.role === 'guitar') {
+  // holograma (2030+): só a vocal vira projeção, com o projetor no chão (dono, 2026-10-17: um holograma só, não dois)
+  if (year >= HOLO5) for (const a of actors) if (a.role === 'vocal') {
     a.holo = true;
     inked(P, (q) => { q.rect(a.x - 6, fy - 3, 12, 3, C('#2a2a38')); q.rect(a.x - 3, fy - 4, 6, 1, C('#7af0ff')); });
   }
@@ -283,8 +285,8 @@ function holo5(ctx: CanvasRenderingContext2D, src: CanvasImageSource & { width: 
     const im = g.getImageData(0, 0, tint.width, tint.height), d = im.data;
     for (let i = 0; i < d.length; i += 4) {
       if (!d[i + 3]) continue;
-      const v = Math.min(1, (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255 * 1.25 + 0.08), top = (i / 4 / tint.width) < tint.height * 0.45 ? 1 : 0;
-      d[i] = Math.round(10 + v * (top ? 190 : 170)); d[i + 1] = Math.round(40 + v * (top ? 180 : 215)); d[i + 2] = Math.round(90 + v * 165);
+      const [r, g, b] = holoRgb5(d[i], d[i + 1], d[i + 2], (i / 4 / tint.width) < tint.height * 0.45);
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
     }
     g.putImageData(im, 0, 0);
     if (holoTint5.size > 64) holoTint5.clear();

@@ -5,6 +5,8 @@
 // Nova run rápida: uma tela só (empresa, ano, cidade, atividade, ponto de partida, nível dos rivais, dificuldade) que gera a MESMA
 // RunConfig da configuração completa (home27model.ts) e abre a configuração completa pré-preenchida.
 
+import { fsOption33 } from '../r33/tela33';
+import { langToggle5 } from '../r31/lang5';
 import { endYearField28 } from '../endyear28'; // r28 (F4)
 import { REC_YEARS28, pickStart28 } from '../../sim/start28data';
 import { SITS29, sit29ById, sitOfScenario29, start28Fits29, statusLabel29, type Sit29 } from '../../sim/start29data'; // r29
@@ -13,7 +15,7 @@ import { NAME_DEFAULT29, NS29, VNS29, labelsTag29, venKind29, type N29, type Vn2
 import type { RunConfig } from '../../sim/types';
 import { drawHqCutaway27 } from './hqpx27';
 import { CITIES, l, type L } from '../../data/world';
-import { S, locale, t, type Lang } from '../../i18n/strings';
+import { S, locale, t } from '../../i18n/strings';
 import { formatMoney } from '../../core/money';
 import { careerDef } from '../../sim/sys/careers12';
 import { YEAR_MAX20, YEAR_MIN20 } from '../../sim/worldpolicy20';
@@ -24,6 +26,9 @@ import { addProfile17, askNewProfile31, curProfile17, deleteProfile17, lastSave1
 import { SaveError20 } from '../../core/save20';
 import { pasteCode20 } from '../newgame17';
 import { launchRun27, newGameScreen, randomSeed } from '../newgame';
+import { intro33On, playIntro33 } from '../r33/intro33'; // R33 INTRO33
+import { setIntro33 } from '../../sim/r33/intro33sw';
+import { randomLook } from '../pixel/avatar';
 import { scenarioScreen } from '../sys/live/goals';
 import { setTutorials19, tutorialsOff19, TUTOFF_LABEL19 } from '../tutoff19';
 import { ic } from '../vis';
@@ -76,12 +81,15 @@ export function options27(redraw: () => void): void {
   const p = store.prefs;
   let close = () => {};
   const body = h('div', { class: 'form h27-opts' },
-    h('label', null, t(S.language), select(p.lang, [{ value: 'pt' as Lang, label: 'Português (BR)' }, { value: 'en' as Lang, label: 'English' }], (v) => { p.lang = v; savePrefs(); close(); redraw(); options27(redraw); })),
-    h('label', null, t(S.theme), select(p.theme, [{ value: 'auto', label: t(S.themeAuto) }, { value: 'light', label: t(S.themeLight) }, { value: 'dark', label: t(S.themeDark) }] as { value: typeof p.theme; label: string }[], (v) => { p.theme = v; savePrefs(); })),
-    h('label', null, `${t(S.textSize)}: ${p.textScale}%`, h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { p.textScale = Number((e.target as HTMLInputElement).value); savePrefs(); } })),
+    h('div', { class: 'h27-langrow' }, h('span', null, t(S.language)), langToggle5((v) => { p.lang = v; savePrefs(); close(); redraw(); options27(redraw); })),
+    fsOption33(), // BUGS33 item 5: tela cheia também na tela inicial
+    h('label', null, t(S.textSize), ': ', h('span', { class: 'ts-val' }, `${p.textScale}%`), h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { const el = e.target as HTMLInputElement; p.textScale = Number(el.value); savePrefs(); const v = el.parentElement?.querySelector('.ts-val'); if (v) v.textContent = `${p.textScale}%`; } })), // o número acompanha o controle
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); } }), ' ', t(TUTOFF_LABEL19)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.contrast)),
-    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.reducedMotion)));
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.reducedMotion)),
+    // R33 INTRO33: intro ao começar a partida (ligada por padrão; a tela inicial fica com o vídeo de show)
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', 'data-opt': 'intro33', checked: intro33On(), onchange: (e: Event) => { setIntro33((e.target as HTMLInputElement).checked); close(); redraw(); options27(redraw); } }), ' ', t(l('Intro da partida', 'Run intro'))),
+    intro33On() ? h('button', { type: 'button', class: 'btn small ghost', 'data-opt': 'intro33-replay', onclick: () => { close(); playIntro33({ name: '', line: t(l('Londres, 1962: o beat está nascendo nos porões. Você começa como selo iniciante.', 'London, 1962: beat music is being born in the basements. You start as a new label.')), year: 1962, look: randomLook('intro33-replay'), lang: p.lang === 'en' ? 'en' : 'pt' }, () => undefined); } }, t(l('Rever a intro', 'Watch the intro again'))) : null);
   close = modal(t(l('Opções', 'Options')), body);
 }
 
@@ -127,7 +135,7 @@ export function homeScreen27(root: HTMLElement, onStart: () => void, at?: 'saves
     h('div', { class: 'h27-shade', 'aria-hidden': 'true' }),
     h('div', { class: 'h27-top' },
       h('span', { class: 'h27-prof' }, '👤 ', curProfile17().name, h('button', { type: 'button', class: 'h27-link h27-achk', title: t(l('Conquistas do perfil', 'Profile achievements')), onclick: () => toAch() }, achBadge27())),
-      select(store.prefs.lang, [{ value: 'pt' as Lang, label: 'PT' }, { value: 'en' as Lang, label: 'EN' }], (v) => { store.prefs.lang = v; savePrefs(); redraw(); }, { 'aria-label': t(S.language), class: 'h27-lang' }),
+      langToggle5((v) => { store.prefs.lang = v; savePrefs(); redraw(); }, 'h27-lang'),
       h('button', { type: 'button', class: 'h27-link', onclick: () => options27(redraw) }, '⚙ ', t(l('Opções', 'Options')))),
     h('div', { class: 'h27-content' },
       h('p', { class: 'h27-kicker' }, t(l('UM MUNDO VIVE DE MÚSICA', 'A WORLD THAT RUNS ON MUSIC'))),

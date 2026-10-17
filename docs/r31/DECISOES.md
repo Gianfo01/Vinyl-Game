@@ -457,4 +457,235 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - **2026-10-17 · MAPA33 (R33):** cidade expandida atrás de `exp33.mapa` (desligado): bairros 7–8 (periferia leste, lotes 58–65; orla sul, 66–83; mapa até 56×40) só abrem quando falta lote; registro aberto tipo → onde (`registerSite33`/`setWant33`/`lotFor33`, estádio na periferia, banco no centro, porto só com água, escola de samba só no Rio). Desligado = mapa idêntico (`DIST_BASE18 = 7`; r27-lots ajustado em 2 linhas). Ver `docs/r33/mapa33.md`.
 - **2026-10-17 · R33 VIDA (complemento).** Cartões de ação da vida (sofá, porta, cofre, mapa), evento `r33_scandal` e viagem de lazer (`takeTrip33`), tudo atrás dos mesmos exp33.* desligados.
 - **2026-10-17 · INT-2 (v33): 15 prédios novos com interior.** `exp33.int2` (desligado): registro `src/sim/r33/int2.ts` (lote, onde, cidades e épocas; samba só no Rio, porto só com água, jazz até 1979 e boate de 1970; terreno do festival com cena própria), ações pequenas em formato de cartão de lugar, ganchos `INT2_HOOKS` para GESTÃO/VIDA/CATÁLOGO/MUNDO. Arte NO PADRÃO DO JOGO: `src/ui/r33/int2px.ts` monta `Interior27` + adereços novos no gancho `extra` do `drawInterior27` (casca `cut27`, bonecos `avatarSprite`), 23 lojas da época no mesmo corte, fachada = arte isométrica existente (`mapArt`). Prints em `docs/r33/mocks/int2/`; detalhes em `docs/r33/int2.md`.
+
+## 2026-10-17 · Celular, computador e redes sociais (versão 33)
+- O dono pediu e aprovou, a partir dos mocks em `docs/r33/mocks/`:
+  - **botão CELULAR** no menu de baixo (o último, atalho 5, só de 1983 em diante);
+  - **computador** no PC da mesa (1982+, sem atalho);
+  - **5 versões de cada aparelho**, apps e **ações por época**, tudo ligado às mecânicas que já existem;
+  - Vídeos que descobrem artista novo, Compras de objetos, cobrinha jogável, Encontros com NPCs da cidade (nunca
+    Fossati nem menores);
+  - **redes sociais** como feed sobre os fatos (`facts17`), com posts que mexem no mundo, e o **Jornal
+    reformulado**.
+- Mecânicas novas aprovadas ("incluir tudo"):
+  - minijogos;
+  - toques como formato;
+  - demo caseira;
+  - live e post;
+  - curtir em Encontros;
+  - ligação por época;
+  - assistente de IA;
+  - denúncia de pirataria;
+  - assinatura de fãs;
+  - viralizar trecho;
+  - vazamento do álbum;
+  - cambistas e preço dinâmico;
+  - conta hackeada;
+  - deepfake de voz.
+- Frases: em vez de ~40 modelos, ~600 núcleos combináveis por tom, abertura e fecho e gíria da época, sem repetir as
+  últimas 50 do mesmo artista (o dono achou que 40 repetiria rápido).
+- Ordem: entra **antes do POL33**, em duas frentes paralelas (APARELHOS33 em Opus, REDES33 em Sonnet), depois do QA33.
+- Dono aprovou o escopo e os mocks: **tudo na mesma arte do resto do jogo** (componentes, cores e fontes atuais, pixel
+  art pelas regras do PLANO). Os mocks valem só como conteúdo e fluxo. Não fazer mocks novos.
+
+## 2026-10-17 · Tela inicial e opções (dono)
+- Saiu "PIXEL STUDIO EDITION" do rodapé. "Créditos" saiu dos links e o "Editor de base" foi para o lugar dele.
+- A língua troca com dois botões PT | EN (`src/ui/r31/lang5.ts`), sem lista suspensa, na tela inicial e nas opções.
+- Não há mais escolha de tema claro/escuro: o jogo é sempre escuro, e o botão de tema também saiu das opções do jogo.
+- O logo MASTERS ficou maior (o `fitHead5` continua encolhendo se cobrir o letreiro). A linha de baixo ficou só "UM
+  MUNDO VIVE DE MÚSICA", sem "1889 – 2040".
+- Nas cenas de 2030+, só a vocal vira holograma (antes eram vocal e guitarra: dois hologramas).
+
+## 2026-10-17 · INTRO33
+- O dono pediu uma intro e um fundo animado da tela inicial a partir do conceito de `docs/r33/ref/intro-conceito.webp`:
+  uma rua isométrica que atravessa as épocas, ligadas por uma onda de som de luz. É só conceito, sem copiar a imagem.
+- Desenho por código na arte do jogo, sem vídeo:
+  - o mesmo motor serve de fundo em loop na tela inicial (no lugar do carrossel de épocas);
+  - e de intro curta na primeira abertura, pulável.
+- Frente INTRO33 (Sonnet), em paralelo ao QA33.
+- INTRO33, ajuste do dono: a intro deixa de ser "primeira abertura" e vira a **intro da partida**.
+  - Protagonista: o personagem criado pelo jogador.
+  - Igual para todas as carreiras.
+  - Só 6 variantes, pela faixa de época de início. Termina mostrando o resumo "Sua história" da ficha.
+  - O loop da tela inicial continua separado.
+
+## 2026-10-17 · GENTE33
+- O dono pediu:
+  - diretor de filial, CEO da empresa e conselho, equipe pessoal e pessoas fixas;
+  - mais NPCs, ligados ao ciclo bartender ↔ artista.
+- Decidido:
+  - **Parte A** roda já (Opus). Tudo opt-in (só quando o jogador contrata), para não mudar os goldens enquanto o QA33
+    mede.
+  - **Parte B** (três camadas de detalhe, promoção e rebaixamento com resumo do passado, talento escondido, volta por
+    cima) só depois de juntar o QA33, porque mexe em todas as pessoas e nos goldens.
+  - Nem todos os NPCs terão o mesmo detalhe: as camadas seguem a pessoa, não o emprego.
+
+## 2026-10-17 · INTRO33 — o que foi feito (frente INTRO33, Sonnet)
+- **Rua que atravessa as épocas**, desenhada só por código (nenhum arquivo de vídeo, nenhuma imagem embutida; o arquivo único
+  não cresceu): cortes isométricos de 1889 (sobrado com piano, gramofone e ribalta a gás), 1920 (rádio com torre e faíscas),
+  1950 (loja de discos com toldo e jukebox), 1965 (estúdio de fita), 1975 (palco com plateia e luzes coloridas), 1995 (estúdio
+  digital com telas) e 2035 (cidade de vidro com UM único holograma de cantora, reaproveitando a cor do `holo5`). Gente com
+  roupa da época (`crowdLook27` + `avatarSprite`), carros de cada época, postes (gás → elétrico → LED), janelas que acendem com
+  a onda, rio com ponte de pedra nas pontas. A onda de luz muda de cor (dourado → laranja → rosa → roxo → ciano) e puxa a câmera.
+- **Arte**: `Px`, contorno `INK` por `inked`, luz de cima à esquerda, rampas `lv`, faixas de época `ep5Of`. Os adereços e os
+  prédios do fundo são caixas isométricas (`sbox`); o que é alto (torre, chaminés) nasce de trás do telhado, e nada fica solto
+  no ar (revisado depois de achados do dono: antena, chaminés, luminárias, placa, alto-falantes e bateria).
+- **Dois usos do mesmo motor** (`src/ui/r33/intro33px.ts` puro + `intro33.ts` canvas):
+  1. **Fundo da tela inicial**, loop de ~40 s, no lugar de `cycleShow5`/`SHOW5` (que continuam para o interruptor desligado).
+     Escala inteira (`k = round(altura/270)`), ~30 quadros por segundo, pausa com a aba oculta ou fora da tela, "movimento
+     reduzido" = um quadro parado (a rua acesa até o palco de 1975). O título segue `fitHead5`, que agora respeita o topo das
+     placas e das torres (`signTop`).
+  2. **Intro da partida** (decisão do coordenador, que valeu mais que o pedido original de "só na 1ª abertura"): ao apertar
+     "Começar minha história" (começo rápido e configuração completa, os dois passam por `launchRun27`), o personagem criado
+     na ficha, com a mesma aparência, anda pela rua até a época escolhida (6 paradas = as faixas de `ep5Of`; a de 1950–69 tem
+     dois cortes), o resumo da ficha aparece digitado com o nome dele e a imagem escurece. 12 a 15 s, pulável com qualquer tecla
+     ou clique (atalhos como F5 e Ctrl seguem funcionando). Movimento reduzido: imagem final parada, resumo e botão
+     "Continuar". Texto vem de `story5` (o mesmo da ficha).
+- **Interruptor** `exp33.intro` (ligado por padrão; editor e Opções). Desligado: tela inicial de antes e início direto da partida.
+  Em Opções: caixa "Intro da partida e rua animada na tela inicial" e botão "Rever a intro".
+- **Easter eggs** (pequenos, na mesma arte, valem para o fundo e para a intro): gato preto nos telhados do sobrado e do estúdio de
+  fita; pombos que voam quando a onda passa; disco voador nos anos 50; disco de vinil que rola pela pista; patinho de borracha no
+  canal; violonista de rua com o estojo aberto entre 1965 e 1975.
+- **Testes**: `tests/r33-intro.test.ts` (cada trecho desenha sem DOM e sem bloco de uma cor, o loop volta ao começo, um só
+  holograma, movimento reduzido não anima, roteiro e duração da intro, easter eggs). Prints em `docs/r33/intro/`.
+- **Achado de processo**: o observador de visibilidade entrega o primeiro aviso antes de o canvas entrar na página; ler só o
+  primeiro pausava o laço para sempre. Vale o último aviso.
+
+## R33 · CENARIOS em duas levas (17/10)
+Dono pediu lugares, interiores, objetos e NPCs inspirados em filmes e séries, cassino com mecânicas e minijogos.
+Decisão: inspirar sem copiar (nome trocado, sem logo/rosto), mesma arte, cada lugar = lote com função (lots31) e cada
+ação chama função existente. Para não ficar complexo demais: leva 1 na versão 34 (10 lugares, cassino com 4
+mecânicas, 6 "quem resolve", 5 minijogos simples); o resto na leva 2. Plano em docs/r33/CENARIOS33.md.
+
+## R33 · Tela inicial volta ao vídeo de show (17/10)
+Dono prefere o vídeo de show (palco por época) na tela inicial. A rua animada da INTRO33 fica só na intro da
+partida; exp33.intro agora controla só a intro ("Intro da partida" nas Opções). mountHome33 segue no código, sem uso.
+## 2026-10-17 · APARELHOS33 (celular e computador)
+- Atrás de `exp33.aparelhos` (**ligado** por padrão, só com a casca `exp5.nav`). Escopo `docs/r33/CELULAR_PC.md`; notas e gancho em `docs/r33/aparelhos.md`.
+- **Celular** = 5º botão do menu de baixo (⇧5), de 1983 em diante; "!" = soma das pendências dos apps (`bangs5`). Abre por cima da cena (EXP-13). A **pilha de demos saiu do ⇧5 para o ⇧9** (docs de teclas regeneradas pelo próprio r31-w5-tec com UPDATE5=1).
+- **Computador** = upgrade "Computador com planilha" do livro-caixa (ou o painel de 2010+): o cartão do livro-caixa ganhou "Instalar computador na mesa" (mesmo `buyDeco31` + `setReq31` do Arrumar); instalado, o PC é uma mesinha ao lado da mesa do mês (`SEDE_ART5`/`SEDE_HAS5` em sede5), com cartão ACOES5 e "Ligar o PC". O teste r31-nav5 passou a pular objetos que não existem no momento (o PC sem upgrade).
+- **Catálogo pelo correio** na mesa (1889–1999) com a compra a distância do `decoshop31`.
+- 5 versões de cada aparelho e todos os ícones desenhados em `Px`; a tela usa os componentes do jogo (botão do cartão de ações, `lockBtn31`, retratos, miniaturas `decoPx5`). Nada de visual de app real.
+- Toda ação chama a função que já existe (teste confere a referência); app some com o sistema desligado; ação cinza mostra o motivo da própria regra. Encontros: perfis da cidade (`gente31`/`jobOf31`) e do meio, match = `askOdds31`/`askRoll31`, chamar = `askOut31`; nunca Fossati (`isFossati31`) nem menores.
+- Mecânicas novas pequenas (estado `x4.ap33` só nasce com o uso): minijogos com alívio de estresse (teto 8/mês) e recorde no diário; toque como formato 1997–2009; demo caseira (compose27 no automático, 1 bolinha, qualidade ×0,72); ligação por época (minuto caro 1983–96, vídeo/holograma pesam mais); assistente de IA 2032+ (erro de 8% → processo → sala de crise); denúncia de pirataria 1999–2010 (gancho `registerLegalCase33`); assinatura de fãs 2013+; vazamento do álbum 1999+ vira escolha (evento `ap33_leak`; o vazamento antigo fica até 1998); cambistas/preço dinâmico e deepfake de voz ligados às regras de `clash17` e `ai18`.
+- **Gancho para a REDES33**: `registerPhoneApp33`/`registerPcApp33` (id, nome, ícone, anos, versões, sistema, "!", `open`) e `registerAct33`; o Redes tem o lugar reservado na tabela e só aparece registrado.
+- Testes (regime da 33): tsc, `tests/r33-aparelhos.test.ts` (21 casos), `tests/r31-uiwords.test.ts`; conferidos também r31-nav5, r31-w5-tec e r31-acoes5 (casca mexida). Goldens não rodados: o vazamento de 1999+ com o interruptor ligado muda o sorteio de eventos — o QA33 re-mede.
+- Prints: `docs/r33/aparelhos/` (celular 1983, 1997, 2008, 2025, 2035; PC 1982, 1995, 2003, 2025, 2035; cobrinha).
+- **2026-10-17 · R33 REDES (frente, branch claude/r33-redes).** Interruptor `exp33.redes`, **ligado**. `docs/r33/redes.md`.
+  - **Feed** (`src/sim/r33/redes33.ts`): vista sobre os fatos públicos de `facts17` com artista entre os atores; o único estado novo é a memória de 50 núcleos por artista e um anel de 160 posts (para o texto não mudar a cada abertura). Mostra seus artistas, depois quem você conhece (`social31`), rivais e o mundo (fatos de lei/crise/boicote e `mundoNow33`). Fossati nunca entra em fofoca romântica.
+  - **Posts mexem no mundo** só com funções existentes: boato→público (`raiseVisibility`), hype (`addHype`), pré-save (`rollout.presaves`), polêmica (`addRep33`/`scandal33`), meme (`mundo33.fx`), indireta/resposta (`feud18`), curtir/repostar (`shiftTie31`), delegar (`pressPick33` + `director33`). Rivais postam indiretas, gafes e vitrines por mês (sorte por chave, sem mexer no fluxo rng19; protegidos do modo exato ficam de fora).
+  - **Mecânicas novas aprovadas:** conta hackeada (2010+, rara, sobe com fama, segurança digital 0–2 reduz; custa para recuperar), trecho viral (2018+, uma tentativa por lançamento), live (2016+, 1 bolinha) e post com ganho próprio de fãs e hype.
+  - **Frases** (`frases33*.ts`): 60 tipos × 10 + 4 grupos × 10 = 640 núcleos, 6 tons, 84 aberturas e 84 fechos, 8 gírias por faixa de época, encaixes (cidade, música, rival, número, lugar, fã), bordões de rival, PT e EN. Sem repetir os últimos 50; tipo que se repete mais de 10 vezes em 50 posts usa o núcleo mais antigo.
+  - **Jornal** (`jornal33.ts`, telas em `ui/r33/redes33ui.ts`): oito seções; cada publicação da época (folha → +revista de rádio → fofoca e paradas → TV e fanzines → jornal + portal) reparte as seções, conta a notícia na voz própria e tem cartas próprias. Matéria clicável abre o cartão ACOES5 (`showAdhoc5`, novo em `acoes5.ts`); classificados apontam para ações existentes. **Dono pediu (pós-mock):** imagens reais (retrato do líder por `portraitCanvas`, capa por `cover`) e nomes de artista/cidade/disco como links para as fichas já existentes.
+  - **Plantar outra nota:** `bribe18` só existe para a carreira de crítico; a coluna paga a nota por conta própria (`plantNote33`) e a oferta de "apoio editorial" do crítico aparece na coluna com aceitar/recusar/denunciar (`bribe18`).
+  - **App no celular/PC:** `src/ui/r33/redes33phone.ts` registra `redes` pelo gancho da APARELHOS33 (`registerPhoneApp33`/`registerPcApp33`) e embute a tela (`embedRedes33`). Branch da APARELHOS33 foi mesclada aqui para ligar. Entrada provisória: cartão do Jornal na mesa (`'`) com "Ler o jornal" e, de 2004, "Abrir as redes".
+  - Testes: `tests/r33-redes.test.ts` + `r31-uiwords`; goldens não rodados (regra da 33; o estado novo `x4.redes33` muda o hash do save).
+
+- **2026-10-17 · R33 GENTE33 parte A (Opus).** Diretor(a) de filial, CEO e conselho, equipe pessoal e pessoas fixas em
+  `src/sim/r33/gente33.ts`, atrás de `exp33.gente` (ligado; ligado não muda nada até o jogador agir).
+  - **Diretor(a) de filial:** pessoa real (equipe, executivo de rival, gente da cidade do `gente31` ou ex-artista).
+    Garimpa (`addSignal`), contrata local (`acceptOffer`), marca shows e divulga (`playGigs`) dentro do teto, e manda
+    relatório mensal na Caixa. O jogador escolhe a linha (ousado/conservador) e o teto. Riscos com sorteio próprio:
+    roubo por rival, saída com o elenco regional abrindo selo (`foundLabel17`), desvio (fato do submundo) e briga com a
+    sede. Ex-artista da cena local ganha bônus.
+  - **CEO:** só com sede Complexo ou 25 anos de casa. Aplica "multinacional" na delegação única, guarda a anterior e a
+    devolve ao sair. Leva grandes decisões ao conselho (`repelRaider`, ampliar sede, abrir ou ampliar filial) e segura
+    a sucessão.
+  - **Conselho:** só com sócios ou ações. Reunião anual com voto dos `holders`; raiders hostis votam contra; maioria
+    contra abre uma moção.
+  - **Equipe pessoal:** motorista, segurança (`setGuard33`), trainer e médico (saúde e estresse do dono).
+  - **Pessoas fixas:** fã-clube, jornalista (coluna como fato `column33`) e representante do sindicato (confiança do
+    `union20`).
+  - **Regras:** Fossati e gente de ato real ficam fora. Ações nos cartões ACOES5 (mapa da parede, mesa de reunião,
+    porta, garagem, espelho, mural, jornal, quadro da equipe), sem tela nova. Estado só nasce na 1ª ação; sem ele o mês
+    não sorteia.
+  - **Goldens:** os 4 rodados e iguais.
+  - Ver `docs/r33/gente.md` (com as pendências da parte B). Teste `tests/r33-gente-a.test.ts`; prints em
+    `docs/r33/gente/`.
+- **2026-10-17 · R33 GENTE33, pendências da parte B (pedido do dono).** Feito o que não é da REDES33 nem da POL33,
+  ainda opt-in:
+  - quem você contrata da cidade larga a vaga do `gente31` e não é recontratado enquanto trabalha para você
+    (`leaveJob31`/`BUSY31`, dois ganchos pequenos no gente31; sem contratação, a virada é a de antes);
+  - diretor ou CEO que sai vivo vira executivo livre no mercado (`leaders10`), com o cargo no currículo;
+  - ficha da passagem e opinião de verdade sobre você;
+  - camada leve (`light33`) nas linhas do quadro da equipe.
+  - Goldens rodados e iguais. O resto do PLANO da parte B (camadas para todos, talento escondido, volta por cima)
+    segue para depois do QA33. Ver `docs/r33/gente.md`.
+- **2026-10-17 · R33 GENTE33 parte B (pedido do dono, antes do QA33).** Em `src/sim/r33/gente33b.ts`, cada parte atrás
+  do seu interruptor, desligado por padrão:
+  - três camadas de pessoas (`exp33.camadas`): rebaixar guarda o resumo do passado e as relações fortes; promover
+    devolve a pessoa inteira, com o mesmo id;
+  - talento escondido de quem trabalha na cidade (`exp33.talento`), com o gancho do bartender recusado que vira
+    estrela num rival;
+  - volta por cima por catálogo, olheiro ou vídeo viral (`exp33.volta`);
+  - romance com quem vira artista do seu selo (`exp33.romance33`).
+  - Desligados, os goldens não mudam (rodados e iguais). O QA33 liga e mede. Teste `tests/r33-gente-b.test.ts`; ver
+    `docs/r33/gente.md`.
+
+## R33 · POL33 cancelado (17/10)
+Dono: cancelar o POL33 e mandar a build; seguir com o planejamento da leva 1 (e talvez 2) de CENARIOS e só depois
+polir. A 33 sai com QA33 + REDES33 juntadas, sem polimento. Os itens do POL33 (outdoors com compra/aluguel, merch e
+itens exclusivos, as 6 ideias, controles, tutorial, festival a céu aberto, interiores antigos pequenos, tela de
+escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Leva 1 detalhada em
+docs/r33/CENARIOS33.md §9.
+
+**Revisto no mesmo dia:** o dono voltou atrás — o POL33 fica onde estava (depois de QA33 e REDES33, antes da `Masters_33.html`). A prévia `Masters_33_previa.html` vai antes, só para ver.
+- **2026-10-17 · R33 REDES (complemento).** Base mesclada (APARELHOS33 + GENTE33). Câmera → post: ação `cam.foto` ("Foto vira post", 2007+, `registerAct33`) posta pelo primeiro artista do elenco com `ownPost33`. Fatos da GENTE33 (`comeback33`, `hire33`, `talent33`, `board_vote33`, `missed33` = ex-artista atrás do balcão) usam núcleos de tipos parecidos (`ALIAS33`) e entram no feed e na seção Música do Jornal.
+
+## R33 · BUGS33 — o que o dono achou jogando a prévia `Masters_33_previa.html` (17/10)
+Casca nova (`VITE_EXP5NAV=1`), Londres e Brasil 1962, em português e inglês. Prints antes/depois em `docs/r33/bugs/`
+(1912×867, a tela do dono, e 1366×768 onde o layout muda). Os "antes" saem da base `2ed339d2`.
+- **Item 1 · "Mercado e política do país" (painel do país no mapa-múndi).** O conserto do commit `2ed339d2`
+  (`openPaper5`, usado por `go27`) foi conferido no navegador: abre "Regiões e política" como papel por cima do mapa,
+  e o Esc volta ao mapa com o país ainda aberto. Nada a mudar.
+- **Item 2 · cartão da cidade no mapa-múndi quebrado.** O `.m5-pick` era uma `div` sem CSS, fora da regra
+  `.map27-body > aside` que limita a altura: os botões ficavam soltos acima da ficha e a ficha passava por baixo da
+  barra de dicas. Agora o cartão é a própria ficha (`sheet27(s, c, { cls: 'm5-pick', el })`), com "Entrar na cidade ▸" e
+  "Fechar" (tamanho normal) presos no topo, logo abaixo do título, e a ficha rola por dentro da coluna, como o painel do
+  país.
+- **Item 3 · camada "Fãs por idade" não mudava o mapa.** Duas causas: (a) no começo da run o selo não tem artistas, então
+  não há fãs em país nenhum; (b) com fãs, o véu do país saía com alfa 0,32 × (0,3–0,95) e não se via. `countryShade`
+  ganhou `alpha` opcional (a camada de idade usa 0,8, no Mundo novo e no painel antigo) e a legenda diz "Seus fãs ainda
+  não aparecem em nenhum país: …" com o motivo (sem artistas / artistas sem público). As outras camadas (Força da cena,
+  Gêneros em alta, Seus atos em turnê, Festivais, Rivais, Países fechados, Seus lugares) e os modos
+  Político/Guerra Fria/Mercados foram conferidos e respondem (`3-outras-camadas-e-modos.png`).
+- **Item 4 · comprar imóvel e abrir filial ao entrar numa cidade.** Modelo `src/sim/r33/cityBuy33.ts`
+  (`cityBuyActs33`/`runCityBuy33`). Ele só junta os fluxos que já existem, cada um com a sua trava: imóvel fora da sede
+  por `buyHome31` (a casa mais barata da época, sai do bolso do dono), filial por `canOpenBranch`/`openBranch`, diretor da
+  filial por `hireBranchDir33` (só com o GENTE33 ligado), e com o imóvel comprado as ações do cidade33 (`baseActs33`). Na
+  cidade visitada, a ficha mostra "Negócios aqui" e dois prédios comuns viram "Imóvel à venda" com as mesmas ações. No
+  cartão da cidade do mapa-múndi entra o atalho "Abrir filial aqui". Na sede a filial vem travada (é a matriz), e
+  terrenos e prédios continuam pelo cartão de cada lote ("Mais opções (comprar o imóvel…)"). Nenhuma regra de simulação
+  mudou. Em 1962 o patrimônio pessoal do começo não paga o apartamento mais barato de Paris ($3.456), então o botão
+  aparece travado com o motivo. Teste `tests/r33-bugs-4.test.ts`.
+- **Item 5 · tela cheia.** `src/ui/r33/tela33.ts` (Fullscreen API): "Tela cheia" no menu de pausa, caixa nas Opções do
+  jogo e nas Opções da tela inicial, e Alt+Enter em qualquer tela (F11 continua sendo a tela cheia do navegador). Alt+Enter
+  entra na lista de teclas como tecla do sistema, fixa e reservada; F ficou de fora porque já é tecla de objeto. A
+  preferência vale só na sessão (`sessionStorage`): como o navegador só deixa entrar com um gesto, depois de recarregar
+  a tela cheia volta no primeiro clique ou tecla. Teste `tests/r33-bugs-5.test.ts`.
+- **Item 6 · pessoa clicável por cima do móvel.** Nos interiores (`inside31`/`scene31`), o móvel com o mouse em cima
+  subia para a camada 3 e cobria a pessoa. Entrando pela mesa, o clique na pessoa caía na mesa: na sala dos fundos da
+  fachada em Londres 1962 abria "Mesa" em vez da chefe; o mesmo na gravadora, na casa de shows, no bar e na rádio. Agora
+  os pontos de pessoa (`Spot31.person` / `personSpot31`: `who:N`, `you`) ficam na camada 5 (6 em hover), acima de
+  qualquer objeto e das bancas da vitrine (4); o móvel continua clicável em volta. Na sede da casca nova (`sede5`), os
+  bonecos desenhados (artistas, equipe) ganharam área de clique acima dos móveis e abaixo dos selos das salas, e abrem a
+  ficha. Teste `tests/r33-bugs-6.test.ts`.
+- **Item 7 (coordenador) · "não consigo reordenar os objetos" no Arrumar.** Em 1962 o Arrumar da sede só mostra os
+  itens obrigatórios, e eles não se moviam (os lugares de decoração começam vazios). Agora os obrigatórios trocam de
+  lugar entre si, só dentro do mesmo grupo (mesa com mesa, chão com chão), e o nível instalado vai junto
+  (`swapReq31`). A ordem fica em `deco31.ord` (por `lugar|cômodo`), que só passa a existir depois da primeira troca: os
+  goldens não mudam, e a ordem continua ao avançar o mês e ao salvar/carregar. Formas de mover, para obrigatórios e peças
+  de decoração: arrastar, setas ← → no lugar escolhido, ou "Mover" e um clique no novo lugar (Esc cancela). Teste
+  `tests/r33-bugs-7.test.ts`.
+- **Pedido 8 (dono) · botão da carreira no menu de baixo.** Logo depois da Sede vem o botão da AÇÃO PRINCIPAL da
+  carreira escolhida (revisto pelo dono no meio do trabalho: "o botão de artista deve mudar conforme a carreira"). Na
+  gravadora é **Artistas** (a gestão do elenco, o papel do mural); nas outras carreiras: Carreira (músico), Clientes
+  (empresário), Turnês (agente), Line-up (festival), Agenda (casa de shows), Sessões (estúdio), Catálogo (editora),
+  Programação (mídia), Plataforma, Projetos (trilhas), Pauta (jornalismo). A tabela fica em
+  `src/ui/r31/dockcar5.ts`, e a página de reserva é a da carreira (`CAREER_PAGE17`). Ícone: desenho 16×16 novo de artista
+  com violão (`exp5px`, para gravadora e músico) ou o ícone pixel da carreira (`icons17`/`icons31`), ampliado ×3 como os
+  de viagem. As teclas seguem a ordem do menu: ⇧1 Sede, ⇧2 carreira, ⇧3 Casa, ⇧4 Cidade, ⇧5 Mundo, ⇧6 Celular (a pilha de
+  demos fica em ⇧9). Os docs de teclas foram regenerados (`UPDATE5=1`), assim como a ajuda "?" (lida de `keys5`) e o
+  robô QA5. Teste `tests/r33-bugs-8.test.ts`.
+
 - **2026-10-17 · R33 QA33 (fechamento da 33).** Ganchos entre frentes ligados em `src/sim/r33/ligar33.ts` (hospital → saúde/estresse da VIDA; banco → crise de crédito da MUNDO em todo empréstimo e relíquia como garantia da CATÁLOGO, com execução no vermelho; cartório → processos de sampling, também pelo diretor jurídico da GESTÃO; TV/publicidade e homenagem póstuma → catálogo que reaparece; 14 prédios da INT-2 nos lotes reservados da MAPA33 como lugares com interior e ações; festival do mês e cartão "Terreno do festival" abrem a cena da INT-2; aprendizados na largura da previsão; robô usando as regras novas). Ganchos de arquivos antigos num módulo folha (`sim/r33/hooks33.ts`: `LOAN_X33` em `economy.loanOffer`, `FCW33` em `market.forecastUnits`) para não criar ciclo de carga. Tudo só vale com os interruptores das duas pontas: com os exp33.* desligados, goldens r27-p2a, r27-p2b, r27-m3 e r16-playbot **iguais** (nenhum valor de referência mudou). Correções: mentor (PESSOAS) escreve relação por `relAdd` (contrato r31), `vida33` na família "imagem" do teto de apelo, fatos `culture33`/`deco_delivery`/`deco_set` justificados, r31-cidade conta os bairros de sempre por `DIST_BASE18`, `cidade5` entre as páginas conhecidas, visto do novo jogo desenhado (r31-emo). Falhas antigas anotadas (já falhavam antes da 33): r27 F consistência, r19 T6 antitruste, r31 E valor por empresa, r31 D previsão × procura 2008, r29 conectar tudo. Save/load: o estado da 33 volta inteiro; continuar um save não segue bit a bit o original nem com tudo desligado (`migrate` completa posição/persona de quem nasceu na partida) — onda 6. Detalhes e o que fica para o POL33 em `docs/r33/qa33.md` · teste r33-qa33

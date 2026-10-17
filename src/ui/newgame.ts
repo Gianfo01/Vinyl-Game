@@ -47,6 +47,8 @@ import { buildRun27, draftDefaults27 } from './ps/home27model';
 import { homeScreen27 } from './ps/home27';
 import { attachBase31 } from './base31ui'; // R31 (EDT): editor de base
 import { ini5On } from './r31/ini5sw'; // R31 onda 5 (INI): tela inicial e nova run novas (interruptor exp5.ini)
+import { intro33On, playIntro33 } from './r33/intro33'; // R33 INTRO33: intro ao começar a partida (exp33.intro)
+import { introInfo33 } from './r33/intro33info';
 import { homeScreen5 } from './r31/home5';
 import { skin5 } from './r31/newrun5';
 
@@ -82,6 +84,7 @@ export function launchRun27(cfg: RunConfig, onStart: () => void): void {
   store.game = g;
   store.area = 'desk';
   store.undoSnapshot = null;
+  if (intro33On()) { try { playIntro33(introInfo33(cfg), onStart); return; } catch (e) { console.error(e); } } // R33 INTRO33: o jogo já está criado; a intro entra antes de abrir a mesa
   onStart();
 }
 
