@@ -364,7 +364,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   // casas, a moradia comum menos vista volta a ser esse prédio (um de cada), para as ações sempre terem onde estar
   for (const k of INT33.need?.(s) ?? []) {
     if (out.some((p) => p.k === k)) continue;
-    const j = [...out.keys()].filter((i) => out[i].src === 'fill' && out[i].k === 'home' && !out[i].fam31 && out[i].lot >= 0).sort((a, b) => lotVis(out[a].lot) - lotVis(out[b].lot) || out[a].lot - out[b].lot)[0];
+    const j = [...out.keys()].filter((i) => out[i].src === 'fill' && out[i].k === 'home' && !out[i].fam31 && !out[i].lot31 && out[i].lot >= 0).sort((a, b) => lotVis(out[a].lot) - lotVis(out[b].lot) || out[a].lot - out[b].lot)[0];
     if (j === undefined) break;
     out[j] = fillPlace(s, k, out[j].lot, j, undefined, undefined, true);
   }

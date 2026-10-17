@@ -84,6 +84,7 @@ export function interior27(k: IKind27, year: number, n = 4, v?: string): Interio
       P('gold', 0.06, 0.2, { n: 3 }); P('desk', 0.08, 0.2); P('desk', 0.36, 0.2); P('poster', 0.62, 0.07); P('couch', 0.66, 0.2); P('filing', 0.9);
       spots = [sp(0.16, 'desk', 'sit'), sp(0.44, 'desk', 'sit'), sp(0.74, 'floor', 'sit', 'SW'), sp(0.56, 'floor')];
       break;
+    case 'int2': // R33 (QA33): prédio da INT-2 — a cena de verdade vem de int2Scene; aqui fica o escritório de reserva
     case 'office':
       floor = 'office';
       P('window', 0.1, 0.2); P('desk', 0.06, 0.22); P('desk', 0.4, 0.22); P('filing', 0.72); P('filing', 0.78); P('plant', 0.9);

@@ -271,7 +271,8 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const city = cityById[x.city]?.name;
   // r33 (INT-1): sem o céu e a rua em volta, todos os pontos andam junto com o recorte
   const cs = cropSize33(W);
-  if (crop) for (const q of spots) { const [qx, qy] = cropPt33(q.x, q.y); q.x = Math.max(0, qx); q.y = Math.max(0, qy); q.w = Math.min(q.w, cs.W - q.x); q.h = Math.min(q.h, cs.H - q.y); }
+  // QA33: ponto que cai fora do corte (carro na porta, na calçada) é trazido para dentro, com o mesmo tamanho
+  if (crop) for (const q of spots) { const [qx, qy] = cropPt33(q.x, q.y); q.w = Math.min(q.w, cs.W); q.h = Math.min(q.h, cs.H); q.x = Math.min(Math.max(0, qx), cs.W - q.w); q.y = Math.min(Math.max(0, qy), cs.H - q.h); }
   return {
     id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W: crop ? cs.W : W, H: crop ? cs.H : G.H, crop, room, people, spots, you, trail, acts, art: artItems31(s, x), vit: vitPx31(s, x),
     note: you.here ? undefined : fmtL(l('{w} — você olha de longe; as ações seguem valendo.', '{w} — you look from afar; actions still work.'), { w: you.where }),
