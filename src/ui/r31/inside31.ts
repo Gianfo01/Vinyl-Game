@@ -34,7 +34,8 @@ import { openFicha13 } from '../sys/persona13';
 import { shop31Tab } from './shop31';
 import { lockBtn31, quickBtn31 } from './lock31';
 import { moreBtn31, runGo31, sceneView31 } from './scene31';
-import { INSIDE_W31, infoLines31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
+import { int2Scene } from '../r33/int2px'; // R33 (INT-2, ligado no QA33)
+import { INSIDE_W31, infoLines31, int2Of31, insideModel31, type InsideM31, type InsideT31 } from './inside31model';
 import { artPanelEl31, paintArt31 } from './art31';
 import { askBox31 } from './amor31ui';
 import { paintVit31, vitListEl31, vitPanelEl31 } from './vit31';
@@ -262,7 +263,7 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     id: `in31-${x.k}`, title: m.title, W: m.W, H: m.H, spots: m.spots, panels,
     paint: (cv) => { (m.crop ? drawInterior33 : drawInterior27)(cv, m.room, m.people, { minW: INSIDE_W31, city: x.city, name: x.name, seed: x.seed,
       look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null,
-      extra: (g, sd) => { if (isInt33(x.k) && int1On(s)) paintInt33(x.k, x.year)(g, sd); paintArt31(m)(g, sd); paintVit31(m)(g); } }); },
+      extra: (g, sd) => { const i2 = int2Of31(x); if (i2) int2Scene(i2, x.year).extra(g, sd); if (isInt33(x.k) && int1On(s)) paintInt33(x.k, x.year)(g, sd); paintArt31(m)(g, sd); paintVit31(m)(g); } }); },
     list: () => h('ul', { class: 'in31-list' }, m.spots.map((sp) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => show(sp.go.panel) }, t(sp.label)), ' ', h('small', { class: 'muted' }, t(sp.tip))))),
     intro: l('Pessoas e objetos são clicáveis: o painel embaixo resolve a ação aqui mesmo.', 'People and objects are clickable: the panel below resolves the action right here.'),
     note: m.note,

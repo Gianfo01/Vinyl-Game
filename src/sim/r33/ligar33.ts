@@ -26,9 +26,10 @@ import { FCW33, LOAN_X33 } from './hooks33';
 import { on33, peek33 } from './cat33';
 import { openShop33, shopLock33 } from './cidade33';
 import { registerLegalCase33 } from './dir33';
-import { INT2, INT2_BLOCK, INT2_HOOKS, INT2_NOW, INT2_WHEN, int2Acts, int2Do, int2Exists, int2On, type Int2Id, type Int2Res } from './int2';
+import { INT2, INT2_BLOCK, INT2_HOOKS, INT2_NOW, INT2_WHEN, int2Acts, int2Do, int2Exists, int2Now, int2On, int2What, type Int2Id, type Int2Res } from './int2';
+import { INT2P27, npcName27, type Place27 } from '../sys/place27';
 import { learnWidth33 } from './learn33';
-import { mapaOn33, setWant33 } from './mapa33';
+import { lotFor33, mapaOn33, setWant33 } from './mapa33';
 import { creditCrisis33, crise33On, memes33On } from './mundo33';
 import { setCatalogSurge33 } from './pessoas33';
 import { collateral33, pledge33, seize33, unpledge33 } from './relic33';
@@ -191,3 +192,35 @@ registerBot33({
     return false;
   },
 });
+
+// ================================================================ prédios da INT-2 como lugares do mapa (place27)
+
+const ROLES33: Record<Int2Id, [L, L]> = {
+  bank: [l('Gerente do banco', 'Bank manager'), l('Caixa', 'Teller')], court: [l('Tabelião', 'Notary'), l('Advogado', 'Lawyer')],
+  hospital: [l('Médico', 'Doctor'), l('Enfermeira', 'Nurse')], stadium: [l('Administrador', 'Manager'), l('Bilheteiro', 'Box office clerk')],
+  jazz: [l('Dono do clube', 'Club owner'), l('Pianista da casa', 'House pianist')], nightclub: [l('Dono da boate', 'Club owner'), l('DJ residente', 'Resident DJ')],
+  church: [l('Padre', 'Priest'), l('Regente do coral', 'Choir master')], tvstudio: [l('Diretor de programa', 'Show director'), l('Câmera', 'Camera operator')],
+  adagency: [l('Diretor de criação', 'Creative director'), l('Redator', 'Copywriter')], samba: [l('Presidente da escola', 'School president'), l('Mestre de bateria', 'Drum master')],
+  festival: [l('Produtor', 'Producer'), l('Segurança', 'Security')], print: [l('Gráfico', 'Printer'), l('Ilustrador', 'Illustrator')],
+  pirate: [l('Locutor', 'DJ'), l('Técnico', 'Engineer')], station: [l('Chefe da estação', 'Station master'), l('Carregador', 'Porter')],
+  port: [l('Capitão do porto', 'Harbour master'), l('Estivador', 'Docker')],
+};
+INT2P27.fn = (s, fillers) => {
+  const free = new Set(fillers);
+  return int2Sites33(s, (k) => lotFor33(s, k)).filter((x) => free.has(x.lot)).map(({ id, lot }) => {
+    const t = INT2.find((x) => x.id === id)!, owner = npcName27(s, `i2${lot}|o`), [r0, r1] = ROLES33[id];
+    return { id: `pl:${lot}`, lot, k: 'int2', int2: id, name: t.name, what: int2What(id, s.year), owner, ownerK: 'npc', now: int2Now(s, id),
+      people: [{ name: owner, role: r0, staff: true, job: 0 }, { name: npcName27(s, `i2${lot}|1`), role: r1, staff: true, job: 1 }], also: [], src: 'fill', draw: t.id === 'jazz' || t.id === 'nightclub' ? 'venue' : 'office' };
+  });
+};
+INT2P27.acts = (s, id) => (int2On(s) && INT2.some((t) => t.id === id) ? int2Acts(s, id as Int2Id) : []);
+INT2P27.run = (s, key) => int2Do(s, key);
+
+/** O terreno do festival (INT-2) como lugar sem lote: abre pelo festival do mês no mapa e pelo cartão "Terreno do festival". */
+export const FEST_PL33 = 'i2:fest';
+export function int2FestPlace33(s: GameState): Place27 | null {
+  if (!int2On(s)) return null;
+  const t = INT2.find((x) => x.id === 'festival')!, owner = npcName27(s, 'i2fest|o'), [r0, r1] = ROLES33.festival;
+  return { id: FEST_PL33, lot: -1, k: 'int2', int2: 'festival', name: t.name, what: int2What('festival', s.year), owner, ownerK: 'npc', now: int2Now(s, 'festival'),
+    people: [{ name: owner, role: r0, staff: true, job: 0 }, { name: npcName27(s, 'i2fest|1'), role: r1, staff: true, job: 1 }], also: [], src: 'fill', draw: 'fest' };
+}

@@ -56,7 +56,7 @@ export const APPEAL_CAT19: Record<string, string[]> = {
   /** imagem e pessoa: identidade, aparência, persona, vida e fama do dono, relevância */
   image: ['identity', 'persona13img', 'persona13race', 'persona13sex', 'looks17div', 'looks17age', 'life-fame', 'traj18', 'relevance8', 'standing9', 'sex17',
     'people-feed', 'people-romance', 'people-owner', 'people-mood', 'scandal29', 'awards29a', // R29: escândalo recente pesa no lançamento seguinte (mech29)
-    'family29'], // R29 (família): sobrenome famoso abre portas no começo; depois, a comparação com o pai/mãe pesa
+    'family29', 'vida33'], // R33 VIDA: imagem pessoal do dono (exp33.reppessoal) // R29 (família): sobrenome famoso abre portas no começo; depois, a comparação com o pai/mãe pesa
   /** público e cena: fãs, cenas locais/históricas, regiões e circuitos, fandoms de idol */
   fans: ['fans18', 'scene12', 'scenes17', 'scenes-radio', 'w4scene', 'w4trainee', 'audience8', 'kpop18mil', 'idols18enka', 'regions18', 'circuits18', 'w4relation', 'scenes27', 'demo29'], // R29 demo29: idade do público × formato
   /** alcance: canais, veículos, imprensa, vitrines, hype de feira, selo/imprint, IA de recomendação */

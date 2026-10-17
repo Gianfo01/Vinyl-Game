@@ -14,7 +14,7 @@ import {
   BIZ31, RES_LOTS31, billboards31, bizAt31, buyHome31, chooseHomeLot31, city31, commonLots31, fest31, festLot31, homes31, housesAt31, minGw31, neon31, placeName31,
   placesOf31, realLots31, slotsOf31, yearLog31,
 } from '../src/sim/r31/city31';
-import { DIST18, LOTS18, buildings18, campus18, homeLot18, layout18 } from '../src/sim/sys/campus18';
+import { DIST18, DIST_BASE18, LOTS18, buildings18, campus18, homeLot18, layout18 } from '../src/sim/sys/campus18';
 import { HOUSES, ownerOf } from '../src/sim/sys/people/owner';
 import { places27 } from '../src/sim/sys/place27';
 import { setSw } from '../src/sim/r31/switches';
@@ -93,11 +93,15 @@ describe('H · lugares reais da música', () => {
 
 describe('H · mapa maior (só acrescentando)', () => {
   it('7 bairros, até 44×32, ~70 terrenos (58 compráveis + 12 reservados); os 34 de sempre intactos', () => {
-    expect(DIST18.length).toBe(7);
+    // R33 (MAPA33, conferido no QA33): os bairros 7–8 (lotes 58–83, mapa até 56×40) só abrem com `exp33.mapa`; o mapa
+    // de sempre são os DIST_BASE18 primeiros, com os mesmos números de antes.
+    const base = DIST18.slice(0, DIST_BASE18);
+    expect(DIST_BASE18).toBe(7);
+    expect(DIST18.length).toBe(9);
     expect(DIST18[3].end).toBe(34);
-    expect(LOTS18.length + RES_LOTS31.length).toBe(70);
-    expect(Math.max(...DIST18.map((d) => d.gw))).toBe(44);
-    expect(Math.max(...DIST18.map((d) => d.gh))).toBe(32);
+    expect(base[base.length - 1].end + RES_LOTS31.length).toBe(70);
+    expect(Math.max(...base.map((d) => d.gw))).toBe(44);
+    expect(Math.max(...base.map((d) => d.gh))).toBe(32);
     expect(LOTS18[0]).toMatchObject({ gx: 11, gy: 1, w: 6, d: 6 });
     expect(LOTS18[33]).toMatchObject({ gx: 26, gy: 21, w: 3, d: 3 });
   });

@@ -29,7 +29,7 @@ export const PLACE_IC27: Record<PlaceK27, { ic: string; col: string }> = {
   bar: { ic: 'ticket', col: '#c06028' }, press: { ic: 'typewriter', col: '#6a48b8' }, rehearsal: { ic: 'drums', col: '#a05828' }, label: { ic: 'contract', col: '#8a3a3a' },
   office: { ic: 'briefcase', col: '#3a7a9a' }, apartments: { ic: 'house', col: '#4a8a3a' }, hotel: { ic: 'door', col: '#7a5ab0' }, instruments: { ic: 'headphones', col: '#2a80c8' },
   facade: { ic: 'mask', col: '#5a2a3a' }, police: { ic: 'gavel', col: '#2a4a8a' }, market: { ic: 'vault', col: '#3a3a30' },
-  home: { ic: 'house', col: '#b07a2a' }, vacant: { ic: 'building', col: '#c8302c' },
+  home: { ic: 'house', col: '#b07a2a' }, vacant: { ic: 'building', col: '#c8302c' }, int2: { ic: 'building', col: '#5a6a8a' },
 };
 /** Lugares básicos da música ganham ícone no mapa; cidade comum (prédios, escritórios) só o ponto clicável. */
 export const PINNED27 = new Set<PlaceK27>(['venue', 'records', 'radio', 'studio', 'bar', 'press']);
@@ -37,7 +37,7 @@ const KNAME27: Record<PlaceK27, L> = {
   venue: l('Casa de shows', 'Venue'), records: l('Loja de música', 'Music shop'), radio: l('Rádio', 'Radio'), studio: l('Estúdio', 'Studio'), bar: l('Bar', 'Bar'), press: l('Imprensa', 'Press'),
   rehearsal: l('Sala de ensaio', 'Rehearsal space'), label: l('Gravadora rival', 'Rival label'), office: l('Escritórios', 'Offices'), apartments: l('Moradia', 'Housing'), hotel: l('Hotel', 'Hotel'), instruments: l('Instrumentos', 'Instruments'),
   facade: l('Fachada', 'Front business'), police: l('Delegacia', 'Police station'), market: l('Mercado negro', 'Black market'),
-  home: l('Residência', 'Residence'), vacant: l('Terreno', 'Plot'),
+  home: l('Residência', 'Residence'), vacant: l('Terreno', 'Plot'), int2: l('Prédio da cidade', 'City building'),
 };
 
 /** Artista escolhido para as ações (por sessão, não vai para o save). */

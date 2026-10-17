@@ -72,6 +72,8 @@ export const INT2: Int2Type[] = [
   T('station', 'Estação de trem', 'Train station', 'ESTACAO', [6, 4], 'centro', 1889),
   T('port', 'Porto', 'Harbour', 'PORTO', [6, 4], 'agua', 1889, 9999, { water: true }),
 ];
+/** Arte isométrica de cada tipo no mapa (id de Art31) — lida pelo mapa sem importar a interface. */
+export const INT2_ART33: Record<string, string> = MAP_ART;
 export const INT2_IDS: Int2Id[] = INT2.map((t) => t.id);
 export const int2Def = (id: string): Int2Type | undefined => INT2.find((t) => t.id === id);
 

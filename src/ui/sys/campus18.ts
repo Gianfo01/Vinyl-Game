@@ -41,6 +41,8 @@ import { placeTabs27, zoom27 } from '../ps/zoom27';
 import { askConfirm, askText } from '../ask31';
 import { cityLots31, type CityLots31 } from '../pixel/lots31map';
 import { buyLotBlock31, coverLine31, fnCol31, lotsCityView31 } from '../r31/lots31ui';
+import { FEST_PL33, int2FestPlace33 } from '../../sim/r33/ligar33'; // R33 (INT-2, ligado no QA33)
+import { int2On } from '../../sim/r33/int2';
 import { FEST_ID31, cityOv31, cityX31, festLine31, type CityOv31 } from '../r31/city31model';
 import { drawCity31 } from '../r31/city31px';
 import { shortNames31 } from '../r31/scene31model';
@@ -432,7 +434,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   };
   // r27 (CITY2): entrar num lugar — aproxima no prédio e abre o corte por dentro; "Voltar à cidade" afasta
   const insideOf = (id: string): InsideT27 | null => {
-    const plc = v.places.find((x) => x.id === id);
+    const plc = v.places.find((x) => x.id === id) ?? (id === FEST_PL33 ? int2FestPlace33(s) ?? undefined : undefined); // r33 (INT-2): terreno do festival
     if (plc) return { id, k: plc.k, name: t(plc.name), what: t(plc.what), people: plc.people, year: v.year, city: s.config.homeCity, seed: s.config.seed, place: plc, org: plc.org };
     const b = v.bs.find((x) => x.id === id), o = b ? ownPlace27(s, b) : null;
     return b && o ? { id, k: o.k, name: o.name, what: t(KIND18[b.kind].name), people: o.people, year: v.year, city: s.config.homeCity, seed: s.config.seed, own: true } : null;
@@ -478,7 +480,8 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const sc = v.scene;
   // prédios (seus e vizinhos), em ordem de profundidade; ícone próprio por tipo com alertas e prazo de obra
   for (const sp of sc.sprites) {
-    if (sp.id === `fl:${FEST_ID31}` && v.festName) { hot(sp.id, 'fill', sp.box, `${t(festLine31(v.festName))} — ${t(l('abrir festivais', 'open festivals'))}`, [h('span', { class: 'c27-pin pl', style: '--k:#d07018', 'aria-hidden': 'true' }, ic('ticket'))], () => go18({ area: 'festivals' })); continue; }
+    if (sp.id === `fl:${FEST_ID31}` && v.festName) { const i2 = v.live && int2On(s); // r33 (INT-2): com os prédios novos, o festival do mês abre o terreno por dentro
+      hot(sp.id, 'fill', sp.box, `${t(festLine31(v.festName))} — ${t(i2 ? l('entrar no terreno', 'enter the grounds') : l('abrir festivais', 'open festivals'))}`, [h('span', { class: 'c27-pin pl', style: '--k:#d07018', 'aria-hidden': 'true' }, ic('ticket'))], i2 ? (hs) => goInside(FEST_PL33, hs) : () => go18({ area: 'festivals' })); continue; }
     if (sp.filler) { // r27 (CITY2): a cidade comum também é lugar (loja, rádio, jornal, prédio, hotel…) — clicável
       const plc = ui.f.nb ? v.places.find((x) => x.id === `pl:${sp.id.slice(3)}`) : undefined;
       const cell = ui.fn ? v.lots?.cells.find((c) => c.lot === plc?.lot) : undefined; // r31 (LOTE): função marcada no mapa
