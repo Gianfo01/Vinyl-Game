@@ -94,7 +94,7 @@ export function paintCasa5(a: CasaArt5): CasaPainted5 {
       if (s.wall) {
         const wx = sx + Math.round((s.w - s.wall.w) / 2), wy = s.wall.y;
         if (s.wall.id === 'janela') {
-          window31(back, wx, wy, 46, 30, a.city, year, a.month);
+          window31(back, wx, wy, 46, 30, a.city, year, a.month, undefined, 7, 'night'); // vista da cidade da casa, de noite como a cena
           p.rect(wx - 1, wy + 30, 48, 2, lv(pal.trim, 2.4)); // peitoril
           put5(sceneDecoPx('curtain', year, { w: 56, h: 36 }), wx - 5, wy - 4); // cortina da época (DECO-A): painéis nas laterais, vista livre
           spots.push({ id: 'janela', x: wx - 4, y: wy - 3, w: 54, h: 36 });

@@ -71,6 +71,7 @@ const shot = async (name) => { await p.waitForTimeout(1000); await p.screenshot(
 for (const [y, hq] of [[1962, 2], [2025, 3]]) {
   console.log(await start(y, hq, 'casa'));
   await shot(`casa-cena-${y}`);
+  for (const nm of ['Quarto', 'Garagem', 'Escritório']) { const b = p.locator('.r5-rbtn', { hasText: nm }); if (await b.count()) { await b.first().click(); await p.waitForTimeout(900); await shot(`casa-cena-${nm.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '')}-${y}`); } }
   await p.keyboard.press('Shift+O');
   for (const [rid, rn] of await roomsOf('home')) { console.log('peças', await furnish('home', rid)); await arrumar('home', rn); await shot(`casa-${rid}-${y}`); }
   await p.keyboard.press('Escape');
