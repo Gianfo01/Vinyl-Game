@@ -50,7 +50,13 @@ export interface Spot31 {
   quick?: QuickTarget31;
   /** sem rótulo por cima (o nome já está desenhado ou o ponto é miúdo) */
   quiet?: boolean;
+  /** BUGS33: é uma pessoa — a área dela ganha do móvel atrás ou na frente (ver personSpot31) */
+  person?: boolean;
 }
+
+/** BUGS33 (dono): pessoa em pé na frente da mesa ou sentada atrás dela tem prioridade de clique sobre o móvel.
+ *  Pessoa = `person` ou a convenção de id das cenas de interior ('who:N', 'you'). */
+export const personSpot31 = (sp: Pick<Spot31, 'id' | 'person'>): boolean => !!sp.person || sp.id === 'you' || sp.id.startsWith('who:');
 
 /** Rótulos curtos: sempre no primeiro ano da partida, opcionais depois. */
 export const LABELS_WEEKS31 = 52;

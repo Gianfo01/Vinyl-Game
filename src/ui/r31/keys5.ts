@@ -18,7 +18,7 @@
 import { l, type L } from '../../data/world';
 
 export type Region5 = 'sede' | 'casa' | 'cidade' | 'mundo';
-export type Sys5 = 'search' | 'search2' | 'advance' | 'keys' | 'prevTab' | 'nextTab' | 'pause' | 'names' | 'houses' | 'home' | 'phone';
+export type Sys5 = 'search' | 'search2' | 'advance' | 'keys' | 'prevTab' | 'nextTab' | 'pause' | 'names' | 'houses' | 'home' | 'phone' | 'artists' | 'fullscreen';
 
 /** O que a tecla faz. */
 export type Act5 =
@@ -45,7 +45,7 @@ export interface Bind5 {
 // ---------------------------------------------------------------- formato e leitura do teclado
 
 const SYMBOLS5 = new Set([';', "'", '\\', '[', ']', ',', '.', '-', '=', '/', '?', '{', '}', '`']);
-const SPECIAL5 = new Set(['escape', 'tab', 'alt', 'enter']);
+const SPECIAL5 = new Set(['escape', 'tab', 'alt', 'enter', 'alt+enter']);
 
 /** A tecla está no formato aceito? */
 export function validChord5(c: string): boolean {
@@ -87,6 +87,7 @@ export function chordLabel5(c: string): string {
   if (c === 'tab') return 'Tab';
   if (c === 'alt') return 'Alt';
   if (c === 'enter') return 'Enter';
+  if (c === 'alt+enter') return 'Alt Enter';
   return c.toUpperCase();
 }
 
@@ -128,15 +129,18 @@ export const BASE_KEYS5: Bind5[] = [
   sys('nextTab', '}', l('Próximo marcador do papel aberto', 'Next marker of the open paper'), '}'),
   sys('pause', 'escape', l('Fecha o papel aberto; sem papel aberto, abre o menu de pausa', 'Closes the open paper; with none open, opens the pause menu')),
   sys('names', 'alt', l('Segurar: mostra o nome e a tecla de todos os objetos', 'Hold: shows every object\'s name and key')),
+  // BUGS33 item 5: tela cheia (tratada em ui/r33/tela33.ts em qualquer tela, até na inicial; aqui só para a lista "?")
+  sys('fullscreen', 'alt+enter', l('Tela cheia (liga/desliga; F11 também serve)', 'Fullscreen (on/off; F11 works too)')),
   sys('houses', 'tab', l('Troca de casa (várias carreiras ativas)', 'Switch house (several active careers)')),
   { id: 'sys:home', chord: 'h', act: { kind: 'travel', id: 'sede' }, label: l('Volta à sede de qualquer lugar', 'Back to the HQ from anywhere'), scope: 'global' },
-  // viagem (barra fixa: Sede, Casa, Cidade, Mundo)
+  // viagem (barra fixa: Sede, ação da carreira, Casa, Cidade, Mundo — BUGS33 pedido 8: a ordem das teclas segue a do menu de baixo)
   travel('sede', 'shift+1', l('Viagem: Sede', 'Travel: HQ'), 'shift+2'),
-  travel('casa', 'shift+2', l('Viagem: Casa', 'Travel: Home'), 'shift+5'),
-  travel('cidade', 'shift+3', l('Viagem: Cidade', 'Travel: City'), 'shift+3'),
-  travel('mundo', 'shift+4', l('Viagem: Mundo', 'Travel: World'), 'shift+4'),
-  // R33 APARELHOS33: o 5º botão do menu de baixo (só existe de 1983 em diante, com exp33.aparelhos)
-  sys('phone', 'shift+5', l('Celular (5º botão do menu de baixo, 1983+)', 'Phone (5th bottom-menu button, 1983+)'), undefined, false),
+  sys('artists', 'shift+2', l('Ação principal da carreira (gravadora: Artistas, a gestão do elenco)', 'Main career action (record label: Artists, roster management)'), undefined, false),
+  travel('casa', 'shift+3', l('Viagem: Casa', 'Travel: Home'), 'shift+5'),
+  travel('cidade', 'shift+4', l('Viagem: Cidade', 'Travel: City'), 'shift+3'),
+  travel('mundo', 'shift+5', l('Viagem: Mundo', 'Travel: World'), 'shift+4'),
+  // R33 APARELHOS33: o último botão do menu de baixo (só existe de 1983 em diante, com exp33.aparelhos)
+  sys('phone', 'shift+6', l('Celular (último botão do menu de baixo, 1983+)', 'Phone (last bottom-menu button, 1983+)'), undefined, false),
   // teclas de marcador: atalhos de hoje de páginas que viraram marcador de um objeto (continuam valendo)
   mark('people', 'p', 'mural', l('Mural do elenco › Pessoas', 'Roster board › People')),
   mark('critics', 'q', 'jornal', l('Jornal › Críticos', 'Newspaper › Critics')),
@@ -156,7 +160,7 @@ for (const b of BASE_KEYS5) registerKey5(b);
 // ---------------------------------------------------------------- conflitos e personalização
 
 /** Teclas que o jogador não pode usar para outra coisa (sistema e navegador). */
-export const RESERVED5 = new Set(['ctrl+k', 'ctrl+enter', '?', '/', '{', '}', 'escape', 'alt', 'tab', 'enter']);
+export const RESERVED5 = new Set(['ctrl+k', 'ctrl+enter', '?', '/', '{', '}', 'escape', 'alt', 'tab', 'enter', 'alt+enter']);
 
 export interface Conflict5 { chord: string; scope: string; ids: string[] }
 /** Duas ligações com a mesma tecla no mesmo escopo. Escopo de papel × global não é conflito (o papel ganha enquanto
@@ -238,13 +242,17 @@ export const KEY_CHANGES5: Change5[] = [
   { chord: 'c', before: l('Compromissos', 'Commitments'), after: l('Quadro de planejamento (a mesma página, com o elenco por mês)', 'Planning board (same page, roster by month)'),
     why: l('Mesma página, objeto novo: nos mocks C era o calendário; o calendário virou a agenda (G) e C abre o quadro de planejamento.', 'Same page, new object: in the mocks C was the calendar; the calendar became the planner (G) and C opens the planning board.') },
   { chord: 'shift+1', before: l('Menu: Hoje', 'Menu: Today'), after: l('Viagem: Sede', 'Travel: HQ'),
-    why: l('Botões de viagem Sede, Casa, Cidade, Mundo em Shift+1…4. "Hoje" virou a mesa do mês (tecla 1).', 'Travel buttons HQ, Home, City, World on Shift+1…4. "Today" became the monthly desk (key 1).') },
-  { chord: 'shift+2', before: l('Menu: Sede', 'Menu: HQ'), after: l('Viagem: Casa', 'Travel: Home'),
-    why: l('"Você" virou a sua casa (EXP-6) e entra no segundo botão de viagem.', '"You" became your home (EXP-6) and is the second travel button.') },
-  { chord: 'shift+5', before: l('Menu: Você', 'Menu: You'), after: l('Celular (5º botão do menu de baixo, 1983+)', 'Phone (5th bottom-menu button, 1983+)'),
-    why: l('Você agora é Shift+2 (Casa). Os botões do menu de baixo são Shift+1…5; o celular (versão 33) é o quinto.', 'You is now Shift+2 (Home). The bottom-menu buttons are Shift+1…5; the phone (version 33) is the fifth.') },
-  { chord: 'shift+6', before: l('Menu: Listas', 'Menu: Lists'), after: l('(livre)', '(free)'),
-    why: l('Listas some (o índice completo fica no menu de pausa).', 'Lists goes away (the full index stays in the pause menu).') },
+    why: l('Botões do menu de baixo em Shift+1…6, na ordem em que aparecem. "Hoje" virou a mesa do mês (tecla 1).', 'Bottom-menu buttons on Shift+1…6, in the order they appear. "Today" became the monthly desk (key 1).') },
+  { chord: 'shift+2', before: l('Menu: Sede', 'Menu: HQ'), after: l('Ação principal da carreira (gravadora: Artistas)', 'Main career action (record label: Artists)'),
+    why: l('Pedido do dono (versão 33): logo depois da Sede, o botão da ação principal da carreira escolhida — na gravadora, a gestão de artistas.', 'Owner\'s request (version 33): right after the HQ, the button for the chosen career\'s main action — for a record label, artist management.') },
+  { chord: 'shift+3', before: l('Menu: Cidade', 'Menu: City'), after: l('Viagem: Casa', 'Travel: Home'),
+    why: l('"Você" virou a sua casa (EXP-6); com o botão Artistas, a Casa passou a ser o terceiro botão.', '"You" became your home (EXP-6); with the Artists button, Home became the third button.') },
+  { chord: 'shift+4', before: l('Menu: Mundo', 'Menu: World'), after: l('Viagem: Cidade', 'Travel: City'),
+    why: l('Segue a posição no menu de baixo.', 'Follows the position in the bottom menu.') },
+  { chord: 'shift+5', before: l('Menu: Você', 'Menu: You'), after: l('Viagem: Mundo', 'Travel: World'),
+    why: l('Segue a posição no menu de baixo (antes da versão 33, o celular).', 'Follows the position in the bottom menu (before version 33, the phone).') },
+  { chord: 'shift+6', before: l('Menu: Listas', 'Menu: Lists'), after: l('Celular (último botão do menu de baixo, 1983+)', 'Phone (last bottom-menu button, 1983+)'),
+    why: l('Listas some (o índice completo fica no menu de pausa); o celular (versão 33) é o último botão.', 'Lists goes away (the full index stays in the pause menu); the phone (version 33) is the last button.') },
   { chord: 'shift+9', before: l('(livre)', '(free)'), after: l('Pilha de demos (talentos)', 'Demo pile (talent)'),
     why: l('A pilha de demos saiu do Shift+5, que virou o celular (versão 33).', 'The demo pile left Shift+5, which became the phone (version 33).') },
   { chord: 'escape', before: l('Fecha janelas', 'Closes windows'), after: l('Fecha o papel aberto; sem nada aberto, menu de pausa', 'Closes the open paper; with nothing open, pause menu'),

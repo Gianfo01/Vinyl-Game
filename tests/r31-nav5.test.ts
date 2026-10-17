@@ -68,7 +68,7 @@ describe('NAV · teclas (exp5.nav ligado)', () => {
   beforeAll(() => { s = game(); setSw(s, SW_NAV5, true); });
 
   it('o evento de cada tecla do mapa volta a ser a mesma tecla', () => {
-    for (const b of keys5()) if (b.chord !== 'alt') expect(chordOf5(evOf(b.chord)), b.id).toBe(b.chord);
+    for (const b of keys5()) if (b.chord !== 'alt' && b.chord !== 'alt+enter') expect(chordOf5(evOf(b.chord)), b.id).toBe(b.chord);
   });
 
   it('toda tecla de objeto abre o próprio objeto no marcador certo', () => {

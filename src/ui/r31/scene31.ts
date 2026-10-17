@@ -17,7 +17,7 @@ import { store } from '../store';
 import { setTab } from '../vis';
 import { goToHub } from '../sys/project12';
 import { quickHook31 } from './lock31';
-import { ALERT31, badgeSym31, labelsDefault31, placeLabels31, type Go31s, type Spot31 } from './scene31model';
+import { ALERT31, badgeSym31, labelsDefault31, personSpot31, placeLabels31, type Go31s, type Spot31 } from './scene31model';
 import { nav5On } from '../../sim/r31/exp5';
 import { ic } from '../vis';
 import { help5Of, sorted5, splitLock5 } from './cenas5model';
@@ -93,7 +93,7 @@ function spotEl(o: SceneOpts31, sp: Spot31, labels: boolean): HTMLElement {
   const btxt = b ? (typeof b.text === 'string' ? b.text : t(b.text)) : '';
   const say = [t(sp.label), b ? `${[badgeSym31(b), btxt].filter(Boolean).join(' ')} (${t(lv!.name)})` : '', t(sp.tip)].filter(Boolean).join(' — ');
   const btn = h('button', {
-    type: 'button', class: `sc31-spot${b ? ` lvl-${b.level}` : ''}`, 'data-spot': sp.id, 'aria-label': say, title: say,
+    type: 'button', class: `sc31-spot${b ? ` lvl-${b.level}` : ''}${personSpot31(sp) ? ' sc31-person' : ''}`, 'data-spot': sp.id, 'aria-label': say, title: say,
     style: `left:${pct(x, o.W)};top:${pct(y, o.H)};width:${pct(w, o.W)};height:${pct(hh, o.H)}`,
     onclick: (e: Event) => { e.stopPropagation(); runGo31(sp.go, o.panels as Record<string, () => void>); },
     oncontextmenu: (e: Event) => { e.preventDefault(); e.stopPropagation(); if (sp.quick) quickHook31.open?.(sp.quick); else runGo31(sp.go, o.panels as Record<string, () => void>); },

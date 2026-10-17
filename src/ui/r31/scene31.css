@@ -12,6 +12,13 @@
 .sc31-spot { position: absolute; padding: 0; margin: 0; background: transparent; border: 2px solid transparent; border-radius: 3px; cursor: pointer; color: inherit; font: inherit; }
 .sc31-spot:hover, .sc31-spot:focus-visible { border-color: #ffd34a; background: rgba(255, 211, 74, 0.12); box-shadow: 0 0 0 1px #170e12; z-index: 3; }
 .sc31-spot:focus-visible { outline: 3px solid #ffffff; outline-offset: 1px; }
+/* BUGS33 (dono): a pessoa fica por cima de qualquer móvel, mesmo do móvel com o mouse em cima (z 3) e das bancas (z 4):
+   o clique na pessoa abre a ficha dela, não a mesa atrás. O móvel continua clicável em volta dela. */
+.sc31-spot.sc31-person { z-index: 5; }
+.sc31-spot.sc31-person:hover, .sc31-spot.sc31-person:focus-visible { z-index: 6; }
+/* a mesma regra na sede da casca nova (sede5): o boneco ganha do móvel e da sala */
+.s5-obj.s5-who { z-index: 3; cursor: pointer; } /* acima dos objetos (sem z), abaixo dos selos das salas (4) */
+.s5-obj.s5-who:hover, .s5-obj.s5-who:focus-visible { z-index: 6; }
 .show-all .sc31-spot { border: 2px dashed rgba(255, 211, 74, 0.85); }
 .sc31-badge { position: absolute; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); white-space: nowrap; pointer-events: none;
   font: 700 0.68rem/1.25 var(--mono, ui-monospace, monospace); padding: 0 0.3em; border: 1px solid #170e12; border-radius: 2px; background: #f4ecd8; color: #170e12; z-index: 2; }

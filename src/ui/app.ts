@@ -50,6 +50,7 @@ import './r31/deco5'; // R31 DECO-M: modo Arrumar (Shift+O) nas cenas da casa e 
 import './r31/decoshop31ui'; // R31 DECO-L: lojas de decoração, correio/internet e os seus lugares (área 'deco31')
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
+import { fsOption33, installFs33 } from './r33/tela33'; // BUGS33 item 5: tela cheia (Alt+Enter, Opções, pausa)
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
 import { eggCmds27, undoEgg27 } from './sys/eggs27'; // r27 ovos de Páscoa (busca secreta e 3/2/1959)
 import { TUTOFF_LABEL19, setTutorials19, tutorialsOff19 } from './tutoff19'; // r19: "Sem tutoriais"
@@ -178,6 +179,7 @@ let root: HTMLElement;
 
 export function boot(el: HTMLElement): void {
   installEmo31(); // r31 onda 4 (EMO): todo emoji que entrar na tela vira ícone em pixel art
+  installFs33(); // BUGS33 item 5: Alt+Enter = tela cheia em qualquer tela (também na inicial)
   root = el;
   applyPrefs();
   registerInspect();
@@ -795,6 +797,7 @@ function settings(): void {
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: fullMenu31(), onchange: (e: Event) => { setFullMenu31((e.target as HTMLInputElement).checked); render(); } }),
       ' ', t(l('Menu completo: mostrar também a árvore com todas as páginas no menu lateral', 'Full menu: also show the tree with every page in the side menu'))),
     h('div', { class: 'h27-langrow' }, h('span', null, t(S.language)), langToggle5((v) => { p.lang = v; savePrefs(); close(); render(); settings(); })),
+    fsOption33(), // BUGS33 item 5
     h('label', null, t(S.textSize), ': ', h('span', { class: 'ts-val' }, `${p.textScale}%`), h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { const el = e.target as HTMLInputElement; p.textScale = Number(el.value); savePrefs(); const v = el.parentElement?.querySelector('.ts-val'); if (v) v.textContent = `${p.textScale}%`; } })), // o número acompanha o controle
     h('label', null, t(l('Modo para daltonismo', 'Colorblind mode')), select(p.colorblind ?? 'none', [{ value: 'none' as const, label: t(l('Desligado', 'Off')) }, { value: 'deutan' as const, label: t(l('Deuteranopia (verde)', 'Deuteranopia (green)')) }, { value: 'protan' as const, label: t(l('Protanopia (vermelho)', 'Protanopia (red)')) }, { value: 'tritan' as const, label: t(l('Tritanopia (azul)', 'Tritanopia (blue)')) }], (v) => { p.colorblind = v; savePrefs(); })),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); close(); render(); settings(); } }), ' ', t(TUTOFF_LABEL19)), // r19 tutoff19
