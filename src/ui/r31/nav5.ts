@@ -56,6 +56,8 @@ export interface PaperCtx5 {
   rerender: () => void;
   /** a página antiga do marcador aberto (o que a casca mostraria sem registro) */
   old: () => HTMLElement;
+  /** tamanho do miolo na tela (px lógicos da moldura, 1 = 2 px de tela) e as páginas dele (livro/agenda: duas), relativas ao miolo */
+  box?: { w: number; h: number; pages: { x: number; y: number; w: number; h: number }[] };
 }
 export type PaperRender5 = (c: PaperCtx5) => HTMLElement | null;
 
