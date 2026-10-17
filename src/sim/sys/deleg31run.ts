@@ -16,7 +16,7 @@ import { genreById, l, type L } from '../../data/world';
 import { hqCaps } from '../branches';
 import { careerSlotsUsed, defaultOffer, expectedAdvance, makeOffer, offerEligible29, withdrawOffer } from '../contracts';
 import {
-  ASK31, EXEC31, MODE31, OPINE31, RESP31, UNDO31, addSpent31, allowOnce31, askFor31, blocked31, d31, dirOf31, exc31, logAuto31, modeOf31, onceOk31, applyPreset31,
+  ASK31, EXEC31, LEARN31X, MODE31, OPINE31, RESP31, respView31, UNDO31, addSpent31, allowOnce31, askFor31, blocked31, d31, dirOf31, exc31, logAuto31, modeOf31, onceOk31, applyPreset31,
   setDir31, setMode31, staffFor31, usd31, PRESET31, type Mode31, type Preset31,
 } from '../deleg31';
 import { freeCash20 } from '../oblig20';
@@ -57,7 +57,7 @@ export function anrRead31(s: GameState, r: Rng | null): AnrPick31[] {
     const noise = r ? (r.next() - 0.5) * 40 * clamp(1.1 - q, 0.05, 1) : 0;
     // negociação: o bom fecha mais perto do esperado; o fraco paga a mais
     const adv = expectedAdvance(s, a) * (1.15 - 0.3 * clamp(q, 0, 1));
-    out.push({ act: a, read: mid + noise + a.fame * 0.15, lo: e?.lo ?? 0, hi: e?.hi ?? 100, adv });
+    out.push({ act: a, read: mid + noise + a.fame * 0.15 + (LEARN31X.anr?.(s, a) ?? 0), lo: e?.lo ?? 0, hi: e?.hi ?? 100, adv });
   }
   return out.sort((x, y) => y.read - x.read || (x.act.id < y.act.id ? -1 : 1));
 }
@@ -149,7 +149,8 @@ EXEC31.release = (s, act, base) => {
   const scored = ready.map((x) => ({ x, v: execRead31(s, x, st.id, q) })).sort((a, b) => b.v - a.v || (a.x.id < b.x.id ? -1 : 1));
   const good = (D.minQ ?? 0) > 0 ? scored.filter((y) => y.v >= (D.minQ ?? 0)) : scored;
   const want: 'single' | 'lp' | undefined = D.fmt === 'single' ? 'single' : D.fmt === 'lp' ? 'lp' : undefined;
-  const type: 'single' | 'lp' = want ?? (good.length >= 8 ? 'lp' : 'single');
+  const auto: 'single' | 'lp' = good.length >= 8 ? 'lp' : 'single';
+  const type: 'single' | 'lp' = want ?? (LEARN31X.fmt?.(s, act, auto, good.length) ?? auto);
   const enough = type === 'lp' ? good.length >= 8 : good.length >= 1;
   if (!enough) {
     if (base.ok && scored.length && s.week - act.lastRelease >= base.minGap && !held(s, act.id))
@@ -203,7 +204,7 @@ registerSimHook('month', 'deleg31', (s) => { anrMonth31(s); });
 
 for (const def of RESP31) {
   registerEditable({ id: `deleg.mode.${def.id}`, area: 'tools', kind: 'select', label: fmtL(l('Delegação: {r}', 'Delegation: {r}'), { r: def.name }),
-    options: () => def.modes.map((m) => ({ value: m, label: MODE31[m].name })),
+    options: (s) => respView31(s, def.id).modes.map((m) => ({ value: m, label: MODE31[m].name })),
     get: (s) => modeOf31(s, def.id), set: (s, v) => setMode31(s, def.id, String(v) as Mode31, undefined, { force: true }) ?? undefined });
   for (const k of def.dirs) {
     if (k === 'genres' || k === 'fmt' || k === 'sponsor' || k === 'head') continue;

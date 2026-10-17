@@ -13,7 +13,7 @@ import { GENRES, genreById, l, type L } from '../../data/world';
 import { STAFF_ROLES } from '../../data/rules';
 import { t } from '../../i18n/strings';
 import {
-  DEPT31, MODE31, PRESET31, RESP31, answerAsk31, applyPreset31, asks31, autoLog31, canUndo31, excs31, goalSet31, lockWhy31, logWho31, qualified31, set31,
+  DEPT31, MODE31, PRESET31, RESP31, answerAsk31, applyPreset31, asks31, autoLog31, canUndo31, excs31, goalSet31, lockWhy31, logWho31, qualified31, respView31, set31,
   setDir31, setGoal31, setMode31, stat31, staffFor31, undo31, type Dept31, type Dir31, type Goal31, type Log31, type Mode31, type Preset31, type Resp31, type RespDef31,
 } from '../../sim/deleg31';
 import { agendaCount31, setAgendaMode31 } from '../../sim/sys/deleg31run';
@@ -149,7 +149,7 @@ function respRow(s: GameState, def: RespDef31): HTMLElement {
 // ---------------------------------------------------------------- visão por departamento (RN-34)
 
 function deptCard(s: GameState, dept: Dept31): HTMLElement {
-  const rs = RESP31.filter((x) => x.dept === dept);
+  const rs = RESP31.filter((x) => x.dept === dept).map((x) => respView31(s, x.id));
   const ids = rs.map((x) => x.id);
   const modes = rs.map((x) => set31(s, x.id).m);
   const roles = [...new Set(rs.flatMap((x) => x.roles))];
@@ -236,7 +236,7 @@ function logView(s: GameState): HTMLElement {
   const xs = autoLog31(s, { r: ui.r || undefined, tone: ui.exc ? 'ask' : undefined, n: 60 });
   return section(t(l('Registro de automação', 'Automation log')),
     h('div', { class: 'row wrap' },
-      select<string>(ui.r, [{ value: '', label: t(l('Todas as responsabilidades', 'All responsibilities')) }, ...RESP31.filter((x) => !x.locked).map((x) => ({ value: x.id, label: t(x.name) }))], (v) => { ui.r = v as Resp31 | ''; rerender(); }, { 'aria-label': t(l('Filtrar', 'Filter')) }),
+      select<string>(ui.r, [{ value: '', label: t(l('Todas as responsabilidades', 'All responsibilities')) }, ...RESP31.filter((x) => !respView31(s, x.id).locked).map((x) => ({ value: x.id, label: t(x.name) }))], (v) => { ui.r = v as Resp31 | ''; rerender(); }, { 'aria-label': t(l('Filtrar', 'Filter')) }),
       h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: ui.exc, onchange: () => { ui.exc = !ui.exc; rerender(); } }), ' ', t(l('só exceções', 'exceptions only')))),
     xs.length ? h('ul', { class: 'dg31-logs small' }, xs.map((e) => logItem(s, e))) : h('p', { class: 'muted small' }, t(l('Nada ainda: o que a equipe e as regras decidirem aparece aqui, com o motivo.', 'Nothing yet: whatever staff and rules decide shows up here, with the reason.'))));
 }
@@ -263,7 +263,7 @@ export function deleg31View(s: GameState): HTMLElement {
         const open = ui.open[d] ?? (!big || hot);
         return h('details', { class: 'dg31-group', open, ontoggle: (e: Event) => { ui.open[d] = (e.target as HTMLDetailsElement).open; } },
           h('summary', null, ic(DEPT31[d].icon), ' ', h('b', null, t(DEPT31[d].name)), hot ? h('span', { class: 'warn' }, ' ● ', t(l('exceções', 'exceptions'))) : null),
-          rs.map((def) => respRow(s, def)));
+          rs.map((def) => respRow(s, respView31(s, def.id))));
       })),
     actsView(s, big),
     careersView(s),
