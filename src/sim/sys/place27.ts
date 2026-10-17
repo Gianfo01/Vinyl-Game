@@ -363,10 +363,13 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   // r31 (LOTE): prédio sem função vira casa de quem mora na cidade ou terreno vago (e o terreno comprado é seu)
   LOTS27.fn?.(s, out);
   // r33 (INT-1, QA33): hotel, escritório e apartamentos têm ações próprias; se a cidade da época os trocou por lojas e
-  // casas, a moradia comum menos vista volta a ser esse prédio (um de cada), para as ações sempre terem onde estar
+  // casas, o prédio comum repetido menos visto volta a ser esse prédio (um de cada), para as ações sempre terem onde estar
   for (const k of INT33.need?.(s) ?? []) {
     if (out.some((p) => p.k === k)) continue;
-    const j = [...out.keys()].filter((i) => out[i].src === 'fill' && out[i].k === 'home' && !out[i].fam31 && !out[i].lot31 && out[i].lot >= 0).sort((a, b) => lotVis(out[a].lot) - lotVis(out[b].lot) || out[a].lot - out[b].lot)[0];
+    // QA33: o prédio comum que tem cópia (escritório, apartamentos…) — moradia de gente da cidade e Casa Fossati ficam
+    const n = (k2: PlaceK27) => out.filter((p) => p.k === k2).length;
+    const j = [...out.keys()].filter((i) => { const p = out[i]; return p.src === 'fill' && FLAVOR27.includes(p.k) && n(p.k) > 1 && !p.fam31 && !p.lot31 && !p.venue && !p.org && !p.deco31 && !p.int2 && p.lot >= 0; })
+      .sort((a, b) => lotVis(out[a].lot) - lotVis(out[b].lot) || out[a].lot - out[b].lot)[0];
     if (j === undefined) break;
     out[j] = fillPlace(s, k, out[j].lot, j, undefined, undefined, true);
   }
