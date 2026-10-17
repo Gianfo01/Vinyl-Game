@@ -44,9 +44,8 @@ import './r31/learn31ui'; // R31 onda 4 (R): resultados e aprendizados — por p
 import './r31/socio31ui'; // R31 onda 3 (SOC): sócios e compras (Negócios, ficha da empresa, painel rápido da cidade)
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
 import './r31/city31ui'; // R31 onda 4 (H): loja e casa em cena (áreas 'loja31' e 'casa31')
-import { area5Of } from './r31/casa5'; // R31 onda 5 (CASA): casa como "Você", sede que cresce e maquete (atrás de exp5.nav)
+import './r31/casa5'; // R31 onda 5 (CASA): casa como "Você", sede que cresce e maquete (registrados na casca; só com exp5.nav)
 import './r31/deco5'; // R31 DECO-M: modo Arrumar (Shift+O) nas cenas da casa e da sede (atrás de deco31 e exp5.nav)
-import { nav5On } from '../sim/r31/exp5';
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)
@@ -484,7 +483,7 @@ function menuCtx31(): MenuCtx31 {
   const ids = new Set(navItems().map((x) => x.id));
   const has = (a: string) => ids.has(a) && (!UX19UI.has || UX19UI.has(g, a) || a === store.area);
   const listed = new Set(groups().flatMap((x) => x.areas));
-  const ctx0: MenuCtx31 = { active: careers(g).active, pages: careerPages17(g), pins: store17.pins.filter((id) => listed.has(id)).length, sede: !!sedeHome25, has, nav5: nav5On(g) || undefined };
+  const ctx0: MenuCtx31 = { active: careers(g).active, pages: careerPages17(g), pins: store17.pins.filter((id) => listed.has(id)).length, sede: !!sedeHome25, has };
   // páginas registradas sem casa na tabela: Listas › Outras páginas (nada some)
   ctx0.extra = [...ids].filter((a) => placeOf31(a, ctx0).id === 'list:other');
   return (menuMemo31 = ctx0);
@@ -545,19 +544,13 @@ function subnav(): HTMLElement | null {
 function places31(): HTMLElement | null {
   const c = menuCtx31();
   const en = (['hoje', 'sede', 'cidade', 'mundo', 'voce'] as EntryId31[]).find((e) => entryHome31(e, c) === store.area);
-  if (!en || (c.nav5 && (en === 'voce' || store.area === SEDE25))) return null; // R31 onda 5 (CASA): a casa e a sede nova substituem a faixa de lugares
+  if (!en) return null;
   return placesStrip31({ entry: en, menu: c, places: placesOf31(en, c), badge: badge31().place, label: areaLabel,
     go: (a, tab) => { if (tab) setTab(tab[0], tab[1]); go(a); } });
 }
 const SEDE_L25 = l('Sua sede', 'Your HQ');
 
 function panel(): HTMLElement {
-  // R31 onda 5 (CASA): com exp5.nav ligado, a casa, a sede que cresce e a maquete trocam (ou encabeçam) a página antiga
-  const r5 = store.game && nav5On(store.game) ? area5Of(store.area) : undefined;
-  if (r5?.mode === 'replace') { stopHq(); return r5.render(store.game!); }
-  return r5 ? h('div', null, r5.render(store.game!), panel0()) : panel0();
-}
-function panel0(): HTMLElement {
   const g = store.game!;
   // r25: tela da Sede (encaixe em ps/slot25.ts); sem tela registrada a área nem aparece no menu
   if (store.area === SEDE25) { stopHq(); const el = h('div', { class: 'sede25 page21-host' }); if (sedeHome25) sedeHome25(el); else el.append(deskPanel(g)); return el; }
@@ -692,7 +685,7 @@ function renderShell5(g: NonNullable<typeof store.game>): void {
       const r = resolve17(store.area, groups());
       if (r.tab) setTab(r.tab[0], r.tab[1]);
       store.area = r.area;
-      return withPlayerActsCache(g, () => { const b = panel0(); enhanceSelects27(b); return b; }); // página de hoje pura: o que é da CASA/ELENCO entra pelos registros da casca
+      return withPlayerActsCache(g, () => { const b = panel(); enhanceSelects27(b); return b; }); // página de hoje pura: o que é da CASA/ELENCO entra pelos registros da casca
     },
     label: areaLabel, has: (a) => areaExists(a),
     advance: () => doAdvance('month'), advMore: () => advMenu31(g), search: palette, options: settings,
@@ -713,7 +706,8 @@ function renderShell5(g: NonNullable<typeof store.game>): void {
 function areaLabel(id: string): string {
   const gr = groupOf(id);
   const it = navItems().find((x) => x.id === id);
-  return gr.home?.tab && gr.home.area === id ? t(gr.label) : it?.label ?? id;
+  const ex = it ? undefined : EXTRA_AREAS.find((x) => x.id === id); // POL5: página escondida do menu (ex.: 'cidade5') tem nome, não o id
+  return gr.home?.tab && gr.home.area === id ? t(gr.label) : it?.label ?? (ex ? t(ex.label) : id);
 }
 
 /** Barra fixa: ← voltar, Grupo › Área › Aba, botão de busca e (no celular) as sub-áreas. */

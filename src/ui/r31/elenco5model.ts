@@ -22,6 +22,10 @@ import { careerDef, careers } from '../../sim/sys/careers12';
 import type { Act, GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
 import { alerts20, baseAgenda20 } from '../actions20';
+import { goalNow19, goalText19, type Ux19State } from '../../sim/sys/ux19';
+import { goalProgress31, type My31 } from '../../sim/r31/mine';
+import type { Story } from '../../sim/sys/media17';
+import { monthOfWeek31 } from '../../sim/sys/auction31';
 
 const N = (pt: string, en: string): L => l(pt, en);
 
@@ -105,6 +109,45 @@ export function mural5(s: GameState): Polaroid5[] {
   });
 }
 
+/** O que enche o mural além das polaroids (POL5, pedido do dono: "nada de área morta"): metas abertas, próximos passos
+ *  do elenco e da empresa (calendário único) e recortes de jornal sobre o selo. Só leitura: lê o estado sem criar gavetas. */
+export interface MuralExtra5 {
+  goals: { t: L; pct: number }[];
+  next: { t: L; d?: L; w: number; deadline: Deadline19 }[];
+  clips: { t: L; y: number; m: number }[];
+  /** recorte de fundação (quando a imprensa ainda não falou do selo) */
+  founded: { name: string; city: string; year: number };
+}
+export function muralExtra5(s: GameState): MuralExtra5 {
+  const x4 = s.x4 as unknown as { ux19?: Ux19State; my31?: My31; media17?: { st?: Story[] } };
+  const goals: MuralExtra5['goals'] = [];
+  for (const g of x4.ux19?.goals ?? []) {
+    if (g.done || g.fail) continue;
+    let pct = 0;
+    try { pct = Math.max(0, Math.min(100, Math.round((goalNow19(s, g) / Math.max(1, g.spec.n)) * 100))); } catch { pct = 0; }
+    goals.push({ t: goalText19(g), pct });
+  }
+  for (const g of x4.my31?.goals ?? []) { if (g.done || g.missed) continue; const p = goalProgress31(s, g); goals.push({ t: p.label, pct: p.pct }); }
+  const mine = new Set(playerActs(s));
+  let cal: Deadline19[] = [];
+  try { cal = calendar19(s, { weeks: 8 }); } catch { cal = []; }
+  const next = cal.filter((d) => d.w >= s.week && (!d.goto?.act || mine.has(d.goto.act)) && d.kind !== 'echo' && d.kind !== 'msg')
+    .sort((a, b) => a.w - b.w).slice(0, 4).map((d) => ({ t: d.t, d: d.d, w: d.w, deadline: d }));
+  const clips: (MuralExtra5['clips'][number] & { w: number })[] = (x4.media17?.st ?? []).filter((x) => (x.a && mine.has(x.a)) || x.mine)
+    .map((x) => ({ t: x.t, y: x.y, m: x.m, w: x.w }));
+  // contratos assinados também viram recorte ("X assina com o selo"), com a data da assinatura
+  const label = s.config.companyName || '';
+  for (const id of mine) {
+    const a = s.acts[id];
+    const c = a?.contractId ? s.contracts[a.contractId] : undefined;
+    if (!a || !c || a.playerBand || c.startWeek === undefined || c.startWeek > s.week) continue;
+    const mi = monthOfWeek31(s, c.startWeek);
+    clips.push({ t: l(`${a.name} assina com ${label || 'o selo'}`, `${a.name} signs with ${label || 'the label'}`), y: Math.floor(mi / 12), m: ((mi % 12) + 12) % 12, w: c.startWeek });
+  }
+  clips.sort((a, b) => b.w - a.w);
+  return { goals: goals.slice(0, 3), next, clips: clips.slice(0, 4).map(({ t, y, m }) => ({ t, y, m })), founded: { name: s.config.companyName || '', city: s.config.homeCity ?? '', year: s.config.startYear } };
+}
+
 /** Abas do mural = abas de hoje da página Pessoas (Elenco é o mural; as outras mostram a página de hoje no papel). */
 export const MURAL_TABS5: { id: string; label: L }[] = [
   { id: 'roster', label: N('Elenco', 'Roster') }, { id: 'health', label: N('Saúde', 'Health') }, { id: 'relations', label: N('Relações', 'Relations') },
@@ -144,6 +187,8 @@ export interface Board5 {
   conflicts: { act: string; col: number; text: L }[];
   /** semana absoluta em que começa o mês corrente (agenda do mês: semanas 1..4) */
   week0: number;
+  /** linha da empresa e da equipe (POL5): prazos do calendário único sem artista (obras, dívidas, contratos, prêmios…) */
+  firm: BoardCard5[];
 }
 
 const AG_KIND: Record<string, Card5Kind> = { record: 'rec', gigs: 'tour', opening: 'tour', interview: 'pro', feat: 'pro', networking: 'pro', reposition: 'pro', social: 'pro', rest: 'rest' };
@@ -223,6 +268,13 @@ export function board5(s: GameState, mode: 'months' | 'weeks' = 'months', onlyCo
     const c0 = colOfWeek(d.w0 ?? d.w), c1 = colOfWeek(d.w);
     push({ id: `cal:${d.id}`, act, kind: CAL_KIND[d.kind] ?? 'other', c0, c1: Math.max(c0, c1), title: d.t, sub: d.d, src: 'cal', movable: false });
   }
+  const firm: BoardCard5[] = [];
+  for (const d of cal) {
+    if (d.goto?.act || d.kind === 'echo' || d.kind === 'msg' || d.kind === 'decision') continue;
+    const c0 = colOfWeek(d.w0 ?? d.w), c1 = colOfWeek(d.w);
+    if (!inside(c0, Math.max(c0, c1))) continue;
+    firm.push({ id: `firm:${d.id}`, act: '', kind: CAL_KIND[d.kind] ?? 'other', c0: clip(c0), c1: clip(Math.max(c0, c1)), title: d.t, sub: d.d, src: 'cal', movable: false });
+  }
   // conflito = o mesmo artista gravando e em turnê na mesma coluna
   const conflicts: Board5['conflicts'] = [];
   for (const r of rows) for (let c = 0; c < span; c++) {
@@ -233,7 +285,34 @@ export function board5(s: GameState, mode: 'months' | 'weeks' = 'months', onlyCo
     }
   }
   const keep = onlyConflicts ? new Set(conflicts.map((x) => x.act)) : null;
-  return { mode, week0: wm, cols, rows: keep ? rows.filter((r) => keep.has(r.id)) : rows, cards: keep ? cards.filter((c) => keep.has(c.act)) : cards, conflicts };
+  return { mode, week0: wm, firm: keep ? [] : firm.slice(0, 24), cols, rows: keep ? rows.filter((r) => keep.has(r.id)) : rows, cards: keep ? cards.filter((c) => keep.has(c.act)) : cards, conflicts };
+}
+
+/** As próximas `n` semanas, uma coluna cada (marcos do quadro de planejamento: lançamentos, shows e prazos do calendário
+ *  único, com "ir até lá"). Só leitura. */
+export interface WeekAhead5 { off: number; mi: number; items: { t: L; d?: L; tone: 'bad' | 'good' | 'info'; deadline?: Deadline19; act?: string; kind?: Card5Kind }[] }
+export function weeksAhead5(s: GameState, n = 4): WeekAhead5[] {
+  let cal: Deadline19[] = [];
+  try { cal = calendar19(s, { weeks: n }); } catch { cal = []; }
+  const out: WeekAhead5[] = Array.from({ length: n }, (_, i) => ({ off: i, mi: monthOfWeek31(s, s.week + i), items: [] }));
+  for (const d of cal) {
+    if (d.kind === 'echo' || d.kind === 'msg') continue;
+    const i = Math.max(0, (d.w0 ?? d.w) - s.week);
+    if (i < n) out[i].items.push({ t: d.t, d: d.d, tone: d.tone ?? 'info', deadline: d });
+  }
+  // a agenda deste mês do elenco (a mesma das ações de artista), na semana de cada horário
+  const wm = weekOfMi(s, monthIndex(s));
+  for (const id of playerActs(s)) {
+    const a = s.acts[id];
+    if (!a || a.status === 'retired' || a.status === 'split') continue;
+    let slots: ReturnType<typeof baseAgenda20> = [];
+    try { slots = baseAgenda20(s, a); } catch { slots = []; }
+    slots.forEach((x, k) => {
+      const i = wm + slotWeek(x, k) - 1 - s.week;
+      if (i >= 0 && i < n) out[i].items.push({ t: l(`${a.name}: ${agL(x.action).pt}`, `${a.name}: ${agL(x.action).en}`), tone: 'info', act: a.id, kind: AG_KIND[x.action] ?? 'other' });
+    });
+  }
+  return out;
 }
 
 /** Mês absoluto de uma coluna do quadro (para reservar/mover com as funções de hoje). */
@@ -289,7 +368,7 @@ export function agenda5(s: GameState): Agenda5 {
 
 export type Drawer5 = 'letter' | 'genre' | 'country';
 export type Sort5 = 'fame' | 'name' | 'know';
-export interface Fich5Filter { drawer: Drawer5; key: string; genre: string; country: string; noLabel: boolean; sort: Sort5; q: string; page: number }
+export interface Fich5Filter { drawer: Drawer5; key: string; genre: string; country: string; noLabel: boolean; sort: Sort5; q: string; page: number; /** cartões por página (o papel cabe quantos couberem; padrão FICH5_PAGE) */ per?: number }
 export const FICH5_0: Fich5Filter = { drawer: 'letter', key: '', genre: '', country: '', noLabel: false, sort: 'fame', q: '', page: 0 };
 export const FICH5_PAGE = 12;
 export type Owner5 = 'mine' | 'rival' | 'free';
@@ -313,10 +392,11 @@ export function fichario5(s: GameState, f: Fich5Filter = FICH5_0): Fich5 {
   const key = f.key && counts.has(f.key) ? f.key : q ? '' : drawers.find((d) => d.n)?.key ?? '';
   const inDrawer = key ? base.filter((c) => keyOf(c, f.drawer) === key) : base;
   const sorted = [...inDrawer].sort((x, y) => (f.sort === 'name' ? x.name.localeCompare(y.name) : f.sort === 'know' ? y.know - x.know || y.fame - x.fame : y.fame - x.fame || x.name.localeCompare(y.name)));
-  const pages = Math.max(1, Math.ceil(sorted.length / FICH5_PAGE));
+  const per = Math.max(1, f.per ?? FICH5_PAGE);
+  const pages = Math.max(1, Math.ceil(sorted.length / per));
   const page = Math.max(0, Math.min(pages - 1, f.page));
   return {
-    total: all.length, drawers, cards: sorted.slice(page * FICH5_PAGE, (page + 1) * FICH5_PAGE), shown: sorted.length, pages, page,
+    total: all.length, drawers, cards: sorted.slice(page * per, (page + 1) * per), shown: sorted.length, pages, page,
     genres: [...new Set(all.map((c) => c.genre))].sort(), countries: [...new Set(all.map((c) => c.country).filter((x): x is string => !!x))].sort(),
   };
 }
