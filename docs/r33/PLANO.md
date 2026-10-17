@@ -173,7 +173,7 @@ Pedidos do dono para o POL33 (2026-10-17, vistos no mapa de Londres 1962):
   5. **Vitrine para a rua**: disco ou relíquia exposto na fachada da sua loja/sede dá um pouco de movimento ao bairro.
   6. **Colecionadores rivais**: NPCs que disputam o mesmo item no leilão e às vezes oferecem compra direta.
 
-Ordem: frentes → junção → QA33 → APARELHOS33 + REDES33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono. Depois: CENARIOS em duas levas — leva 1 na versão 34 (ver `docs/r33/CENARIOS33.md`: 10 lugares inspirados em filmes e séries, cassino, 6 "quem resolve", 5 minijogos).
+Ordem: frentes → junção → QA33 → APARELHOS33 + REDES33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono. Depois: ELENCO34 (gestão de cada integrante para todo artista e banda, docs/r33/ELENCO34.md) e então CENARIOS em duas levas — leva 1 na versão 34 (ver `docs/r33/CENARIOS33.md`: 10 lugares inspirados em filmes e séries, cassino, 6 "quem resolve", 5 minijogos).
 
 ## Fica para a onda 6 (fechamento), não para a 33
 (11) começar tarde rende pouco (meta 3× × hoje ~1,1×) e o padrão de cada interruptor; metas e fim de jogo num motor

@@ -687,3 +687,8 @@ Casca nova (`VITE_EXP5NAV=1`), Londres e Brasil 1962, em português e inglês. P
   de viagem. As teclas seguem a ordem do menu: ⇧1 Sede, ⇧2 carreira, ⇧3 Casa, ⇧4 Cidade, ⇧5 Mundo, ⇧6 Celular (a pilha de
   demos fica em ⇧9). Os docs de teclas foram regenerados (`UPDATE5=1`), assim como a ajuda "?" (lida de `keys5`) e o
   robô QA5. Teste `tests/r33-bugs-8.test.ts`.
+
+## ELENCO34 antes da leva 1 (17/10)
+Dono: as ideias do Idol Manager (escalação, fãs por integrante, regras da casa, agenda por pessoa, casa própria,
+subgrupos, gerações, panelinhas, produtos por integrante, propostas de trabalho) valem para todo artista e banda em que
+fizer sentido e entram antes da leva 1 de CENARIOS. Plano em docs/r33/ELENCO34.md.
