@@ -224,7 +224,7 @@ H('careers', ['Carreiras', 'Careers'],
   ['Suas carreiras ativas (selo, músico, empresário, agente, festival, casa, estúdio, editora, mídia, plataforma, trilhas, jornalismo): começar, delegar ou largar.', 'Your active careers (label, musician, manager, agent, festival, venue, studio, publisher, media, platform, screen, journalism): start, delegate or drop.'],
   ['Cada carreira custa tempo (bolinhas). Ex.: selo + festival sem diretor = sobrecarga; contrate um diretor e o festival segue sozinho.', 'Each career costs time (balls). E.g. label + festival without a director = overload; hire a director and the festival runs itself.'], [], ['agenda17', 'tut18']);
 H('agenda17', ['Agenda e contratações', 'Agenda and hiring'],
-  ['5 bolinhas pessoais + 2 de expediente por mês; contratar direto, freelancers, músicos de estúdio reais por época.', '5 personal balls + 2 office balls a month; direct hiring, freelancers, real session musicians by era.'],
+  ['5 bolinhas pessoais + 3 de expediente por mês; contratar direto, freelancers, músicos de estúdio reais por época.', '5 personal balls + 3 office balls a month; direct hiring, freelancers, real session musicians by era.'],
   ['Passe o mouse em cada bolinha para ver o motivo. Ex.: freelancer resolve uma ação sem salário fixo.', 'Hover each ball to see why. E.g. a freelancer handles one action with no fixed salary.'], [], ['team', 'careers'], ['session']);
 H('ventures', ['Empreendimentos', 'Ventures'],
   ['Negócios próprios: festival, editora, estúdio, agência, mídia e plataforma — no selo ou no seu nome.', 'Own businesses: festival, publisher, studio, agency, media and platform — under the label or your name.'],

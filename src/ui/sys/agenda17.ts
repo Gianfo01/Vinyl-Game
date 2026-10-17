@@ -260,7 +260,7 @@ registerArea({ id: 'agenda17', label: l('Agenda e contratações', 'Schedule and
 export function ngBalls17(main: string[]): HTMLElement {
   const n = main.length, spill = Math.max(0, n - OFFICE), free = Math.max(0, 5 - spill);
   return h('p', { class: `small ${spill > 5 ? 'bad' : spill ? 'warn' : 'good'}` },
-    t(l('Tempo: cada carreira ocupa 1 bolinha por mês (2 se você ficar à frente, 0 se delegar a um diretor contratado). Você tem 2 de expediente + 5 pessoais (a banda não ocupa nenhuma). Com {n} carreira(s): {f} pessoais livres por mês.', 'Time: each career takes 1 ball a month (2 if you go hands-on, 0 if delegated to a hired director). You get 2 office + 5 personal balls (the band takes none). With {n} career(s): {f} personal balls free each month.'), { n, f: free }),
+    t(l('Tempo: cada carreira ocupa 1 bolinha por mês (2 se você ficar à frente, 0 se delegar a um diretor contratado). Você tem {o} de expediente + {p} pessoais (a banda não ocupa nenhuma). Com {n} carreira(s): {f} pessoais livres por mês.', 'Time: each career takes 1 ball a month (2 if you go hands-on, 0 if delegated to a hired director). You get {o} office + {p} personal balls (the band takes none). With {n} career(s): {f} personal balls free each month.'), { n, f: free, o: OFFICE, p: 5 }),
     ' ', h('span', { class: 'ag17-balls' }, ...Array.from({ length: OFFICE }, (_, i) => h('i', { class: `ag17-b ${i < n ? 'career' : 'spare'}` })), h('span', { class: 'ag17-sep' }, '|'),
       ...Array.from({ length: 5 }, (_, i) => h('i', { class: `ag17-b ${i < spill ? 'career' : 'free'}` }))));
 }

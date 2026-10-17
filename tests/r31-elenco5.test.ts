@@ -137,11 +137,17 @@ describe('ELENCO 5 · desligado = igual a hoje', () => {
     expect(N.keyNav5(s, { key: '4' })).toBe(false);
     setSw(s, SW_NAV5, true);
     went.length = 0;
+    // ligado: a casca (NAV5.open) abre o papel do objeto, desenhado pelo registro do ELENCO (POL5: sem embrulho de NAV5.go)
+    const opened: string[] = [];
+    N.NAV5.open = (id) => { opened.push(id); };
     for (const [id, p] of Object.entries(PAPERS5)) {
       if (!object5(p.obj)) continue;
       N.open5(p.obj);
-      expect(E.paperOpen5(), id).toBe(id);
+      expect(opened.at(-1), id).toBe(p.obj);
+      expect(N.paperOf5(p.obj), id).toBeTypeOf('function');
+      expect(E.paperOpen5(), id).toBeUndefined();
     }
+    N.NAV5.open = undefined;
     expect(went).toHaveLength(0);
     // a página antiga continua a um clique ("página de hoje ▸"), e viajar fecha o papel
     E.goOld5({ area: 'artists' });

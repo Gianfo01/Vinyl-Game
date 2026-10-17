@@ -492,9 +492,19 @@ export function pirateLoss31(s: GameState): number {
   return tot;
 }
 
+/** Outras fontes migradas (ex.: lojas de decoração, r31/decoshop31): giram junto com a loja de instrumentos, sem gancho
+ *  próprio. `when`: 'new' (nova partida), 'month' (virada: estoque do mês que começa) ou 'edit' (editor: mês atual). */
+export type VitWhen31 = 'new' | 'month' | 'edit';
+export const VIT_SOURCES31: { id: string; roll: (s: GameState, when: VitWhen31) => void }[] = [];
+export function registerVitSource31(id: string, roll: (s: GameState, when: VitWhen31) => void): void {
+  const i = VIT_SOURCES31.findIndex((x) => x.id === id);
+  if (i >= 0) VIT_SOURCES31[i] = { id, roll }; else VIT_SOURCES31.push({ id, roll });
+}
+
 registerSimHook('newgame', 'vit31', (s) => {
   restockAuction31(s);
   restockShops31(s, false);
+  for (const x of VIT_SOURCES31) x.roll(s, 'new');
 });
 // o primeiro mês da partida é sorteado na primeira semana (no motor): na nova partida os índices de pessoas e papéis
 // ainda estão sendo montados por outros ganchos, e ler gente cedo demais deixaria esses caches velhos
@@ -504,6 +514,7 @@ registerSimHook('month', 'vit31', (s) => {
   restockAuction31(s);
   restockShops31(s, true);
   restockUnder31(s);
+  for (const x of VIT_SOURCES31) x.roll(s, 'month');
   if (!vitOn31(s)) return;
   pirateLoss31(s);
   rollVit31(s, ymIdx31(s) + 1);
@@ -565,6 +576,7 @@ registerRunnable({ id: 'vit31.roll', area: 'world', label: l('Vitrine do mês: s
     st.items = []; st.forced++;
     for (const c of shopCities31(s)) { const x = (s.x4 as unknown as { items31?: { stock: Record<string, { ym: string }> } }).items31?.stock[c]; if (x) x.ym = ''; }
     restockShops31(s, false);
+    for (const x of VIT_SOURCES31) x.roll(s, 'edit');
     const r = rollVit31(s, ymIdx31(s));
     return fmtL(l('{n} item(ns) novo(s) na vitrine.', '{n} new item(s) in the showcase.'), { n: r.added });
   } });
