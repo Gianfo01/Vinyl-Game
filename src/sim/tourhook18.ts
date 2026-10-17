@@ -35,4 +35,7 @@ export const TOUR18: {
   book?: (s: GameState, t: Tour, key: string, amount: number, memo: string) => boolean;
   /** r20 (B16): fator de concorrência na agenda (cidade × semana do DIA do show) — o mesmo na previsão e no acerto. */
   clash?: (s: GameState, act: import('./types').Act, cityId: string, day: number) => number;
+  /** r33 (CIDADE): cidade-base (imóvel seu) — alívio de cansaço por show e hospedagem poupada (por pessoa e noite); 0 = sem base */
+  baseRelief?: (s: GameState, cityId: string) => number;
+  baseLodging?: (s: GameState, cityId: string, people: number, nights: number) => number;
 } = {};

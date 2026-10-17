@@ -7,6 +7,7 @@
 //     escolher o terreno da casa, imóveis em outras cidades (aparecem na faixa "pelo mundo").
 // Explorar não muda o mundo: montar a cena só lê.
 
+import { baseActs33, runBase33 } from '../../sim/r33/cidade33';
 import { cityById, l, type L } from '../../data/world';
 import { getLang, t } from '../../i18n/strings';
 import {
@@ -169,7 +170,8 @@ export function houseList31(s: GameState): HTMLElement {
         lockBtn31(h('span', null, t(l('Mudar a casa para lá', 'Move the house there')), ' ', h('small', null, $(moveHomeCost31(s)))), o.wealth < moveHomeCost31(s) ? l('Falta dinheiro pessoal para a mudança.', 'Not enough personal money for the move.') : lots.length < 2 ? l('Nenhum terreno livre agora.', 'No free plot right now.') : null,
           () => say(chooseHomeLot31(s, sel.lot), l('Mudança feita: a casa está no terreno novo.', 'Moved: the house is on the new plot.'))))),
     section(t(l('Imóveis em outras cidades', 'Homes in other cities')),
-      mine.length ? h('ul', { class: 'attr-list' }, mine.map((m) => h('li', null, h('b', null, t(cityById[m.city]?.name ?? l(m.city, m.city))), ` · ${t(HOUSES[m.house].name)} · ${t(l('desde', 'since'))} ${m.y} · ${t(l('manutenção', 'upkeep'))} ${$(homeUpkeep31(s, m))}/${t(l('mês', 'mo'))}`))) : h('p', { class: 'small muted' }, t(l('Nenhum ainda. Eles aparecem na faixa "pelo mundo" do mapa.', 'None yet. They show up in the map\'s "around the world" strip.'))),
+      mine.length ? h('ul', { class: 'attr-list' }, mine.map((m) => h('li', null, h('b', null, t(cityById[m.city]?.name ?? l(m.city, m.city))), ` · ${t(HOUSES[m.house].name)} · ${t(l('desde', 'since'))} ${m.y} · ${t(l('manutenção', 'upkeep'))} ${$(homeUpkeep31(s, m))}/${t(l('mês', 'mo'))}`,
+        ...baseActs33(s, m.city).map((a) => h('button', { class: 'btn small', title: t(a.desc), onclick: () => { const r = runBase33(s, m.city, a.id); say(r.ok ? null : r.text, r.text); } }, ' ', t(a.label), a.cost ? ` ${$(Math.abs(a.cost))}` : ''))))) : h('p', { class: 'small muted' }, t(l('Nenhum ainda. Eles aparecem na faixa "pelo mundo" do mapa.', 'None yet. They show up in the map\'s "around the world" strip.'))),
       casasOn31(s) && others.length && avail.length ? h('div', { class: 'row wrap' },
         select(sel.city, others.map((c) => ({ value: c.id, label: t(c.name) })), (v) => { sel.city = v; }),
         select(String(sel.house), avail.map((i) => ({ value: String(i), label: t(HOUSES[i].name) })), (v) => { sel.house = +v; }),

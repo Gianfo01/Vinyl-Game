@@ -10,6 +10,9 @@ import {
   rentLot33, sceneAt33, sellLot33,
 } from '../src/sim/r33/cidade33';
 import { homes31 } from '../src/sim/r31/city31';
+import { TOUR18 } from '../src/sim/tourhook18';
+import { LOTS27 } from '../src/sim/sys/place27';
+import { baseActs33, baseLodgingSaving33, homeValue33, rentBase33, runBase33, sellBase33 } from '../src/sim/r33/cidade33';
 import type { Act, GameState, Release } from '../src/sim/types';
 
 const game = (over = {}) => createGame(defaultConfig('r33-cidade', over));
@@ -83,5 +86,29 @@ describe('R33 · cidade', () => {
     const off = [dem('grunge'), dem('samba')];
     expect(on[0]).toBeGreaterThan(off[0] * 1.1);
     expect(on[1]).toBeCloseTo(off[1], 6);
+  });
+
+  it('ajustes: cartão do lote, turnê com base e imóvel fora (valor, aluguel, venda)', () => {
+    const s = game();
+    for (const id of [SW_LOJAS33, SW_BASE33, SW_TERRENOS33]) setSw(s, id, true);
+    s.player.cash += 1e9;
+    // cartão do terreno seu: loja, alugar, vender
+    lots31(s).own[5] = { w: s.week, price: 100000 };
+    const ids = LOTS27.acts!(s, { k: 'vacant', id: 'pl:5', lot: 5, lot31: { k: 'own' } }).map((a) => a.id);
+    expect(ids).toEqual(expect.arrayContaining(['build', 'shop', 'rent', 'sell']));
+    expect(LOTS27.run!(s, { k: 'vacant', id: 'pl:5', lot: 5, lot31: { k: 'own' } }, 'rent').ok).toBe(true);
+    // imóvel fora: base alivia cansaço e hospedagem; alugado, deixa de ser base
+    const city = s.config.homeCity === 'rio' ? 'london' : 'rio';
+    (s as any).x4.city31 = { homes: [{ city, house: 0, y: s.year - 10, paid: 100000 }] };
+    expect(TOUR18.baseRelief!(s, city)).toBeGreaterThan(0);
+    expect(TOUR18.baseLodging!(s, city, 5, 1)).toBe(baseLodgingSaving33(s, city, 1, 5));
+    expect(baseLodgingSaving33(s, city, 1, 5)).toBeGreaterThan(0);
+    expect(baseActs33(s, city).map((a) => a.id)).toEqual(expect.arrayContaining(['office', 'rent', 'sell']));
+    expect(homeValue33(s, homes31(s)[0])).toBeGreaterThan(100000);
+    expect(rentBase33(s, city, true).ok).toBe(true);
+    expect(TOUR18.baseRelief!(s, city)).toBe(0);
+    expect(runBase33(s, city, 'sell').ok).toBe(true);
+    expect(homes31(s).length).toBe(0);
+    expect(sellBase33(s, city).ok).toBe(false);
   });
 });
