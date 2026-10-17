@@ -571,6 +571,16 @@ partida; exp33.intro agora controla só a intro ("Intro da partida" nas Opções
 - **Gancho para a REDES33**: `registerPhoneApp33`/`registerPcApp33` (id, nome, ícone, anos, versões, sistema, "!", `open`) e `registerAct33`; o Redes tem o lugar reservado na tabela e só aparece registrado.
 - Testes (regime da 33): tsc, `tests/r33-aparelhos.test.ts` (21 casos), `tests/r31-uiwords.test.ts`; conferidos também r31-nav5, r31-w5-tec e r31-acoes5 (casca mexida). Goldens não rodados: o vazamento de 1999+ com o interruptor ligado muda o sorteio de eventos — o QA33 re-mede.
 - Prints: `docs/r33/aparelhos/` (celular 1983, 1997, 2008, 2025, 2035; PC 1982, 1995, 2003, 2025, 2035; cobrinha).
+- **2026-10-17 · R33 REDES (frente, branch claude/r33-redes).** Interruptor `exp33.redes`, **ligado**. `docs/r33/redes.md`.
+  - **Feed** (`src/sim/r33/redes33.ts`): vista sobre os fatos públicos de `facts17` com artista entre os atores; o único estado novo é a memória de 50 núcleos por artista e um anel de 160 posts (para o texto não mudar a cada abertura). Mostra seus artistas, depois quem você conhece (`social31`), rivais e o mundo (fatos de lei/crise/boicote e `mundoNow33`). Fossati nunca entra em fofoca romântica.
+  - **Posts mexem no mundo** só com funções existentes: boato→público (`raiseVisibility`), hype (`addHype`), pré-save (`rollout.presaves`), polêmica (`addRep33`/`scandal33`), meme (`mundo33.fx`), indireta/resposta (`feud18`), curtir/repostar (`shiftTie31`), delegar (`pressPick33` + `director33`). Rivais postam indiretas, gafes e vitrines por mês (sorte por chave, sem mexer no fluxo rng19; protegidos do modo exato ficam de fora).
+  - **Mecânicas novas aprovadas:** conta hackeada (2010+, rara, sobe com fama, segurança digital 0–2 reduz; custa para recuperar), trecho viral (2018+, uma tentativa por lançamento), live (2016+, 1 bolinha) e post com ganho próprio de fãs e hype.
+  - **Frases** (`frases33*.ts`): 60 tipos × 10 + 4 grupos × 10 = 640 núcleos, 6 tons, 84 aberturas e 84 fechos, 8 gírias por faixa de época, encaixes (cidade, música, rival, número, lugar, fã), bordões de rival, PT e EN. Sem repetir os últimos 50; tipo que se repete mais de 10 vezes em 50 posts usa o núcleo mais antigo.
+  - **Jornal** (`jornal33.ts`, telas em `ui/r33/redes33ui.ts`): oito seções; cada publicação da época (folha → +revista de rádio → fofoca e paradas → TV e fanzines → jornal + portal) reparte as seções, conta a notícia na voz própria e tem cartas próprias. Matéria clicável abre o cartão ACOES5 (`showAdhoc5`, novo em `acoes5.ts`); classificados apontam para ações existentes. **Dono pediu (pós-mock):** imagens reais (retrato do líder por `portraitCanvas`, capa por `cover`) e nomes de artista/cidade/disco como links para as fichas já existentes.
+  - **Plantar outra nota:** `bribe18` só existe para a carreira de crítico; a coluna paga a nota por conta própria (`plantNote33`) e a oferta de "apoio editorial" do crítico aparece na coluna com aceitar/recusar/denunciar (`bribe18`).
+  - **App no celular/PC:** `src/ui/r33/redes33phone.ts` registra `redes` pelo gancho da APARELHOS33 (`registerPhoneApp33`/`registerPcApp33`) e embute a tela (`embedRedes33`). Branch da APARELHOS33 foi mesclada aqui para ligar. Entrada provisória: cartão do Jornal na mesa (`'`) com "Ler o jornal" e, de 2004, "Abrir as redes".
+  - Testes: `tests/r33-redes.test.ts` + `r31-uiwords`; goldens não rodados (regra da 33; o estado novo `x4.redes33` muda o hash do save).
+
 - **2026-10-17 · R33 GENTE33 parte A (Opus).** Diretor(a) de filial, CEO e conselho, equipe pessoal e pessoas fixas em
   `src/sim/r33/gente33.ts`, atrás de `exp33.gente` (ligado; ligado não muda nada até o jogador agir).
   - **Diretor(a) de filial:** pessoa real (equipe, executivo de rival, gente da cidade do `gente31` ou ex-artista).
@@ -620,6 +630,63 @@ escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Le
 docs/r33/CENARIOS33.md §9.
 
 **Revisto no mesmo dia:** o dono voltou atrás — o POL33 fica onde estava (depois de QA33 e REDES33, antes da `Masters_33.html`). A prévia `Masters_33_previa.html` vai antes, só para ver.
+- **2026-10-17 · R33 REDES (complemento).** Base mesclada (APARELHOS33 + GENTE33). Câmera → post: ação `cam.foto` ("Foto vira post", 2007+, `registerAct33`) posta pelo primeiro artista do elenco com `ownPost33`. Fatos da GENTE33 (`comeback33`, `hire33`, `talent33`, `board_vote33`, `missed33` = ex-artista atrás do balcão) usam núcleos de tipos parecidos (`ALIAS33`) e entram no feed e na seção Música do Jornal.
+
+## R33 · BUGS33 — o que o dono achou jogando a prévia `Masters_33_previa.html` (17/10)
+Casca nova (`VITE_EXP5NAV=1`), Londres e Brasil 1962, em português e inglês. Prints antes/depois em `docs/r33/bugs/`
+(1912×867, a tela do dono, e 1366×768 onde o layout muda). Os "antes" saem da base `2ed339d2`.
+- **Item 1 · "Mercado e política do país" (painel do país no mapa-múndi).** O conserto do commit `2ed339d2`
+  (`openPaper5`, usado por `go27`) foi conferido no navegador: abre "Regiões e política" como papel por cima do mapa,
+  e o Esc volta ao mapa com o país ainda aberto. Nada a mudar.
+- **Item 2 · cartão da cidade no mapa-múndi quebrado.** O `.m5-pick` era uma `div` sem CSS, fora da regra
+  `.map27-body > aside` que limita a altura: os botões ficavam soltos acima da ficha e a ficha passava por baixo da
+  barra de dicas. Agora o cartão é a própria ficha (`sheet27(s, c, { cls: 'm5-pick', el })`), com "Entrar na cidade ▸" e
+  "Fechar" (tamanho normal) presos no topo, logo abaixo do título, e a ficha rola por dentro da coluna, como o painel do
+  país.
+- **Item 3 · camada "Fãs por idade" não mudava o mapa.** Duas causas: (a) no começo da run o selo não tem artistas, então
+  não há fãs em país nenhum; (b) com fãs, o véu do país saía com alfa 0,32 × (0,3–0,95) e não se via. `countryShade`
+  ganhou `alpha` opcional (a camada de idade usa 0,8, no Mundo novo e no painel antigo) e a legenda diz "Seus fãs ainda
+  não aparecem em nenhum país: …" com o motivo (sem artistas / artistas sem público). As outras camadas (Força da cena,
+  Gêneros em alta, Seus atos em turnê, Festivais, Rivais, Países fechados, Seus lugares) e os modos
+  Político/Guerra Fria/Mercados foram conferidos e respondem (`3-outras-camadas-e-modos.png`).
+- **Item 4 · comprar imóvel e abrir filial ao entrar numa cidade.** Modelo `src/sim/r33/cityBuy33.ts`
+  (`cityBuyActs33`/`runCityBuy33`). Ele só junta os fluxos que já existem, cada um com a sua trava: imóvel fora da sede
+  por `buyHome31` (a casa mais barata da época, sai do bolso do dono), filial por `canOpenBranch`/`openBranch`, diretor da
+  filial por `hireBranchDir33` (só com o GENTE33 ligado), e com o imóvel comprado as ações do cidade33 (`baseActs33`). Na
+  cidade visitada, a ficha mostra "Negócios aqui" e dois prédios comuns viram "Imóvel à venda" com as mesmas ações. No
+  cartão da cidade do mapa-múndi entra o atalho "Abrir filial aqui". Na sede a filial vem travada (é a matriz), e
+  terrenos e prédios continuam pelo cartão de cada lote ("Mais opções (comprar o imóvel…)"). Nenhuma regra de simulação
+  mudou. Em 1962 o patrimônio pessoal do começo não paga o apartamento mais barato de Paris ($3.456), então o botão
+  aparece travado com o motivo. Teste `tests/r33-bugs-4.test.ts`.
+- **Item 5 · tela cheia.** `src/ui/r33/tela33.ts` (Fullscreen API): "Tela cheia" no menu de pausa, caixa nas Opções do
+  jogo e nas Opções da tela inicial, e Alt+Enter em qualquer tela (F11 continua sendo a tela cheia do navegador). Alt+Enter
+  entra na lista de teclas como tecla do sistema, fixa e reservada; F ficou de fora porque já é tecla de objeto. A
+  preferência vale só na sessão (`sessionStorage`): como o navegador só deixa entrar com um gesto, depois de recarregar
+  a tela cheia volta no primeiro clique ou tecla. Teste `tests/r33-bugs-5.test.ts`.
+- **Item 6 · pessoa clicável por cima do móvel.** Nos interiores (`inside31`/`scene31`), o móvel com o mouse em cima
+  subia para a camada 3 e cobria a pessoa. Entrando pela mesa, o clique na pessoa caía na mesa: na sala dos fundos da
+  fachada em Londres 1962 abria "Mesa" em vez da chefe; o mesmo na gravadora, na casa de shows, no bar e na rádio. Agora
+  os pontos de pessoa (`Spot31.person` / `personSpot31`: `who:N`, `you`) ficam na camada 5 (6 em hover), acima de
+  qualquer objeto e das bancas da vitrine (4); o móvel continua clicável em volta. Na sede da casca nova (`sede5`), os
+  bonecos desenhados (artistas, equipe) ganharam área de clique acima dos móveis e abaixo dos selos das salas, e abrem a
+  ficha. Teste `tests/r33-bugs-6.test.ts`.
+- **Item 7 (coordenador) · "não consigo reordenar os objetos" no Arrumar.** Em 1962 o Arrumar da sede só mostra os
+  itens obrigatórios, e eles não se moviam (os lugares de decoração começam vazios). Agora os obrigatórios trocam de
+  lugar entre si, só dentro do mesmo grupo (mesa com mesa, chão com chão), e o nível instalado vai junto
+  (`swapReq31`). A ordem fica em `deco31.ord` (por `lugar|cômodo`), que só passa a existir depois da primeira troca: os
+  goldens não mudam, e a ordem continua ao avançar o mês e ao salvar/carregar. Formas de mover, para obrigatórios e peças
+  de decoração: arrastar, setas ← → no lugar escolhido, ou "Mover" e um clique no novo lugar (Esc cancela). Teste
+  `tests/r33-bugs-7.test.ts`.
+- **Pedido 8 (dono) · botão da carreira no menu de baixo.** Logo depois da Sede vem o botão da AÇÃO PRINCIPAL da
+  carreira escolhida (revisto pelo dono no meio do trabalho: "o botão de artista deve mudar conforme a carreira"). Na
+  gravadora é **Artistas** (a gestão do elenco, o papel do mural); nas outras carreiras: Carreira (músico), Clientes
+  (empresário), Turnês (agente), Line-up (festival), Agenda (casa de shows), Sessões (estúdio), Catálogo (editora),
+  Programação (mídia), Plataforma, Projetos (trilhas), Pauta (jornalismo). A tabela fica em
+  `src/ui/r31/dockcar5.ts`, e a página de reserva é a da carreira (`CAREER_PAGE17`). Ícone: desenho 16×16 novo de artista
+  com violão (`exp5px`, para gravadora e músico) ou o ícone pixel da carreira (`icons17`/`icons31`), ampliado ×3 como os
+  de viagem. As teclas seguem a ordem do menu: ⇧1 Sede, ⇧2 carreira, ⇧3 Casa, ⇧4 Cidade, ⇧5 Mundo, ⇧6 Celular (a pilha de
+  demos fica em ⇧9). Os docs de teclas foram regenerados (`UPDATE5=1`), assim como a ajuda "?" (lida de `keys5`) e o
+  robô QA5. Teste `tests/r33-bugs-8.test.ts`.
 
 ## R33 · FICHAS33 — janelas no padrão de papel (17/10)
 - **Papel comum `paperSheet33` (`src/ui/r33/paper33.ts`).** `modal()` (common.ts) passa a abrir o papel: plaqueta em

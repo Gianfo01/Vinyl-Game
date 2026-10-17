@@ -40,3 +40,7 @@
 .deco5-fx { display: flex; flex-wrap: wrap; gap: 6px; }
 .deco5-open { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 2px 10px; border: 2px solid #0a121a; border-radius: 5px; background: #1c3048; box-shadow: inset 0 0 0 1px #3f5f84; color: #e9edf5; font: 600 12px var(--sans); letter-spacing: 0; cursor: pointer; }
 @media (max-width: 760px) { .deco5-main { grid-template-columns: 1fr; } }
+/* BUGS33: peça escolhida para "Mover" (o próximo clique leva para lá) e obrigatórios arrastáveis */
+.deco5-spot.moving { box-shadow: inset 0 0 0 2px #ffd040, 0 0 0 2px #1a1214; background: rgba(255, 208, 64, 0.18); }
+.deco5-spot[draggable="true"] { cursor: grab; }
+.deco5-spot.over { box-shadow: inset 0 0 0 2px #7ad07a; }

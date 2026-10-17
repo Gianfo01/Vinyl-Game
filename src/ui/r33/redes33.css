@@ -1,0 +1,88 @@
+/* R33 · REDES — o Jornal e o app Redes. Mesma arte do cartão de ações e dos papéis da sede (acoes5.css, papers5.css):
+   creme e tinta, borda dura de 2px, sombra em degrau, cantos retos, fonte do jogo (--pixel nos títulos, --sans no texto). */
+.r33-ov { position: fixed; inset: 0; z-index: 50; background: var(--scrim, rgba(10, 8, 12, 0.7)); display: flex; align-items: flex-start; justify-content: center; padding: 3vh 8px; overflow-y: auto; }
+.r33-sheet { --pap: #efe3c2; --acc: #c83a32; --ink: #170e12; --line: #c8b898; position: relative; width: min(960px, 100%); box-sizing: border-box; padding: 10px 12px 14px;
+  background: var(--pap); color: #1c1612; border: 2px solid var(--ink); font: 13px var(--sans);
+  box-shadow: 0 0 0 2px var(--pap), 0 0 0 4px var(--ink), 6px 6px 0 4px rgba(0, 0, 0, 0.4); image-rendering: pixelated; }
+.r33-sheet.ep0 { --pap: #d6c392; --acc: #6e2e20; } .r33-sheet.ep1 { --pap: #e2d3a8; --acc: #8a2430; } .r33-sheet.ep2 { --pap: #eee2c0; --acc: #c83a32; }
+.r33-sheet.ep3 { --pap: #efe5ce; --acc: #2a5ab0; } .r33-sheet.ep4 { --pap: #e8e6dc; --acc: #2a8a6a; } .r33-sheet.ep5 { --pap: #dde6ee; --acc: #3a7ab8; }
+.r33-head { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; }
+.r33-sheet .r33-head h2 { flex: 1; color: var(--ink); margin: 0; font: 17px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); }
+.r33-head small { font: 12px var(--sans); color: #5a4a3a; }
+.r33-x { border: 2px solid var(--ink); background: #fffdf6; box-shadow: 2px 2px 0 var(--ink); font: 700 14px/1 var(--sans); padding: 2px 8px; cursor: pointer; color: #1c1612; }
+.r33-x:hover, .r33-x:focus-visible { background: #f0c060; outline: none; }
+.r33-mast { display: block; width: 100%; height: auto; border: 2px solid var(--ink); margin: 0 0 6px; }
+.r33-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+.r33-tab { border: 2px solid var(--ink); border-bottom-width: 4px; background: #fffdf6; color: #1c1612; font: 700 12px var(--sans); padding: 3px 10px; cursor: pointer; }
+.r33-tab.on { background: var(--acc); color: #fff; }
+.r33-cols { columns: 2 340px; column-gap: 14px; column-rule: 2px dashed var(--line); }
+.r33-sec { break-inside: avoid; margin: 0 0 10px; padding: 0 0 6px; }
+.r33-sheet .r33-sec > h3 { margin: 0 0 4px; padding: 3px 6px; font: 13px var(--pixel); letter-spacing: 0.05em; text-transform: uppercase; background: var(--ink) !important; color: #f6efdc !important; border: 0; }
+.r33-sheet .r33-sec.big > h3 { font-size: 16px; background: var(--acc) !important; color: #fff !important; }
+.r33-it { display: flex; gap: 8px; align-items: flex-start; width: 100%; box-sizing: border-box; text-align: left; margin: 0 0 4px; padding: 4px 6px; border: 2px solid transparent; border-bottom: 1px dashed var(--line); background: transparent; color: #1c1612; font: 13px var(--sans); cursor: pointer; }
+.r33-it:hover, .r33-it:focus-visible { background: #fffdf6; border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); outline: none; }
+.r33-it .r33-tx { flex: 1; min-width: 0; }
+.r33-it b { display: block; font: 700 13px var(--sans); }
+.r33-sec.big .r33-it b { font-size: 17px; }
+.r33-it span { display: block; color: #3a2e24; font-size: 12px; }
+.r33-tag { display: inline-block; margin-left: 4px; padding: 0 5px; border: 1px solid var(--ink); background: #fffdf6; font: 700 10px var(--sans); text-transform: uppercase; color: var(--acc); }
+.r33-tag.bad { color: #a3241c; border-color: #a3241c; }
+.r33-empty { margin: 0; padding: 4px 6px; color: #6a5a4a; font-size: 12px; }
+.r33-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; padding: 6px; background: #fffdf6; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.r33-sheet .r33-bar select { font: 13px var(--sans); border: 2px solid var(--ink); background: #fff !important; color: #1c1612 !important; padding: 2px 4px; min-width: 140px; }
+.r33-btn { border: 2px solid var(--ink); background: #fffdf6; color: #1c1612; font: 13px var(--sans); padding: 3px 9px; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); }
+.r33-btn:hover, .r33-btn:focus-visible { background: #f0c060; outline: none; }
+.r33-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.r33-btn[disabled] { opacity: 0.6; cursor: not-allowed; border-style: dashed; box-shadow: none; }
+.r33-why { font-size: 11px; color: #7a3a2a; }
+.r33-alert { margin: 0 0 8px; padding: 6px 8px; border: 2px solid #a3241c; background: #fbe4dc; color: #6a1a14; font-weight: 700; }
+.r33-feed { display: grid; gap: 6px; }
+.r33-post { display: flex; gap: 8px; align-items: flex-start; width: 100%; text-align: left; padding: 6px; border: 2px solid var(--ink); background: #fffdf6; color: #1c1612; font: 13px var(--sans); cursor: pointer; box-shadow: 2px 2px 0 var(--ink); }
+.r33-post:hover, .r33-post:focus-visible { background: #f6ecd0; outline: none; }
+.r33-post.mine { border-left: 8px solid var(--acc); }
+.r33-post.bad { border-color: #a3241c; background: #fbe4dc; }
+.r33-post .who { font: 700 13px var(--sans); }
+.r33-post .who i { font: 700 10px var(--sans); font-style: normal; margin-left: 6px; color: var(--acc); text-transform: uppercase; }
+.r33-post .txt { margin: 2px 0 0; }
+.r33-post .meta { margin-top: 2px; font-size: 11px; color: #6a5a4a; }
+.r33-post canvas { flex: none; border: 2px solid var(--ink); }
+.r33-post.micro .txt { font-size: 12px; }
+.r33-post.perfil { display: block; }
+.r33-post.perfil .bio { font-size: 11px; color: #6a5a4a; }
+.r33-sheet .r33-h4 { margin: 10px 0 4px; font: 13px var(--pixel); text-transform: uppercase; letter-spacing: 0.05em; color: var(--acc); }
+@media (max-width: 560px) { .r33-cols { columns: 1; } .r33-post canvas { width: 66px; height: auto; } }
+
+/* imagens reais do jogo: retrato do líder (portraitCanvas) e capa do disco (cover); ambos são links para as fichas */
+.r33-img { flex: none; padding: 0; border: 2px solid var(--ink); background: #1a1418; cursor: pointer; line-height: 0; position: relative; box-shadow: 2px 2px 0 var(--ink); }
+.r33-img:hover, .r33-img:focus-visible { outline: 2px solid #f0c060; outline-offset: 1px; }
+.r33-img canvas, .r33-img img { display: block; image-rendering: pixelated; }
+.r33-img img { object-fit: cover; }
+.r33-play { position: absolute; left: 50%; top: 50%; width: 0; height: 0; margin: -11px 0 0 -7px; border-left: 18px solid #fff; border-top: 11px solid transparent; border-bottom: 11px solid transparent; filter: drop-shadow(2px 2px 0 var(--ink)); pointer-events: none; }
+.r33-post.avatar .r33-img { border-color: #3a7ab8; box-shadow: 0 0 0 2px #7ad0f0, 0 0 10px 2px rgba(122, 208, 240, 0.7); }
+.r33-sheet .r33-lk { display: inline; padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--acc); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+.r33-sheet .r33-lk:hover, .r33-sheet .r33-lk:focus-visible { text-decoration: underline solid; background: #f0c060; color: #1c1612; outline: none; }
+.r33-lk.place { margin-left: 6px; font-weight: 400; font-size: 11px; }
+.r33-post .r33-body { flex: 1; min-width: 0; }
+.r33-post.perfil { display: flex; }
+.r33-dateline { display: flex; justify-content: space-between; gap: 8px; margin: -2px 0 8px; padding: 2px 6px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--ink); font: 11px var(--pixel); text-transform: uppercase; letter-spacing: 0.06em; color: #3a2e24; }
+.r33-sec.big .r33-it { padding: 8px 6px; border-bottom: 2px solid var(--ink); }
+.r33-sec.big .r33-it b { font-size: 19px; line-height: 1.15; }
+.r33-sec.big .r33-it .r33-why2 { margin-top: 4px; font-style: italic; }
+.r33-sec.k-paradas .r33-it { align-items: center; }
+.r33-sec.k-classificados .r33-it { border: 1px dashed var(--ink); background: rgba(255, 253, 246, 0.55); margin-bottom: 6px; }
+.r33-sec.k-cartas .r33-it b { font-weight: 400; font-style: italic; }
+
+.r33-sheet.r33-embed { width: 100%; max-height: 100%; overflow-y: auto; padding: 6px; box-shadow: none; border-width: 0; font-size: 12px; }
+/* dentro do aparelho a tela é estreita: o post empilha (retrato e texto lado a lado, capa pequena embaixo) */
+.r33-embed .r33-post { flex-wrap: wrap; gap: 6px; }
+.r33-embed .r33-post .r33-body { flex: 1 1 90px; text-align: left; }
+.r33-embed .r33-post .who { text-align: left; }
+.r33-embed .r33-post .who .r33-lk { text-align: left; }
+.r33-embed .r33-img.cov img { width: 52px; height: 52px; }
+.r33-embed .r33-img canvas { max-width: 56px; height: auto; }
+.r33-embed .r33-bar select { min-width: 0; max-width: 100%; }
+.r33-embed .r33-post { display: block; }
+.r33-embed .r33-post:has(> .r33-img:first-child) { display: grid; grid-template-columns: 56px 1fr; align-items: start; }
+.r33-embed .r33-post .r33-body { min-width: 0; }
+.r33-embed .r33-post > .r33-img.cov { grid-column: 2; justify-self: start; }
+.r33-embed .r33-post .txt { overflow-wrap: anywhere; }

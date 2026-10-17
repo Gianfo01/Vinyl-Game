@@ -162,9 +162,9 @@ export const PHONE_APPS33: Record<number, string[]> = {
 export const PC_APPS33: Record<number, string[]> = {
   1982: ['planilha', 'contratos', 'relatorios', 'jogo'],
   1995: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros'],
-  2003: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros', 'forum', 'demos', 'leilao', 'noticias', 'loja'],
-  2012: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros', 'forum', 'demos', 'leilao', 'noticias', 'loja', 'videos', 'painel', 'anuncios'],
-  2032: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros', 'forum', 'demos', 'leilao', 'noticias', 'loja', 'videos', 'painel', 'anuncios', 'ia'],
+  2003: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros', 'forum', 'redes', 'demos', 'leilao', 'noticias', 'loja'],
+  2012: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros', 'forum', 'redes', 'demos', 'leilao', 'noticias', 'loja', 'videos', 'painel', 'anuncios'],
+  2032: ['planilha', 'contratos', 'relatorios', 'jogo', 'email', 'site', 'compras', 'bolsa', 'editor', 'encontros', 'forum', 'redes', 'demos', 'leilao', 'noticias', 'loja', 'videos', 'painel', 'anuncios', 'ia'],
 };
 export const appTable33 = (d: Dev33): Record<number, string[]> => (d === 'phone' ? PHONE_APPS33 : PC_APPS33);
 

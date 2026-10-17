@@ -15,9 +15,9 @@ import { lookOf } from '../pixel/avatar';
 import { PAD5, obj5Canvas, obj5Def, type Obj5 as Art5, type St5 } from '../pixel/exp5px';
 import { hqModel25, type Sprite25 } from '../ps/hq25model';
 import { buyDlg27 } from '../ps/hq25';
-import { $ } from '../common';
+import { $, inspect } from '../common';
 import type { Unit27 } from '../../sim/sys/hqrooms27';
-import { drawHqCutaway27, plan27, type Cell27, type Kind27, type Plan27 } from '../ps/hqpx27';
+import { drawHqCutaway27, plan27, type Cell27, type Kind27, type Plan27, type Spot27 } from '../ps/hqpx27';
 import { chordLabel5, key5 } from './keys5';
 import { object5 } from './objects5';
 import { worldTag5 } from './acoes5model';
@@ -209,6 +209,17 @@ function objBtn(pl: Plan27, it: Item5, n: number, year: number, k: number, on: (
   return h('button', { type: 'button', class: `s5-obj ${it.art ? 'art' : 'spot'} m-${it.mount}${n ? ' new' : ''}${flash ? ' flash' : ''}`, 'data-obj': it.id, style: box, 'aria-label': say, title: say, onclick: () => on(it.id) }, ...kids);
 }
 
+/** BUGS33 (dono): pessoa desenhada na sede (artista, equipe, olheiro) clicável por cima dos móveis — abre a ficha dela.
+ *  Mesma caixa dos bonecos dos interiores (14 × 32 acima dos pés). Você (sem ficha aqui) fica de fora. */
+function whoBtn(pl: Plan27, sp: Spot27): HTMLElement | null {
+  const x = sp.sprite;
+  const go = x.actId ? () => inspect.act(x.actId!) : x.personId ? () => inspect.person(x.personId!) : null;
+  if (!go || x.kind === 'you') return null;
+  const say = `${x.name}${x.role ? ` — ${x.role}` : ''} · ${tl5(x.note)}`;
+  return h('button', { type: 'button', class: 's5-obj spot s5-who', 'data-who': x.id, style: at(pl, sp.x - 7, sp.y - 31, 14, 32), 'aria-label': say, title: say, onclick: go },
+    h('span', { class: 's5-lab', 'aria-hidden': 'true' }, txt5(x.name)));
+}
+
 /** Selo da sala: nome, quantos objetos e "!"; abre a lista da sala (tudo da sala, inclusive o que não coube no desenho). */
 function roomChip(pl: Plan27, r: Room5, bangs: Record<string, number>, on: (id: string) => void, flash?: string): HTMLElement {
   const n = r.objs.reduce((a, id) => a + (bangs[id] ?? 0), 0);
@@ -300,6 +311,7 @@ export function sedeScene5(o: SedeIn5): HTMLElement {
     } catch { /* canvas sem leitura (testes): fica o fundo da casca */ }
     layer.replaceChildren(
       ...lay.items.map((it) => objBtn(d.plan, it, o.bangs[it.id] ?? 0, s.year, Math.ceil(k), o.open, o.flash === it.id)),
+      ...d.spots.map((sp) => whoBtn(d.plan, sp)).filter((x): x is HTMLElement => !!x), // BUGS33: pessoas por cima dos móveis
       ...lay.rooms.map((r) => roomChip(d.plan, r, o.bangs, o.open, lay.items.some((x) => x.id === o.flash) ? undefined : o.flash)),
       ...lockChips(s, d.plan, m.units));
   };

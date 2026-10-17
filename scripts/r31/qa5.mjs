@@ -132,7 +132,7 @@ async function sweepObjects(regionName, key, sel, idOf, limitActs = 99) {
 }
 
 async function sweepCity() {
-  await goRegion('Shift+Digit3', 'cidade');
+  await goRegion('Shift+Digit4', 'cidade');
   await checkScroll('cidade');
   const labs = await p.evaluate(() => [...document.querySelectorAll('.w19-hs')].filter((e) => !e.classList.contains('mine')).map((e) => e.getAttribute('aria-label') || ''));
   const kinds = new Set();
@@ -143,7 +143,7 @@ async function sweepCity() {
     if (QUICK && kinds.size > 6) break;
     const where = `cidade.${kind}`;
     await escBack(where, { pauseOk: true });
-    if ((await region()) !== 'cidade') { await p.keyboard.press('Shift+Digit3'); await wait(1100); await escBack(where, { pauseOk: true }); }
+    if ((await region()) !== 'cidade') { await p.keyboard.press('Shift+Digit4'); await wait(1100); await escBack(where, { pauseOk: true }); }
     const ok = await p.evaluate((lab) => { document.querySelectorAll('[data-qa5]').forEach((e) => e.removeAttribute('data-qa5')); const e = [...document.querySelectorAll('.w19-hs')].find((x) => x.getAttribute('aria-label') === lab); e?.setAttribute('data-qa5', '1'); return !!e; }, lab);
     if (!ok) continue;
     const before = await sig();
@@ -170,7 +170,7 @@ async function sweepCity() {
 }
 
 async function sweepWorld() {
-  await goRegion('Shift+Digit4', 'mundo');
+  await goRegion('Shift+Digit5', 'mundo');
   await checkScroll('mundo');
   // país: o botão do país de casa no painel ou Enter no teclado do mapa
   const home = p.locator('.app5 main button', { hasText: /Reino Unido|Brasil|Estados Unidos|França/ }).first();
@@ -192,9 +192,9 @@ async function sweepWorld() {
 async function sweepSystem() {
   // viagem por tecla e por clique, H
   step = 'viagem';
-  for (const [k, r] of [['Shift+Digit2', 'casa'], ['Shift+Digit3', 'cidade'], ['Shift+Digit4', 'mundo'], ['Shift+Digit1', 'sede']]) await goRegion(k, r);
+  for (const [k, r] of [['Shift+Digit3', 'casa'], ['Shift+Digit4', 'cidade'], ['Shift+Digit5', 'mundo'], ['Shift+Digit1', 'sede']]) await goRegion(k, r);
   for (const r of ['casa', 'mundo', 'sede']) { await p.locator(`.b5-tr[data-travel="${r}"]`).click(); await wait(1100); await escBack(`clique>${r}`, { pauseOk: true }); if ((await region()) !== r) flag('sem-efeito', `viagem.clique.${r}`); }
-  await p.keyboard.press('Shift+Digit3'); await wait(1000); await p.keyboard.press('h'); await wait(1100); if ((await region()) !== 'sede') flag('sem-efeito', 'tecla H');
+  await p.keyboard.press('Shift+Digit4'); await wait(1000); await p.keyboard.press('h'); await wait(1100); if ((await region()) !== 'sede') flag('sem-efeito', 'tecla H');
   // ajuda
   step = 'ajuda';
   await escBack('ajuda', { pauseOk: true });
@@ -262,7 +262,7 @@ async function sweepSystem() {
 /** Modo Arrumar (DECO-M, ⇧O): abrir na casa, trocar cômodo, trocar para a sede, abrir a gaveta de um lugar, Esc fecha. */
 async function sweepArrumar() {
   step = 'arrumar';
-  await goRegion('Shift+Digit2', 'casa');
+  await goRegion('Shift+Digit3', 'casa');
   await p.keyboard.press('Shift+KeyO'); await wait(900);
   if (!(await p.locator('.deco5-x').count())) { flag('sem-efeito', 'arrumar.tecla ⇧O'); return; }
   await checkScroll('arrumar');
@@ -315,7 +315,7 @@ for (const run of RUNS) {
     await shot('sede');
     const parts = [
       ['sede', () => sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', QUICK ? 3 : 99)],
-      ['casa', () => sweepObjects('casa', 'Shift+Digit2', '.app5 main .r5-spot', 'aria-label', QUICK ? 3 : 99)],
+      ['casa', () => sweepObjects('casa', 'Shift+Digit3', '.app5 main .r5-spot', 'aria-label', QUICK ? 3 : 99)],
       ['arrumar', sweepArrumar], ['cidade', sweepCity], ['mundo', sweepWorld], ['sistema', sweepSystem],
       ['mes', () => advance(QUICK ? 1 : 3)],
       ['sede-depois', () => sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', 0)],

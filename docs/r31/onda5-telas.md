@@ -24,14 +24,14 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **"!":** soma dos "!" dos objetos da sede
 - **Nota:** Botão de viagem; H também volta à sede. Com outra carreira principal, a sede é o prédio dessa carreira.
 
-### Porta da rua · tecla ⇧3 (viagem: cidade)
+### Porta da rua · tecla ⇧4 (viagem: cidade)
 - **Lugar:** Sede › Recepção
 - **Papel:** cena em pixel art
 - **Atalho para:** `campus18` (Nosso mundo) (dono: Cidade)
 - **Marcadores:** — (papel de uma folha só)
 - **"!":** —
 
-### Mapa-múndi na parede · tecla ⇧4 (viagem: mundo)
+### Mapa-múndi na parede · tecla ⇧5 (viagem: mundo)
 - **Lugar:** Sede › Recepção
 - **Papel:** mapa
 - **Atalho para:** `world` (Mundo) › map27 (dono: Mapa-múndi)
@@ -328,7 +328,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 
 ## Casa
 
-### Casa · tecla ⇧2 (viagem: casa)
+### Casa · tecla ⇧3 (viagem: casa)
 - **Lugar:** Casa › Casa (cena inteira)
 - **Papel:** cena em pixel art
 - **Páginas (dono):** `casa31` (Sua casa) ⚑
@@ -491,7 +491,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **Marcadores:** — (papel de uma folha só)
 - **"!":** pendências com dono nestas páginas
 
-### Cidade · tecla ⇧3 (viagem: cidade)
+### Cidade · tecla ⇧4 (viagem: cidade)
 - **Lugar:** Cidade › Cidade (mapa da cidade)
 - **Papel:** mapa
 - **Páginas (dono):** `campus18` (Nosso mundo)
@@ -623,7 +623,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 
 ## Mundo
 
-### Mundo · tecla ⇧4 (viagem: mundo)
+### Mundo · tecla ⇧5 (viagem: mundo)
 - **Lugar:** Mundo › Mundo (mapa-múndi)
 - **Papel:** mapa
 - **Atalho para:** `world` (Mundo) › map27 (dono: Mapa-múndi)
@@ -678,10 +678,10 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 | `business` Negócios | Contador | Sede › Financeiro | conversa com a pessoa + "ver números" | B | sim | 12/0 |
 | `cal17` Agenda de shows | Agenda de couro | Sede › Sua sala | agenda de couro | G | sim | 0/0 |
 | `calendar19` Calendário | Agenda de couro | Sede › Sua sala | agenda de couro | G | sim | 0/0 |
-| `campus18` Nosso mundo | Cidade | Cidade › Cidade (mapa da cidade) | mapa | ⇧3 (viagem: cidade) | sim | 0/0 |
+| `campus18` Nosso mundo | Cidade | Cidade › Cidade (mapa da cidade) | mapa | ⇧4 (viagem: cidade) | sim | 0/0 |
 | `car31` Decisões de carreira | Mesa de reunião | Sede › Sala de reunião | cena em pixel art | ⇧R | sim | 0/0 |
 | `careers` Carreiras | Escritório em casa | Casa › Escritório em casa | cena em pixel art | N | sim | 0/0 |
-| `casa31` Sua casa | Casa | Casa › Casa (cena inteira) | cena em pixel art | ⇧2 (viagem: casa) | ⚑ não | 0/0 |
+| `casa31` Sua casa | Casa | Casa › Casa (cena inteira) | cena em pixel art | ⇧3 (viagem: casa) | ⚑ não | 0/0 |
 | `catalog` Catálogo | Prateleiras de masters | Sede › Arquivo | cena em pixel art | 7 | sim | 4/0 |
 | `charts` Paradas | Revista de paradas | Sede › Sua sala | revista | 3 | sim | 12/0 |
 | `cidade5` Cidade (visita) | Mapa-múndi | Mundo › Mapa-múndi | mapa | W | ⚑ não | 0/0 |

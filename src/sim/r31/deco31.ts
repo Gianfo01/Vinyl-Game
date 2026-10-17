@@ -61,6 +61,8 @@ export interface Deco31St {
   at: Record<string, string>;
   /** obrigatório (`place|room|req`) → id da peça do nível instalado (sem entrada = nível 0) */
   req: Record<string, string>;
+  /** BUGS33: ordem dos obrigatórios por cômodo (`place|room` → ids), quando o jogador troca de lugar (sem entrada = a de sempre) */
+  ord?: Record<string, string[]>;
 }
 declare module '../ext4' { interface Ext4 { deco31: Deco31St } }
 const fresh = (): Deco31St => ({ at: {}, req: {} });
@@ -152,8 +154,17 @@ export function decoPlaces31(s: GameState): DecoPlaceDef31[] {
   for (const h of homes31(s)) out.push({ key: `abroad:${h.city}`, kind: 'home', name: HOUSES[h.house]?.name ?? l('Casa', 'Home'), rooms: homeRooms(h.house) });
   out.push({ key: 'sede', kind: 'sede', name: l('Sede', 'HQ'), rooms: sedeRooms(s) });
   for (const [, fn] of VENUES) out.push(...fn(s));
+  const ord = peek(s).ord; // BUGS33: obrigatórios na ordem que o jogador arrumou
+  if (ord) for (const p of out) for (const r of p.rooms) { const o = ord[`${p.key}|${r.id}`]; if (o) r.req = orderReq31(r.req, o); }
   return out;
 }
+/** Os obrigatórios do cômodo na ordem guardada; os que não estão nela (sala nova, item novo) ficam no fim, na ordem de sempre (PURO). */
+export function orderReq31(base: readonly string[], ord: readonly string[]): string[] {
+  const inOrd = ord.filter((x) => base.includes(x));
+  return [...inOrd, ...base.filter((x) => !inOrd.includes(x))];
+}
+/** Grupo de posição do obrigatório no cômodo: na mesa (telefone, fichário…) ou no chão/parede (cofre, arquivo…). */
+const reqGroup31 = (id: string): 'desk' | 'floor' => (reqDef31(id)?.slot === 'desk' ? 'desk' : 'floor');
 export const decoPlace31 = (s: GameState, key: string): DecoPlaceDef31 | undefined => decoPlaces31(s).find((p) => p.key === key);
 
 /** Chave de um lugar: `place|room|spot`. */
@@ -233,6 +244,29 @@ export function placeDeco31(s: GameState, objId: string, key: string): DecoRes31
     if (pd && ff && pd.slots.includes(ff.sp.slot) && pd.places.includes(ff.p.kind)) { st.at[from] = prev; swapped = prev; }
   }
   return { ok: true, moved: from, swapped };
+}
+
+/** BUGS33: troca dois obrigatórios de lugar no mesmo cômodo (o cofre onde estava o arquivo e vice-versa). Só entre os do
+ *  mesmo grupo (mesa com mesa, chão com chão): o telefone não vai para o chão. O nível instalado acompanha o item. */
+export function swapReq31(s: GameState, place: string, roomId: string, a: string, b: string): DecoRes31 {
+  if (!decoOn31(s)) return { ok: false, why: 'off' };
+  const r = decoPlace31(s, place)?.rooms.find((x) => x.id === roomId);
+  if (!r || !r.req.includes(a) || !r.req.includes(b)) return { ok: false, why: 'no_spot' };
+  if (a === b) return { ok: true };
+  if (reqGroup31(a) !== reqGroup31(b)) return { ok: false, why: 'wrong_slot' };
+  const cur = [...r.req];
+  const i = cur.indexOf(a), j = cur.indexOf(b);
+  [cur[i], cur[j]] = [cur[j], cur[i]];
+  const st = deco31(s);
+  (st.ord ??= {})[`${place}|${roomId}`] = cur;
+  return { ok: true, moved: a, swapped: b };
+}
+/** Vizinho do obrigatório no mesmo grupo (para as setas do teclado): -1 = anterior, +1 = seguinte (PURO). */
+export function reqNeighbor31(req: readonly string[], id: string, dir: -1 | 1): string | undefined {
+  const g = reqGroup31(id);
+  const same = req.filter((x) => reqGroup31(x) === g);
+  const i = same.indexOf(id);
+  return i < 0 ? undefined : same[i + dir];
 }
 
 /** Tira a peça do lugar (volta para a gaveta; continua sua). */

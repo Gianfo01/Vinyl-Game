@@ -31,8 +31,10 @@ export const NAV5: {
   travel?: (r: Region5) => void;
   /** casca (NAV): abre o papel do objeto `id` no marcador `t` (sem o gancho: `go(t)`) */
   open?: (id: string, t: Open5) => void;
-  /** R33 APARELHOS33: abre/fecha o celular (⇧5); devolve false quando ainda não há celular (antes de 1983) */
+  /** R33 APARELHOS33: abre/fecha o celular (⇧6; era ⇧5 antes do botão Artistas); devolve false quando ainda não há celular (antes de 1983) */
   phone?: () => boolean;
+  /** BUGS33 pedido 8: botão/tecla Artistas (página do elenco; artista solo sem elenco: a carreira) */
+  artists?: () => boolean;
 } = {};
 
 // ---------------------------------------------------------------- registro das frentes (PAPEL, ELENCO, CASA, MAPA, TRN)
@@ -286,5 +288,6 @@ export function keyNav5(s: GameState | undefined, e: KeyEv5): boolean {
   if (a.kind === 'sys' && a.id === 'pause' && NAV5.pause) { NAV5.pause(); return true; }
   if (a.kind === 'sys' && a.id === 'keys' && NAV5.help) { NAV5.help(keyRows5()); return true; }
   if (a.kind === 'sys' && a.id === 'phone') return !!NAV5.phone?.();
+  if (a.kind === 'sys' && a.id === 'artists') return !!NAV5.artists?.();
   return false; // busca, avançar, marcadores { }: continuam com o código de hoje
 }

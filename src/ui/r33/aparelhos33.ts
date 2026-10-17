@@ -1,6 +1,6 @@
 // R33 · APARELHOS33 — A CASCA DO CELULAR E DO COMPUTADOR (docs/r33/CELULAR_PC.md). Só com a casca da onda 5 (exp5.nav)
 // e o interruptor `exp33.aparelhos` (ligado por padrão).
-//  • CELULAR: 5º botão do menu de baixo (depois de Sede, Casa, Cidade, Mundo), ⇧5, só de 1983 em diante; o "!" é a soma
+//  • CELULAR: último botão do menu de baixo (depois de Sede, Artistas, Casa, Cidade, Mundo), ⇧6, só de 1983 em diante; o "!" é a soma
 //    dos "!" dos apps (as mesmas pendências de hoje). Abre o aparelho POR CIMA da cena, sem trocar de lugar (EXP-13).
 //  • COMPUTADOR: o PC da mesa do escritório (upgrade "Computador com planilha" do livro-caixa, 1982+), objeto clicável
 //    com o cartão de ações (ACOES5): "Ligar o PC" abre a tela do monitor. Sem atalho no menu de baixo.
@@ -341,7 +341,7 @@ function dockBtn33(s: GameState): HTMLElement | null {
   const v = phoneV33(s.year)!;
   const on = UI33.dev === 'phone';
   const bang = devBang33(s, 'phone');
-  const chord = key5('sys:phone')?.chord ?? 'shift+5';
+  const chord = key5('sys:phone')?.chord ?? 'shift+6';
   const ic = dock33Canvas(v, on ? 'lit' : 'idle', 3); ic.className = 'px';
   return h('button', { type: 'button', class: `b5-tr ap33-dock${on ? ' on' : ''}`, 'data-travel': 'celular', 'aria-pressed': on ? 'true' : 'false',
     title: `${t(l('Celular', 'Phone'))} (${chordLabel5(chord)})`, onclick: () => (on ? close33() : openPhone33()) },
@@ -357,7 +357,7 @@ function onKey33(e: KeyboardEvent): void {
   if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
   const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
   if (e.key === 'Escape') { stop(); back33(); return; }
-  if (e.shiftKey && (e.key === '%' || e.code === 'Digit5')) return; // ⇧5 segue para a casca (abre/fecha o celular)
+  if (e.shiftKey && (e.key === '^' || e.key === '¨' || e.code === 'Digit6')) return; // ⇧6 (BUGS33: era ⇧5) segue para a casca (abre/fecha o celular)
   if (UI33.game && !overOf33(UI33.game)) {
     const dig: Record<string, Key33> = { '2': 'up', '4': 'left', '6': 'right', '8': 'down', '5': 'act' }; // teclado do celular
     const k = KEYMAP33[e.key] ?? (UI33.game.k !== 'tap' && dig[e.key] ? dig[e.key] : /^[1-9]$/.test(e.key) ? (`n${e.key}` as Key33) : undefined);

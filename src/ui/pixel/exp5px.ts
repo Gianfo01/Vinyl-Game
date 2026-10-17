@@ -1079,8 +1079,23 @@ const K = {
   chim: C('#9a6034'), road: C('#3c3c4c'),
 };
 
-function travelDraw(p: Px, id: Travel5, lit: boolean): void {
+/** BUGS33 pedido 8: o botão Artistas do menu de baixo (não é lugar de viagem, mas usa o mesmo desenho 16×16). */
+export type Dock5 = Travel5 | 'artistas';
+
+function travelDraw(p: Px, id: Dock5, lit: boolean): void {
   const win = lit ? K.win : K.winOff;
+  if (id === 'artistas') { // artista de topete com violão (aceso: camisa viva e a cravelha brilha)
+    const skin = C('#f0c090'), hair = C('#3a2418'), shirt = lit ? C('#e05a8a') : C('#b04870'), pants = C('#2a3a6a');
+    p.rect(6, 1, 4, 2, hair); p.put(10, 1, hair); // topete
+    p.rect(6, 3, 4, 3, skin); p.put(7, 4, K.ink); p.put(9, 4, K.ink);
+    p.rect(5, 6, 6, 5, shirt); p.vline(4, 7, 9, skin); // corpo e braço
+    p.rect(6, 11, 2, 4, pants); p.rect(9, 11, 2, 4, pants);
+    p.hline(5, 7, 15, K.ink); p.hline(9, 11, 15, K.ink);
+    // violão atravessado
+    p.disc(10, 10, 2, C('#c8803a')); p.disc(12, 9, 1.5, C('#c8803a')); p.put(10, 10, K.ink);
+    p.line(12, 8, 15, 4, C('#6a3a1a')); p.put(15, 3, lit ? K.lgold : K.gold);
+    return;
+  }
   if (id === 'sede') { // prédio do selo com letreiro
     p.rect(3, 5, 10, 10, lit ? K.lbrick : K.brick); p.hline(3, 12, 5, K.lbrick); p.vline(12, 6, 14, C('#8a3a2a'));
     p.rect(2, 1, 12, 3, K.gold); p.hline(2, 13, 1, K.lgold); p.rect(7, 2, 2, 1, K.ink);
@@ -1119,7 +1134,7 @@ function travelDraw(p: Px, id: Travel5, lit: boolean): void {
 
 const travelCache = new Map<string, Px>();
 /** Ícone de viagem 16×16 com contorno; `lit` = o lugar atual (aceso); `new` = selo "!" no canto. */
-export function travel5Px(id: Travel5, st: St5 = 'idle'): Px {
+export function travel5Px(id: Dock5, st: St5 = 'idle'): Px {
   const key = `${id}|${st}`;
   const hit = travelCache.get(key);
   if (hit) return hit;
@@ -1132,7 +1147,7 @@ export function travel5Px(id: Travel5, st: St5 = 'idle'): Px {
   travelCache.set(key, p);
   return p;
 }
-export function travel5Canvas(id: Travel5, st: St5 = 'idle', scale = 3): HTMLCanvasElement {
+export function travel5Canvas(id: Dock5, st: St5 = 'idle', scale = 3): HTMLCanvasElement {
   return upscale(travel5Px(id, st).canvas(), 16 * scale);
 }
 

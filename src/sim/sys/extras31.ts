@@ -136,6 +136,96 @@ export const ficActive31 = (): Fiction31[] => {
   return (FIC_ACT31 = FICTION31.filter((f) => !f.naBase && !real.has(dedupKey27(f.n))));
 };
 
+// Frase da estreia: abertura × detalhe × fecho sorteados por chave (hash da semente + banda; não usa a sorte do jogo),
+// para a notícia não se repetir (pedido do dono, 17/10): 30 × 18 × 20 combinações. {c} cidade, {a} ato, {g} gênero.
+const FIC_OPEN31: L[] = [
+  l('Surge em {c} {u}: {a}.', '{U} turns up in {c}: {a}.'),
+  l('Nova cara na noite de {c}: {a}.', 'A new face on the {c} circuit: {a}.'),
+  l('{a} estreia num porão de {c}.', '{a} debuts in a {c} basement.'),
+  l('Quem passou por {c} nesta semana ouviu falar de {a}.', 'Anyone in {c} this week heard about {a}.'),
+  l('{a} toca pela primeira vez em {c}.', '{a} plays {c} for the first time.'),
+  l('Os bares de {c} só falam de {a}.', 'The bars of {c} talk of nothing but {a}.'),
+  l('Um cartaz colado à mão anuncia {a} em {c}.', 'A hand-glued poster announces {a} in {c}.'),
+  l('{a} aparece em {c} como se tivesse saído de um filme.', '{a} appears in {c} as if straight out of a film.'),
+  l('Em {c}, {a} lota um salão de clube na estreia.', 'In {c}, {a} fills a club hall on debut night.'),
+  l('A rádio da faculdade de {c} já toca a fita de {a}.', 'The {c} college station is already spinning {a}\'s tape.'),
+  l('{a} ganha um concurso de calouros em {c}.', '{a} wins a talent night in {c}.'),
+  l('Ninguém sabe de onde veio {a}, mas {c} já sabe as letras.', 'Nobody knows where {a} came from, but {c} already knows the words.'),
+  l('{c} ganhou {u}: {a}.', '{c} has gained {u}: {a}.'),
+  l('Um jornalzinho de {c} dá meia página para {a}.', 'A {c} fanzine gives {a} half a page.'),
+  l('{a} abre a noite de outro artista em {c} e rouba o show.', '{a} opens for someone else in {c} and steals the show.'),
+  l('Em {c}, a fila para ver {a} dobra a esquina.', 'In {c}, the queue to see {a} wraps round the block.'),
+  l('{a} sobe ao palco em {c} sem ensaio nenhum.', '{a} takes the stage in {c} with no rehearsal at all.'),
+  l('O dono de um bar de {c} jura que descobriu {a}.', 'A {c} bar owner swears he discovered {a}.'),
+  l('{a} grava uma demo num quarto de {c}.', '{a} records a demo in a {c} bedroom.'),
+  l('Uma festa de bairro em {c} revela {a}.', 'A {c} block party reveals {a}.'),
+  l('Na saída de um show em {c}, todo mundo pergunta por {a}.', 'Leaving a gig in {c}, everyone asks about {a}.'),
+  l('{a} faz o primeiro show pago em {c}.', '{a} plays its first paid show in {c}.'),
+  l('A loja de discos de {c} pendura a foto de {a} na vitrine.', 'The {c} record shop hangs {a}\'s photo in the window.'),
+  l('Começa a circular em {c} uma fita de {a}.', 'A tape by {a} starts going round {c}.'),
+  l('{a} se apresenta numa esquina de {c} e para o trânsito.', '{a} performs on a {c} street corner and stops the traffic.'),
+  l('Em {c}, um teatro pequeno abre as portas para {a}.', 'In {c}, a small theatre opens its doors to {a}.'),
+  l('O boca a boca de {c} tem nome: {a}.', 'The {c} word of mouth has a name: {a}.'),
+  l('{a} aparece do nada no circuito de {c}.', '{a} appears out of nowhere on the {c} circuit.'),
+  l('Uma noite de microfone aberto em {c} termina com {a}.', 'An open-mic night in {c} ends with {a}.'),
+  l('{u} chega a {c} com nome de cartaz de cinema: {a}.', '{U} hits {c} with a name fit for a film poster: {a}.'),
+];
+const FIC_MID31: L[] = [
+  l('', ''),
+  l('', ''),
+  l('', ''),
+  l('', ''),
+  l(' O som é {g}.', ' The sound is {g}.'),
+  l(' Tocam {g} como se fosse a última noite.', ' They play {g} as if it were the last night.'),
+  l(' Quarenta pessoas viram; quatrocentas dizem que estavam lá.', ' Forty people saw it; four hundred say they were there.'),
+  l(' A entrada era de graça.', ' Entry was free.'),
+  l(' O dono da casa já quer marcar outra data.', ' The owner already wants another date.'),
+  l(' O figurino chama mais atenção que a música.', ' The outfits get more attention than the music.'),
+  l(' Tocaram só seis músicas, todas próprias.', ' They played only six songs, all their own.'),
+  l(' A polícia apareceu por causa do barulho.', ' The police turned up over the noise.'),
+  l(' O público pediu bis três vezes.', ' The crowd called for three encores.'),
+  l(' Ninguém conseguiu uma foto decente.', ' Nobody managed a decent photo.'),
+  l(' O equipamento era emprestado.', ' The gear was borrowed.'),
+  l(' Um fotógrafo da imprensa estava lá por acaso.', ' A press photographer happened to be there.'),
+  l(' Saíram do palco sem dizer uma palavra.', ' They left the stage without a word.'),
+  l(' Os ingressos acabaram antes das oito.', ' Tickets ran out before eight.'),
+];
+const FIC_TAIL31: L[] = [
+  l('', ''),
+  l('', ''),
+  l('', ''),
+  l('', ''),
+  l('', ''),
+  l(' Parece personagem de série, e sabem disso.', ' It looks like something off a TV show, and they know it.'),
+  l(' Os olheiros dos selos grandes ainda não chegaram.', ' The big labels\' scouts have not arrived yet.'),
+  l(' A imprensa local chama de "a próxima coisa".', ' The local press calls it "the next thing".'),
+  l(' Um crítico jura que já viu essa história no cinema.', ' One critic swears he has seen this story at the movies.'),
+  l(' Ainda sem contrato.', ' Still unsigned.'),
+  l(' Quem chegar primeiro com um contrato leva.', ' Whoever shows up first with a contract gets them.'),
+  l(' Há quem diga que é invenção de algum roteirista.', ' Some say it is a screenwriter\'s invention.'),
+  l(' Os rivais já mandaram alguém espiar.', ' Rivals have already sent someone to look.'),
+  l(' Vale ficar de olho.', ' Worth keeping an eye on.'),
+  l(' A cidade ainda não decidiu se ama ou odeia.', ' The city has not decided whether to love or hate it.'),
+  l(' Ninguém sabe quanto tempo vai durar.', ' Nobody knows how long it will last.'),
+  l(' Os mais velhos torcem o nariz.', ' The old guard turns up its nose.'),
+  l(' Os fãs já copiam o corte de cabelo.', ' Fans are already copying the haircut.'),
+  l(' O nome parece tirado de um letreiro de filme.', ' The name looks lifted from a movie marquee.'),
+  l(' Seu olheiro pode querer ver de perto.', ' Your scout may want a closer look.'),
+];
+export function ficLine31(key: string, c: L, a: string, g: L | undefined, solo: boolean): L {
+  const r = Rng.fromSeed(`ficline31|${key}`);
+  const pick = (xs: L[]): L => xs[Math.floor(r.next() * xs.length) % xs.length];
+  const o = pick(FIC_OPEN31);
+  let m = pick(FIC_MID31);
+  if (!g && m.pt.includes('{g}')) m = FIC_MID31[0];
+  const t = pick(FIC_TAIL31);
+  return fmtL(l(o.pt + m.pt + t.pt, o.en + m.en + t.en), {
+    c, a, g: g ?? '',
+    u: solo ? l('um nome novo', 'a new name') : l('uma banda nova', 'a new band'),
+    U: solo ? l('Um nome novo', 'A new name') : l('Uma banda nova', 'A new band'),
+  });
+}
+
 function spawnFic(s: GameState, f: Fiction31): Act | undefined {
   const city = cityById[f.c] ? f.c : s.config.homeCity;
   const genre = genreById[f.g] ? f.g : undefined;
@@ -145,9 +235,9 @@ function spawnFic(s: GameState, f: Fiction31): Act | undefined {
   a.members.forEach((pid, i) => { const p = s.persons[pid]; if (p && f.m[i]) p.name = s.config.realNames ? f.m[i] : homage31(f.m[i]); });
   x31(s).fic[f.id] = a.id;
   kin15(s).chk.push(a.id); // integrantes são personagens: sem sobrenome de "banda de irmãos" sorteado
+  const t = ficLine31(`${s.config.seed}|${f.id}`, cityById[city].name, a.name, genre ? genreById[genre].name : undefined, f.m.length <= 1);
   emitFact(s, { kind: 'culture31', actors: [a.id], place: city, severity: 15, visibility: 'public', tags: ['culture31', 'fiction'], src: 'extras31', data: { fic: f.id },
-    text: f.fan ? fmtL(l('Surge em {c} uma banda que parece saída de uma obra de ficção: {a}. {fan}', 'A band that looks straight out of a work of fiction appears in {c}: {a}. {fan}'), { c: cityById[city].name, a: a.name, fan: f.fan })
-      : fmtL(l('Surge em {c} uma banda que parece saída de uma obra de ficção: {a}.', 'A band that looks straight out of a work of fiction appears in {c}: {a}.'), { c: cityById[city].name, a: a.name }), diary: true });
+    text: f.fan ? fmtL(l('{t} {fan}', '{t} {fan}'), { t, fan: f.fan }) : t, diary: true });
   return a;
 }
 
