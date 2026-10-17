@@ -97,6 +97,35 @@ intervalo de anos, e o cartão mostra só as ações do ano da partida.
 | Dinheiro | **2000** ver saldo → **2010** pagar e transferir → **2020** Pix e carteira digital (Brasil 2020) → **2021–22** bolha das NFTs |
 | Computador | **1982** planilha e jogo → **1995** e-mail, site e compras → **1999–2010** fórum e P2P → **2003** demos em perfis → **2006** vídeos → **2012** painel do artista, loja online e anúncios → **2030** IA (demo gerada, relatório que prevê vendas) |
 
+## Jogos jogáveis e Encontros (pedido do dono)
+
+Mock: `mocks/mock33-celular-jogos-encontros.png`.
+
+- **Jogos de verdade, jogáveis com setas ou teclado**, desenhados em pixel e respeitando "movimento reduzido" (com ele,
+  o jogo fica pausado até apertar uma tecla).
+
+  | Desde | Onde | Jogo |
+  |---|---|---|
+  | 1982 | PC | tênis de dois traços e labirinto |
+  | 1997 | celular | **cobrinha** |
+  | 2007 | — | quebra-cabeça de blocos |
+  | 2015 | — | jogo de toque rápido |
+
+  Cada partida baixa um pouco o estresse (`stress17`, `vida33`), com limite por mês. O recorde vira fato no diário.
+  Teste: o jogo roda sem DOM pela lógica pura (passo, colisão, comida) e com seed fixa.
+- **Encontros como app de arrastar para o lado** (2012+). Os perfis são gente de verdade do jogo:
+  - quem trabalha nos lugares da cidade (`gente31`, `jobOf31`): enfermeira e enfermeiro do hospital da INT-2 (incluir a
+    função no hospital se não existir), bartender, vendedora da loja de discos, professor da escola de música…;
+  - artistas, executivos e críticos solteiros.
+
+  Curtir conta como interesse. O match usa `askOdds31`/`askRoll31` de `amor31`, que dá "chance de dar certo" e mostra
+  amigos em comum por `social31`. O encontro gasta 1 bolinha pessoal e pode virar namoro (`life.partner`), caso
+  (`love17`) ou fofoca (paparazzi, reputação pessoal).
+
+  Regras: só adultos; a **família Fossati nunca aparece**; quem é casado e curte corre risco de traição (`love17`).
+- **Por época:** 1889 anúncio de jornal ("coração solitário") → 1965 encontro por computador (cartão perfurado) →
+  1996 sala de bate-papo → 2003 site de namoro → 2012 arrastar para o lado → 2032 encontro em holograma.
+
 ## Antes do celular e do computador
 
 Sem botão (antes de 1983) e sem PC (antes de 1982), as mesmas portas continuam nos objetos de sempre: telefone de

@@ -178,10 +178,21 @@ function flipBig(){return pcanvas(60,125,4,(R)=>{R(4,0,52,58,INK);R(5,1,50,56,'#
  R(4,60,52,65,INK);R(5,61,50,63,'#5a6a8a');R(5,61,50,2,'#8a9ab8');R(4,57,52,4,'#3a4a62');
  for(let y=0;y<4;y++)for(let x=0;x<3;x++){R(12+x*13,80+y*10,10,7,INK);R(13+x*13,81+y*10,8,5,'#d8d0c0');R(13+x*13,81+y*10,8,1,'#fff6e8')}
  R(12,66,36,10,INK);R(13,67,34,8,'#3a4a62');R(26,68,8,6,'#9aaac8')});}
+function nurse(){return pcanvas(54,45,4,(R)=>{R(0,0,54,45,'#c8e0e8');R(0,30,54,15,'#a8c8d8');R(0,0,54,2,'#e8f4f8');
+ R(36,4,12,10,INK);R(37,5,10,8,'#fff6e8');R(41,6,2,6,'#e04848');R(39,8,6,2,'#e04848');// placa de cruz na parede
+ R(17,7,20,4,'#3a2414');R(15,10,24,16,'#3a2414');// cabelo
+ R(18,10,18,16,INK);R(19,11,16,14,'#e8b080');R(19,11,16,2,'#f0c8a0');R(21,16,3,2,INK);R(30,16,3,2,INK);R(25,21,5,1,'#a03a3a');R(19,20,2,2,'#f0a080');R(33,20,2,2,'#f0a080');// rosto
+ R(16,7,22,4,INK);R(17,6,20,4,'#fff6e8');R(25,6,4,4,'#e04848');R(26,5,2,6,'#e04848');// touca
+ R(23,26,8,3,'#e8b080');R(11,29,32,16,INK);R(12,30,30,15,'#5aa0e8');R(12,30,30,2,'#8ac8ff');R(25,30,4,8,'#3a7ac8');// uniforme
+ R(14,34,6,1,'#fff6e8');R(14,35,6,4,'#fff6e8');R(16,36,2,2,'#e04848')});}
+function roundBtn(k){return pcanvas(14,14,3,(R)=>{const c=k==='x'?'#e04848':k==='star'?'#5aa0e8':'#5cbf6a';R(3,0,8,14,INK);R(0,3,14,8,INK);R(1,1,12,12,INK);R(3,1,8,12,'#fff6e8');R(1,3,12,8,'#fff6e8');R(2,2,10,10,'#fff6e8');
+ if(k==='x'){for(let i=0;i<6;i++){R(4+i,4+i,1,1,c);R(9-i,4+i,1,1,c);R(5+i,4+i,1,1,c);R(8-i,4+i,1,1,c)}}
+ if(k==='heart'){R(4,4,2,1,c);R(8,4,2,1,c);R(3,5,8,2,c);R(4,7,6,1,c);R(5,8,4,1,c);R(6,9,2,1,c)}
+ if(k==='star'){R(6,3,2,2,c);R(3,5,8,2,c);R(5,7,4,2,c);R(4,9,2,2,c);R(8,9,2,2,c)}});}
 // ---------- background ----------
 document.getElementById('bg').src=M==='cel'?'sede25.png':'sede25.png';
 
-if(M==='cel'||M==='cel2'){
+if(M==='cel'||M==='cel2'||M==='cel3'){
  add('<div class="dim"></div>');
  add('<div class="title">CELULAR <span>· atalho 5 · aparece no menu de baixo quando o celular é lançado (1983)</span></div>');
  // dock
@@ -259,6 +270,42 @@ if(M==='cel'||M==='cel2'){
  '<div class="it"><b>Dinheiro</b> 2000: ver saldo → 2010: pagar e transferir → 2020: Pix e carteira digital (BR 2020) → 2021–22: bolha das NFTs.</div>';
  }
  }
+
+
+if(M==='cel3'){
+ const PT=96;
+ // phone A: flip 1997 com a cobrinha
+ const P3L=150;
+ const fl=flipBig();fl.style.cssText=`position:absolute;left:${P3L+20}px;top:${PT+10}px;width:240px;height:500px`;root.appendChild(fl);
+ const sn=pcanvas(39,36,4,(R)=>{R(0,0,39,36,'#9ac0a0');const D='#1a2a1a';R(0,0,39,1,D);R(0,35,39,1,D);R(0,0,1,36,D);R(38,0,1,36,D);
+  R(1,1,37,4,'#8ab090');// placar
+  const body=[[6,20],[7,20],[8,20],[9,20],[10,20],[11,20],[11,19],[11,18],[11,17],[12,17],[13,17],[14,17],[15,17],[16,17],[17,17],[18,17],[18,18],[18,19],[19,19],[20,19],[21,19],[22,19],[23,19]];
+  for(const [x,y] of body)R(x,y,1,1,D);R(24,19,1,1,D);R(24,18,1,1,'#3a5a3a');// cabeça
+  R(29,19,1,1,D);R(30,18,1,1,D);R(30,20,1,1,D);R(31,19,1,1,D);// comida
+ });
+ sn.style.cssText=`position:absolute;left:${P3L+62}px;top:${PT+36}px;width:156px;height:144px`;root.appendChild(sn);
+ add(`<div style="position:absolute;left:${P3L+66}px;top:${PT+38}px;font-family:var(--pix);font-size:9px;color:#1a2a1a">COBRINHA 0230 · REC 0410</div>`);
+ add(`<div class="callout" style="left:${P3L-4}px;top:${PT+500}px;width:300px">Jogo de verdade: setas ou teclado do celular. Cada partida baixa um pouco o <b>estresse</b>; recorde vira fato no diário.</div>`);
+ // phone B: Encontros (2025)
+ const P2L=470;const f2=bigPhone();f2.style.cssText=`position:absolute;left:${P2L}px;top:${PT}px;width:280px;height:528px`;root.appendChild(f2);
+ const s2=add(`<div class="scr" style="left:${P2L+20}px;top:${PT+20}px;width:240px;height:472px;background:#2a1020"></div>`);
+ s2.innerHTML='<div class="sbar"><span>21:14</span><span>ENCONTROS</span><span>▮▮▮ 64%</span></div>'+
+  '<div class="apphead" style="background:#a03a6a">Perto de você · Londres <span>18 km</span></div>';
+ const card=$('<div style="margin:7px 9px;background:#fffaf0;border:2px solid #1a1018;border-radius:6px;box-shadow:3px 3px 0 #0008;overflow:hidden"></div>');s2.appendChild(card);
+ const pt=nurse();pt.style.cssText='display:block;width:218px;height:180px';card.appendChild(pt);
+ card.insertAdjacentHTML('beforeend','<div style="padding:5px 8px;color:#2a2018"><b style="font-size:16px">Ana Prado, 29</b><div style="font-size:12px;color:#6d5a44">Enfermeira · Hospital St. Mary (na sua cidade)</div><div style="font-size:12px;margin-top:3px">Gosta de: <b>jazz, corrida, karaokê</b> · já ouviu o seu selo</div><div style="font-size:11.5px;color:#2f7a3a;margin-top:2px">Chance de dar certo: boa (vocês têm 1 amigo em comum)</div></div>');
+ const btns=$('<div style="display:flex;justify-content:center;gap:26px;margin-top:6px"></div>');s2.appendChild(btns);
+ btns.appendChild(roundBtn('x'));btns.appendChild(roundBtn('star'));btns.appendChild(roundBtn('heart'));
+ s2.insertAdjacentHTML('beforeend','<div style="text-align:center;color:#f2c8dc;font-size:11.5px;margin-top:5px">passar · super curtida · curtir</div>');
+ add(`<div class="callout" style="left:${P2L+286}px;top:${PT+110}px;width:150px">Deu <b>match</b> → "chamar para sair" do Amor, com a mesma chance. Encontro gasta 1 bolinha pessoal.</div>`);
+ const n=add(`<div class="note" style="left:916px;top:96px;width:432px"></div>`);
+ n.innerHTML='<h4>JOGOS E ENCONTROS</h4>'+
+ '<div class="it"><b>Jogos jogáveis por época</b>: 1982 no PC, tênis de dois traços e labirinto · 1997 cobrinha no celular · 2007 quebra-cabeça de blocos · 2015 jogo de toque rápido. Tudo em pixel, com teclado.</div>'+
+ '<div class="it"><b>Encontros = Amor que já existe</b>: os perfis são gente de verdade do jogo, quem trabalha nos lugares da cidade (enfermeira do hospital, bartender, vendedora da loja de discos, professor da escola de música), além de artistas e executivos solteiros.</div>'+
+ '<div class="it"><b>Match</b> usa a chance do "chamar para sair". Pode virar namoro, caso ou fofoca na imprensa (paparazzi, reputação pessoal).</div>'+
+ '<div class="it"><b>Regras</b>: só adultos; a <b>família Fossati nunca aparece</b>; casado(a) curtindo vira risco de traição (Amor).</div>'+
+ '<div class="it"><b>Por época</b>: 1889 anúncio de jornal ("coração solitário") → 1965 encontro por computador (cartão perfurado) → 1996 sala de bate-papo → 2003 site de namoro → 2012 arrastar para o lado → 2032 encontro em holograma.</div>';
+}
 
 if(M==='pc'){
  // ring + action card on the desk PC (scene stays visible)
