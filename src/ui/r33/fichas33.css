@@ -74,7 +74,7 @@
 .f33-discs { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 16px 14px; }
 .f33-disc { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 0; border: 0; background: none; color: #1a160f; text-align: left; cursor: pointer; }
 .f33-disc img { width: 112px; height: 112px; image-rendering: pixelated; border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35); }
-.f33-disc:hover img, .f33-disc:focus-visible img { outline: 3px solid #f0c060; }
+.f33-disc:hover img, .f33-disc:focus-visible img { outline: 3px solid var(--p33-hi, #f0c060); }
 .f33-disc b { font-size: 13px; line-height: 1.2; }
 .f33-disc small { font-size: 11px; color: #5f584c; }
 
@@ -84,7 +84,7 @@
 .f33-fph { display: flex; align-items: flex-end; justify-content: center; width: 88px; height: 92px; overflow: hidden; background: #4a4462; border: 2px solid #170e12; }
 .f33-fph canvas, .f33-fph img { image-rendering: pixelated; max-height: 100%; }
 .f33-face b { font-size: 12px; line-height: 1.15; text-align: center; }
-.f33-face:hover .f33-fph, .f33-face:focus-visible .f33-fph { outline: 3px solid #f0c060; }
+.f33-face:hover .f33-fph, .f33-face:focus-visible .f33-fph { outline: 3px solid var(--p33-hi, #f0c060); }
 .f33-more { display: flex; align-items: center; justify-content: center; width: 88px; height: 92px; border: 2px dashed #170e12; font: 700 14px var(--pixel, monospace); }
 
 @media (max-width: 1100px) {

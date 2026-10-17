@@ -44,6 +44,27 @@ export interface Sheet33 {
 }
 export interface Open33 { close: () => void; redraw: () => void; go: (mark: string) => void; el: HTMLElement }
 
+/** Barras de ação das janelas antigas: os botões delas vão para o cartão (a linha clica o MESMO botão). */
+export const ACTION_BARS33 = ['.actions', '.a27-actions'];
+const txt33 = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+/** Colhe os botões das barras de ação do miolo (esconde os originais; o cartão os espelha). */
+function harvestBars33(body: HTMLElement): Row33[] {
+  const sel = ACTION_BARS33.flatMap((b) => [`${b} > button`, `${b} > .lk31 > button`]).join(', ');
+  const bs = [...body.querySelectorAll<HTMLButtonElement>(sel)].filter((b) => b.closest('.pp33-body') === body && txt33(b));
+  return bs.map((b, i) => {
+    const wrap = b.parentElement?.classList.contains('lk31') ? b.parentElement : null;
+    (wrap ?? b).classList.add('pp33-moved');
+    const why = wrap?.querySelector('.lk31-why > span:not(.lk31-cond)');
+    const cond = wrap?.querySelector('.lk31-cond');
+    const t0 = (b.getAttribute('title') ?? '').replace(/^\S*🔒\S*\s*/u, '');
+    const lock: Lock31 | L | null = !b.disabled ? null
+      : why ? { why: l(txt33(why), txt33(why)), unlock: l(txt33(cond ?? why).replace(/^→\s*/, ''), txt33(cond ?? why).replace(/^→\s*/, '')) }
+        : l(t0 || t(l('Indisponível agora.', 'Unavailable now.')), t0 || t(l('Indisponível agora.', 'Unavailable now.')));
+    return { id: `bar${i}`, label: txt33(b), lock, primary: b.classList.contains('primary'), run: () => { if (b.isConnected && !b.disabled) b.click(); } };
+  });
+}
+
 /** Bolso da casca (ligado por fichas33, que conhece a casca; sem casca, nada). */
 export const POCKET33: { has?: (obj: string) => boolean; toggle?: (obj: string) => L | undefined; on?: () => boolean } = {};
 
@@ -92,7 +113,7 @@ export function paperSheet33(o: Sheet33): Open33 {
     if (!top()) return; // outra janela por cima: a tecla é dela
     if (e.key === 'Escape') { close(); e.preventDefault(); return; } // QA5: a casca nova não abre a pausa com o mesmo Esc
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (/^[1-9]$/.test(e.key) && cardBox.isConnected) {
+    if (/^[1-9]$/.test(e.key) && !e.defaultPrevented && cardBox.isConnected && !cardBox.hidden) {
       const b = cardBox.querySelectorAll<HTMLButtonElement>('.ac5-a')[Number(e.key) - 1];
       if (b && !b.disabled) { e.preventDefault(); b.click(); }
       return;
@@ -149,7 +170,8 @@ export function paperSheet33(o: Sheet33): Open33 {
     body.replaceChildren(el ?? h('p', { class: 'muted' }, '—'));
   };
   const drawCard = () => {
-    const c = o.card?.() ?? null;
+    const bars = o.card ? [] : harvestBars33(body);
+    const c = o.card?.() ?? (bars.length ? { title: o.plate, rows: bars } : null);
     cardBox.hidden = !c;
     sheet.classList.toggle('has-card', !!c);
     cardBox.replaceChildren(...(c ? [card33(c, panel)] : []));
@@ -158,6 +180,16 @@ export function paperSheet33(o: Sheet33): Open33 {
   const go = (id: string) => { cur = id; drawMarks(); drawBody(); body.scrollTop = 0; };
   const redraw = () => { if (closed) return; drawMarks(); drawBody(); drawCard(); drawPin(); };
   redraw();
+  // janela comum: a tela muda sozinha (passos, takes, respostas) — o cartão acompanha os botões da barra de ações
+  if (!o.card && typeof MutationObserver !== 'undefined') {
+    let queued = false;
+    const mo = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      queueMicrotask(() => { queued = false; if (!back.isConnected) { mo.disconnect(); return; } drawCard(); });
+    });
+    mo.observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+  }
   document.body.appendChild(back);
   document.addEventListener('keydown', onKey);
   (sheet.querySelector<HTMLElement>('.pp33-body button, .pp33-body input, .pp33-body select, .ac5-a:not([disabled])') ?? sheet.querySelector<HTMLElement>('.pp33-x'))?.focus();

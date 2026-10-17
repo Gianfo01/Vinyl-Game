@@ -620,3 +620,37 @@ escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Le
 docs/r33/CENARIOS33.md §9.
 
 **Revisto no mesmo dia:** o dono voltou atrás — o POL33 fica onde estava (depois de QA33 e REDES33, antes da `Masters_33.html`). A prévia `Masters_33_previa.html` vai antes, só para ver.
+
+## R33 · FICHAS33 — janelas no padrão de papel (17/10)
+- **Papel comum `paperSheet33` (`src/ui/r33/paper33.ts`).** `modal()` (common.ts) passa a abrir o papel: plaqueta em
+  Silkscreen + subtítulo, "+ fixar no bolso" (quando há objeto dono, só com a casca), "Esc fechar", marcadores no alto
+  com o número de assuntos e o CARTÃO DE AÇÕES numerado (as mesmas classes `.ac5` e o `lockBtn31` do cartão EXP-13).
+  Mesma API e mesmo fechar: o fundo continua `.overlay`, o miolo `.modal-body` — por isso as ~75 janelas que chamam
+  `modal(` migraram de uma vez. Nas janelas comuns, os botões das barras `.actions`/`.a27-actions` vão para o cartão
+  (a linha clica o MESMO botão; um MutationObserver refaz o cartão quando a tela muda; trava = o motivo do botão).
+  Na casca nova o papel fica entre a barra de cima e a doca; sem a casca, em tela cheia. Janela comum: miolo inteiro
+  rola dentro da mesa (nada cortado embaixo).
+- **Fichas (`src/ui/r33/fichas33.ts`).** Artista, pessoa, disco e selo como pasta manila (mocks aprovados
+  `docs/r33/mocks/mock33-ficha-*.png`): foto presa por clipe (portraitCanvas do jogo; banda = integrantes da base
+  quando conhecidos, senão o logo), letreiro, carimbos (situação, dono, conhecimento, fonte, fonte/certeza), barras,
+  potencial escondido como tarja preta, recordes como etiquetas, recortes (os 2 fatos mais recentes da carreira),
+  discos como capas. Marcadores = as categorias das abas de antes (`groupTabs17`). MESMOS dados e funções:
+  `actItems`/`personItems`/`releaseParts`/`labelItems13` saíram das páginas antigas sem mudar nada; os botões dos
+  cabeçalhos (`ACT_HEAD_EXTRAS`, `PERSON_HEAD_EXTRAS`) são colhidos e clicados como antes ("Ações" vira quadro no
+  cartão). Ato solo: marcador "Artista solo" (sem aba de banda). "Fazer oferta" aparece travado com o motivo quando o
+  ato tem dono ou parou (antes sumia). Ganchos `OPEN33` em pages/ficha/dossier13; registro em app.ts.
+- **Fora do `modal()`:** `openScene` (registry.ts, ~20 telas: popup do mapa, festival, capa, momentos…) ganhou a
+  plaqueta e o papel; perguntas `ask31` e painéis do Mundo (`sheet27`: cidade, país) restilizados só por CSS;
+  páginas das regiões Mundo e Cidade na casca: miolo em papel sobre a mesa de madeira, abas do alto como marcadores
+  (fim do fundo vinho do tema escuro). O mapa continua lendo a tinta clara (nomes legíveis).
+- **Arte por era:** cores do papel em variáveis (`--p33-*`) por `data-era-skin`: Gazeta nogueira, Déco mogno/latão,
+  Jukebox = mock aprovado, Hi-Fi teca/laranja, Fósforo fórmica cinza + formulário contínuo zebrado, Janelas 95 bege e
+  azul-marinho, Portal melamina, Plano carvalho claro, Vidro vidro escuro/roxo (sem veio nas três últimas).
+- **Ficou de fora (ver relatório):** `el5-paper` (papéis do elenco), `c27-sheet` (cidade no celular), interiores
+  `in31`, cartão da cidade do mapa `m5-ccard` (já é papel em pixel), menus (`cx27`, `am20`, `s5-pop`), pausa/teclas
+  da casca, celular/computador (`ap33`, outra frente), Arrumar (`deco5`), navsheet27 (celular), tour/why18. Páginas
+  das regiões Sede e Casa são cenas em pixel (sem mudança).
+- **Inconsistências da base vistas (não corrigidas):** o dono de Luiz Gonzaga em 1962 muda a cada partida
+  (RCA Victor, Columbia, K-tel, "Victor Talking Machine Co." — nome extinto em 1929 —, Gramophone Company of India,
+  ou independente/aposentado); Elvis Presley aparece "separado" em 1985/1995 e "aposentado" em 2022 (morreu em 1977);
+  o ato Elvis Presley tem 4 integrantes (com Scotty Moore). Prints antes/depois em `docs/r33/fichas/`.
