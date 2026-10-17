@@ -61,7 +61,7 @@ const RUNS = QUICK
 
 const browser = await pw.chromium.launch(exe ? { executablePath: exe } : {});
 let p;
-const OPEN = '.p5, .pz5, .overlay, .scene-overlay, .slip5, .hk5, .ac5, .c2-in';
+const OPEN = '.p5, .pz5, .overlay, .scene-overlay, .slip5, .hk5, .ac5:not(.ac5-in33), .c2-in'; // FICHAS33-B: o cartão fixo dos painéis (.ac5-in33) não é janela
 const wait = (ms) => p.waitForTimeout(ms);
 const region = () => p.evaluate(() => document.querySelector('.b5-tr.on')?.getAttribute('data-travel') ?? null);
 const anyOpen = () => p.evaluate((sel) => [...document.querySelectorAll(sel)].some((e) => e.isConnected && (e.offsetParent !== null || getComputedStyle(e).position === 'fixed')), OPEN);
@@ -75,7 +75,7 @@ const checkScroll = async (where) => {
 const escBack = async (where, { pauseOk = false } = {}) => {
   for (let k = 0; k < 5; k++) {
     if (!(await anyOpen())) return true;
-    if (!pauseOk && k > 0 && (await p.locator('.pz5').count()) && !(await p.locator('.p5, .ac5, .overlay, .c2-in').count())) { flag('sem-volta', where, 'Esc caiu na pausa'); await p.keyboard.press('Escape'); await wait(300); return false; }
+    if (!pauseOk && k > 0 && (await p.locator('.pz5').count()) && !(await p.locator('.p5, .ac5:not(.ac5-in33), .overlay, .c2-in').count())) { flag('sem-volta', where, 'Esc caiu na pausa'); await p.keyboard.press('Escape'); await wait(300); return false; }
     await p.keyboard.press('Escape'); await wait(450);
   }
   if (await anyOpen()) { flag('sem-volta', where, 'Esc não fecha'); await shot(`semvolta-${where}`); return false; }
@@ -107,15 +107,15 @@ async function sweepObjects(regionName, key, sel, idOf, limitActs = 99) {
     try { await open(); } catch { flag('sem-efeito', where, 'clique bloqueado'); continue; }
     await checkScroll(where);
     if (await p.locator('.p5-old').count()) flag('antiga', where, 'clique abre página antiga inteira');
-    const hasCard = await p.locator('.ac5').count();
+    const hasCard = await p.locator('.ac5:not(.ac5-in33)').count();
     const opened = hasCard || (await anyOpen()) || (await region()) !== regionName;
     if (!opened) flag('sem-efeito', where, 'clique no objeto não abre nada');
     if (!hasCard) { await shot(`obj-${where}`); await escBack(where); continue; }
-    const acts = await p.evaluate(() => [...document.querySelectorAll('.ac5 button')].map((b, j) => ({ j, t: b.textContent.trim().replace(/\s+/g, ' '), dis: b.disabled || b.getAttribute('aria-disabled') === 'true' || b.classList.contains('locked') })));
+    const acts = await p.evaluate(() => [...document.querySelectorAll('.ac5:not(.ac5-in33) button')].map((b, j) => ({ j, t: b.textContent.trim().replace(/\s+/g, ' '), dis: b.disabled || b.getAttribute('aria-disabled') === 'true' || b.classList.contains('locked') })));
     for (const a of acts.slice(0, limitActs + 2)) {
       if (a.t === '×' || a.dis) continue;
       try { await open(); } catch { continue; }
-      const b = p.locator('.ac5 button').nth(a.j);
+      const b = p.locator('.ac5:not(.ac5-in33) button').nth(a.j);
       if (!(await b.count())) continue;
       const before = await sig();
       try { await b.click({ timeout: 2500 }); } catch { flag('sem-efeito', `${where}>${a.t}`, 'clique bloqueado'); continue; }
@@ -213,9 +213,9 @@ async function sweepSystem() {
   await p.keyboard.press('Escape'); await wait(500);
   if (!(await p.locator('.pz5').count())) flag('sem-efeito', 'Esc (pausa)');
   const before = await sig();
-  await p.locator('.pz5-i', { hasText: 'Salvar' }).click(); await wait(800);
+  await p.locator('.pz5-sheet .ac5-a', { hasText: 'Salvar' }).click(); await wait(800);
   if (before === (await sig())) flag('sem-efeito', 'pausa>Salvar');
-  await p.locator('.pz5-i', { hasText: 'Carregar' }).click(); await wait(900);
+  await p.locator('.pz5-sheet .ac5-a', { hasText: 'Carregar' }).click(); await wait(900);
   if (!(await p.locator('.overlay').count())) flag('sem-efeito', 'pausa>Carregar');
   await escBack('carregar');
   await p.keyboard.press('Escape'); await wait(500);
