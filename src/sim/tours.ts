@@ -131,6 +131,7 @@ export function estimateTour(s: GameState, p: TourPlan): TourEstimate {
       if (leg.visa.denyChance > 0.3) warnings.push(fmtL(l('{c}: visto difícil ({p}% de recusa).', '{c}: hard visa ({p}% refusal).'), { c: cityById[cityId]?.name ?? cityId, p: Math.round(leg.visa.denyChance * 100) }));
     }
     logistics += leg.cost + money(s, (v.cost + 90 * people + PRODUCTION_COST[p.production]) * (1 - staffSkill(s, 'tour_manager') / 400));
+    logistics -= TOUR18.baseLodging?.(s, cityId, people, 1) ?? 0; // r33 (CIDADE): base na cidade poupa a hospedagem
     // r20 (B16): a previsão aplica a mesma concorrência de agenda que o acerto (TOUR18.clash, semana do dia do show)
     const clash = TOUR18.clash?.(s, act, cityId, day) ?? 1;
     if (clash < 0.92) warnings.push(fmtL(l('{c}: concorrência na agenda nessa semana (−{p}% na bilheteria).', '{c}: calendar competition that week (−{p}% box office).'), { c: cityById[cityId]?.name ?? cityId, p: Math.round((1 - clash) * 100) }));
@@ -361,7 +362,7 @@ export function playStop(s: GameState, r: Rng, t: Tour, st: TourStop, day: numbe
     for (const id of act.members) {
       const p = s.persons[id];
       if (!p?.alive) continue;
-      p.fatigue = clamp(p.fatigue + 2.5 + st.travelDays * travelFatigue31(s, st) - t.crew * 0.15 + (m?.fatigue ?? 0), 0, 100);
+      p.fatigue = clamp(p.fatigue + 2.5 + st.travelDays * travelFatigue31(s, st) - t.crew * 0.15 + (m?.fatigue ?? 0) - (TOUR18.baseRelief?.(s, st.cityId) ?? 0), 0, 100);
       p.skills.stage = Math.min(p.potential + 4, p.skills.stage + 0.08);
       p.morale = clamp(p.morale + (sold > st.capacity * 0.8 ? 1.5 : -0.5) + (m?.morale ?? 0), 0, 100);
     }

@@ -15,11 +15,15 @@ import { cityById, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { emitFact } from '../facts17';
 import { addAsset, removeAsset } from '../finance';
-import { bizAt31, commonLots31, homes31, realLots31 } from '../r31/city31';
+import { bizAt31, commonLots31, homePrice31, homes31, realLots31, type Home31 } from '../r31/city31';
 import { registerEditable } from '../r31/editor';
+import { purse } from '../r31/purse31';
 import { registerSwitch, setSw, sw } from '../r31/switches';
 import { rng19 } from '../rng19';
 import { watchAct } from '../scouting';
+import { TOUR18 } from '../tourhook18';
+import { ownerOf } from '../sys/people/owner';
+import { LOTS27, type PAct27, type Place27 } from '../sys/place27';
 import { LOTS18, buildings18, campus18, layout18 } from '../sys/campus18';
 import { nb19 } from '../sys/hood19';
 import { lots31, ownsLot31, peekLots31 } from '../sys/lots31';
@@ -60,7 +64,7 @@ export const CIDADE33 = {
   /** terreno: valorização ao ano, venda (fração do valor) e aluguel mensal (fração do valor), bônus da parceria */
   grow: 0.03, sellCut: 0.92, rentRate: 0.004, partner: 1.25,
   /** base de turnê: menos risco, alívio de cansaço por show, diária de hospedagem que se poupa; escritório regional */
-  baseRisk: 0.9, baseRest: 1.5, nightCost: 90, officeCost: 2500, officeUpkeep: 400, officeScout: 0.35,
+  baseRisk: 0.9, baseRest: 1.5, nightCost: 90, lodgeCut: 0.7, officeCost: 2500, officeUpkeep: 400, officeScout: 0.35,
   /** cena: aumento da demanda do gênero */
   scene: 0.18,
 };
@@ -78,16 +82,18 @@ export interface Cidade33St {
   partner: Record<number, string>;
   /** escritórios regionais: cidade → semana */
   office: Record<string, number>;
+  /** imóveis em outras cidades alugados (deixam de ser base): cidade → 1 */
+  homeRent: Record<string, 1>;
   /** último estágio do bairro avisado */
   stage?: string;
 }
 declare module '../ext4' { interface Ext4 { cidade33: Cidade33St } }
-const fresh = (): Cidade33St => ({ shops: {}, rent: {}, age0: {}, partner: {}, office: {} });
+const fresh = (): Cidade33St => ({ shops: {}, rent: {}, age0: {}, partner: {}, office: {}, homeRent: {} });
 registerExt4('cidade33', fresh);
 export function cidade33(s: GameState): Cidade33St {
   const x = ((s as unknown as { x4?: Record<string, unknown> }).x4 ??= {});
   const st = (x.cidade33 ??= fresh()) as Cidade33St;
-  st.shops ??= {}; st.rent ??= {}; st.age0 ??= {}; st.partner ??= {}; st.office ??= {};
+  st.shops ??= {}; st.rent ??= {}; st.age0 ??= {}; st.partner ??= {}; st.office ??= {}; st.homeRent ??= {};
   return st;
 }
 const peek = (s: GameState): Cidade33St | undefined => (s as unknown as { x4?: { cidade33?: Cidade33St } }).x4?.cidade33;
@@ -210,11 +216,14 @@ export function rentLot33(s: GameState, lot: number, on: boolean): { ok: boolean
 // ---------------------------------------------------------------- 3 · base de turnê e escritório regional
 
 /** A cidade tem imóvel seu (base de turnê)? Só conta com o interruptor ligado. */
-export const isBase33 = (s: GameState, city: string): boolean => base33(s) && homes31(s).some((h) => h.city === city);
+export const isBase33 = (s: GameState, city: string): boolean => base33(s) && homes31(s).some((h) => h.city === city) && !peek(s)?.homeRent[city];
 /** Cansaço a menos por show na cidade-base (gancho de leitura para a turnê). */
 export const baseFatigueRelief33 = (s: GameState, city: string): number => (isBase33(s, city) ? CIDADE33.baseRest : 0);
-/** Hospedagem poupada em N noites na cidade-base (gancho de leitura para o custo da turnê). */
-export const baseLodgingSaving33 = (s: GameState, city: string, nights: number): number => (isBase33(s, city) ? money(s, CIDADE33.nightCost) * Math.max(0, nights) : 0);
+/** Hospedagem poupada por pessoa e noite na cidade-base (a turnê desconta da logística). */
+export const baseLodgingSaving33 = (s: GameState, city: string, nights: number, people = 1): number =>
+  (isBase33(s, city) ? Math.round(money(s, CIDADE33.nightCost * CIDADE33.lodgeCut) * Math.max(0, nights) * Math.max(1, people)) : 0);
+TOUR18.baseRelief = baseFatigueRelief33;
+TOUR18.baseLodging = (s, city, people, nights) => baseLodgingSaving33(s, city, nights, people);
 
 registerMod('tourRisk', 'cidade33', (s, v, ctx) => (ctx.cityId && isBase33(s, ctx.cityId) ? { value: v * CIDADE33.baseRisk, label: l('Base na cidade', 'Base in the city') } : null));
 
@@ -307,3 +316,95 @@ registerSimHook('year', 'cidade33', (s) => {
 });
 
 
+
+// ---------------------------------------------------------------- imóveis em outras cidades: valor, venda, aluguel (bairro DA CIDADE do imóvel)
+
+/** Valor atual do imóvel: o que pagou, valorizado pelos anos e pela mudança do bairro DAQUELA cidade (piso 70%). */
+export function homeValue33(s: GameState, h: Home31): number {
+  const paid = h.paid || homePrice31(s, h.city, h.house);
+  const dAge = districtStage33(h.city, s.year).age - districtStage33(h.city, h.y).age;
+  return Math.round(paid * Math.max(0.7, Math.pow(1 + CIDADE33.grow, Math.max(0, s.year - h.y)) * (1 + 0.5 * dAge)));
+}
+export const homeRent33 = (s: GameState, h: Home31): number => Math.round(homeValue33(s, h) * CIDADE33.rentRate);
+const homeOf33 = (s: GameState, city: string): Home31 | undefined => homes31(s).find((h) => h.city === city);
+
+export function sellBase33(s: GameState, city: string): { ok: boolean; text: L } {
+  if (!terrenos33(s)) return { ok: false, text: l('Venda de imóveis da versão 33 está desligada.', 'Version 33 home sales are off.') };
+  const h = homeOf33(s, city);
+  if (!h) return { ok: false, text: l('Você não tem imóvel nessa cidade.', 'You have no home in that city.') };
+  purse(s, Math.round(homeValue33(s, h) * CIDADE33.sellCut), 'home', 'sellBase33', { who: ownerOf(s) });
+  const list = homes31(s), i = list.indexOf(h);
+  if (i >= 0) list.splice(i, 1);
+  const st = cidade33(s);
+  delete st.homeRent[city]; delete st.office[city];
+  return { ok: true, text: fmtL(l('Imóvel em {c} vendido.', 'Home in {c} sold.'), { c: cityById[city]?.name ?? city }) };
+}
+export function rentBase33(s: GameState, city: string, on: boolean): { ok: boolean; text: L } {
+  if (!terrenos33(s)) return { ok: false, text: l('Aluguel de imóveis da versão 33 está desligado.', 'Version 33 home rental is off.') };
+  if (!homeOf33(s, city)) return { ok: false, text: l('Você não tem imóvel nessa cidade.', 'You have no home in that city.') };
+  const st = cidade33(s);
+  if (on) st.homeRent[city] = 1; else delete st.homeRent[city];
+  return { ok: true, text: on ? l('Imóvel alugado: rende todo mês, mas deixa de ser base de turnê.', 'Home rented out: it pays every month but stops being a tour base.') : l('Imóvel de volta: volta a ser base de turnê.', 'Home back: it is a tour base again.') };
+}
+registerSimHook('month', 'cidade33.homes', (s) => {
+  const st = peek(s);
+  if (!st || !terrenos33(s)) return;
+  for (const city of Object.keys(st.homeRent)) {
+    const h = homeOf33(s, city);
+    if (!h) { delete st.homeRent[city]; continue; }
+    purse(s, homeRent33(s, h), 'home', 'rentBase33', { who: ownerOf(s) });
+  }
+});
+
+// ---------------------------------------------------------------- ações (cartão do lote e lista de imóveis)
+
+export interface BaseAct33 { id: string; label: L; desc: L; cost?: number; dis?: L }
+/** Ações do imóvel fora da sede (a lista de casas usa; cada uma devolve o motivo quando está bloqueada). */
+export function baseActs33(s: GameState, city: string): BaseAct33[] {
+  const h = homeOf33(s, city);
+  if (!h) return [];
+  const out: BaseAct33[] = [];
+  if (base33(s)) out.push({ id: 'office', label: l('Escritório regional', 'Regional office'), cost: money(s, CIDADE33.officeCost),
+    desc: l('Um olheiro local põe talentos da cidade no seu radar.', 'A local scout puts the city\'s talent on your radar.'),
+    dis: officeLock33(s, city) ?? undefined });
+  if (terrenos33(s)) {
+    const rented = !!peek(s)?.homeRent[city];
+    out.push({ id: rented ? 'unrent' : 'rent', label: rented ? l('Retomar o imóvel', 'Take the home back') : l('Alugar o imóvel', 'Rent the home out'),
+      desc: fmtL(l('Aluguel de {v} por mês; enquanto alugado, não é base de turnê.', 'Rent of {v} a month; while rented it is not a tour base.'), { v: `$${Math.round(homeRent33(s, h) / 100).toLocaleString('en-US')}` }) });
+    out.push({ id: 'sell', label: l('Vender o imóvel', 'Sell the home'),
+      desc: fmtL(l('Rende {v}, com a valorização do bairro daquela cidade.', 'Brings {v}, with that city\'s district appreciation.'), { v: `$${Math.round(homeValue33(s, h) * CIDADE33.sellCut / 100).toLocaleString('en-US')}` }) });
+  }
+  return out;
+}
+export function runBase33(s: GameState, city: string, id: string): { ok: boolean; text: L } {
+  if (id === 'office') return openOffice33(s, city);
+  if (id === 'rent' || id === 'unrent') return rentBase33(s, city, id === 'rent');
+  if (id === 'sell') return sellBase33(s, city);
+  return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
+}
+
+type LotP33 = Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>;
+/** Terreno seu no cartão do mapa: loja própria, alugar/retomar e vender (somam às ações que o lote já tinha). */
+const prevActs = LOTS27.acts, prevRun = LOTS27.run;
+LOTS27.acts = (s, p: LotP33): PAct27[] => {
+  const out = prevActs?.(s, p) ?? [];
+  if (p.k !== 'vacant' || p.lot31?.k !== 'own') return out;
+  const st = peek(s);
+  if (lojas33(s)) out.push(st?.shops[p.lot] !== undefined
+    ? { id: 'shop', label: l('Sua loja (aberta)', 'Your shop (open)'), desc: l('A loja vende o seu catálogo físico e rende todo mês.', 'The shop sells your physical catalogue and pays every month.'), dis: l('Já está aberta.', 'Already open.') }
+    : { id: 'shop', label: l('Abrir loja própria', 'Open own shop'), desc: l('Canal de venda do seu catálogo físico; custo mensal pequeno.', 'A sales channel for your physical catalogue; small monthly cost.'), cost: money(s, CIDADE33.shopCost), dis: shopLock33(s, p.lot) ?? undefined });
+  if (terrenos33(s)) {
+    const rented = !!st?.rent[p.lot];
+    out.push({ id: rented ? 'unrent' : 'rent', label: rented ? l('Retomar o terreno', 'Take the plot back') : l('Alugar o terreno', 'Rent the plot out'),
+      desc: fmtL(l('Aluguel de {v} por mês (vizinho ao lado dá parceria).', 'Rent of {v} a month (a next-door neighbour brings a partnership).'), { v: `$${Math.round(lotRent33(s, p.lot) / 100).toLocaleString('en-US')}` }), dis: lotUseLock33(s, p.lot) ?? undefined });
+    out.push({ id: 'sell', label: l('Vender o terreno', 'Sell the plot'),
+      desc: fmtL(l('Rende {v}: o que pagou com a valorização dos anos e do bairro.', 'Brings {v}: what you paid plus the years\' and district\'s appreciation.'), { v: `$${Math.round(lotValue33(s, p.lot) * CIDADE33.sellCut / 100).toLocaleString('en-US')}` }), dis: lotUseLock33(s, p.lot) ?? undefined });
+  }
+  return out;
+};
+LOTS27.run = (s, p: LotP33, id) => {
+  if (id === 'shop') return openShop33(s, p.lot);
+  if (id === 'rent' || id === 'unrent') return rentLot33(s, p.lot, id === 'rent');
+  if (id === 'sell') return sellLot33(s, p.lot);
+  return prevRun ? prevRun(s, p, id) : { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
+};
