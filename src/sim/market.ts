@@ -256,7 +256,7 @@ export function launchNpcRelease(s: GameState, r: Rng, act: Act, owner: string, 
   const channels = CHANNELS.filter((c) => (!c.from || hasTech(s, c.from)) && (!c.untilYear || s.year <= c.untilYear) && isUnlocked(s, c.id));
   const ch = channels.length ? r.pick(channels) : CHANNELS[0];
   const marketing = budgetReal > 0 ? [{ channel: ch.id, budget: nominal(budgetReal, s.year) }] : [];
-  const territories: MarketId[] = lb ? lb.territories : [cityById[act.city]?.market ?? 'na'];
+  const territories: MarketId[] = lb ? [...lb.territories] : [cityById[act.city]?.market ?? 'na']; // QA33: cópia (o save desfazia o laço com o selo)
   const rel: Release = {
     id: nextId(s, 'r'), actId: act.id, owner, type, title: s.songs[songIds[0]]?.title ?? 'Untitled', songs: songIds,
     week: s.week, year: s.year, q: releaseQ(s, songIds), appeal: 0, formats: [], stock: Infinity, pressed: 0,

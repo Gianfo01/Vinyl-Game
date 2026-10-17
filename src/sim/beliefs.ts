@@ -132,14 +132,16 @@ const actOfPersonLite = (s: GameState, pid: string): Act | undefined => actsOfPe
 export function viewsOf(s: GameState, id: string): Views {
   const p = s.persons[id];
   if (p?.isPlayer || id === 'player') return playerViews(s);
-  const key = `${s.config.seed}|${id}`;
+  // QA33 (save/load): a chave leva tudo o que a visão usa (ano, cidade e gênero do ato) — antes a primeira leitura ficava
+  // guardada fora do save e um jogo carregado recalculava com o ano atual, divergindo do original
+  const a = p ? actOfPersonLite(s, id) : undefined;
+  const key = `${s.config.seed}|${id}|${s.year}|${a?.city ?? ''}|${a?.genre ?? ''}`;
   let cache = CACHES.get(s);
   if (!cache) CACHES.set(s, (cache = new Map()));
   const hit = cache.get(key);
   if (hit) return hit;
   let v: Views;
   if (p) {
-    const a = actOfPersonLite(s, id);
     v = deriveViews(s.config.seed, id, { born: p.born, year: s.year, city: a?.city, genre: a?.genre, engaged: p.traits.includes('engaged') });
   } else {
     v = deriveViews(s.config.seed, id, { year: s.year, city: s.config.homeCity });

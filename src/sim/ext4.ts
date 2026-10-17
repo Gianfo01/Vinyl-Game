@@ -52,8 +52,6 @@ export function registerSimHook(phase: HookPhase, id: string, fn: HookFn): void 
 
 export function runSimHooks(phase: HookPhase, s: GameState, r: Rng, arg: Partial<HookArgs> = {}): void {
   const P = (globalThis as { __hookProf?: Record<string, number> }).__hookProf;
-  const T = (globalThis as { __hookTrace?: (k: string, s: GameState) => void }).__hookTrace; // diagnóstico (QA33: save/load)
-  if (T) { for (const h of HOOKS[phase]) { h.fn(s, r, arg); T(`${phase}:${h.id}`, s); } return; }
   if (!P) { for (const h of HOOKS[phase]) h.fn(s, r, arg); return; }
   for (const h of HOOKS[phase]) { const t = performance.now(); h.fn(s, r, arg); const k = phase + ':' + h.id; P[k] = (P[k] ?? 0) + performance.now() - t; }
 }

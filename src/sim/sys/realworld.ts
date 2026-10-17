@@ -330,7 +330,7 @@ function makeRealPerson(s: GameState, r: Rng, act: Act, m: { name: string; role:
   const p = makePerson(s, r, { lang, role: m.role, potential, born: m.born ?? act.formed - r.int(18, 26), startFrac: 0.66, name: real ? m.name : undefined });
   s.persons[p.id] = p;
   if (m.born === undefined) p.real27 = { ...p.real27, bornEst: 1 }; // r27 (F): nascimento gerado → "idade aproximada"
-  if (m.died !== undefined && m.died <= s.year) { p.alive = false; p.died = m.died; }
+  if (m.died != null && m.died <= s.year) { p.alive = false; p.died = m.died; } // QA33: != null — dentro de listas do save, undefined volta como null
   return p;
 }
 
@@ -981,7 +981,8 @@ function monthly(s: GameState, r: Rng): void {
     if (ev.kind === 'join' && (act.status === 'retired' || act.status === 'split') && st.sched.some((x) => x.kind === 'reunion' && x.actId === act.id && x.year <= s.year)) {
       st.sched.push({ ...ev, mo: Math.min(12, s.month + 1) }); // rodada 16: volta na reunião do mesmo ano
     } else if (ev.kind === 'join' && ev.m && act.status !== 'retired' && act.status !== 'split' && !histDiverged(s, act)) {
-      const [name, role, born, died] = ev.m;
+      const [name, role, born0, died0] = ev.m;
+      const born = born0 ?? undefined, died = died0 ?? undefined; // QA33: null (save) = sem data
       // r27 (F): quem volta (2ª passagem) é a mesma Pessoa; quem estreia na banda é criado agora
       const back = ev.personId ? s.persons[ev.personId] : undefined;
       let p = back ?? makeRealPerson(s, r, act, { name, role, born, died }, act.potential, !!s.config.realNames);
@@ -1020,7 +1021,7 @@ function monthly(s: GameState, r: Rng): void {
       // disco real no ano real: entra no mercado como lançamento de terceiros
       const rel = seedRelease(s, r, act, { title: ev.rel[0], year: s.year, type: ev.rel[2] ?? 'lp', tier: realDataOf(act)?.t ?? 2, live: true, doc: !!s.config.realNames, kind: ev.rel[3] });
       rel.weeksOnChart = 0;
-      rel.territories = act.owner && s.labels[act.owner] ? s.labels[act.owner].territories : rel.territories;
+      rel.territories = act.owner && s.labels[act.owner] ? [...s.labels[act.owner].territories] : rel.territories; // QA33: cópia
       rel.appeal = computeAppeal(s, r, rel, act).appeal;
       act.lastRelease = s.week;
       act.momentum = clamp(act.momentum + 12, 0, 100);

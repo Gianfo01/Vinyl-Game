@@ -134,23 +134,23 @@ describe('QA33 · prédios da INT-2 no mapa (MAPA33)', () => {
 });
 
 describe('QA33 · salvar e carregar com o estado novo', () => {
-  // O jogo carregado não segue bit a bit o original nem com tudo desligado (o `migrate` completa posição de atos e
-  // persona/meta/aposentadoria de quem nasceu na partida — anotado para a onda 6, "save do estado novo"); aqui vale:
-  // o estado da 33 volta inteiro, os interruptores voltam e a partida continua sem erro.
-  it('todos os exp33.* ligados, 2 anos de robô: salvar, carregar e continuar 4 meses', () => {
+  // QA33: o jogo carregado segue IGUAL ao original (antes divergia: estoque infinito virava null, histórico de formação
+  // e visões das pessoas ficavam fora do save, o migrate completava campos de quem nasceu na partida).
+  it('todos os exp33.* ligados, 2 anos de robô: salvar, carregar e continuar 4 meses dá o mesmo jogo', () => {
     const s = game(1985);
     for (const d of switchDefs()) if (d.id.startsWith('exp33.') && typeof d.def === 'boolean') setSw(s, d.id, true);
     for (let m = 0; m < 24; m++) { playMonth(s, 'aggressive'); advanceMonth(s); }
     const x = s.x4 as unknown as Record<string, unknown>;
-    const keys = Object.keys(x).filter((k) => /33$|^int2$|^sw31$/.test(k));
-    expect(keys.length).toBeGreaterThan(4); // o estado novo existe
+    expect(Object.keys(x).filter((k) => /33$|^int2$/.test(k)).length).toBeGreaterThan(4); // o estado novo existe
     const back = decodeSave20(encodeSave20(s), migrate);
-    const y = back.x4 as unknown as Record<string, unknown>;
-    for (const k of keys) expect(JSON.stringify(y[k]), k).toBe(JSON.stringify(x[k]));
-    for (const sw of switchDefs()) if (sw.id.startsWith('exp33.')) expect(swRead(back, sw.id), sw.id).toBe(swRead(s, sw.id));
-    for (let m = 0; m < 4; m++) { playMonth(back, 'aggressive'); advanceMonth(back); }
-    expect(Number.isFinite(back.player.cash)).toBe(true);
-    expect(back.year * 12 + back.month).toBe(s.year * 12 + s.month + 4);
+    // depois de carregar só o tempo anda: o robô de teste guarda memória própria fora do save (playbot16 MEM), o jogo não
+    for (let m = 0; m < 4; m++) { advanceMonth(s); advanceMonth(back); }
+    expect(back.player.cash).toBe(s.player.cash);
+    const j = (v: unknown) => JSON.parse(JSON.stringify(v)); // mesmo conteúdo (a ordem das chaves pode variar)
+    const dif = (a: any, b: any, p: string, out: string[]): void => { if (out.length > 6 || JSON.stringify(a) === JSON.stringify(b)) return; if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) dif(a[k], b[k], `${p}.${k}`, out); return; } out.push(`${p}: ${JSON.stringify(a)?.slice(0, 80)} × ${JSON.stringify(b)?.slice(0, 80)}`); };
+    const d: string[] = []; dif(j(s.x4), j(back.x4), 'x4', d);
+    expect(d).toEqual([]);
+    expect(j(back.acts)).toEqual(j(s.acts));
   });
 });
 

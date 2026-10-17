@@ -1,5 +1,6 @@
 // QA33: os interruptores exp33.* nascem ligados (decisão do dono, 2026-10-17). Testes que medem "desligado = como antes"
 // desligam explicitamente com esta função (nunca apagados nem pulados).
+import '../../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas (como nos testes)
 import { setSw, switchDefs } from '../../src/sim/r31/switches';
 import type { GameState } from '../../src/sim/types';
 

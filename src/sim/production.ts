@@ -266,7 +266,7 @@ export function scheduleRelease(s: GameState, r: Rng, p: ReleasePlan): PendingRe
     formats: p.formats,
     press: p.press,
     marketing: p.marketing.filter((m) => m.budget > 0),
-    territories: p.territories,
+    territories: [...p.territories], // QA33: cópia — antes vários discos dividiam o array do jogador (abrir um mercado mudava os antigos e o save desfazia o laço)
     week: s.week + Math.max(1, p.weeksAhead),
     reissueOf: p.reissueOf,
     kind: p.kind,

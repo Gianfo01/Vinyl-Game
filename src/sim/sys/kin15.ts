@@ -110,7 +110,9 @@ export function halfByParents27(a: string, b: string, shared: string): boolean {
 
 /** Arestas reais (do dataset, casando por nome) + geradas. */
 function graph(s: GameState): Edges {
-  const n = mIdx(s), st = kin15(s), c = cache.get(s);
+  // QA33 (save/load): a chave conta também quantas pessoas existem — gente nascida no meio do mês entrava no grafo só no
+  // jogo carregado (que monta o cache do zero) e o original seguia com o grafo velho até o mês seguinte
+  const n = mIdx(s) + Object.keys(s.persons).length * 1e7, st = kin15(s), c = cache.get(s);
   if (c && c.n === n + st.g.length * 100000) return c.e;
   const idx: Record<string, string> = {};
   for (const p of Object.values(s.persons)) { const k = canonKey(p.name); if (!(k in idx) || (!s.persons[idx[k]].alive && p.alive)) idx[k] = p.id; }
