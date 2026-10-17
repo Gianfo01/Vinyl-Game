@@ -123,7 +123,7 @@ export const REDIRECT29: Record<string, Target29> = { desk: { area: 'cockpit', t
 const CAREER_AREAS = new Map(ORDER17.map((id) => [CAREER_PAGE17[id].area, id] as [string, string]));
 const ABSORBED = new Map(ORDER17.flatMap((id) => CAREER_PAGE17[id].absorbs.map((a) => [a, id] as [string, string])));
 /** Páginas que já existiram em algum menu e não estão na árvore r27 (registradas por outras frentes). */
-const EXTRA_KNOWN29 = ['shared18', 'artist18', 'tut18', 'agenda17', 'sede25', 'deleg31', 'airport31', 'auction31'];
+const EXTRA_KNOWN29 = ['shared18', 'artist18', 'tut18', 'agenda17', 'sede25', 'deleg31', 'airport31', 'auction31', 'cidade5'];  // QA33: mapa de cidade da onda 5 (map5ui CITY_AREA5) também é página conhecida
 
 /** Todos os ids de página conhecidos (árvore r27 + r17 + carreiras + absorvidas + extras). */
 export const ALL_AREAS29: string[] = [...new Set([
