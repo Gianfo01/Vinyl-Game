@@ -6,22 +6,27 @@
 import { cityById, l, type L } from '../../data/world';
 import type { Act, GameState } from '../types';
 import { fmtL } from '../util';
+import { actsVersion17 } from '../actidx17';
 
 export type Where31K = 'here' | 'gone' | 'jail' | 'tour' | 'studio';
 export interface Where31 { k: Where31K; why: L; city?: string; until?: number }
 
-const memo = new WeakMap<GameState, { w: number; n: number; m: Map<string, Act> }>();
+const memo = new WeakMap<GameState, { w: number; n: number; v: number; m: Map<string, Act> }>();
 /** Ato atual de cada pessoa (ativo primeiro), refeito por semana. */
 export function actOfPid31(s: GameState, pid: string): Act | undefined {
-  const n = Object.keys(s.acts).length;
+  // R31 (DBTAM, desempenho): contar s.acts a cada consulta custava ~12% do mês com base grande; a contagem só é refeita
+  // quando a versão de s.acts muda (actsTouched17 em toda entrada/saída de ato) — mesma regra de antes (semana + nº de atos)
   let c = memo.get(s);
+  const v = actsVersion17(s);
+  const n = c && c.v === v ? c.n : Object.keys(s.acts).length;
+  if (c) c.v = v;
   if (!c || c.w !== s.week || c.n !== n) {
     const m = new Map<string, Act>();
     for (const a of Object.values(s.acts)) for (const p of a.members) {
       const old = m.get(p);
       if (!old || ((old.status === 'retired' || old.status === 'split') && a.status !== 'retired' && a.status !== 'split')) m.set(p, a);
     }
-    c = { w: s.week, n, m };
+    c = { w: s.week, n, v, m };
     memo.set(s, c);
   }
   return c.m.get(pid);

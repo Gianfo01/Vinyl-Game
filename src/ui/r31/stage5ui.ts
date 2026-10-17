@@ -8,7 +8,7 @@ import { paintScene5, scene5, type StageOpts5 } from './stage5px';
 const reduced = (): boolean => { try { return !!store.prefs.reducedMotion || document.documentElement.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 
 /** Canvas com a cena; `set` redesenha com outra época/cidade/carreira/boneco (a prévia da nova run). */
-export function mountStage5(o: StageOpts5, cls: string): { el: HTMLCanvasElement; set: (o: StageOpts5) => void } {
+export function mountStage5(o: StageOpts5, cls: string): { el: HTMLCanvasElement; set: (o: StageOpts5) => void; signTop: () => number; floorY: () => number } {
   const cv = document.createElement('canvas');
   cv.className = cls;
   cv.setAttribute('aria-hidden', 'true');
@@ -32,7 +32,8 @@ export function mountStage5(o: StageOpts5, cls: string): { el: HTMLCanvasElement
   };
   paint();
   loop();
-  return { el: cv, set: (n) => { sc = scene5(n); cache = new Map(); paint(); loop(); } };
+  // topo do letreiro (cabos incluídos) em pixels do canvas, para a tela inicial não cobri-lo com o título
+  return { el: cv, set: (n) => { sc = scene5(n); cache = new Map(); paint(); loop(); }, signTop: () => sc.fy - 88, floorY: () => sc.fy };
 }
 
 /** Letras grossas 5×5 do logo (as do título); outras letras caem na fonte 3×5 do jogo. */

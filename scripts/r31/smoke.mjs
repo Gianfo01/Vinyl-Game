@@ -1,12 +1,12 @@
 // Masters 31 — teste de fumaça da build de arquivo único: abre no Chromium, começa uma partida nova,
 // avança alguns meses pelo botão do topo e falha se houver erro de página ou se o jogo não avançar.
-// Uso: node scripts/r31/smoke.mjs Masters_31_ondaN.html [meses]
+// Uso: node scripts/r31/smoke.mjs Masters_32_ondaN.html [meses]
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 const require = createRequire(import.meta.url);
 const pwPath = process.env.PLAYWRIGHT_PATH ?? (() => { try { return require.resolve('playwright'); } catch { return '/opt/node-tools/node_modules/playwright'; } })();
 const { chromium } = require(pwPath);
-const file = resolve(process.argv[2] ?? 'Masters_31.html');
+const file = resolve(process.argv[2] ?? 'Masters_32.html');
 const months = Number(process.argv[3] ?? 6);
 const exe = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const b = await chromium.launch(require('node:fs').existsSync(exe) ? { executablePath: exe } : {});

@@ -34,6 +34,8 @@ import { paintCasa5, type CasaSpot5 } from './casa5px';
 import { key5 } from './keys5';
 import { badge5, registerPaper5, registerRegion5 } from './nav5';
 import { lockBtn31 } from './lock31';
+import { casaCard5 } from './acoes5';
+import { worldTag5 } from './acoes5model';
 import { goDest31 } from './quick31';
 import { blitPx31 } from './scene31';
 import { placeLabels31, type Spot31 } from './scene31model';
@@ -141,9 +143,15 @@ export function casaView5(s: GameState): HTMLElement {
     ctx.drawImage(sp.c, d.you.x - sp.ax, d.you.y - sp.ay + 1);
   }, spots.map((sp) => {
     const o = by.get(sp.id)!;
-    return { sp, label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
+    return { sp, obj: o.obj, tag: worldTag5(s, o.obj ?? `casa.${o.id}`), label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
   }), [d.top, d.H - 12]));
   const sc = root.lastElementChild as HTMLElement;
+  // POL5: a sobra da tela em volta da casa continua o céu (em cima) e o chão (embaixo), sem faixa preta
+  try {
+    const cx = sc.querySelector<HTMLCanvasElement>('canvas.r5-cv')?.getContext('2d');
+    const px = (y: number) => { const v = cx!.getImageData(1, y, 1, 1).data; return `rgb(${v[0]},${v[1]},${v[2]})`; };
+    if (cx) { root.style.setProperty('--r5-sky', px(Math.max(0, d.top))); root.style.setProperty('--r5-ground', px(Math.max(0, d.H - 13))); }
+  } catch { /* sem canvas (testes) */ }
   sc.querySelector('.r5-view')!.append(roomsBar5(d.rooms.map((r) => ({ label: ROOM5_L[r.id], x: r.x, w: r.w })), d.W));
   // cômodos: um botão por cômodo rola a cena até ele (casa larga não cabe inteira na tela)
   if (d.rooms.length > 1) root.querySelector('.r5-head')!.append(h('span', { class: 'r5-roomsnav' }, d.rooms.map((r) => h('button', { type: 'button', class: 'r5-rbtn',
@@ -152,6 +160,7 @@ export function casaView5(s: GameState): HTMLElement {
 }
 
 function act5(s: GameState, at: DOMRect | undefined, o: CasaObj5): void {
+  if (o.panel !== 'chaveiro' && casaCard5(s, o.obj ?? `casa.${o.id}`, at)) return; // ACOES5 (EXP-13): cartão de ações ao lado do objeto
   if (o.panel === 'janela') return janela5(s);
   if (o.panel === 'garagem') return garagem5(s);
   if (o.panel === 'chaveiro') return chaveiro5(s);
@@ -161,7 +170,7 @@ function act5(s: GameState, at: DOMRect | undefined, o: CasaObj5): void {
 
 // ---------------------------------------------------------------- palco comum (canvas + pontos + rótulos)
 
-interface Pt5 { sp: CasaSpot5; label: L; tip: L; key: string; bang: boolean; act: (at: DOMRect | undefined) => void; /** rótulo dentro do ponto, no alto (salas da sede) */ inside?: boolean }
+interface Pt5 { sp: CasaSpot5; /** objeto da onda 5 (âncora do cartão de ações) */ obj?: string; /** número no próprio objeto (ACOES5: saúde, bolinhas, dinheiro) */ tag?: string; label: L; tip: L; key: string; bang: boolean; act: (at: DOMRect | undefined) => void; /** rótulo dentro do ponto, no alto (salas da sede) */ inside?: boolean }
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
 
 /** Palco: canvas + pontos + rótulos. `crop` = faixa vertical mostrada [y0, y1) (corta céu e rua para a casa ter
@@ -173,10 +182,10 @@ function stage5(W: number, H: number, paint: (cv: HTMLCanvasElement) => void, pt
   const st = h('div', { class: 'r5-stage', style: `top:${pct(-crop[0], ch)};height:${pct(H, ch)}` }, cv);
   // altura: cômodos (casa, garagem) ~50vh; prédio alto cresce com os andares (até 82vh) para as salas não ficarem miúdas
   const hv = ch > 190 ? `min(70vh, ${Math.round(ch * 2.2)}px)` : 'var(--r5-h)';
-  const view = h('div', { class: 'r5-view', style: `height:${hv};width:calc(${hv} * ${(W / ch).toFixed(4)})` }, st);
+  const view = h('div', { class: 'r5-view', style: `--hv:${hv};--ar:${(W / ch).toFixed(4)};height:var(--hv);width:calc(var(--hv) * var(--ar))` }, st);
   const layer = h('div', { class: 'r5-layer' });
   for (const p of pts) {
-    const b = h('button', { type: 'button', class: `r5-spot${p.bang ? ' bang' : ''}`, title: `${t(p.label)}: ${t(p.tip)}${p.key ? ` (${p.key})` : ''}`, 'aria-label': `${t(p.label)}: ${t(p.tip)}`,
+    const b = h('button', { type: 'button', class: `r5-spot${p.bang ? ' bang' : ''}`, 'data-obj': p.obj, title: `${t(p.label)}: ${t(p.tip)}${p.key ? ` (${p.key})` : ''}`, 'aria-label': `${t(p.label)}: ${t(p.tip)}`,
       style: `left:${pct(p.sp.x, W)};top:${pct(p.sp.y, H)};width:${pct(p.sp.w, W)};height:${pct(p.sp.h, H)}`, onclick: (e: Event) => p.act((e.currentTarget as HTMLElement | null)?.getBoundingClientRect()) });
     layer.append(b);
   }
@@ -185,7 +194,7 @@ function stage5(W: number, H: number, paint: (cv: HTMLCanvasElement) => void, pt
     (sp) => { const p = pts.find((x) => x.sp.id === sp.id)!; return `${t(p.label)}${p.key ? `  ${p.key}` : ''}`; });
   const lab = h('div', { class: 'r5-labels', 'aria-hidden': 'true' }, labs.map((b) => {
     const p = pts.find((x) => x.sp.id === b.id)!;
-    return h('span', { class: `r5-lab${p.bang ? ' bang' : ''}`, style: `left:${pct(b.x + b.w / 2, W)};top:${pct(b.y, H)}` }, t(p.label), p.key ? keyChip(p.key) : null);
+    return h('span', { class: `r5-lab${p.bang ? ' bang' : ''}`, style: `left:${pct(b.x + b.w / 2, W)};top:${pct(b.y, H)}` }, t(p.label), p.key ? keyChip(p.key) : null, p.tag ? h('small', { class: 'r5-tag' }, p.tag) : null);
   }));
   st.append(layer, lab);
   return h('div', { class: 'r5-scroll' }, view);
@@ -284,16 +293,6 @@ export function maqueteView5(s: GameState): HTMLElement {
 // API da casca (NAV, nav5.ts): a região 'casa' e o papel da maquete.
 registerRegion5('casa', (c) => casaView5(c.s));
 registerPaper5('maquete', (c) => h('div', null, maqueteView5(c.s), c.old()));
-
-/** Gancho TEMPORÁRIO enquanto a casca (shell5) não existe: com `exp5.nav` ligado, app.ts troca a página da área pela
- *  cena nova ('replace') ou põe a cena acima dela ('top'). A sede ('sede25') é da casca: ela pode chamar `sedeView5`
- *  (ou só o modelo `sedeObjs5`/`maquete5`) e apagar esta tabela (DECISOES, 31.5 CASA). */
-export const AREA5: Record<string, { mode: 'replace' | 'top'; render: (s: GameState) => HTMLElement }> = {
-  casa31: { mode: 'replace', render: casaView5 },
-  sede25: { mode: 'replace', render: (s) => sedeView5(s) },
-  hq: { mode: 'top', render: maqueteView5 },
-};
-export const area5Of = (area: string) => AREA5[area];
 
 /** Tab troca de casa/sede (chaveiro) quando a casa ou a sede nova está na tela. */
 if (typeof document !== 'undefined') document.addEventListener('keydown', (e) => {

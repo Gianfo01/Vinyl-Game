@@ -5,7 +5,7 @@
 // convite aberto mostra o baile; a delegacia mostra as celas; o beco, o mercado negro.
 
 import { baucOn31 } from '../../sim/sys/bauc31';
-import { l, type L } from '../../data/world';
+import { cityById, l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
@@ -35,6 +35,8 @@ import { artPanelEl31, paintArt31 } from './art31';
 import { askBox31 } from './amor31ui';
 import { paintVit31, vitListEl31, vitPanelEl31 } from './vit31';
 import { fairName31 } from '../../sim/r31/vitrine31';
+import { nav5On } from '../../sim/r31/exp5';
+import { bindBack5, fillMain5, placeStrip5 } from './cenas5';
 import './inside31.css';
 
 /** Painel aberto e sala dos fundos (só na sessão: explorar não muda o mundo). */
@@ -216,6 +218,7 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
   const pane = h('div', { class: 'in31-pane', 'aria-live': 'polite' });
   const show = (panel?: string) => {
     ui31.panel = panel;
+    pane.classList.toggle('cn5-idle', !panel); // R31 onda 5 (CENAS5): sem nada aberto, o painel some e a cena ocupa tudo
     if (!panel) { pane.replaceChildren(h('p', { class: 'small muted' }, t(l('Clique numa pessoa ou num objeto.', 'Click a person or an object.')))); return; }
     const ci = panel.indexOf(':'); const k = ci < 0 ? panel : panel.slice(0, ci), arg = ci < 0 ? '' : panel.slice(ci + 1);
     let el: HTMLElement | null = null;
@@ -243,6 +246,21 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     note: m.note,
     legend: m.trail.length ? h('p', { class: 'small in31-trail' }, '★ ', m.trail.map((y) => t(y)).join(' · ')) : null,
   });
+  // R31 onda 5 (CENAS5): com exp5.nav, a cena ocupa a área da casca; título na faixa de lugar ("◂ Cidade"), Esc/Backspace
+  // volta um nível (sala dos fundos/feira → o lugar → a cidade); a ajuda do lugar fica no "?" da casca
+  if (nav5On(s)) {
+    const up = (): void => { if (ui31.room) { ui31.room = undefined; ui31.panel = undefined; rerender(); } else back(); };
+    const cityN = cityById[x.city]?.name;
+    const box5 = h('div', { class: 'c2-in in31 cn5', role: 'dialog', 'aria-label': t(l('{n} por dentro', '{n}, inside'), { n: x.name }) },
+      placeStrip5({ title: x.name, sub: [x.what ?? '', cityN ? t(cityN) : '', String(x.year)], back: { label: ui31.room ? l(x0.name, x0.name) : l('Cidade', 'City'), go: up },
+        extra: [actions ? h('button', { type: 'button', class: 'btn small primary c2-acts-btn', onclick: actions }, t(l('Ações', 'Actions'))) : null] }),
+      h('div', { class: 'in31-body' }, scene, pane));
+    show(ui31.panel);
+    bindZoomOut27(box5, back);
+    fillMain5(box5);
+    bindBack5(box5, up);
+    return box5;
+  }
   const box = h('div', { class: 'c2-in in31', role: 'dialog', 'aria-label': t(l('{n} por dentro', '{n}, inside'), { n: x.name }) },
     h('div', { class: 'c2-in-bar' },
       h('button', { type: 'button', class: 'btn small c2-back', onclick: () => { ui31.room = undefined; back(); } }, '← ', t(l('Voltar à cidade', 'Back to the city'))),

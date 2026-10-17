@@ -20,6 +20,8 @@ import type { Unit27 } from '../../sim/sys/hqrooms27';
 import { drawHqCutaway27, plan27, type Cell27, type Kind27, type Plan27 } from '../ps/hqpx27';
 import { chordLabel5, key5 } from './keys5';
 import { object5 } from './objects5';
+import { worldTag5 } from './acoes5model';
+import { store } from '../store';
 
 type Mount5 = 'floor' | 'wall' | 'desk' | 'spot' | 'list';
 /** Objeto da sede: id (objects5), arte (exp5px; null = ponto sobre o desenho da sala), salas preferidas, montagem. */
@@ -192,7 +194,8 @@ function objBtn(pl: Plan27, it: Item5, n: number, year: number, k: number, on: (
     const b = obj5Canvas(it.art, year, 'lit', k); b.className = 'px s5-lit';
     kids.push(a, b);
   } else if (n) kids.push(h('i', { class: 's5-bang', 'aria-hidden': 'true' }, '!'));
-  kids.push(h('span', { class: 's5-lab', 'aria-hidden': 'true' }, txt5(name), kbd5(key)));
+  const tag = store.game ? worldTag5(store.game, it.id) : undefined; // ACOES5: o número mora no objeto (caixa no livro-caixa, fama no jornal…)
+  kids.push(h('span', { class: 's5-lab', 'aria-hidden': 'true' }, txt5(name), kbd5(key), tag ? h('small', { class: 'r5-tag' }, tag) : null));
   const box = it.art ? at(pl, it.x - PAD5, it.y - PAD5, it.w + 2 * PAD5, it.h + 2 * PAD5) : at(pl, it.x, it.y, it.w, it.h);
   return h('button', { type: 'button', class: `s5-obj ${it.art ? 'art' : 'spot'} m-${it.mount}${n ? ' new' : ''}${flash ? ' flash' : ''}`, 'data-obj': it.id, style: box, 'aria-label': say, title: say, onclick: () => on(it.id) }, ...kids);
 }
@@ -280,6 +283,12 @@ export function sedeScene5(o: SedeIn5): HTMLElement {
     const lay = sedeLay5(d.plan, has);
     stage.style.width = `${Math.round(d.plan.W * k)}px`;
     stage.style.height = `${Math.round(d.plan.H * k)}px`;
+    // a sobra da tela em volta da cena (escala em quartos) continua o céu em cima e a rua embaixo: nada de faixa preta
+    try {
+      const cx = cv.getContext('2d');
+      const px = (y: number) => { const v = cx!.getImageData(1, y, 1, 1).data; return `rgb(${v[0]},${v[1]},${v[2]})`; };
+      if (cx && cv.height > 2) wrap.style.background = `linear-gradient(to bottom, ${px(0)} 0 50%, ${px(cv.height - 1)} 50% 100%)`;
+    } catch { /* canvas sem leitura (testes): fica o fundo da casca */ }
     layer.replaceChildren(
       ...lay.items.map((it) => objBtn(d.plan, it, o.bangs[it.id] ?? 0, s.year, Math.ceil(k), o.open, o.flash === it.id)),
       ...lay.rooms.map((r) => roomChip(d.plan, r, o.bangs, o.open, lay.items.some((x) => x.id === o.flash) ? undefined : o.flash)),
