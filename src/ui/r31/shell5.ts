@@ -16,6 +16,10 @@ import { $, dateLabel, toast } from '../common';
 import { h } from '../dom';
 import { portraitCanvas } from '../pixel/avatar';
 import { travel5Canvas } from '../pixel/exp5px';
+import { iconPx, type IconName } from '../pixel/icons';
+import { icon17Px } from '../pixel/icons17';
+import { icon31Px } from '../pixel/icons31';
+import { dockCar5, type DockCar5 } from './dockcar5';
 import { rgba, type Px } from '../pixel/px';
 import { inbox5Layout, inbox5Look, inbox5Px, paper5Canvas, paper5Layout, paper5Px, type Paper5, type Rect5 } from '../pixel/exp5paper';
 import { TABS_REG27 } from '../ps/tabsreg27';
@@ -220,6 +224,7 @@ export function install5(host: Shell5Host): void {
   NAV5.travel = (r) => travel5go(r);
   NAV5.pause = () => esc5();
   NAV5.help = () => help5();
+  NAV5.artists = () => { if (!store.game) return false; openPaper5(artistsArea5(store.game).area); return true; }; // BUGS33 pedido 8
   NAV5.paper = () => SH5.paper?.obj ?? (document.querySelector('main .m27-keys') ? 'correspondencia' : undefined);
   const alt = (on: boolean) => { const was = document.body.classList.contains('alt5'); document.body.classList.toggle('alt5', on && !!document.querySelector('.app5')); if (on && !was) declutter5(); };
   window.addEventListener('keydown', (e) => {
@@ -270,6 +275,30 @@ function topBar5(s: GameState, host: Shell5Host): HTMLElement {
 
 let cardAtDown5: string | undefined;
 
+/** BUGS33 pedido 8: o 2º botão do menu de baixo é a ação principal da carreira (gravadora: gestão de artistas). */
+export function artistsArea5(s: GameState): DockCar5 {
+  const main = careers(s).active[0] ?? 'label';
+  return dockCar5(main, (a) => !HOST || HOST.has(a), CAREER_PAGE17[main]?.area);
+}
+function carIcon5(name: string, lit: boolean): HTMLCanvasElement {
+  if (name === 'artistas') return travel5Canvas('artistas', lit ? 'lit' : 'idle', 3);
+  const p = icon17Px(name) ?? icon31Px(name) ?? iconPx(name as IconName);
+  const c = p.canvas(), out = document.createElement('canvas');
+  out.width = 48; out.height = 48;
+  const x = out.getContext('2d');
+  if (x) { x.imageSmoothingEnabled = false; if (!lit) x.globalAlpha = 0.85; x.drawImage(c, 0, 0, 48, 48); }
+  return out;
+}
+function artistsBtn5(s: GameState): HTMLElement {
+  const d = artistsArea5(s);
+  const on = SH5.paper?.marker.area === d.area;
+  const chord = key5('sys:artists')?.chord ?? 'shift+2';
+  const ic = carIcon5(d.icon, on); ic.className = 'px';
+  return h('button', { type: 'button', class: `b5-tr b5-art${on ? ' on' : ''}`, 'data-travel': 'carreira', 'data-area': d.area, 'aria-pressed': on ? 'true' : 'false',
+    title: `${t(d.label)} — ${t(d.why)} (${chordLabel5(chord)})`, onclick: () => { if (on) { SH5.paper = null; redraw(); } else openPaper5(d.area); } },
+  raw5('small', 'b5-k', chordLabel5(chord)), ic, h('span', null, txt5(tl5(d.label))));
+}
+
 function bottom5(s: GameState): HTMLElement {
   const tr = travel5(s);
   const cur = SH5.region;
@@ -301,7 +330,7 @@ function bottom5(s: GameState): HTMLElement {
       return h('button', { type: 'button', class: `b5-tr${x.id === cur ? ' on' : ''}`, 'data-travel': x.id, 'aria-current': x.id === cur ? 'page' : undefined,
         title: `${tl5(x.label)} (${chordLabel5(x.key)})`, onclick: () => travel5go(x.id) },
         raw5('small', 'b5-k', x.key ? chordLabel5(x.key) : `⇧${i + 1}`), ic, h('span', null, txt5(tl5(x.label))), x.bang ? raw5('i', 'bg5', x.bang > 9 ? '9+' : String(x.bang)) : null);
-    }), ...DOCK5.btns.map((f) => f(s))),
+    }).flatMap((b, i) => (i === 0 ? [b, artistsBtn5(s)] : [b])), ...DOCK5.btns.map((f) => f(s))), // BUGS33 pedido 8: Artistas logo depois da Sede
     h('div', { class: 'b5-pocket', role: 'group', 'aria-label': t(l('Bolso', 'Pocket')) },
       h('b', { class: 'b5-pl' }, t(l('Bolso', 'Pocket'))),
       ...pocket.map((p) => h('span', { class: `b5-pi${SH5.paper?.obj === p.id ? ' on' : ''}` },

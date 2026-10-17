@@ -61,7 +61,8 @@ Shift+1…6 do menu) e nada muda.
 | Esc | Fecha o papel aberto; sem papel aberto, abre o menu de pausa | nova |
 | Alt | Segurar: mostra o nome e a tecla de todos os objetos | nova |
 | Tab | Troca de casa (várias carreiras ativas) | nova |
-| ⇧5 | Celular (5º botão do menu de baixo, 1983+) | nova |
+| ⇧2 | Ação principal da carreira (gravadora: Artistas, a gestão do elenco) | nova |
+| ⇧6 | Celular (último botão do menu de baixo, 1983+) | nova |
 
 ### Viagem (botões fixos)
 
@@ -69,9 +70,9 @@ Shift+1…6 do menu) e nada muda.
 |---|---|---|
 | H | Volta à sede de qualquer lugar | nova |
 | ⇧1 | Viagem: Sede | antes: ⇧2 |
-| ⇧2 | Viagem: Casa | antes: ⇧5 |
-| ⇧3 | Viagem: Cidade | igual |
-| ⇧4 | Viagem: Mundo | igual |
+| ⇧3 | Viagem: Casa | antes: ⇧5 |
+| ⇧4 | Viagem: Cidade | antes: ⇧3 |
+| ⇧5 | Viagem: Mundo | antes: ⇧4 |
 
 ### Objetos
 
@@ -173,10 +174,12 @@ Shift+1…6 do menu) e nada muda.
 | G | Página de empresário | Agenda de couro (agenda, calendário, shows marcados) | Os mocks tinham G = telefone; o pedido fixou G = agenda. A página de empresário foi para Shift+G; o telefone ficou com Shift+T. |
 | H | Lendas | Volta à sede de qualquer lugar | Regra 8 do mapa: H volta à sede. Lendas virou marcador do livro "Cultura" (tecla M). |
 | C | Compromissos | Quadro de planejamento (a mesma página, com o elenco por mês) | Mesma página, objeto novo: nos mocks C era o calendário; o calendário virou a agenda (G) e C abre o quadro de planejamento. |
-| ⇧1 | Menu: Hoje | Viagem: Sede | Botões de viagem Sede, Casa, Cidade, Mundo em Shift+1…4. "Hoje" virou a mesa do mês (tecla 1). |
-| ⇧2 | Menu: Sede | Viagem: Casa | "Você" virou a sua casa (EXP-6) e entra no segundo botão de viagem. |
-| ⇧5 | Menu: Você | Celular (5º botão do menu de baixo, 1983+) | Você agora é Shift+2 (Casa). Os botões do menu de baixo são Shift+1…5; o celular (versão 33) é o quinto. |
-| ⇧6 | Menu: Listas | (livre) | Listas some (o índice completo fica no menu de pausa). |
+| ⇧1 | Menu: Hoje | Viagem: Sede | Botões do menu de baixo em Shift+1…6, na ordem em que aparecem. "Hoje" virou a mesa do mês (tecla 1). |
+| ⇧2 | Menu: Sede | Ação principal da carreira (gravadora: Artistas) | Pedido do dono (versão 33): logo depois da Sede, o botão da ação principal da carreira escolhida — na gravadora, a gestão de artistas. |
+| ⇧3 | Menu: Cidade | Viagem: Casa | "Você" virou a sua casa (EXP-6); com o botão Artistas, a Casa passou a ser o terceiro botão. |
+| ⇧4 | Menu: Mundo | Viagem: Cidade | Segue a posição no menu de baixo. |
+| ⇧5 | Menu: Você | Viagem: Mundo | Segue a posição no menu de baixo (antes da versão 33, o celular). |
+| ⇧6 | Menu: Listas | Celular (último botão do menu de baixo, 1983+) | Listas some (o índice completo fica no menu de pausa); o celular (versão 33) é o último botão. |
 | ⇧9 | (livre) | Pilha de demos (talentos) | A pilha de demos saiu do Shift+5, que virou o celular (versão 33). |
 | Esc | Fecha janelas | Fecha o papel aberto; sem nada aberto, menu de pausa | Pausa com salvar, opções, ajuda, editor e índice (mock da pausa). |
 | Alt | (sem uso) | Segurar mostra nomes e teclas dos objetos | Rótulos só ao passar o mouse ou com Alt (decisão do dono sobre os mocks). |

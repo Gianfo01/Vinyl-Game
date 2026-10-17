@@ -91,7 +91,10 @@ describe('W5 TEC · teclas sem conflito e configuráveis', () => {
     expect(g('g')!.act).toEqual({ kind: 'object', id: 'agenda' });
     expect(g('e')!.act).toEqual({ kind: 'object', id: 'correspondencia' });
     expect(g('h')!.act).toEqual({ kind: 'travel', id: 'sede' });
-    expect(['shift+1', 'shift+2', 'shift+3', 'shift+4'].map((c) => g(c)!.act)).toEqual(['sede', 'casa', 'cidade', 'mundo'].map((id) => ({ kind: 'travel', id })));
+    // BUGS33 pedido 8: ⇧2 = ação principal da carreira; viagem em ⇧1, ⇧3, ⇧4, ⇧5; celular ⇧6
+    expect(['shift+1', 'shift+3', 'shift+4', 'shift+5'].map((c) => g(c)!.act)).toEqual(['sede', 'casa', 'cidade', 'mundo'].map((id) => ({ kind: 'travel', id })));
+    expect(g('shift+2')!.act).toEqual({ kind: 'sys', id: 'artists' });
+    expect(g('shift+6')!.act).toEqual({ kind: 'sys', id: 'phone' });
     expect(g('escape')!.act).toEqual({ kind: 'sys', id: 'pause' });
     expect(g('alt')!.act).toEqual({ kind: 'sys', id: 'names' });
     expect(g('ctrl+k')!.act).toEqual({ kind: 'sys', id: 'search' });
@@ -132,9 +135,11 @@ describe('W5 TEC · teclas sem conflito e configuráveis', () => {
     expect(checkRebind5('obj:telefone', 'ctrl+k')).toBeTruthy();
     expect(checkRebind5('obj:telefone', '?')).toBeTruthy();
     expect(checkRebind5('sys:search', 'shift+6')).toBeTruthy();
-    expect(checkRebind5('obj:telefone', 'shift+6')).toBeUndefined();
-    const r = applyCustom5({ 'obj:telefone': 'shift+6', 'obj:jornal': 'shift+6', 'obj:quadroplan': 'ç' });
-    expect(r.binds.find((b) => b.id === 'obj:telefone')!.chord).toBe('shift+6');
+    expect(checkRebind5('obj:telefone', 'shift+6')!.pt).toMatch(/Celular/); // BUGS33: ⇧6 agora é o celular
+    const FREE = ['`', ';', "'", '\\', ',', '.', '-', '='].find((c) => checkRebind5('obj:telefone', c) === undefined)!;
+    expect(FREE).toBeTruthy();
+    const r = applyCustom5({ 'obj:telefone': FREE, 'obj:jornal': FREE, 'obj:quadroplan': 'ç' });
+    expect(r.binds.find((b) => b.id === 'obj:telefone')!.chord).toBe(FREE);
     expect(r.rejected.map((x) => x.id)).toEqual(['obj:jornal', 'obj:quadroplan']);
     expect(conflicts5(r.binds)).toEqual([]);
     // tecla interna do papel não briga com a global (a do papel ganha enquanto ele está aberto)
@@ -188,7 +193,7 @@ describe('W5 TEC · open5 e "ir até lá"', () => {
   });
   it('viagem: 4 botões com tecla, nome da sede pela carreira, aceso no lugar atual', () => {
     const tv = travel5(s, { area: 'artists' });
-    expect(tv.map((x) => [x.id, x.key])).toEqual([['sede', 'shift+1'], ['casa', 'shift+2'], ['cidade', 'shift+3'], ['mundo', 'shift+4']]);
+    expect(tv.map((x) => [x.id, x.key])).toEqual([['sede', 'shift+1'], ['casa', 'shift+3'], ['cidade', 'shift+4'], ['mundo', 'shift+5']]);
     expect(tv.find((x) => x.active)!.id).toBe('sede');
     expect(travel5(s, { area: 'crime' }).find((x) => x.active)!.id).toBe('cidade');
     expect(travel5(s, { area: 'you' }).find((x) => x.active)!.id).toBe('casa');
@@ -245,7 +250,7 @@ describe('W5 TEC · interruptor desligado não muda nada', () => {
     setSw(s, SW_NAV5, true);
     expect(keyNav5(s, { key: 'e' })).toBe(true);
     expect(keyNav5(s, { key: 'g' })).toBe(true);
-    expect(keyNav5(s, { key: '!', code: 'Digit3', shiftKey: true })).toBe(true);
+    expect(keyNav5(s, { key: '!', code: 'Digit4', shiftKey: true })).toBe(true); // BUGS33: a cidade foi para ⇧4
     expect(keyNav5(s, { key: 'p' })).toBe(true);
     expect(keyNav5(s, { key: 'k', ctrlKey: true })).toBe(false); // busca continua com o código de hoje
     expect(calls.map((c) => c.area)).toEqual(['inbox', 'agenda17', 'campus18', 'people']);
