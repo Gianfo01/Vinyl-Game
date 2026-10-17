@@ -519,3 +519,24 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - **Parte B** (três camadas de detalhe, promoção e rebaixamento com resumo do passado, talento escondido, volta por
     cima) só depois de juntar o QA33, porque mexe em todas as pessoas e nos goldens.
   - Nem todos os NPCs terão o mesmo detalhe: as camadas seguem a pessoa, não o emprego.
+- **2026-10-17 · R33 GENTE33 parte A (Opus).** Diretor(a) de filial, CEO e conselho, equipe pessoal e pessoas fixas em
+  `src/sim/r33/gente33.ts`, atrás de `exp33.gente` (ligado; ligado não muda nada até o jogador agir).
+  - **Diretor(a) de filial:** pessoa real (equipe, executivo de rival, gente da cidade do `gente31` ou ex-artista).
+    Garimpa (`addSignal`), contrata local (`acceptOffer`), marca shows e divulga (`playGigs`) dentro do teto, e manda
+    relatório mensal na Caixa. O jogador escolhe a linha (ousado/conservador) e o teto. Riscos com sorteio próprio:
+    roubo por rival, saída com o elenco regional abrindo selo (`foundLabel17`), desvio (fato do submundo) e briga com a
+    sede. Ex-artista da cena local ganha bônus.
+  - **CEO:** só com sede Complexo ou 25 anos de casa. Aplica "multinacional" na delegação única, guarda a anterior e a
+    devolve ao sair. Leva grandes decisões ao conselho (`repelRaider`, ampliar sede, abrir ou ampliar filial) e segura
+    a sucessão.
+  - **Conselho:** só com sócios ou ações. Reunião anual com voto dos `holders`; raiders hostis votam contra; maioria
+    contra abre uma moção.
+  - **Equipe pessoal:** motorista, segurança (`setGuard33`), trainer e médico (saúde e estresse do dono).
+  - **Pessoas fixas:** fã-clube, jornalista (coluna como fato `column33`) e representante do sindicato (confiança do
+    `union20`).
+  - **Regras:** Fossati e gente de ato real ficam fora. Ações nos cartões ACOES5 (mapa da parede, mesa de reunião,
+    porta, garagem, espelho, mural, jornal, quadro da equipe), sem tela nova. Estado só nasce na 1ª ação; sem ele o mês
+    não sorteia.
+  - **Goldens:** os 4 rodados e iguais.
+  - Ver `docs/r33/gente.md` (com as pendências da parte B). Teste `tests/r33-gente-a.test.ts`; prints em
+    `docs/r33/gente/`.
