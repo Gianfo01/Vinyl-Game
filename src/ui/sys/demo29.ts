@@ -208,6 +208,10 @@ export const ageLayerColor29 = (band: number, v: number): string => {
   return `rgba(${r},${g},${b},${(0.3 + 0.65 * Math.sqrt(v)).toFixed(2)})`;
 };
 export const ageLegend29 = (): HTMLElement[] => AGE29.map((x, i) => h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: `background-color:${BAND_COL29[i]};opacity:.7` }), `${t(l('País: maioria', 'Country: mostly'))} ${t(x.name)}`));
+/** BUGS33: legenda da camada quando nenhum país tem fãs seus (começo da run, selo sem artistas, artistas sem público). */
+export const ageEmpty29 = (s: GameState): HTMLElement => h('span', { class: 'wmap-key bad', 'data-age29': 'empty' }, t(playerActs(s).length
+  ? l('Seus fãs ainda não aparecem em nenhum país: lance discos, faça shows e rádio para formar público.', 'Your fans do not show up in any country yet: release records, play shows and radio to build an audience.')
+  : l('Seus fãs ainda não aparecem em nenhum país: você ainda não tem artistas.', 'Your fans do not show up in any country yet: you have no acts yet.')));
 /** Bolhas na maior praça de cada país (cor = faixa dominante, tamanho = volume): o véu do país é discreto no mapa. */
 export function ageBubbles29(s: GameState): { kind: 'bubble'; city: string; value: number; color: string }[] {
   const out: { kind: 'bubble'; city: string; value: number; color: string }[] = [];

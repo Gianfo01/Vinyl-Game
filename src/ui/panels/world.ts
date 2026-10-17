@@ -22,7 +22,7 @@ import { ic, stat, chips, tabs, tile } from '../vis';
 import { select } from '../dom';
 import { board } from '../../sim/sys/charts7';
 import { fansByCountry, genreHeat, rivalPower } from '../../sim/sys/mapx8';
-import { ageBubbles29, ageLayer29, ageLayerColor29, ageLegend29 } from '../sys/demo29'; // R29 demo29: camada Fãs por idade
+import { ageBubbles29, ageEmpty29, ageLayer29, ageLayerColor29, ageLegend29 } from '../sys/demo29'; // R29 demo29: camada Fãs por idade
 import { cityActions, cityScene, countryExtra, personalOverlays } from '../sys/mapx8';
 import { bubbleNotes, cityTip13, countryPanel13, countryTip13, paintBar, paintLegend, paintNow, paintShadeMap, setPaint } from '../sys/map13';
 import { PAINT_INFO, paintAvailable, type Paint } from '../../sim/sys/map13';
@@ -87,13 +87,13 @@ function marketShade(s: GameState): Map<string, { color: string; hatch?: boolean
 
 /** Sombreamento por país das camadas novas: paradas (ouro) e fãs por país (laranja, mais forte = mais fãs). */
 function countryLayerShade(s: GameState): Map<string, { color: string }> {
-  const m = new Map<string, { color: string }>();
+  const m = new Map<string, { color: string; alpha?: number }>();
   if (layers.has('countryfans')) {
     const f = fansByCountry(s);
     const max = Math.max(1, ...f.values());
     for (const [a3, v] of f) if (v / max > 0.03) m.set(a3, { color: `rgba(200,100,30,${(0.35 + 0.65 * Math.sqrt(v / max)).toFixed(2)})` });
   }
-  if (layers.has('agefans')) for (const [a3, x] of ageLayer29(s)) m.set(a3, { color: ageLayerColor29(x.band, x.v) }); // R29 demo29: faixa dominante dos seus fãs no país
+  if (layers.has('agefans')) for (const [a3, x] of ageLayer29(s)) m.set(a3, { color: ageLayerColor29(x.band, x.v), alpha: 0.8 }); // BUGS33: alfa próprio (0,32 sumia) · R29 demo29: faixa dominante dos seus fãs no país
   if (layers.has('charts')) {
     const keys = new Set<string>();
     for (const c of CITIES) { const a3 = countryOfCity(c.id); if (a3) keys.add(a3); }
@@ -321,7 +321,7 @@ function mapSection(s: GameState): HTMLElement {
       layers.has('geo') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:var(--warn, #e0a030);opacity:.5' }), t(l('Crise econômica', 'Economic crisis'))) : null,
       layers.has('countryfans') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgb(200,100,30);opacity:.5' }), t(l('País: seus fãs', 'Country: your fans'))) : null,
       layers.has('charts') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgb(184,144,28);opacity:.5' }), t(l('País: você nas paradas', 'Country: you on the charts'))) : null,
-      ...(layers.has('agefans') ? ageLegend29() : []),
+      ...(layers.has('agefans') ? (ageLayer29(s).size ? ageLegend29() : [ageEmpty29(s)]) : []), // BUGS33: aviso sem fãs
       layers.has('genre') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:#a35bd8' }), t(l('Bolha: calor do gênero', 'Bubble: genre heat'))) : null,
       layers.has('rivalpower') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--bad)' }), t(l('Bolha: força dos rivais', 'Bubble: rival strength'))) : null,
       ...(['hq', 'branch', 'rival', 'festival', 'tour', 'movement', 'home', 'you', 'promo', 'scout'] as const).map((g) => h('span', { class: 'wmap-key' }, glyphCanvas(g, 1), t(GLYPH_NAMES[g]))),

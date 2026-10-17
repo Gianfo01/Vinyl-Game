@@ -8,7 +8,7 @@
 // Modelos puros em ./mundo27model.ts (testes: tests/r27-mundo.test.ts).
 
 import { tourList } from '../../sim/tours';
-import { ageBubbles29, ageLayer29, ageLayerColor29, ageLegend29 } from './demo29'; // R29 demo29: camada Fãs por idade
+import { ageBubbles29, ageEmpty29, ageLayer29, ageLayerColor29, ageLegend29 } from './demo29'; // R29 demo29: camada Fãs por idade
 import { CITIES, l, type L } from '../../data/world';
 import { countryOfCity } from '../../data/geo';
 import { t } from '../../i18n/strings';
@@ -207,13 +207,14 @@ function sitesBlock27(xs: Site27[]): HTMLElement | null {
         h('button', { type: 'button', class: 'btn tiny', 'aria-label': `${T(l('Abrir', 'Open'))}: ${x.name}`, onclick: () => go27(x.go) }, T(l('Abrir', 'Open')), ' →'))))));
 }
 
-export function sheet27(s: GameState, c: CitySheet27): HTMLElement {
+export function sheet27(s: GameState, c: CitySheet27, top?: { cls: string; el: HTMLElement }): HTMLElement {
   const sc = c.scene;
   const tierCls = ['', '', 'good', 'gold'][sc.tier];
-  return h('aside', { class: 'card sheet27', 'aria-label': `${T(l('Ficha da cidade', 'City sheet'))}: ${T(c.name)}` },
+  return h('aside', { class: `card sheet27 ${top?.cls ?? ''}`, 'aria-label': `${T(l('Ficha da cidade', 'City sheet'))}: ${T(c.name)}` },
     h('header', { class: 'sheet27-h' },
       h('div', null, h('h3', null, a29(cityCrestImg29(c.id, 20)), T(c.name)), h('small', { class: 'muted' }, `${T(c.country)}${c.market ? ` · ${T(c.market)}` : ''}`)),
       h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar ficha', 'Close sheet')), onclick: () => { mapSel = null; WORLD5.pick = undefined; rerender(); } }, '✕')), // QA5: também fecha o cartão da cidade (casca nova)
+    top?.el ?? null, // BUGS33: botões do cartão da cidade (Entrar, Fechar) dentro da ficha, logo abaixo do título
     (() => { const i = skylineThumbImg29(c.id, s.year, 240); i.style.display = 'block'; i.style.width = '100%'; i.style.height = 'auto'; return i; })(), // r29: horizonte da cidade
     c.closed.length ? h('div', { class: 'chips' }, c.closed.map((x) => pill(T(x), 'bad'))) : null,
     sitesBlock27(sitesByCity27(s).get(c.id) ?? []),
@@ -272,7 +273,8 @@ function mapTab(s: GameState): HTMLElement {
     onCityClick: (id: string) => { if (nav5) { WORLD5.pick = id; rerender(); return; } mapSel = id; rerender(); }, // QA5: cartão da cidade antes de entrar
     onCountryClick: (a3: string) => { if (nav5) { WORLD5.country = country5(s, a3)?.id; WORLD5.focus = WORLD5.country; rerender(); return; } openMapInfo17(s, 'country', a3); },
     overlays: () => ov,
-    countryShade: (a3: string) => { if (nav5 && WORLD5.country && selA3s5.has(a3)) return { color: '#ffc428' }; const c = closed.get(a3); if (!c && ages) { const x = ages.get(a3); if (x) return { color: ageLayerColor29(x.band, x.v) }; } return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
+    // BUGS33: a camada de idade tem alfa próprio (com 0,32 o véu do país sumia no mapa)
+    countryShade: (a3: string) => { if (nav5 && WORLD5.country && selA3s5.has(a3)) return { color: '#ffc428' }; const c = closed.get(a3); if (!c && ages) { const x = ages.get(a3); if (x) return { color: ageLayerColor29(x.band, x.v), alpha: 0.8 }; } return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
     cityTipExtra: (id: string) => { const v = st.get(id) ?? 0; const mine = layers.has('mine') ? sites.get(id) ?? [] : []; return h('div', { class: 'small' }, `${T(l('Cena', 'Scene'))}: ${T(TIER27[sceneTier27(v)])}`, mine.length ? h('div', { class: 'mine27' }, ic('building'), ` ${mine.map((x) => `${x.name} (${T(x.kindName)})`).join(' · ')}`) : null); },
     countryTipExtra: (a3: string) => { const c = closed.get(a3); const x = ages?.get(a3); return c ? h('div', { class: 'small bad' }, ic('lock'), ' ', T(c.why)) : x ? h('div', { class: 'small' }, ic('fans'), ' ', x.mix.map((v, i) => `${['13–17', '18–24', '25–34', '35–49', '50+'][i]} ${Math.round(v * 100)}%`).join(' · ')) : null; },
     legendExtra: () => [
@@ -282,7 +284,7 @@ function mapTab(s: GameState): HTMLElement {
       layers.has('rivals') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw dot', style: 'background-color:var(--bad)' }), T(l('Força dos rivais', 'Rival strength'))) : null,
       layers.has('closed') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw hatch', style: 'background-color:var(--bad)' }), T(l('Fechado (guerra, bloco, shows proibidos)', 'Closed (war, bloc, shows banned)'))) : null,
       layers.has('closed') ? h('span', { class: 'wmap-key' }, h('i', { class: 'sw', style: 'background-color:rgba(238,143,132,0.45)' }), T(l('Censura forte', 'Heavy censorship'))) : null,
-      ...(ages ? ageLegend29() : []),
+      ...(ages ? (ages.size ? ageLegend29() : [ageEmpty29(s)]) : []), // BUGS33: sem fãs em país nenhum, dizer por quê
     ].filter(Boolean) as HTMLElement[],
   };
   if (!map27) map27 = new WorldMap(opts);
@@ -295,11 +297,9 @@ function mapTab(s: GameState): HTMLElement {
     const openC = (id: string) => { WORLD5.country = id; WORLD5.focus = id; const c = country5(s, id); if (c) map27?.centerOn(c.lon, c.lat, c.span); rerender(); };
     // QA5: cidade clicada no mapa = cartão com a ficha dela e "Entrar na cidade ▸" (antes entrava direto)
     const pick = WORLD5.pick ? citySheet27(s, WORLD5.pick) : null;
-    const pickEl = pick ? h('div', { class: 'm5-pick', 'data-m5': 'pick' },
-      h('div', { class: 'row wrap m5-pick-go' },
-        h('button', { type: 'button', class: 'btn primary', onclick: () => { const id = WORLD5.pick!; WORLD5.pick = undefined; openCityMap5(s, id); } }, T(l('Entrar na cidade', 'Enter the city')), ' ▸'),
-        h('button', { type: 'button', class: 'btn ghost', 'data-esc5': '1', onclick: () => { WORLD5.pick = undefined; rerender(); } }, T(l('Fechar', 'Close')))),
-      sheet27(s, pick)) : null;
+    const pickEl = pick ? sheet27(s, pick, { cls: 'm5-pick', el: h('div', { class: 'row wrap m5-pick-go', 'data-m5': 'pick' },
+      h('button', { type: 'button', class: 'btn small primary', onclick: () => { const id = WORLD5.pick!; WORLD5.pick = undefined; openCityMap5(s, id); } }, T(l('Entrar na cidade', 'Enter the city')), ' ▸'),
+      h('button', { type: 'button', class: 'btn small ghost', 'data-esc5': '1', onclick: () => { WORLD5.pick = undefined; rerender(); } }, T(l('Fechar', 'Close')))) }) : null;
     const side = pickEl ?? (WORLD5.country ? countryPanel5(s, WORLD5.country, { close: () => { WORLD5.country = undefined; rerender(); }, full: (a3) => openMapInfo17(s, 'country', a3), market: () => go27({ area: 'regions19' }) }) : null)
       ?? worldIdle5(s, { open: openC });
     pinTelex5(map27.element, telexCard5(s, go27));

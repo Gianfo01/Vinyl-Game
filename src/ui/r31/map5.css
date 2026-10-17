@@ -92,3 +92,11 @@
 .m5-cc-go { background: #f0c040; color: #1a1214; }
 .m5-cc-x2 { background: #fbf6e8; color: #22201c; }
 .m5-cc-go:focus-visible, .m5-cc-x2:focus-visible { outline: 2px solid #2a5ab0; outline-offset: 2px; }
+
+/* BUGS33 (dono): cartão da cidade no mapa-múndi como o painel do país — inteiro dentro da coluna, título e botões
+   no tamanho normal presos no topo, a ficha rola por dentro e nada fica atrás da barra de dicas */
+.m5-world .map27-body > .sheet27.m5-pick { max-height: 100%; overflow: auto; scrollbar-width: thin; align-self: start; }
+.m5-pick > .sheet27-h, .m5-pick > .m5-pick-go { position: sticky; z-index: 2; background: var(--panel, #1c2028); }
+.m5-pick > .sheet27-h { top: -12px; padding-top: 4px; }
+.m5-pick > .m5-pick-go { top: 34px; gap: 6px; padding: 4px 0 6px; border-bottom: 1px solid var(--line, #3a3f4a); }
+.m5-pick > .m5-pick-go .btn { flex: 1 1 auto; }
