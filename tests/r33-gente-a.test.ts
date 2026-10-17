@@ -12,11 +12,14 @@ import { capital } from '../src/sim/sys/capital';
 import { vida33 } from '../src/sim/r33/vida33';
 import { card5 } from '../src/ui/r31/acoes5model';
 import { attnQueue } from '../src/sim/attention';
+import { gente31, staffMonth31 } from '../src/sim/sys/gente31';
+import { leaders } from '../src/sim/sys/leaders10';
+import { opinionOf } from '../src/sim/opinion';
 import { spawnProceduralAct } from '../src/sim/worldgen';
 import { rng19 } from '../src/sim/rng19';
 import type { GameState } from '../src/sim/types';
 import {
-  GENTE33, adoptFixed33, defect33, board33, boardMeeting33, branchMonth33, branchRisks33, cands33, ceo33, crew33, dirOf33, fireCeo33, fixed33,
+  GENTE33, adoptFixed33, defect33, fireBranchDir33, light33, board33, boardMeeting33, branchMonth33, branchRisks33, cands33, ceo33, crew33, dirOf33, fireCeo33, fixed33,
   gente33Month, hireBranchDir33, hireCeo33, hireCrew33, peek33, seatBoard33, setBranchLine33,
 } from '../src/sim/r33/gente33';
 
@@ -149,5 +152,31 @@ describe('R33 GENTE33 parte A', () => {
     if (ok.includes('doctor') || ok.includes('trainer')) expect(o.health).toBeGreaterThan(h);
     if (ok.includes('driver') || ok.includes('doctor')) expect(o.stress).toBeLessThan(st);
     expect(adoptFixed33(s, 'union') === null ? fixed33(s, 'union') : true).toBeTruthy();
+  });
+
+  it('parte B: gente da cidade larga a vaga, não volta enquanto trabalha para você; quem sai vira executivo e fica na camada leve', () => {
+    const { s, br } = withBranch('g33pb');
+    const c = cands33(s, { srcs: ['city'], n: 1 })[0];
+    expect(c).toBeTruthy();
+    const pid = c.k.slice(2);
+    expect(Object.values(gente31(s).j).some((j) => j.p === pid)).toBe(true);
+    expect(hireBranchDir33(s, br, c.k)).toBeNull();
+    expect(Object.values(gente31(s).j).some((j) => j.p === pid)).toBe(false); // largou a vaga
+    expect(opinionOf(s, c.k)).toBeGreaterThan(0);
+    staffMonth31(s);
+    expect(Object.values(gente31(s).j).some((j) => j.p === pid)).toBe(false); // a cidade não o recontrata
+    expect(light33(s).find((x) => x.k === c.k)?.now).toBe(true);
+    // demitido: vira executivo livre no mercado, com a filial no currículo, e a opinião cai
+    const op = opinionOf(s, c.k);
+    expect(fireBranchDir33(s, br)).toBeNull();
+    expect(opinionOf(s, c.k)).toBeLessThan(op);
+    const row = light33(s).find((x) => x.k === c.k)!;
+    expect(row.now).toBe(false);
+    const L0 = leaders(s).L[row.ldr!];
+    expect(L0.name).toBe(c.n);
+    expect(L0.st).toBe('free');
+    expect(L0.jobs[0].lb).toBe('player');
+    // e volta a poder ser contratado (como executivo do mercado)
+    expect(cands33(s, { srcs: ['exec'], n: 999 }).some((x) => x.k === `l:${L0.id}`)).toBe(true);
   });
 });

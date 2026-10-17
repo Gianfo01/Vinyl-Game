@@ -2,14 +2,15 @@
 //   • mapa da parede da sede (as filiais): contratar diretor(a) de filial, trocar a linha (ousado/conservador);
 //   • mesa da sala de reunião: contratar/dispensar o CEO, instalar o conselho (e as linhas das últimas decisões);
 //   • garagem, porta e espelho: motorista, segurança, personal trainer e médico particular;
-//   • mural do elenco, jornal da mesa e quadro da equipe: presidente do fã-clube, jornalista, representante do sindicato.
+//   • mural do elenco, jornal da mesa e quadro da equipe: presidente do fã-clube, jornalista, representante do sindicato;
+//     o quadro da equipe também lista quem trabalha ou trabalhou com você (camada leve: profissão de hoje e opinião).
 // Cada ação chama a função de src/sim/r33/gente33.ts (fonte única, `src` + `fn` como pede o teste r31-acoes5) e só
 // aparece com `exp33.gente` ligado (`when`). Montar o cartão só lê (peek33/cands33 não criam estado).
 
 import { l, type L } from '../../data/world';
 import {
   CREW33, FIX33, adoptFixed33, board33, boardLock33, ceo33, ceoLock33, courtFixed33, crew33, crewLock33, dirOf33, fireCeo33, fixLock33,
-  fixed33, freeBranch33, gente33On, hireCeo33, hireCrew33, hireFirstBranchDir33, log33Of, peek33, seatBoard33, toggleBranchLine33, canHireBranchDir33,
+  fixed33, freeBranch33, gente33On, light33, hireCeo33, hireCrew33, hireFirstBranchDir33, log33Of, peek33, seatBoard33, toggleBranchLine33, canHireBranchDir33,
   type Crew33, type Fixed33,
 } from '../../sim/r33/gente33';
 import type { GameState } from '../../sim/types';
@@ -65,6 +66,8 @@ const NUM: Record<string, NumDef5> = {
   } },
 };
 Object.assign(NUMS_CAT5, NUM);
+// parte B · camada leve: quem trabalha ou trabalhou com você, com a profissão de hoje e a opinião sobre você
+LINES_CAT5.g33gente = (s) => (gente33On(s) ? light33(s).slice(0, 4).map((x) => fmtL(l('{n}{a} · {p} · opinião {o}', '{n}{a} · {p} · opinion {o}'), { n: x.n, a: x.age ? `, ${x.age}` : '', p: x.prof, o: x.op > 0 ? `+${x.op}` : String(x.op) })) : []);
 LINES_CAT5.g33 = (s) => (gente33On(s) ? log33Of(s).slice(0, 3).map(([, t]) => t) : []);
 
 function put(card: string, acts: string[], nums: string[], lines?: string): void {
@@ -81,4 +84,4 @@ put('porta', ['g33.seguranca'], []);
 put('espelho', ['g33.treinador', 'g33.medico'], []);
 put('mural', ['g33.fa'], []);
 put('jornal', ['g33.jornalista', 'g33.agrado'], []);
-put('quadrofunc', ['g33.sindicato'], []);
+put('quadrofunc', ['g33.sindicato'], [], 'g33gente');

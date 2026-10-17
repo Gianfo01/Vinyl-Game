@@ -42,12 +42,13 @@ import { capital } from '../sys/capital';
 import { bolsa, holders, raiders, repelRaider, OWN } from '../sys/bolsa10';
 import { fan18 } from '../sys/fans18';
 import { heirs } from '../sys/heirs8';
-import { depart, leaders, succeed, type Leader, type LeaderStyle } from '../sys/leaders10';
+import { depart, leaders, newLeader, succeed, type Leader, type LeaderStyle } from '../sys/leaders10';
+import { opine, opinionOf, putOpinion } from '../opinion';
 import { foundLabel17 } from '../sys/npc17';
 import { ownerOf } from '../sys/people/owner';
 import { clamp01 } from '../sys/people/state';
 import { union20 } from '../sys/union20';
-import { gente31, peekGente31, parseSlot31, JOBS31 } from '../sys/gente31';
+import { BUSY31, gente31, jobOf31, leaveJob31, peekGente31, parseSlot31, JOBS31 } from '../sys/gente31';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, playerActs, post, staffSkill } from '../util';
 import { addSignal, talentScore } from '../worldgen';
@@ -131,8 +132,12 @@ export interface Ceo33 extends Hire33 {
 }
 export interface Board33 { since: number; next: number; conf: number; log: [number, number, number, L][] }
 export interface Fix33 extends Hire33 { rel: number; act?: string; seen?: number }
+/** Passagem de alguém pelos seus papéis (parte B): cargos com início/fim e como saiu; `ldr` = virou executivo no mercado. */
+export interface Past33 { k: string; n: string; roles: [L, number, number, How33][]; ldr?: string }
+export type How33 = 'fired' | 'poached' | 'left' | 'died' | 'defect';
 export interface G33 {
   br: Record<string, BrDir33>;
+  past: Record<string, Past33>;
   ceo?: Ceo33;
   board?: Board33;
   crew: Partial<Record<Crew33, Hire33>>;
@@ -143,8 +148,8 @@ declare module '../ext4' { interface Ext4 { gente33: G33 } }
 /** Estado (cria na primeira ação do jogador — nunca pelo motor nem pela tela). */
 export function g33(s: GameState): G33 {
   const x = ((s as unknown as { x4?: Record<string, unknown> }).x4 ??= {});
-  const g = (x.gente33 ??= { br: {}, crew: {}, fix: {}, log: [] }) as G33;
-  g.br ??= {}; g.crew ??= {}; g.fix ??= {}; g.log ??= [];
+  const g = (x.gente33 ??= { br: {}, past: {}, crew: {}, fix: {}, log: [] }) as G33;
+  g.br ??= {}; g.past ??= {}; g.crew ??= {}; g.fix ??= {}; g.log ??= [];
   return g;
 }
 /** Leitura sem criar estado (tela, cartões, motor). */
@@ -282,6 +287,91 @@ function hireOf(s: GameState, c: Cand33, loyBase = 55): Hire33 {
 /** Luvas (centavos): um salário; tirar executivo de selo rival custa seis. */
 const signOn = (s: GameState, c: Cand33): number => money(s, c.sal * (c.rival ? 6 : 1));
 
+// ---------------------------------------------------------------- parte B: vaga, passagem, promoção, camada leve
+
+/** Gente da cidade que vai trabalhar com você larga a vaga (o gente31 preenche na virada do mês) e gosta do convite. */
+function onHire(s: GameState, c: Cand33, role: L): void {
+  if (c.src === 'city' && c.k.startsWith('p:')) leaveJob31(s, c.k.slice(2), fmtL(l('foi trabalhar com {c} ({r})', 'went to work for {c} ({r})'), { c: s.config.companyName, r: role }));
+  opine(s, c.k, 4, fmtL(l('Você me contratou: {r}', 'You hired me: {r}'), { r: role }));
+}
+const STYLE_TO_LEADER: Record<Style33, LeaderStyle> = { bold: 'dealmaker', careful: 'consensus', social: 'mentor', numbers: 'numbers' };
+const yearOf = (s: GameState, w: number): number => Math.round(s.year - (s.week - w) / 52);
+const branchRole = (s: GameState, brId: string): L => { const b = s.branches.find((x) => x.id === brId); return fmtL(l('Diretor(a) da filial {c}', 'Director of the {c} branch'), { c: cityById[b?.city ?? '']?.name ?? b?.name ?? '' }); };
+/** Quem comandou filial ou empresa e sai vivo vira executivo de verdade no mercado (leaders10): rivais podem chamá-lo como
+ *  sucessor, e ele pode voltar a você como candidato "executivo". Executivo de origem só ganha a linha no currículo. */
+function promote(s: GameState, h: Hire33, role: L, how: How33): string | undefined {
+  const job = { lb: 'player', n: `${s.config.companyName} · ${role.pt}`, from: yearOf(s, h.w), to: s.year, end: how === 'poached' ? 'poached' as const : 'left' as const };
+  if (h.src === 'exec') { const L0 = leaderOfHire(s, h); if (L0) L0.jobs.push(job); return L0?.id; }
+  const lb = Object.values(s.labels).filter((x) => x.active).sort((a, b) => (a.id < b.id ? -1 : 1))[0];
+  if (!lb) return undefined;
+  const pid = h.k.startsWith('p:') ? h.k.slice(2) : undefined;
+  const L0 = newLeader(s, rr(s, `promo:${h.k}`), lb, { name: h.n, born: pid ? s.persons[pid]?.born : undefined });
+  L0.bg = h.src === 'exart' ? 'artist' : h.src === 'staff' ? 'accountant' : 'promoter';
+  L0.style = STYLE_TO_LEADER[h.style];
+  L0.amb = Math.round(h.amb);
+  L0.city = s.config.homeCity;
+  L0.jobs = [job];
+  L0.st = 'free';
+  putOpinion(s, `l:${L0.id}`, opinionOf(s, h.k));
+  return L0.id;
+}
+/** Fim de um papel: ficha da passagem, opinião sobre você e, para quem mandava, a promoção a executivo. */
+function endHire(s: GameState, h: Hire33, role: L, how: How33, ldr?: string): void {
+  const g = g33(s);
+  const p = (g.past[h.k] ??= { k: h.k, n: h.n, roles: [] });
+  p.roles.push([role, yearOf(s, h.w), s.year, how]);
+  if (p.roles.length > 8) p.roles.shift();
+  if (how !== 'died') {
+    const d = how === 'fired' ? -10 : how === 'left' ? -3 : how === 'defect' ? -15 : 0;
+    if (d) opine(s, h.k, d, fmtL(l('Saí do cargo: {r}', 'I left the post: {r}'), { r: role }));
+  }
+  release(s, h);
+  const boss = role.pt === 'CEO' || role.pt.startsWith('Diretor');
+  if (ldr) p.ldr = ldr;
+  else if (boss && how !== 'died' && alive(s, h) && !p.ldr) p.ldr = promote(s, h, role, how);
+  else if (boss && p.ldr && h.src !== 'exec') { const L0 = leaders(s)?.L[p.ldr]; L0?.jobs.push({ lb: 'player', n: `${s.config.companyName} · ${role.pt}`, from: yearOf(s, h.w), to: s.year, end: how === 'poached' ? 'poached' : 'left' }); }
+}
+/** Quem está empregado num papel daqui (não volta a uma vaga da cidade). */
+function busy33(s: GameState): string[] {
+  const g = peek33(s);
+  if (!g) return [];
+  return [...Object.values(g.br), ...(g.ceo ? [g.ceo] : []), ...Object.values(g.crew)].filter((h): h is Hire33 => !!h && h.k.startsWith('p:')).map((h) => h.k.slice(2));
+}
+BUSY31.push(busy33);
+
+/** Camada leve: ficha curta de quem trabalha ou trabalhou com você — nome, idade, profissão, 2–3 traços e opinião. */
+export interface Light33 { k: string; n: string; age?: number; prof: L; traits: L[]; op: number; now: boolean; ldr?: string }
+export function light33(s: GameState): Light33[] {
+  const g = peek33(s);
+  if (!g) return [];
+  const out: Light33[] = [];
+  const age = (k: string): number | undefined => { const pid = k.startsWith('p:') ? k.slice(2) : undefined; const L0 = k.startsWith('l:') ? leaders(s)?.L[k.slice(2)] : undefined; const b = pid ? s.persons[pid]?.born : L0?.born; return b ? s.year - b : undefined; };
+  const traits = (h: { k: string; style?: Style33; amb?: number }): L[] => {
+    const pid = h.k.startsWith('p:') ? h.k.slice(2) : undefined;
+    const t: L[] = (pid ? s.persons[pid]?.traits ?? [] : []).slice(0, 1).map((x) => l(x, x));
+    if (h.style) t.push(STYLE33[h.style]);
+    if (h.amb !== undefined) t.push(h.amb >= 65 ? l('ambicioso(a)', 'ambitious') : h.amb <= 35 ? l('sossegado(a)', 'easygoing') : l('equilibrado(a)', 'steady'));
+    return t.slice(0, 3);
+  };
+  const cur: [Hire33, L][] = [
+    ...Object.entries(g.br).map(([b, h]) => [h, branchRole(s, b)] as [Hire33, L]),
+    ...(g.ceo ? [[g.ceo, l('CEO', 'CEO')] as [Hire33, L]] : []),
+    ...(Object.entries(g.crew) as [Crew33, Hire33][]).map(([k, h]) => [h, CREW33[k].n] as [Hire33, L]),
+    ...(Object.entries(g.fix) as [Fixed33, Fix33][]).map(([k, h]) => [h, FIX33[k].n] as [Hire33, L]),
+  ];
+  for (const [h, r] of cur) out.push({ k: h.k, n: h.n, age: age(h.k), prof: r, traits: traits(h), op: Math.round(opinionOf(s, h.k)), now: true });
+  for (const p of Object.values(g.past)) {
+    if (out.some((x) => x.k === p.k)) continue;
+    const last = p.roles[p.roles.length - 1];
+    const job = p.k.startsWith('p:') ? jobOf31(s, p.k.slice(2)) : null;
+    const L0 = p.ldr ? leaders(s)?.L[p.ldr] : undefined;
+    const lb = L0?.label ? s.labels[L0.label] : undefined;
+    const prof = lb ? fmtL(l('Chefe de {l}', 'Head of {l}'), { l: lb.name }) : job ? job.line : last ? fmtL(l('Ex-{r}', 'Former {r}'), { r: last[0] }) : l('—', '—');
+    out.push({ k: p.k, n: p.n, age: age(p.k), prof, traits: traits({ k: p.k }), op: Math.round(opinionOf(s, p.k)), now: false, ldr: p.ldr });
+  }
+  return out;
+}
+
 // ================================================================ 1. DIRETOR(A) DE FILIAL
 
 export const dirOf33 = (s: GameState, brId: string): BrDir33 | undefined => peek33(s)?.br[brId];
@@ -309,6 +399,7 @@ export function hireBranchDir33(s: GameState, brId: string, k?: string, o: { lin
   const c = (k ? candBy(s, k, b.city) : cands33(s, { city: b.city, n: 1 })[0])!;
   const fee = signOn(s, c);
   takeFrom(s, c);
+  onHire(s, c, fmtL(l('diretor(a) da filial {c}', 'director of the {c} branch'), { c: cityById[b.city]?.name ?? b.city }));
   postCost(s, `g33:hire:${brId}`, fee, 'salaries', `Luvas: ${c.n} (filial ${b.name})`);
   const d: BrDir33 = { ...hireOf(s, c), line: o.line ?? (c.style === 'bold' ? 'bold' : 'safe'), cap: Math.max(0, o.cap ?? 0), fric: 0, ...(c.local ? { local: 1 as const } : {}) };
   g33(s).br[brId] = d;
@@ -330,12 +421,12 @@ export function toggleBranchLine33(s: GameState): L | null {
   if (!id) return l('Nenhuma filial tem diretor(a).', 'No branch has a director.');
   return setBranchLine33(s, id, dirOf33(s, id)!.line === 'bold' ? 'safe' : 'bold');
 }
-export function fireBranchDir33(s: GameState, brId: string, why?: L): L | null {
+export function fireBranchDir33(s: GameState, brId: string, why?: L, how: How33 = 'fired'): L | null {
   const g = peek33(s), d = g?.br[brId];
   if (!g || !d) return l('Esta filial não tem diretor(a).', 'This branch has no director.');
   delete g.br[brId];
-  release(s, d);
-  postCost(s, `g33:fire:${brId}`, money(s, d.sal), 'salaries', `Rescisão: ${d.n}`);
+  endHire(s, d, branchRole(s, brId), how);
+  if (how === 'fired') postCost(s, `g33:fire:${brId}`, money(s, d.sal), 'salaries', `Rescisão: ${d.n}`);
   log33(s, why ?? fmtL(l('{n} deixa a filial.', '{n} leaves the branch.'), { n: d.n }));
   return null;
 }
@@ -428,7 +519,7 @@ function branchReport(s: GameState, brId: string, d: BrDir33): void {
 function poach(s: GameState, brId: string, d: BrDir33): void {
   const lbs = Object.values(s.labels).filter((x) => x.active).sort((a, b) => b.cash - a.cash || (a.id < b.id ? -1 : 1));
   const lb = lbs[0];
-  fireBranchDir33(s, brId, fmtL(l('{n} foi levado(a) por {l} e deixou a filial.', '{n} was poached by {l} and left the branch.'), { n: d.n, l: lb?.name ?? '?' }));
+  fireBranchDir33(s, brId, fmtL(l('{n} foi levado(a) por {l} e deixou a filial.', '{n} was poached by {l} and left the branch.'), { n: d.n, l: lb?.name ?? '?' }), 'poached');
   if (lb) s.rivalries[lb.id] = (s.rivalries[lb.id] ?? 0) + 3;
   const t = fmtL(l('{l} tira {n} do comando da sua filial em {c}.', '{l} lures {n} away from your {c} branch.'), { l: lb?.name ?? '?', n: d.n, c: cityById[s.branches.find((x) => x.id === brId)?.city ?? '']?.name ?? '' });
   emitFact(s, { kind: 'poach', actors: [lb?.id ?? '', 'player'], severity: 35, visibility: 'public', tags: ['gente33', 'branch', 'poach'], text: t, src: 'gente33', notify: 'bad', diary: true });
@@ -443,6 +534,7 @@ export function defect33(s: GameState, brId: string): L | null {
     why: l('saiu da filial para ter o próprio selo', 'left the branch to run their own label'), leaderId: d.src === 'exec' ? d.k.slice(2) : undefined });
   for (const a of take) { endContract(s, a, 'left', { quiet: true }); delete s.branchOf[a.id]; signWithRival(s, a, lb.id, r, true); }
   delete g33(s).br[brId];
+  endHire(s, d, branchRole(s, brId), 'defect', lb.leaderId);
   const t = fmtL(l('{n} deixa a filial de {c}, abre o selo {l} e leva {k} artista(s) do elenco regional.', '{n} quits the {c} branch, opens the label {l} and takes {k} regional act(s).'), { n: d.n, c: cityById[b.city]?.name ?? b.city, l: lb.name, k: take.length });
   log33(s, t);
   s.rivalries[lb.id] = (s.rivalries[lb.id] ?? 0) + 10;
@@ -454,7 +546,7 @@ export function defect33(s: GameState, brId: string): L | null {
 export function branchRisks33(s: GameState, brId: string): 'poach' | 'defect' | 'skim' | 'caught' | 'clash' | 'gone' | null {
   const d = dirOf33(s, brId);
   if (!d) return null;
-  if (!alive(s, d)) { fireBranchDir33(s, brId, fmtL(l('{n} morreu; a filial está sem comando.', '{n} died; the branch has no one in charge.'), { n: d.n })); return 'gone'; }
+  if (!alive(s, d)) { fireBranchDir33(s, brId, fmtL(l('{n} morreu; a filial está sem comando.', '{n} died; the branch has no one in charge.'), { n: d.n }), 'died'); return 'gone'; }
   const r = rr(s, `risk:${brId}`), k = GENTE33.risk;
   // atrito com a sede: estilo × linha e teto × ambição
   const mismatch = (d.style === 'bold' && d.line === 'safe') ? 6 : (d.style === 'careful' && d.line === 'bold') ? 4 : 0;
@@ -540,6 +632,7 @@ export function hireCeo33(s: GameState, k?: string): L | null {
   const c = k ? candBy(s, k) : cands33(s, { min: 0.55, n: 1 })[0];
   if (!c || c.q < 0.55) return l('Esse candidato não tem estatura de CEO.', 'That candidate is not CEO material.');
   takeFrom(s, c);
+  onHire(s, c, l('CEO', 'CEO'));
   postCost(s, 'g33:ceo:hire', signOn(s, c) * 3, 'salaries', `Luvas do CEO: ${c.n}`);
   const prev = JSON.parse(JSON.stringify(d31(s).r)) as Ceo33['prev'];
   applyPreset31(s, 'multi');
@@ -550,13 +643,13 @@ export function hireCeo33(s: GameState, k?: string): L | null {
   emitFact(s, { kind: 'hire33', actors: ['player', c.k.replace(/^[slp]:/, '')], severity: 45, visibility: 'public', tags: ['gente33', 'ceo'], text: t, src: 'gente33', diary: { important: true }, notify: 'info' });
   return null;
 }
-export function fireCeo33(s: GameState, why?: L): L | null {
+export function fireCeo33(s: GameState, why?: L, how: How33 = 'fired'): L | null {
   const g = peek33(s), c = g?.ceo;
   if (!g || !c) return l('A empresa não tem CEO.', 'The company has no CEO.');
   d31(s).r = JSON.parse(JSON.stringify(c.prev));
   delete g.ceo;
-  release(s, c);
-  postCost(s, 'g33:ceo:fire', money(s, c.sal * 3), 'salaries', `Rescisão do CEO: ${c.n}`);
+  endHire(s, c, l('CEO', 'CEO'), how);
+  if (how === 'fired') postCost(s, 'g33:ceo:fire', money(s, c.sal * 3), 'salaries', `Rescisão do CEO: ${c.n}`);
   log33(s, why ?? fmtL(l('{n} deixa o cargo de CEO; a delegação volta a ser como antes.', '{n} steps down as CEO; delegation goes back to how it was.'), { n: c.n }));
   return null;
 }
@@ -575,7 +668,7 @@ function bigAsks(s: GameState): Big33[] {
 }
 const upgradeBlock = (s: GameState, id: string): boolean => { const b = s.branches.find((x) => x.id === id); return !b || b.level >= 2 || s.player.hq < b.level + 2; };
 function ceoMonth(s: GameState, c: Ceo33): void {
-  if (!alive(s, c)) { fireCeo33(s, fmtL(l('{n} morreu; o conselho procura outro CEO.', '{n} died; the board looks for another CEO.'), { n: c.n })); return; }
+  if (!alive(s, c)) { fireCeo33(s, fmtL(l('{n} morreu; o conselho procura outro CEO.', '{n} died; the board looks for another CEO.'), { n: c.n }), 'died'); return; }
   postCost(s, 'g33:ceo:sal', money(s, c.sal), 'salaries', `Salário do CEO: ${c.n}`);
   // sucessão: o dono mudou com o CEO no cargo → transição segura (ou o CEO sai se o herdeiro não o quer)
   const gen = heirs(s).lineage.length;
@@ -585,7 +678,7 @@ function ceoMonth(s: GameState, c: Ceo33): void {
     if (c.loy >= 50 || r.chance(0.6)) {
       s.player.reputation.institutional = clamp(s.player.reputation.institutional + 3, 0, 100);
       log33(s, fmtL(l('{n} segura a empresa na troca de dono: o mercado nem piscou.', '{n} holds the company together through the change of owner: the market barely blinked.'), { n: c.n }));
-    } else { fireCeo33(s, fmtL(l('Com o novo dono, {n} prefere sair.', 'With the new owner, {n} prefers to leave.'), { n: c.n })); return; }
+    } else { fireCeo33(s, fmtL(l('Com o novo dono, {n} prefere sair.', 'With the new owner, {n} prefers to leave.'), { n: c.n }), 'left'); return; }
   }
   // grande decisão para o presidente aprovar
   if (s.week >= c.nextAsk) {
@@ -706,6 +799,7 @@ export function hireCrew33(s: GameState, k: Crew33): L | null {
   const c = crewCand(s, k)!;
   const h: Hire33 = { ...hireOf(s, c), sal: CREW33[k].sal };
   g33(s).crew[k] = h;
+  onHire(s, c, CREW33[k].n);
   purse(s, -money(s, h.sal), 'living', `g33:${k}`, { who: ownerOf(s) });
   if (k === 'guard') setGuard33(s, Math.max(vida33(s).guard, c.q >= 0.6 ? 2 : 1));
   log33(s, fmtL(l('{n} agora é {r} de {o}.', '{n} is now {o}\'s {r}.'), { n: c.n, r: CREW33[k].n, o: ownerOf(s).name }));
@@ -715,6 +809,7 @@ export function fireCrew33(s: GameState, k: Crew33): L | null {
   const g = peek33(s), h = g?.crew[k];
   if (!g || !h) return l('Ninguém nesse posto.', 'Nobody in that post.');
   delete g.crew[k];
+  endHire(s, h, CREW33[k].n, 'fired');
   if (k === 'guard') setGuard33(s, 0);
   return null;
 }
@@ -722,7 +817,7 @@ function crewMonth(s: GameState, g: G33): void {
   const o = ownerOf(s);
   for (const k of Object.keys(g.crew) as Crew33[]) {
     const h = g.crew[k]!;
-    if (!alive(s, h)) { delete g.crew[k]; if (k === 'guard') setGuard33(s, 0); continue; }
+    if (!alive(s, h)) { delete g.crew[k]; endHire(s, h, CREW33[k].n, 'died'); if (k === 'guard') setGuard33(s, 0); continue; }
     // o segurança já é cobrado pelo vida33 quando o paparazzi está ligado (uma conta só)
     if (!(k === 'guard' && sw<boolean>(s, SW33.paparazzi))) purse(s, -money(s, h.sal), 'living', `g33:${k}`, { who: o });
     if (k === 'driver') o.stress = clamp01(o.stress - 1.5 * (0.6 + h.q * 0.6));
@@ -763,6 +858,7 @@ export function adoptFixed33(s: GameState, k: Fixed33): L | null {
   const c = fixCand(s, k)!;
   const f: Fix33 = { ...hireOf(s, c), sal: 0, rel: k === 'press' ? 0 : 20, ...(k === 'fan' ? { act: topAct(s)!.id } : {}) };
   g33(s).fix[k] = f;
+  opine(s, c.k, 2, fmtL(l('Agora acompanho você: {r}', 'I now follow you: {r}'), { r: FIX33[k].n }));
   log33(s, fmtL(l('{n}: {r}.', '{n}: {r}.'), { n: c.n, r: FIX33[k].n }));
   return null;
 }
@@ -828,7 +924,7 @@ export function gente33Month(s: GameState): void {
   const g = peek33(s);
   if (!g || !gente33On(s)) return;
   for (const brId of Object.keys(g.br).sort()) {
-    if (!s.branches.some((b) => b.id === brId)) { const d = g.br[brId]; delete g.br[brId]; release(s, d); continue; }
+    if (!s.branches.some((b) => b.id === brId)) { const d = g.br[brId]; delete g.br[brId]; endHire(s, d, l('Diretor(a) de filial', 'Branch director'), 'left'); continue; }
     branchMonth33(s, brId);
     const d = g.br[brId];
     if (d) branchReport(s, brId, d);

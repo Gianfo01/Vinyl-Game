@@ -540,3 +540,12 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - **Goldens:** os 4 rodados e iguais.
   - Ver `docs/r33/gente.md` (com as pendências da parte B). Teste `tests/r33-gente-a.test.ts`; prints em
     `docs/r33/gente/`.
+- **2026-10-17 · R33 GENTE33, pendências da parte B (pedido do dono).** Feito o que não é da REDES33 nem da POL33,
+  ainda opt-in:
+  - quem você contrata da cidade larga a vaga do `gente31` e não é recontratado enquanto trabalha para você
+    (`leaveJob31`/`BUSY31`, dois ganchos pequenos no gente31; sem contratação, a virada é a de antes);
+  - diretor ou CEO que sai vivo vira executivo livre no mercado (`leaders10`), com o cargo no currículo;
+  - ficha da passagem e opinião de verdade sobre você;
+  - camada leve (`light33`) nas linhas do quadro da equipe.
+  - Goldens rodados e iguais. O resto do PLANO da parte B (camadas para todos, talento escondido, volta por cima)
+    segue para depois do QA33. Ver `docs/r33/gente.md`.

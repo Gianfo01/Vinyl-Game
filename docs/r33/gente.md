@@ -102,14 +102,28 @@ Sempre a mesma pessoa:
 | Jornal da mesa | Ter um(a) jornalista que acompanha você · Dar uma exclusiva | — |
 | Quadro da equipe | Receber o(a) representante do sindicato | — |
 
-## Pendências para a parte B
+## Parte B já feita (o que não é da REDES33 nem da POL33)
 
-- Gente da cidade contratada como diretor ou equipe pessoal continua na vaga do `gente31`, porque a parte A não mexe
-  na forma de guardar pessoas. Na parte B, a vaga deve ser liberada e a pessoa promovida de camada.
-- **Promoção e rebaixamento:**
-  - diretor que sai ou é roubado deve virar pessoa "completa", com resumo do passado;
-  - funcionário pessoal e pessoas fixas são candidatos naturais à camada "leve".
-- O jornalista escreve como **fato** (`column33`); a coluna no Jornal e nas Redes é da REDES33, pelo fato.
-- Escolha manual de candidato (lista com os 6 melhores) existe na regra (`cands33`, `hireBranchDir33(s, br, k)`). O
-  cartão usa o melhor; uma ficha de escolha fica para a parte B ou o POL33.
-- **Goldens:** não mudam, porque nada roda sem ação do jogador. A parte B muda.
+Continua opt-in: só age sobre quem o jogador contratou, então os goldens não mudam.
+
+- **A vaga da cidade é liberada.** Gente da cidade contratada como diretor, CEO ou equipe pessoal larga o emprego no
+  `gente31` (`leaveJob31`), e a vaga é preenchida na virada do mês. Enquanto trabalha para você, a cidade não a
+  recontrata (registro `BUSY31`). Pessoas fixas (fã-clube, jornalista, sindicato) seguem no emprego delas.
+- **Quem sai vira executivo de verdade.** Diretor de filial ou CEO que sai vivo (demitido, roubado, pediu para sair)
+  vira executivo livre no mercado (`leaders10`), com o cargo na sua empresa no currículo. Os rivais podem chamá-lo
+  como sucessor, e ele volta a aparecer para você como candidato "executivo". Quem sai com o elenco já vira fundador
+  do selo novo. Executivo que veio do mercado só ganha a linha no currículo.
+- **Ficha da passagem.** Cada pessoa guarda os cargos que teve com você, as datas e como saiu (`past`).
+- **Opinião sobre você.** Opinião de verdade (`opinion.ts`): sobe ao ser contratado, cai ao ser demitido (mais ainda
+  se saiu brigado).
+- **Camada leve** (`light33`): ficha curta de quem trabalha ou trabalhou com você, com nome, idade, profissão de hoje
+  (vaga na cidade, "chefe de selo X" ou "ex-cargo"), 2–3 traços e opinião. Aparece nas linhas do cartão do quadro da
+  equipe.
+
+## Fica para depois
+
+- **REDES33:** a coluna do jornalista no Jornal e nas Redes, a partir do fato `column33`.
+- **POL33:** a ficha de escolha de candidato na tela. A regra já aceita a escolha (`hireBranchDir33(s, br, k)`).
+- **Depois do QA33**, por mudar todas as pessoas e os goldens: o resto do PLANO da parte B, que são as três camadas
+  para todo mundo, talento escondido, volta por cima e os ganchos (bartender recusado vira estrela num rival,
+  romance com quem vira artista).
