@@ -250,6 +250,70 @@ Ideias novas que combinam com os aparelhos, para o dono decidir:
 | 13 | **Golpe e invasão de conta** | 2010 | conta do artista hackeada posta besteira; segurança digital custa | `addRep33`, escândalo |
 | 14 | **Deepfake de voz** | 2023 | música falsa com a voz do seu artista circula; derrubar ou licenciar | `fakes19`, `ai18` |
 
+## Redes sociais: feed de posts (pedido do dono, versão simples)
+
+Ideia: os artistas, os seus e os dos outros, postam o que está acontecendo com eles e com o mundo, e o post pode mexer
+no mundo.
+
+**Base que já existe:** o barramento de fatos (`facts17`). Todo acontecimento notável já vira um `Fact`, com:
+- quem: `actors`;
+- onde: `place`;
+- quão grave: `severity`;
+- quão visível: `visibility` (rumor → público);
+- tags.
+
+São cerca de 180 arquivos publicando, entre eles: assinatura, show, prêmio, parada, briga, término, casamento,
+nascimento, escândalo, prisão, saúde, lançamento, volta, saída da banda, voz falsa por IA, fraude de streams,
+"statement" (declaração) e história real. A leitura já existe: `recentFacts`, `factsAbout`, `causeChain`.
+
+**Feed sem estado novo:**
+- O feed é uma vista sobre os fatos públicos recentes que têm um artista entre os atores. Cada fato vira um post na
+  voz do artista, com modelo de frase por tipo de fato e tom pela persona e pelo temperamento (`persona13`,
+  `temper18`).
+- Exemplos:
+  - um fato `award` vira "Obrigado, Londres! Esse prêmio é de vocês";
+  - um fato `breakup` vira "Hoje acaba um capítulo";
+  - um fato `feud` vira uma indireta.
+- O mundo também posta: crises, censura e memes do MUNDO (`mundoNow33`, `pulse33`) aparecem como posts de jornais e
+  perfis de notícia.
+- Mostra os seus artistas e os de rivais, primeiro quem você segue, conhece (`social31`) ou tem no elenco.
+
+**Como o post mexe no mundo (só com funções que já existem):**
+
+| Gatilho | Efeito | Função |
+|---|---|---|
+| Post sobre um boato | o boato vira público | `raiseVisibility` |
+| Post de artista | hype do artista | `addHype` |
+| Indireta | esquenta a briga | `feud18` |
+| Apoio | aproxima | `shiftTie31`, `bonds9` |
+| Post polêmico | reputação pessoal, chance de escândalo | `addRep33`, `scandal33` |
+| Post sobre um lançamento | ajuda o lançamento | `planRollout` (pré-save) |
+| Meme que pega | entra nos memes do MUNDO | `memes33` |
+
+**Suas ações no feed (poucas):**
+- Com artista seu: postar, desmentir, pedir desculpa ou ficar quieto.
+- Com post de outro: curtir e repostar (aproxima), responder (pode virar briga) ou ignorar.
+- Pedir ao diretor de imprensa para cuidar (`pressPick33`).
+
+**Conta hackeada (2010+), aprovada:** um evento raro, maior com artista famoso e sem segurança, publica um post ruim em
+nome do artista. A reputação cai (`addRep33`) e pode virar escândalo. Recuperar a conta custa; contratar segurança
+digital reduz a chance (mesma linha do `setGuard33`).
+
+**Por época** (a mesma vista muda de forma):
+
+| Ano | Forma |
+|---|---|
+| 1889–2003 | fofoca do jornal e coluna social (já existe como Jornal) |
+| 2004 | perfil |
+| 2006 | microblog curto |
+| 2010 | foto |
+| 2018 | vídeo curto |
+| 2030 | avatar |
+
+**Complexidade:** média-baixa. Não precisa de estado novo para o feed. O trabalho é o texto (modelos de frase para os
+tipos de fato mais comuns, uns 40 cobrem a maioria) e poucas ações. A parte nova de verdade é só a conta hackeada e o
+"post mexe no mundo", que chama funções prontas.
+
 ## Antes do celular e do computador
 
 Sem botão (antes de 1983) e sem PC (antes de 1982), as mesmas funções continuam nos objetos de sempre (telefone de
