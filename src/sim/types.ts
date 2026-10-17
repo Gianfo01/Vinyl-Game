@@ -31,6 +31,8 @@ export interface RunConfig {
   contentFilters: string[]; // tags desligadas
   /** rodada 6: artistas, selos, festivais e mídia com nomes reais */
   realNames?: boolean;
+  /** R31 (BASE-BR): `false` = o lote brasileiro ampliado (data/base31br) não estreia; ausente = ligado. Interruptor 'base31.br'. */
+  base31br?: boolean;
   /** R31 (X): o que a tela mostra no começo (Nomes e obras reais); ausente = igual a realNames. Só exibição. */
   showReal31?: boolean;
   /** rodada 7: no modo histórico, pessoas reais morrem perto do ano real */
@@ -49,6 +51,8 @@ export interface RunConfig {
   dbSize?: 'small' | 'medium' | 'large' | 'huge';
   /** R31 (BASE-IT): base italiana nova (data/base31it) — ausente = ligada; false = os atos dela não nascem (interruptor base31.it). */
   base31it?: boolean;
+  /** R31 (BASE-HITS): base de sucessos 1992+ (data/base31hits) — ausente = ligada; false = os atos dela não nascem (interruptor base31.hits). */
+  base31hits?: boolean;
   /** R31 onda 5: países (ISO-3) cujos artistas reais ficam fora desta partida; ausente/vazio = todos */
   realOff31?: string[];
   /** R29 (relíquias): densidade das relíquias procedurais (relics29); ausente = 'many' */

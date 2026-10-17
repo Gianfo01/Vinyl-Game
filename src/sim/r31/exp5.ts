@@ -12,7 +12,8 @@ import { registerSwitch, setSw, sw } from './switches';
 
 export const SW_NAV5 = 'exp5.nav';
 registerSwitch({
-  id: SW_NAV5, def: false, scope: 'game',
+  // build de teste do dono: VITE_EXP5NAV=1 liga por padrão nas partidas novas (o padrão do código continua desligado)
+  id: SW_NAV5, def: (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_EXP5NAV === '1', scope: 'game',
   desc: l('Onda 5 · navegação nova (em construção): teclas por objeto (E caixa de entrada, G agenda, H sede, Shift+1…4 viagem), "ir até lá" e bolso. Desligado: tudo como antes.',
     'Wave 5 · new navigation (in progress): one key per object (E inbox, G planner, H HQ, Shift+1…4 travel), "go there" and pocket. Off: everything as before.'),
 });

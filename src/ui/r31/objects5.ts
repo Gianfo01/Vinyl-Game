@@ -280,7 +280,7 @@ export const DEFAULT_OBJECTS5: Obj5[] = [
   O('fossati', l('Casa Fossati e praça', 'Fossati house and square'), 'cidade.fossati', 'predio', undefined, [], { links: [ln('world', ['worldHub', 'fossati31'])] }),
   // ======================================================== MUNDO
   O('mundo', l('Mundo', 'World'), 'mundo.lugar', 'mapa', undefined, [], { keyRef: 'travel:mundo', links: [ln('world', ['worldHub', 'map27'])], bang: l('países com novidade', 'countries with news') }),
-  O('mapa', l('Mapa-múndi', 'World map'), 'mundo.mapa', 'mapa', 'w', ['world', 'regions18', 'regions19'], { note: l('Clicar no país = mercado e política do país.', 'Click a country = that country\'s market and politics.') }),
+  O('mapa', l('Mapa-múndi', 'World map'), 'mundo.mapa', 'mapa', 'w', ['world', 'regions18', 'regions19', 'cidade5'], { note: l('Clicar no país = mercado, cidades e cultura; clicar numa cidade = o mapa dela (cidade5, onda 5 MAPA).', 'Click a country = market, cities and culture; click a city = its own map (cidade5, wave 5 MAPA).') }),
   O('telex', l('Telex na borda', 'Telex on the edge'), 'mundo.borda', 'jornal', 'shift+w', ['mundo27', 'world17'], {
     forms: [{ era: [1889, 1929], label: l('Telégrafo', 'Telegraph') }, { era: [1930, 1989], label: l('Telex', 'Telex') }, { era: [1990, 2040], label: l('Agência de notícias na tela', 'Newswire on screen') }],
     bang: l('acontecimento grande no mundo este mês', 'big world event this month') }),

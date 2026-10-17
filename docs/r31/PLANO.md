@@ -165,6 +165,10 @@ Fluxo: onda N termina com build `Masters_31_ondaN.html`, enviada ao dono; a onda
   - **Por época:** veludo vermelho (1889–1949), veludo vinho (1950–79), lâminas de metal e neon (1980–2009), painel de
     LED (2010–40). O calendário da virada acompanha: folha de parede, relógio de virar, tela do celular.
   - **Opção:** transições completas, rápidas ou desligadas. Nunca bloqueiam nem atrasam a simulação.
+- **EXP-13 · Ações no objeto, o mínimo de telas (pedido do dono, 2026-10-16)** — "essas telas assim não devem aparecer e sim ações ao clicar em objetos; a ideia é diminuir ao máximo essas telas":
+  - Clicar num objeto abre um cartão pequeno em pixel AO LADO do objeto com as 2–6 ações e os 1–3 números que importam ali (ex.: espelho → aparência; cama → descansar, energia; escrivaninha → dinheiro pessoal). Fazer a ação é ali mesmo.
+  - Página antiga inteira dentro do papel deixa de ser o padrão: só abre por "ver tudo ▸" no cartão ou pelo índice da pausa.
+  - Informação vira coisa do mundo sempre que der (fama no jornal, saúde no espelho/cama, dinheiro na carteira/cofre).
 - **EXP-12 · Tutorial guiado opcional** — interface · proposta aceita pelo dono em 2026-10-16 (sem mocks); fazer DEPOIS que NAV, PAPEL, ELENCO e CASA estiverem juntos:
   - Entrada: "Aprender a jogar" na tela inicial, cenário "Primeiro selo" e chave "Tutorial guiado" na nova run rápida. Partida normal com semente fixa e acontecimentos roteirizados.
   - Foco: tela escurece, só o alvo fica recortado com o contorno "aceso"; guia fala num balão em pixel art; clique/tecla fora do alvo não faz nada ("primeiro aqui"); Esc = pular capítulo / sair.

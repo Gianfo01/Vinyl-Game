@@ -93,12 +93,22 @@ export function chordLabel5(c: string): string {
 // ---------------------------------------------------------------- registro (fonte única)
 
 const BINDS5 = new Map<string, Bind5>();
+/** Tecla padrão de cada ligação (a primeira registrada) — "voltar ao padrão" nas teclas personalizadas. */
+const DEF5 = new Map<string, string>();
+/** Teclas personalizadas guardadas (preferência do navegador `vtn:keys5`, nunca estado do jogo). */
+const KEYS5_LS = 'vtn:keys5';
+const CUSTOM5: Custom5 = (() => {
+  try { const j = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem(KEYS5_LS) ?? '{}') as Custom5 : {}; return j && typeof j === 'object' ? j : {}; } catch { return {}; }
+})();
 
 /** Registra (ou substitui, pelo id) uma ligação de tecla. Objetos registram a sua em `registerObject5`. */
 export function registerKey5(b: Bind5): void {
   if (!validChord5(b.chord)) throw new Error(`keys5: tecla inválida "${b.chord}" em ${b.id}`);
-  BINDS5.set(b.id, b);
+  if (!DEF5.has(b.id)) DEF5.set(b.id, b.chord);
+  const mine = CUSTOM5[b.id];
+  BINDS5.set(b.id, mine && !b.fixed ? { ...b, chord: mine } : b);
 }
+export const defaultChord5 = (id: string): string | undefined => DEF5.get(id);
 export const keys5 = (): Bind5[] => [...BINDS5.values()];
 export const key5 = (id: string): Bind5 | undefined => BINDS5.get(id);
 
@@ -172,6 +182,27 @@ export function checkRebind5(id: string, chord: string, list: readonly Bind5[] =
 
 /** Teclas personalizadas do jogador (id → tecla). Guardadas fora do mundo (preferência), aplicadas por cima do padrão. */
 export type Custom5 = Record<string, string>;
+
+// ---------------------------------------------------------------- personalização guardada (NAV, onda 5)
+// Preferência do navegador (nunca estado do jogo): `vtn:keys5`. Aplicada no registro e por `rebind5`.
+const saveCustom5 = (): void => { try { if (typeof localStorage !== 'undefined') localStorage.setItem(KEYS5_LS, JSON.stringify(CUSTOM5)); } catch { /* sem armazenamento */ } };
+export const custom5 = (): Custom5 => ({ ...CUSTOM5 });
+
+/** Troca a tecla de uma função (Opções › Teclas). Recusa com o motivo (conflito, reservada, do sistema). */
+export function rebind5(id: string, chord: string): L | undefined {
+  const why = checkRebind5(id, chord);
+  if (why) return why;
+  const b = BINDS5.get(id)!;
+  if (chord === DEF5.get(id)) delete CUSTOM5[id]; else CUSTOM5[id] = chord;
+  BINDS5.set(id, { ...b, chord });
+  saveCustom5();
+  return undefined;
+}
+/** Todas as teclas de volta ao padrão. */
+export function resetKeys5(): void {
+  for (const id of Object.keys(CUSTOM5)) { delete CUSTOM5[id]; const b = BINDS5.get(id); const d = DEF5.get(id); if (b && d) BINDS5.set(id, { ...b, chord: d }); }
+  saveCustom5();
+}
 
 /** Aplica as personalizações em ordem; a que daria conflito (ou é inválida) é ignorada e devolvida em `rejected`. */
 export function applyCustom5(custom: Custom5, base: readonly Bind5[] = keys5()): { binds: Bind5[]; rejected: { id: string; chord: string; why: L }[] } {

@@ -1,0 +1,287 @@
+/* R31 · onda 5 (PAPEL, EXP-4) — papéis por cima da cena: moldura em pixel art (canvas) e o conteúdo de hoje por cima.
+   Só existe com exp5.nav ligado (o desenho da página só cria .paper5 nesse caso). Mocks: onda5-mock-bolso-*.png, onda5-mock-caixa*.png. */
+main:has(> .paper5) { padding: 12px 16px !important; overflow: hidden; }
+.app:has(main > .paper5) { grid-template-columns: 0 minmax(0, 1fr) !important; }
+.app:has(main > .paper5) > nav, .app:has(main > .paper5) > .nav, .app:has(main > .paper5) .nav31 { display: none !important; }
+.paper5 {
+  position: relative; height: calc(100dvh - 96px); min-height: 420px; width: 100%; max-width: 1480px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 6px; padding: 12px; box-sizing: border-box; border-radius: 6px;
+  background: #2a3a2c; color: #20201c; font-family: var(--sans);
+}
+.paper5 > canvas.paper5-bg { position: absolute; left: 0; top: 0; image-rendering: pixelated; pointer-events: none; z-index: 0; }
+.paper5 > canvas.paper5-bg.gray { filter: grayscale(1) contrast(1.05); }
+.paper5.laid { padding: 0; background: transparent; display: block; }
+.paper5.laid > .paper5-head, .paper5.laid > .paper5-tabs, .paper5.laid > .paper5-page, .paper5.laid > .paper5-x { position: absolute; z-index: 1; box-sizing: border-box; }
+
+/* cabeçalho: título no estilo da moldura, mês e tecla, fixar e fechar */
+.paper5-head { display: flex; align-items: center; min-height: 24px; }
+.paper5-hd { display: flex; align-items: center; gap: 14px; width: 100%; min-width: 0; }
+.paper5-title { margin: 0; font-family: var(--pixel); font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; color: #f4ecd8; text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.paper5-sub { font-family: var(--sans); font-size: 12px; letter-spacing: 0.02em; color: #e8dcc0; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.paper5-sp { flex: 1; }
+.paper5-pin, .paper5-close { background: rgba(10, 16, 24, 0.55); color: #f0e8d8; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; padding: 2px 8px; font: 12px var(--sans); cursor: pointer; white-space: nowrap; }
+.paper5-pin.on { background: #f0c060; color: #1a1214; border-color: #b08a30; }
+.paper5-pin.full { border-color: #c83a32; }
+.paper5-close kbd, .paper5-keys kbd { font: 700 10px var(--sans); text-transform: uppercase; background: #2a3a5a; color: #fff; border-radius: 3px; padding: 1px 5px; border-bottom: 2px solid #121a2a; }
+/* molduras claras: título escuro */
+.paper5-whiteboard .paper5-title, .paper5-planning .paper5-title, .paper5-form .paper5-title, .paper5-rolodex .paper5-title,
+.paper5-inbox-fax .paper5-title, .paper5-inbox-phone .paper5-title { color: #1a1a20; text-shadow: none; }
+.paper5-whiteboard .paper5-sub, .paper5-planning .paper5-sub, .paper5-form .paper5-sub, .paper5-rolodex .paper5-sub,
+.paper5-inbox-fax .paper5-sub, .paper5-inbox-phone .paper5-sub { color: #3a3a40; }
+.paper5-charts .paper5-title { font-size: 26px; color: #fff; }
+.paper5-charts .paper5-sub { color: #ffe8e0; }
+
+/* marcadores: abas de hoje viram etiquetas do papel; pastas = páginas irmãs do mesmo objeto */
+.paper5-tabs { display: flex; align-items: flex-end; overflow: hidden; }
+.paper5-marks { display: flex; gap: 6px; align-items: flex-end; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; white-space: nowrap; max-width: 100%; }
+.paper5-folders { display: inline-flex; gap: 4px; margin-right: 8px; padding-right: 8px; border-right: 2px solid rgba(0, 0, 0, 0.25); }
+.paper5 .paper5-mk, .paper5-folder {
+  all: unset; box-sizing: border-box; cursor: pointer; font: 600 12.5px var(--sans); line-height: 18px; padding: 1px 10px; white-space: nowrap;
+  background: #f4ead6; color: #2a2018; border: 2px solid #1e1812; border-bottom: 0; border-radius: 3px 3px 0 0; display: inline-flex; gap: 4px; align-items: center;
+}
+.paper5 .paper5-mk svg, .paper5 .paper5-mk .ic { display: none; }
+.paper5 .paper5-mk[aria-selected='true'] { background: #c83a32; color: #fff; }
+.paper5-folder { background: #d8c49a; }
+.paper5-folder.on { background: #f0c060; }
+.paper5 .paper5-mk:focus-visible, .paper5-folder:focus-visible { outline: 2px solid #f0c060; outline-offset: 1px; }
+.paper5-scout .paper5-mk[aria-selected='true'], .paper5-form .paper5-mk[aria-selected='true'] { background: #e0b048; color: #1a1214; }
+.paper5-whiteboard .paper5-mk[aria-selected='true'] { background: #2a5ab0; }
+.paper5-charts .paper5-mk[aria-selected='true'], .paper5-planning .paper5-mk[aria-selected='true'] { background: #1a1a1a; }
+.paper5-cork .paper5-mk[aria-selected='true'], .paper5-agenda .paper5-mk[aria-selected='true'] { background: #7a2a1a; }
+
+/* páginas: o conteúdo de hoje com as cores do papel (tokens claros só aqui dentro) */
+.paper5-page, .paper5-x {
+  --bg: transparent; --panel: rgba(255, 252, 244, 0.72); --panel-2: rgba(232, 222, 200, 0.7); --ink: #22201c; --muted: #6a6458; --line: rgba(80, 70, 50, 0.28);
+  --accent: #b0482a; --accent-ink: #fff; --good: #22764a; --bad: #b0302a; --warn: #9a6a12; --gold: #9a7a12;
+  color: var(--ink); color-scheme: light; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;
+}
+.paper5-in { padding: 10px 14px 16px 18px; min-height: 100%; box-sizing: border-box; font-size: 13.5px; }
+.paper5-in .card, .paper5-in section.card { background: var(--panel); border-color: var(--line); box-shadow: none; }
+.paper5-in h2, .paper5-in h3 { font-family: var(--serif); color: #1e1a14; }
+.paper5-in table th { background: transparent; color: #3a3428; border-bottom: 2px solid #3a3428; }
+.paper5-in table td { border-bottom: 1px solid var(--line); background: transparent; }
+.paper5-in .tabs { background: transparent; }
+.paper5-in .tabs > button[role='tab'] { background: rgba(255, 255, 255, 0.5); color: var(--ink); }
+.paper5-in .tabs > button[role='tab'][aria-selected='true'] { background: #2a2018; color: #fff; }
+.paper5.one .paper5-in { padding-left: 22px; }
+/* livro e caderno: linhas do livro acompanham a pauta */
+.paper5-ledger .paper5-in, .paper5-scout .paper5-in, .paper5-agenda .paper5-in { line-height: 1.55; }
+.paper5-charts .paper5-in table tbody tr:nth-child(odd) td { background: rgba(0, 0, 0, 0.03); }
+.paper5-whiteboard .paper5-in .card, .paper5-cork .paper5-in .card { background: #fff6b8; border: 0; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.18); }
+.paper5-cork .paper5-page { --panel: rgba(255, 250, 236, 0.92); }
+.paper5-cork .paper5-in { background: rgba(255, 250, 236, 0.0); }
+.paper5-planning .paper5-in, .paper5-form .paper5-in, .paper5-rolodex .paper5-in { background: rgba(250, 246, 236, 0.86); }
+
+/* livro-caixa: lançamentos como linhas do livro */
+.pl5 { font-family: var(--serif); }
+.pl5-h { margin: 0 0 2px; font-size: 19px; }
+.pl5-s { margin: 0 0 10px; font: 12px var(--sans); color: var(--muted); }
+.pl5-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px solid rgba(60, 120, 80, 0.18); font-size: 15px; }
+.pl5-row.tot { border-top: 2px solid #22201c; font-weight: 700; }
+.pl5-row.cash { border-top-width: 2px; }
+.pl5-v { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pl5-v.pos { color: #22764a; } .pl5-v.neg { color: #b0302a; }
+.pl5-stamps { display: flex; gap: 14px; margin: 16px 0 6px; flex-wrap: wrap; }
+.pl5-stamp { font: 700 11px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 8px; border: 3px solid currentColor; transform: rotate(-3deg); }
+.pl5-stamp.green { color: #22764a; } .pl5-stamp.red { color: #b0302a; transform: rotate(2deg); }
+.pl5-bars { display: flex; align-items: flex-end; gap: 6px; height: 150px; padding: 0 2px 18px; border-left: 2px solid #22201c; border-bottom: 2px solid #22201c; margin-bottom: 12px; }
+.pl5-bar { flex: 1; height: 100%; position: relative; display: flex; align-items: flex-end; }
+.pl5-bar i { display: block; width: 100%; border: 2px solid #1a1a14; box-sizing: border-box; }
+.pl5-bar i.pos { background: #44b45a; } .pl5-bar i.neg { background: #d84a40; }
+.pl5-bar small { position: absolute; bottom: -17px; left: 0; right: 0; text-align: center; font: 10px var(--sans); color: var(--muted); }
+.pl5-more { margin-top: 18px; font-family: var(--sans); }
+
+/* caixa de entrada: as mesmas peças (inbox27) nas áreas da aparência da época */
+.paper5-mail-root { display: none !important; }
+.paper5-mail-tools .m27-tools { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; margin: 0; padding: 0; background: none; border: 0; }
+.paper5-mail-tools .m27-q { flex: 1; min-width: 120px; }
+.paper5-mail-flags .m27-filters { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; margin: 0; scrollbar-width: none; }
+.paper5-mail-list .m27-lpane, .paper5-mail-read .m27-rpane { height: 100%; overflow: auto; }
+.paper5-mail-list .m27-list { max-height: none; }
+.paper5[data-paper5='correspondencia'] .paper5-page { overflow: auto; }
+.paper5[data-paper5='correspondencia'] .m27-row { background: rgba(255, 250, 236, 0.92); border: 2px solid #2a2018; border-radius: 3px; margin-bottom: 6px; }
+.paper5[data-paper5='correspondencia'] .m27-row.sel { outline: 3px solid #f0c060; }
+.paper5-mail-read .m27-reader { background: #fbf6ea; padding: 10px 14px; min-height: 100%; box-sizing: border-box; font-family: var(--serif); }
+.paper5-notes { padding: 0; }
+.paper5-notes .dc18-pend { background: #fbeea0; border: 0; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.2); margin: 0; min-height: 100%; font-size: 12px; }
+.paper5-keys { background: #2a1e18; color: #f0e8d8; padding: 8px; font-size: 12px; line-height: 1.9; border-radius: 3px; }
+/* cada época: o mesmo conteúdo, só a aparência dos itens */
+.paper5-inbox-desk .m27-row, .paper5-inbox-telegram .m27-row { font-family: var(--serif); }
+.paper5-inbox-desk .m27-row::before, .paper5-inbox-telegram .m27-row::before { content: ''; position: absolute; }
+.paper5-inbox-telegram .m27-row[data-urgent='1'] { background: #f6dc60 !important; }
+.paper5-inbox-desk .m27-row[data-urgent='1'] { border-color: #c83a32 !important; }
+.paper5-inbox-fax .m27-row { font-family: ui-monospace, monospace; border-style: dashed !important; }
+.paper5-inbox-crt .paper5-page, .paper5-inbox-flat .paper5-page { --panel: #fff; }
+.paper5-inbox-crt .m27-row.sel, .paper5-inbox-flat .m27-row.sel { background: #10307a !important; color: #fff; outline: 0; }
+.paper5-inbox-crt .m27-row, .paper5-inbox-flat .m27-row { border-radius: 0; border-width: 1px; font-family: Tahoma, Verdana, var(--sans); }
+.paper5-inbox-phone .m27-row { border-radius: 12px; }
+.paper5-inbox-desk .m27-row[data-cat] .m27-av, .paper5-inbox-telegram .m27-row[data-cat] .m27-av { filter: sepia(0.35); }
+
+@media (max-width: 900px) { .paper5 { height: auto; min-height: 70vh; } .paper5.laid { padding: 12px; display: flex; } .paper5.laid > * { position: static !important; width: auto !important; height: auto !important; } .paper5 > canvas.paper5-bg { display: none; } }
+
+/* faixas da caixa de entrada compactas (as alturas vêm da moldura da época) */
+.paper5-mail-tools { display: flex; align-items: center; overflow: hidden; }
+.paper5-mail-tools .m27-tools, .paper5-mail-flags .m27-filters { font-size: 12px; }
+.paper5-mail-tools .m27-tools button, .paper5-mail-tools .m27-tools [role='radio'], .paper5-mail-flags button, .paper5-mail-flags [role='checkbox'], .paper5-mail-flags [role='radio'] { padding: 1px 8px !important; min-height: 0 !important; line-height: 18px !important; font-size: 12px !important; }
+.paper5-mail-tools .m27-q { padding: 1px 6px !important; height: 22px; font-size: 12px; }
+.paper5-mail-tools .m27-sort small { display: none; }
+.paper5-mail-flags { display: flex; align-items: center; overflow: hidden; }
+.paper5-mail-flags .m27-filters > * { flex: 0 0 auto; display: flex; gap: 4px; flex-wrap: nowrap; margin: 0 !important; }
+.paper5-mail-flags .m27-filters legend, .paper5-mail-flags .m27-filters .muted { display: none; }
+
+/* ---------------------------------------------------------------- polimento: texto e botões em pixel art */
+.pxt5, .pxk5 { display: inline-flex; align-items: center; line-height: 0; vertical-align: middle; }
+.pxt5 canvas, .pxk5 canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+.paper5-title { display: inline-flex; line-height: 0; }
+.paper5-title .pxt5 canvas { filter: none; }
+.paper5-sub { display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.paper5-sub .pxt5 { flex: 0 1 auto; overflow: hidden; }
+/* botões em pixel art: contorno escuro de 2 px, luz em cima/esquerda, sombra embaixo/direita, sem arredondar */
+.paper5 .paper5-pin, .paper5 .paper5-close, .paper5 .paper5-mk, .paper5 .paper5-folder {
+  border-radius: 0 !important; border: 2px solid #120e0a !important; padding: 3px 8px !important; line-height: 0 !important; min-height: 0;
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.45), inset -2px -2px 0 rgba(0, 0, 0, 0.25) !important; image-rendering: pixelated;
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+}
+.paper5 .paper5-pin, .paper5 .paper5-close { background: #33445e; box-shadow: inset 2px 2px 0 #56709a, inset -2px -2px 0 #1a2436, 2px 2px 0 rgba(0, 0, 0, 0.35) !important; }
+.paper5 .paper5-pin.on { background: #f0c060; box-shadow: inset 2px 2px 0 #ffe8a8, inset -2px -2px 0 #b08a30, 2px 2px 0 rgba(0, 0, 0, 0.35) !important; }
+.paper5 .paper5-pin:hover, .paper5 .paper5-close:hover { filter: brightness(1.15); }
+.paper5 .paper5-pin:active, .paper5 .paper5-close:active, .paper5 .paper5-mk:active { transform: translate(1px, 1px); }
+.paper5 .paper5-close .pxk5 { margin-left: -4px; }
+.paper5 .paper5-mk { border-bottom: 0 !important; padding: 3px 9px 4px !important; background: #f4ead6; }
+.paper5 .paper5-mk[aria-selected='true'] { padding-bottom: 6px !important; margin-bottom: -2px; }
+.paper5 .paper5-mk .badge { font: 700 9px var(--sans); line-height: 12px; border-radius: 0; padding: 0 3px; background: #c83a32; color: #fff; box-shadow: 1px 1px 0 #000; }
+.paper5 .paper5-folder { background: #d8c49a; box-shadow: inset 2px 2px 0 #f4e4bc, inset -2px -2px 0 #9a8058 !important; }
+.paper5 .paper5-folder.on { background: #f0c060; }
+.paper5-marks { scroll-behavior: smooth; padding-top: 2px; }
+.paper5.laid > .paper5-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+/* botões das páginas de hoje, dentro do papel, no mesmo estilo (só a forma; o clique é o mesmo) */
+.paper5-in button.btn, .paper5-in .btn, .paper5-in .m27-acts button, .paper5-mail-read .m27-acts button, .paper5-mail-read .m27-rbar button,
+.paper5-mail-tools button, .paper5-mail-flags button, .paper5-in [role='radiogroup'] > button, .paper5-in .seg27 button {
+  border-radius: 0 !important; border: 2px solid #1e1812 !important; background: #f2e6cc; color: #22201c;
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.7), inset -2px -2px 0 rgba(0, 0, 0, 0.18), 2px 2px 0 rgba(0, 0, 0, 0.25) !important;
+  font-weight: 700; letter-spacing: 0.01em; text-shadow: none;
+}
+.paper5-in .btn.primary, .paper5-in button.primary, .paper5-mail-read .m27-acts button.primary { background: #c84a32; color: #fff; box-shadow: inset 2px 2px 0 #ec8a6a, inset -2px -2px 0 #8a2a1a, 2px 2px 0 rgba(0, 0, 0, 0.3) !important; }
+.paper5-in button:hover:not(:disabled), .paper5-mail-read button:hover:not(:disabled) { filter: brightness(1.06); }
+.paper5-in button:active:not(:disabled), .paper5-mail-read button:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.18) !important; }
+.paper5-in button:disabled { opacity: 0.55; }
+.paper5-in [aria-pressed='true'], .paper5-in [aria-checked='true'], .paper5-mail-tools [aria-checked='true'], .paper5-mail-flags [aria-checked='true'], .paper5-mail-flags [aria-pressed='true'] { background: #2a2018 !important; color: #fff !important; }
+.paper5-in .card, .paper5-in section.card, .paper5-mail-read .m27-reader, .paper5-notes .dc18-pend { border-radius: 0 !important; }
+.paper5-in .pill, .paper5-in .chip, .paper5-in .badge { border-radius: 0 !important; }
+/* nada estourando: tabelas, textos longos e listas ficam dentro da página */
+.paper5-page { overflow-x: hidden; }
+.paper5-in { overflow-wrap: anywhere; max-width: 100%; }
+.paper5-in > * { max-width: 100%; }
+.paper5-in table { max-width: 100%; display: block; overflow-x: auto; }
+.paper5-in .kpi27, .paper5-in [class*='kpis'] { flex-wrap: wrap; }
+.paper5-in img, .paper5-in canvas, .paper5-in svg { max-width: 100%; height: auto; }
+.paper5-notes { overflow: auto; }
+.paper5-notes .dc18-pend { font-size: 11.5px; line-height: 1.35; padding: 8px 10px; }
+.paper5-notes .dc18-pend h3 { font-size: 13px; margin: 0 0 4px; }
+.paper5-notes .dc18-pl small { font-size: 10.5px; }
+.paper5-keys { overflow: hidden; line-height: 1; display: flex; flex-direction: column; gap: 6px; }
+.paper5-krow { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.paper5-mail-tools .m27-tools { width: 100%; overflow: hidden; }
+.paper5-mail-tools .m27-bulk { margin-left: auto; display: flex; gap: 4px; }
+.paper5-mail-read .m27-rpane { overflow-x: hidden; }
+.paper5[data-paper5='correspondencia'] .m27-row { overflow: hidden; }
+.paper5[data-paper5='correspondencia'] .m27-sj, .paper5[data-paper5='correspondencia'] .m27-sn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.pl5-stamp { padding: 4px 6px; line-height: 0; display: inline-flex; }
+.pl5-row > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* livros e cadernos: o texto não encosta na margem vermelha nem na fita marcadora */
+.paper5-ledger .paper5-in, .paper5-scout .paper5-in, .paper5-agenda .paper5-in { padding-left: 40px; padding-right: 22px; }
+.paper5-ledger .paper5-p1 .paper5-in, .paper5-agenda .paper5-p1 .paper5-in { padding-right: 52px; }
+.paper5-scout .paper5-p1 .paper5-in { padding-left: 44px; }
+/* item escolhido nas telas de monitor: tudo em branco sobre o azul */
+.paper5-inbox-crt .m27-row.sel *, .paper5-inbox-flat .m27-row.sel * { color: #fff !important; }
+.paper5-mail-tools .btn.ghost, .paper5-mail-tools button.ghost, .paper5-in .btn.ghost { color: #22201c !important; opacity: 1 !important; }
+.paper5-mail-flags .m27-filters { overflow-x: auto; }
+/* campos (escolhas, busca, números) no papel: claros, contorno escuro reto */
+.paper5-in select, .paper5-in input:not([type='checkbox']):not([type='radio']):not([type='range']), .paper5-in textarea, .paper5-mail-tools input, .paper5-mail-tools select {
+  background: #fffaf0 !important; color: #22201c !important; border: 2px solid #1e1812 !important; border-radius: 0 !important;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.12) !important; color-scheme: light;
+}
+.paper5-in select option { background: #fffaf0; color: #22201c; }
+/* cartões, caixas e grupos do conteúdo de hoje com cantos retos (pixel) */
+.paper5-in .card, .paper5-in section, .paper5-in details, .paper5-in fieldset, .paper5-in [class*='card'], .paper5-in [class*='box'], .paper5-in [role='radiogroup'] { border-radius: 0 !important; }
+.paper5-in [role='radiogroup'] { background: transparent !important; }
+
+/* ---------------------------------------------------------------- polimento 2: nada fora do lugar */
+/* avatar das mensagens: o ícone no centro do círculo (o CSS antigo põe display:block e o ícone ia para o canto) */
+.paper5 .m27-av .m27-tile, .paper5 .m27-lav .m27-tile, .paper5 .m27-fold .m27-tile { display: flex !important; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; }
+.paper5 .m27-tile > img, .paper5 .m27-tile > .ic-emoji, .paper5 .m27-tile > svg { display: block; margin: 0 !important; flex: 0 0 auto; }
+.paper5 .m27-av .portrait, .paper5 .m27-av .logo { overflow: hidden; }
+.paper5 .m27-dot { right: -1px; top: -1px; }
+/* cabeçalho cabe na faixa da moldura (24 px): botões baixos; fechar = tecla Esc + palavra, sem caixa */
+.paper5-head { overflow: visible; }
+.paper5-hd { height: 100%; gap: 12px; }
+.paper5 .paper5-pin { padding: 2px 6px !important; height: 22px; box-sizing: border-box; }
+.paper5 .paper5-close.bare { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; height: 22px; gap: 6px; }
+.paper5 .paper5-close.bare:hover .pxt5 { filter: brightness(1.3); }
+.paper5 .paper5-close .pxk5 { margin-left: 0; }
+.paper5-whiteboard .paper5-close .pxt5 canvas, .paper5-planning .paper5-close .pxt5 canvas, .paper5-form .paper5-close .pxt5 canvas, .paper5-rolodex .paper5-close .pxt5 canvas,
+.paper5-inbox-fax .paper5-close .pxt5 canvas, .paper5-inbox-phone .paper5-close .pxt5 canvas { filter: invert(0.85); }
+.paper5-title { height: 22px; align-items: center; }
+.paper5-sub { height: 22px; }
+/* marcadores não passam da faixa */
+.paper5.laid > .paper5-tabs { align-items: flex-end; }
+.paper5 .paper5-mk, .paper5 .paper5-folder { height: 20px; box-sizing: border-box; }
+.paper5 .paper5-mk[aria-selected='true'] { height: 22px; }
+/* conteúdo: linhas de etiquetas quebram, campos cabem, listas dentro de "detalhes" não vazam */
+.paper5-in .row, .paper5-in .row.wrap { flex-wrap: wrap; min-width: 0; }
+.paper5-in .row > *, .paper5-in label { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.paper5-in label input, .paper5-in label select { max-width: 100%; }
+.paper5-in details > ul, .paper5-in details > ol, .paper5-in details ul { max-width: 100%; box-sizing: border-box; padding-left: 18px; margin-right: 0; }
+.paper5-in td span:has(> .pill) { display: inline-flex; flex-wrap: wrap; gap: 3px; max-width: 100%; }
+.paper5-in .pill { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.paper5-in td { overflow-wrap: anywhere; }
+.paper5-notes details ul, .paper5-x details ul { padding-left: 14px; }
+.paper5-in details ul, .paper5-x details ul { margin-bottom: 0; }
+/* cabeçalho não cobre os enfeites do canto da moldura (ímãs do quadro, trama da revista, fita do livro) */
+.paper5-whiteboard .paper5-hd { padding-right: 26px; box-sizing: border-box; }
+.paper5-charts .paper5-hd { padding-right: 64px; box-sizing: border-box; }
+.paper5-ledger .paper5-hd, .paper5-agenda .paper5-hd { padding-right: 6px; box-sizing: border-box; }
+/* a página fica dentro da borda de baixo da moldura */
+.paper5.laid > .paper5-page { clip-path: inset(0 0 3px 0); }
+/* filtros e marcadores longos: rolam de lado com um esmaecido na borda (nada cortado no seco) */
+.paper5-mail-flags .m27-filters, .paper5-marks { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); padding-right: 28px; }
+/* botões "fantasma" da caixa (marcar lidas, arquivar lidas) com fundo de papel, legíveis em qualquer moldura */
+.paper5-mail-tools .btn.ghost, .paper5-mail-tools button.ghost { background: #f2e6cc !important; }
+.paper5-mail-tools .m27-q { min-width: 200px; }
+/* revista: listas da coluna da direita sem marcador solto, cada item numa linha arrumada */
+.paper5-charts .paper5-in ul { list-style: none; padding-left: 0; }
+.paper5-charts .paper5-in li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 6px; }
+.paper5-in td .pill, .paper5-in td [class*='chip'] { vertical-align: middle; }
+/* papéis em moldura de aparelho (rádio/TV, secretária): a folha tem fundo de papel, nada solto sobre a madeira */
+.paper5[class*='paper5-inbox-']:not([data-paper5='correspondencia']) .paper5-in { background: #fbf6ea; box-shadow: inset 0 0 0 2px rgba(30, 24, 18, 0.25); }
+.paper5-in h1, .paper5-in .ph27 h1, .paper5-in [class*='hero'] h1, .paper5-in [class*='hero'] h2 { color: #1e1a14 !important; text-shadow: none !important; -webkit-text-stroke: 0 !important; }
+/* livro/caderno com conteúdo largo: uma folha solta, opaca, por cima das duas páginas (a espiral não aparece através) */
+.paper5.wide .paper5-page { padding: 6px 10px; box-sizing: border-box; }
+.paper5.wide .paper5-in { --panel: #fffdf6; background: #fbf6ea; border: 2px solid #2a2018; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); padding-left: 22px !important; padding-right: 22px !important; }
+.paper5.wide .paper5-in .card, .paper5.wide .paper5-in section.card { box-shadow: none; }
+
+/* ---------------------------------------------------------------- miolo dentro da casca (shell5 .p5-body) */
+.p5-body:has(> .paper5m) { background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: hidden !important; }
+.paper5.paper5m { position: relative; height: 100%; min-height: 0; max-width: none; margin: 0; padding: 0; border-radius: 0; background: transparent; display: flex; flex-direction: column; gap: 4px; }
+.paper5m-marks { flex: 0 0 auto; display: flex; gap: 6px; padding: 2px 4px 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; border-bottom: 2px solid rgba(30, 24, 18, 0.55); }
+.paper5m-pages { flex: 1 1 auto; min-height: 0; display: grid; gap: 0; }
+.paper5m-pages.one { grid-template-columns: 1fr; }
+/* duas páginas: o vão do meio fica sobre a lombada/espiral da moldura */
+.paper5m-pages.two { grid-template-columns: 1fr 1fr; column-gap: 16px; }
+.paper5-scout .paper5m-pages.two { column-gap: 24px; }
+.paper5m-pages > .paper5-page { min-height: 0; overflow: auto; }
+/* folhas claras onde a moldura é escura ou ruidosa (cortiça, prancheta, quadro, fichário) */
+.paper5m.paper5-cork .paper5-in, .paper5m.paper5-form .paper5-in, .paper5m.paper5-rolodex .paper5-in, .paper5m.paper5-planning .paper5-in { background: rgba(251, 246, 234, 0.94); box-shadow: inset 0 0 0 2px rgba(30, 24, 18, 0.25); }
+.paper5m.paper5-whiteboard .paper5-in { background: rgba(255, 255, 255, 0.6); }
+.paper5m.wide .paper5-page { padding: 4px 8px; }
+/* caixa de entrada no miolo: faixas em cima, 3 colunas (lista · leitura · pendências e teclas) */
+.paper5m-mail { gap: 6px; }
+.paper5m-mail .paper5-tabsrow { flex: 0 0 auto; display: flex; align-items: center; min-height: 28px; overflow: hidden; }
+.paper5m-mail .paper5-filtrow { flex: 0 0 auto; display: flex; align-items: center; min-height: 26px; overflow: hidden; }
+.paper5m-mail .paper5-tabsrow > .paper5-mail-tools, .paper5m-mail .paper5-filtrow > .paper5-mail-flags { width: 100%; }
+.paper5m-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 40% minmax(0, 1fr) 18%; gap: 8px; }
+.paper5m-grid > .paper5-page { min-height: 0; overflow: auto; }
+.paper5m-side { min-height: 0; display: grid; grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; }
+.paper5m-side > .paper5-x { min-height: 0; overflow: auto; }
+.paper5m-mail .paper5-keys { height: 100%; box-sizing: border-box; }
+.paper5m-mail .paper5-notes { height: 100%; }

@@ -126,13 +126,19 @@ describe('r27 P2B — modo rápido intacto', () => {
     // UNI-4 (cache da ficha com chave completa — o jogo carregado de um save divergia): caixa 10093 → 10092 e
     // acts 3500990849 → 1560130818 (o r27-p2a, sem os módulos P2B, não muda).
     // UNI-4 + N + I + T/H/CAR2 (junção final da onda 4): re-medido com tudo junto — 182589 / turnês 3575668786 / acts 1693608899 / rng 103954728.
-    // R31 onda 4 (BASE-IT · base italiana, de propósito — docs/r31/DECISOES.md e docs/r31/base-it.md): 284 artistas italianos reais
+      // R31 onda 4 (BASE-IT · base italiana, de propósito — docs/r31/DECISOES.md e docs/r31/base-it.md): 284 artistas italianos reais
     // no fim de REAL_ALL (nascem no início e estreiam nesses 8 meses): caixa, turnês, acts e rng mudam. Com `base31.it` desligado
     // (config.base31it = false) voltam 182589 / 3575668786 / 1693608899 / 3302724126.
-    expect(AFTER.player.cash).toBe(2343);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(1382068899);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3720502148);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(2898923487);
+    // R31 onda 4 (BASE-HITS · sucessos de 1992 em diante, de propósito — docs/r31/base-hits.md): 1 043 atos novos depois da base italiana; Tom Cochrane (estreia 1974) já está no mundo no início (um ato e uma pessoa a mais deslocam os ids de tudo que nasce depois) e o sorteio de estreia dos outros muda a trajetória. Decisão do dono (2026-10-16): os hits só entram com base Enorme (z 3); o golden usa a base padrão, então os valores são os da BASE-IT. Com base Enorme ligada mediu-se 305463 / 2782225819 / 4616992 / 962726072.
+    // R31 onda 4 (BASE-BR · base brasileira ampliada, de propósito — docs/r31/DECISOES.md e docs/r31/base-br.md): 337 atos
+    // brasileiros reais no fim de REAL_ALL, ANTES da base italiana e dos hits (ordem BR, IT, HITS): mais atos reais estreiam
+    // (caixa, turnês, acts e rng mudam). Com `base31.br` desligado (config.base31br = false) voltam os valores da BASE-IT acima
+    // (2343 / 1382068899 / rng 2898923487); acts só difere pelo número de catálogo dos atos IT/HITS, que vêm depois do lote BR
+    // (descontado o deslocamento, 3720502148 — conferido).
+    expect(AFTER.player.cash).toBe(182589);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3575668786);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1693608899);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(3302724126);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
   it('nada de estado P2B criado sem o jogador', () => {
@@ -164,16 +170,23 @@ describe('r27 P2B — modo rápido intacto', () => {
 // ------------------------------------------------------------------------------------------- turnê no mapa
 const CITIES = ['rio', 'sao_paulo', 'buenos_aires', 'montevideo', 'santiago', 'lima', 'mexico_city', 'new_york', 'chicago', 'los_angeles'];
 function roadFix(): { s: GameState; tid: string } {
-  const s = clone(FIX);
-  let actId = playerActs(s).find((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
-  if (!actId) { actId = playerActs(s)[0]; for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id); }
-  const home = s.acts[actId].city;
-  // R29 demo29: com o mundo novo, 6 paradas desta semente não sorteiam nenhum evento de estrada; 10 paradas garantem a amostra
-  const cities = CITIES.filter((c) => c !== home).slice(0, 10);
-  s.player.cash += money(s, 200000);
-  const r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays: 7 }));
-  if (!('id' in r)) throw new Error(`book: ${r.pt}`);
-  return { s, tid: r.id };
+  // R31 BASE-BR/BASE-HITS: com IT + HITS no mundo, o ato livre desta semente já tem 25% da própria agenda reservado neste mês (a rota de
+  // 86% não cabe): tenta os atos do jogador na ordem e, se nenhum cabe com saída em 7 dias, sai no mês seguinte (35 dias).
+  const free = (s: GameState) => playerActs(s).filter((id) => !s.tours.some((t) => t.actId === id && (t.status === 'planned' || t.status === 'running')));
+  const ids = free(FIX).length ? free(FIX) : [playerActs(FIX)[0]];
+  let msg = '';
+  for (const startInDays of [7, 21, 35, 49]) for (const actId of ids) {
+    const s = clone(FIX);
+    for (const t of s.tours) if (t.actId === actId && (t.status === 'planned' || t.status === 'running')) cancelTour(s, t.id);
+    const home = s.acts[actId].city;
+    // R29 demo29: com o mundo novo, 6 paradas desta semente não sorteiam nenhum evento de estrada; 10 paradas garantem a amostra
+    const cities = CITIES.filter((c) => c !== home).slice(0, 10);
+    s.player.cash += money(s, 200000);
+    const r = bookRoute27(s, basePlan27(s, actId, cities, { startInDays }));
+    if ('id' in r) return { s, tid: r.id };
+    msg = r.pt;
+  }
+  throw new Error(`book: ${msg}`);
 }
 
 describe('r27 P2B — turnê no mapa', () => {
@@ -252,6 +265,9 @@ describe('r27 P2B — turnê no mapa', () => {
   it('sem decisão do jogador, a equipe decide no dia (dentro da política) e o mês corre igual nos dois clones', () => {
     const a = roadFix(), b = roadFix();
     advanceMonth(a.s); advanceMonth(b.s);
+    advanceMonth(a.s); advanceMonth(b.s); // R31 BASE-HITS: a rota pode sair no mês seguinte (roadFix)
+    // R31 (BASE-BR): a estrada pode ter saído com mais folga — corre até 2 meses a mais nos dois clones até ter paradas
+    for (let i = 0; i < 2 && !Object.values(roadOf27(a.s, a.tid)?.ev ?? {}).length; i++) { advanceMonth(a.s); advanceMonth(b.s); }
     const R = roadOf27(a.s, a.tid)!; // UNI-4: estrada na própria turnê
     expect(Object.values(R.ev).length).toBeGreaterThan(0);
     expect(Object.values(R.ev).every((x) => x.auto)).toBe(true);
