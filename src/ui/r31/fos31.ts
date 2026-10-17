@@ -26,6 +26,8 @@ import { go18 } from '../sys/inbox18';
 import { openInside18 } from '../sys/campus18';
 import { store } from '../store';
 import { bindZoomOut27 } from '../ps/zoom27';
+import { nav5On } from '../../sim/r31/exp5';
+import { bindBack5, fillMain5, placeStrip5 } from './cenas5';
 import '../sys/extras31';
 import { cityEggs27 } from '../sys/eggs27';
 import { openFicha13 } from '../sys/persona13';
@@ -155,6 +157,7 @@ function fosScene(s: GameState, m: FosM31, back: () => void, overlay = false): H
   const square = m.kind === 'square';
   const show = (panel?: string) => {
     fosUi31.panel = panel;
+    pane.classList.toggle('cn5-idle', !panel); // R31 onda 5 (CENAS5): sem nada aberto, a cena ocupa tudo
     if (!panel) { pane.replaceChildren(h('p', { class: 'small muted' }, t(l('Clique numa pessoa ou num objeto.', 'Click a person or an object.')))); return; }
     const [k, arg = ''] = panel.split(':');
     let el: HTMLElement | null = null;
@@ -179,6 +182,21 @@ function fosScene(s: GameState, m: FosM31, back: () => void, overlay = false): H
     note: m.note,
     legend: h('p', { class: 'small in31-trail' }, t(m.what)),
   });
+  const goOther = square ? h('button', { type: 'button', class: 'btn small', onclick: () => openFos31('home') }, t(l('Ir à casa', 'Go to the house')))
+    : h('button', { type: 'button', class: 'btn small', onclick: () => openFos31('square') }, t(l('Ir à praça', 'Go to the square')));
+  // R31 onda 5 (CENAS5): com exp5.nav, título na faixa de lugar ("◂ Cidade"), Esc/Backspace volta, ajuda no "?" da casca
+  if (nav5On(s)) {
+    const cityId = square ? s.config.homeCity : famCity31(s);
+    const box5 = h('div', { class: `c2-in in31 cn5${overlay ? '' : ' in31-inline'} fos31`, role: overlay ? 'dialog' : 'region', 'aria-label': t(m.title) },
+      placeStrip5({ title: t(m.title), sub: [t(m.what), t(cityById[cityId]?.name ?? l('', '')), String(s.year)],
+        back: { label: overlay ? l('Cidade', 'City') : l('Família Fossati', 'Fossati family'), go: back },
+        extra: [goOther, quickBtn31({ kind: 'city', id: cityId }, t(cityById[cityId]?.name ?? l('', '')))] }),
+      h('div', { class: 'in31-body' }, scene, pane));
+    show(fosUi31.panel);
+    if (overlay) { bindZoomOut27(box5, back); fillMain5(box5); }
+    bindBack5(box5, back);
+    return box5;
+  }
   const box = h('div', { class: `c2-in in31${overlay ? '' : ' in31-inline'} fos31`, role: overlay ? 'dialog' : 'region', 'aria-label': t(m.title) },
     h('div', { class: 'c2-in-bar' },
       h('button', { type: 'button', class: 'btn small c2-back', onclick: back }, '← ', t(overlay ? l('Voltar à cidade', 'Back to the city') : l('Família Fossati (lista)', 'Fossati family (list)'))),

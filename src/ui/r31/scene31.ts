@@ -18,6 +18,10 @@ import { setTab } from '../vis';
 import { goToHub } from '../sys/project12';
 import { quickHook31 } from './lock31';
 import { ALERT31, badgeSym31, labelsDefault31, placeLabels31, type Go31s, type Spot31 } from './scene31model';
+import { nav5On } from '../../sim/r31/exp5';
+import { ic } from '../vis';
+import { help5Of, sorted5, splitLock5 } from './cenas5model';
+import { arrows5, fit5, setHelp5 } from './cenas5';
 import './scene31.css';
 
 const lsGet = (k: string): string | null => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -100,8 +104,50 @@ function spotEl(o: SceneOpts31, sp: Spot31, labels: boolean): HTMLElement {
   return btn;
 }
 
+/** R31 onda 5 (CENAS5): um ponto no jogo explorável — o bloqueio vira selo no próprio objeto (antes do clique). */
+function spotEl5(o: SceneOpts31, sp: Spot31): HTMLElement {
+  const lk = splitLock5(sp.tip);
+  const btn = spotEl(o, { ...sp, tip: lk.tip }, false);
+  if (!lk.lock) return btn;
+  const why = t(lk.lock);
+  btn.classList.add('sc5-locked');
+  btn.setAttribute('aria-label', `${btn.getAttribute('aria-label') ?? ''} — ${t(l('bloqueado', 'locked'))}: ${why}`);
+  btn.title = btn.getAttribute('aria-label') ?? '';
+  btn.append(h('span', { class: 'sc5-lock', 'aria-hidden': 'true' }, ic('lock')));
+  btn.querySelector('.sc31-tip')?.append(h('span', { class: 'sc5-tlk' }, ic('lock'), ' ', why));
+  return btn;
+}
+
+/** R31 onda 5 (CENAS5): com exp5.nav ligado a cena é SÓ o cenário — sem barra (Cena/lista, mostrar clicáveis, rótulos),
+ *  sem a caixa de ajuda e sem a lista de pontos. Rótulos e "tudo que é clicável" aparecem com Alt (e no passar do
+ *  mouse/foco); a ajuda vai para o "?" da casca; Tab e setas percorrem os pontos na ordem de leitura. */
+function sceneNav5(s: GameState, o: SceneOpts31): HTMLElement {
+  setHelp5(o.id, help5Of(o.title, o.intro, o.spots, o.legend?.textContent?.trim() || undefined));
+  const cv = h('canvas', { class: 'sc31-cv px', 'aria-hidden': 'true' }) as HTMLCanvasElement;
+  try { o.paint(cv); } catch (e) { console.error('cena', o.id, e); }
+  const lab = h('div', { class: 'sc31-labels sc5-labels', 'aria-hidden': 'true' });
+  const relabel = (px: number): void => {
+    const sc = Math.max(1, px / o.W);
+    lab.replaceChildren(...placeLabels31(o.spots, o.W, o.H, sc, (sp) => t(sp.label)).map((b) => h('span', {
+      class: 'sc31-label', title: b.text !== b.full ? b.full : undefined,
+      style: `left:${pct(b.x, o.W)};top:${pct(b.y, o.H)};width:${pct(b.w, o.W)}`,
+    }, b.text)));
+  };
+  // ordem de leitura = ordem do Tab; nenhum ponto fica de fora (nem os "quietos")
+  const layer = h('div', { class: 'sc31-layer', role: 'group', 'aria-label': t(o.title) }, sorted5(o.spots).map((sp) => spotEl5(o, sp)));
+  arrows5(layer, o.spots);
+  const stage = h('div', { class: 'sc31-stage sc5-stage' }, cv, layer, lab);
+  const fit = h('div', { class: 'sc5-fit' }, stage);
+  relabel(Math.min(960, o.W * 4));
+  fit5(fit, stage, o.W, o.H, relabel);
+  return h('section', { class: `sc31 sc31-${o.id} sc5`, 'aria-label': t(o.title), 'data-help5': o.id },
+    o.tools || o.note ? h('div', { class: 'sc5-top' }, o.tools ?? null, o.note ? h('p', { class: 'sc5-note', role: 'status' }, t(o.note)) : null) : null,
+    fit);
+}
+
 /** A cena inteira (ou a lista, quando a pessoa prefere pular a cena). */
 export function sceneView31(s: GameState, o: SceneOpts31): HTMLElement {
+  if (nav5On(s)) return sceneNav5(s, o); // R31 onda 5 (CENAS5): só o cenário navegável
   const root = h('section', { class: `sc31 sc31-${o.id}`, 'aria-label': t(o.title) });
   const draw = (): void => {
     const mode = sceneMode31(o.id);

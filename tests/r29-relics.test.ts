@@ -354,7 +354,10 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
     const births: { y: number; a: string; arch: string }[] = [];
     onFact('relic', (s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '', arch: f.tags[3] }); }, 'r29test:bot');
     // o mesmo laço do simulatePlayer (bot equilibrado), devolvendo o controle ao vitest a cada mês (run longa)
-    const s = createGame(defaultConfig('r29rel-bot', { startYear: 1970, realNames: true }));
+    // W5-FIX2: semente 'r29rel-bot' → 'r29rel-bot2'. Com a base italiana (BASE-IT, fim de REAL_ALL) o mundo muda e o robô de
+    // 'r29rel-bot' quebra em 1971 (processo de incidente grave em estádio logo depois do aporte do investidor; com base31.it
+    // desligado ele segue): 48 peças em 17 meses deixam o teste de 20 anos sem objeto. Asserções iguais (docs/r31/fix2.md)
+    const s = createGame(defaultConfig('r29rel-bot2', { startYear: 1970, realNames: true }));
     for (let m = 0; m < 20 * 12 && !s.ended; m++) { playMonth(s, 'balanced'); advanceMonth(s); await tick(); }
     const byY: Record<number, number> = {}, byAY: Record<string, number> = {};
     for (const b of births) { byY[b.y] = (byY[b.y] ?? 0) + 1; if (b.a) byAY[`${b.a}:${b.y}`] = (byAY[`${b.a}:${b.y}`] ?? 0) + 1; }

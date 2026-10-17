@@ -339,7 +339,7 @@ export function proj12(s: GameState, f: OwnFestival): Proj {
   // r19: festivais rivais pesam por distância, mês, gênero/identidade e porte (rivalFest19)
   const rv = rivalFest19(s, ventures(s).npc, { city: f.cityId, month: f.month, fam: x.fam, ident: x.ident, rep: f.rep });
   if (rv.v < 0.995) { dem *= rv.v; why.push(fmtL(l('Festivais rivais na região e na temporada: −{p}% de procura ({n}).', 'Rival festivals in the region and season: −{p}% demand ({n}).'), { p: Math.round((1 - rv.v) * 100), n: rv.rows.map((q) => q.n.name).join(', ') })); }
-  dem *= festDem19.f(s, f, acts, why); // r19 (careers19): qualidade do line-up, gênero, época e concorrência mexem na procura
+  dem *= festDem19.f(s, f, acts, why) * festDeco19.f(s, why); // r19 (careers19): qualidade do line-up, gênero, época e concorrência mexem na procura
   dem = dem * x.cyc.hype * x.cyc.mods.dem * (x.cyc.late ? 0.85 : 1) + x.loyal * id.loyalF;
   if (x.loyal) why.push(fmtL(l('{n} fiéis compram pelo festival, não pela atração.', '{n} loyalists buy for the festival, not the act.'), { n: Math.round(x.loyal) }));
   const trust = clamp((f.rep + x.hist.length * 6) / 90, 0.08, 1);
@@ -869,6 +869,8 @@ deferEvents([...OP_EVENTS, CANCEL]);
 // r18 live18: prestígio da curadoria baixa o cachê pedido; pagamento do festival exposto para fest18.
 export const festFee18: { f: (s: GameState, f: OwnFestival, a: Act, why: L[]) => number } = { f: () => 1 };
 // r19 (careers19/intra19): ganchos injetados (sem ciclo de import)
+/** R31 · DECO-M: procura a mais pela decoração dos seus lugares (1 sem peças postas). */
+export const festDeco19: { f: (s: GameState, why: L[]) => number } = { f: () => 1 };
 export const festDem19: { f: (s: GameState, f: OwnFestival, acts: Act[], why: L[]) => number } = { f: () => 1 };
 export const houseAsk19: { f: (s: GameState, f: OwnFestival, a: Act, k: Ask) => Ask } = { f: (_s, _f, _a, k) => ({ ...k, fee: 0, why: [l('Artista do seu selo: sem cachê.', 'Your own act: no fee.')] }) };
 export const ownPaid19: { f: (s: GameState, f: OwnFestival, a: Act, fee: number) => void } = { f: () => {} };

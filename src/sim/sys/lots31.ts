@@ -239,7 +239,7 @@ LAND18.mult = ownLotBuildMult31;
  *  frente H, loja da época) ou tem dono real próprio. Prédio de apartamentos genérico não é negócio; a mesma equipe
  *  repetida em outro prédio (a cidade comum repete escritórios e hotéis) também não. */
 export function functional31(s: GameState, p: Place27): boolean {
-  if (p.lot31 || p.fam31 || p.lot < 0) return true; // casa nossa, Casa Fossati (frente FOS), lugar real (frente H)
+  if (p.lot31 || p.fam31 || p.deco31 || p.lot < 0) return true; // casa nossa, Casa Fossati (frente FOS), lugar real (frente H), loja de decoração (DECO-L)
   if (p.src === 'nb' || p.venue || p.outlet || p.org || p.k === 'police' || p.k === 'market' || p.k === 'label') return true;
   if (eraBiz31(s, p)) return true;
   if (p.k === 'apartments') return false;
