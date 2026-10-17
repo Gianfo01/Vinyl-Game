@@ -106,7 +106,17 @@ export const songOf31 = (s: GameState, r?: Release): string | undefined => r?.so
 const actName = (s: GameState, id?: string): string => (id ? s.acts[id]?.name : undefined) ?? '?';
 const sortId = <T extends { id: string }>(xs: T[]): T[] => [...xs].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 /** Atos da cidade sem contrato (revelações possíveis). */
+// R31 (DBTAM, desempenho): dentro de um rollVit31 o mundo não muda (as ofertas não mexem em atos) — a lista por cidade sai
+// uma vez por sorteio em vez de uma vez por tipo × vaga × lugar (varria todos os atos a cada pergunta)
+let UH31: Map<string, Act[]> | null = null;
 function unsignedHere(s: GameState, city: string): Act[] {
+  const hit = UH31?.get(city);
+  if (hit) return hit;
+  const v = unsignedHere0(s, city);
+  UH31?.set(city, v);
+  return v;
+}
+function unsignedHere0(s: GameState, city: string): Act[] {
   return sortId(Object.values(s.acts).filter((a) => live(a) && a.city === city && !a.owner && !a.playerBand && a.fame < 40)).sort((a, b) => b.potential - a.potential).slice(0, 8);
 }
 /** Músicos que fazem bico nos lugares (gente31). */
@@ -419,6 +429,10 @@ const okEra = (d: VitDef31, c: VitCtx31): boolean => (!d.from || c.year >= d.fro
 
 /** Sorteia o conteúdo do mês `target` (índice). Só o motor chama (virada do mês, nova partida, editor). */
 export function rollVit31(s: GameState, target: number): { added: number; dropped: number } {
+  UH31 = new Map();
+  try { return rollVit31b(s, target); } finally { UH31 = null; }
+}
+function rollVit31b(s: GameState, target: number): { added: number; dropped: number } {
   const st = vit31(s);
   const r = rng19(s, 'vit31');
   const c = ctxOf(s);

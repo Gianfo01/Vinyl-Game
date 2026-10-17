@@ -6,10 +6,10 @@ import { countryOfCity } from '../data/geo';
 import { cityById } from '../data/world';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { classicOff31, dbSizeInfo, realAllowed, realCountry31 } from './dbsize14';
-import { BASE31BR_FROM, BASE31BR_TO, BASE31H_FROM, BASE31H_TO, BASE31IT_FROM, BASE31IT_TO, REAL_ALL } from './sys/realworld';
+import { BASE31BR_FROM, BASE31BR_TO, BASE31H_FROM, BASE31H_TO, BASE31IT_FROM, BASE31IT_TO, REAL_ALL, starsOff31 } from './sys/realworld';
 import type { RunConfig } from './types';
 
-export type DbCfg31 = Partial<Pick<RunConfig, 'dbSize' | 'realOff31' | 'history' | 'realNames' | 'mode' | 'base31br' | 'base31it' | 'base31hits' | 'startYear'>>;
+export type DbCfg31 = Partial<Pick<RunConfig, 'dbSize' | 'realOff31' | 'history' | 'realNames' | 'mode' | 'base31br' | 'base31it' | 'base31hits' | 'base31stars' | 'startYear'>>;
 
 /** O ato `i` de REAL_ALL pode existir nesta configuração (tamanho, país, modo exato e chaves das bases novas). */
 export function realIn31(c: DbCfg31, i: number): boolean {
@@ -18,6 +18,7 @@ export function realIn31(c: DbCfg31, i: number): boolean {
   if (c.base31br === false && i >= BASE31BR_FROM && i < BASE31BR_TO) return false;
   if (c.base31it === false && i >= BASE31IT_FROM && i < BASE31IT_TO) return false;
   if (c.base31hits === false && i >= BASE31H_FROM && i < BASE31H_TO) return false;
+  if (starsOff31(c, i)) return false;
   return true;
 }
 

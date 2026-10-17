@@ -130,9 +130,19 @@ registerSwitch({
 });
 /** índice de REAL_ALL fora do mundo nesta partida (base de sucessos desligada): lido no início e a cada mês para quem ainda vai surgir. */
 const hitOff31 = (s: GameState, i: number): boolean => i >= BASE31H_FROM && i < BASE31H_TO && s.config.base31hits === false;
-/** R31 (DBTAM): estrelas (t 1) das listas antigas que estavam só na Grande voltam para a Média (data/dbtam31.rebalance31). */
-export const REBAL31 = rebalance31(REAL_ALL, BASE31_FROM);
+/** R31 (DBTAM): estrelas (t 1) das listas antigas que estavam só na Grande voltam para a Média (data/dbtam31.rebalance31),
+ *  atrás da chave 'base31.stars' (na configuração, vale na criação): desligada, na Média elas ficam fora como antes. */
+export const REBAL31 = new Set(rebalance31(REAL_ALL, BASE31_FROM));
 for (const i of REBAL31) REAL_ALL[i].z = 1;
+registerSwitch({
+  id: 'base31.stars', def: true, scope: 'game',
+  desc: l('Estrelas que faltavam na base Média (Herbert Grönemeyer, Flume, aespa, IVE, LE SSERAFIM, Tate McRae, Jorge e Mateus, Paulo Londra). Vale ao criar a partida; desligada, só existem nas bases Grande e Enorme.',
+    'Stars missing from the Medium database (Herbert Grönemeyer, Flume, aespa, IVE, LE SSERAFIM, Tate McRae, Jorge e Mateus, Paulo Londra). Applies when the game is created; off, they only exist in the Large and Huge databases.'),
+  read: (s) => s.config.base31stars !== false,
+  write: (s, v) => { if (v) delete s.config.base31stars; else s.config.base31stars = false; },
+});
+/** índice de REAL_ALL fora desta partida pela chave 'base31.stars' (só muda a base Média: na Grande/Enorme já entravam). */
+export const starsOff31 = (c: Pick<GameState['config'], 'base31stars' | 'dbSize'>, i: number): boolean => c.base31stars === false && REBAL31.has(i) && (c.dbSize ?? 'medium') === 'medium';
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
 // r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
 {
@@ -853,7 +863,7 @@ function newgame(s: GameState, r: Rng): void {
   for (let i = 0; i < REAL_ALL.length; i++) {
     const r = i >= ACERVO21_FROM ? rAc : rMain;
     const a = REAL_ALL[i];
-    if (!realAllowed(s.config, a) || brOff31(s, i) || !it31Ok(s, i) || hitOff31(s, i)) continue;
+    if (!realAllowed(s.config, a) || brOff31(s, i) || !it31Ok(s, i) || hitOff31(s, i) || starsOff31(s.config, i)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
     const debut = a.d + jitter(s, r, 2);

@@ -53,6 +53,8 @@ export interface RunConfig {
   base31it?: boolean;
   /** R31 (BASE-HITS): base de sucessos 1992+ (data/base31hits) — ausente = ligada; false = os atos dela não nascem (interruptor base31.hits). */
   base31hits?: boolean;
+  /** R31 (DBTAM): estrelas antigas devolvidas à base Média — ausente = ligada; false = fora da Média (interruptor base31.stars). */
+  base31stars?: boolean;
   /** R31 onda 5: países (ISO-3) cujos artistas reais ficam fora desta partida; ausente/vazio = todos */
   realOff31?: string[];
   /** R29 (relíquias): densidade das relíquias procedurais (relics29); ausente = 'many' */
