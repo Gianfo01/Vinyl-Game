@@ -53,6 +53,7 @@ import { botMedia18 } from './botmedia18';
 import { rankChannels18 } from './sys/mkt18';
 import { freshLogBiz27, playBiz27, type LogBiz27 } from './botbiz27';
 import { rng19 } from './rng19';
+import { botMonth33 } from './r33/bots33';
 
 export type Profile = 'cautious' | 'balanced' | 'aggressive';
 
@@ -525,6 +526,7 @@ export function playMonth(s: GameState, prof: Profile = 'balanced'): void {
   playBiz27(s, prof, { cash: s.player.cash, burn: burn(s), cut: k.cut }, L.biz); // r27: negócios que o bot nunca tocava
   play17(s, prof, { cash: s.player.cash, burn: burn(s), energy: energyLeft(s) }, L.r17);
   botMedia18(s, prof);
+  botMonth33(s, prof); // r33 (GESTÃO): jabá, leilões, terrenos/casas e vitrine — só com exp33.bots
   personal(s);
 }
 
