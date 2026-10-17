@@ -22,9 +22,9 @@ Junto com a correção do dono já integrada (`keep31`: cidades, países, mercad
 2. **Palavras da interface geradas** (`scripts/r31/uiwords31.ts` → `src/data/uiwords31.ts`): varre os textos do
    código (pares pt/en de `l()`/`s()`/`N()`… e chamadas `l()`/`s()` do resto) e cruza com a tabela e com todo texto
    das bases (títulos que a partida põe na tabela na hora):
-   - `UI_WHOLE31` (1175): nome que é um rótulo da interface — tem tradução diferente ou aparece em minúsculas numa
+   - `UI_WHOLE31` (1246): nome que é um rótulo da interface — tem tradução diferente ou aparece em minúsculas numa
      frase — não troca como texto inteiro ("Nome", "Telefone", "Balanço", "Lightning", "Status");
-   - `UI_INTEXT31` (161): palavra única comum ou homônima — em minúsculas numa frase, ou com maiúscula num texto da
+   - `UI_INTEXT31` (170): palavra única comum ou homônima — em minúsculas numa frase, ou com maiúscula num texto da
      interface sem ser citação de propósito — só troca como texto inteiro ("Fazer", "Teto", "Neto", "Mobile", "Blitz").
      Citação de propósito continua trocando em frase: nomes compostos ("B.B. King") e a lista `ENTITY_OK31` revisada à
      mão + registro de lugares/veículos/marcas ("o som Motown", "Sobreviva ao Napster", "Era TV/MTV").
