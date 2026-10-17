@@ -186,7 +186,17 @@ export const RESP31: RespDef31[] = [
   R('people', 'people', l('Equipe: aumentos e saídas', 'Staff: raises and exits'), l('Pedidos de aumento e propostas de rivais pela sua equipe.', 'Raise requests and rival offers for your staff.'),
     ['admin'], ['me'], 'me', [], {}, l('Ainda sem delegação: pedidos de aumento e propostas de rivais chegam para você.', 'No delegation yet: raise requests and rival offers come to you.')),
 ];
-export const respDef31 = (id: Resp31): RespDef31 => RESP31.find((x) => x.id === id)!;
+const respBase31 = (id: Resp31): RespDef31 => RESP31.find((x) => x.id === id)!;
+/** R33 (GESTÃO): uma regra nova pode abrir uma linha travada (modos, diretrizes) enquanto o interruptor dela estiver
+ *  ligado — ex.: imprensa, jurídico e equipe com diretor (sim/r33/dir33.ts). Sem nada registrado, a linha de antes. */
+export const RESP_X31: Partial<Record<Resp31, (s: GameState) => Partial<RespDef31> | null>> = {};
+/** Linha efetiva da responsabilidade nesta partida (o catálogo de antes com o que uma regra ligada abrir). */
+export function respView31(s: GameState, id: Resp31): RespDef31 {
+  const base = respBase31(id), x = RESP_X31[id]?.(s);
+  return x ? { ...base, ...x, id } : base;
+}
+/** Catálogo de antes (nome, departamento); modos e diretrizes desta partida: `respView31`. */
+export const respDef31 = respBase31;
 
 export const MODE31: Record<Mode31, { name: L; desc: L }> = {
   me: { name: l('Eu decido', 'I decide'), desc: l('Tudo chega para você.', 'Everything comes to you.') },
@@ -199,7 +209,7 @@ export const MODE31: Record<Mode31, { name: L; desc: L }> = {
 
 /** Configuração atual (com os padrões de antes). */
 export function set31(s: GameState, id: Resp31): Set31 {
-  const def = respDef31(id);
+  const def = respView31(s, id);
   const cur = ro(s)?.r[id];
   return { m: cur?.m ?? def.def, st: cur?.st, d: { ...def.defDir, ...(cur?.d ?? {}) } };
 }
@@ -213,7 +223,7 @@ export const joinDelegated31 = (s: GameState, act?: { playerBand?: boolean }): b
 
 const roleName = (role: string): L => STAFF_ROLES.find((x) => x.id === role)?.name ?? l(role, role);
 /** Quem da equipe pode responder por esta responsabilidade. */
-export const qualified31 = (s: GameState, id: Resp31): StaffMember[] => { const roles = respDef31(id).roles; return roles.length ? s.player.staff.filter((x) => roles.includes(x.role)) : []; };
+export const qualified31 = (s: GameState, id: Resp31): StaffMember[] => { const roles = respView31(s, id).roles; return roles.length ? s.player.staff.filter((x) => roles.includes(x.role)) : []; };
 /**
  * Quem responde: o escolhido (se ainda estiver na equipe e tiver a função) ou o primeiro qualificado na ordem da equipe
  * (a regra de antes da renovação: o primeiro jurídico/empresário/A&R).
@@ -224,7 +234,7 @@ export function staffFor31(s: GameState, id: Resp31): StaffMember | undefined {
 }
 /** Motivo de o modo não estar disponível (null = disponível). */
 export function lockWhy31(s: GameState, id: Resp31, m: Mode31): L | null {
-  const def = respDef31(id);
+  const def = respView31(s, id);
   if (!def.modes.includes(m)) return def.locked ?? l('Esta responsabilidade não tem esse modo.', 'This responsibility has no such mode.');
   if ((m === 'staff' || m === 'partial') && def.roles.length && !qualified31(s, id).length)
     return fmtL(l('Falta alguém com o cargo: {r}. Contrate na Equipe.', 'You need someone in the role: {r}. Hire in Staff.'), { r: def.roles.map((r) => roleName(r)).reduce((a, b) => l(`${a.pt} / ${b.pt}`, `${a.en} / ${b.en}`)) });
@@ -239,8 +249,8 @@ export const OPINE31: { f?: (s: GameState, key: string, d: number, why: L) => vo
 
 export function setMode31(s: GameState, id: Resp31, m: Mode31, staffId?: string, o: { force?: boolean } = {}): L | null {
   const why = lockWhy31(s, id, m);
-  if (why && !(o.force && respDef31(id).modes.includes(m))) return why;
-  const d = d31(s), cur = d.r[id] ?? { m: respDef31(id).def, d: {} };
+  if (why && !(o.force && respView31(s, id).modes.includes(m))) return why;
+  const d = d31(s), cur = d.r[id] ?? { m: respView31(s, id).def, d: {} };
   if (staffId !== undefined) {
     if (staffId && !qualified31(s, id).some((x) => x.id === staffId)) return l('Essa pessoa não tem a função certa.', 'That person does not have the right role.');
     cur.st = staffId || undefined;
@@ -256,7 +266,7 @@ export function setMode31(s: GameState, id: Resp31, m: Mode31, staffId?: string,
   return null;
 }
 export function setDir31(s: GameState, id: Resp31, patch: Dir31): void {
-  const d = d31(s), cur = d.r[id] ?? { m: respDef31(id).def, d: {} };
+  const d = d31(s), cur = d.r[id] ?? { m: respView31(s, id).def, d: {} };
   const nd: Dir31 = { ...cur.d, ...patch };
   for (const k of ['cap', 'ask', 'budget', 'per', 'minQ', 'frac', 'months', 'minTrust', 'reserve', 'rest', 'maxShows'] as const) if (nd[k] !== undefined) nd[k] = Math.max(0, Number(nd[k]) || 0);
   if (nd.minQ !== undefined) nd.minQ = clamp(nd.minQ, 0, 100);
@@ -382,6 +392,12 @@ export const excs31 = (s: GameState, sinceWeek = -Infinity): Exc31[] =>
 /** Produção executiva: o executor (sys/deleg31run) ajusta a regra de lançamento automático das agendas delegadas
  *  (pacing8). Sem ele (ou sem diretriz), a regra de antes vale. `why` dá códigos extras de motivo para o registro. */
 export interface RelPol31 { ok: boolean; minGap: number; budgetMult: number; maxSpend: number; type?: 'single' | 'lp'; songs?: string[] }
+/** R33 (GESTÃO, exp33.learn): o que os aprendizados ensinam aos diretores — pontos a mais/menos na leitura do A&R por
+ *  gênero e o formato que o produtor executivo escolhe. Sem registro (ou interruptor desligado), a decisão de antes. */
+export const LEARN31X: {
+  anr?: (s: GameState, act: import('./types').Act) => number;
+  fmt?: (s: GameState, act: import('./types').Act, type: 'single' | 'lp', good: number) => 'single' | 'lp';
+} = {};
 export const EXEC31: { release?: (s: GameState, act: import('./types').Act, base: RelPol31) => RelPol31; why?: (s: GameState, act: import('./types').Act) => string[] } = {};
 
 /** Desfazedores registrados pelos executores: devolvem null (desfeito) ou o motivo. Recebem a entrada do registro

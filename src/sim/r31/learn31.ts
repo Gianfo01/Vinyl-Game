@@ -35,6 +35,8 @@ export interface Samp31 {
   fa: number; cash: number;
   /** traços da decisão */
   f: string[];
+  /** R33 (exp33.learn): fator de calibração que a previsão deste lançamento já trazia (ausente = 1) */
+  k?: number;
 }
 export interface Learn31St { s: Samp31[]; seen: Record<string, 1> }
 declare module '../ext4' { interface Ext4 { learn31: Learn31St } }
@@ -95,16 +97,22 @@ export function traitName31(k: string): L {
 
 // ---------------------------------------------------------------- coleta (gancho semanal; só lê o lançamento)
 
+/** R33 (GESTÃO): quem calibra a previsão diz quanto da previsão deste lançamento já era calibração (sim/r33/learn33). */
+export const SAMP31X: { k?: (s: GameState, rel: Release) => number | undefined } = {};
+
 export function sampleOf31(s: GameState, rel: Release): Samp31 | null {
   if (rel.fa === undefined || rel.fc === undefined) return null;
   const e = expectedFor(rel, EXPLAIN_WEEKS);
   if (e === null || e <= 0) return null;
   const a = s.acts[rel.actId];
-  return {
+  const x: Samp31 = {
     id: rel.id, n: rel.title, a: rel.actId, an: a?.name ?? '', y: rel.year, m: monthOf(s, rel), g: a ? familyOf(a.genre) : '', t: rel.type,
     u: rel.fa, e, pk: rel.peak || 99, cr: rel.criticN ? Math.round(rel.critic ?? 0) : 0,
     fa: Math.round(a?.fame ?? 0), cash: Math.round(s.player.cash), f: traitsOf31(s, rel),
   };
+  const k = SAMP31X.k?.(s, rel);
+  if (k !== undefined && k !== 1) x.k = k;
+  return x;
 }
 
 export function collect31(s: GameState): number {
