@@ -519,3 +519,34 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - **Parte B** (três camadas de detalhe, promoção e rebaixamento com resumo do passado, talento escondido, volta por
     cima) só depois de juntar o QA33, porque mexe em todas as pessoas e nos goldens.
   - Nem todos os NPCs terão o mesmo detalhe: as camadas seguem a pessoa, não o emprego.
+
+## 2026-10-17 · INTRO33 — o que foi feito (frente INTRO33, Sonnet)
+- **Rua que atravessa as épocas**, desenhada só por código (nenhum arquivo de vídeo, nenhuma imagem embutida; o arquivo único
+  não cresceu): cortes isométricos de 1889 (sobrado com piano, gramofone e ribalta a gás), 1920 (rádio com torre e faíscas),
+  1950 (loja de discos com toldo e jukebox), 1965 (estúdio de fita), 1975 (palco com plateia e luzes coloridas), 1995 (estúdio
+  digital com telas) e 2035 (cidade de vidro com UM único holograma de cantora, reaproveitando a cor do `holo5`). Gente com
+  roupa da época (`crowdLook27` + `avatarSprite`), carros de cada época, postes (gás → elétrico → LED), janelas que acendem com
+  a onda, rio com ponte de pedra nas pontas. A onda de luz muda de cor (dourado → laranja → rosa → roxo → ciano) e puxa a câmera.
+- **Arte**: `Px`, contorno `INK` por `inked`, luz de cima à esquerda, rampas `lv`, faixas de época `ep5Of`. Os adereços e os
+  prédios do fundo são caixas isométricas (`sbox`); o que é alto (torre, chaminés) nasce de trás do telhado, e nada fica solto
+  no ar (revisado depois de achados do dono: antena, chaminés, luminárias, placa, alto-falantes e bateria).
+- **Dois usos do mesmo motor** (`src/ui/r33/intro33px.ts` puro + `intro33.ts` canvas):
+  1. **Fundo da tela inicial**, loop de ~40 s, no lugar de `cycleShow5`/`SHOW5` (que continuam para o interruptor desligado).
+     Escala inteira (`k = round(altura/270)`), ~30 quadros por segundo, pausa com a aba oculta ou fora da tela, "movimento
+     reduzido" = um quadro parado (a rua acesa até o palco de 1975). O título segue `fitHead5`, que agora respeita o topo das
+     placas e das torres (`signTop`).
+  2. **Intro da partida** (decisão do coordenador, que valeu mais que o pedido original de "só na 1ª abertura"): ao apertar
+     "Começar minha história" (começo rápido e configuração completa, os dois passam por `launchRun27`), o personagem criado
+     na ficha, com a mesma aparência, anda pela rua até a época escolhida (6 paradas = as faixas de `ep5Of`; a de 1950–69 tem
+     dois cortes), o resumo da ficha aparece digitado com o nome dele e a imagem escurece. 12 a 15 s, pulável com qualquer tecla
+     ou clique (atalhos como F5 e Ctrl seguem funcionando). Movimento reduzido: imagem final parada, resumo e botão
+     "Continuar". Texto vem de `story5` (o mesmo da ficha).
+- **Interruptor** `exp33.intro` (ligado por padrão; editor e Opções). Desligado: tela inicial de antes e início direto da partida.
+  Em Opções: caixa "Intro da partida e rua animada na tela inicial" e botão "Rever a intro".
+- **Easter eggs** (pequenos, na mesma arte, valem para o fundo e para a intro): gato preto nos telhados do sobrado e do estúdio de
+  fita; pombos que voam quando a onda passa; disco voador nos anos 50; disco de vinil que rola pela pista; patinho de borracha no
+  canal; violonista de rua com o estojo aberto entre 1965 e 1975.
+- **Testes**: `tests/r33-intro.test.ts` (cada trecho desenha sem DOM e sem bloco de uma cor, o loop volta ao começo, um só
+  holograma, movimento reduzido não anima, roteiro e duração da intro, easter eggs). Prints em `docs/r33/intro/`.
+- **Achado de processo**: o observador de visibilidade entrega o primeiro aviso antes de o canvas entrar na página; ler só o
+  primeiro pausava o laço para sempre. Vale o último aviso.
