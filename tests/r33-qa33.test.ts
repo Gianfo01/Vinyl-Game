@@ -3,7 +3,10 @@
 import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
 import { newRunConfig20 } from '../src/sim/start17';
-import { setSw } from '../src/sim/r31/switches';
+import { setSw, sw as swRead, switchDefs } from '../src/sim/r31/switches';
+import { decodeSave20, encodeSave20 } from '../src/core/save20';
+import { migrate } from '../src/ui/store';
+import { playMonth } from '../src/sim/playbot16';
 import { loanOffer } from '../src/sim/economy';
 import { advanceMonth } from '../src/sim/tick';
 import { int2Acts, int2Do, int2Now } from '../src/sim/r33/int2';
@@ -113,5 +116,26 @@ describe('QA33 · prédios da INT-2 no mapa (MAPA33)', () => {
     const f = int2FestPlace33(s)!;
     expect(f.int2).toBe('festival');
     expect(int2Acts(s, 'festival').length).toBeGreaterThan(0);
+  });
+});
+
+describe('QA33 · salvar e carregar com o estado novo', () => {
+  // O jogo carregado não segue bit a bit o original nem com tudo desligado (o `migrate` completa posição de atos e
+  // persona/meta/aposentadoria de quem nasceu na partida — anotado para a onda 6, "save do estado novo"); aqui vale:
+  // o estado da 33 volta inteiro, os interruptores voltam e a partida continua sem erro.
+  it('todos os exp33.* ligados, 2 anos de robô: salvar, carregar e continuar 4 meses', () => {
+    const s = game(1985);
+    for (const d of switchDefs()) if (d.id.startsWith('exp33.') && typeof d.def === 'boolean') setSw(s, d.id, true);
+    for (let m = 0; m < 24; m++) { playMonth(s, 'aggressive'); advanceMonth(s); }
+    const x = s.x4 as unknown as Record<string, unknown>;
+    const keys = Object.keys(x).filter((k) => /33$|^int2$|^sw31$/.test(k));
+    expect(keys.length).toBeGreaterThan(4); // o estado novo existe
+    const back = decodeSave20(encodeSave20(s), migrate);
+    const y = back.x4 as unknown as Record<string, unknown>;
+    for (const k of keys) expect(JSON.stringify(y[k]), k).toBe(JSON.stringify(x[k]));
+    for (const sw of switchDefs()) if (sw.id.startsWith('exp33.')) expect(swRead(back, sw.id), sw.id).toBe(swRead(s, sw.id));
+    for (let m = 0; m < 4; m++) { playMonth(back, 'aggressive'); advanceMonth(back); }
+    expect(Number.isFinite(back.player.cash)).toBe(true);
+    expect(back.year * 12 + back.month).toBe(s.year * 12 + s.month + 4);
   });
 });

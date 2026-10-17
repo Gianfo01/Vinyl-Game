@@ -241,10 +241,16 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     spots.push({ id: o.id, x: G.X(fx), y: py, w: Math.max(14, G.Wd(fw)), h: ph, label: o.label, tip: o.tip, go: { panel: o.go }, quiet: false });
   }
   // r33 (INT-2): cada ação do lugar é um ponto no chão da sala (o cartão de ações abre no painel de sempre)
-  if (i2) acts.forEach((a, i) => {
-    const fx = 0.08 + (0.84 * (i + 0.5)) / acts.length, [py, ph] = vband('desk', G);
-    spots.push({ id: `i2:${a.id}`, x: Math.max(0, G.X(fx) - 14), y: py, w: 28, h: ph, label: a.label, tip: a.dis ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: a.desc, w: a.dis }) : a.desc, go: { panel: `do:${a.id}` }, quiet: false });
-  });
+  // no alto (parede/objeto alto), na coluna de um adereço da sala, para não disputar o clique com as pessoas no chão
+  if (i2) {
+    const xs = room.props.map((p) => p.x + (p.w ?? 0.08) / 2);
+    acts.forEach((a, i) => {
+      const f0 = 0.08 + (0.84 * (i + 0.5)) / acts.length, near = xs.filter((x) => Math.abs(x - f0) < 0.3 / acts.length).sort((x, y) => Math.abs(x - f0) - Math.abs(y - f0))[0];
+      const fx = near ?? f0; // encosta no adereço mais perto quando há um na faixa da ação
+      const [py, ph] = vband('poster', G), w = Math.min(40, Math.floor((G.Wd(0.84) / acts.length) - 4));
+      spots.push({ id: `i2:${a.id}`, x: Math.max(0, Math.min(W - w, G.X(fx) - w / 2)), y: py, w, h: ph, label: a.label, tip: a.dis ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: a.desc, w: a.dis }) : a.desc, go: { panel: `do:${a.id}` }, quiet: false });
+    });
+  }
   // r31 (ART2): objetos novos ligados às mecânicas (jukebox, parada, telefone, vitrine, carro na porta…)
   if (!x.vit) spots.push(...artSpots31(s, x, room, W));
   // r31 (VIT): a prateleira do mês (itens sorteados na virada) e a porta da feira
