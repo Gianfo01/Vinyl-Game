@@ -2,19 +2,28 @@
 // sementes) e, quando o sinal é conhecido, anda na direção certa. Ver src/sim/probe29all.ts e docs/connect29.md.
 import { beforeAll, describe, expect, it } from 'vitest';
 import '../src/sim/sys/index';
-import { base29, EDGES29, matrix29, median29, run29, strength29, type Cell29, type Run29 } from '../src/sim/probe29all';
+import { base29, EDGES29, matrix29, median29, NUDGES29, run29, strength29, type Cell29, type Run29 } from '../src/sim/probe29all';
 import { CONNMAP29 } from '../src/sim/connmap29';
 
 let RUN: Run29;
 let CELLS: Map<string, Cell29>;
-beforeAll(() => {
+beforeAll(async () => {
   // r31 (W0-RNG): o ato da sonda sai do fluxo 'act' e o mundo do fluxo 'world'. Com 'r29all-b'/'r29all-c' só uma sonda
   // tinha gênero de rua e a aresta submundo → público (calor → jovens, só para gênero de rua) sumia na mediana; 'r29all-q'
   // (two tone) e 'r29all-x' (punk) no lugar — conferido: todas as arestas e sinais (também em 3 outros trios de 7 sementes)
   // r31 (W3-FIX): a base nova da onda 3 (Z) muda o mundo de 'r29all-x': o ato dela vira solo e já começa estressado
   // acima do limiar da terapia nos dois braços, e a aresta vida → dinheiro (estresse → despesas) zerava na mediana;
   // 'r29all-d' (punk, dupla) no lugar — conferido: todas as arestas e sinais também em [d,q,w], [d,q,z] e [q,r,r29all]
-  RUN = median29(['r29all', 'r29all-q', 'r29all-d'].map((sd) => run29(base29(sd))));
+  // W5-FIX2: a mesma sonda, um empurrão por chamada (o run29 já roda controle + empurrão por empurrão: mesma sequência de
+  // braços), devolvendo o controle ao vitest entre eles — 180 s síncronos travavam o worker ("Timeout calling onTaskUpdate")
+  const runs: Run29[] = [];
+  for (const sd of ['r29all', 'r29all-q', 'r29all-d']) {
+    const b = base29(sd);
+    const rows: Run29['rows'] = [];
+    for (const n of NUDGES29) { rows.push(...run29(b, (x) => x.id === n.id).rows); await new Promise<void>((r) => setTimeout(r, 0)); }
+    runs.push({ rows });
+  }
+  RUN = median29(runs);
   CELLS = new Map(matrix29(RUN).map((c) => [`${c.a}>${c.b}`, c]));
 }, 600_000);
 

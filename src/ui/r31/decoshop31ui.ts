@@ -182,8 +182,8 @@ export function decoShop31Page(s: GameState): HTMLElement {
     body);
 }
 
-// onda 5: as lojas de decoração são prédios da cidade (Shift+O: decOração)
-registerObject5({ id: 'decoracao', label: l('Lojas de decoração', 'Decoration shops'), place: 'cidade.loja', frame: 'predio', key: 'shift+o', opens: [{ area: DECO_AREA31 }],
+// onda 5: as lojas de decoração são prédios da cidade (Shift+U; Shift+O é o modo Arrumar da DECO-M)
+registerObject5({ id: 'decoracao', label: l('Lojas de decoração', 'Decoration shops'), place: 'cidade.loja', frame: 'predio', key: 'shift+u', opens: [{ area: DECO_AREA31 }],
   note: l('Móveis, antiquário, eletrônicos, galeria, correio/internet e os seus lugares decorados.', 'Furniture, antiques, electronics, gallery, mail/online and your decorated places.') });
 registerArea({ id: DECO_AREA31, label: l('Lojas de decoração', 'Decoration shops'), icon: 'house', key: '', render: (s) => decoShop31Page(s), visible: () => false });
 // o prédio da loja no mapa: "Entrar na loja" (uma por loja quando o centro comercial junta várias)

@@ -11,9 +11,11 @@ import { CUR31 } from '../src/data/cur31';
 import { POP31 } from '../src/data/pop31';
 import { homage31 } from '../src/data/homage31';
 import { disp31, setDisplay31 } from '../src/data/realdisp31';
-import { allRealNames31, realPairsOff31, realShown31, setRealShown31, syncRealShow31 } from '../src/sim/r31/realshow31';
+import { allRealNames31, keep31, realPairsOff31, realShown31, setRealShown31, syncRealShow31 } from '../src/sim/r31/realshow31';
 import { REAL_ALL, realDataOf } from '../src/sim/sys/realworld';
 import { REAL_ACTS } from '../src/data/realnames';
+import { t } from '../src/i18n/strings';
+import { l } from '../src/data/world';
 import type { GameState } from '../src/sim/types';
 
 const words = (s: string, w: string) => new RegExp(`(^|[^\\p{L}\\p{N}])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}\\p{N}])`, 'u').test(s);
@@ -52,6 +54,24 @@ describe('X · varredura de nomes reais', () => {
     setDisplay31([], []);
   });
 
+  it('cidades, países, teclas e letras soltas não são trocados; nomes de artista e obra continuam trocados', () => {
+    const s: GameState = createGame(defaultConfig('x31-ui', { startYear: 1975, realNames: false }));
+    setRealShown31(s, false);
+    syncRealShow31(s);
+    // lugares (inteiros e em frase), teclas e rótulos da interface ficam como estão
+    for (const txt of ['Rio de Janeiro', 'SEDE · RIO DE JANEIRO', 'Sede · Rio de Janeiro', 'Hoje no Rio de Janeiro', 'Boston', 'Chicago', 'Hungria',
+      'Enter', 'Ctrl Enter', 'Esc', 'N', 'I', 'X', '5', '13', '+', 'OK']) expect(disp31(txt)).toBe(txt);
+    expect(disp31(t(l('Elenco', 'Roster')))).toBe('Elenco'); // o que o h() mostra
+    expect(disp31(t(l('Mapa da cidade · Rio de Janeiro', 'City map · Rio de Janeiro')))).toBe('Mapa da cidade · Rio de Janeiro');
+    // nomes reais continuam trocados: em frase, inteiros e entre aspas
+    expect(disp31('The Beatles')).not.toBe('The Beatles');
+    expect(disp31('Hoje, The Beatles lançou um disco.')).not.toMatch(/Beatles/);
+    expect(disp31('Elvis Presley')).not.toBe('Elvis Presley');
+    expect(disp31('U2')).not.toBe('U2');
+    expect(disp31('Elenco')).toBe('Sol Maior Discos'); // a gravadora real (texto que não veio de rótulo da interface)
+    setDisplay31([], []);
+  });
+
   for (const year of [1965, 2005]) {
     it(`partida com nomes reais (${year}) e exibição desligada: nenhum ato, integrante ou disco real aparece`, () => {
       const s: GameState = createGame(defaultConfig(`x31-${year}`, { startYear: year, realNames: true }));
@@ -65,6 +85,7 @@ describe('X · varredura de nomes reais', () => {
       for (const a of Object.values(s.acts)) {
         const real = a.catalogNo ? (realDataOf(a)?.n ?? REAL_ACTS[a.catalogNo]?.name) : undefined;
         if (!real || a.name !== real) continue;
+        if (keep31(real)) continue; // lugar, tecla ou número ("Chicago", "883"): o interruptor não troca
         checked++;
         const shown = disp31(a.name);
         if (shown === real) leaks.push(`ato ${real}`);
@@ -76,6 +97,7 @@ describe('X · varredura de nomes reais', () => {
       for (const r of Object.values(s.releases)) {
         const a = s.acts[r.actId];
         if (!a?.catalogNo) continue;
+        if (keep31(r.title)) continue; // "1984", "Berlin", "V": ano, lugar ou letra na tela
         const shown = disp31(r.title);
         const realAct = realDataOf(a);
         if (realAct?.al?.some((x) => x[0] === r.title) && shown === r.title) leaks.push(`disco ${r.title}`);

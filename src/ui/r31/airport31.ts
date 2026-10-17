@@ -22,7 +22,7 @@ import { furniture } from '../pixel/sprites';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
-import { vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
+import { vitOpen5, vitSpot5, vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
 import { blitPx31, moreBtn31, runGo31, sceneView31 } from './scene31';
 import { airport31Model, type Air31 } from './airport31model';
 
@@ -301,9 +301,9 @@ function eventsPanel(s: GameState): void {
 export function airport31View(s: GameState): HTMLElement {
   const m = airport31Model(s);
   return sceneView31(s, {
-    id: 'airport', title: m.name, W: m.W, H: m.H, spots: m.spots,
+    id: 'airport', title: m.name, W: m.W, H: m.H, spots: [...m.spots, ...vitSpot5(s, 'airport', m.W)],
     paint: (cv) => paint(cv, s, m),
-    panels: { dep: () => depPanel(s, m), arr: () => arrPanel(s, m), customs: () => customsPanel(s), vip: () => vipPanel(s), hangar: () => hangarPanel(), sea: () => seaPanel(s), holo: () => holoPanel(s), news: () => newsPanel(s, m), events: () => eventsPanel(s) },
+    panels: { vit5: () => vitOpen5(s, 'airport'), dep: () => depPanel(s, m), arr: () => arrPanel(s, m), customs: () => customsPanel(s), vip: () => vipPanel(s), hangar: () => hangarPanel(), sea: () => seaPanel(s), holo: () => holoPanel(s), news: () => newsPanel(s, m), events: () => eventsPanel(s) },
     list: () => h('ul', null, m.spots.map((sp) => h('li', null, h('b', null, T(sp.label)), ' — ', T(sp.tip)))),
     intro: l('O aeroporto muda com a época: estação e porto até 1919, campo de pouso, terminal, jatos (1958) e hangar de jatinhos. Cada balcão leva a uma ação.', 'The airport changes with the era: station and port until 1919, airfield, terminal, jets (1958) and a private-jet hangar. Each desk leads to an action.'),
     legend: h('p', { class: 'sc31-legend' }, h('span', null, h('b', null, T(m.name)))),

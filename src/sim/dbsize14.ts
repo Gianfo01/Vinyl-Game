@@ -21,5 +21,10 @@ export const realAllowed = (c: Pick<RunConfig, 'dbSize'> & Partial<Pick<RunConfi
   return a.z ? a.z <= lvl : lvl > 0 || a.t < 3;
 };
 
-/** País (ISO-3) de um artista real, pela cidade de origem ('' = desconhecido). */
-export const realCountry31 = (a: Pick<RealArtist, 'c'>): string => countryOfCity(a.c) ?? '';
+/** País (ISO-3) de um artista real: o país fichado (`cn`, nacionalidade) e, sem ele, o da cidade ('' = desconhecido).
+ *  R31 (DBTAM): antes era só a cidade — Rihanna contava como EUA, Hong Kong como China, quem vive fora como o país da cidade. */
+export const realCountry31 = (a: Pick<RealArtist, 'c'> & Partial<Pick<RealArtist, 'cn'>>): string => a.cn || (countryOfCity(a.c) ?? '');
+/** R31 (DBTAM): ato do catálogo clássico (100 arquétipos que viram nomes reais com "nomes reais" ligado) fora da partida
+ *  porque o país dele está desligado — a mesma chave do resto da base (início, lendas e estreias futuras). */
+export const classicOff31 = (c: Partial<Pick<RunConfig, 'realNames' | 'realOff31'>>, city: string): boolean =>
+  !!c.realNames && !!c.realOff31?.length && c.realOff31.includes(countryOfCity(city) ?? '');

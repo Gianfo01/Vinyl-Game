@@ -29,18 +29,20 @@ import { SONGS27 } from '../../data/audit27_songs';
 import { applyAudit27, applyFix27, applySongs27, type AnyArtist27 } from '../../data/audit27';
 import { NEW27_C1 } from '../../data/new27c1';
 import { BASE31_ACTS } from '../../data/base31acts';
-import { BASE31_IT } from '../../data/base31it';
-import { BASE31_HITS } from '../../data/base31hits';
-import { registerSwitch } from '../r31/switches';
+import { BASE31BR_ACTS, BR31_NOTES } from '../../data/base31br';
+import { BASE31_IT, IT31 } from '../../data/base31it';
+import { BASE31_HITS, HITS31_SRC } from '../../data/base31hits';
+import { rebalance31, zBr31, zHit31, zIt31 } from '../../data/dbtam31';
 import { frontmanSings27, lineupMonth27, realRoles27 } from '../../data/lineup27';
 import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
 import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
 const ACERVO22 = [...ACERVO21, ...LIKES22_ARTISTS];
-import { realAllowed } from '../dbsize14';
+import { classicOff31, realAllowed } from '../dbsize14';
 import { REAL_ACTS } from '../../data/realnames';
 import { atDebut27, firstJoin, inLineupAt, periodsOf, type Prov27, type RealArtist, type RealMember, type RealPeriod, type RealRelease } from '../../data/realtypes';
 import { CITIES, cityById, familyOf, l } from '../../data/world';
 import { personDies } from '../dynasty';
+import { registerSwitch, sw } from '../r31/switches';
 import { computeAppeal } from '../market';
 import { registerExt4, registerSimHook } from '../ext4';
 import { langForCity, makeAct, makePerson, songTitle } from '../people';
@@ -81,8 +83,26 @@ for (const a of [...NEW27_C1, ...NEW27_F]) { const k = dedupKey27(a.n); if (!tak
 /** R31 (Z): base nova (data/base31acts) no FIM — os números de catálogo de quem já existia não mudam; usa o sorteio do acervo. */
 export const BASE31_FROM = REAL_ALL.length;
 for (const a of BASE31_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+/** R31 (BASE-BR): artistas brasileiros (data/base31br) no FIM, depois do lote Z — interruptor 'base31.br' (desligado: não estreiam). */
+export const BASE31BR_FROM = REAL_ALL.length;
+// R31 (DBTAM): tamanho da base por notoriedade (data/dbtam31; antes, decisão de 2026-10-16: tudo só na Enorme)
+BASE31BR_ACTS.forEach((a, i) => { a.z = zBr31(a, BR31_NOTES[i]); });
+for (const a of BASE31BR_ACTS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
+export const BASE31BR_TO = REAL_ALL.length;
+registerSwitch({
+  id: 'base31.br', def: true, scope: 'game',
+  desc: l('Base brasileira ampliada (R31): centenas de atos brasileiros reais a mais, de 1889 a hoje, com fontes. Desligado: os atos novos não estreiam.',
+    'Expanded Brazilian database (R31): hundreds more real Brazilian acts, 1889 to today, with sources. Off: the new acts never debut.'),
+  // mora na configuração da partida (decide a composição do mundo já na criação; pode ser preparado antes de createGame)
+  read: (s) => s.config.base31br !== false,
+  write: (s, v) => { if (v) delete s.config.base31br; else s.config.base31br = false; },
+});
+/** R31 (BASE-BR): índice de REAL_ALL do lote brasileiro com o interruptor desligado nesta partida. */
+export const brOff31 = (s: GameState, i: number): boolean => i >= BASE31BR_FROM && i < BASE31BR_TO && !sw<boolean>(s, 'base31.br');
 /** R31 (BASE-IT): base italiana (data/base31it) no FIM, depois do lote BR (ordem BR, IT, HITS); atrás do interruptor base31.it. */
 export const BASE31IT_FROM = REAL_ALL.length;
+// R31 (DBTAM): tamanho da base por notoriedade (o `z: 2` gravado na 2ª passada é lido antes de ser trocado)
+{ const zs = IT31.map(zIt31); IT31.forEach((x, i) => { x.a.z = zs[i]; }); }
 for (const a of BASE31_IT) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
 export const BASE31IT_TO = REAL_ALL.length;
 registerSwitch({
@@ -96,8 +116,9 @@ registerSwitch({
 const it31Ok = (s: GameState, i: number): boolean => i < BASE31IT_FROM || i >= BASE31IT_TO || s.config.base31it !== false;
 /** R31 · onda 4 (BASE-HITS): sucessos de 1992 até hoje (data/base31hits) no FIM, depois das frentes BR e IT (ordem BR, IT, HITS); interruptor 'base31.hits'. */
 export const BASE31H_FROM = REAL_ALL.length;
-// dono (2026-10-16): os hits só entram com base de dados Enorme (z 3) — custam até +60% no mês a partir de 2012
-for (const a of BASE31_HITS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); a.z ??= 3; REAL_ALL.push(a); } }
+// R31 (DBTAM): tamanho da base pelos hits fichados; quem entra na Média (nº 1 e mais de um top 10) é grande nome (t 2)
+BASE31_HITS.forEach((a, i) => { const h = HITS31_SRC[i]; a.z = zHit31(h); if (a.z === 1 && h.t === undefined) a.t = 2; });
+for (const a of BASE31_HITS) { const k = dedupKey27(a.n); if (!taken17.has(k)) { taken17.add(k); REAL_ALL.push(a); } }
 export const BASE31H_TO = REAL_ALL.length;
 export const SW_HITS31 = 'base31.hits';
 registerSwitch({
@@ -109,6 +130,19 @@ registerSwitch({
 });
 /** índice de REAL_ALL fora do mundo nesta partida (base de sucessos desligada): lido no início e a cada mês para quem ainda vai surgir. */
 const hitOff31 = (s: GameState, i: number): boolean => i >= BASE31H_FROM && i < BASE31H_TO && s.config.base31hits === false;
+/** R31 (DBTAM): estrelas (t 1) das listas antigas que estavam só na Grande voltam para a Média (data/dbtam31.rebalance31),
+ *  atrás da chave 'base31.stars' (na configuração, vale na criação): desligada, na Média elas ficam fora como antes. */
+export const REBAL31 = new Set(rebalance31(REAL_ALL, BASE31_FROM));
+for (const i of REBAL31) REAL_ALL[i].z = 1;
+registerSwitch({
+  id: 'base31.stars', def: true, scope: 'game',
+  desc: l('Estrelas que faltavam na base Média (Herbert Grönemeyer, Flume, aespa, IVE, LE SSERAFIM, Tate McRae, Jorge e Mateus, Paulo Londra). Vale ao criar a partida; desligada, só existem nas bases Grande e Enorme.',
+    'Stars missing from the Medium database (Herbert Grönemeyer, Flume, aespa, IVE, LE SSERAFIM, Tate McRae, Jorge e Mateus, Paulo Londra). Applies when the game is created; off, they only exist in the Large and Huge databases.'),
+  read: (s) => s.config.base31stars !== false,
+  write: (s, v) => { if (v) delete s.config.base31stars; else s.config.base31stars = false; },
+});
+/** índice de REAL_ALL fora desta partida pela chave 'base31.stars' (só muda a base Média: na Grande/Enorme já entravam). */
+export const starsOff31 = (c: Pick<GameState['config'], 'base31stars' | 'dbSize'>, i: number): boolean => c.base31stars === false && REBAL31.has(i) && (c.dbSize ?? 'medium') === 'medium';
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
 // r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
 {
@@ -131,18 +165,23 @@ applySongs27(SONGS22);
  *  Só nomes de 2+ palavras (os de uma palavra são ambíguos) e fora dos homônimos conhecidos. */
 export const HARMONIZED27: string[] = [];
 function harmonize27(): void {
-  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string };
+  type Ref = { b?: number; x?: number; d?: number; setB: (v: number) => void; setX: (v: number) => void; where: string; recv?: boolean };
   const refs = new Map<string, Ref[]>();
-  const put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
+  let put = (n: string, r: Ref) => { const k = canonKey(n); if (!k.includes(' ') || HOMONYMS27.has(k)) return; (refs.get(k) ?? refs.set(k, []).get(k)!).push(r); };
   const scan = (a: { n: string; d?: number; m?: RealMember[]; b?: number; x?: number; e?: number }) => {
     if (!a.m?.length) put(a.n, { b: a.b, x: a.x, d: a.d, setB: (v) => { a.b = v; }, setX: (v) => { a.x = v; if (a.e === undefined || a.e > v) a.e = v; }, where: a.n });
     for (const m of a.m ?? []) put(m[0], { b: m[2], x: m[3], d: m[4] ?? a.d, setB: (v) => { m[2] = v; }, setX: (v) => { m[3] = v; }, where: a.n });
   };
-  for (const a of REAL_ALL) scan(a);
+  // R31 (BASE-BR): o lote BR só RECEBE (Pixinguinha nos Oito Batutas ganha a morte de 1973); nunca muda os dados de quem já existia
+  let recv = false;
+  const put0 = put;
+  put = (n, r) => put0(n, recv ? { ...r, recv: true } : r);
+  REAL_ALL.forEach((a, i) => { recv = i >= BASE31BR_FROM && i < BASE31BR_TO; scan(a); });
+  recv = false;
   for (const [no, ex] of Object.entries(REAL_CLASSIC)) { const n = REAL_ACTS[+no]?.name; if (n) scan({ get n() { return n; }, get d() { return ex.d; }, get m() { return ex.m; }, get b() { return ex.b; }, set b(v) { ex.b = v; }, get x() { return ex.x; }, set x(v) { ex.x = v; }, get e() { return ex.e; }, set e(v) { ex.e = v; } }); }
   for (const [k, xs] of refs) {
     if (xs.length < 2) continue;
-    const b = xs.find((r) => r.b !== undefined)?.b, x = xs.find((r) => r.x !== undefined)?.x;
+    const b = xs.find((r) => r.b !== undefined && !r.recv)?.b, x = xs.find((r) => r.x !== undefined && !r.recv)?.x;
     for (const r of xs) {
       if (r.b === undefined && b !== undefined && (r.d === undefined || r.d >= b + 8)) { r.setB(b); HARMONIZED27.push(`${k} @ ${r.where}: nasc. ${b}`); }
       if (r.x === undefined && x !== undefined && (r.d === undefined || r.d <= x + 1)) { r.setX(x); HARMONIZED27.push(`${k} @ ${r.where}: morte ${x}`); }
@@ -805,6 +844,7 @@ function newgame(s: GameState, r: Rng): void {
     }
     // r27 (LIN): quem estreia no próprio ano inicial não pode ter "terminado antes do início" (Beatles separados em jan/1962)
     if (upcomingNos.has(no) || !s.config.realNames || ex.d === undefined || ex.d >= y0) continue;
+    if (classicOff31(s.config, CATALOG_LOOKUP()[no]?.city ?? '')) continue; // R31 (DBTAM): país desligado
     // terminou antes do início: entra aposentado/separado, com catálogo
     const real = REAL_ACTS[no];
     const memberCount = Math.max(1, (ex.m ?? []).filter((m) => inLineupAt(m, ex.d!)).length);
@@ -823,7 +863,7 @@ function newgame(s: GameState, r: Rng): void {
   for (let i = 0; i < REAL_ALL.length; i++) {
     const r = i >= ACERVO21_FROM ? rAc : rMain;
     const a = REAL_ALL[i];
-    if (!realAllowed(s.config, a) || !it31Ok(s, i) || hitOff31(s, i)) continue;
+    if (!realAllowed(s.config, a) || brOff31(s, i) || !it31Ok(s, i) || hitOff31(s, i) || starsOff31(s.config, i)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
     const debut = a.d + jitter(s, r, 2);
@@ -908,6 +948,7 @@ function monthly(s: GameState, r: Rng): void {
       const r = i >= ACERVO21_FROM ? rAc : rMain;
       if (hitOff31(s, i)) { keep.push(i); continue; } // base de sucessos desligada depois de criar a partida: quem ainda não surgiu espera (religar devolve)
       const a = REAL_ALL[i];
+      if (brOff31(s, i)) continue; // R31 (BASE-BR): desligado no meio da partida — sai da fila
       if (a && !it31Ok(s, i)) continue; // R31 (BASE-IT): interruptor desligado no meio da partida — some da fila
       if (!a || s.year < a.d - 1 || (s.year === a.d - 1 && s.month < 6)) { keep.push(i); continue; }
       const act = spawnReal(s, r, i, false);

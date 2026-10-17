@@ -16,6 +16,7 @@ import { $, dateLabel, toast } from '../common';
 import { h } from '../dom';
 import { portraitCanvas } from '../pixel/avatar';
 import { travel5Canvas } from '../pixel/exp5px';
+import { rgba, type Px } from '../pixel/px';
 import { inbox5Layout, inbox5Look, inbox5Px, paper5Canvas, paper5Layout, paper5Px, type Paper5, type Rect5 } from '../pixel/exp5paper';
 import { TABS_REG27 } from '../ps/tabsreg27';
 import { REDIRECT29 } from '../ps/route29model';
@@ -24,9 +25,10 @@ import { setTab } from '../vis';
 import { CAREER_PAGE17 } from '../nav17';
 import { openCredits31 } from './credits31';
 import { KEY_CHANGES5, chordLabel5, chordOf5, defaultChord5, key5, keys5, rebind5, resetKeys5, type Bind5, type Region5 } from './keys5';
-import { NAV5, REGIONS5, TRANS5, bangs5, goto5, index5, open5, paperOf5, pin5, pocketView5, regionOfR5, resolveGoto5, travel5, travelTarget5, type GotoIn5 } from './nav5';
+import { CARD5, NAV5, REGIONS5, TRANS5, bangs5, goto5, index5, open5, paperOf5, pin5, pocketView5, regionOfR5, resolveGoto5, travel5, travelTarget5, type GotoIn5 } from './nav5';
 import { FRAME_L5, PLACES5, REGION_L5, movedInto5, object5, objectFor5, objects5, regionOf5, type Obj5, type Open5 } from './objects5';
 import { declutter5, kbd5, raw5, sedeScene5, tl5, txt5 } from './sede5';
+import { helpHere5 } from './cenas5'; // R31 onda 5 (CENAS5): ajuda do lugar no "?"
 import './shell5.css';
 
 /** O que app.ts entrega à casca (as funções de hoje: página antiga, avançar, busca, opções, salvar…). */
@@ -69,6 +71,7 @@ export function show5(area: string, tab?: [string, string], objId?: string): voi
   if (!s) return;
   const o = (objId ? object5(objId) : undefined) ?? objectFor5(area, tab);
   if (o && isPlace5(o) && !objId) { travel5go(regionOf5(o.place)); return; }
+  if (o && !SH5.paper && CARD5.take?.(o.id, { area, tab })) return; // ACOES5 (EXP-13): cartão de ações ao lado do objeto; papel só por "ver tudo ▸"/pausa
   const id = o?.id ?? `page:${area}`;
   const rect = clickRect5; clickRect5 = undefined;
   const swap = () => {
@@ -98,7 +101,9 @@ export function travel5go(r: Region5): void {
   if (!s) return;
   TRANS5.run({ kind: 'travel', from: SH5.region, to: r, year: s.year }, () => {
     SH5.region = r; SH5.paper = null; SH5.pause = false; SH5.help = false; SH5.flash = undefined;
-    store.area = travelTarget5(s, r).area as typeof store.area;
+    const to = travelTarget5(s, r);
+    if (to.tab) setTab(to.tab[0], to.tab[1]); // POL5: Mundo volta sempre ao mapa (não à última aba aberta da página)
+    store.area = to.area as typeof store.area;
     redraw();
   });
 }
@@ -168,7 +173,7 @@ export function shellKey5(e: KeyboardEvent): boolean {
   if (SH5.pause || SH5.help) return false;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { HOST?.save(); return true; }
   if (c === '{' || c === '}') return markerStep5(c === '}' ? 1 : -1);
-  if (c === 'tab') return house5();
+  if (c === 'tab') return !e.defaultPrevented && house5(); // na casa, o chaveiro da CASA (casa5) já tratou o Tab
   return false;
 }
 
@@ -322,10 +327,13 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
   const seenL = new Set<string>();
   const ms = ms0.filter((m) => { const k = markLabel5(m, host); if (seenL.has(k) && !sameMark(m, p.marker)) return false; seenL.add(k); return true; });
   const old = () => host.page(p.marker.area);
+  const est = size5(null);
+  const g0 = geo5(kind, s.year, est.w, est.h);
+  const box = { w: g0.br.w, h: g0.br.h, pages: g0.pages };
   let body: HTMLElement | null = null;
   const reg = o ? paperOf5(o.id) : undefined;
   if (reg && o) {
-    try { body = reg({ s, obj: o, marker: p.marker, markers: ms, mark: (m) => show5(m.area, m.tab, o.id), open: (id, m) => open5(id, m), goto: (x) => goto5(s, x), close: closePaper5, rerender: redraw, old }); } catch (e) { console.error('[nav5] papel', o.id, e); body = null; }
+    try { body = reg({ s, obj: o, marker: p.marker, markers: ms, mark: (m) => show5(m.area, m.tab, o.id), open: (id, m) => open5(id, m), goto: (x) => goto5(s, x), close: closePaper5, rerender: redraw, old, box }); } catch (e) { console.error('[nav5] papel', o.id, e); body = null; }
   }
   const content = body ?? h('div', { class: 'p5-old page21-host' }, old());
   const title = o ? tl5(o.label) : host.label(p.marker.area);
@@ -334,7 +342,7 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
   const pinned = o ? pocketIds5(s).includes(o.id) : false;
   const cv = h('canvas', { class: 'p5-cv px', 'aria-hidden': 'true' }) as HTMLCanvasElement;
   const head = h('div', { class: 'p5-head' },
-    h('h1', { class: 'p5-t' }, txt5(title)), h('small', { class: 'p5-sub' }, txt5(sub)),
+    h('span', { class: 'p5-ttl' }, h('h1', { class: 'p5-t' }, txt5(title)), h('small', { class: 'p5-sub' }, txt5(sub))),
     h('span', { class: 't5-sp' }),
     o ? h('button', { type: 'button', class: `p5-pin${pinned ? ' on' : ''}`, onclick: () => { pin5(s, o.id); redraw(); } }, pinned ? t(l('no bolso ✓', 'in pocket ✓')) : `+ ${t(l('fixar no bolso', 'pin to pocket'))}`) : null,
     h('button', { type: 'button', class: 'p5-x', onclick: closePaper5 }, kbd5('Esc'), t(l('fechar', 'close'))));
@@ -347,33 +355,19 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
   const put = (el: HTMLElement, r: Rect5, W: number, H: number) => { el.style.left = `${(r.x / W) * 100}%`; el.style.top = `${(r.y / H) * 100}%`; el.style.width = `${(r.w / W) * 100}%`; el.style.height = `${(r.h / H) * 100}%`; };
   let last = '';
   const fit = (cw: number, ch: number): void => {
-    const W = Math.max(200, Math.floor(cw / 2)), H = Math.max(120, Math.floor(ch / 2));
-    const key2 = `${W}x${H}`;
+    const key2 = `${Math.max(200, Math.floor(cw / 2))}x${Math.max(120, Math.floor(ch / 2))}`;
     if (key2 === last) return;
     last = key2;
-    let px; let hr: Rect5; let tr: Rect5; let br: Rect5;
-    if (kind === 'inbox') {
-      const look = inbox5Look(s.year);
-      px = inbox5Px(look, W, H);
-      const L = inbox5Layout(look, W, H);
-      hr = L.head; tr = L.tabs; br = { x: L.screen.x + 3, y: L.tabs.y + L.tabs.h + 2, w: L.screen.w - 6, h: L.screen.y + L.screen.h - (L.tabs.y + L.tabs.h + 2) - 3 };
-    } else {
-      px = paper5Px(kind, W, H, { seed: 5 });
-      const L = paper5Layout(kind, W, H);
-      hr = L.head; tr = L.tabs;
-      const b0 = L.body[0], b1 = L.body[L.body.length - 1];
-      br = { x: b0.x, y: b0.y, w: b1.x + b1.w - b0.x, h: b0.h };
-    }
-    const c2 = paper5Canvas(px, 2);
+    const g = geo5(kind, s.year, cw, ch);
+    const c2 = paper5Canvas(g.px, 2);
     cv.width = c2.width; cv.height = c2.height;
     cv.getContext('2d')?.drawImage(c2, 0, 0);
-    const PW = px.w, PH = px.h;
-    put(head, { ...hr, h: Math.max(hr.h, 12) }, PW, PH); put(tabs, tr, PW, PH); put(bodyEl, br, PW, PH);
+    const PW = g.px.w, PH = g.px.h;
+    const ink = headInk5(g.px, g.hr);
+    sheet.dataset.ink = ink.ink; if (ink.plate) sheet.dataset.plate = '1'; else delete sheet.dataset.plate;
+    put(head, { ...g.hr, h: Math.max(g.hr.h, 12) }, PW, PH); put(tabs, g.tr, PW, PH); put(bodyEl, g.br, PW, PH);
   };
-  const size = () => {
-    const r = sheet.parentElement?.getBoundingClientRect();
-    return r && r.width > 50 ? { w: r.width - 24, h: r.height - 20 } : { w: Math.max(640, (window.innerWidth || 1280) - 48), h: Math.max(360, (window.innerHeight || 800) - 56 - 96 - 24) };
-  };
+  const size = () => size5(sheet.parentElement);
   queueMicrotask(() => { const z = size(); fit(z.w, z.h); });
   { const z = size(); fit(z.w, z.h); }
   if (typeof ResizeObserver !== 'undefined') {
@@ -381,6 +375,42 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
     queueMicrotask(() => { if (sheet.parentElement) ro.observe(sheet.parentElement); });
   }
   return sheet;
+}
+
+/** Contraste do cabeçalho pela própria moldura (POL5): mede o pixel por baixo do título (60% da esquerda da faixa).
+ *  Fundo escuro → letra clara; claro → escura; textura ou tom médio (cortiça, capa com trama) → etiqueta própria. */
+export function headInk5(p: Px, r: Rect5): { ink: 'dark' | 'light'; plate: boolean } {
+  let n = 0, s = 0, s2 = 0;
+  for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + Math.round(r.w * 0.6); x++) {
+    const [R, G, B, A] = rgba(p.get(x, y));
+    const v = A ? (0.2126 * R + 0.7152 * G + 0.0722 * B) / 255 : 0;
+    n++; s += v; s2 += v * v;
+  }
+  const m = n ? s / n : 0, sd = n ? Math.sqrt(Math.max(0, s2 / n - m * m)) : 0;
+  const plate = sd > 0.075 || (m > 0.42 && m < 0.66);
+  return { ink: plate || m >= 0.66 ? 'dark' : 'light', plate };
+}
+
+/** Tamanho do papel na tela (o espaço da cena menos a margem); antes de entrar no DOM, a conta pela janela. */
+function size5(parent: HTMLElement | null): { w: number; h: number } {
+  const r = parent?.getBoundingClientRect();
+  if (r && r.width > 50) return { w: r.width - 24, h: r.height - 20 };
+  const W = typeof window !== 'undefined' ? window.innerWidth || 1280 : 1280, H = typeof window !== 'undefined' ? window.innerHeight || 800 : 800;
+  return { w: Math.max(640, W - 24), h: Math.max(360, H - 56 - 92 - 20) };
+}
+/** Moldura e áreas do papel (px lógicos = px de tela / 2): título, marcadores, miolo e as páginas do miolo. */
+function geo5(kind: Paper5 | 'inbox', year: number, cw: number, ch: number): { px: Px; hr: Rect5; tr: Rect5; br: Rect5; pages: Rect5[] } {
+  const W = Math.max(200, Math.floor(cw / 2)), H = Math.max(120, Math.floor(ch / 2));
+  if (kind === 'inbox') {
+    const look = inbox5Look(year);
+    const L = inbox5Layout(look, W, H);
+    const br = { x: L.screen.x + 3, y: L.tabs.y + L.tabs.h + 2, w: L.screen.w - 6, h: L.screen.y + L.screen.h - (L.tabs.y + L.tabs.h + 2) - 3 };
+    return { px: inbox5Px(look, W, H), hr: L.head, tr: L.tabs, br, pages: [{ x: 0, y: 0, w: br.w, h: br.h }] };
+  }
+  const L = paper5Layout(kind, W, H);
+  const b0 = L.body[0], b1 = L.body[L.body.length - 1];
+  const br = { x: b0.x, y: b0.y, w: b1.x + b1.w - b0.x, h: b0.h };
+  return { px: paper5Px(kind, W, H, { seed: 5 }), hr: L.head, tr: L.tabs, br, pages: L.body.map((r) => ({ x: r.x - br.x, y: r.y - br.y, w: r.w, h: r.h })) };
 }
 
 // ---------------------------------------------------------------- pausa e índice
@@ -449,7 +479,8 @@ function help5el(s: GameState): HTMLElement {
         h('button', { type: 'button', class: 'hk5-reset', onclick: () => { resetKeys5(); toast(t(l('Teclas de volta ao padrão.', 'Keys back to default.')), 'info'); redraw(); } }, t(l('voltar ao padrão', 'reset to default'))),
         h('button', { type: 'button', class: 'p5-x', onclick: () => { SH5.help = false; SH5.rebind = undefined; redraw(); } }, kbd5('Esc'), t(l('fechar', 'close')))),
       h('div', { class: 'hk5-cols' },
-        h('section', null, h('h2', null, t(l('Nesta tela', 'On this screen'))), h('ul', null, ...here.map(row)),
+        h('section', null, helpHere5(SH5.paper ? '.p5' : undefined), // R31 onda 5 (CENAS5): a ajuda do lugar à vista (interior, sala…)
+          h('h2', null, t(l('Nesta tela', 'On this screen'))), h('ul', null, ...here.map(row)),
           h('h2', null, t(l('Viagem', 'Travel'))), h('ul', null, ...travel.map(row)),
           h('h2', null, t(l('Sistema', 'System'))), h('ul', null, ...sys.map(row)),
           h('p', { class: 'muted small' }, t(l('Segure Alt para ver o nome e a tecla de todos os objetos da cena.', 'Hold Alt to see every object\'s name and key.')))),

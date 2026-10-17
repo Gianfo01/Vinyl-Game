@@ -597,7 +597,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **Marcadores:** — (papel de uma folha só)
 - **"!":** —
 
-### Lojas de decoração · tecla ⇧O
+### Lojas de decoração · tecla ⇧U
 - **Lugar:** Cidade › Loja de instrumentos
 - **Papel:** fachada do prédio (cena)
 - **Páginas (dono):** `deco31` (Lojas de decoração) ⚑
@@ -688,7 +688,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 | `crime` Crime | Beco do submundo | Cidade › Beco do submundo | fachada do prédio (cena) | ; | sim | 6/0 |
 | `critics` Críticos | Jornal na mesa | Sede › Sua sala | jornal | ' | sim | 0/0 |
 | `customs31` Alfândega | Aeroporto e porto | Cidade › Aeroporto e porto | fachada do prédio (cena) | ⇧A | ⚑ não | 0/0 |
-| `deco31` Lojas de decoração | Lojas de decoração | Cidade › Loja de instrumentos | fachada do prédio (cena) | ⇧O | ⚑ não | 0/0 |
+| `deco31` Lojas de decoração | Lojas de decoração | Cidade › Loja de instrumentos | fachada do prédio (cena) | ⇧U | ⚑ não | 0/0 |
 | `deleg31` Delegação | Chefe de gabinete | Sede › Sua sala | conversa com a pessoa + "ver números" | ⇧D | sim | 0/0 |
 | `desk` Mesa do mês | Mesa do mês | Sede › Sua sala | cena em pixel art | 1 | sim | 0/0 |
 | `diary` Diário da run | Diário na gaveta | Sede › Sua sala | caderno | D | sim | 0/0 |

@@ -68,7 +68,7 @@ const report = (s: GameState, t: L, tone: 'good' | 'bad' | 'info' = 'info') => {
 
 // ================================================================ bolinhas
 
-export const OFFICE = 2;
+export const OFFICE = 3; // dono (2026-10-17): 3 de expediente + 5 pessoais (antes 2 + 5)
 export const INV_NAME: Record<Inv, L> = { lead: l('À frente', 'Hands-on'), normal: l('Normal', 'Normal'), deleg: l('Delegada', 'Delegated') };
 export const INV_DESC: Record<Inv, L> = {
   lead: l('2 bolinhas: você cuida de tudo pessoalmente. Resultado de +2% a +18% (reputação, qualidade, satisfação): sobe com a sua energia, cai com cada outra frente que você toca e com o porte do negócio.', '2 balls: you handle everything personally. Results +2% to +18% (reputation, quality, satisfaction): higher with your energy, lower with each other front you run and with the size of the business.'),

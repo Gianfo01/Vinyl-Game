@@ -12,7 +12,7 @@ import { clamp, hashString, Rng, seedState } from '../core/rng';
 import { nominal } from '../core/money';
 import { CATALOG_ACTS, CATALOG_LABELS } from '../data/catalog';
 import { REAL_ACTS, REAL_LABELS, applyRealNames, realFounded } from '../data/realnames';
-import { dbSizeInfo } from './dbsize14';
+import { classicOff31, dbSizeInfo } from './dbsize14';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { EXTRA_LABELS } from '../data/labels10';
 import type { CatalogLabel } from '../data/catalog';
@@ -420,6 +420,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   // L2 — elenco: catálogo como banco de arquétipos
   const presence = cfg.mode === 'historic' ? 1 : cfg.mode === 'free' ? r.float(0.6, 1) : r.float(0.3, 1);
   for (const ca of CATALOG_ACTS) {
+    if (classicOff31(cfg, ca.city)) continue; // R31 (DBTAM): país desligado na Nova run (só com nomes reais)
     if (!r.chance(presence)) continue;
     const jitter = cfg.mode === 'historic' ? 0 : cfg.mode === 'free' ? r.int(-2, 2) : r.int(-7, 7);
     let potential = r.int(80, 97);
