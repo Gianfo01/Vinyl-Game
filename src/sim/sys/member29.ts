@@ -726,7 +726,7 @@ function finalizeBand(s: GameState, id: string, sh: Shell29): Settled29 {
  *  carreira ou crônica (não houve anúncio). As audições ficam pagas. */
 function dissolveBand(s: GameState, id: string, sh: Shell29): void {
   const x = sh.band!, p = s.persons[sh.pid];
-  delete s.acts[id]; delete s.soloOf[id]; delete s.delegated[id]; delete s.knowledge[id];
+  delete s.acts[id]; delete s.soloOf[id]; delete s.delegated[id]; delete s.knowledge[id]; actsTouched17(s);
   delete (s.agenda as Record<string, unknown>)[id];
   delete l16(s).boost[id];
   s.offers = s.offers.filter((o) => o.actId !== id);
