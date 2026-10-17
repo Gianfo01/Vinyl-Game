@@ -71,7 +71,15 @@ Pedidos do dono para o POL33 (2026-10-17, vistos no mapa de Londres 1962):
   por época (lista no relatório do coordenador): camiseta de turnê, pôster autografado, pulseira/ingresso de festival,
   baqueta e palheta de show, setlist do palco, passe de backstage, fita/vinil de edição limitada, jaqueta de equipe,
   bilhete de festival histórico (Woodstock 69, Rock in Rio 85, Live Aid 85), boneco/brinquedo de artista. Interruptor
-  `exp33.merch`, ligado por padrão.
+  `exp33.merch`, ligado por padrão. Cada artista grande também tem uma peça própria (guitarra quebrada no palco,
+  figurino de clipe) que dá notícia na imprensa ao ser comprada.
+- **Mais 6 ideias aprovadas pelo dono** (mesmo interruptor `exp33.merch`, exceto a 4, que fica em `exp33.outdoors`):
+  1. **Marca própria de merch**: abrir uma linha do selo ou do artista; vende mais quando o artista está em alta.
+  2. **Banca de merch no show**: escolher quanto levar na turnê; se sobrar fica encalhado, se faltar perde venda.
+  3. **Pirataria de merch**: camisetas falsificadas perto de shows grandes; denunciar no cartório ou deixar passar.
+  4. **Anúncio pago na rádio e na TV**: além do outdoor, comprar o intervalo da rádio/TV, por época.
+  5. **Vitrine para a rua**: disco ou relíquia exposto na fachada da sua loja/sede dá um pouco de movimento ao bairro.
+  6. **Colecionadores rivais**: NPCs que disputam o mesmo item no leilão e às vezes oferecem compra direta.
 
 Ordem: frentes → junção → QA33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono.
 
