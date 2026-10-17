@@ -90,7 +90,7 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .reg5-casa > .casa5-root::after { content: ''; flex: 1; background: var(--r5-ground, transparent); }
 .reg5-casa > .casa5-root > .r5-head { padding: 0 16px; }
 .reg5-casa .r5-scroll { flex: none; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
-.reg5-casa .r5-view { --hv: max(min(50vh, 400px), min(calc((100vw - 32px) / var(--ar)), calc(100dvh - 260px))) !important; }
+.reg5-casa .r5-view { --hv: max(min(50vh, 400px), calc(100dvh - 236px)) !important; } /* DECO-A: a casa ocupa a altura da tela (sem faixa vazia); a largura rola de lado */
 .rc5 { position: absolute; right: 12px; top: 30px; flex: none; width: 270px; max-height: calc(100% - 40px); overflow: auto; font-size: 13px; padding: 8px; background: rgba(13, 21, 32, 0.94); border: 1px solid var(--c5-line); box-shadow: 3px 3px 0 rgba(0,0,0,.5); z-index: 5; }
 .rc5-h { display: block; width: 100%; padding: 2px 4px 6px; border: 0; background: none; text-align: left; font: 700 11px/1.3 var(--pixel, monospace); color: var(--c5-mut); text-transform: uppercase; letter-spacing: 0.06em; }
 .rc5-h small { text-transform: none; letter-spacing: 0; font-family: var(--sans, sans-serif); }
