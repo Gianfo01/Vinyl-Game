@@ -31,3 +31,9 @@ dinheiro e pessoas ficam com GESTÃO/VIDA/CATÁLOGO (combinar pelo gancho, sem e
 ## Fica para a onda 6 (fechamento), não para a 33
 (11) começar tarde rende pouco (meta 3× × hoje ~1,1×) e o padrão de cada interruptor; metas e fim de jogo num motor
 só; save do estado novo; acessibilidade; apagar telas antigas; gênero infantil (adiado em "M · estilos por época").
+
+## Modelo por frente (dono, 2026-10-17: usar modelos mais baratos onde der)
+- **Opus** (regras que mexem em dinheiro, pessoas e goldens, mais risco): CATÁLOGO, PESSOAS, GESTÃO.
+- **Sonnet** (mais barato): VIDA, CIDADE, MUNDO, INT-1, INT-2, MAPA33.
+- Haiku fica de fora: o código é grande demais para ele seguir as regras do projeto sem retrabalho.
+Se uma frente em Sonnet travar ou sair do padrão, a correção vai para uma sessão Opus curta, só com o que faltou.
