@@ -26,7 +26,7 @@ export const CARS31: Car31[] = ['label', 'musician', 'manager', 'booking', 'venu
 
 type AnyRec = Record<string, unknown>;
 const x4 = (s: GameState): AnyRec => ((s as unknown as { x4?: AnyRec }).x4 ?? {});
-interface V9 { id: string; kind: string; level: number; rep: number; sound?: number; subs?: number; deals?: string[]; clients?: { actId: string }[]; cat?: unknown[]; editions?: { crowd: number; verdict: string; y: number }[] }
+interface V9 { id: string; kind: string; level: number; rep: number; sound?: number; subs?: number; deals?: string[]; clients?: { actId: string }[]; cat?: unknown[]; editions?: { crowd: number; verdict: string; y: number; w?: number; rating?: number }[] }
 const vl = (s: GameState): V9[] => ((x4(s).ventures9 as { list?: V9[] } | undefined)?.list ?? []);
 const vk = (s: GameState, k: string): V9[] => vl(s).filter((v) => v.kind === k);
 const mg = (s: GameState): { clients: { actId: string }[] } => ((x4(s).ventures9 as { mg?: { clients: { actId: string }[] } } | undefined)?.mg ?? { clients: [] });
@@ -49,9 +49,18 @@ export interface Def31 {
   goal: L[];
   /** tensão central (RN-22) */
   tension: L;
-  end: { name: L; desc: L; metric: (s: GameState) => number; shock: (s: GameState) => void; ok: (s: GameState, base: number) => boolean; target: (base: number) => L };
+  end: {
+    name: L; desc: L; metric: (s: GameState) => number; shock: (s: GameState) => void;
+    /** QA33: `e` traz a fotografia do início (`keep`: quem tinha de continuar) e a semana de início (`w0`) */
+    ok: (s: GameState, base: number, e: Pick<End31, 'w0' | 'keep'>) => boolean; target: (base: number) => L;
+    /** QA33: o que guardar no início para medir "não perca ninguém" (ids de clientes, acordos…) — antes do choque */
+    keep?: (s: GameState) => string[];
+  };
 }
 const n0 = (n: number) => Math.round(n);
+/** QA33: nota mínima da edição no desafio do festival e o tombo de reputação do estúdio no "som datado". */
+export const FEST_NOTE31 = 60;
+export const STUDIO_HIT31 = 15;
 export const DEF31: Record<Car31, Def31> = {
   label: {
     tiers: [l('Selo pequeno', 'Small label'), l('Independente forte', 'Strong indie'), l('Major', 'Major')], at: [0, 6, 14],
@@ -80,7 +89,10 @@ export const DEF31: Record<Car31, Def31> = {
     end: { name: l('Clientes disputando a mesma vaga', 'Clients fighting for the same slot'), desc: l('O cliente menos satisfeito recebe proposta de um empresário rival. Não perca ninguém em 12 meses.', 'Your least satisfied client gets an offer from a rival manager. Lose no one in 12 months.'),
       metric: (s) => mg(s).clients.length,
       shock: (s) => { const c = [...mg(s).clients].sort((a, b) => clientTrust9(s, a.actId) - clientTrust9(s, b.actId) || (a.actId < b.actId ? -1 : 1))[0]; if (c) addClientTrust9(s, c.actId, -25); }, // UNI-4: satisfação = confiança
-      ok: (s, b) => mg(s).clients.length >= b, target: (b) => fmtL(l('{n} cliente(s)', '{n} client(s)'), { n: b }) },
+      // QA33: "não perca ninguém" = todos os clientes do início continuam (trocar um por outro não vale)
+      keep: (s) => mg(s).clients.map((c) => c.actId),
+      ok: (s, _b, e) => { const now = new Set(mg(s).clients.map((c) => c.actId)); return (e.keep ?? []).every((id) => now.has(id)); },
+      target: (b) => fmtL(l('Os mesmos {n} cliente(s) de hoje', 'The same {n} client(s) as today'), { n: b }) },
   },
   booking: {
     tiers: [l('Rotas regionais', 'Regional routes'), l('Rotas nacionais', 'National routes'), l('Rotas mundiais', 'World routes')], at: [0, 3, 6],
@@ -89,7 +101,9 @@ export const DEF31: Record<Car31, Def31> = {
     tension: l('Encher a agenda × cansar o artista; casa cheia × cambismo.', 'Fill the schedule × wear out the act; full rooms × scalping.'),
     end: { name: l('A promotora gigante', 'The giant promoter'), desc: l('Uma promotora gigante fecha casas exclusivas: sua agência perde prestígio. Mantenha todos os clientes em 12 meses.', 'A giant promoter locks venues into exclusives: your agency loses standing. Keep every client for 12 months.'),
       metric: (s) => vk(s, 'booking').reduce((t, v) => t + (v.clients?.length ?? 0), 0), shock: (s) => { for (const v of vk(s, 'booking')) v.rep = clamp(v.rep - 10, 0, 100); },
-      ok: (s, b) => DEF31.booking.end.metric(s) >= b, target: (b) => fmtL(l('{n} cliente(s) na agência', '{n} agency client(s)'), { n: b }) },
+      keep: (s) => vk(s, 'booking').flatMap((v) => (v.clients ?? []).map((c) => c.actId)), // QA33: "mantenha todos" = os mesmos
+      ok: (s, _b, e) => { const now = new Set(vk(s, 'booking').flatMap((v) => (v.clients ?? []).map((c) => c.actId))); return (e.keep ?? []).every((id) => now.has(id)); },
+      target: (b) => fmtL(l('Os mesmos {n} cliente(s) na agência', 'The same {n} agency client(s)'), { n: b }) },
   },
   venue: {
     tiers: [l('Bar', 'Bar'), l('Casa média', 'Mid-size venue'), l('Arena', 'Arena'), l('Rede de casas', 'Venue chain')], at: [0, 2, 3, 4],
@@ -107,7 +121,9 @@ export const DEF31: Record<Car31, Def31> = {
     tension: l('Headliner caro vende ingresso; revelação barata dá prestígio e arrisca a procura.', 'An expensive headliner sells tickets; a cheap breakout brings prestige and risks demand.'),
     end: { name: l('A edição que dá errado', 'The edition that goes wrong'), desc: l('Clima, segurança e um line-up disputado: faça a próxima edição sem desastre e com nota 60 ou mais.', 'Weather, security and a contested line-up: run the next edition with no disaster and a rating of 60 or more.'),
       metric: (s) => s.year, shock: () => {},
-      ok: (s, b) => vk(s, 'festival').some((v) => (v.editions ?? []).some((e) => e.y >= b && e.verdict !== 'disaster' && e.verdict !== 'flop')), target: () => l('Edição sem desastre nem fracasso', 'An edition with no disaster or flop') },
+      // QA33: só vale edição DEPOIS do início do desafio (semana gravada na edição), sem desastre e com nota 60+
+      ok: (s, _b, e) => vk(s, 'festival').some((v) => (v.editions ?? []).some((x) => (x.w ?? -1) > e.w0 && x.verdict !== 'disaster' && (x.rating ?? 0) >= FEST_NOTE31)),
+      target: () => fmtL(l('Próxima edição sem desastre e com nota {n} ou mais', 'Next edition with no disaster and a rating of {n} or more'), { n: FEST_NOTE31 }) },
   },
   studio: {
     tiers: [l('Estúdio caseiro', 'Home studio'), l('Estúdio de referência', 'Reference studio'), l('Produtor-assinatura', 'Signature producer')], at: [0, 80, 150],
@@ -115,7 +131,8 @@ export const DEF31: Record<Car31, Def31> = {
     goal: [l('', ''), l('Estúdio com nível e som somando 80', 'Studio level and sound adding up to 80'), l('Somando 150', 'Adding up to 150')],
     tension: l('Assinatura que vende × som que envelhece; estúdio cheio × recusar clientes.', 'A signature that sells × a sound that ages; a full studio × turning clients away.'),
     end: { name: l('Som datado', 'A dated sound'), desc: l('A era do estúdio caseiro chega e o seu som envelhece. Recupere a reputação do estúdio em 12 meses.', 'The home-studio era arrives and your sound ages. Win back the studio\'s reputation within 12 months.'),
-      metric: (s) => Math.max(0, ...vk(s, 'studio').map((v) => v.rep)), shock: (s) => { for (const v of vk(s, 'studio')) v.sound = clamp((v.sound ?? 0) - 15, 0, 100); },
+      // QA33: o som envelhece E a reputação cai junto (antes só o som caía e a meta, que mede reputação, já começava cumprida)
+      metric: (s) => Math.max(0, ...vk(s, 'studio').map((v) => v.rep)), shock: (s) => { for (const v of vk(s, 'studio')) { v.sound = clamp((v.sound ?? 0) - 15, 0, 100); v.rep = clamp(v.rep - STUDIO_HIT31, 0, 100); } },
       ok: (s, b) => DEF31.studio.end.metric(s) >= b, target: (b) => fmtL(l('Reputação do estúdio {n} ou mais', 'Studio reputation {n} or more'), { n: n0(b) }) },
   },
   publisher: {
@@ -144,7 +161,9 @@ export const DEF31: Record<Car31, Def31> = {
     end: { name: l('Gravadoras e regulação', 'Labels and regulation'), desc: l('Um regulador questiona os repasses e a confiança dos artistas cai. Não perca acordos de catálogo em 12 meses.', 'A regulator questions payouts and artists\' trust drops. Lose no catalog deal in 12 months.'),
       metric: (s) => vk(s, 'platform').reduce((t, v) => t + (v.deals?.length ?? 0), 0),
       shock: (s) => { const p = (x4(s).ventures12 as { plat?: Record<string, { trust: number }> } | undefined)?.plat ?? {}; for (const k of Object.keys(p)) p[k].trust = clamp(p[k].trust - 10, 0, 100); },
-      ok: (s, b) => DEF31.platform.end.metric(s) >= b, target: (b) => fmtL(l('{n} acordo(s) de catálogo', '{n} catalog deal(s)'), { n: b }) },
+      keep: (s) => vk(s, 'platform').flatMap((v) => v.deals ?? []), // QA33: "não perca acordos" = os mesmos acordos
+      ok: (s, _b, e) => { const now = new Set(vk(s, 'platform').flatMap((v) => v.deals ?? [])); return (e.keep ?? []).every((id) => now.has(id)); },
+      target: (b) => fmtL(l('Os mesmos {n} acordo(s) de catálogo', 'The same {n} catalog deal(s)'), { n: b }) },
   },
   critic: {
     tiers: [l('Frila', 'Freelancer'), l('Editor', 'Editor'), l('Dono do veículo', 'Outlet owner'), l('Cânone', 'Canon')], at: [0, 2, 3, 4],
@@ -168,7 +187,7 @@ export const DEF31: Record<Car31, Def31> = {
 
 // ---------------------------------------------------------------- estado
 
-export interface End31 { c: Car31; w0: number; due: number; base: number; res?: 'ok' | 'fail' }
+export interface End31 { c: Car31; w0: number; due: number; base: number; res?: 'ok' | 'fail'; /** QA33: quem tinha de continuar (ids do início) */ keep?: string[] }
 export interface Prog31State { t: Partial<Record<Car31, number>>; end: End31[]; last: Partial<Record<Car31, number>> }
 declare module '../ext4' { interface Ext4 { car31g: Prog31State } }
 const fresh = (): Prog31State => ({ t: {}, end: [], last: {} });
@@ -210,7 +229,7 @@ function monthProg(s: GameState): void {
     const open = st.end.find((e) => e.c === c && !e.res);
     if (open) {
       if (s.week < open.due) continue;
-      open.res = d.end.ok(s, open.base) ? 'ok' : 'fail';
+      open.res = d.end.ok(s, open.base, open) ? 'ok' : 'fail';
       st.last[c] = s.week;
       const ok = open.res === 'ok';
       s.player.reputation.institutional = clamp(s.player.reputation.institutional + (ok ? 4 : -4), 0, 100);
@@ -223,9 +242,9 @@ function monthProg(s: GameState): void {
     if (t !== d.tiers.length - 1) continue;
     if ((st.last[c] ?? -999) > s.week - 156) continue; // um desafio a cada três anos no máximo
     if (!Rng.fromSeed(`${s.config.seed}|car31|end|${c}|${s.year}|${s.month}`).chance(0.15)) continue;
-    const base = d.end.metric(s);
+    const base = d.end.metric(s), keep = d.end.keep?.(s);
     d.end.shock(s);
-    st.end.push({ c, w0: s.week, due: s.week + 52, base });
+    st.end.push({ c, w0: s.week, due: s.week + 52, base, ...(keep ? { keep } : {}) });
     if (st.end.length > 24) st.end.splice(0, st.end.length - 24);
     st.last[c] = s.week;
     emitFact(s, { kind: 'endgame_start', actors: ['player'], severity: 55, tags: ['car31', 'career', c], src: 'car31',
@@ -250,9 +269,9 @@ registerRunnable({
     const d = DEF31[c];
     if (!d) return l('Carreira inválida.', 'Invalid career.');
     if (progRo31(s).end.some((e) => e.c === c && !e.res)) return l('Já há um desafio aberto.', 'A challenge is already open.');
-    const base = d.end.metric(s);
+    const base = d.end.metric(s), keep = d.end.keep?.(s);
     d.end.shock(s);
-    pg(s).end.push({ c, w0: s.week, due: s.week + 52, base });
+    pg(s).end.push({ c, w0: s.week, due: s.week + 52, base, ...(keep ? { keep } : {}) });
     return fmtL(l('Desafio "{n}" começou.', 'Challenge "{n}" started.'), { n: d.end.name });
   },
 });

@@ -28,7 +28,7 @@ export interface Venture {
   total: number;
   // festival
   /** r27: festival — id do terreno/ciclo (fest12); mês, ingresso e edições são espelho escrito só pelo fest12 */
-  fx?: string; month?: number; price?: number; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string }[];
+  fx?: string; month?: number; price?: number; editions?: { y: number; crowd: number; profit: number; verdict: Verdict; head: string; /** QA33 */ w?: number; rating?: number }[];
   // editora
   writers?: { pid: string; name: string; skill: number; until: number }[]; cat?: { title: string; actId: string; y: number; v: number; wp?: string; x?: import('./ventures12').CatX }[]; cool?: number;
   // estúdio

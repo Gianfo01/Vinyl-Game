@@ -797,7 +797,8 @@ export function runEdition12(s: GameState, f: OwnFestival): Hist | null {
   const h: Hist = { y: x.cyc.year, crowd: att, cap: p.cap, loyal: x.loyal, early: x.cyc.early, rating, profit, head: head?.name ?? '—', ident: x.ident, tag, why };
   x.hist.push(h);
   if (x.hist.length > 30) x.hist.shift();
-  if (v) { (v.editions ??= []).push({ y: x.cyc.year, crowd: att, profit, verdict, head: h.head }); if (v.editions.length > 30) v.editions.shift(); v.rep = f.rep; }
+  // QA33: a edição guarda a semana e a nota (desafio de fim de carreira do festival)
+  if (v) { (v.editions ??= []).push({ y: x.cyc.year, w: s.week, rating: Math.round(rating), crowd: att, profit, verdict, head: h.head }); if (v.editions.length > 30) v.editions.shift(); v.rep = f.rep; }
   bump(s, 'festEditions');
   if (rating >= 60 && !disaster) bump(s, 'festGood');
   if (disaster) bump(s, 'festDisasters');
