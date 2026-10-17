@@ -25,9 +25,10 @@ import { setTab } from '../vis';
 import { CAREER_PAGE17 } from '../nav17';
 import { openCredits31 } from './credits31';
 import { KEY_CHANGES5, chordLabel5, chordOf5, defaultChord5, key5, keys5, rebind5, resetKeys5, type Bind5, type Region5 } from './keys5';
-import { NAV5, REGIONS5, TRANS5, bangs5, goto5, index5, open5, paperOf5, pin5, pocketView5, regionOfR5, resolveGoto5, travel5, travelTarget5, type GotoIn5 } from './nav5';
+import { CARD5, NAV5, REGIONS5, TRANS5, bangs5, goto5, index5, open5, paperOf5, pin5, pocketView5, regionOfR5, resolveGoto5, travel5, travelTarget5, type GotoIn5 } from './nav5';
 import { FRAME_L5, PLACES5, REGION_L5, movedInto5, object5, objectFor5, objects5, regionOf5, type Obj5, type Open5 } from './objects5';
 import { declutter5, kbd5, raw5, sedeScene5, tl5, txt5 } from './sede5';
+import { helpHere5 } from './cenas5'; // R31 onda 5 (CENAS5): ajuda do lugar no "?"
 import './shell5.css';
 
 /** O que app.ts entrega à casca (as funções de hoje: página antiga, avançar, busca, opções, salvar…). */
@@ -70,6 +71,7 @@ export function show5(area: string, tab?: [string, string], objId?: string): voi
   if (!s) return;
   const o = (objId ? object5(objId) : undefined) ?? objectFor5(area, tab);
   if (o && isPlace5(o) && !objId) { travel5go(regionOf5(o.place)); return; }
+  if (o && !SH5.paper && CARD5.take?.(o.id, { area, tab })) return; // ACOES5 (EXP-13): cartão de ações ao lado do objeto; papel só por "ver tudo ▸"/pausa
   const id = o?.id ?? `page:${area}`;
   const rect = clickRect5; clickRect5 = undefined;
   const swap = () => {
@@ -540,7 +542,8 @@ function help5el(s: GameState): HTMLElement {
         h('button', { type: 'button', class: 'hk5-reset', onclick: () => { resetKeys5(); toast(t(l('Teclas de volta ao padrão.', 'Keys back to default.')), 'info'); redraw(); } }, t(l('voltar ao padrão', 'reset to default'))),
         h('button', { type: 'button', class: 'p5-x', onclick: () => { SH5.help = false; SH5.rebind = undefined; redraw(); } }, kbd5('Esc'), t(l('fechar', 'close')))),
       h('div', { class: 'hk5-cols' },
-        h('section', null, h('h2', null, t(l('Nesta tela', 'On this screen'))), h('ul', null, ...here.map(row)),
+        h('section', null, helpHere5(SH5.paper ? '.p5' : undefined), // R31 onda 5 (CENAS5): a ajuda do lugar à vista (interior, sala…)
+          h('h2', null, t(l('Nesta tela', 'On this screen'))), h('ul', null, ...here.map(row)),
           h('h2', null, t(l('Viagem', 'Travel'))), h('ul', null, ...travel.map(row)),
           h('h2', null, t(l('Sistema', 'System'))), h('ul', null, ...sys.map(row)),
           h('p', { class: 'muted small' }, t(l('Segure Alt para ver o nome e a tecla de todos os objetos da cena.', 'Hold Alt to see every object\'s name and key.')))),

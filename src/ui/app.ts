@@ -45,6 +45,8 @@ import './r31/socio31ui'; // R31 onda 3 (SOC): sócios e compras (Negócios, fic
 import './r31/salas31'; // R31 onda 2 (K): salas da sede em cena (área 'sala31', topo das páginas)
 import './r31/city31ui'; // R31 onda 4 (H): loja e casa em cena (áreas 'loja31' e 'casa31')
 import './r31/casa5'; // R31 onda 5 (CASA): casa como "Você", sede que cresce e maquete (registrados na casca; só com exp5.nav)
+import './r31/deco5'; // R31 DECO-M: modo Arrumar (Shift+O) nas cenas da casa e da sede (atrás de deco31 e exp5.nav)
+import './r31/decoshop31ui'; // R31 DECO-L: lojas de decoração, correio/internet e os seus lugares (área 'deco31')
 import './r31/car31ui'; // R31 onda 3 (CAR): decisões de carreira que mudam o mundo (área 'car31', painel rápido, cena-assinatura)
 import { salaHook31 } from './r31/salahook31';
 import './r31/mech31'; // R31 · V: cenas de mecânica (negociar, renovar, rescindir, contratar, demitir, punir, formação)

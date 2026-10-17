@@ -92,6 +92,11 @@ export type Trans5 = 'travel' | 'open' | 'close';
 export interface TransIn5 { kind: Trans5; from?: Region5; to?: Region5; obj?: string; year: number; /** retângulo do objeto na tela (zoom) */ rect?: { x: number; y: number; w: number; h: number } }
 export const TRANS5: { run: (t: TransIn5, swap: () => void) => void } = { run: (_t, swap) => swap() };
 
+/** Cartão de ações (frente ACOES5, EXP-13): com o gancho ligado, abrir um objeto mostra o cartão pequeno ao lado dele
+ *  (ações e números) em vez do papel; a página inteira só abre por "ver tudo ▸" no cartão ou pelo índice da pausa.
+ *  `take` devolve true quando abriu o cartão (a casca não abre o papel). */
+export const CARD5: { take?: (id: string, t: Open5) => boolean } = {};
+
 // ---------------------------------------------------------------- abrir um objeto
 
 /** Página (+ aba) que o objeto abre. `marker` escolhe um marcador do objeto (página dona ou aba que veio para ele). */

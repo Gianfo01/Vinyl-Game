@@ -5,7 +5,7 @@
 import type { Place27 } from '../../sim/sys/place27';
 import { bizAt31 } from '../../sim/r31/city31';
 import type { GameState } from '../../sim/types';
-import { BIZART31, artOfKind31, type Art31 } from './pred31';
+import { BIZART31, DECOART31, artOfKind31, type Art31 } from './pred31';
 
 export const PLART31: Record<Place27['k'], Art31> = {
   venue: 'venue', records: 'records', radio: 'radio', studio: 'studio', bar: 'bar', press: 'press', rehearsal: 'rehearsal', label: 'label', office: 'office',
@@ -13,6 +13,7 @@ export const PLART31: Record<Place27['k'], Art31> = {
 };
 /** Lugar do bairro (cidade comum, vizinho ou lugar real já convertido em Place27). Loja da época e porte da casa contam. */
 export function artOfPlace31(s: GameState, p: Place27): Art31 {
+  if (p.deco31) return DECOART31[p.deco31];
   if (p.lot31?.k === 'home') return p.lot31.tier === 2 ? 'mansion' : p.lot31.tier === 1 ? 'house' : 'apart';
   if (p.fam31) return 'house';
   if (p.src === 'fill' && p.lot >= 0 && (p.k === 'office' || p.k === 'hotel' || p.k === 'instruments' || p.k === 'apartments')) {

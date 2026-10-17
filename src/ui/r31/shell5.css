@@ -90,7 +90,7 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .reg5-casa > .casa5-root::after { content: ''; flex: 0 0 10px; background: var(--r5-ground, transparent); } /* dono: nada de faixa de chão na frente da casa; a sobra fica no céu */
 .reg5-casa > .casa5-root > .r5-head { padding: 0 16px; }
 .reg5-casa .r5-scroll { flex: none; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
-.reg5-casa .r5-view { --hv: min(max(min(50vh, 400px), calc((100vw - 32px) / var(--ar))), calc(100dvh - 260px)) !important; }
+.reg5-casa .r5-view { --hv: max(min(50vh, 400px), calc(100dvh - 236px)) !important; } /* DECO-A: a casa ocupa a altura da tela (sem faixa vazia); a largura rola de lado */
 /* casa larga: sem barra de rolagem; os cômodos viram páginas (botões do topo e setas ◂ ▸) */
 .reg5-casa .r5-scroll { overflow-x: hidden; position: relative; scroll-behavior: smooth; }
 .r5-pg { position: absolute; top: 50%; z-index: 4; transform: translateY(-50%); width: 34px; height: 58px; border: 2px solid var(--c5-gold, #f0c040); background: rgba(13, 21, 32, 0.88); color: var(--c5-gold2, #ffd868); font: 700 18px/1 var(--pixel, monospace); }

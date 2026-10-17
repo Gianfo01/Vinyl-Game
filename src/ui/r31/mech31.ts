@@ -32,6 +32,7 @@ import { goToProjects } from '../sys/project8';
 import { radioTab } from '../sys/world4/industry';
 import { openBiz31, openCitySoc31 } from './socio31ui';
 import { hot31, labels31, stage31 } from './scene31stage';
+import { nav5On } from '../../sim/r31/exp5';
 
 const T = (x: L | string): string => (typeof x === 'string' ? x : t(x));
 const fmtL0 = (x: L, c: L, e?: L): L => ({ pt: x.pt.replace('{c}', c.pt).replace('{e}', e?.pt ?? ''), en: x.en.replace('{c}', c.en).replace('{e}', e?.en ?? '') });
@@ -76,6 +77,7 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
   let out: SceneOut31 | null = null;
   let react: Record<string, Mood31> = {};
   let picked: Cast31 | null = null;
+  let helpOn = false; // R31 onda 5 (CENAS5): ajuda da cena aberta pelo "?" (sem a caixa da primeira visita)
   const seen = store.prefs.sceneSeen31 ?? [];
   const firstVisit = !seen.includes(kind);
   if (firstVisit) { store.prefs.sceneSeen31 = [...seen, kind]; savePrefs(); }
@@ -128,7 +130,9 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
         ? h('button', { type: 'button', class: 'btn small ghost', 'data-skip31': '', title: t(l('Decidir sem a cena: números e escolhas num painel curto.', 'Decide without the scene: numbers and choices in a short panel.')), onclick: () => { mode = 'quick'; draw(); } }, '⏭ ', t(l('Pular cena', 'Skip scene')))
         : h('button', { type: 'button', class: 'btn small ghost', 'data-show31': '', onclick: () => { mode = 'scene'; draw(); } }, '🎬 ', t(l('Ver a cena', 'Show the scene'))),
       h('button', { type: 'button', class: 'btn small ghost', title: t(l('O formulário completo de sempre, com todos os campos.', 'The usual full form, with every field.')), onclick: () => { close(); details31(s, kind, id); } }, '📋 ', t(l('Ver detalhes', 'See details')))),
-    mode === 'scene' ? h('div', { class: 'row wrap' },
+    // R31 onda 5 (CENAS5): no jogo explorável, "mostrar clicáveis" e os rótulos são o Alt; a ajuda da cena fica no "?"
+    mode === 'scene' && nav5On(s) ? h('div', { class: 'row wrap' }, h('button', { type: 'button', class: 'kb5 mc5-help', title: t(FIRST_TIP), 'aria-label': t(FIRST_TIP), 'aria-expanded': helpOn ? 'true' : 'false', onclick: () => { helpOn = !helpOn; draw(); } }, '?'))
+      : mode === 'scene' ? h('div', { class: 'row wrap' },
       h('button', { type: 'button', class: 'btn small ghost', 'aria-pressed': hot31() ? 'true' : 'false', onclick: () => { store.prefs.sceneHot31 = !hot31(); savePrefs(); draw(); } }, t(l('Mostrar tudo que é clicável', 'Show everything clickable'))),
       h('button', { type: 'button', class: 'btn small ghost', 'aria-pressed': labels31(s) ? 'true' : 'false', onclick: () => { store.prefs.sceneLabels31 = labels31(s) ? 'off' : 'on'; savePrefs(); draw(); } }, t(l('Rótulos nos balões', 'Labels on bubbles')))) : null);
 
@@ -144,7 +148,7 @@ export function openScene31(kind: SceneKind31, id: string, force?: 'scene' | 'qu
         m.lock ? null : choicesView(), outView(), foot());
     } else {
       put(
-        firstVisit && !out ? h('p', { class: 'mc31-tip' }, t(FIRST_TIP)) : null,
+        (nav5On(s!) ? helpOn : firstVisit && !out) ? h('p', { class: nav5On(s!) ? 'mc5-tip' : 'mc31-tip' }, t(FIRST_TIP)) : null,
         stage31(s!, m, { react, onPick: (c) => { picked = c; draw(); (root.querySelector(`[data-mc31="${c.id}"]`) as HTMLElement | null)?.focus(); } }),
         whoView(), numsView(m), m.note ? h('p', { class: 'small muted' }, t(m.note)) : null, lockNote,
         m.lock ? null : choicesView(), outView(), foot());

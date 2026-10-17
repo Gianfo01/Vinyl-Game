@@ -19,14 +19,16 @@ export type Art31 =
   | 'records' | 'instruments' | 'bar' | 'press' | 'hotel' | 'facade' | 'police' | 'alley' | 'tv' | 'theatre' | 'arena'
   // lojas da época (frente H)
   | 'sheet' | 'piano' | 'telegraph' | 'gramophone' | 'tailor' | 'cinema' | 'radiotv' | 'diner' | 'jukebox' | 'hifi'
-  | 'arcade' | 'video' | 'cdmega' | 'pager' | 'lan' | 'phones' | 'games' | 'vinyl' | 'cafe' | 'holo' | 'bakery';
+  | 'arcade' | 'video' | 'cdmega' | 'pager' | 'lan' | 'phones' | 'games' | 'vinyl' | 'cafe' | 'holo' | 'bakery'
+  // lojas de decoração (DECO-L): móveis/departamentos, antiquário/brechó, galeria (eletrônicos usam 'hifi')
+  | 'furniture' | 'antique' | 'gallery';
 
 /** Todos os tipos de arte (ordem da galeria). */
 export const ART31_ALL: Art31[] = [
   'hq', 'label', 'sublabel', 'imprint', 'studio', 'venue', 'fest', 'school', 'museum', 'publisher', 'plant', 'office', 'radio', 'platform', 'booking',
   'rehearsal', 'store', 'sign', 'dorm', 'park', 'apart', 'house', 'mansion', 'records', 'instruments', 'bar', 'press', 'hotel', 'facade', 'police', 'alley',
   'tv', 'theatre', 'arena', 'sheet', 'piano', 'telegraph', 'gramophone', 'tailor', 'cinema', 'radiotv', 'diner', 'jukebox', 'hifi', 'arcade', 'video',
-  'cdmega', 'pager', 'lan', 'phones', 'games', 'vinyl', 'cafe', 'holo', 'bakery',
+  'cdmega', 'pager', 'lan', 'phones', 'games', 'vinyl', 'cafe', 'holo', 'bakery', 'furniture', 'antique', 'gallery',
 ];
 /** Rótulo curto (fonte 3×5, galeria e inventário). */
 export const ART31_TAG: Record<Art31, string> = {
@@ -37,6 +39,7 @@ export const ART31_TAG: Record<Art31, string> = {
   tv: 'TV', theatre: 'TEATRO', arena: 'ARENA', sheet: 'PARTITURAS', piano: 'PIANOS', telegraph: 'TELEGRAFO', gramophone: 'GRAMOFONES', tailor: 'ALFAIATE',
   cinema: 'CINEMA', radiotv: 'RADIOS E TVS', diner: 'LANCHONETE', jukebox: 'BAR JUKEBOX', hifi: 'HI-FI', arcade: 'FLIPERAMA', video: 'LOCADORA',
   cdmega: 'MEGASTORE CD', pager: 'BIPES', lan: 'LAN HOUSE', phones: 'CELULARES', games: 'GAMES', vinyl: 'VINIL', cafe: 'CAFE WI-FI', holo: 'HOLOGRAMAS', bakery: 'PADARIA',
+  furniture: 'MOVEIS', antique: 'ANTIQUARIO', gallery: 'GALERIA',
 };
 /** Carcaça da simulação usada para o tamanho base de cada arte (o desenho ajusta por cima, ver SHAPE em pred31px). */
 export const ARTK31: Record<Art31, BKind> = {
@@ -46,7 +49,7 @@ export const ARTK31: Record<Art31, BKind> = {
   press: 'publisher', hotel: 'office', facade: 'venue', police: 'office', alley: 'store', tv: 'media', theatre: 'museum', arena: 'venue',
   sheet: 'store', piano: 'store', telegraph: 'office', gramophone: 'store', tailor: 'store', cinema: 'venue', radiotv: 'store', diner: 'store', jukebox: 'venue',
   hifi: 'store', arcade: 'store', video: 'store', cdmega: 'store', pager: 'store', lan: 'store', phones: 'store', games: 'store', vinyl: 'store', cafe: 'store',
-  holo: 'store', bakery: 'store',
+  holo: 'store', bakery: 'store', furniture: 'store', antique: 'store', gallery: 'store',
 };
 
 /** Prédio do selo (ou carcaça sem lugar): a arte padrão do BKind. */
@@ -68,5 +71,7 @@ export const BIZART31: Record<string, Art31> = {
   radio_tv: 'radiotv', records: 'records', diner: 'diner', jukebox_bar: 'jukebox', hifi: 'hifi', arcade: 'arcade', video: 'video', cd_mega: 'cdmega',
   pager: 'pager', lan: 'lan', phones: 'phones', games: 'games', vinyl: 'vinyl', cowork: 'cafe', holo: 'holo', bakery: 'bakery',
 };
+/** Loja de decoração (DECO-L, Place27.deco31) → arte. */
+export const DECOART31: Record<'furniture' | 'antique' | 'hifi' | 'gallery', Art31> = { furniture: 'furniture', antique: 'antique', hifi: 'hifi', gallery: 'gallery' };
 /** Faixa de época usada pela arte (igual às do resto do mapa): 0 = 1889–1919 … 5 = 2010–2040. */
 export const eraIx31 = (y: number): number => (y < 1920 ? 0 : y < 1950 ? 1 : y < 1970 ? 2 : y < 1990 ? 3 : y < 2010 ? 4 : 5);

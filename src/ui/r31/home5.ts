@@ -21,7 +21,7 @@ import { dedication31, openCredits31 } from './credits31';
 import { baseEditorScreen31 } from '../base31ui';
 import { homeScreen27, options27 } from '../ps/home27';
 import { quickDefaults27, quickRunConfig27 } from '../ps/home27model';
-import { last5 } from './ini5sw';
+import type { StageOpts5 } from './stage5px';
 import { logo5, mountStage5 } from './stage5ui';
 import { quickRun5Screen } from './newrun5';
 import './home5.css';
@@ -31,13 +31,15 @@ export const SHOW5: [number, string][] = [[1905, 'rio'], [1927, 'chicago'], [195
 const monthName = (m: number) => new Date(2000, m, 1).toLocaleString(locale(), { month: 'short' });
 const top5 = () => { try { window.scrollTo(0, 0); } catch { /* sem janela */ } };
 
-/** Época e cidade da cena: a última partida salva neste perfil, senão uma da vitrine. */
-export function homeScene5(): { year: number; city: string; career: string } {
-  const last = last5();
-  if (last) return last;
-  const [year, city] = SHOW5[Math.floor(Math.random() * SHOW5.length)];
-  return { year, city, career: 'label' };
+/** Época e cidade da cena. Dono (2026-10-17): a vitrine passa pelas épocas em ordem, independente do save; começa num
+ *  ponto sorteado. `i` = índice em SHOW5. */
+export function homeScene5(i = Math.floor(Math.random() * SHOW5.length)): { year: number; city: string; career: string; i: number } {
+  const k = ((i % SHOW5.length) + SHOW5.length) % SHOW5.length;
+  const [year, city] = SHOW5[k];
+  return { year, city, career: 'label', i: k };
 }
+/** Tempo em cada época da vitrine (ms) e do escurecer/clarear da troca. */
+const SHOW_MS5 = 7000, FADE_MS5 = 450;
 
 export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   const redraw = () => homeScreen5(root, onStart);
@@ -49,7 +51,9 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   };
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const sc = homeScene5();
-  const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: store.prefs.lang === 'en' ? 'en' : 'pt' }, 'h5-stage');
+  const lang5 = (): 'pt' | 'en' => (store.prefs.lang === 'en' ? 'en' : 'pt');
+  const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: lang5() }, 'h5-stage');
+  cycleShow5(stage, sc.i, lang5);
 
   const btn = (label: string, fn: () => void, cls = '', extra: Record<string, string> = {}) => h('button', { type: 'button', class: `h5-b ${cls}`, onclick: fn, ...extra }, label);
   const cont = btn(t(S.continue).toUpperCase(), () => undefined, '', { 'data-h5': 'continue', disabled: 'true' }) as HTMLButtonElement;
@@ -67,7 +71,8 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
     stage.el,
     h('div', { class: 'h5-shade', 'aria-hidden': 'true' }),
     h('header', { class: 'h5-head' },
-      h('h1', { class: 'h5-h1' }, logo5(t(S.gameTitle).toUpperCase())),
+      h('h1', { class: 'h5-h1', 'aria-label': `${t(S.gameTitle)}: ${t(S.gameSubtitle)}` }, logo5(t(S.gameTitle).toUpperCase())),
+      h('p', { class: 'h5-sub' }, t(S.gameSubtitle).toUpperCase()),
       h('p', { class: 'h5-tag' }, t(l('UM MUNDO VIVE DE MÚSICA · 1889 – 2040', 'A WORLD THAT RUNS ON MUSIC · 1889 – 2040')))),
     h('nav', { class: 'h5-menu', 'aria-label': t(l('Menu inicial', 'Main menu')) },
       btn(t(S.newGame).toUpperCase(), () => quickRun5Screen(root, onStart), 'h5-main', { 'data-h5': 'new' }),
@@ -83,8 +88,65 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
     dedication31('h5-ded'),
     h('footer', { class: 'h5-foot' },
       h('span', null, 'PIXEL STUDIO EDITION', ' · ', link(t(l('Editor de base', 'Database editor')), () => { baseEditorScreen31(root, redraw); top5(); }, { 'data-link': 'base31' })),
-      h('span', null, 'R31'))));
+      h('span', null, 'R32'))));
+  fitHead5(root, stage);
   top5();
+}
+
+/** A vitrine troca de época sozinha (escurece, troca a cena, clareia); para quando a tela sai ou com movimento reduzido. */
+function cycleShow5(stage: { el: HTMLCanvasElement; set: (o: StageOpts5) => void }, start: number, lang: () => 'pt' | 'en'): void {
+  let reduced = false;
+  try { reduced = !!store.prefs.reducedMotion || matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* sem janela */ }
+  if (reduced) return;
+  let i = start;
+  const el = stage.el;
+  el.style.transition = `opacity ${FADE_MS5}ms ease`;
+  const tick = window.setInterval(() => {
+    if (!el.isConnected) { window.clearInterval(tick); return; }
+    el.style.opacity = '0';
+    window.setTimeout(() => {
+      if (!el.isConnected) return;
+      const n = homeScene5(++i);
+      stage.set({ year: n.year, city: n.city, career: n.career, lang: lang() });
+      el.style.opacity = '1';
+    }, FADE_MS5);
+  }, SHOW_MS5);
+}
+
+/** O título nunca cobre o letreiro do palco (AO VIVO / RÁDIO / STREAM): o canvas usa object-fit cover (corta em cima
+ *  nas janelas largas e baixas), então mede onde o letreiro caiu na tela e sobe/encolhe o cabeçalho até caber acima dele. */
+function fitHead5(root: HTMLElement, stage: { el: HTMLCanvasElement; signTop: () => number; floorY: () => number }): void {
+  const head = root.querySelector<HTMLElement>('.h5-head'), logo = head?.querySelector<HTMLElement>('canvas');
+  if (!head || !logo) return;
+  const fit = () => {
+    if (!head.isConnected) { window.removeEventListener('resize', fit); return; }
+    const cv = stage.el;
+    head.style.top = ''; logo.style.width = ''; cv.style.objectPosition = '';
+    const W = cv.width, H = cv.height;
+    let r = cv.getBoundingClientRect();
+    if (!W || !H || !r.height) return;
+    const k = Math.max(r.width / W, r.height / H), extra = r.height - H * k; // < 0: o cover corta em cima/embaixo
+    const signAt = (py: number) => r.top + extra * py + stage.signTop() * k - 8; // folga acima dos cabos
+    let hr = head.getBoundingClientRect();
+    if (hr.bottom <= signAt(0.7)) return;
+    // 1) mostra mais céu (corta mais da plateia embaixo), até 25%, sem o piso do palco descer até os botões
+    const menu = root.querySelector<HTMLElement>('.h5-menu')?.getBoundingClientRect().top ?? Infinity;
+    const floorAt = (y: number) => r.top + extra * y + stage.floorY() * k;
+    let py = 0.7;
+    while (py > 0.25 && hr.bottom > signAt(py) && floorAt(py - 0.05) <= menu - 4) py -= 0.05;
+    cv.style.objectPosition = `center ${Math.round(py * 100)}%`;
+    r = cv.getBoundingClientRect();
+    const sign = signAt(py);
+    if (hr.bottom <= sign) return;
+    // 2) sobe o cabeçalho; 3) só então encolhe o logo
+    head.style.top = `${Math.max(Math.max(6, r.top + 6), hr.top - (hr.bottom - sign))}px`;
+    hr = head.getBoundingClientRect();
+    if (hr.bottom <= sign) return;
+    const lb = logo.getBoundingClientRect();
+    logo.style.width = `${Math.max(160, lb.width * Math.max(0.3, (lb.height - (hr.bottom - sign)) / lb.height))}px`;
+  };
+  window.addEventListener('resize', fit);
+  requestAnimationFrame(fit);
 }
 
 /** "Carregar": saves do perfil (mais recentes primeiro), importar e a lista completa (perfis, renomear, apagar). */

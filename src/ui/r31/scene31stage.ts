@@ -11,6 +11,7 @@ import { pxEmo31 } from '../pixel/emo31'; // r31 onda 4 (EMO): gesto em pixel ar
 import { store } from '../store';
 import type { Cast31, Mood31, SceneModel31 } from './scene31core';
 import { MH31, MW31, emptySeats31, paintRoom31, spots31 } from './scene31px';
+import { nav5On } from '../../sim/r31/exp5';
 import './mech31.css';
 
 const W = MW31, H = MH31;
@@ -45,7 +46,8 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
     const r = paintRoom31(m.room, s.year, watchers, m.cards ?? 0, { city: s.config.homeCity, month: s.month, seats: spots.filter((x) => x.pose === 'sit'), empty: emptySeats31(m.room, m.cast.map((c) => c.side)) });
     drawScene27(cv, r.back, s.year, who, r.front);
   } catch { /* canvas indisponível (testes) */ }
-  const showLabels = labels31(s);
+  const nav = nav5On(s); // R31 onda 5 (CENAS5): rótulos e "tudo que é clicável" só no passar do mouse/foco e com Alt
+  const showLabels = nav || labels31(s);
   let k = 0;
   const pts = m.cast.map((c, i) => {
     const md = o.react?.[c.id] ?? c.mood;
@@ -57,7 +59,7 @@ export function stage31(s: GameState, m: SceneModel31, o: StageOpts31 = {}): HTM
       style: `left:${(sp.x / W) * 100}%;top:${Math.max(8, ((sp.y - (sp.pose === 'sit' ? 34 : 40)) / H) * 100 - lift)}%`,
       title: bubbleText(c, md), 'aria-label': bubbleText(c, md), 'data-mc31': c.id,
       onclick: () => o.onPick?.(c),
-    }, h('span', { class: 'mc31-ico', 'aria-hidden': 'true' }, pxEmo31(md.icon, 1, md.label)), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: 'mc31-lbl' }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
+    }, h('span', { class: 'mc31-ico', 'aria-hidden': 'true' }, pxEmo31(md.icon, 1, md.label)), (showLabels && c.side !== 'watch') || reacted ? h('span', { class: `mc31-lbl${nav && !reacted ? ' mc5-lbl' : ''}` }, c.side === 'you' ? t(l('Você', 'You')) : t(md.label)) : null);
   });
-  return h('div', { class: `mc31-stage${hot31() ? ' mc31-hot' : ''}` }, cv, ...pts);
+  return h('div', { class: `mc31-stage${!nav && hot31() ? ' mc31-hot' : ''}${nav ? ' mc5-stage' : ''}` }, cv, ...pts);
 }

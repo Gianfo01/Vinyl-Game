@@ -209,7 +209,7 @@ export const CUR31: Cur31[] = [
     return { id, nome, apelidos: n.ap ?? [], tipo: 'referencia', area: 'marca', anos, cidade: 'sao_paulo', lingua: 'pt', fontes: ['homenagem da família (relato do autor)'], confirmar: n.c ?? [], ref: `fossati31:sonia`, sub: n.sub };
   }),
   ...FAMILY31.map((m): Cur31 => ({
-    id: `fam_${m.id}`, nome: m.name, apelidos: [], tipo: 'pessoa', area: 'familia', anos: [1880], cidade: FAM_CITY31.id, lingua: 'it',
+    id: `fam_${m.id}`, nome: m.name, apelidos: [], tipo: 'pessoa', area: 'familia', anos: [1880], cidade: FAM_CITY31.id || 'cidade de início do jogador', lingua: 'it',
     fontes: ['homenagem da família (relato do autor)'], confirmar: m.id === 'gianluca' ? ['de quem é filho (Sonia ou Antonella)', 'ano de fundação da Arara'] : ['idade aparente (fixa)'], ref: `fossati31:${m.id}`,
   })),
 ];
