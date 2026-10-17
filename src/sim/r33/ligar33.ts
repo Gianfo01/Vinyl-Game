@@ -275,14 +275,14 @@ INT2_HOOKS['port.carga'] = (s) => freight(s, 1.06, l('Discos embarcam para fora'
 
 /** Gráfica → físico: a capa encomendada vale para o próximo lançamento seu (ou o que saiu há até 8 semanas). */
 INT2_HOOKS['print.capa'] = (s) => {
-  const rel = Object.values(s.releases).filter((r) => r.owner === 'player' && s.week - r.week <= 8 && r.formats.some(physicalFmt)).sort((a, b) => b.week - a.week)[0];
+  const rel = Object.values(s.releases).filter((r) => r.owner === 'player' && s.week - r.week <= 8 && (r.formats ?? []).some(physicalFmt)).sort((a, b) => b.week - a.week)[0];
   const st = lig(s), key = rel ? rel.id : 'next';
   st.cover[key] = s.week + 26;
   return ok(rel ? fmtL(l('"{t}" ganha capa nova: +5% nas vendas físicas.', '"{t}" gets a new cover: +5% on physical sales.'), { t: rel.title }) : l('A capa fica pronta para o seu próximo lançamento físico (+5%).', 'The cover is ready for your next physical release (+5%).'));
 };
 registerMod('chartUnits', 'ligar33', (s, v, { release }) => {
   const st = peekLig(s);
-  if (!st || !release || release.owner !== 'player' || !release.formats.some(physicalFmt)) return null;
+  if (!st || !release || release.owner !== 'player' || !(release.formats ?? []).some(physicalFmt)) return null;
   let m = 1;
   if ((st.cover[release.id] ?? 0) >= s.week) m *= 1.05;
   if (st.freight >= s.week) m *= st.fmult;
@@ -292,6 +292,6 @@ registerMod('chartUnits', 'ligar33', (s, v, { release }) => {
 registerSimHook('week', 'ligar33.cover', (s) => {
   const st = peekLig(s);
   if (!st?.cover.next) return;
-  const rel = Object.values(s.releases).find((r) => r.owner === 'player' && r.week <= s.week && s.week - r.week <= 1 && r.formats.some(physicalFmt) && !st.cover[r.id]);
+  const rel = Object.values(s.releases).find((r) => r.owner === 'player' && r.week <= s.week && s.week - r.week <= 1 && (r.formats ?? []).some(physicalFmt) && !st.cover[r.id]);
   if (rel) { st.cover[rel.id] = st.cover.next; delete st.cover.next; }
 });

@@ -43,7 +43,7 @@ export function formatLife33(s: GameState, f: FormatId, y = s.year): number {
 
 /** Fator da parte física de um disco (0..1) relativo ao melhor formato físico vivo agora. */
 export function formatFit33(s: GameState, rel: Pick<Release, 'formats'>): number {
-  const phys = rel.formats.filter((f) => formatById[f]?.physical);
+  const phys = (rel.formats ?? []).filter((f) => formatById[f]?.physical);
   if (!phys.length) return 1;
   const best = Math.max(1e-6, ...availableFormats(s).filter((f) => formatById[f]?.physical).map((f) => formatLife33(s, f)), ...phys.map((f) => formatLife33(s, f)));
   return clamp(Math.max(...phys.map((f) => formatLife33(s, f))) / best, 0, 1);

@@ -124,7 +124,7 @@ export const ownShops33 = (s: GameState): number => Object.keys(peek(s)?.shops ?
 
 registerMod('chartUnits', 'cidade33', (s, v, ctx) => {
   if (!lojas33(s) || !ctx.release) return null;
-  const fm = ctx.release.formats.filter((f) => physical(f) && FMT_BIZ33[f]);
+  const fm = (ctx.release.formats ?? []).filter((f) => physical(f) && FMT_BIZ33[f]);
   if (!fm.length) return null;
   let m = fm.reduce((t, f) => t + formatShopMult33(s, f), 0) / fm.length;
   if (ctx.release.owner === 'player') m *= 1 + CIDADE33.ownPer * Math.min(ownShops33(s), CIDADE33.ownMax);
