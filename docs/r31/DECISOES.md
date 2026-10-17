@@ -556,3 +556,7 @@ Dono pediu lugares, interiores, objetos e NPCs inspirados em filmes e séries, c
 Decisão: inspirar sem copiar (nome trocado, sem logo/rosto), mesma arte, cada lugar = lote com função (lots31) e cada
 ação chama função existente. Para não ficar complexo demais: leva 1 na versão 34 (10 lugares, cassino com 4
 mecânicas, 6 "quem resolve", 5 minijogos simples); o resto na leva 2. Plano em docs/r33/CENARIOS33.md.
+
+## R33 · Tela inicial volta ao vídeo de show (17/10)
+Dono prefere o vídeo de show (palco por época) na tela inicial. A rua animada da INTRO33 fica só na intro da
+partida; exp33.intro agora controla só a intro ("Intro da partida" nas Opções). mountHome33 segue no código, sem uso.

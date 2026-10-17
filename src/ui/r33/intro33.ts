@@ -1,6 +1,6 @@
 // R33 · INTRO33 — a rua que atravessa as épocas no navegador: canvas de pixels com escala inteira, laço leve que para
 // quando a aba some ou a tela sai, "movimento reduzido" = um quadro parado. Dois usos do mesmo motor (`intro33px`):
-//   · `mountHome33`: FUNDO da tela inicial em loop (~40 s), no lugar da vitrine de épocas;
+//   · `mountHome33`: rua em loop (~40 s); hoje fora da tela inicial (o dono preferiu o vídeo de show), reaproveitável;
 //   · `playIntro33`: INTRO curta da partida (~12–15 s) ao apertar "Começar minha história": o personagem criado na ficha
 //     anda pela rua enquanto as épocas passam, para na época escolhida, o resumo da ficha aparece digitado e a imagem
 //     escurece. Pulável com qualquer tecla ou clique. Nada aqui lê ou muda a partida.

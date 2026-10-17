@@ -26,7 +26,6 @@ import { logo5, mountStage5 } from './stage5ui';
 import { quickRun5Screen } from './newrun5';
 import { tut5Enabled, tutEraPicker5 } from './tut5entry'; // R31 onda 5 (TUT): "Aprender a jogar" (só com exp5.tut)
 import { langToggle5 } from './lang5';
-import { intro33On, mountHome33 } from '../r33/intro33'; // R33 INTRO33: rua animada no fundo (exp33.intro; desligado = vitrine de épocas de antes)
 import './home5.css';
 
 /** Épocas e cidades da vitrine quando não há partida salva (sorteio só de interface). */
@@ -55,9 +54,9 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const sc = homeScene5();
   const lang5 = (): 'pt' | 'en' => (store.prefs.lang === 'en' ? 'en' : 'pt');
-  const live = intro33On();
-  const stage: { el: HTMLCanvasElement; signTop: () => number; floorY: () => number } = live ? mountHome33(lang5()) : mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: lang5() }, 'h5-stage');
-  if (!live) cycleShow5(stage as ReturnType<typeof mountStage5>, sc.i, lang5);
+  // R33: o dono prefere o vídeo de show na tela inicial; a rua animada (intro33) fica só na intro da partida
+  const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: lang5() }, 'h5-stage');
+  cycleShow5(stage, sc.i, lang5);
 
   const btn = (label: string, fn: () => void, cls = '', extra: Record<string, string> = {}) => h('button', { type: 'button', class: `h5-b ${cls}`, onclick: fn, ...extra }, label);
   const cont = btn(t(S.continue).toUpperCase(), () => undefined, '', { 'data-h5': 'continue', disabled: 'true' }) as HTMLButtonElement;
@@ -71,7 +70,7 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
 
   const link = (label: string, fn: () => void, extra: Record<string, string> = {}) => h('button', { type: 'button', class: 'h5-l', onclick: fn, ...extra }, label);
   const lang = langToggle5((v) => { store.prefs.lang = v; savePrefs(); redraw(); }, 'h5-lang');
-  root.replaceChildren(h('div', { class: live ? 'h5 h5-live' : 'h5', id: 'main', role: 'main', tabindex: '-1' },
+  root.replaceChildren(h('div', { class: 'h5', id: 'main', role: 'main', tabindex: '-1' },
     stage.el,
     h('div', { class: 'h5-shade', 'aria-hidden': 'true' }),
     h('header', { class: 'h5-head' },

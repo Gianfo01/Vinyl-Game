@@ -7,8 +7,8 @@ import { registerSwitch, setSw, setSwUi, sw, swUi } from '../r31/switches';
 
 registerSwitch({
   id: 'exp33.intro', def: true, scope: 'prod',
-  desc: l('R33 · rua animada no fundo da tela inicial e intro ao começar a partida (desligado: palco de antes e início direto).',
-    'R33 · animated street behind the title screen and an intro when a run starts (off: the old stage and a direct start).'),
+  desc: l('R33 · intro ao começar a partida (desligado: início direto).',
+    'R33 · an intro when a run starts (off: a direct start).'),
   read: () => swUi<boolean>('exp33.intro'),
   write: (_s, v) => setSwUi('exp33.intro', !!v),
 });
@@ -17,7 +17,7 @@ export const intro33On = (): boolean => swUi<boolean>('exp33.intro');
 export const setIntro33 = (v: boolean): void => setSwUi('exp33.intro', v);
 
 registerEditable({
-  id: 'sw.exp33.intro', area: 'tools', kind: 'bool', label: l('R33 · rua animada e intro', 'R33 · animated street and intro'), raw: true,
+  id: 'sw.exp33.intro', area: 'tools', kind: 'bool', label: l('R33 · intro da partida', 'R33 · run intro'), raw: true,
   get: (s) => sw<boolean>(s, 'exp33.intro'),
   set: (s, v) => { setSw(s, 'exp33.intro', !!v); },
 });
