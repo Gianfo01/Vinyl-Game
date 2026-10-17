@@ -60,6 +60,7 @@ Shift+1…6 do menu) e nada muda.
 | } | Próximo marcador do papel aberto | igual |
 | Esc | Fecha o papel aberto; sem papel aberto, abre o menu de pausa | nova |
 | Alt | Segurar: mostra o nome e a tecla de todos os objetos | nova |
+| Alt Enter | Tela cheia (liga/desliga; F11 também serve) | nova |
 | Tab | Troca de casa (várias carreiras ativas) | nova |
 | ⇧2 | Ação principal da carreira (gravadora: Artistas, a gestão do elenco) | nova |
 | ⇧6 | Celular (último botão do menu de baixo, 1983+) | nova |

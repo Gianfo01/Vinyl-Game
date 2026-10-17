@@ -18,7 +18,7 @@
 import { l, type L } from '../../data/world';
 
 export type Region5 = 'sede' | 'casa' | 'cidade' | 'mundo';
-export type Sys5 = 'search' | 'search2' | 'advance' | 'keys' | 'prevTab' | 'nextTab' | 'pause' | 'names' | 'houses' | 'home' | 'phone' | 'artists';
+export type Sys5 = 'search' | 'search2' | 'advance' | 'keys' | 'prevTab' | 'nextTab' | 'pause' | 'names' | 'houses' | 'home' | 'phone' | 'artists' | 'fullscreen';
 
 /** O que a tecla faz. */
 export type Act5 =
@@ -45,7 +45,7 @@ export interface Bind5 {
 // ---------------------------------------------------------------- formato e leitura do teclado
 
 const SYMBOLS5 = new Set([';', "'", '\\', '[', ']', ',', '.', '-', '=', '/', '?', '{', '}', '`']);
-const SPECIAL5 = new Set(['escape', 'tab', 'alt', 'enter']);
+const SPECIAL5 = new Set(['escape', 'tab', 'alt', 'enter', 'alt+enter']);
 
 /** A tecla está no formato aceito? */
 export function validChord5(c: string): boolean {
@@ -87,6 +87,7 @@ export function chordLabel5(c: string): string {
   if (c === 'tab') return 'Tab';
   if (c === 'alt') return 'Alt';
   if (c === 'enter') return 'Enter';
+  if (c === 'alt+enter') return 'Alt Enter';
   return c.toUpperCase();
 }
 
@@ -128,6 +129,8 @@ export const BASE_KEYS5: Bind5[] = [
   sys('nextTab', '}', l('Próximo marcador do papel aberto', 'Next marker of the open paper'), '}'),
   sys('pause', 'escape', l('Fecha o papel aberto; sem papel aberto, abre o menu de pausa', 'Closes the open paper; with none open, opens the pause menu')),
   sys('names', 'alt', l('Segurar: mostra o nome e a tecla de todos os objetos', 'Hold: shows every object\'s name and key')),
+  // BUGS33 item 5: tela cheia (tratada em ui/r33/tela33.ts em qualquer tela, até na inicial; aqui só para a lista "?")
+  sys('fullscreen', 'alt+enter', l('Tela cheia (liga/desliga; F11 também serve)', 'Fullscreen (on/off; F11 works too)')),
   sys('houses', 'tab', l('Troca de casa (várias carreiras ativas)', 'Switch house (several active careers)')),
   { id: 'sys:home', chord: 'h', act: { kind: 'travel', id: 'sede' }, label: l('Volta à sede de qualquer lugar', 'Back to the HQ from anywhere'), scope: 'global' },
   // viagem (barra fixa: Sede, ação da carreira, Casa, Cidade, Mundo — BUGS33 pedido 8: a ordem das teclas segue a do menu de baixo)
@@ -157,7 +160,7 @@ for (const b of BASE_KEYS5) registerKey5(b);
 // ---------------------------------------------------------------- conflitos e personalização
 
 /** Teclas que o jogador não pode usar para outra coisa (sistema e navegador). */
-export const RESERVED5 = new Set(['ctrl+k', 'ctrl+enter', '?', '/', '{', '}', 'escape', 'alt', 'tab', 'enter']);
+export const RESERVED5 = new Set(['ctrl+k', 'ctrl+enter', '?', '/', '{', '}', 'escape', 'alt', 'tab', 'enter', 'alt+enter']);
 
 export interface Conflict5 { chord: string; scope: string; ids: string[] }
 /** Duas ligações com a mesma tecla no mesmo escopo. Escopo de papel × global não é conflito (o papel ganha enquanto

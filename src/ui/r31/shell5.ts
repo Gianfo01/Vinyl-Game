@@ -20,6 +20,7 @@ import { iconPx, type IconName } from '../pixel/icons';
 import { icon17Px } from '../pixel/icons17';
 import { icon31Px } from '../pixel/icons31';
 import { dockCar5, type DockCar5 } from './dockcar5';
+import { FS_KEY33, FS_LABEL33, fsAble33, fsOn33, toggleFs33 } from '../r33/tela33';
 import { rgba, type Px } from '../pixel/px';
 import { inbox5Layout, inbox5Look, inbox5Px, paper5Canvas, paper5Layout, paper5Px, type Paper5, type Rect5 } from '../pixel/exp5paper';
 import { TABS_REG27 } from '../ps/tabsreg27';
@@ -549,6 +550,7 @@ function pause5(s: GameState, host: Shell5Host): HTMLElement {
         item(l('Salvar', 'Save'), 'Ctrl S', () => { host.save(); }),
         item(l('Carregar', 'Load'), null, () => { SH5.pause = false; redraw(); host.files(); }),
         item(l('Opções', 'Options'), t(l('nomes reais, som, teclas', 'real names, sound, keys')), () => { SH5.pause = false; redraw(); host.options(); }),
+        fsAble33() ? item(fsOn33() ? l('Sair da tela cheia', 'Exit fullscreen') : FS_LABEL33, FS_KEY33, () => { void toggleFs33().then(() => redraw()); }) : null, // BUGS33 item 5
         item(l('Teclas de atalho', 'Shortcut keys'), kbd5('?'), help5),
         item(l('Ajuda e tutorial', 'Help and tutorial'), null, () => show5('tut18')),
         item(l('Créditos', 'Credits'), null, () => openCredits31()),
