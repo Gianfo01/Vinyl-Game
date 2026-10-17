@@ -32,7 +32,7 @@ import { BASE31_ACTS } from '../../data/base31acts';
 import { BASE31BR_ACTS, BR31_NOTES } from '../../data/base31br';
 import { BASE31_IT, IT31 } from '../../data/base31it';
 import { BASE31_HITS, HITS31_SRC } from '../../data/base31hits';
-import { zBr31, zHit31, zIt31 } from '../../data/dbtam31';
+import { rebalance31, zBr31, zHit31, zIt31 } from '../../data/dbtam31';
 import { frontmanSings27, lineupMonth27, realRoles27 } from '../../data/lineup27';
 import { FIXR27, FIXV27, NEW27_F } from '../../data/research27';
 import { ALIASES27, HOMONYMS27, MERGED27, mergePeriods27, memberProv27, SONGADD27, songList27, takeOf27, workOf27, WORKS27, WRITERS27 } from '../../data/model27';
@@ -130,6 +130,9 @@ registerSwitch({
 });
 /** índice de REAL_ALL fora do mundo nesta partida (base de sucessos desligada): lido no início e a cada mês para quem ainda vai surgir. */
 const hitOff31 = (s: GameState, i: number): boolean => i >= BASE31H_FROM && i < BASE31H_TO && s.config.base31hits === false;
+/** R31 (DBTAM): estrelas (t 1) das listas antigas que estavam só na Grande voltam para a Média (data/dbtam31.rebalance31). */
+export const REBAL31 = rebalance31(REAL_ALL, BASE31_FROM);
+for (const i of REBAL31) REAL_ALL[i].z = 1;
 applyAudit27(REAL_ALL, { extra: REAL_CLASSIC, names: REAL_ACTS });
 // r27 (F): pesquisa da fila (research27) e normalização das passagens (uma linha por pessoa, com o 7º campo)
 {

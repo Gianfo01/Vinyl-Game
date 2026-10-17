@@ -1,8 +1,8 @@
 // R31 · frente DBTAM — em que tamanho de base de dados entra cada artista das bases novas (BR, IT, HITS).
 // Critério objetivo por notoriedade, só com o que está fichado em cada base (nada de opinião):
 //   Média (z 1)   o núcleo: estrelas e grandes nomes (t ≤ 2), vencedores de Sanremo/Eurovision, carreiras longas com
-//                 discografia ampla (BR), artistas com nº 1 em parada oficial e mais de um top 10 (ou nº 1 nos EUA/Reino
-//                 Unido/mundo) que não são one-hit wonders (HITS).
+//                 discografia ampla (BR), artistas com nº 1 nos EUA/Reino Unido/mundo e mais de um top 10 que não são
+//                 one-hit wonders (HITS).
 //   Grande (z 2)  o degrau seguinte: carreira de 15+ anos com 2+ discos fichados, ou de 30+ anos (BR/IT), quem tem 10+ lançamentos no
 //                 MusicBrainz (IT 2ª passada), quem tem hit no top 10 sem ser one-hit wonder, e o one-hit wonder que foi
 //                 nº 1 nos EUA/Reino Unido/mundo (HITS).
@@ -45,7 +45,17 @@ export function zHit31(h: HitSrc31): Z31 {
   const hits = [h.h, ...(h.h2 ?? [])];
   const n1 = hits.filter((x) => x[3] === 1);
   const n1Big = n1.some((x) => BIG31.has(x[2]));
-  if (!h.o && n1.length && (hits.length >= 2 || n1Big)) return 1;
+  if (!h.o && n1Big && hits.length >= 2) return 1;
   if (!h.o || n1Big) return 2;
   return 3;
+}
+
+/** Listas antigas (antes do lote Z): estrela global (t 1) que ficou só na Grande (z 2) volta para a Média — Herbert
+ *  Grönemeyer, Flume, aespa, IVE, LE SSERAFIM, Tate McRae, Jorge e Mateus, Paulo Londra. Devolve os índices promovidos.
+ *  A cota por país (dar à França, Alemanha, Japão… seus grandes nomes t 2 na Média) foi medida e ficou de fora: +272 atos
+ *  custavam +11% a +23% no mês da Média (docs/r31/dbtam.md, "Reequilíbrio por país"). */
+export function rebalance31(all: RealArtist[], oldTo: number): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < oldTo; i++) if (all[i].z === 2 && all[i].t === 1) out.push(i);
+  return out;
 }
