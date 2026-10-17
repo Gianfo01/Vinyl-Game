@@ -56,7 +56,7 @@ dinheiro e pessoas ficam com GESTÃO/VIDA/CATÁLOGO (combinar pelo gancho, sem e
 | Frente | O quê | Modelo |
 |---|---|---|
 | **QA33** | suíte inteira e goldens re-medidos com explicação; robô jogando 1889→2040 em várias carreiras com todos os `exp33.*` ligados; abrir cada prédio e interior novo; save/load com o estado novo; consertar tudo que quebrar (sem desligar teste); relatório com o que ficou | Opus |
-| **POL33** | polimento visual depois do QA (inclui: interiores antigos pequenos com vazio em volta, achado do QA5): varrer telas, cenas e interiores novos em 1962 e 2025 (e 1889/2035 nos novos), textos cortados ou sobrepostos, padrão pixel, letreiros, cartão de ações; prints antes/depois | Sonnet |
+| **POL33** | polimento visual depois do QA (inclui: interiores antigos pequenos com vazio em volta, achado do QA5; terreno do festival da INT-2 aparece dentro de uma moldura de prédio com teto — virar campo aberto com céu, palco grande e plateia em campo): varrer telas, cenas e interiores novos em 1962 e 2025 (e 1889/2035 nos novos), textos cortados ou sobrepostos, padrão pixel, letreiros, cartão de ações; prints antes/depois | Sonnet |
 
 Ordem: frentes → junção → QA33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono.
 
