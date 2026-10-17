@@ -83,7 +83,7 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
     dedication31('h5-ded'),
     h('footer', { class: 'h5-foot' },
       h('span', null, 'PIXEL STUDIO EDITION', ' · ', link(t(l('Editor de base', 'Database editor')), () => { baseEditorScreen31(root, redraw); top5(); }, { 'data-link': 'base31' })),
-      h('span', null, 'R31'))));
+      h('span', null, 'R32'))));
   top5();
 }
 
