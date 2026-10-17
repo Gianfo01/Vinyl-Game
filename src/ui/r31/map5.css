@@ -100,3 +100,13 @@
 .m5-pick > .sheet27-h { top: -12px; padding-top: 4px; }
 .m5-pick > .m5-pick-go { top: 34px; gap: 6px; padding: 4px 0 6px; border-bottom: 1px solid var(--line, #3a3f4a); }
 .m5-pick > .m5-pick-go .btn { flex: 1 1 auto; }
+
+/* BUGS33 item 4: "Negócios aqui" (comprar imóvel, abrir filial) na ficha da cidade e o atalho da filial no cartão do mundo */
+.cb33-list { display: flex; flex-direction: column; gap: 6px; }
+.cb33-row { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.cb33-lk { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.cb33-why { color: var(--warn, #e0a040); font-size: 12px; }
+.cb33-why .ic-px { width: 12px; height: 12px; vertical-align: -2px; }
+.m5-pick-br { flex: 1 0 100%; }
+.m5-pick-br .btn { width: 100%; }
+.m5-vs.m5-sale .m5-vtag { box-shadow: 0 0 0 1px #6ac06a; }

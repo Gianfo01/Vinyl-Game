@@ -30,6 +30,8 @@ import {
 } from './mundo27model';
 import './mundo27.css';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
+import { cityBuyActs33 } from '../../sim/r33/cityBuy33';
+import { cityBuyBtn33 } from '../r33/cityBuy33ui'; // BUGS33 item 4: abrir filial pelo cartão da cidade
 import { nav5On } from '../../sim/r31/exp5';
 import { openPaper5, shell5On } from '../r31/shell5'; // R31 onda 5 (MAPA): mundo só pelo mapa atrás de exp5.nav
 import { country5 } from '../r31/map5model';
@@ -299,7 +301,8 @@ function mapTab(s: GameState): HTMLElement {
     const pick = WORLD5.pick ? citySheet27(s, WORLD5.pick) : null;
     const pickEl = pick ? sheet27(s, pick, { cls: 'm5-pick', el: h('div', { class: 'row wrap m5-pick-go', 'data-m5': 'pick' },
       h('button', { type: 'button', class: 'btn small primary', onclick: () => { const id = WORLD5.pick!; WORLD5.pick = undefined; openCityMap5(s, id); } }, T(l('Entrar na cidade', 'Enter the city')), ' ▸'),
-      h('button', { type: 'button', class: 'btn small ghost', 'data-esc5': '1', onclick: () => { WORLD5.pick = undefined; rerender(); } }, T(l('Fechar', 'Close')))) }) : null;
+      h('button', { type: 'button', class: 'btn small ghost', 'data-esc5': '1', onclick: () => { WORLD5.pick = undefined; rerender(); } }, T(l('Fechar', 'Close'))),
+      branchShortcut33(s, pick.id)) }) : null; // BUGS33 item 4: "Abrir filial aqui" (trava com motivo)
     const side = pickEl ?? (WORLD5.country ? countryPanel5(s, WORLD5.country, { close: () => { WORLD5.country = undefined; rerender(); }, full: (a3) => openMapInfo17(s, 'country', a3), market: () => go27({ area: 'regions19' }) }) : null)
       ?? worldIdle5(s, { open: openC });
     pinTelex5(map27.element, telexCard5(s, go27));
@@ -320,6 +323,12 @@ function mapTab(s: GameState): HTMLElement {
     hot.length ? h('p', { class: 'small muted map27-note' }, ic('fire'), ` ${T(l('Em alta nas paradas', 'Hot on the charts'))}: ${hot.map(genreName).join(', ')}`) : null,
     layers.has('closed') && closed.size ? h('p', { class: 'small muted map27-note' }, ic('lock'), ` ${closed.size} ${T(l('países fechados ou sob censura forte agora', 'countries closed or under heavy censorship now'))}`) : null,
     h('div', { class: 'map27-body' }, h('div', { class: 'map27-map' }, map27.element), sheet ? sheet27(s, sheet) : hintSheet(s)));
+}
+
+/** BUGS33 item 4: atalho da filial no cartão da cidade do mapa-múndi (o resto dos negócios fica na cidade visitada). */
+function branchShortcut33(s: GameState, city: string): HTMLElement | null {
+  const a = cityBuyActs33(s, city).find((x) => x.id === 'branch');
+  return a ? h('div', { class: 'm5-pick-br' }, cityBuyBtn33(s, city, a)) : null;
 }
 
 // ================================================================ 4. O que sabemos
