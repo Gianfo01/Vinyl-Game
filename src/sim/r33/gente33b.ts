@@ -56,7 +56,7 @@ const SWB_DESC: Record<keyof typeof SWB33, [L, L]> = {
     l('V33 · romance com artista do selo', 'V33 · romance with a roster artist')],
 };
 for (const k of Object.keys(SWB33) as (keyof typeof SWB33)[]) {
-  registerSwitch({ id: SWB33[k], def: false, scope: 'game', desc: SWB_DESC[k][0] });
+  registerSwitch({ id: SWB33[k], def: true, scope: 'game', desc: SWB_DESC[k][0] });
   registerEditable({ id: `sw.${SWB33[k]}`, area: 'tools', kind: 'bool', label: SWB_DESC[k][1], get: (s) => !!sw<boolean>(s, SWB33[k]), set: (s, v) => { setSw(s, SWB33[k], !!v); } });
 }
 const on = (s: GameState, k: keyof typeof SWB33): boolean => !!sw<boolean>(s, SWB33[k]);

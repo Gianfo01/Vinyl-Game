@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/sim/worldgen';
 import { defaultConfig } from '../src/sim/bot';
-import { setSw } from '../src/sim/r31/switches';
+import { setSw, switchDef } from '../src/sim/r31/switches';
 import { rngSnapshot19 } from '../src/sim/rng19';
 import { life } from '../src/sim/sys/life';
 import { gente31, peekGente31 } from '../src/sim/sys/gente31';
@@ -16,11 +16,14 @@ import {
   GB33, SWB33, comeback33, gente33bMonth, hidden33, lightCard33, listen33, peekB33, romanceMonth33, talentMonth33, tier33, tiersMonth33,
 } from '../src/sim/r33/gente33b';
 
-const mk = (seed: string, year = 1975): GameState => createGame(defaultConfig(seed, { startYear: year }));
+// QA33: os quatro interruptores da parte B nascem ligados (decisão do dono, 2026-10-17); cada teste parte deles desligados
+// (config sw31) e liga o que mede, como antes
+const mk = (seed: string, year = 1975): GameState => { const c = defaultConfig(seed, { startYear: year }); c.sw31 = Object.fromEntries(Object.values(SWB33).map((id) => [id, false])); return createGame(c); };
 const townPid = (s: GameState): string => Object.values(gente31(s).j).find((j) => !j.bico && !s.persons[j.p]?.real27 && !j.p.startsWith('fam:') && !Object.values(s.acts).some((a) => a.status !== 'retired' && a.status !== 'split' && a.members.includes(j.p)))!.p;
 
 describe('R33 GENTE33 parte B', () => {
-  it('desligado por padrão: nada muda', () => {
+  it('desligado: nada muda (o padrão agora é ligado — QA33)', () => {
+    for (const id of Object.values(SWB33)) expect(switchDef(id)?.def).toBe(true);
     const s = mk('g33b-off');
     const snap = rngSnapshot19(s), n = Object.keys(s.acts).length;
     gente33bMonth(s);
