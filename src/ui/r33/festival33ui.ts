@@ -9,6 +9,8 @@ import { rerender, toast } from '../common';
 import { h } from '../dom';
 import { registerSection } from '../registry';
 import { lockBtn31 } from '../r31/lock31';
+import { merchOn } from '../../sim/r33/merch33';
+import { openMerch33 } from './merch33ui';
 import { clima33, drawFestival33, estacao33, type Clima33 } from './festival33px';
 
 const CLIMA: Record<Clima33, ReturnType<typeof l>> = {
@@ -25,11 +27,12 @@ export function festivalField33(s: GameState): HTMLElement {
   const acts = int2On(s) ? int2Acts(s, 'festival') : [];
   return h('div', { class: 'fest33' }, cv,
     h('p', { class: 'small muted' }, t(int2What('festival', s.year)), ' · ', t(SEASON[estacao33(month)]), ' · ', t(CLIMA[clima])),
+    merchOn(s) ? h('div', { class: 'row wrap' }, h('button', { type: 'button', class: 'btn small', onclick: (e: Event) => openMerch33((e.currentTarget as HTMLElement).getBoundingClientRect(), 'shop:festival') }, t(l('Barraca de merch', 'Merch stall')), ' ▸'), h('button', { type: 'button', class: 'btn small ghost', onclick: (e: Event) => openMerch33((e.currentTarget as HTMLElement).getBoundingClientRect()) }, t(l('Merch e colecionáveis', 'Merch and collectibles')), ' ▸')) : null,
     acts.length ? h('div', { class: 'row wrap' }, acts.map((a) => lockBtn31(t(a.label), a.dis ?? null, () => { const r = int2Do(s, a.id); toast(t(r.text), r.ok ? 'good' : 'bad'); rerender(); }, { cls: 'btn small' }))) : null);
 }
 
 registerSection('shows', {
   id: 'fest33-open', order: 39,
-  render: (s) => (!ownFests(s).length && !int2On(s) ? null : h('section', { class: 'card wide' }, h('h3', null, t(l('Festival ao ar livre', 'Open-air festival'))), festivalField33(s))),
+  render: (s) => (!ownFests(s).length && !int2On(s) && !merchOn(s) ? null : h('section', { class: 'card wide' }, h('h3', null, t(l('Festival ao ar livre', 'Open-air festival'))), festivalField33(s))),
 });
 void clima33;
