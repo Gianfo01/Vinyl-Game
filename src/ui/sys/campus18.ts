@@ -65,7 +65,7 @@ const ui: { sty?: Style18; styFor?: string; pop?: string; year?: number; mode: '
 /** R31 (FOS): abre o mapa já dentro de um lugar ('fos31:home' = casa da família Fossati, 'fos31:square' = a praça). */
 export function openInside18(id: string): void { ui.inside = id; ui.pop = undefined; store.area = 'campus18' as typeof store.area; rerender(); }
 
-interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[]; /** R31 (H): camada da cidade da época */ ov?: CityOv31; festName?: string; bbHits?: { relId: string; actId?: string; box: [number, number, number, number] }[] ; /** r31 (LOTE) */ lots?: CityLots31 }
+interface View { s: GameState; bs: Bld18[]; scene: Scene18; year: number; live: boolean; vis: Map<string, BVis27>; sale: Sale27[]; nbs: NbInfo27[]; /** r27 (CITY2) */ places: Place27[]; /** R31 (H): camada da cidade da época */ ov?: CityOv31; festName?: string; bbHits?: { relId: string; actId?: string; site?: string; box: [number, number, number, number] }[] ; /** r31 (LOTE) */ lots?: CityLots31 }
 /** r27: o que a vida na rua (fãs, imprensa) e o estado dos prédios (fila de show) já mostram sai do ambiente antigo. */
 const AMB_DONE27 = new Set(['fans', 'press', 'show']);
 function makeView(s: GameState, year?: number): View {
@@ -97,7 +97,7 @@ function makeView(s: GameState, year?: number): View {
   ov.avoid = scene.sprites.filter((sp) => !sp.filler || pinned.has(sp.id)).map((sp) => { const cx = (sp.box[0] + sp.box[2]) / 2; return [cx - 7, sp.box[1] - 12, cx + 7, sp.box[1] + 1] as [number, number, number, number]; });
   for (const b of ov.boards) { // R31 (POL2): artista em alta / turnê = retrato do artista (sprite do jogo); disco = capa
     const r = s.releases[b.relId], a = r ? s.acts[r.actId] : undefined;
-    const face = (b.kind === 'hot' || b.kind === 'tour') && b.actId ? portrait31(s, b.actId) : null;
+    const face = (b.kind === 'hot' || b.kind === 'tour' || (b.site && !r && !b.col && !b.vacant)) && b.actId ? portrait31(s, b.actId) : null;
     if (face) b.cover = face; else if (r) b.cover = coverPx(r.coverSeed, r.title, a?.name ?? '', a?.genre ?? 'pop', r.year, 0.5, r.coverChoice).canvas();
   }
   return { s, bs, year: s.year, live: true, vis, sale, nbs, places, scene, ov, festName: cx.festName, lots };
@@ -499,6 +499,7 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   }
   // R31 (H): outdoors das paradas — clicar abre a ficha da obra
   for (const b of v.bbHits ?? []) {
+    if (b.site) { const sid = b.site, bd0 = v.ov?.boards.find((x) => x.site === sid); hot(`bb:${sid}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: ${bd0 ? `${t(bd0.label)}${bd0.title ? ` — ${bd0.title}` : ''}` : sid}`, [], (hs) => { const at = hs.getBoundingClientRect(); void import('../r33/outdoor33ui').then((m) => m.openOutdoor33(sid, at)); }); continue; } // R33 (POL33-A): ponto de outdoor com aluguel e compra
     const r = s.releases[b.relId], bd = v.ov?.boards.find((x) => x.relId === b.relId);
     if (b.actId && s.acts[b.actId]) hot(`bb:${b.actId}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: ${bd ? t(bd.label) : ''} — ${s.acts[b.actId].name}`, [], () => openAct(b.actId!));
     else if (r) hot(`bb:${b.relId}`, 'lm', b.box, `${t(l('Outdoor', 'Billboard'))}: ${bd ? `${t(bd.label)} · ` : ''}"${r.title}" — ${s.acts[r.actId]?.name ?? ''}`, [], () => openRelease(b.relId));

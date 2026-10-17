@@ -64,9 +64,9 @@ export function planTags31(tags: CityOv31['tags'], byId: Map<string, Pick<Sprite
 }
 
 /** Desenha a camada; devolve as caixas clicáveis dos outdoors (para a página ligar à ficha da obra). */
-export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityOv31, t: number, night: number): { relId: string; actId?: string; box: [number, number, number, number] }[] {
+export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityOv31, t: number, night: number): { relId: string; actId?: string; site?: string; box: [number, number, number, number] }[] {
   const byId = new Map<string, Sprite18>(sc.sprites.map((s) => [s.id, s]));
-  const hits: { relId: string; actId?: string; box: [number, number, number, number] }[] = [];
+  const hits: { relId: string; actId?: string; site?: string; box: [number, number, number, number] }[] = [];
   ctx.imageSmoothingEnabled = false;
   // neon das fachadas
   if (ov.neon.f > 0) {
@@ -99,20 +99,31 @@ export function drawCity31(ctx: CanvasRenderingContext2D, sc: Scene18, ov: CityO
     if (y0 === undefined) return;
     ctx.fillStyle = '#4a4048'; ctx.fillRect(x0 + 4, y0 + bh, 1, yb - y0 + 8); ctx.fillRect(x0 + bw - 5, y0 + bh, 1, yb - y0 + 8);
     const st = ov.boardStyle;
-    const frame = st === 'painted' ? '#e8dcc0' : st === 'neon' ? '#2a1a2a' : st === 'backlit' ? '#f4f4f8' : '#101418';
+    const frame = st === 'painted' ? '#e8dcc0' : st === 'paste' ? '#c9b48a' : st === 'lit' ? '#dfe6ec' : st === 'neon' ? '#2a1a2a' : st === 'backlit' ? '#f4f4f8' : st === 'holo' ? '#1a2a3a' : '#101418';
+    if (st === 'holo') { // r33: holograma — projetor no poste e feixe de luz até o painel (nada flutua: o feixe liga os dois)
+      ctx.fillStyle = INK; ctx.fillRect(x0 + (bw >> 1) - 5, y0 + bh + 3, 10, 5); ctx.fillStyle = '#5a6a7a'; ctx.fillRect(x0 + (bw >> 1) - 4, y0 + bh + 4, 8, 3);
+      ctx.globalAlpha = 0.28 + night * 0.3; ctx.fillStyle = '#7be0ff'; ctx.beginPath(); ctx.moveTo(x0 + (bw >> 1) - 3, y0 + bh + 3); ctx.lineTo(x0 + (bw >> 1) + 3, y0 + bh + 3); ctx.lineTo(x0 + bw, y0 + bh); ctx.lineTo(x0, y0 + bh); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    }
     ctx.fillStyle = INK; ctx.fillRect(x0 - 1, y0 - 1, bw + 2, bh + 2);
     ctx.fillStyle = frame; ctx.fillRect(x0, y0, bw, bh);
-    if (b.cover) { ctx.drawImage(b.cover, x0 + 1, y0 + 1, 13, 13); }
+    if (b.vacant) { // r33: ponto livre — painel em branco com listras e "ALUGUE"
+      ctx.fillStyle = '#8a8a92'; ctx.fillRect(x0 + 1, y0 + 1, bw - 2, bh - 2);
+      ctx.fillStyle = '#a8a8b0'; for (let i = 0; i < bw + bh; i += 6) for (let k = 0; k < bh - 2; k++) { const xx = x0 + 1 + i - k; if (xx > x0 && xx < x0 + bw - 1) ctx.fillRect(xx, y0 + 1 + k, 1, 1); }
+    } else if (b.col) { ctx.fillStyle = b.col; ctx.fillRect(x0 + 1, y0 + 1, 13, 13); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x0 + 1, y0 + 1, 13, 2); }
+    else if (b.cover) { ctx.drawImage(b.cover, x0 + 1, y0 + 1, 13, 13); }
     else { ctx.fillStyle = b.mine ? '#d0a020' : '#a03040'; ctx.fillRect(x0 + 1, y0 + 1, 13, 13); }
-    const fg = st === 'painted' || st === 'backlit' ? INK : '#fff4c0';
-    drawText(ctx, b.tagTxt, x0 + 15, y0 + 2, b.mine ? '#e0a020' : fg);
-    ctx.fillStyle = b.mine ? '#e0a020' : st === 'neon' ? NEON[i % NEON.length] : st === 'led' ? '#40e0ff' : '#a03040';
+    if (st === 'paste') { ctx.fillStyle = 'rgba(80,60,30,.45)'; for (let i = 0; i < 4; i++) ctx.fillRect(x0 + 2 + i * 7, y0 + bh - 2, 3, 2); } // beiras rasgadas do lambe-lambe
+    if (st === 'lit') { ctx.globalAlpha = 0.5 + night * 0.5; ctx.fillStyle = '#fff8c0'; ctx.fillRect(x0, y0 - 2, bw, 1); ctx.globalAlpha = 1; }
+    const fg = st === 'painted' || st === 'backlit' || st === 'paste' || st === 'lit' ? INK : '#fff4c0';
+    drawText(ctx, b.tagTxt, x0 + 15, y0 + 2, b.vacant ? '#ffffff' : b.mine ? '#e0a020' : fg);
+    if (b.own) { ctx.fillStyle = INK; ctx.fillRect(x0 - 1, y0 + bh + 1, 9, 5); ctx.fillStyle = '#e0a020'; ctx.fillRect(x0, y0 + bh + 2, 7, 3); } // r33: placa dourada = ponto seu
+    ctx.fillStyle = b.mine ? '#e0a020' : st === 'neon' ? NEON[i % NEON.length] : st === 'led' || st === 'holo' ? '#40e0ff' : '#a03040';
     ctx.fillRect(x0 + 15, y0 + 9, bw - 16, 2);
     if (st === 'neon' || st === 'led') { // borda acesa
       ctx.globalAlpha = 0.5 + night * 0.5; ctx.fillStyle = st === 'led' ? '#40e0ff' : NEON[(i + 1) % NEON.length];
       ctx.fillRect(x0, y0 - 1, bw, 1); ctx.fillRect(x0, y0 + bh, bw, 1); ctx.globalAlpha = 1;
     }
-    hits.push({ relId: b.relId, ...(b.actId && (b.kind === 'hot' || b.kind === 'tour') ? { actId: b.actId } : {}), box: [x0 - 1, y0 - 1, x0 + bw + 1, y0 + bh + 1] });
+    hits.push({ relId: b.relId, ...(b.actId && (b.kind === 'hot' || b.kind === 'tour' || b.site) ? { actId: b.actId } : {}), ...(b.site ? { site: b.site } : {}), box: [x0 - 1, y0 - 1, x0 + bw + 1, y0 + bh + 1] });
   });
   // etiquetas: lojas da época (com abriu/fechou) e letreiros dos lugares reais — R31 (POL), regras de densidade:
   //   · nada se sobrepõe: nem etiqueta com etiqueta, nem com as placas "À venda" (e o preço em cima delas), outdoors
