@@ -100,7 +100,7 @@ export function ap33(s: GameState): Ap33 {
 }
 /** Leitura sem criar o estado (montar telas não muda o mundo). */
 export const peekAp33 = (s: GameState): Ap33 | undefined => (s as unknown as { x4?: { ap33?: Ap33 } }).x4?.ap33;
-const rngOf = (s: GameState, k: string): Rng => Rng.fromSeed(`${s.config.seed}|ap33|${k}|${s.week}`);
+const rngAp33 = (s: GameState, k: string): Rng => Rng.fromSeed(`${s.config.seed}|ap33|${k}|${s.week}`);
 const ym = (s: GameState): number => s.year * 12 + s.month;
 
 // ---------------------------------------------------------------- (1) minijogos: alívio de estresse e recorde
@@ -254,7 +254,7 @@ export function aiAnswer33(s: GameState): { text: L; n: number; crisis?: string 
   st.ai = s.week;
   let n = 0;
   for (const m of q) { answerMsg(s, m.id, m.act); n++; }
-  const r = rngOf(s, 'ai');
+  const r = rngAp33(s, 'ai');
   if (r.chance(AI33.err)) {
     const f = emitFact(s, { kind: 'industry_suit', actors: ['ap33:ai', 'player'], severity: 40, visibility: 'public', tags: ['ap33', 'ai', 'lawsuit'], src: 'aparelhos33',
       text: l('O assistente respondeu sozinho aceitando um acordo que o selo não podia cumprir; a outra parte processa.', 'The assistant replied on its own, accepting a deal the label could not honour; the other party sues.'), notify: 'bad' });
@@ -293,7 +293,7 @@ export function reportPiracy33(s: GameState): L {
 export function resolvePiracy33(s: GameState, id: string, win: number = PIR33.win): L {
   const c = (peekAp33(s)?.pir ?? []).find((x) => x.id === id && !x.done);
   if (!c) return l('Processo não encontrado.', 'Case not found.');
-  const ok = rngOf(s, `pir:${id}`).chance(win);
+  const ok = rngAp33(s, `pir:${id}`).chance(win);
   c.done = ok ? 'won' : 'lost';
   if (ok) {
     const v = peekVit31(s);

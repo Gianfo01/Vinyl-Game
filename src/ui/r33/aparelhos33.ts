@@ -383,7 +383,7 @@ if (typeof window !== 'undefined') { window.addEventListener('keydown', onKey33,
 registerObject5({ id: 'computador', label: l('Computador', 'Computer'), place: 'sede.sala', frame: 'tela', opens: [], links: [{ area: 'finance' }], era: [1982, 2040],
   note: l('Upgrade "Computador com planilha" do livro-caixa (1982+); "Ligar o PC" abre a tela do monitor (5 versões).', 'The ledger\'s "Computer with spreadsheet" upgrade (1982+); "Turn on the PC" opens the monitor screen (5 versions).') });
 registerObject5({ id: 'catalogo', label: l('Catálogo pelo correio', 'Mail-order catalogue'), place: 'sede.sala', frame: 'revista', opens: [], links: [{ area: 'deco31' }], era: [1889, 1999],
-  note: l('Compra a distância das lojas de decoração (decoshop31), com prazo de semanas.', 'Remote purchase from the decoration shops (decoshop31), with weeks of delivery.') });
+  note: l('Compra a distância das lojas de decoração, com prazo de semanas.', 'Remote purchase from the decoration shops, with weeks of delivery.') });
 SEDE_HAS5.computador = (s) => pcOk33(s);
 SEDE_HAS5.catalogo = (s) => ap33On(s) && s.year <= 1999;
 SEDE_ART5.set('pc33', { ...DESKPC_SIZE33, canvas: (y, st, k) => { const p = deskPc33(pcV33(y) ?? 1982, st); return upscale(p.canvas(), p.w * k, p.h * k); } });

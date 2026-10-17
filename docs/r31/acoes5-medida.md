@@ -1,8 +1,8 @@
 # ACOES5 · medida (gerada por tests/r31-acoes5.test.ts)
 
-- Objetos com cartão: **89** (81 de objects5 + 8 peças só da cena da casa).
+- Objetos com cartão: **90** (82 de objects5 + 8 peças só da cena da casa).
 - Páginas antigas que abrem no fluxo normal (clique, tecla, "ir até lá"): **0** (meta: 0; só por "ver tudo ▸" ou pelo índice da pausa).
-- Antes (base): clicar/tecla em qualquer um dos 77 objetos abria a página antiga inteira no papel.
+- Antes (base): clicar/tecla em qualquer um dos 78 objetos abria a página antiga inteira no papel.
 
 ## As 20 ações mais comuns
 

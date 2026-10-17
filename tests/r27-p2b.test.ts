@@ -147,9 +147,12 @@ describe('r27 P2B — modo rápido intacto', () => {
     // diferença para os valores antigos é a correção do save (market.launchNpcRelease copia os territórios do selo — antes o
     // lançamento NPC dividia a lista com o selo, e um lançamento que ia para fora levava o selo junto; carregar um save desfazia
     // o laço e o jogo divergia). Antes: 703829 / 3703042045 / 3137463213 / 2738656355.
+    // QA33 (GENTE33 parte B ligada por padrão, decisão do dono 2026-10-17): três camadas de NPC, talento escondido, volta
+    // por cima e romance no elenco passam a rodar no golden; só acts muda (caixa, turnês e rng iguais): 3737846083 → 2458442822.
+    // Com exp33.camadas/talento/volta/romance33 desligados volta 3737846083 (conferido).
     expect(AFTER.player.cash).toBe(367837);
     expect(hashString(JSON.stringify(AFTER.tours))).toBe(3516171289);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3737846083);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(2458442822);
     expect(hashString(rngSnapshot19(AFTER))).toBe(3431896346);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
