@@ -158,18 +158,18 @@ body:has(.app5) .scene-overlay.pp33s { top: 56px; bottom: 92px; }
   --accent: #8a3a20; --accent-ink: #fff6dd; --accent-2: #6e2c16; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --gold: #7a5a10; --card-shadow: none; --shadow: none; color-scheme: light;
   background: var(--p33-paper, #f6eedb) !important; color: #22201c; border: 2px solid #170e12 !important; border-radius: 0 !important;
   box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 4px #170e12, 6px 6px 0 4px rgba(0, 0, 0, 0.35) !important; margin: 8px 14px 12px; padding: 10px 14px; }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) :is(*, *::before, *::after) { border-radius: 0 !important; }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) :is(.card, section.card, .sheet27-blk, .c27-side, .c27-pn) {
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(*, *::before, *::after) { border-radius: 0 !important; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.card, section.card, .sheet27-blk, .c27-side, .c27-pn) {
   background: #fffaf0; border-color: #b9a07a; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18); }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) :is(h2, h3) { color: #1a160f; }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) .card > h3:first-child {
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(h2, h3) { color: #1a160f; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) .card > h3:first-child {
   font: 700 11px/1.2 var(--pixel, monospace) !important; letter-spacing: 0.2em; text-transform: uppercase; padding-bottom: 4px; border-bottom: 2px dashed #b9a07a; }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) :is(.btn, .chip, .pill, .wmap-btn, .z27-tabs button) {
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.btn, .chip, .pill, .wmap-btn, .z27-tabs button) {
   border: 2px solid #170e12; background: #fffdf6; color: #1c1612; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25); }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) :is(.btn.primary, .btn.on, .wmap-btn.on, .chip.on, [aria-pressed='true'].btn, .z27-tabs button.on) {
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.btn.primary, .btn.on, .wmap-btn.on, .chip.on, [aria-pressed='true'].btn, .z27-tabs button.on) {
   background: var(--p33-hi, #f0c060); color: #1c1612; border-color: #170e12; }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) :is(.btn, .wmap-btn):hover { background: var(--p33-hi-lt, #f8e4a0); }
-.app5 :is(.reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .reg5-cidade .m5-city > .card) .pill { box-shadow: none; border-width: 1px; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.btn, .wmap-btn):hover { background: var(--p33-hi-lt, #f8e4a0); }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) .pill { box-shadow: none; border-width: 1px; }
 /* o mapa (canvas) lê --ink da própria .wmap para os nomes: mantém tinta clara do mapa escuro; o resto da .wmap (barra,
    legenda, dica) volta à tinta do papel */
 .app5 .reg5-mundo .wmap { --ink: #f3e8cc; }
@@ -189,3 +189,15 @@ body:has(.app5) .scene-overlay.pp33s { top: 56px; bottom: 92px; }
 :root[data-era-skin='fosforo'] .pp33-body.modal-body { background-image: repeating-linear-gradient(180deg, transparent 0 28px, rgba(60, 140, 70, 0.10) 28px 56px); }
 /* Vidro e Plano: mesa lisa (sem veio de tábua) */
 :root:is([data-era-skin='vidro'], [data-era-skin='plano'], [data-era-skin='portal']) :is(.pp33-desk:not(.dim), .app5 .reg5-mundo, .app5 .reg5-cidade) { background-image: none !important; }
+
+/* páginas antigas dentro do papel da casca (.p5-old, inventário FICHAS33) e miolo das janelas: abas em pílula viram
+   marcadores; o miolo já tem as cores do papel (shell5 POL5 / paper33) */
+.p5-old :is(.tabs, .cats17) > button, .pp33-body :is(.tabs, .cats17) > button { border-radius: 0 !important; border: 2px solid var(--p33-ink, #170e12); border-bottom-width: 3px;
+  background: #f8f2e2; color: #1e1a16; box-shadow: none; padding: 3px 12px; font: 600 13px/1.2 var(--sans, sans-serif); }
+.p5-old :is(.tabs, .cats17) > button:hover, .pp33-body :is(.tabs, .cats17) > button:hover { background: var(--p33-hi, #f0c060); }
+.p5-old :is(.tabs, .cats17) > button:is(.on, [aria-selected='true']), .pp33-body :is(.tabs, .cats17) > button:is(.on, [aria-selected='true']) {
+  background: var(--p33-mk, #2a5ab0); color: #fff; border-color: var(--p33-mk-dk, #14306a); }
+.p5-old :is(.tabs, .cats17), .pp33-body :is(.tabs, .cats17) { gap: 4px; }
+.p5-old, .p5-old :is(*, *::before, *::after) { border-radius: 0 !important; }
+/* tons de bom/ruim/aviso do papel também nas páginas antigas dentro do papel da casca (antes vinham do tema escuro) */
+.p5-body:has(> .p5-old) { --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; }
