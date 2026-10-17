@@ -99,7 +99,9 @@ export function travel5go(r: Region5): void {
   if (!s) return;
   TRANS5.run({ kind: 'travel', from: SH5.region, to: r, year: s.year }, () => {
     SH5.region = r; SH5.paper = null; SH5.pause = false; SH5.help = false; SH5.flash = undefined;
-    store.area = travelTarget5(s, r).area as typeof store.area;
+    const to = travelTarget5(s, r);
+    if (to.tab) setTab(to.tab[0], to.tab[1]); // POL5: Mundo volta sempre ao mapa (não à última aba aberta da página)
+    store.area = to.area as typeof store.area;
     redraw();
   });
 }
@@ -169,7 +171,7 @@ export function shellKey5(e: KeyboardEvent): boolean {
   if (SH5.pause || SH5.help) return false;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { HOST?.save(); return true; }
   if (c === '{' || c === '}') return markerStep5(c === '}' ? 1 : -1);
-  if (c === 'tab') return house5();
+  if (c === 'tab') return !e.defaultPrevented && house5(); // na casa, o chaveiro da CASA (casa5) já tratou o Tab
   return false;
 }
 

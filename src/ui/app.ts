@@ -705,7 +705,8 @@ function renderShell5(g: NonNullable<typeof store.game>): void {
 function areaLabel(id: string): string {
   const gr = groupOf(id);
   const it = navItems().find((x) => x.id === id);
-  return gr.home?.tab && gr.home.area === id ? t(gr.label) : it?.label ?? id;
+  const ex = it ? undefined : EXTRA_AREAS.find((x) => x.id === id); // POL5: página escondida do menu (ex.: 'cidade5') tem nome, não o id
+  return gr.home?.tab && gr.home.area === id ? t(gr.label) : it?.label ?? (ex ? t(ex.label) : id);
 }
 
 /** Barra fixa: ← voltar, Grupo › Área › Aba, botão de busca e (no celular) as sub-áreas. */

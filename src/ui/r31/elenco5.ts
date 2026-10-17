@@ -407,7 +407,7 @@ function quadroBody(s: GameState, tab: string, body: Rect5[]): HTMLElement {
     const ws = weeksAhead5(s, BOARD5.mode === 'weeks' ? 6 : 4);
     const wl = (o: number) => (o === 0 ? t(l('Esta semana', 'This week')) : o === 1 ? t(l('Semana que vem', 'Next week')) : t(l('Em {n} semanas', 'In {n} weeks'), { n: o }));
     month = h('div', { class: 'el5-month' },
-      h('h4', null, t(l('Marcos das próximas semanas', 'Milestones for the coming weeks')), h('small', null, ` · ${t(l('lançamentos, shows e prazos; clique para ir até lá', 'releases, shows and deadlines; click to go there'))}`)),
+      h('h4', null, raw(h('span'), ui(l('Marcos das próximas semanas', 'Milestones for the coming weeks'))), h('small', null, ` · ${t(l('lançamentos, shows e prazos; clique para ir até lá', 'releases, shows and deadlines; click to go there'))}`)),
       h('div', { class: 'el5-mweeks', style: `grid-template-columns: repeat(${ws.length}, minmax(0, 1fr))` }, ws.map((w) => h('div', { class: `el5-mwk ${w.off === 0 ? 'now' : ''}` },
         h('span', { class: 'el5-wkn' }, `${wl(w.off)} · ${tl(MONTH5[((w.mi % 12) + 12) % 12]).slice(0, 3).toLowerCase()}`),
         w.items.length ? w.items.slice(0, 4).map((it) => h('button', { type: 'button', class: `el5-ms tone-${it.tone}${it.kind ? ` k-${it.kind}` : ''}`, title: [tl(it.t), tl(it.d)].filter(Boolean).join(' · '),
