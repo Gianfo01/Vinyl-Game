@@ -15,6 +15,7 @@ import { perk } from '../../perks';
 import { cashWhy20, freeCash20 } from '../../oblig20';
 import { purse, purseSet } from '../../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { registerSwitch, sw } from '../../r31/switches';
+import { inheritedBump33, negPenalty33, setHousePrestige33 } from '../../r33/vida33'; // R33 VIDA
 
 export type OwnerAttr = keyof Owner['attrs'];
 
@@ -116,8 +117,9 @@ export function ownerOf(s: GameState, r?: Rng): Owner {
 export function ownerBonus(s: GameState, a: OwnerAttr): number {
   const o = P(s).owner;
   if (!o) return 0;
-  return (o.attrs[a] - 50) / 50;
+  return (o.attrs[a] - 50) / 50 - (a === 'negotiation' ? negPenalty33(s) : 0); // R33: saúde baixa (exp33.saude)
 }
+setHousePrestige33((_s, i) => HOUSES[i]?.prestige ?? 0);
 
 export function ownerAge(s: GameState): number {
   return s.year - ownerOf(s).born;
@@ -237,6 +239,8 @@ export function succession(s: GameState, r: Rng, reason: 'retire' | 'death' | 'h
     for (const a of Object.keys(next.attrs) as OwnerAttr[]) next.attrs[a] = Math.round(old.attrs[a] * 0.4 + k.aptitude * 0.4 + next.attrs[a] * 0.2);
     purseSet(s, Math.round(old.wealth * 0.7), 'inherit', 'succession', { who: next }); // imposto de herança
     next.house = old.house;
+    const bump = inheritedBump33(s, Number(heir.slice(4))); // R33: interesse herdado (exp33.herdeiros)
+    if (bump) next.attrs[bump.attr] = clamp01(next.attrs[bump.attr] + bump.bonus, 10, 95);
   } else if (heir?.startsWith('staff:') && s.player.staff.some((x) => x.id === heir.slice(6))) {
     const sf = s.player.staff.find((x) => x.id === heir.slice(6))!;
     next = makeOwner(s, r, old.generation + 1);

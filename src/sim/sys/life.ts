@@ -27,6 +27,7 @@ import { actsNow27 } from '../tickcache27';
 import { purse, purseSet } from '../r31/purse31'; // R31 (P/B.17): dinheiro pessoal com registro
 import { relPut } from '../opinion';
 import { joinDelegated31 } from '../deleg31';
+import { stressDot33 } from '../r33/vida33'; // R33 VIDA
 
 export * from './life/data';
 
@@ -109,7 +110,7 @@ export function bindAgenda17(f: { reserve: (s: GameState) => number; spent: (s: 
 
 /** Tempo livre pessoal do mês: 5 bolinhas (r17: a banda não ocupa mais uma; ela agora é a carreira "Músico"). */
 export function maxEnergy(s: GameState): number {
-  return Math.max(1, ENERGY_PER_MONTH + Math.round(perk(s, 'energy')));
+  return Math.max(1, ENERGY_PER_MONTH + Math.round(perk(s, 'energy')) - stressDot33(s)); // R33: estresse alto (exp33.saude)
 }
 
 export function energyLeft(s: GameState): number {
