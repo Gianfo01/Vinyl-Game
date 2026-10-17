@@ -23,6 +23,7 @@ import type { ArtItem31 } from '../pixel/props31';
 import type { VitPx31 } from '../pixel/vit31px';
 import { vitPeople31, vitPx31, vitSpots31 } from './vit31model';
 import { ACT33_KINDS, int1Lines, int1On, isInt33 } from '../../sim/r33/int1'; // R33 (INT-1)
+import { polCropOn } from '../../sim/r33/pol33'; // R33 (POL33-A)
 import { LAY33, cropPt33, cropSize33, interior33 } from '../r33/int1px';
 import { EMPTY33, OBJS33 } from '../r33/int1model';
 
@@ -206,7 +207,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const you = youIn31(s, x.name);
   const people = [...(you.who ? [you.who] : []), ...x.people.filter((p) => !p.away), ...vitPeople31(s, x).filter((v) => !x.people.some((p) => (p.pid && p.pid === v.pid) || (p.key && p.key === v.key)))];
   const own33 = int1On(s) && isInt33(x.k); // r33 (INT-1): interior próprio
-  const crop = int1On(s) && (own33 || (ACT33_KINDS as readonly string[]).includes(x.k)); // a cena sem o céu e a rua em volta
+  const crop = (int1On(s) && (own33 || (ACT33_KINDS as readonly string[]).includes(x.k))) || (polCropOn(s) && x.k !== 'facade'); // a cena sem o céu e a rua em volta (r33 POL: também os interiores antigos)
   const room = isInt33(x.k) ? interior33(x.k, x.year, people.length) : dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v ?? (x.k === 'home' ? `${x.place?.lot31?.tier ?? 1}:${x.place?.lot31?.who === 'fam' ? 'fam' : x.place?.lot31?.who?.startsWith('l:') ? 'ceo' : 'artist'}` : undefined)));
   const G = geom27(W);
   const acts = actsOfPlace(s, x);

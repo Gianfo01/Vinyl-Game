@@ -4,3 +4,4 @@ import './intro33sw'; // R33 INTRO33: intro da partida (exp33.intro, ligado por 
 import './aparelhos33'; // APARELHOS33: celular e computador, minijogos, toques, demo caseira, assistente, pirataria, assinatura e vazamento (`exp33.aparelhos`, ligado)
 import './gente33'; // GENTE33 parte A: diretor de filial, CEO e conselho, equipe pessoal e pessoas fixas (`exp33.gente`, opt-in)
 import './gente33b'; // GENTE33 parte B: três camadas, talento escondido, volta por cima, romance no elenco (`exp33.camadas/talento/volta/romance33`, desligados)
+import './pol33'; // POL33-A: interiores antigos recortados (`exp33.pol.crop`, ligado), outdoors e merch (`exp33.pol.outdoors/merch`, desligados)
