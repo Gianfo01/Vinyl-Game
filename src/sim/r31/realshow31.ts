@@ -21,8 +21,9 @@ import { REALNAMES31 } from '../../data/realnames31';
 import { FICTION31 } from '../../data/fiction31';
 import { POP31 } from '../../data/pop31';
 import { homage31 } from '../../data/homage31';
-import { setDisplay31, type DispPair31 } from '../../data/realdisp31';
-import { CITIES, GENRES } from '../../data/world';
+import { setDisplay31, tooShort31, type DispPair31 } from '../../data/realdisp31';
+import { allCountryCodes, countryName } from '../../data/geo';
+import { CITIES, GENRES, MARKETS } from '../../data/world';
 import { registerExt4 } from '../ext4';
 import { RELICS17 } from '../relics17';
 import { REAL_ALL, realDataOf } from '../sys/realworld';
@@ -58,14 +59,38 @@ const COMMON31 = new Set(('yes kiss heart queen prince boston chicago america eu
   + 'elenco nada menor magro alemão dente levante clara area gala mango city culture focus jet winter sabotage bender accept '
   + 'deluxe random melody shade hub jun jul flood youth vinyl friends friday savage gazebo syria variety').split(/\s+/));
 
+// teclas e palavras curtas da interface (rótulos de tecla e botões que não passam por t()): nunca trocadas
+const UIWORDS31 = ['Enter', 'Esc', 'Tab', 'Alt', 'Ctrl', 'Shift', 'Space', 'Espaço', 'Home', 'End', 'Delete', 'Backspace',
+  'OK', 'Ok', 'No', 'Go', 'Up', 'On', 'Off', 'So', 'Be', 'Re', 'Do', 'Oh'];
+
+let PLACES31: Set<string> | null = null;
+/** nomes de lugar: cidades, países e mercados (pt e en), inteiros */
+function places31(): Set<string> {
+  if (PLACES31) return PLACES31;
+  const pl = new Set<string>();
+  for (const c of CITIES) { pl.add(c.name.pt); pl.add(c.name.en); }
+  for (const a3 of allCountryCodes()) { const n = countryName(a3); pl.add(n.pt); pl.add(n.en); }
+  for (const m of MARKETS) { pl.add(m.name.pt); pl.add(m.name.en); }
+  return (PLACES31 = pl);
+}
+
 let STOP31: Set<string> | null = null;
 function stop31(): Set<string> {
   if (STOP31) return STOP31;
   const st = new Set<string>(COMMON31);
-  for (const c of CITIES) { st.add(c.name.pt.toLowerCase()); st.add(c.name.en.toLowerCase()); }
+  // lugares inteiros e cada palavra deles ("Rio" de "Rio de Janeiro", "Hungria", "Oriente"): não trocam em frase
+  for (const p of places31()) { st.add(p.toLowerCase()); for (const w of p.split(/[^\p{L}]+/u)) if (w) st.add(w.toLowerCase()); }
   for (const g of GENRES) { st.add(g.name.pt.toLowerCase()); st.add(g.name.en.toLowerCase()); }
   return (STOP31 = st);
 }
+
+let KEEP31: Set<string> | null = null;
+/** texto que o interruptor nunca troca, nem como texto inteiro: cidade, país ou mercado ("Boston", "Chicago",
+ *  "Berlin" também são nomes de banda, mas na tela quase sempre são o lugar), palavras/teclas da interface e texto curto
+ *  ou sem letra ("N", "1984", "883": na tela quase sempre é tecla, ano ou número) */
+export const keep31 = (s: string): boolean => tooShort31(s) || (KEEP31 ??= new Set([...places31(), ...UIWORDS31])).has(s.trim());
+const set31 = (names: DispPair31[], titles: DispPair31[]): void =>
+  setDisplay31(names.filter(([a]) => !keep31(a)), titles.filter(([a]) => !keep31(a)), entities31());
 /** nome que pode ser trocado em qualquer ponto da frase (o resto só quando é o texto inteiro ou está entre aspas) */
 const inText31 = (n: string): boolean => {
   const w = n.trim();
@@ -85,8 +110,8 @@ const hasWord31 = (s: string, w: string): boolean => {
 
 /** R31 (NOMES): entidade conhecida que troca mesmo coincidindo com uma palavra da interface (gravadoras reais e atos do
  *  catálogo à mão: a gravadora "Elenco", o sambista "Cartola"); como rótulo da interface, a marca UI31 do t() protege. */
-let KEEP31: Set<string> | null = null;
-export const keep31 = (): ReadonlySet<string> => (KEEP31 ??= new Set([...Object.values(REAL_LABELS), ...Object.values(REAL_ACTS).map((a) => a.name)]));
+let ENT31: Set<string> | null = null;
+export const entities31 = (): ReadonlySet<string> => (ENT31 ??= new Set([...Object.values(REAL_LABELS), ...Object.values(REAL_ACTS).map((a) => a.name)]));
 
 export interface RealPairs31 { names: DispPair31[]; titles: DispPair31[]; keep: ReadonlySet<string> }
 let STATIC_OFF: RealPairs31 | null = null;
@@ -138,7 +163,7 @@ export function realPairsOff31(): RealPairs31 {
   }
   // 5) cultura pop, memes, bolhas e fracassos (src/data/pop31.ts): homenagem escrita junto da referência
   for (const p of POP31) for (const [real, sub] of p.refs) add(real, sub);
-  return (STATIC_OFF = { names, titles, keep: keep31() });
+  return (STATIC_OFF = { names, titles, keep: entities31() });
 }
 
 /** Todos os nomes reais conhecidos pelo interruptor (teste de varredura). */
@@ -165,11 +190,11 @@ export function syncRealShow31(s: GameState): void {
         if (real && real !== a.name && inText31(a.name)) names.push([a.name, real]);
       }
     }
-    setDisplay31(names, Object.values(s.acts).flatMap((a) => { const real = a.catalogNo && !s.config.realNames ? (realDataOf(a)?.n ?? REAL_ACTS[a.catalogNo]?.name) : undefined; return real && real !== a.name && !inText31(a.name) ? [[a.name, real] as DispPair31] : []; }), keep31());
+    set31(names, Object.values(s.acts).flatMap((a) => { const real = a.catalogNo && !s.config.realNames ? (realDataOf(a)?.n ?? REAL_ACTS[a.catalogNo]?.name) : undefined; return real && real !== a.name && !inText31(a.name) ? [[a.name, real] as DispPair31] : []; }));
     return;
   }
   const st = realPairsOff31();
-  if (!s.config.realNames) { setDisplay31(st.names, st.titles, keep31()); return; }
+  if (!s.config.realNames) { set31(st.names, st.titles); return; }
   // mundo nascido com nomes reais: títulos e integrantes vindos de qualquer base (canções por artista, auditorias…)
   const names = [...st.names], titles = [...st.titles];
   const known = new Set([...names, ...titles].map(([a]) => a));
@@ -187,5 +212,5 @@ export function syncRealShow31(s: GameState): void {
     known.add(r.title);
     titles.push([r.title, homage31(r.title)]);
   }
-  setDisplay31(names, titles, keep31());
+  set31(names, titles);
 }

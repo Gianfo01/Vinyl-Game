@@ -11,7 +11,7 @@ import { entityOk31, render31, uiCollisions31, uiLiterals31 } from '../scripts/r
 import { l } from '../src/data/world';
 import { S, getLang, setLang, t } from '../src/i18n/strings';
 import { DEPT31 } from '../src/sim/deleg31';
-import { realPairsOff31, setRealShown31 } from '../src/sim/r31/realshow31';
+import { keep31, realPairsOff31, setRealShown31 } from '../src/sim/r31/realshow31';
 
 // o h() passa todo texto pelo disp31 de novo: o que a tela mostra é disp31(t(...))
 const shown = (s: string) => disp31(s);
@@ -68,13 +68,15 @@ describe('X · palavras da interface não viram homenagem', () => {
 // teclas e cabeçalhos passam intactos (medido na integração: "Nome" → "Noix", "Telefone" → "Teliel", "Z" → "A", "5" → "10").
 describe('NOMES · só nomes de entidades trocam', () => {
   afterEach(() => setDisplay31([], []));
-  const on = () => { const p = realPairsOff31(); setDisplay31(p.names, p.titles, p.keep); return p; };
+  // como a partida monta: tabela sem lugares/teclas (keep31 do dono) e com as entidades conhecidas (p.keep)
+  const on = () => { const p = realPairsOff31(); setDisplay31(p.names.filter(([a]) => !keep31(a)), p.titles.filter(([a]) => !keep31(a)), p.keep); return p; };
 
   it('rótulos, letras soltas, números e teclas passam intactos (texto cru e via t())', () => {
     on();
-    const raw = ['Nome', 'Telefone', 'NOME', 'Z', 'I', 'N', 'R', 'V', 'X', 'A', 'J', 'K', 'Q', 'OK', 'No', 'Up', 'Go', 'LP', 'DJ', 'F1', 'Esc',
+    const raw = ['Nome', 'Telefone', 'NOME', 'Z', 'I', 'N', 'R', 'V', 'X', 'A', 'J', 'K', 'Q', 'OK', 'No', 'Up', 'Go', 'LP', 'DJ', 'Esc',
       '5', '1984', '1999', '2001', '13', '45', '4/3/1943', '99.9%', '22:22', '1, 2, 3, 4', '( )', '+', '=', 'Status', 'Total', 'Next', 'Area',
-      'Television', 'Europe', 'Respect', 'People', 'Radio', 'Debut', 'Drama', 'Livro', 'Agora', 'Luz', 'Mais', 'Nada', 'Menor', 'Fazer', 'Cargo'];
+      'Television', 'Europe', 'Respect', 'People', 'Radio', 'Debut', 'Drama', 'Livro', 'Agora', 'Luz', 'Mais', 'Nada', 'Menor', 'Fazer', 'Cargo',
+      'Enter', 'Space', 'Ctrl', 'Shift', 'Rio de Janeiro', 'Chicago', 'Boston', 'Berlin', 'Nashville'];
     for (const s of raw) expect(disp31(s), s).toBe(s);
     withPt(() => {
       expect(shown(t(l('Nome', 'Name')))).toBe('Nome');
@@ -84,12 +86,13 @@ describe('NOMES · só nomes de entidades trocam', () => {
       expect(shown(`${t(l('Nome', 'Name'))} ▲`)).toBe('Nome ▲');
     });
     // palavra comum no meio da frase também não troca
-    for (const s of ['Fazer o quê?', 'Total: 5', 'Status do contrato', 'Next: Z']) expect(disp31(s), s).toBe(s);
+    for (const s of ['Fazer o quê?', 'Total: 5', 'Status do contrato', 'Next: Z', 'Sede no Rio de Janeiro', 'Aperte Enter', 'Em Chicago, hoje']) expect(disp31(s), s).toBe(s);
   });
 
   it('entidades continuam trocadas: gravadora Elenco, artistas, obras e nomes em frase', () => {
     const p = on();
     expect(disp31('Elenco')).toBe('Sol Maior Discos');
+    expect(disp31('U2')).not.toBe('U2'); // sigla com dígito é nome de ato
     for (const n of ['The Beatles', 'Elvis Presley', 'Caetano Veloso', 'Chico Buarque', 'Taylor Swift', 'Michael Jackson']) {
       const pair = [...p.names, ...p.titles].find(([a]) => a === n);
       expect(pair, n).toBeTruthy();
@@ -97,7 +100,7 @@ describe('NOMES · só nomes de entidades trocam', () => {
       expect(disp31(`Hoje, ${n} lançou um disco.`), n).toBe(`Hoje, ${pair![1]} lançou um disco.`);
     }
     // amostra grande: todo nome real de artista/obra que não é palavra da interface, número ou sigla continua trocado
-    const skip = (a: string) => notEntity31(a) || UI_WHOLE31.includes(a.trim()) || /\bFossati\b|^(Efro|Lucia|Sonia|Antonella|Gianluca)$/.test(a);
+    const skip = (a: string) => notEntity31(a) || keep31(a) || UI_WHOLE31.includes(a.trim()) || /\bFossati\b|^(Efro|Lucia|Sonia|Antonella|Gianluca)$/.test(a);
     const all = [...p.names, ...p.titles].filter(([a, b]) => a !== b && !skip(a));
     const sample = all.filter((_, i) => i % 7 === 0);
     expect(sample.length).toBeGreaterThan(1500);
@@ -109,7 +112,7 @@ describe('NOMES · só nomes de entidades trocam', () => {
     // tira só as citações de propósito (nome composto, ou de uma palavra revisado em ENTITY_OK31/registro): "o som Motown",
     // "Com B.B. King" trocam por querer; todo o resto do texto da interface tem de passar intacto
     const p = realPairsOff31(), ok = await entityOk31();
-    setDisplay31(p.names.filter(([a]) => !/[^\p{L}\p{N}]/u.test(a.trim()) && !ok.has(a)), p.titles, p.keep);
+    setDisplay31(p.names.filter(([a]) => !keep31(a) && !/[^\p{L}\p{N}]/u.test(a.trim()) && !ok.has(a)), p.titles.filter(([a]) => !keep31(a)), p.keep);
     const lits = uiLiterals31();
     const keep = p.keep;
     // texto curto da interface (rótulo, cabeçalho, botão): palavra com tradução, ou chave de t() (S)
@@ -130,7 +133,7 @@ describe('NOMES · só nomes de entidades trocam', () => {
   it('mundo com nomes reais e exibição desligada: rótulos intactos, atos e discos reais trocados', () => {
     const s = createGame(defaultConfig('x31-nomes', { startYear: 1985, realNames: true }));
     setRealShown31(s, false);
-    for (const x of ['Nome', 'Telefone', 'Z', '5', '1984', 'Status']) expect(disp31(x), x).toBe(x);
+    for (const x of ['Nome', 'Telefone', 'Z', '5', '1984', 'Status', 'Enter', 'Rio de Janeiro']) expect(disp31(x), x).toBe(x);
     const a = Object.values(s.acts).find((x) => x.name === 'The Beatles' || x.name === 'Queen' || x.name === 'Michael Jackson');
     expect(a).toBeTruthy();
     expect(disp31(a!.name)).not.toBe(a!.name);

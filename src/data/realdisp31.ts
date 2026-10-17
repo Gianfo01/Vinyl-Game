@@ -10,18 +10,23 @@
 //    texto inteiro é o título, ou quando ele aparece entre aspas.
 // Palavra da interface ("Elenco", "Telefone", "Status"…) que coincide com um título NÃO é trocada: t() avisa que o texto
 // veio de um rótulo da interface (ui = true) e devolve a palavra com a marca invisível UI31, para o h() também não trocar.
-// A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing).
-// R31 (NOMES): a troca vale só para NOMES DE ENTIDADES. Nunca troca número, sigla ou letra solta (texto de 1–2
-// caracteres: teclas, colunas, "5", "1984"); palavra da interface gerada pela varredura (src/data/uiwords31.ts: "Nome",
+// A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing). Texto curto (uma letra, só números ou
+// símbolos: teclas "N", "5", "+") nunca é trocado; cidades, países e teclas ficam de fora já na tabela (realshow31.ts).
+// R31 (NOMES): a troca vale só para NOMES DE ENTIDADES. Nunca troca número, letra solta ou par de letras (teclas,
+// colunas, "5", "1984", "OK"; "U2", letra e dígito, é ato e troca); palavra da interface gerada pela varredura (src/data/uiwords31.ts: "Nome",
 // "Telefone", "Status") não troca como texto inteiro e palavra comum ("Fazer", "Total") não troca no meio da frase —
-// salvo entidade conhecida (`keep`: registro à mão, atos e gravadoras), que continua protegida só pela marca UI31 do t().
+// salvo entidade conhecida (`keep`: gravadoras reais e atos do catálogo à mão), protegida só pela marca UI31 do t().
 import { UI_INTEXT31, UI_WHOLE31 } from './uiwords31';
 
 export type DispPair31 = [from: string, to: string];
 
 const UIW = new Set(UI_WHOLE31), UIT = new Set(UI_INTEXT31);
-/** texto que nunca é nome de entidade: sem letra (números, datas, "99.9%") ou de até 2 caracteres ("Z", "OK", "F1") */
-export const notEntity31 = (from: string): boolean => { const w = from.trim(); return [...w].length <= 2 || !/\p{L}/u.test(w); };
+/** texto que nunca é nome de entidade: sem letra (números, datas, "99.9%"), uma letra ("Z") ou duas sem dígito ("OK",
+ *  "LP", "No"); sigla de letra e dígito ("U2", "A1") é nome de ato e troca */
+export const notEntity31 = (from: string): boolean => {
+  const w = [...from.trim()];
+  return w.length <= 1 || !/\p{L}/u.test(from) || (w.length === 2 && !/\p{N}/u.test(from));
+};
 
 // R31 (BASE-IT): protege o sobrenome e os prenomes sozinhos — não nomes reais de terceiros que só dividem o prenome
 // (Lucia Mannucci, Antonella Ruggiero, Gianluca Grignani vazavam com a exibição desligada)
@@ -29,6 +34,8 @@ const FAMILY_GUARD31 = /\bFossati\b|^(Efro|Lucia|Sonia|Antonella|Gianluca)$/;
 const WORD = /[\p{L}\p{N}]+/gu;
 const firstWord = (s: string): string | undefined => { WORD.lastIndex = 0; const m = WORD.exec(s); return m ? m[0] : undefined; };
 const isWordChar = (c: string | undefined) => !!c && /[\p{L}\p{N}]/u.test(c);
+/** nome curto demais para ser trocado: menos de 2 caracteres ou sem letra ("N", "5", "13", "+", "#3") */
+export const tooShort31 = (s: string): boolean => s.trim().length < 2 || !/\p{L}/u.test(s);
 
 let byFirst = new Map<string, DispPair31[]>();
 let whole = new Map<string, string>();
