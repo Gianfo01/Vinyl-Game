@@ -15,6 +15,25 @@ frentes de arte (INT-1, INT-2, MAPA33), um por lugar novo. Na junção o coorden
 uiwords; os goldens (r27-p2a, r27-p2b, r27-m3, r16-playbot) só nas frentes que mexem na simulação (VIDA, CIDADE,
 CATÁLOGO, GESTÃO, PESSOAS, MUNDO), e se mudarem fica anotado para o QA33 conferir.
 
+## Regras de pixel art (valem para TODO objeto, prédio, interior, fachada e peça nova da 33)
+Seguir o padrão atual do jogo (`docs/r31/onda5-arte.md`, sede `hqpx27`/`salas31px`, interiores `props31`/`inside31`,
+prédios `pred31px`, decoração `deco31px`, objetos `exp5px`):
+- **Desenhado por código** em `Px` (`src/ui/pixel/px`), sem imagem externa, sem emoji, sem texto de sistema por cima;
+  letras só na fonte do jogo (`pixel/font`, `drawTextOutlined`), sem acento.
+- **Luz de cima à esquerda**, sombra arroxeada, **contorno escuro quente** (INK) via `inked()`, tons por `lv()`
+  (rampa de ~6 tons por material); luz (cones, halos, telas acesas) numa camada própria, sem contorno.
+- **Paleta da época** pelas 6 faixas `ep5Of` (1889–1919, 1920–49, 1950–69, 1970–89, 1990–2009, 2010–2040): o mesmo
+  objeto muda de forma e material com a época (ex.: rádio de válvula → transistor → smart speaker).
+- **Escala** dos pixels lógicos da sede: boneco 24×34, porta 22×38, mesa na cintura (26), objetos pequenos cabem
+  sobre a mesa; fachada do prédio na grade e altura de `pred31px`, letreiro sem sobrepor (regra do POL2).
+- **Estados** de objeto clicável: `idle`, `new` (selo "!"), `lit` (anel dourado), como em `obj5Px`; tudo que é clicável
+  abre o cartão de ações (ACOES5), não uma tela nova.
+- **Nada flutuando** (tudo apoiado no chão, na parede ou na mesa), **nada de placeholder** (bloco de uma cor, caixa
+  vazia, "TODO"), nada cortado; animação leve e respeitando "movimento reduzido".
+- **Teste**: cada peça nova entra num teste do tipo `r31-exp5-art` (desenha no tamanho certo, épocas e estados
+  diferentes entre si, nenhum bloco de uma cor só) e numa galeria com print para aprovação.
+- Bonecos de artistas reais: skill `masters-artist-sprites`.
+
 ## Frentes
 
 | Frente | O quê | Dono dos arquivos (principal) |
