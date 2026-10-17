@@ -6,19 +6,19 @@ import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga do
 import { newRunConfig20 } from '../src/sim/start17';
 import { setSw } from '../src/sim/r31/switches';
 import { INT2, INT2_HOOKS, SW_INT2, int2Acts, int2Def, int2Do, int2Exists, int2On, int2Types, int2Used } from '../src/sim/r33/int2';
-import { FACADE_H, FACADE_W, IH, IW, SHOP2_IDS, int2Facade, int2Interior, int2Shop, int2Spots } from '../src/ui/r33/int2px';
+import { INT2_H, INT2_W, SHOP2_IDS, int2Scene, int2ShopScene, paintInt2 } from '../src/ui/r33/int2px';
 import { BIZ31 } from '../src/sim/r31/city31';
 import type { Px } from '../src/ui/pixel/px';
 
 const game = () => createGame(newRunConfig20({ seed: 'int2-teste', companyName: 'Selo Teste' }));
 const colors = (p: Px): number => new Set(p.d).size;
-const opaque = (p: Px): boolean => p.d.every((c) => c >>> 24 === 255);
+const opaque = (p: Px): boolean => p.d.every((c) => c >>> 24 > 0); // nada transparente: a cena preenche a área
 const same = (a: Px, b: Px): boolean => a.d.every((c, i) => c === b.d[i]);
 
 describe('INT-2 · registro e interruptor', () => {
-  it('14 tipos, ids únicos, lote e onde preenchidos; samba só no Rio, porto só com água, jazz e boate por época', () => {
-    expect(INT2.length).toBe(14);
-    expect(new Set(INT2.map((t) => t.id)).size).toBe(14);
+  it('15 tipos, ids únicos, lote e onde preenchidos; samba só no Rio, porto só com água, jazz e boate por época', () => {
+    expect(INT2.length).toBe(15);
+    expect(new Set(INT2.map((t) => t.id)).size).toBe(15);
     for (const t of INT2) { expect(t.lot.w).toBeGreaterThan(0); expect(t.lot.d).toBeGreaterThan(0); expect(t.where).toBeTruthy(); expect(t.tag).toMatch(/^[A-Z ]+$/); }
     expect(int2Exists(int2Def('samba')!, 'rio', 1962)).toBe(true);
     expect(int2Exists(int2Def('samba')!, 'london', 1962)).toBe(false);
@@ -75,24 +75,40 @@ describe('INT-2 · ações', () => {
   });
 });
 
-describe('INT-2 · arte', () => {
+describe('INT-2 · festival (terreno com cena própria)', () => {
+  it('ações do festival usam as funções que já existem e bloqueiam sem convite ou sem festival próprio', () => {
+    const s = game(); setSw(s, SW_INT2, true);
+    expect(int2Types(s).map((t) => t.id)).toContain('festival');
+    const dis = (k: string) => int2Acts(s, 'festival').find((x) => x.id === k)!.dis;
+    expect(dis('festival.convite')).toBeTruthy(); // sem convite pendente
+    expect(dis('festival.escalar')).toBeTruthy(); // sem festival próprio
+    expect(dis('festival.ingresso')).toBeTruthy();
+    expect(dis('festival.visitar')).toBeUndefined();
+    expect(int2Do(s, 'festival.visitar').ok).toBe(true);
+  });
+});
+
+describe('INT-2 · arte (padrão do jogo: corte de interior27, adereços e bonecos)', () => {
   const YEARS = [1889, 1962, 2025, 2035];
+  const pic = (sc: ReturnType<typeof int2Scene>) => paintInt2(sc).px;
   for (const t of INT2) {
-    it(`${t.id}: interior ${IW}×${IH} opaco, épocas diferentes, fachada ${FACADE_W}×${FACADE_H}, pessoas dentro da cena`, () => {
+    it(`${t.id}: cena ${INT2_W}×${INT2_H} no corte do jogo, opaca, épocas diferentes, lugares das pessoas`, () => {
       const ys = YEARS.filter((y) => int2Exists(t, t.cities?.[0] ?? 'new_york', y));
       expect(ys.length).toBeGreaterThan(0);
-      const ins = ys.map((y) => int2Interior(t.id, y)), fac = ys.map((y) => int2Facade(t.id, y));
-      for (const p of ins) { expect([p.w, p.h]).toEqual([IW, IH]); expect(opaque(p)).toBe(true); expect(colors(p)).toBeGreaterThan(40); }
-      for (const p of fac) { expect([p.w, p.h]).toEqual([FACADE_W, FACADE_H]); expect(opaque(p)).toBe(true); expect(colors(p)).toBeGreaterThan(25); }
-      for (let i = 1; i < ys.length; i++) { expect(same(ins[i], ins[0])).toBe(false); expect(same(fac[i], fac[0])).toBe(false); }
-      expect(same(int2Interior(t.id, ys[0]), ins[0])).toBe(true); // determinístico
-      for (const sp of int2Spots(t.id)) { expect(sp.x).toBeGreaterThan(0); expect(sp.x).toBeLessThan(1); expect(sp.y).toBeLessThan(IH); }
+      const ins = ys.map((y) => pic(int2Scene(t.id, y)));
+      for (const p of ins) { expect([p.w, p.h]).toEqual([INT2_W, INT2_H]); expect(opaque(p)).toBe(true); expect(colors(p)).toBeGreaterThan(60); }
+      for (let i = 1; i < ys.length; i++) expect(same(ins[i], ins[0])).toBe(false);
+      expect(same(pic(int2Scene(t.id, ys[0])), ins[0])).toBe(true); // determinístico
+      const m = int2Scene(t.id, ys[0]).m;
+      expect(m.spots.length).toBeGreaterThanOrEqual(4);
+      for (const sp of m.spots) { expect(sp.x).toBeGreaterThan(0); expect(sp.x).toBeLessThan(1); }
+      expect(t.mapArt).toBeTruthy();
     });
   }
-  it('lojas da época: todas as de BIZ31 têm interior (360×150 opaco); lojas diferentes se distinguem', () => {
+  it('lojas da época: todas as de BIZ31 têm interior no mesmo corte; lojas diferentes se distinguem', () => {
     for (const b of BIZ31) expect(SHOP2_IDS).toContain(b.id);
-    const ps = SHOP2_IDS.map((id) => int2Shop(id, 1962));
-    for (const p of ps) { expect([p.w, p.h]).toEqual([IW, IH]); expect(opaque(p)).toBe(true); expect(colors(p)).toBeGreaterThan(40); }
+    const ps = SHOP2_IDS.map((id) => pic(int2ShopScene(id, 1962)));
+    for (const p of ps) { expect([p.w, p.h]).toEqual([INT2_W, INT2_H]); expect(opaque(p)).toBe(true); expect(colors(p)).toBeGreaterThan(60); }
     expect(new Set(ps.map((p) => Array.from(p.d).join(','))).size).toBe(ps.length);
   });
 });

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Galeria INT-2</title>
+<style>body{margin:0;background:#12141c;color:#e8e0c8;font:600 12px sans-serif}h2{margin:8px 10px 2px;font-size:13px;color:#f0c060}canvas{display:block;margin:2px 10px;image-rendering:pixelated}</style></head>
+<body><main id="gal"></main>
+<script type="module">
+import { gallery } from '/src/ui/r33/int2gallery.ts';
+const q = new URLSearchParams(location.search);
+await gallery(document.getElementById('gal'), q.get('s') || 'ref', q.get('id') || '', Number(q.get('y') || 1962));
+document.body.dataset.ready = '1';
+</script></body></html>

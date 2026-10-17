@@ -17,6 +17,9 @@ import { ownerOf } from '../sys/people/owner';
 import { money, nextId, playerActs, post } from '../util';
 import { freeCash20 } from '../oblig20';
 import { loanOffer, takeLoan } from '../economy';
+import { acceptInvite, fest8 } from '../sys/fests8';
+import { ownFests } from '../sys/feststore';
+import { addToLineup, setFestival } from '../sys/live/festival';
 import type { PAct27 } from '../sys/place27';
 import type { GameState } from '../types';
 import { registerSwitch, sw } from '../r31/switches';
@@ -29,7 +32,7 @@ export const int2On = (s: GameState): boolean => !!sw<boolean>(s, SW_INT2);
 
 // ---------------------------------------------------------------- registro dos tipos
 
-export type Int2Id = 'bank' | 'court' | 'hospital' | 'stadium' | 'jazz' | 'nightclub' | 'church' | 'tvstudio' | 'adagency' | 'samba' | 'print' | 'pirate' | 'station' | 'port';
+export type Int2Id = 'bank' | 'court' | 'hospital' | 'stadium' | 'jazz' | 'nightclub' | 'church' | 'tvstudio' | 'adagency' | 'samba' | 'festival' | 'print' | 'pirate' | 'station' | 'port';
 /** Onde o lote deve ficar na cidade (a MAPA33 decide a posição exata). */
 export type Int2Where = 'centro' | 'borda' | 'periferia' | 'bairro' | 'agua' | 'beco';
 export interface Int2Type {
@@ -40,7 +43,7 @@ export interface Int2Type {
   /** letreiro curto na fachada (fonte do jogo, sem acento) */ tag: string;
   /** arte do mapa isométrico enquanto o PRED não tem desenho próprio (id de `Art31`, ui/pixel/pred31) */ mapArt: string;
 }
-const MAP_ART: Record<Int2Id, string> = { bank: 'office', court: 'office', hospital: 'hotel', stadium: 'arena', jazz: 'venue', nightclub: 'venue', church: 'museum', tvstudio: 'tv', adagency: 'office', samba: 'arena', print: 'press', pirate: 'alley', station: 'platform', port: 'plant' };
+const MAP_ART: Record<Int2Id, string> = { bank: 'office', court: 'office', hospital: 'hotel', stadium: 'arena', jazz: 'venue', nightclub: 'venue', church: 'museum', tvstudio: 'tv', adagency: 'office', samba: 'arena', festival: 'fest', print: 'press', pirate: 'alley', station: 'platform', port: 'plant' };
 const T = (id: Int2Id, pt: string, en: string, tag: string, lot: [number, number], where: Int2Where, from: number, to = 9999, x: Partial<Int2Type> = {}): Int2Type =>
   ({ id, name: l(pt, en), tag, lot: { w: lot[0], d: lot[1] }, where, from, to, mapArt: MAP_ART[id], ...x });
 
@@ -63,6 +66,7 @@ export const INT2: Int2Type[] = [
   T('tvstudio', 'Estúdio de TV e cinema', 'TV and film studio', 'ESTUDIO TV', [6, 5], 'borda', 1920),
   T('adagency', 'Agência de publicidade', 'Advertising agency', 'AGENCIA', [4, 3], 'centro', 1900),
   T('samba', 'Escola de samba', 'Samba school', 'ESCOLA DE SAMBA', [6, 4], 'periferia', 1928, 9999, { cities: ['rio'] }),
+  T('festival', 'Terreno do festival', 'Festival grounds', 'FESTIVAL', [8, 6], 'periferia', 1889),
   T('print', 'Gráfica e estúdio de arte', 'Print shop and art studio', 'GRAFICA', [4, 3], 'borda', 1889),
   T('pirate', 'Rádio pirata e garagem', 'Pirate radio and garage', 'GARAGEM', [3, 3], 'beco', 1960),
   T('station', 'Estação de trem', 'Train station', 'ESTACAO', [6, 4], 'centro', 1889),
@@ -99,6 +103,9 @@ export function int2What(id: Int2Id, year: number): L {
       : year < 1990 ? l('Estúdio de TV: auditório, câmeras e programa de calouros', 'TV studio: audience, cameras and a talent show') : l('Estúdio de TV e cinema: telão verde e auditório', 'TV and film studio: green screen and audience');
     case 'adagency': return year < 1950 ? l('Agência: cartazes e anúncios de rádio', 'Agency: posters and radio spots') : l('Agência de publicidade: jingles e sincronização', 'Ad agency: jingles and sync');
     case 'samba': return l('Escola de samba: quadra, bateria e alegorias', 'Samba school: floor, drums and floats');
+    case 'festival': return year < 1920 ? l('Coreto e feira ao ar livre', 'Bandstand and open-air fair') : year < 1950 ? l('Parque com banda e palco de concha', 'Park with a band and a bandshell')
+      : year < 1970 ? l('Campo com palco de madeira e lona', 'Field with a wooden stage and canvas') : year < 1990 ? l('Festival na lama: palco de andaimes e acampamento', 'Muddy festival: scaffold stage and camping')
+      : year < 2010 ? l('Megafestival: palco gigante e telões', 'Mega festival: giant stage and screens') : l('Festival de LED e drones', 'LED and drone festival');
     case 'print': return year < 1950 ? l('Gráfica de prensa e tipos de chumbo', 'Print shop with lead type') : year < 1990 ? l('Gráfica offset e estúdio de capas', 'Offset press and cover studio') : l('Estúdio de arte e impressão digital', 'Art studio and digital print');
     case 'pirate': return year < 1980 ? l('Rádio pirata no porão: transmissor e discos', 'Pirate radio in a cellar: transmitter and records') : year < 2005 ? l('Garagem e rádio livre', 'Garage and free radio') : l('Garagem e web-rádio underground', 'Garage and underground web radio');
     case 'station': return year < 1950 ? l('Estação de trem: saguão, relógio e vapor', 'Train station: hall, clock and steam') : year < 1990 ? l('Estação de trem: plataforma e painel de partidas', 'Train station: platform and departures board')
@@ -213,6 +220,18 @@ const ACTS: Record<Int2Id, ActDef[]> = {
     A('ensaio', 'Ensaio da bateria', 'Drum rehearsal', 'Noite de ensaio na quadra: estresse menor e prestígio artístico.', 'A rehearsal night on the floor: lower stress and artistic prestige.', { cost: 60, stress: -4, rep: ['artistic', 0.2], cd: 2 }),
     A('carnaval', 'Desfilar no Carnaval', 'Parade at Carnival', 'Apoia o enredo da escola: reputação artistic e artistas sobem.', 'Back the school\'s theme: artistic and artists reputation rise.', { cost: 1500, rep: ['artistic', 0.8], cd: 26 }),
   ],
+  festival: [
+    A('convite', 'Aceitar convite de festival', 'Accept a festival invitation', 'Aceita o convite mais antigo de um festival para um artista seu (o mesmo da carreira festival).', 'Accepts the oldest festival invitation for one of your acts (same as the festival career).',
+      { cd: 1, block: (s) => (fest8(s).invites.length ? null : l('Nenhum convite pendente.', 'No pending invitation.')),
+        own: (s) => { const inv = fest8(s).invites[0]; const e = acceptInvite(s, inv.id); return e ? { ok: false, text: e } : { ok: true, text: l('Convite aceito: o artista entrou no line-up.', 'Invitation accepted: the act joined the bill.') }; } }),
+    A('escalar', 'Escalar artista no seu festival', 'Book an act at your festival', 'Põe um artista seu no line-up do seu festival (precisa de palco livre no terreno).', 'Puts one of your acts on your festival bill (needs a free stage on the grounds).',
+      { cd: 1, block: (s) => (!ownFests(s).length ? l('Você ainda não tem festival próprio.', 'You have no festival of your own yet.') : freeAct(s) ? null : l('Todos os seus artistas já estão no line-up.', 'All your acts are already on the bill.')),
+        own: (s) => { const f = ownFests(s)[0], a = freeAct(s)!; const e = addToLineup(s, f.id, a); return e ? { ok: false, text: e } : { ok: true, text: l('Artista escalado no festival.', 'Act booked at the festival.') }; } }),
+    A('ingresso', 'Subir o preço do ingresso', 'Raise the ticket price', 'Sobe o ingresso do seu festival em 10%: mais receita, público mais exigente.', 'Raises your festival ticket by 10%: more revenue, a pickier crowd.',
+      { cd: 4, block: (s) => (ownFests(s).length ? null : l('Você ainda não tem festival próprio.', 'You have no festival of your own yet.')),
+        own: (s) => { const f = ownFests(s)[0]; setFestival(s, f.id, { price: f.price * 1.1 }); return { ok: true, text: l('Ingresso reajustado em 10%.', 'Ticket raised by 10%.') }; } }),
+    A('visitar', 'Passar o dia no festival', 'Spend the day at the festival', 'Um dia na grama, ouvindo música: estresse menor.', 'A day on the grass listening to music: lower stress.', { cost: 40, stress: -4, cd: 2 }),
+  ],
   print: [
     A('capa', 'Encomendar capa melhor', 'Order a better cover', 'Arte de capa feita por um artista gráfico: prestígio artístico.', 'Cover art by a graphic artist: artistic prestige.', { cost: 700, rep: ['artistic', 0.4], cd: 8 }),
     A('cartaz', 'Imprimir cartazes', 'Print posters', 'Cartazes para a cidade: fama comercial.', 'Posters for the city: commercial fame.', { cost: 150, rep: ['commercial', 0.2], cd: 4 }),
@@ -232,6 +251,11 @@ const ACTS: Record<Int2Id, ActDef[]> = {
 };
 export const int2ActDefs = (id: Int2Id): { id: string; label: L }[] => ACTS[id].map((a) => ({ id: a.id, label: a.label }));
 
+/** Primeiro artista seu que ainda não está no line-up do 1º festival próprio. */
+function freeAct(s: GameState): string | undefined {
+  const f = ownFests(s)[0];
+  return f ? playerActs(s).find((id) => s.acts[id] && !f.lineup.some((x) => x.actId === id)) : undefined;
+}
 const weeksLeft = (s: GameState, key: string): number => Math.max(0, (st(s).cd[key] ?? 0) - s.week);
 
 /** Ações do lugar no formato do cartão de lugar (PAct27): custo, motivo de bloqueio e descrição. */

@@ -741,6 +741,7 @@ export const UI_WHOLE31: readonly string[] = [
   "Videogame",
   "Vinil",
   "Vinyl",
+  "Visitante",
   "Você",
   "Voice",
   "Volta por cima",

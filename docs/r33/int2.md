@@ -2,15 +2,18 @@
 
 Interruptor **`exp33.int2`** (padrão DESLIGADO no código; sim `src/sim/r33/int2.ts`). Desligado: `int2Types` devolve vazio e nenhuma ação roda.
 
+## Padrão de arte (ajuste pedido pelo dono)
+Os interiores NÃO são cenas próprias: usam o caminho do jogo. `int2Scene(id, ano)` devolve um `Interior27` (adereços do vocabulário `PropT27`, `spots` das pessoas) + um gancho `extra` com os adereços novos, e quem pinta é o `paintInterior27`/`drawInterior27` (casca `cut27`: céu, vizinhos, rua, parede e piso da época, letreiro, lâmpadas, contorno INK). As pessoas são os bonecos do jogo (`avatarSprite` 24×34, `placePeople27`). Lojas da época (`int2ShopScene`) usam o mesmo corte, com `props31` (jukebox, fliperama, rádio, caixa de som, telefone). A fachada no mapa é a arte isométrica que já existe (`mapArt` do registro → `buildingSprite18`), até a MAPA33/PRED dar desenho próprio.
+
 ## Arquivos
-- `src/sim/r33/int2.ts` — registro `INT2` (14 tipos), ações (`int2Acts`/`int2Do`, formato `PAct27`), ganchos `INT2_HOOKS`, linha de situação `int2Now`.
-- `src/ui/r33/int2kit.ts` — casca da sala e peças repetidas (balcão, estante com mercadoria, mesa, janela, porta, tela, letreiro…).
-- `src/ui/r33/int2px.ts` — `int2Interior(id, ano)` (360×150, opaco, preenche a área), `int2Facade(id, ano)` (128×96), `int2Shop(biz, ano)` (lojas da época), `int2Spots(id)` (onde ficam as pessoas).
-- `scripts/r33/int2shots.ts` → prints em `docs/r33/mocks/int2/` (um PNG por lugar: fachada + interior em 1889*, 1962, 2025, 2035 onde o lugar existe; `lojas.png` com as 23 lojas). *1889 só onde o lugar já existe.
-- `tests/r33-int2.test.ts` — registro, interruptor, ações, arte.
+- `src/sim/r33/int2.ts` — registro `INT2` (15 tipos), ações (`int2Acts`/`int2Do`, formato `PAct27`), ganchos `INT2_HOOKS`, linha de situação `int2Now`.
+- `src/ui/r33/int2px.ts` — `int2Scene`, `int2ShopScene`, `paintInt2` (só Px, sem DOM), `drawInt2` (com bonecos).
+- `src/ui/r33/int2gallery.ts` + `docs/r33/mocks/int2/galeria.html` — galeria (vite) pelo caminho do jogo; `scripts/r33/int2shots.mjs` tira os prints (`npx vite --host 127.0.0.1 --port 5880 &` e `node scripts/r33/int2shots.mjs`).
+- Prints em `docs/r33/mocks/int2/<id>.png` (prédio isométrico + interior com bonecos em 1889, 1962, 2025 e 2035 onde o lugar existe) e `lojas.png` (23 lojas, cada uma numa época).
+- `tests/r33-int2.test.ts` — registro, interruptor, ações, festival, arte.
 
 ## Registro (para a MAPA33)
-`int2Types(s, cidade, ano)` → lista de `{ id, name, lot:{w,d}, where, from, to, cities?, water?, tag, mapArt }`.
+`int2Types(s, cidade, ano)` → `{ id, name, lot:{w,d}, where, from, to, cities?, water?, tag, mapArt }`.
 | id | lote | onde | existe |
 |---|---|---|---|
 | bank | 4×4 | centro | 1889+ |
@@ -23,19 +26,22 @@ Interruptor **`exp33.int2`** (padrão DESLIGADO no código; sim `src/sim/r33/int
 | tvstudio | 6×5 | borda | 1920+ |
 | adagency | 4×3 | centro | 1900+ |
 | samba | 6×4 | periferia | 1928+, só `rio` |
+| festival | 8×6 | periferia | 1889+ |
 | print | 4×3 | borda | 1889+ |
 | pirate | 3×3 | beco | 1960+ |
 | station | 6×4 | centro | 1889+ |
 | port | 6×4 | água | 1889+, só cidades de `PORT_CITIES33` |
-`mapArt` = arte do mapa isométrico já existente em `pred31` (office, hotel, arena, venue, museum, tv, press, alley, platform, plant) até a MAPA33/PRED dar desenho próprio; a fachada de frente e o interior são os daqui.
+
+## Festival (acréscimo)
+Terreno do festival com cena própria (hoje o botão abre a sede do selo: QA5 #17). Cena por época: coreto e feira (1889–1919), parque com concha (1920–49), campo com palco de madeira e lona (1950–69), lama e andaimes (1970–89), megapalco com telões (1990–2009), LED e drones (2010+); barracas de comida e merch, banheiros, VIP, torre de som, plateia em campo. Ações com as funções que já existem: `festival.convite` (`acceptInvite`, fests8), `festival.escalar` (`addToLineup` no 1º festival próprio), `festival.ingresso` (`setFestival` +10%), `festival.visitar`. **Falta ligar o botão "Terreno do festival"** (`objects5` `cidade.festival`) à cena: é arquivo de outra frente; o gancho é `int2Scene('festival', ano)` + `drawInt2` + `int2Acts(s, 'festival')`, atrás de `exp33.int2`.
 
 ## Ações (cartão do lugar; efeito simples, custo e espera visíveis)
-Cada lugar tem 1–3 ações em `PAct27` (`int2Acts`) com custo em dólar real do ano, espera em semanas e motivo de bloqueio. Efeitos pequenos: reputação (comercial/artística/artistas/institucional), estresse e saúde do dono, caixa (cachês). Dois têm efeito próprio: `bank.loan` usa o `takeLoan` de hoje; `bank.collateral` cria crédito menor (US$ 6 mil reais, 10% a.a., 12 meses) com o catálogo como garantia; `hospital.rehab` põe o 1º integrante seu com vício, burnout ou doença em `recovering` (estresse −20).
+1–4 ações por lugar em `PAct27` com custo em dólar real do ano, espera em semanas e motivo de bloqueio. Efeitos pequenos: reputação, estresse/saúde do dono, caixa. Próprios: `bank.loan` (`takeLoan`), `bank.collateral` (crédito de US$ 6 mil reais, 10% a.a., 12 meses), `hospital.rehab` (1º integrante com vício/burnout/doença → `recovering`, estresse −20), e as quatro do festival.
 
-## Ganchos para outras frentes (chave = `<lugar>.<ação>`, `INT2_HOOKS[chave] = (s, chave) => {ok,text} | null`)
-Quem registra o gancho assume o efeito (o custo e a espera continuam daqui). Nenhum existe ainda:
-- GESTÃO: `bank.loan`; CATÁLOGO: `bank.collateral` (relíquias/catálogo como garantia), `court.registro`/`court.plagio`/`court.rescisao` (rights18), `tvstudio.calouros`/`tvstudio.trilha`, `adagency.jingle`/`adagency.sync` (pop31), `print.capa` (capa pesa no físico).
-- VIDA: `hospital.checkup` (saúde do dono), `hospital.rehab` (vício/burnout); PESSOAS/turnês: `stadium.show`; MUNDO: `station.viagem`/`port.embarque` (viagem antes do avião), crise de crédito (`int2Now('bank')` lê `economy.recession`; a MUNDO pode trocar por crédito mais apertado).
+## Ganchos para outras frentes (`INT2_HOOKS[<lugar>.<ação>] = (s, chave) => {ok,text} | null`)
+Quem registra assume o efeito (custo e espera continuam daqui). Nenhum existe ainda:
+- GESTÃO: `bank.loan`; CATÁLOGO: `bank.collateral`, `court.registro`/`plagio`/`rescisao`, `tvstudio.calouros`/`trilha`, `adagency.jingle`/`sync`, `print.capa`.
+- VIDA: `hospital.checkup`, `hospital.rehab`; PESSOAS/turnês: `stadium.show`; MUNDO: `station.viagem`, `port.embarque`; crise de crédito em `int2Now('bank')` (`economy.recession`).
 
 ## Fica de fora
-Ligar na tela (cartão de lugar, botão "Entrar", objeto no `objects5`/`acoes5data` e o desenho no mapa isométrico) — arquivos de outras frentes (INT-1/MAPA33/place27); a fachada de frente e `mapArt` ficam prontos para esse encaixe. Pessoas nos interiores (`int2Spots` diz onde; o desenho de bonecos é da camada de cena). Sem gancho, sem regra de dinheiro própria além do crédito pequeno.
+Ligar nas telas (botão "Entrar", objetos em `objects5`/`acoes5data`, botão "Terreno do festival", prédio no mapa com arte própria) — arquivos de INT-1/MAPA33/place27. Sem gancho, sem regra de dinheiro própria além do crédito pequeno.
