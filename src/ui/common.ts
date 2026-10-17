@@ -124,7 +124,7 @@ export function modal(title: string, content: HTMLElement, opts: { wide?: boolea
     prev?.focus?.();
   };
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape') { close(); e.preventDefault(); } // QA5: a casca nova não abre a pausa com o mesmo Esc
   };
   const overlay = h('div', { class: 'overlay', onclick: (e: Event) => { if (e.target === overlay) close(); } },
     h('div', { class: `modal ${opts.wide ? 'wide' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': title },

@@ -69,6 +69,8 @@ export function show5(area: string, tab?: [string, string], objId?: string): voi
   if (!s) return;
   const o = (objId ? object5(objId) : undefined) ?? objectFor5(area, tab);
   if (o && isPlace5(o) && !objId) { travel5go(regionOf5(o.place)); return; }
+  // porta da rua / mapa na parede: são atalhos de viagem, não papel (QA5)
+  if (o && !o.opens.length && o.keyRef?.startsWith('travel:')) { travel5go(o.keyRef.slice(7) as Region5); return; }
   const id = o?.id ?? `page:${area}`;
   const rect = clickRect5; clickRect5 = undefined;
   const swap = () => {
