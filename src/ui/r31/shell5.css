@@ -200,3 +200,6 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 body:has(.app5) .overlay .modal { display: flex; flex-direction: column; max-height: calc(100dvh - 8vh); }
 body:has(.app5) .overlay .modal > header { flex: none; }
 body:has(.app5) .overlay .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #6a7a96 transparent; }
+
+/* QA5 (pedido do dono): a cidade na casca nova sem o título "Nosso mundo — <selo>" (o botão Cidade embaixo já diz onde está) */
+.app5 .m5-city > .card > h3:first-child { display: none; }

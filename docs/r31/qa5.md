@@ -37,6 +37,7 @@ Estado: ✅ resolvido · ⏳ com a frente dona (ainda não chegou) · ❌ aberto
 | 22 | Janelas antigas maiores que a tela (ficha do disco "Supersonic", casas à venda…) pareciam cortadas: rolava a camada inteira sem barra visível e o título/✕ sumiam — **relato do dono durante o QA** | Cidade → outdoor "Nº 1" | `qa5-15-janela-disco-ok.png` (depois) | QA5 | ✅ (`shell5.css`, só com a casca: janela cabe na tela, título fixo, miolo rola) |
 | 23 | Pedido do dono: tirar os botões "Dia e noite / Dia / Noite" da cidade e deixar o céu mudando sozinho | ⇧3 | `qa5-16-cidade-noite-sozinha.png` | QA5 | ✅ (com a casca: sem os botões, sempre no ciclo automático de ~48 s; desligado = igual a hoje) |
 | 24 | Pedido do dono: tirar as abas "Sua sede / Nosso mundo" da cidade (os botões de viagem de baixo já fazem isso) | ⇧3 | `qa5-17-cidade-sem-abas.png` | QA5 | ✅ (`placeTabs27` não desenha com a casca) |
+| 26 | Pedido do dono: tirar também o título "Nosso mundo — Selo Agulha" da cidade | ⇧3 | `qa5-18-cidade-sem-titulo.png` | QA5 | ✅ (`shell5.css`, só com a casca) |
 | 25 | Pergunta do dono: o que é "Vizinhanças boas"? | ⇧3, chip do topo | — | — | ℹ️ bônus de vizinhança entre os SEUS prédios (`world19.ts`, ADJ19: estúdio ao lado da sede, loja em esquina movimentada, casa dos artistas perto do estúdio…; fábrica barulhenta é negativa). Fica 0 enquanto só há a sede |
 
 ## Robô (`scripts/r31/qa5.mjs` + `tests/r31-qa5.test.ts`)
