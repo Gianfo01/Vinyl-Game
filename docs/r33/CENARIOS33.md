@@ -193,3 +193,49 @@ joga muito ganha o traço "Jogador" (vices). Sorte própria por partida (Rng.fro
 
 Regras: nada de dinheiro real nem compra no jogo; ganhar demais no mesmo cassino faz a casa te barrar; as chances
 aparecem na tela (odds19) e são as mesmas do sorteio.
+
+## 9. LEVA 1 detalhada (versão 34) — o que cada frente faz e onde encaixa
+
+Decisão do dono (17/10): POL33 cancelado; a 33 sai sem polimento; seguimos com a leva 1 (e talvez a 2) e o
+polimento vem depois de tudo. Base técnica que a 33 já deixou pronta:
+- **Lugares:** `registerSite33` (mapa33: tipo → zona, cidade, época) + o padrão do INT-2 (`src/sim/r33/int2.ts`:
+  prédio novo com interior e ações que passam pelos ganchos) + `place27`/`interior27` (props) + `lots31`.
+- **Pessoas:** GENTE33 (pessoas fixas, três camadas, talento escondido, ciclo bartender↔artista do gente31).
+- **Minijogos:** `src/sim/r33/jogos33.ts` (motor puro com `newGame33`/`step…`, Rng por semente) + a tela do
+  APARELHOS33.
+- **Celular/PC:** `registerPhoneApp33`/`registerAct33` para ligar para "quem resolve" e o app de apostas (2010+).
+- **Redes/Jornal:** tudo vira fato (facts17) e aparece no feed do REDES33.
+
+### CENARIOS34-A — lugares (Opus) · interruptor `exp34.lugares`
+| Lugar | Já existe parecido? | O que fazer |
+|---|---|---|
+| Cassino | fachada `casino` do under31 + residência do venue.ts | prédio legal próprio (1933–46 BRA; 1946+ EUA/MCO/MAC) separado da fachada; interior com mesas, palco, caixa |
+| Bar (Cheers/HIMYM) | `bar` do place27 | variação "bar do bairro" com mesa cativa, dono fixo, balcão do bartender↔artista |
+| Café (Friends) | — | novo tipo, 1994–2005+, noite acústica (night27) |
+| Loja de discos (Alta Fidelidade) | `records` | variação com balcão de colecionador, compra/venda de vinil (relic31), colecionador rival |
+| Lanchonete com jukebox | — | novo tipo, 1950–65 (e retrô depois), baile e concurso (discover18) |
+| Fliperama | — | novo tipo, 1978–92 (vira QG hacker abandonado depois de 2005) |
+| Escritório do advogado | — | novo tipo nos fundos de salão de manicure, 1980+; outdoor dele no mapa |
+| Hospital (House) | `hospital` do INT-2 | só o NPC médico fixo e o diagnóstico raro como ação |
+| Restaurante (The Bear) | — | lanchonete que vira restaurante, 1990+; jantar de negócios (nego27) |
+| QG hacker (Mr. Robot) | — | fliperama abandonado, 2005+; contratar hacker |
+Cada lugar: `registerSite33` + interior (props na arte do jogo) + NPC fixo (GENTE33, camada completa) + 1 verbo
+principal no objeto + fato no facts17. Objetos/relíquias da seção 2 entram no relic31/decoshop31.
+Testes `r34-lugares`: cada lugar só na época/país; o verbo chama a função existente; Fossati fora.
+
+### CENARIOS34-B — cassino, serviços e minijogos (Opus) · `exp34.cassino`, `exp34.servicos`, `exp34.minijogos`
+- **Cassino:** residência para artista em alta (startResidency com regra nova de elegibilidade); vício em jogo
+  (traço "Jogador" em vices, com recaída e tratamento); dívida com agiota → favor devido à facção (mob29/under31);
+  a baleia → investidor/conselho (bolsa10/board27/GENTE33).
+- **"Quem resolve" (6):** advogado (lawyer31/bail31/caseWay31/contracts18), médico (saúde/rehab), hacker
+  (pirataria/conta hackeada/vazamento do APARELHOS33), agente (sync15), chef (nego27/odds19), chefão (mob29).
+  Pagos com dinheiro ou favor (favors27); criam laço e fato. Ligação pelo celular (`registerAct33`).
+- **Minijogos (5), no motor do jogos33:** blackjack, caça-níquel (símbolos por época), roleta, jukebox,
+  karaokê. Chance mostrada = chance sorteada (odds19); "resolver rápido" disponível; ganhar demais = barrado.
+- Goldens re-medidos com explicação; robôs QA rodando 30 anos com os interruptores ligados; desempenho do mês
+  antes/depois.
+
+### Ordem e build
+33 sai (QA33 + REDES33 juntadas) → CENARIOS34-A e -B em paralelo (A mexe em lugares/interiores, B em regras;
+B usa os lugares de A por id, então B registra o cassino só pelo id `casino33` combinado) → junção → build
+`Masters_34_previa` → decidir leva 2 → polimento geral → `Masters_34`.

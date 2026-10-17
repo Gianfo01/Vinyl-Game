@@ -611,3 +611,10 @@ partida; exp33.intro agora controla só a intro ("Intro da partida" nas Opções
   - romance com quem vira artista do seu selo (`exp33.romance33`).
   - Desligados, os goldens não mudam (rodados e iguais). O QA33 liga e mede. Teste `tests/r33-gente-b.test.ts`; ver
     `docs/r33/gente.md`.
+
+## R33 · POL33 cancelado (17/10)
+Dono: cancelar o POL33 e mandar a build; seguir com o planejamento da leva 1 (e talvez 2) de CENARIOS e só depois
+polir. A 33 sai com QA33 + REDES33 juntadas, sem polimento. Os itens do POL33 (outdoors com compra/aluguel, merch e
+itens exclusivos, as 6 ideias, controles, tutorial, festival a céu aberto, interiores antigos pequenos, tela de
+escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Leva 1 detalhada em
+docs/r33/CENARIOS33.md §9.
