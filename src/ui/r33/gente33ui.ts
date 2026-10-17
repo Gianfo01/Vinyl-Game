@@ -9,7 +9,7 @@
 
 import { l, type L } from '../../data/world';
 import {
-  CREW33, FIX33, adoptFixed33, board33, boardLock33, ceo33, ceoLock33, courtFixed33, crew33, crewLock33, dirOf33, fireCeo33, fixLock33,
+  CREW33, FIX33, adoptFixed33, cands33, board33, boardLock33, ceo33, ceoLock33, courtFixed33, crew33, crewLock33, dirOf33, fireCeo33, fixLock33,
   fixed33, freeBranch33, gente33On, light33, hireCeo33, hireCrew33, hireFirstBranchDir33, log33Of, peek33, seatBoard33, toggleBranchLine33, canHireBranchDir33,
   type Crew33, type Fixed33,
 } from '../../sim/r33/gente33';
@@ -18,6 +18,7 @@ import { sw } from '../../sim/r31/switches';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
 import { CARDS5 } from '../r31/acoes5data';
+import { openCand33, type CandSpec33 } from './cand33ui';
 import { ACTS_CAT5, LINES_CAT5, NUMS_CAT5 } from '../r31/acoes5cat';
 import type { ActDef5, ActRes5, NumDef5 } from '../r31/acoes5model';
 
@@ -32,7 +33,19 @@ const crew = (k: Crew33, home: string): ActDef5 =>
 const fix = (k: Fixed33, home: string, label: L): ActDef5 =>
   A(label, adoptFixed33, 'adoptFixed33', home, (s) => !fixed33(s, k), (s) => adoptFixed33(s, k), fmtL(l('{n}: agora acompanha você.', '{n}: now follows you.'), { n: FIX33[k].n }), (s) => fixLock33(s, k));
 
+/** r33 POL (item 6): "Escolher entre candidatos…" abre a tela de candidatos (cand33ui) em vez de contratar o melhor da busca. */
+const pick = (label: L, home: string, when: (s: GameState) => boolean, spec: CandSpec33): ActDef5 => ({
+  label, kind: 'ui', src: [M, 'cands33'], fn: cands33, home, when: (s) => gente33On(s) && when(s),
+  run: (_s, c) => { c.close(); openCand33(spec); },
+});
+
 const ADD: Record<string, ActDef5> = {
+  'g33.escFilial': pick(l('Escolher entre candidatos a diretor(a)…', 'Choose among branch director candidates…'), 'mapaparede', (s) => !!freeBranch33(s), { k: 'branch' }),
+  'g33.escCeo': pick(l('Escolher entre candidatos a CEO…', 'Choose among CEO candidates…'), 'mesareuniao', (s) => !ceo33(s), { k: 'ceo' }),
+  'g33.escMotorista': pick(l('Escolher o motorista…', 'Choose the driver…'), 'garagem', (s) => !crew33(s, 'driver'), { k: 'crew', crew: 'driver' }),
+  'g33.escSeguranca': pick(l('Escolher o segurança…', 'Choose the bodyguard…'), 'porta', (s) => !crew33(s, 'guard'), { k: 'crew', crew: 'guard' }),
+  'g33.escTreinador': pick(l('Escolher o personal trainer…', 'Choose the trainer…'), 'espelho', (s) => !crew33(s, 'trainer'), { k: 'crew', crew: 'trainer' }),
+  'g33.escMedico': pick(l('Escolher o(a) médico(a)…', 'Choose the doctor…'), 'espelho', (s) => !crew33(s, 'doctor'), { k: 'crew', crew: 'doctor' }),
   'g33.filialDir': A(l('Contratar diretor(a) de filial', 'Hire a branch director'), hireFirstBranchDir33, 'hireFirstBranchDir33', 'mapaparede', (s) => !!freeBranch33(s),
     hireFirstBranchDir33, l('A filial tem quem mande.', 'The branch has someone in charge.'), (s) => { const id = freeBranch33(s); return id ? canHireBranchDir33(s, id) : null; }),
   'g33.filialLinha': A(l('Trocar a linha da filial (ousado/conservador)', 'Switch the branch line (bold/conservative)'), toggleBranchLine33, 'toggleBranchLine33', 'mapaparede',
@@ -82,11 +95,11 @@ function put(card: string, acts: string[], nums: string[], lines?: string): void
   for (const n of nums) if (!c.nums.includes(n)) c.nums.push(n);
   if (lines && !c.lines) c.lines = lines;
 }
-put('mapaparede', ['g33.filialDir', 'g33.filialLinha'], ['g33.filiais']);
-put('mesareuniao', ['g33.ceo', 'g33.ceoFora', 'g33.conselho'], ['g33.conselho'], 'g33');
-put('garagem', ['g33.motorista'], []);
-put('porta', ['g33.seguranca'], []);
-put('espelho', ['g33.treinador', 'g33.medico'], []);
+put('mapaparede', ['g33.filialDir', 'g33.escFilial', 'g33.filialLinha'], ['g33.filiais']);
+put('mesareuniao', ['g33.escCeo', 'g33.ceoFora', 'g33.conselho'], ['g33.conselho'], 'g33');
+put('garagem', ['g33.motorista', 'g33.escMotorista'], []);
+put('porta', ['g33.seguranca', 'g33.escSeguranca'], []);
+put('espelho', ['g33.escTreinador', 'g33.escMedico'], []);
 put('mural', ['g33.fa'], []);
 put('jornal', ['g33.jornalista', 'g33.agrado'], []);
 put('quadrofunc', ['g33.sindicato'], [], 'g33gente');

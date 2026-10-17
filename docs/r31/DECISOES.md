@@ -687,3 +687,38 @@ Casca nova (`VITE_EXP5NAV=1`), Londres e Brasil 1962, em português e inglês. P
   de viagem. As teclas seguem a ordem do menu: ⇧1 Sede, ⇧2 carreira, ⇧3 Casa, ⇧4 Cidade, ⇧5 Mundo, ⇧6 Celular (a pilha de
   demos fica em ⇧9). Os docs de teclas foram regenerados (`UPDATE5=1`), assim como a ajuda "?" (lida de `keys5`) e o
   robô QA5. Teste `tests/r33-bugs-8.test.ts`.
+
+## R33 · POL33-A — primeira parte do polimento da 33 (17/10, Sonnet)
+Branch `claude/r33-pol33a`, prints antes/depois em `docs/r33/pol/`. Interruptores novos (todos `exp33.pol.*`, escopo `game`):
+`exp33.pol.crop` (**ligado**, só pintura), `exp33.pol.outdoors` e `exp33.pol.merch` (**desligados**). Goldens `r27-p2a`, `r27-p2b`,
+`r27-m3`, `r16-playbot` rodados e iguais; `r31-uiwords` e `r31-w5-tec` passam. As 3 falhas de `r31-acoes5` ("decoracao") já existiam
+antes desta frente (conferido com `git stash`).
+- **Item 1 · interiores antigos no padrão novo.** O QA5 e o dono viram os interiores antigos (`interior27`) pequenos no meio de céu e
+  rua. Agora `insideModel31` recorta todos (menos a fachada, que precisa da rua) como os novos: `CROP33` (336×112), pontos clicáveis
+  andam junto. Script `scripts/r33/shots-pol33-int.mjs`; prints `int-<lugar>-antes|depois.png` de 8 lugares.
+- **Item 2 · festival a céu aberto.** `src/ui/r33/festival33px.ts`: campo sem moldura de prédio, céu por época, estação (mês) e clima
+  (`clima33`, hash estável), colinas e árvores da estação, palco por época (coreto → concha → lona → andaimes → megapalco →
+  LED e drones), barracas COMIDA/MERCH, banheiros, VIP, torre de som, plateia em campo em 3 fileiras e bonecos do jogo no palco.
+  Aparece na página de shows (Negócios ao vivo) pela seção `fest33-open` (`festival33ui.ts`); as ações do lugar (INT-2) ficam nela.
+- **Item 3 · outdoors (`exp33.pol.outdoors`).** `src/sim/r33/outdoor33.ts`: 30 pontos fixos espalhados (centro em vários cantos e,
+  a cada bairro que abre, leste, avenida sul, bairro novo, porto, estação, casas de show, financeiro, periferia, orla); só nos
+  lotes comuns dos bairros abertos. Alugar 1/3/6 meses (preço pelo movimento do bairro e da época, desconto no prazo longo; hype
+  mensal no alvo pelo `addHype`), comprar (60× o aluguel; marcas ocupam em blocos de 3 meses e pagam 85%; vender devolve 80%),
+  ponto livre mostra "ALUGUE". Arte por época: lambe-lambe → cartaz pintado → painel iluminado → neon → LED → holograma (2030+, com
+  projetor e feixe: nada flutua). Clique abre o cartão de ações (ACOES5) com o motivo da trava. Rádio e TV: "Intervalo pago" no
+  cartão do rádio/TV (rádio 1922+, TV 1950+). Teste `tests/r33-pol33-outdoors.test.ts`.
+- **Itens 4 e 5 · merch pelas relíquias (`exp33.pol.merch`).** `src/sim/r33/merch33.ts`: 13 peças por época em 9 lugares (festival, casa
+  de shows, loja de discos, jazz, boate, estádio, museu, aeroporto, show); cada compra vira uma `Relic` sua (dono registrado, valor,
+  tipo, história) com ids próprios (`rl_m33_n`, não mexe no contador do jogo). Artista seu: peça ganha (uma por mês). Peça grande
+  (guitarra quebrada, figurino de clipe) sai no jornal. As 6 ideias: marca própria, banca na turnê (encalha ou perde venda),
+  pirataria (cartório 60% ou deixar passar), vitrine para a rua, colecionadores rivais (oferta direta), e rádio/TV (no item 3).
+  Interface: hub `merch33ui.ts` (cartões ACOES5) a partir da seção do festival + ações "Comprar/Ganhar" no cartão da casa de shows,
+  loja de discos e bar (`INT33`). Teste `tests/r33-pol33-merch.test.ts`.
+- **Item 6 · tela de candidatos do GENTE33.** `src/ui/r33/cand33ui.ts` + `cand33.css`: pasta com índice de candidatos, papel com
+  retrato preso, traços em barras, carimbos, custo (luvas e salário), opinião sobre você, dossiê, e o cartão numerado (1 contratar,
+  2/3 trocar, 4 ficha, 5 fechar, motivo da trava embaixo). Contrata quem foi marcado (`hireBranchDir33/hireCeo33/hireCrew33` com a
+  chave; `hireCrew33` ganhou o parâmetro `ck`). Entradas: "Escolher entre candidatos…" nos cartões da parede (filial), mesa de reunião
+  (CEO, no lugar do "contratar o melhor"), garagem, porta e espelho. Teste `tests/r33-pol33-cand.test.ts`.
+- **Ficou para depois / limites.** Clube de jazz, boate e estádio compram merch pelo hub/cartão do bar, não pelo interior próprio do
+  INT-2 (a tabela de ações do INT-2 é fixa); aeroporto e museu só pelo hub. Os 30 pontos de outdoor só aparecem em lote comum:
+  numa cidade pequena (1962, só o centro) são cerca de 8. Prints dos outdoors com campanha sua dependem de artista no elenco.

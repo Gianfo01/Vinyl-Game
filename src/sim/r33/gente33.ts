@@ -286,6 +286,8 @@ function hireOf(s: GameState, c: Cand33, loyBase = 55): Hire33 {
 }
 /** Luvas (centavos): um salário; tirar executivo de selo rival custa seis. */
 const signOn = (s: GameState, c: Cand33): number => money(s, c.sal * (c.rival ? 6 : 1));
+/** r33 POL: luvas de um candidato (a tela de escolha mostra o custo antes de contratar). */
+export const signOn33 = signOn;
 
 // ---------------------------------------------------------------- parte B: vaga, passagem, promoção, camada leve
 
@@ -793,10 +795,10 @@ export function crewLock33(s: GameState, k: Crew33): L | null {
   return null;
 }
 /** Contrata alguém da equipe pessoal (paga do bolso). */
-export function hireCrew33(s: GameState, k: Crew33): L | null {
+export function hireCrew33(s: GameState, k: Crew33, ck?: string): L | null {
   const err = crewLock33(s, k);
   if (err) return err;
-  const c = crewCand(s, k)!;
+  const c = (ck ? candBy(s, ck) : undefined) ?? crewCand(s, k)!;
   const h: Hire33 = { ...hireOf(s, c), sal: CREW33[k].sal };
   g33(s).crew[k] = h;
   onHire(s, c, CREW33[k].n);
