@@ -1,0 +1,150 @@
+# CENARIOS33 — lugares, interiores, objetos e gente inspirados em filmes e séries
+
+Pedido do dono (17/10): prédios com interiores, objetos e NPCs **inspirados** em filmes e séries, um **cassino com
+mecânicas**, e frentes que **liguem tudo** — coisas novas que se conectem às que existem e ligações entre as que já
+existem. Frente própria, depois do POL33 (não atrasa a 33).
+
+## Regras
+
+- **Inspirar, não copiar:** nome trocado (naming19), sem logo, sem rosto de ator, forma mudada. Quem conhece pega
+  a piada; quem não conhece vê só um lugar bom do jogo.
+- **Mesma arte do resto do jogo** (interior27, props, cine18). Sem emoji, nada flutuando, sem placeholder.
+- **Nada de regra paralela:** cada lugar é um **lote com função** no registro único (lots31) e cada ação chama uma
+  função que já existe. Coisa nova só quando liga duas ou mais coisas que já existem.
+- **Ação no objeto (EXP-13):** um verbo principal por lugar, no próprio prédio/interior.
+- **Época e país:** cada lugar só aparece quando faz sentido (abaixo).
+- **Interruptores:** `exp33.cenarios.lugares`, `exp33.cenarios.cassino`, `exp33.cenarios.servicos`,
+  `exp33.cenarios.negocios` (ligados por padrão depois do teste, como os exp33.*).
+- Fossati continuam fora de romance; temas pesados (crime, drogas, morte) só como risco, multa e escândalo, sem
+  violência explícita — dentro do submundo que já existe (crime17/under31/heist27/mob29).
+
+## 1. Onde cada coisa entra no jogo
+
+| Peça | Sistema que já existe | O que muda |
+|---|---|---|
+| Prédio | `lots31` (lote com função), `cidade33` (terreno, loja, aluguel), `hood19` (vizinhos, bairro) | novo **tipo de lote** com época/país; compra e aluguel pelos fluxos de lote |
+| Interior | `interior27` (props por tipo), `place27` | novo conjunto de props por lugar |
+| NPC | `gente31` (trabalho, ciclo bartender↔artista), GENTE33 (pessoas fixas e camadas), `leisure14` (pontos de encontro) | o dono/frequentador do lugar vira **pessoa fixa** com camada completa |
+| Objeto | `relic31`/`relic33`, `decoshop31`, `items31`, `under31` (mercado negro) | objeto comprável/relíquia com efeito pequeno e dono registrado |
+| Cena | `cine18`, `night27`, `show27` | storyboards curtos no lugar |
+| Notícia | `facts17` → REDES33 e Jornal | toda visita/acontecimento relevante vira fato |
+
+## 2. Lugares (inspiração → lugar no jogo → época → verbo → sistema)
+
+**Filmes**
+| Inspiração | Lugar | Época | Verbo | Liga com |
+|---|---|---|---|---|
+| De Volta para o Futuro / Grease | lanchonete com jukebox e pista | 1950–65 | baile e concurso de talento | discover18, night27 |
+| Mad Men | agência de publicidade | 1958–75 | contratar anúncio rádio/TV, outdoor | adsync19, outdoors do POL33 |
+| O Grande Gatsby | mansão de festas | 1920–30 e retorno | festa de gala | board27, bolsa10, favors27 |
+| O Iluminado | hotel isolado na serra | qualquer | retiro de composição | compose27, stress17 |
+| Blues Brothers | bar de estrada com tela no palco | 1970–90 | show difícil | show27, crime17 (confusão) |
+| Cheers | bar onde todos sabem seu nome | 1980–95 | balcão do ciclo bartender↔artista | gente31 |
+| Stranger Things | fliperama | 1978–92 | minijogos, público jovem | APARELHOS33 jogos, audience8 |
+| Friends | café com sofá | 1994–2005 | noite acústica | night27, discover18 |
+| Alta Fidelidade | loja de discos | 1970–2010 | compra/venda de vinil | relic31, colecionadores rivais (POL33) |
+| Blade Runner | prédio neon na chuva | 2030+ | holograma, voz de IA | ai18, deepfake de voz |
+| Quase Famosos | ônibus de turnê (interior) | 1965+ | eventos de estrada | tour12, road27 |
+
+**Séries**
+| Inspiração | Lugar | Época | Verbo | NPC | Liga com |
+|---|---|---|---|---|---|
+| Breaking Bad | lava-carros de fachada | 1990+ | lavar dinheiro | professor químico | crime17.toggleLaunder, under31 |
+| Better Call Saul | advogado nos fundos de um salão de manicure | 1980+ | resolver caso barato e arriscado | advogado espalhafatoso | under31.lawyer31, caseWay31, contracts18, rights18; outdoor dele no mapa |
+| Sopranos | clube na estrada e açougue | 1980–2010 | pagar/recusar proteção | chefão em terapia | mob29 favores, under31 fachada |
+| Boardwalk Empire | cassino-hotel no calçadão | 1920–33 (EUA) | bar clandestino na Lei Seca | tesoureiro político | crime17, license17 |
+| Mr. Robot | fliperama abandonado (QG hacker) | 2005+ | contratar hacker | hacker solitário | conta hackeada, vazamento, denúncia de pirataria (APARELHOS33) |
+| Lost | escotilha com computador | evento raro | retiro isolado / avião da turnê cai | homem dos números | tour12, compose27 |
+| Dexter | laboratório forense da polícia, barco | 1990+ | investigar/encobrir | analista forense com segredo | crime17.forensic, scandal17 |
+| Californication | casa de praia, carro velho | 1990+ | escrever letras | escritor em crise | compose27, amor31 (escândalo) |
+| Entourage | mansão em Hollywood | 1995+ | levar a turma | agente agressivo, amigos do astro | equipe pessoal (GENTE33), sync15, cine |
+| House | hospital universitário | 1950+ | diagnóstico raro | médico genial e grosso | saúde/vices (rehab), Encontros (médicos, enfermeiras) |
+| How I Met Your Mother | bar embaixo do apartamento | 2000+ | mesa cativa | solteiro de terno | leisure14, Encontros |
+| How to Make It in America | ateliê de roupas | 2005+ | coleção de merch própria | dupla de amigos | merch17, marca própria (POL33) |
+| Studio 60 | teatro de humor ao vivo | 1975+ | tocar ao vivo na TV | produtor em guerra com a emissora | tv18, media19 |
+| The Americans | casa de subúrbio com garagem secreta | 1947–91 | espionagem | casal de espiões vizinhos | rivalmind18, secrets23 |
+| Atlanta | estúdio caseiro e barbearia | 2005+ | descobrir rapper local | rapper e primo empresário | discover18, demo caseira |
+| The Bear | lanchonete que vira restaurante | 1990+ | jantar de negócios / restaurante próprio | chef estressado | nego27, ventures12, gente31 |
+
+## 3. O CASSINO (núcleo que liga palco, dinheiro, vício, crime e poder)
+
+Hoje: o cassino existe como **fachada de facção** (`under31`, com props em `interior27`) e como **residência de
+veterano** (`live/venue.ts`: residencyEligible/residencyNight/startResidency). A proposta junta tudo num lugar só,
+com época e país:
+
+| Época / país | Como aparece |
+|---|---|
+| 1920–33 EUA | cassino-hotel do calçadão + bar clandestino (Lei Seca) |
+| 1933–46 Brasil | grandes cassinos com palco para cantores de rádio |
+| 1946 Brasil | jogo proibido: os cassinos fecham e viram clandestinos (vira fachada do under31) |
+| 1946+ EUA (Vegas), Mônaco, Macau | cassino legal com palco e residência |
+| 2010+ | apostas no celular (APARELHOS33) e patrocínio de bets |
+
+**Mecânicas do cassino** (todas usando o que já existe):
+
+1. **Palco e residência:** contrato de temporada (pagamento fixo + parte do bar) pelo `startResidency`; agora também
+   para artista em alta, não só veterano. Casino da época de rádio lança cantor (fama, discover18).
+2. **Mesa de jogo do personagem:** jogar como vício igual a bebida/drogas em `vices.ts` (traço "Jogador",
+   dependência, recaída). Ganhar dá dinheiro rápido; perder gera **dívida de jogo**.
+3. **Dívida e agiota:** dívida não paga vira favor devido à facção (mob29/under31): tocar no baile, emprestar o
+   estúdio, assinar artista indicado. Saída: pagar, negociar (favors27), denunciar (denounce31) com risco.
+4. **Artista seu que joga:** dívida de artista vira pedido de adiantamento (bandpay19), escândalo (scandal17) ou
+   saída do selo; "tratar o vício" igual ao rehab.
+5. **Lavagem:** comprar o cassino (ou o lava-carros) como **fachada própria** (lots31 + crime17.toggleLaunder):
+   lava dinheiro do submundo, mas aumenta o calor (addHeat) e o risco de investigação (forensic, Dexter).
+6. **Apostas da indústria:** a casa de apostas aceita palpites em parada, prêmio e programa de talentos (charts7,
+   awards, tv18). Informação de dentro (favors27, secrets23) aumenta a chance — e a chance de escândalo de
+   manipulação, como o voto comprado do tv18.
+7. **A baleia:** apostador rico frequentador vira investidor (bolsa10/board27) ou membro do conselho (GENTE33).
+8. **Golpe no cofre:** o cofre do cassino vira alvo de operação (heist27), com equipe, traição e encobrimento.
+9. **Patrocínio de bets (2018+):** dinheiro alto por campanha; fãs jovens e imprensa reagem (fans18, press18);
+   regra por país (proibição e regulamentação viram fato público).
+
+## 4. "Quem resolve" — serviços dos NPCs inspirados
+
+Os NPCs fixos viram **serviços** pagos com dinheiro ou favor (favors27), cada um ligado a um sistema:
+
+| NPC | Serviço | Sistema |
+|---|---|---|
+| advogado espalhafatoso | caso barato, chance de dar errado; fiança | under31.lawyer31/bail31, caseWay31, contracts18 |
+| médico genial | salvar artista doente, diagnóstico raro | vices (saúde), life |
+| hacker | rastrear pirataria, recuperar conta, vazar o rival (risco) | piracy (APARELHOS33), crime17 cyber |
+| analista forense | descobrir quem vazou / sumir com indício (risco alto) | crime17.forensic, scandal17 |
+| agente de Hollywood | trilha de filme/série para o artista | sync15, cine18 |
+| produtor de TV | vaga ao vivo (visibilidade + chance de gafe) | tv18, media19 |
+| espiões vizinhos | informação sobre a próxima jogada do rival | rivalmind18, secrets23 |
+| chef | jantar de negociação (melhora a chance na mesa) | nego27, odds19 |
+| tesoureiro político | licença, alvará, vista grossa | license17, corruption |
+| chefão | proteção das casas de show | mob29 |
+| escritor em crise | parceria de letra | compose27 |
+
+Cada serviço gera **laço** (gente31/social31) e **fato** (facts17) — a pessoa lembra e cobra.
+
+## 5. Negócios paralelos (novos, sobre o que existe)
+
+- **Restaurante próprio** (The Bear), **bar próprio** (Cheers/HIMYM), **ateliê de roupa** (How to Make It),
+  **lava-carros** (Breaking Bad): comprados em lote (lots31/cidade33), rendem por mês, empregam gente da cidade
+  (gente31 — o ciclo bartender↔artista acontece *no seu bar*), viram palco de cena e de descoberta.
+- Base: `ventures12` (negócios do jogador) + `cidade33` (loja/aluguel). Um negócio ruim fecha, um bom vira
+  ponto de encontro (leisure14) e entra no mapa de quem frequenta.
+
+## 6. Ligações entre o que JÁ existe (sem nada novo)
+
+- **Mural de ligações** (under31.mural31) passa a mostrar também lugares: quem frequenta, quem é dono, quem deve.
+- **Pontos de encontro** (leisure14) usam os lugares novos: romances, rixas e parcerias nascem no bar, no café, no
+  cassino.
+- **Outdoors** (POL33) mostram anúncios dos lugares (o advogado, o cassino, o restaurante) e os seus.
+- **Sync** (sync15): séries e filmes do mundo do jogo pedem música; o agente e o produtor de TV trazem esses pedidos.
+- **Noite de olheiro** (night27) passa pelos lugares novos conforme a época.
+- **Redes e Jornal** (REDES33): o que acontece nos lugares vira post e manchete, e muda reputação.
+- **Celular/PC** (APARELHOS33): ligar para os "quem resolve", app de apostas (2010+), reservar mesa.
+
+## 7. Divisão em frentes
+
+| Frente | Escopo | Mexe na simulação? |
+|---|---|---|
+| CENARIOS33-A | lugares, interiores, objetos/relíquias e NPCs fixos (seções 2 e 5), na arte do jogo | pouco (lotes e pessoas fixas) — goldens podem mudar com explicação |
+| CENARIOS33-B | cassino (seção 3), "quem resolve" (seção 4), ligações (seção 6) | sim — goldens re-medidos com explicação; robôs QA |
+
+Ordem: depois do POL33 e do GENTE33-B (usa as camadas de pessoas). Testes: `r33-cenarios` (cada lugar aparece só na
+época/país certos; cada verbo chama a função existente; dívida/lavagem/apostas com Rng fixo) + uiwords + goldens.
