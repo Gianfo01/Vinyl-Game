@@ -339,7 +339,10 @@ describe('r29 relíquias — run de bot de 20 anos', () => {
   it('"poucas" (5 anos): tetos da primeira versão', async () => {
     const births: { y: number; a: string }[] = [];
     onFact('relic', (_s, f) => { if (f.tags.includes('r29') && f.tags.includes('born')) births.push({ y: f.y, a: f.actors[0] ?? '' }); }, 'r29test:few');
-    const s = createGame(defaultConfig('r29rel-few', { startYear: 1970, realNames: true, relicDensity: 'few' }));
+    // QA33: semente 'r29rel-few' → 'r29rel-few2'. exp33.* ligados por padrão, decisão do dono 2026-10-17: com a 33 o robô de
+    // 'r29rel-few' quebra em 1971 (17 meses, 5 peças) e o teste de 5 anos fica sem objeto; com a 33 desligada ele chega a 1975.
+    // Em 6 sementes a 33 ligada não deixa o robô mais pobre na média (docs/r33/qa33.md). Asserções iguais.
+    const s = createGame(defaultConfig('r29rel-few2',{ startYear: 1970, realNames: true, relicDensity: 'few' }));
     for (let m = 0; m < 5 * 12 && !s.ended; m++) { playMonth(s, 'balanced'); advanceMonth(s); await tick(); }
     onFact('relic', () => {}, 'r29test:few');
     const byY: Record<number, number> = {}, byAY: Record<string, number> = {};
