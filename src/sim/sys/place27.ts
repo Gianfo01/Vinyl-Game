@@ -37,6 +37,9 @@ export type PlaceK27 = 'venue' | 'records' | 'radio' | 'studio' | 'bar' | 'press
   | 'facade' | 'police' | 'market'
   // r31 (LOTE): casa de quem mora na cidade (CEO, artista, família Fossati) e terreno vago (à venda ou seu) — sys/lots31
   | 'home' | 'vacant';
+/** r33 (INT-1): prédios SEUS que antes emprestavam o interior de outro lugar (escola, fábrica, museu, plataforma, agência de
+ *  turnê, filial). Só existem como interior com `exp33.int1` ligado (sim/r33/int1). */
+export type IntK33 = 'school' | 'plant' | 'museum' | 'platform' | 'agency' | 'branch';
 /** Os lugares básicos da música (sempre presentes na cidade, conforme a época). */
 export const MUSIC27: PlaceK27[] = ['venue', 'records', 'studio', 'radio', 'bar', 'press'];
 export const RADIO_FROM27 = 1922;
@@ -85,6 +88,11 @@ export const LOTS27: {
 } = {};
 /** r31 (DECO-L): as lojas de decoração ocupam prédios da cidade comum (sim/r31/decoshop31 preenche). */
 export const DECO27: { fn?: (s: GameState, out: Place27[]) => void } = {};
+/** r33 (INT-1): ações no lugar (hotel, escritório, apartamentos, sede rival) atrás de `exp33.int1` — sim/r33/int1 preenche. */
+export const INT33: {
+  acts?: (s: GameState, p: Pick<Place27, 'k' | 'id'> & Partial<Pick<Place27, 'lot' | 'owner'>>, actId?: string) => PAct27[];
+  run?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'name'> & Partial<Pick<Place27, 'lot' | 'owner'>>, id: string, actId?: string) => { ok: boolean; text: L } | null;
+} = {};
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
 
 /** R31 (H): negócio da época num prédio de cidade comum (lojas com ano de abertura e fechamento — sim/r31/city31). */
@@ -366,6 +374,9 @@ export function covered27(s: GameState, ps: Place27[]): Set<PlaceK27> {
 
 export interface PAct27 { id: string; label: L; desc: L; cost?: number; dis?: L; /** precisa escolher um artista seu */ act?: boolean; go?: Goto18; /** abre o lote (comprar/construir) */ lot?: boolean }
 interface P27State { cd: Record<string, number> }
+/** r33 (INT-1): espera por chave, guardada onde as outras esperas do lugar ficam (ler não cria estado). */
+export const cdLeft27 = (s: GameState, k: string): number => Math.max(0, ((s.x4 as unknown as { place27?: P27State }).place27?.cd[k] ?? 0) - s.week);
+export const cdSet27 = (s: GameState, k: string, weeks: number): void => { st27(s).cd[k] = s.week + weeks; };
 const st27 = (s: GameState): P27State => { const x = s.x4 as unknown as { place27?: P27State }; return (x.place27 ??= { cd: {} }); };
 const activeMine = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a && a.status !== 'retired' && a.status !== 'split' && !a.deceased);
 const latestRel = (s: GameState, a: Act) => Object.values(s.releases).filter((r) => r.owner === 'player' && r.actId === a.id && s.week - r.week <= 16 && s.week >= r.week).sort((x, y) => y.week - x.week)[0];
@@ -384,7 +395,7 @@ export const GO27: Partial<Record<PlaceK27, Goto18>> = {
 };
 
 /** Ações do lugar (com bloqueio explicado). `actId` = artista escolhido (padrão: o primeiro do elenco). */
-export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & Partial<Pick<Place27, 'lot' | 'lot31' | 'fam31'>>, actId?: string): PAct27[] {
+export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src'> & Partial<Pick<Place27, 'lot' | 'lot31' | 'fam31' | 'owner'>>, actId?: string): PAct27[] {
   if (p.k === 'home' || p.k === 'vacant') return LOTS27.acts?.(s, { k: p.k, id: p.id, lot: p.lot ?? +p.id.slice(3), lot31: p.lot31 }) ?? []; // r31 (LOTE)
   const mine = activeMine(s);
   const a = (actId ? mine.find((x) => x.id === actId) : undefined) ?? mine[0];
@@ -437,6 +448,7 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
     }
     default: break;
   }
+  out.push(...(INT33.acts?.(s, p, actId) ?? [])); // r33 (INT-1): hotel, escritório, apartamentos, sede rival (exp33.int1)
   // r31 (FOS): a Casa Fossati não se compra; leva à ficha da família (as ações ficam dentro da casa)
   if (p.fam31) out.push({ id: 'fam31', label: l('Ver a ficha da família', 'See the family sheet'), desc: l('Efro, Lucia, Sonia, Antonella e Gianluca: papéis da época e ações.', 'Efro, Lucia, Sonia, Antonella and Gianluca: roles of the era and actions.'), go: { area: 'world', tab: ['worldHub', 'fossati31'] } });
   if (p.src === 'fill' && !p.venue && !p.fam31 && p.k !== 'police' && p.k !== 'facade' && p.k !== 'market') out.push({ id: 'lot', lot: true, label: l('Comprar o imóvel / construir', 'Buy the property / build'), desc: l('Compra o lote e põe uma obra sua no lugar (Nosso mundo).', 'Buys the lot and puts your own works there (Our world).') });
@@ -446,7 +458,7 @@ export function placeActs27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' 
 }
 
 /** Executa a ação do lugar. Devolve o texto do resultado (ok = deu certo). */
-export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src' | 'name'> & Partial<Pick<Place27, 'lot' | 'lot31'>>, id: string, actId?: string): { ok: boolean; text: L } {
+export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 'outlet' | 'sale' | 'src' | 'name'> & Partial<Pick<Place27, 'lot' | 'lot31' | 'owner'>>, id: string, actId?: string): { ok: boolean; text: L } {
   if ((p.k === 'home' || p.k === 'vacant') && LOTS27.run) { // r31 (LOTE)
     const a0 = placeActs27(s, p, actId).find((x) => x.id === id);
     if (!a0) return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
@@ -456,6 +468,8 @@ export function doPlace27(s: GameState, p: Pick<Place27, 'k' | 'id' | 'venue' | 
   const act = placeActs27(s, p, actId).find((x) => x.id === id);
   if (!act) return { ok: false, text: l('Ação indisponível.', 'Action unavailable.') };
   if (act.dis) return { ok: false, text: act.dis };
+  const r33 = INT33.run?.(s, p, id, actId); // r33 (INT-1)
+  if (r33) return r33;
   const mine = activeMine(s);
   const a = (actId ? mine.find((x) => x.id === actId) : undefined) ?? mine[0];
   const bad = (t: L) => ({ ok: false, text: t });

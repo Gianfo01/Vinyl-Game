@@ -5,7 +5,7 @@
 //   interior27(k, ano, n)     — PURO: o que tem dentro (adereços e lugares das pessoas, em frações da sala);
 //   drawInterior27(canvas, …) — DOM: pinta com as primitivas da sede (prim27) e desenha os bonecos (avatarSprite).
 
-import type { PlaceK27, Person27 } from '../../sim/sys/place27';
+import type { PlaceK27, Person27, IntK33 } from '../../sim/sys/place27';
 import { avatarSprite, lookOf, type Pose } from './avatar';
 import { paletteOf } from './palette';
 import { C, INK, Px, inked, lv, mix, noise, tint, withAlpha, type Col } from './px';
@@ -25,7 +25,8 @@ export interface Prop27 { t: PropT27; x: number; w?: number; media?: Media27; n?
 export type Zone27 = 'stage' | 'floor' | 'booth' | 'live' | 'counter' | 'desk';
 export interface ISpot27 { x: number; z: Zone27; pose: Pose; dir: 'SE' | 'SW' }
 /** r31 (S): salas que não são lugares do mapa (fundos da fachada, baile) */
-export type IKind27 = PlaceK27 | 'backroom' | 'baile';
+/** r33 (INT-1): + os interiores próprios (escola, fábrica, museu, plataforma, agência, filial) */
+export type IKind27 = PlaceK27 | 'backroom' | 'baile' | IntK33;
 export interface Interior27 { k: IKind27; year: number; props: Prop27[]; spots: ISpot27[]; floor: 'studio' | 'lounge' | 'lobby' | 'office'; dim: boolean; /** r31: fachada (restaurante, boate…) */ v?: string; /** r31 (AMOR): onde fica o seu personagem (padrão: na porta) */ youAt?: ISpot27 }
 
 export const INTERIOR_KINDS27: PlaceK27[] = ['venue', 'records', 'radio', 'studio', 'bar', 'press', 'rehearsal', 'label', 'office', 'apartments', 'hotel', 'instruments'];

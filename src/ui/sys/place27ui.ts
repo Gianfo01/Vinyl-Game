@@ -6,7 +6,8 @@
 import { l, type L } from '../../data/world';
 import { t } from '../../i18n/strings';
 import type { Bld18 } from '../../sim/sys/campus18';
-import { doPlace27, placeActs27, type PAct27, type Person27, type Place27, type PlaceK27 } from '../../sim/sys/place27';
+import { doPlace27, placeActs27, type IntK33, type PAct27, type Person27, type Place27, type PlaceK27 } from '../../sim/sys/place27';
+import { crew33, int1On, ownKind33 } from '../../sim/r33/int1'; // R33 (INT-1)
 import { panel27 } from '../pixel/city27';
 import type { GameState } from '../../sim/types';
 import { playerActs } from '../../sim/util';
@@ -100,9 +101,11 @@ const OWNK27: Partial<Record<Bld18['kind'], PlaceK27>> = {
   branch: 'office', office: 'office', school: 'office', platform: 'office', plant: 'office', museum: 'hotel', home: 'apartments', dorm: 'apartments',
 };
 /** Interior de um prédio seu (a sede tem a tela própria). */
-export function ownPlace27(s: GameState, b: Bld18): { k: PlaceK27; name: string; people: Person27[] } | null {
+export function ownPlace27(s: GameState, b: Bld18): { k: PlaceK27 | IntK33; name: string; people: Person27[] } | null {
   if (b.kind === 'hq' || b.kind === 'sign' || b.kind === 'park') return null;
-  let k = OWNK27[b.kind];
+  let k: PlaceK27 | IntK33 | undefined = OWNK27[b.kind];
+  const k33 = int1On(s) ? ownKind33(b.kind) : null; // r33 (INT-1): interior próprio no lugar do emprestado
+  if (k33) k = k33;
   if (b.kind === 'media') k = ventures(s).list.find((v) => `v:${v.id}` === b.id)?.media === 'radio' ? 'radio' : 'press';
   if (!k) return null;
   const people: Person27[] = [];
@@ -110,13 +113,14 @@ export function ownPlace27(s: GameState, b: Bld18): { k: PlaceK27; name: string;
   if (k === 'studio' || k === 'rehearsal') for (const x of s.sessions.filter((y) => !y.done && mine.has(y.actId)).slice(0, 2)) { const a = s.acts[x.actId]; if (a) for (const pid of a.members.slice(0, 3)) people.push({ name: s.persons[pid]?.name ?? a.name, role: l('Gravando', 'Recording'), pid, actId: a.id, mine: true }); }
   const pn = panel27(s, b.id);
   for (const w of pn?.who ?? []) if (!people.some((x) => x.name === w) && !/\d/.test(w)) people.push({ name: w, role: l('Equipe', 'Staff') });
+  if (k33) people.unshift(...crew33(s, b, k33).filter((c) => !people.some((x) => x.name === c.name))); // r33 (INT-1): quem trabalha de verdade no prédio
   if (!people.length) people.push({ name: s.player.staff[0]?.name ?? t(l('Gerente', 'Manager')), role: l('Gerente', 'Manager') });
   return { k, name: b.name, people };
 }
 
 // ---------------------------------------------------------------- interior (sobreposto ao mapa)
 
-export interface InsideT27 { id: string; k: PlaceK27; name: string; what?: string; people: Person27[]; year: number; city: string; seed: string; /** r31: lugar de terceiros (ações) */ place?: Place27; /** r31: prédio seu */ own?: boolean; /** r31 (S): facção da fachada */ org?: string }
+export interface InsideT27 { id: string; k: PlaceK27 | IntK33; name: string; what?: string; people: Person27[]; year: number; city: string; seed: string; /** r31: lugar de terceiros (ações) */ place?: Place27; /** r31: prédio seu */ own?: boolean; /** r31 (S): facção da fachada */ org?: string }
 /** O corte do lugar por dentro, cobrindo o mapa; "Voltar à cidade" (ou Esc, Ctrl + roda, pinça) afasta.
  *  R31 (onda 4 · I): vira cena interativa (inside31) — pessoas e objetos clicáveis, você lá dentro. */
 export function insideView27(s: GameState, x: InsideT27, back: () => void, actions?: () => void): HTMLElement {

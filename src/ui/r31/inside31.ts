@@ -23,6 +23,10 @@ import { usd } from '../../sim/sys/crime17';
 import { inspect, rerender, toast } from '../common';
 import { h } from '../dom';
 import { drawInterior27 } from '../pixel/interior27';
+import { buildings18 } from '../../sim/sys/campus18'; // R33 (INT-1): a tela do prédio próprio
+import { OWNACT33, int1On, int1Lines, isInt33 } from '../../sim/r33/int1';
+import { drawInterior33, paintInt33 } from '../r33/int1px';
+import { EMPTY33 } from '../r33/int1model';
 import { lookOf } from '../pixel/avatar';
 import { bindZoomOut27 } from '../ps/zoom27';
 import { go18 } from '../sys/inbox18';
@@ -189,10 +193,26 @@ function infoPanel(s: GameState, m: InsideM31, x: InsideT31, key: string): HTMLE
 
 function goPanel(s: GameState, x: InsideT31, dest: string, back: () => void): HTMLElement | null {
   if (dest === 'shop') return h('div', { class: 'in31-pn in31-shop' }, shop31Tab(s));
-  const g = dest === 'labels' ? { area: 'labels' } : dest === 'office' ? { area: 'biz17' } : dest === 'own' ? GO27[x.k as keyof typeof GO27] ?? { area: 'campus18' } : { area: dest };
+  const g = dest === 'labels' ? { area: 'labels' } : dest === 'office' ? { area: 'biz17' } : dest === 'own' ? (isInt33(x.k) ? buildings18(s).find((b) => b.id === x.id)?.goto : GO27[x.k as keyof typeof GO27]) ?? { area: 'campus18' } : { area: dest };
   back();
   go18(g);
   return null;
+}
+
+/** R33 (INT-1): objeto de interior próprio com ações de outras frentes (ganchos de OWNACT33): o que o sistema sabe + os botões. */
+function ownPanel(s: GameState, x: InsideT31, key: string, back: () => void): HTMLElement {
+  const k = isInt33(x.k) ? x.k : null;
+  const box = h('div', { class: 'in31-pn' });
+  if (!k) return box;
+  const lines = int1Lines(s, k, key, x.id);
+  box.append(li(lines.length ? lines : [EMPTY33]));
+  for (const a of OWNACT33.acts?.(s, k, x.id) ?? []) {
+    box.append(h('div', { class: 'in31-act' }, h('b', null, t(a.label)), a.cost !== undefined ? h('span', { class: 'small' }, ` · ${$v(a.cost)}`) : null,
+      h('p', { class: 'small muted' }, t(a.desc)),
+      btn(a.label, a.dis, () => result(OWNACT33.run?.(s, k, x.id, a.id) ?? { ok: false, text: l('Ação sem efeito agora.', 'Action has no effect right now.') }), true)));
+  }
+  box.append(h('div', { class: 'row wrap' }, btn(l('Abrir a tela', 'Open the screen'), null, () => { goPanel(s, x, 'own', back); }))); // o prédio e a tela dele
+  return box;
 }
 
 // ---------------------------------------------------------------- a cena
@@ -227,6 +247,7 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
     else if (k === 'do') el = actPanel(s, m, x, arg);
     else if (k === 'info') el = infoPanel(s, m, x, arg);
     else if (k === 'go') el = goPanel(s, x, arg, back);
+    else if (k === 'own') el = ownPanel(s, x, arg, back); // r33 (INT-1)
     else if (k === 'art') el = artPanelEl31(s, x, arg, show, back);
     else if (k === 'vit') el = vitPanelEl31(s, arg, show, back);
     else if (k === 'vitlist') el = vitListEl31(s, x, show, back);
@@ -236,11 +257,12 @@ export function insideView31(s: GameState, x0: InsideT31, back: () => void, acti
       h('button', { type: 'button', class: 'icon', 'aria-label': t(l('Fechar', 'Close')), onclick: () => show() }, '✕')), el);
   };
   const panels: Record<string, (arg?: string) => void> = {};
-  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art', 'vit', 'vitlist']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
+  for (const k of ['who', 'you', 'do', 'info', 'go', 'room', 'art', 'vit', 'vitlist', 'own']) panels[k] = (arg?: string) => show(arg === undefined ? k : `${k}:${arg}`);
   const scene = sceneView31(s, {
     id: `in31-${x.k}`, title: m.title, W: m.W, H: m.H, spots: m.spots, panels,
-    paint: (cv) => { drawInterior27(cv, m.room, m.people, { minW: INSIDE_W31, city: x.city, name: x.name, seed: x.seed,
-      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null, extra: (g, sd) => { paintArt31(m)(g, sd); paintVit31(m)(g); } }); },
+    paint: (cv) => { (m.crop ? drawInterior33 : drawInterior27)(cv, m.room, m.people, { minW: INSIDE_W31, city: x.city, name: x.name, seed: x.seed,
+      look: (p) => lookOf((p.pid ? s.persons[p.pid] : undefined) ?? { id: p.pid ?? p.key ?? `npc:${x.id}:${p.name}` }), role: (p) => (p.pid ? s.persons[p.pid]?.role : null) ?? null,
+      extra: (g, sd) => { if (isInt33(x.k) && int1On(s)) paintInt33(x.k, x.year)(g, sd); paintArt31(m)(g, sd); paintVit31(m)(g); } }); },
     list: () => h('ul', { class: 'in31-list' }, m.spots.map((sp) => h('li', null, h('button', { type: 'button', class: 'link', onclick: () => show(sp.go.panel) }, t(sp.label)), ' ', h('small', { class: 'muted' }, t(sp.tip))))),
     intro: l('Pessoas e objetos são clicáveis: o painel embaixo resolve a ação aqui mesmo.', 'People and objects are clickable: the panel below resolves the action right here.'),
     note: m.note,
