@@ -38,3 +38,6 @@
 .ac5-all:hover, .ac5-all:focus-visible { color: #170e12; }
 @media (prefers-reduced-motion: no-preference) { .ac5 { animation: ac5-in 0.12s steps(3) both; } }
 @keyframes ac5-in { from { transform: scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
+/* número no próprio objeto da cena (casa): etiqueta pequena ao lado do nome */
+.r5-tag { padding: 0 3px; border: 1px solid currentColor; font: 700 10px var(--mono, monospace); opacity: 0.9; }
+.ac5 .lk31-why, .ac5 .lk31-why * { color: #7a3a2a !important; }

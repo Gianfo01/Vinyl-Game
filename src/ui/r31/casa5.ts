@@ -35,6 +35,7 @@ import { key5 } from './keys5';
 import { badge5, registerPaper5, registerRegion5 } from './nav5';
 import { lockBtn31 } from './lock31';
 import { casaCard5 } from './acoes5';
+import { worldTag5 } from './acoes5model';
 import { goDest31 } from './quick31';
 import { blitPx31 } from './scene31';
 import { placeLabels31, type Spot31 } from './scene31model';
@@ -142,7 +143,7 @@ export function casaView5(s: GameState): HTMLElement {
     ctx.drawImage(sp.c, d.you.x - sp.ax, d.you.y - sp.ay + 1);
   }, spots.map((sp) => {
     const o = by.get(sp.id)!;
-    return { sp, obj: o.obj, label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
+    return { sp, obj: o.obj, tag: worldTag5(s, o.obj ?? `casa.${o.id}`), label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
   }), [d.top, d.H - 12]));
   const sc = root.lastElementChild as HTMLElement;
   sc.querySelector('.r5-view')!.append(roomsBar5(d.rooms.map((r) => ({ label: ROOM5_L[r.id], x: r.x, w: r.w })), d.W));
@@ -163,7 +164,7 @@ function act5(s: GameState, at: DOMRect | undefined, o: CasaObj5): void {
 
 // ---------------------------------------------------------------- palco comum (canvas + pontos + rótulos)
 
-interface Pt5 { sp: CasaSpot5; /** objeto da onda 5 (âncora do cartão de ações) */ obj?: string; label: L; tip: L; key: string; bang: boolean; act: (at: DOMRect | undefined) => void; /** rótulo dentro do ponto, no alto (salas da sede) */ inside?: boolean }
+interface Pt5 { sp: CasaSpot5; /** objeto da onda 5 (âncora do cartão de ações) */ obj?: string; /** número no próprio objeto (ACOES5: saúde, bolinhas, dinheiro) */ tag?: string; label: L; tip: L; key: string; bang: boolean; act: (at: DOMRect | undefined) => void; /** rótulo dentro do ponto, no alto (salas da sede) */ inside?: boolean }
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
 
 /** Palco: canvas + pontos + rótulos. `crop` = faixa vertical mostrada [y0, y1) (corta céu e rua para a casa ter
@@ -187,7 +188,7 @@ function stage5(W: number, H: number, paint: (cv: HTMLCanvasElement) => void, pt
     (sp) => { const p = pts.find((x) => x.sp.id === sp.id)!; return `${t(p.label)}${p.key ? `  ${p.key}` : ''}`; });
   const lab = h('div', { class: 'r5-labels', 'aria-hidden': 'true' }, labs.map((b) => {
     const p = pts.find((x) => x.sp.id === b.id)!;
-    return h('span', { class: `r5-lab${p.bang ? ' bang' : ''}`, style: `left:${pct(b.x + b.w / 2, W)};top:${pct(b.y, H)}` }, t(p.label), p.key ? keyChip(p.key) : null);
+    return h('span', { class: `r5-lab${p.bang ? ' bang' : ''}`, style: `left:${pct(b.x + b.w / 2, W)};top:${pct(b.y, H)}` }, t(p.label), p.key ? keyChip(p.key) : null, p.tag ? h('small', { class: 'r5-tag' }, p.tag) : null);
   }));
   st.append(layer, lab);
   return h('div', { class: 'r5-scroll' }, view);

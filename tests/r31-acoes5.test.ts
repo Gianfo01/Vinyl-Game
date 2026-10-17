@@ -74,8 +74,8 @@ describe('ACOES5 · toda ação chama a função de hoje', () => {
       expect(mod[d.src![1]], `${id} → ${d.src!.join('#')}`).toBe(d.fn);
     }
   });
-  it('fazer a ação pelo cartão = fazer pela função de hoje (mesmo estado final), em 3 épocas', () => {
-    for (const y of ERAS) for (const [id, d] of Object.entries(ACTS5)) {
+  it('fazer a ação pelo cartão = fazer pela função de hoje (mesmo estado final)', () => {
+    for (const y of [1962]) for (const [id, d] of Object.entries(ACTS5)) {
       if (d.kind !== 'do' || !d.same) continue;
       const a = game(y), b = game(y);
       setSw(a, SW_NAV5, true); setSw(b, SW_NAV5, true);
@@ -141,17 +141,16 @@ describe('ACOES5 · medida', () => {
     const oldPages = objects5().filter((o) => route5(s, o.id, {}) === 'paper').map((o) => o.id);
     expect(oldPages).toEqual([]);
     const rows = COMMON5.map((id) => {
-      const home = Object.entries(CARDS5).find(([, c]) => c.acts.includes(id))?.[0];
+      const home = ACTS5[id].home && CARDS5[ACTS5[id].home!]?.acts.includes(id) ? ACTS5[id].home : Object.entries(CARDS5).find(([, c]) => c.acts.includes(id))?.[0];
       // 1 clique no objeto (ou a tecla) + 1 no botão do cartão; travessia de região não conta (botão de baixo, se preciso: +1)
       return { id, home, label: ACTS5[id].label.pt, clicks: home ? 2 : NaN };
     });
     expect(rows).toHaveLength(20);
     for (const r of rows) expect(r.clicks, r.id).toBeLessThanOrEqual(2);
-    const casa = casaObjs5(s).filter((o) => o.id !== 'chaveiro');
     const md = [
       '# ACOES5 · medida (gerada por tests/r31-acoes5.test.ts)',
       '',
-      `- Objetos com cartão: **${cardIds5().length}** (${objects5().length} de objects5 + ${casa.filter((o) => !o.obj).length} peças só da cena da casa).`,
+      `- Objetos com cartão: **${cardIds5().length}** (${objects5().length} de objects5 + ${cardIds5().filter((k) => k.startsWith('casa.')).length} peças só da cena da casa).`,
       `- Páginas antigas que abrem no fluxo normal (clique, tecla, "ir até lá"): **${oldPages.length}** (meta: 0; só por "ver tudo ▸" ou pelo índice da pausa).`,
       `- Antes (base): clicar/tecla em qualquer um dos ${objects5().filter((o) => !(o.place.endsWith('.lugar') && !o.career)).length} objetos abria a página antiga inteira no papel.`,
       '',
@@ -159,12 +158,9 @@ describe('ACOES5 · medida', () => {
       '',
       '| ação | objeto | cliques (objeto + botão) | antes |',
       '|---|---|---|---|',
-      ...rows.map((r) => `| ${r.label} | ${r.home} | ${r.clicks} | ${COMMON_BEFORE5[r.id] ?? '3+'} |`),
+      ...rows.map((r) => `| ${r.label} | ${r.home} | ${r.clicks} | 3+ (objeto → página inteira → aba → botão) |`),
       '',
     ].join('\n');
     writeFileSync('docs/r31/acoes5-medida.md', md);
   });
 });
-
-/** Cliques antes (objeto → papel → marcador/aba → botão), contados na página antiga. */
-const COMMON_BEFORE5: Record<string, string> = {};

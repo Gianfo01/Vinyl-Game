@@ -5,6 +5,7 @@
 // botão antes do clique. Montar o cartão só lê; só `run` escreve, e pela função de hoje.
 
 import { l, type L } from '../../data/world';
+import { t } from '../../i18n/strings';
 import { nav5On } from '../../sim/r31/exp5';
 import type { Lock31 } from '../../sim/r31/lock';
 import type { GameState } from '../../sim/types';
@@ -75,8 +76,26 @@ function runOf5(id: string, d: ActDef5): CardAct5['run'] {
   return (s, c) => d.run?.(s, c);
 }
 
+/** Lê sem deixar rastro: as leituras de hoje (energyLeft, fin18…) criam/normalizam estado preguiçoso na 1ª vez; o cartão
+ *  desfaz isso (explorar não muda o mundo). Só chaves novas em `x4`/`player` e o mês da bolinha de tempo livre. */
+export function peek5<T>(s: GameState, fn: () => T): T {
+  const x4 = (s as unknown as { x4: Record<string, unknown> }).x4 ?? {};
+  const pl = s.player as unknown as Record<string, unknown>;
+  const k4 = new Set(Object.keys(x4)), kp = new Set(Object.keys(pl));
+  const lf = x4.life as { monthKey?: number; used?: number } | undefined;
+  const keep = lf ? { monthKey: lf.monthKey, used: lf.used } : undefined;
+  try { return fn(); } finally {
+    for (const k of Object.keys(x4)) if (!k4.has(k)) delete x4[k];
+    for (const k of Object.keys(pl)) if (!kp.has(k)) delete pl[k];
+    if (lf && keep) { lf.monthKey = keep.monthKey; lf.used = keep.used; }
+  }
+}
+
 /** Monta o cartão de um objeto (só leitura). */
 export function card5(s: GameState, id: string): Card5 | undefined {
+  return peek5(s, () => card5raw(s, id));
+}
+function card5raw(s: GameState, id: string): Card5 | undefined {
   const spec = CARDS5[id];
   if (!spec) return undefined;
   const o = object5(id);
@@ -117,4 +136,19 @@ export function route5(s: GameState, id: string, o: { pass?: boolean; pause?: bo
   if (ob && ob.place.endsWith('.lugar') && !ob.career) return 'travel';
   if (o.pass || o.pause || o.paper) return 'paper';
   return CARDS5[id] ? 'card' : 'paper';
+}
+
+// ---------------------------------------------------------------- informação como coisa do mundo (etiqueta no objeto)
+
+/** Número que aparece no próprio objeto da cena (sem abrir nada): saúde no espelho, tempo livre em bolinhas na cama e no
+ *  calendário, dinheiro no cofre/escrivaninha/livro-caixa, fama no jornal e na revista. Só leitura. */
+const TAG5: Record<string, string> = {
+  espelho: 'saude', cama: 'energia', 'casa.sofa': 'energia', calcozinha: 'energia', agenda: 'energia', cofrecasa: 'pessoal', 'casa.escrivaninha': 'pessoal',
+  livrocaixa: 'caixa', cofre: 'caixaLivre', jornal: 'fama', revista: 'melhorParada', radiotv: 'fama', trofeus: 'premios', retratoscasa: 'filhos',
+  quadrofunc: 'equipe', mural: 'artistas', jornalpredio: 'fama', banco: 'divida',
+};
+export function worldTag5(s: GameState, id: string): string | undefined {
+  const n = TAG5[id];
+  if (!n || !nav5On(s)) return undefined;
+  return peek5(s, () => { try { const v = NUMS5[n].val(s); return v ? `${n === 'saude' || n === 'fama' ? `${t(NUMS5[n].label)} ` : ''}${v.value.replace(/^★ /, '')}` : undefined; } catch { return undefined; } });
 }

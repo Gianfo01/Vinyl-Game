@@ -97,7 +97,7 @@ function ctx5(id: string): ActCtx5 {
 }
 
 function actBtn5(s: GameState, id: string, a: CardAct5, i: number): HTMLElement {
-  const label = h('span', { class: 'ac5-al' }, h('kbd', { class: 'ac5-n' }, String(i + 1)), h('span', null, t(a.label)), a.kind === 'open' || a.kind === 'all' ? ' ▸' : null);
+  const label = h('span', { class: 'ac5-al' }, h('kbd', { class: 'ac5-n' }, String(i + 1)), h('span', null, t(a.label)), a.kind === 'open' ? ' ▸' : null);
   const run = () => {
     const c = ctx5(id);
     const msg = a.run(s, c);
