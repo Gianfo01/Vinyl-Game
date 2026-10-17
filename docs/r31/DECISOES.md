@@ -571,3 +571,43 @@ partida; exp33.intro agora controla só a intro ("Intro da partida" nas Opções
 - **Gancho para a REDES33**: `registerPhoneApp33`/`registerPcApp33` (id, nome, ícone, anos, versões, sistema, "!", `open`) e `registerAct33`; o Redes tem o lugar reservado na tabela e só aparece registrado.
 - Testes (regime da 33): tsc, `tests/r33-aparelhos.test.ts` (21 casos), `tests/r31-uiwords.test.ts`; conferidos também r31-nav5, r31-w5-tec e r31-acoes5 (casca mexida). Goldens não rodados: o vazamento de 1999+ com o interruptor ligado muda o sorteio de eventos — o QA33 re-mede.
 - Prints: `docs/r33/aparelhos/` (celular 1983, 1997, 2008, 2025, 2035; PC 1982, 1995, 2003, 2025, 2035; cobrinha).
+- **2026-10-17 · R33 GENTE33 parte A (Opus).** Diretor(a) de filial, CEO e conselho, equipe pessoal e pessoas fixas em
+  `src/sim/r33/gente33.ts`, atrás de `exp33.gente` (ligado; ligado não muda nada até o jogador agir).
+  - **Diretor(a) de filial:** pessoa real (equipe, executivo de rival, gente da cidade do `gente31` ou ex-artista).
+    Garimpa (`addSignal`), contrata local (`acceptOffer`), marca shows e divulga (`playGigs`) dentro do teto, e manda
+    relatório mensal na Caixa. O jogador escolhe a linha (ousado/conservador) e o teto. Riscos com sorteio próprio:
+    roubo por rival, saída com o elenco regional abrindo selo (`foundLabel17`), desvio (fato do submundo) e briga com a
+    sede. Ex-artista da cena local ganha bônus.
+  - **CEO:** só com sede Complexo ou 25 anos de casa. Aplica "multinacional" na delegação única, guarda a anterior e a
+    devolve ao sair. Leva grandes decisões ao conselho (`repelRaider`, ampliar sede, abrir ou ampliar filial) e segura
+    a sucessão.
+  - **Conselho:** só com sócios ou ações. Reunião anual com voto dos `holders`; raiders hostis votam contra; maioria
+    contra abre uma moção.
+  - **Equipe pessoal:** motorista, segurança (`setGuard33`), trainer e médico (saúde e estresse do dono).
+  - **Pessoas fixas:** fã-clube, jornalista (coluna como fato `column33`) e representante do sindicato (confiança do
+    `union20`).
+  - **Regras:** Fossati e gente de ato real ficam fora. Ações nos cartões ACOES5 (mapa da parede, mesa de reunião,
+    porta, garagem, espelho, mural, jornal, quadro da equipe), sem tela nova. Estado só nasce na 1ª ação; sem ele o mês
+    não sorteia.
+  - **Goldens:** os 4 rodados e iguais.
+  - Ver `docs/r33/gente.md` (com as pendências da parte B). Teste `tests/r33-gente-a.test.ts`; prints em
+    `docs/r33/gente/`.
+- **2026-10-17 · R33 GENTE33, pendências da parte B (pedido do dono).** Feito o que não é da REDES33 nem da POL33,
+  ainda opt-in:
+  - quem você contrata da cidade larga a vaga do `gente31` e não é recontratado enquanto trabalha para você
+    (`leaveJob31`/`BUSY31`, dois ganchos pequenos no gente31; sem contratação, a virada é a de antes);
+  - diretor ou CEO que sai vivo vira executivo livre no mercado (`leaders10`), com o cargo no currículo;
+  - ficha da passagem e opinião de verdade sobre você;
+  - camada leve (`light33`) nas linhas do quadro da equipe.
+  - Goldens rodados e iguais. O resto do PLANO da parte B (camadas para todos, talento escondido, volta por cima)
+    segue para depois do QA33. Ver `docs/r33/gente.md`.
+- **2026-10-17 · R33 GENTE33 parte B (pedido do dono, antes do QA33).** Em `src/sim/r33/gente33b.ts`, cada parte atrás
+  do seu interruptor, desligado por padrão:
+  - três camadas de pessoas (`exp33.camadas`): rebaixar guarda o resumo do passado e as relações fortes; promover
+    devolve a pessoa inteira, com o mesmo id;
+  - talento escondido de quem trabalha na cidade (`exp33.talento`), com o gancho do bartender recusado que vira
+    estrela num rival;
+  - volta por cima por catálogo, olheiro ou vídeo viral (`exp33.volta`);
+  - romance com quem vira artista do seu selo (`exp33.romance33`).
+  - Desligados, os goldens não mudam (rodados e iguais). O QA33 liga e mede. Teste `tests/r33-gente-b.test.ts`; ver
+    `docs/r33/gente.md`.
