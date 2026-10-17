@@ -124,6 +124,9 @@ import { NAV5, TRANS5, keyNav5 } from './r31/nav5'; // R31 onda 5 (TEC): navega�
 import { paperGo5, paperKey5Ev } from './r31/papers5'; // R31 onda 5 (PAPEL): páginas dentro dos papéis (registradas na casca; só com exp5.nav)
 import { chordLabel5 } from './r31/keys5';
 import { help5, shell5, shell5On, shellKey5, show5, type Shell5Host } from './r31/shell5'; // R31 onda 5 (NAV): casca do jogo explorável (exp5.nav)
+import { tutLayer5, tutOptions5 } from './r31/tut5ui'; // R31 onda 5 (TUT): tutorial guiado (só numa partida com tutorial e exp5.nav)
+import { setSwUi } from '../sim/r31/switches';
+import { SW_TUTHINT5, tutRunning5 } from '../sim/r31/tut5';
 import './r31/elenco5'; // R31 onda 5 (ELENCO): mural, quadro, agenda, fichário, contratação e chefe como papéis (só com exp5.nav ligado)
 import { TOPBAR31, fullMenu31, listHome31, listsHome31, nav31, placesStrip31, setFullMenu31, subnav31 } from './ps/menu31ui';
 import { pendingList } from '../sim/r31/pending';
@@ -696,13 +699,13 @@ function renderShell5(g: NonNullable<typeof store.game>): void {
     save: async () => { const ok = await saveGame(`slot-${store.game?.signature}`); toast(ok ? t(S.saved) : 'Erro', ok ? 'good' : 'bad'); },
     mainMenu: () => { void saveGame('auto'); store.game = null; titleScreen(root, startGame); },
     rerender: render, saveChip: () => saveChip20(),
-    extra: () => (mayShow27('tutorial', g) ? tutorialCard(g, render) : null),
+    extra: () => tutLayer5(g, render) ?? (mayShow27('tutorial', g) ? tutorialCard(g, render) : null), // R31 onda 5 (TUT): tutorial guiado primeiro
   };
   const area0 = store.area;
   const el = shell5(g, host);
   root.replaceChildren(el);
   if (store.area !== area0 && !el.querySelector('.p5')) store.area = area0 as Area;
-  kick27(g);
+  if (!tutRunning5(g) && !document.querySelector('.tu5-dipback')) kick27(g); // R31 onda 5 (TUT): as metas de abertura esperam o tutorial guiado terminar
 }
 
 /** Rótulo da área igual ao do menu (casa da carreira usa o nome do grupo). */
@@ -796,6 +799,7 @@ function settings(): void {
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); close(); render(); settings(); } }), ' ', t(TUTOFF_LABEL19)), // r19 tutoff19
     h('button', { class: 'btn small ghost', onclick: () => { resetTut18('all'); setTutorials19(p, true); savePrefs(); if (store.game) restartTutorial(store.game); close(); render(); } }, t(l('Reiniciar tutoriais', 'Restart tutorials'))),
     h('button', { class: 'btn small ghost', onclick: () => { if (store.game) { restartTutorial(store.game); close(); render(); } } }, t(l('Rever tutorial', 'Replay tutorial'))),
+    ...(shell5On(store.game) ? tutOptions5(store.game, (v) => setSwUi(SW_TUTHINT5, v), () => { close(); render(); }) : []), // R31 onda 5 (TUT): modo dica e tutorial guiado nesta partida
     ...settings18(() => { close(); go('tut18'); }), // r18 tutorial18
     presetsSettings29(), // r29 REORG (M20): Guiado / Livre / Contemplativo — só apresentação
     settings19(), // r19 B.5

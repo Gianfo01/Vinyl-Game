@@ -24,7 +24,8 @@ import { fmtL, playerActs } from '../../sim/util';
 import { $, N, modal, rerender, toast } from '../common';
 import { h } from '../dom';
 import { UX19UI } from '../hooks19';
-import { C, Px, upscale, type Col } from '../pixel/px';
+import { C, Px, discV, inked, lv, rectV, upscale, volume, type Col } from '../pixel/px';
+import { obj5Px } from '../pixel/exp5px';
 import { AFTER_ADVANCE, EXTRA_AREAS, registerSection } from '../registry';
 import { help18 } from '../help18';
 import { profileId17, store } from '../store';
@@ -86,22 +87,25 @@ export const profileMarks19 = (pid?: string): { k: string; name: L; y: number }[
 MARKS27.f = profileMarks19;
 
 // ---------------------------------------------------------------- pixel art da época
-const P = { ink: C('#1a1214'), cream: C('#f4e4b8'), gold: C('#f0c040'), dgold: C('#b07c1c'), brown: C('#9a6034'), dbrown: C('#5e3a1e'), black: C('#2a2628'), grey: C('#a8a4a0'), dgrey: C('#5c5856'), red: C('#e04848'), blue: C('#4a8ae0'), teal: C('#2ec8c0'), purple: C('#8a5ad0'), white: C('#f8f4ec'), green: C('#48b85c') };
+/** Cena da época (cartões de abertura e de virada): um canto de sala da época com o rádio/TV dela — os mesmos objetos
+ *  em pixel da onda 5 (exp5px: volume, luz de cima à esquerda, contorno escuro quente), não um ícone solto. */
 function eraArt(y: number, alt = ''): HTMLElement {
   const W = 96, H = 40, p = new Px(W, H);
-  const sky: Col = y < 1925 ? C('#3a2a1e') : y < 1955 ? C('#2a2238') : y < 1981 ? C('#3a1e3a') : y < 1999 ? C('#1e2240') : y < 2008 ? C('#1e2e2e') : C('#141a2a');
-  p.rect(0, 0, W, H, sky);
-  for (let i = 0; i < 12; i++) p.put((i * 37) % W, (i * 13) % 18, P.cream);
-  p.rect(0, 32, W, 8, P.dbrown); p.hline(0, W - 1, 32, P.brown);
-  const cx = 48;
-  if (y < 1925) { p.rect(cx - 10, 24, 20, 8, P.brown); p.rect(cx - 6, 20, 12, 4, P.black); p.poly([[cx + 2, 20], [cx + 20, 4], [cx + 26, 12], [cx + 6, 22]], P.gold); p.line(cx + 20, 4, cx + 26, 12, P.dgold); }
-  else if (y < 1948) { p.rect(cx - 1, 12, 3, 20, P.grey); p.ellipse(cx, 9, 5, 6, P.dgrey); for (let k = 5; k < 14; k += 2) p.hline(cx - 4, cx + 4, k, P.grey); p.rect(cx - 6, 30, 13, 2, P.dgrey); }
-  else if (y < 1955) { p.disc(cx, 20, 11, P.black); p.ring(cx, 20, 8, P.dgrey); p.ring(cx, 20, 5, P.dgrey); p.disc(cx, 20, 3, P.red); p.put(cx, 20, P.ink); }
-  else if (y < 1981) { p.ellipse(cx - 4, 24, 8, 6, P.red); p.ellipse(cx - 4, 24, 3, 2, P.black); p.poly([[cx + 2, 22], [cx + 26, 10], [cx + 27, 12], [cx + 3, 25]], P.brown); p.rect(cx + 24, 7, 5, 4, P.dbrown); }
-  else if (y < 1999) { p.rect(cx - 14, 8, 28, 22, P.dgrey); p.rect(cx - 11, 11, 22, 15, P.purple); p.rect(cx - 6, 14, 3, 3, P.gold); p.rect(cx + 2, 18, 4, 3, P.teal); p.hline(cx - 9, cx + 9, 28, P.grey); }
-  else if (y < 2008) { p.disc(cx - 8, 20, 9, P.grey); p.ring(cx - 8, 20, 6, P.white); p.disc(cx - 8, 20, 2, P.dgrey); p.rect(cx + 4, 12, 16, 12, P.dgrey); p.rect(cx + 6, 14, 12, 8, P.blue); p.rect(cx + 2, 24, 20, 2, P.grey); }
-  else { p.rect(cx - 7, 6, 14, 25, P.black); p.rect(cx - 5, 9, 10, 18, P.teal); p.poly([[cx - 2, 14], [cx + 3, 17], [cx - 2, 20]], P.white); p.put(cx, 29, P.grey); }
-  p.outline(P.ink);
+  const wall: Col = y < 1925 ? C('#7a4a34') : y < 1955 ? C('#5a6a4a') : y < 1981 ? C('#8a5a2a') : y < 1999 ? C('#3e4a6a') : y < 2008 ? C('#4a5a5a') : C('#2e3446');
+  // parede com papel listrado (tom 2/3 da rampa), rodapé de madeira e piso de tábuas
+  for (let x = 0; x < W; x++) for (let yy = 0; yy < 29; yy++) p.set(x, yy, (x >> 2) % 2 ? lv(wall, 3) : lv(wall, 2.6));
+  p.hline(0, W - 1, 0, lv(wall, 1.6));
+  // janela com o céu da noite e estrelas
+  p.rect(8, 6, 22, 14, lv(wall, 1)); p.rect(9, 7, 20, 12, C('#1a2038'));
+  for (let i = 0; i < 7; i++) p.put(10 + ((i * 7) % 18), 8 + ((i * 5) % 9), C('#f4ecd0'));
+  p.vline(19, 7, 18, lv(wall, 1)); p.hline(9, 28, 12, lv(wall, 1)); p.hline(7, 30, 20, lv(wall, 4));
+  rectV(p, 0, 27, W, 3, C('#6a3a22'));
+  for (let yy = 30; yy < H; yy++) for (let x = 0; x < W; x++) p.set(x, yy, (x + (yy % 2 ? 0 : 7)) % 14 === 0 ? C('#4a2a1a') : yy === 30 ? C('#9a6a3e') : C('#7a4e2c'));
+  // o rádio/TV da época no centro e a pilha de discos/demos ao lado
+  const tv = obj5Px('radiotv', y);
+  p.blit(tv, 52 - Math.floor(tv.w / 2), H - tv.h + 1);
+  const dm = obj5Px('demos', y);
+  p.blit(dm, W - dm.w, H - dm.h + 1);
   const cv = upscale(p.canvas(), W * 3, H * 3);
   cv.className = 'ux19-art px';
   cv.setAttribute('role', 'img');
@@ -110,17 +114,27 @@ function eraArt(y: number, alt = ''): HTMLElement {
 }
 function tombArt(name: string): HTMLElement {
   const W = 64, H = 40, p = new Px(W, H);
-  p.rect(0, 0, W, H, C('#1e2030')); p.rect(0, 33, W, 7, C('#2c4a2c'));
-  p.rect(18, 8, 28, 26, P.grey); p.ellipse(32, 9, 14, 6, P.grey); p.rect(20, 10, 24, 22, C('#c4c0bc'));
-  p.disc(32, 16, 5, P.black); p.disc(32, 16, 1.4, P.gold); p.hline(24, 40, 25, P.dgrey); p.hline(26, 38, 28, P.dgrey);
-  for (const x of [10, 52]) { p.vline(x, 26, 33, P.green); p.disc(x, 25, 1.6, P.red); }
-  p.outline(P.ink);
+  // céu da noite com degradê em faixas (rampa) e grama com tufos
+  for (let y = 0; y < 33; y++) p.hline(0, W - 1, y, lv(C('#2a3050'), 1 + Math.floor(y / 11) * 0.6));
+  for (let i = 0; i < 6; i++) p.put(5 + ((i * 23) % 54), 3 + ((i * 7) % 10), C('#f4ecd0'));
+  for (let y = 33; y < H; y++) for (let x = 0; x < W; x++) p.set(x, y, (x * 3 + y) % 7 === 0 ? C('#3e6a34') : y === 33 ? C('#5a8a44') : C('#2c4a2c'));
+  // lápide em volume (luz de cima à esquerda), com o disco gravado e duas flores
+  inked(p, (q) => {
+    volume(q, 18, 4, 28, 31, (x, y) => y >= 9 || (x + 0.5 - 32) ** 2 / 196 + (y + 0.5 - 10) ** 2 / 36 <= 1, C('#a8a4a0'), { r: 3 });
+    discV(q, 32, 17, 6, C('#2a2628'), { spec: true });
+  });
+  p.disc(32, 17, 1.4, C('#f0c040'));
+  p.hline(24, 40, 27, C('#6a6664')); p.hline(26, 38, 30, C('#6a6664'));
+  for (const x of [10, 52]) { p.vline(x, 27, 33, C('#48b85c')); inked(p, (q) => discV(q, x, 26, 2, C('#e04848'))); }
   const cv = upscale(p.canvas(), W * 3, H * 3);
   cv.className = 'ux19-art px';
   cv.setAttribute('role', 'img');
   cv.setAttribute('aria-label', name);
   return cv as unknown as HTMLElement;
 }
+
+/** Para a galeria de arte (capturas). */
+export const eraArt19 = eraArt, tombArt19 = tombArt;
 
 // ---------------------------------------------------------------- utilidades
 const BUSY19 = '.overlay, .scene-overlay, .tour18, aside.tutorial';
@@ -399,7 +413,7 @@ function tryOpening(): void {
   if (!s || openTried.has(s) || s.ended) return;
   if (!openingDue19(s)) { openTried.add(s); return; } // sem tutoriais: só aparece se houver herança a oferecer
   // r27: o cartão do tutorial e as dicas esperam as metas (fila de janelas); só um modal/cena/tour aberto adia
-  if (typeof document === 'undefined' || document.querySelector('.overlay, .scene-overlay, .tour18')) return;
+  if (typeof document === 'undefined' || document.querySelector('.overlay, .scene-overlay, .tour18, .tu5, .tu5-dipback')) return; // R31 onda 5 (TUT): o tutorial guiado vem primeiro
   openTried.add(s);
   openingCard(s);
 }

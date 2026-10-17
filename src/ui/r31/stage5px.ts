@@ -32,7 +32,7 @@ export interface StageOpts5 {
   H?: number;
 }
 
-export interface Actor5 { look: Appearance; role: string | null; pose: Pose; dir: Dir; x: number; y: number; player?: boolean; front?: boolean }
+export interface Actor5 { look: Appearance; role: string | null; pose: Pose; dir: Dir; x: number; y: number; player?: boolean; front?: boolean; /** holograma (2030+): desenhado em ciano translúcido, com linhas e tremido */ holo?: boolean }
 export interface Scene5 {
   W: number; H: number; fy: number; year: number;
   /** céu, horizonte, palco, equipamento, letreiro e lua */
@@ -43,14 +43,18 @@ export interface Scene5 {
   front: Px;
   actors: Actor5[];
   beams: number[];
+  /** bicos de gás da ribalta (1889–1899): chamas que tremulam */
+  lamps: [number, number][];
   /** telões de LED (x, y, w, h) — animados no canvas */
   screens: [number, number, number, number][];
   sign: string;
 }
 
 /** Letreiro da época (fonte do jogo, sem acento). */
-export const sign5 = (year: number, lang: 'pt' | 'en' = 'pt'): string => year < 1930 ? (lang === 'en' ? 'RADIO' : 'RÁDIO') : year < 2005 ? (lang === 'en' ? 'LIVE' : 'AO VIVO') : 'STREAM';
-const signCol5 = (year: number): string => year < 1930 ? '#f0d890' : year < 2005 ? '#ff4fa0' : '#4ff0ff';
+export const sign5 = (year: number, lang: 'pt' | 'en' = 'pt'): string => year < 1900 ? (lang === 'en' ? 'PHONOGRAPH' : 'FONOGRAFO') : year < 1930 ? (lang === 'en' ? 'RADIO' : 'RÁDIO') : year < 2005 ? (lang === 'en' ? 'LIVE' : 'AO VIVO') : year < HOLO5 ? 'STREAM' : 'HOLO';
+const signCol5 = (year: number): string => year < 1900 ? '#e8c890' : year < 1930 ? '#f0d890' : year < 2005 ? '#ff4fa0' : year < HOLO5 ? '#4ff0ff' : '#b88cff';
+/** A partir deste ano a vocalista do palco é um holograma (com projetor no chão). */
+export const HOLO5 = 2030;
 const labelCol5 = (year: number): string => year < 1975 ? '#c0392b' : year < 2005 ? '#f0c040' : '#2ec8c0';
 
 /** Banda da época: [semente, papel, posição relativa, direção]. */
@@ -63,6 +67,22 @@ function band5(year: number): [string, string, number, Dir][] {
 const put = (p: Px, x: number, y: number, c: Col) => p.put(x, y, c);
 
 /** Gramofone numa mesinha (antes do amplificador): caixa de madeira, prato, braço e a corneta de latão. */
+/** Fonógrafo de cilindro (Edison, 1889): caixa de madeira, cilindro de cera e corneta de lata. */
+function phonograph5(p: Px, x: number, fy: number): void {
+  const wood = C('#6a3e22'), wax = C('#b88a4a'), tin = C('#9aa0a8');
+  p.rect(x + 1, fy - 9, 1, 9, lv(wood, 2)); p.rect(x + 12, fy - 9, 1, 9, lv(wood, 2)); // mesinha
+  p.rect(x, fy - 10, 14, 2, lv(wood, 4));
+  for (let yy = fy - 15; yy < fy - 10; yy++) for (let xx = x + 1; xx < x + 13; xx++) put(p, xx, yy, yy === fy - 15 ? lv(wood, 4.4) : xx === x + 1 ? lv(wood, 3.6) : xx === x + 12 ? lv(wood, 2) : wood);
+  for (let xx = x + 3; xx < x + 11; xx++) { put(p, xx, fy - 18, lv(wax, 4)); put(p, xx, fy - 17, wax); put(p, xx, fy - 16, lv(wax, 2)); } // cilindro
+  p.vline(x + 2, fy - 19, fy - 16, lv(tin, 2)); p.vline(x + 11, fy - 19, fy - 16, lv(tin, 2)); // suportes
+  // corneta de lata subindo para o alto, boca virada para a plateia
+  for (let i = 0; i < 11; i++) {
+    const cx = x + 9 - i, top = fy - 19 - Math.round(i * 1.1), r = Math.round(i * 0.4);
+    for (let k = -r; k <= r; k++) put(p, cx, top + k, k < 0 ? lv(tin, 4) : k === r && r ? lv(tin, 2) : tin);
+  }
+  for (let k = -5; k <= 5; k++) put(p, x - 2, fy - 31 + k, lv(tin, k < 0 ? 1.6 : 1.2));
+}
+
 function gramophone5(p: Px, x: number, fy: number): void {
   const wood = C('#7a4a2a'), brass = C('#d8b048');
   p.rect(x + 1, fy - 9, 1, 9, lv(wood, 2)); p.rect(x + 12, fy - 9, 1, 9, lv(wood, 2)); // pernas
@@ -164,6 +184,17 @@ export function scene5(o: StageOpts5): Scene5 {
   P.blit(sky.g, 0, 0);
   // estrelas (fixas por posição)
   for (let i = 0; i < 90; i++) { const x = (i * 97) % W, y = (i * 53) % Math.round(H * 0.35); if (!(P.get(x, y) >>> 24) || noise(x, y, 3) > 0.15) P.put(x, y, C(i % 5 ? '#9aa8d8' : '#ffffff')); }
+  // Paris 1889+: a Torre Eiffel (inaugurada na Exposição de 1889, onde o fonógrafo de Edison fez fila) ao fundo
+  if (cityId === 'paris' && year >= 1889) {
+    const tx = Math.round(W * 0.6), base = Math.round(H * 0.72), th = 58, col = C('#3a3050'), hi = C('#5a4a70');
+    for (let i = 0; i < th; i++) {
+      const y = base - i, f = i / th, half = Math.max(0, Math.round(16 * Math.pow(1 - f, 2.2)));
+      if (i < 12) { const arch = Math.round(Math.sqrt(Math.max(0, 1 - (i / 12) ** 2)) * (half - 3)); for (let x = tx - half; x <= tx + half; x++) if (Math.abs(x - tx) >= arch) P.put(x, y, (x + y) % 3 ? col : hi); }
+      else { P.put(tx - half, y, hi); P.put(tx + half, y, col); for (let x = tx - half + 1; x < tx + half; x++) if ((x + y) % 2 === 0) P.put(x, y, col); }
+      if (i === 12 || i === 30) P.hline(tx - half - 1, tx + half + 1, y, hi);
+    }
+    P.vline(tx, base - th - 6, base - th, hi);
+  }
   // lua de vinil: sulcos, rótulo da cor da época, furo
   const cx = Math.round(W * 0.8), cy = Math.round(H * 0.2), rr = Math.round(H * 0.13);
   discV(P, cx, cy, rr, C('#1c1a24'));
@@ -183,7 +214,7 @@ export function scene5(o: StageOpts5): Scene5 {
   const screens: [number, number, number, number][] = [];
   inked(P, (q) => {
     if (year < 1930) {
-      gramophone5(q, L + 6, fy);
+      if (year < 1900) phonograph5(q, L + 6, fy); else gramophone5(q, L + 6, fy);
       piano5(q, Math.round(W * 0.74), fy, year);
       const bx = Math.round(W * 0.74) + 8, wood = C('#5a3420'); // banquinho do pianista
       q.rect(bx, fy - 6, 11, 2, lv(wood, 4)); q.vline(bx + 1, fy - 4, fy - 1, lv(wood, 2.4)); q.vline(bx + 9, fy - 4, fy - 1, lv(wood, 2));
@@ -215,20 +246,66 @@ export function scene5(o: StageOpts5): Scene5 {
   if (career === 'platform' && year >= 2007) for (let i = 0; i < 9; i++) { const x = Math.round(((i + 0.5) * W) / 9 + noise(i, 1, 5) * 10), y = fy + 8 + Math.round(noise(i, 2, 5) * 6); crowdB.rect(x, y, 3, 4, C('#141418')); crowdB.rect(x, y, 3, 3, C('#9af0ff')); }
   // banda
   const actors: Actor5[] = band5(year).map(([s, role, fx, dir]) => ({ look: randomLook(`home${s}${year}`), role, pose: 'play' as Pose, dir, x: Math.round(W * fx), y: fy }));
+  // 1889–1899: ribalta a gás (bicos com chama) na beira do palco
+  const lamps: [number, number][] = [];
+  if (year < 1900) for (let x = L + 10; x < R - 4; x += 22) { inked(P, (q) => { q.rect(x - 1, fy - 2, 3, 2, C('#6a5a3a')); q.put(x, fy - 3, C('#3a3020')); }); lamps.push([x, fy - 4]); }
+  // hologramas (2030+): a vocal e o guitarrista viram projeções, cada um com o projetor no chão
+  if (year >= HOLO5) for (const a of actors) if (a.role === 'vocal' || a.role === 'guitar') {
+    a.holo = true;
+    inked(P, (q) => { q.rect(a.x - 6, fy - 3, 12, 3, C('#2a2a38')); q.rect(a.x - 3, fy - 4, 6, 1, C('#7af0ff')); });
+  }
   // pianista de costas para a plateia, sentado ao teclado do piano de armário
   if (year < 1930) actors.push({ look: randomLook(`homek1${year}`), role: 'keys', pose: 'sitplay', dir: 'NE', x: Math.round(W * 0.74) + 13, y: fy + 1 });
   // jogador
   const front = new Px(W, H);
   if (o.player) {
-    if (career === 'musician') { const v = actors.find((a) => a.role === 'vocal')!; v.look = o.player; v.player = true; }
+    if (career === 'musician') { const v = actors.find((a) => a.role === 'vocal')!; v.look = o.player; v.player = true; v.holo = false; }
     else if (career === 'studio' || career === 'producer') { inked(front, (q) => foh5(q, Math.round(W * 0.56), fy + 40, year)); actors.push({ look: o.player, role: null, pose: 'stand', dir: 'NW', x: Math.round(W * 0.56) + 13, y: fy + 34, player: true, front: true }); }
     else if (career === 'media') { inked(front, (q) => camera5(q, Math.round(W * 0.2), fy + 40, year)); actors.push({ look: o.player, role: null, pose: 'stand', dir: 'NE', x: Math.round(W * 0.2) - 4, y: fy + 42, player: true, front: true }); }
     else actors.push({ look: o.player, role: null, pose: 'stand', dir: 'SE', x: L + 32, y: fy, player: true });
   }
-  return { W, H, fy, year, base: P, crowd: [crowdA, crowdB], front, actors, beams: [0.3, 0.5, 0.7], screens, sign };
+  return { W, H, fy, year, base: P, crowd: [crowdA, crowdB], front, actors, beams: [0.3, 0.5, 0.7], screens, lamps, sign };
 }
 
 /** Desenho de um quadro (t = número do quadro; 0 = parado). */
+/** Holograma: cone de luz do projetor, figura tingida de ciano/violeta, linhas de varredura que correm, brilho que
+ *  pulsa e, de vez em quando, um tremido de 1–2 px numa faixa. `t` = 0 desenha parado (movimento reduzido). */
+const holoTint5 = new Map<CanvasImageSource, HTMLCanvasElement>();
+function holo5(ctx: CanvasRenderingContext2D, src: CanvasImageSource & { width: number; height: number }, x: number, y: number, fx: number, fy: number, t: number): void {
+  let tint = holoTint5.get(src);
+  if (!tint && typeof document === 'undefined') { ctx.save(); ctx.globalAlpha = 0.85; ctx.drawImage(src, x, y); ctx.restore(); return; } // sem DOM (testes)
+  if (!tint) {
+    tint = document.createElement('canvas'); tint.width = src.width; tint.height = src.height;
+    const g = tint.getContext('2d')!;
+    g.imageSmoothingEnabled = false; g.drawImage(src, 0, 0);
+    // recolore pela luz de cada pixel (mantém contorno e detalhes): escuro = azul fundo, claro = ciano quase branco;
+    // a metade de cima puxa para o violeta
+    const im = g.getImageData(0, 0, tint.width, tint.height), d = im.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (!d[i + 3]) continue;
+      const v = Math.min(1, (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255 * 1.25 + 0.08), top = (i / 4 / tint.width) < tint.height * 0.45 ? 1 : 0;
+      d[i] = Math.round(10 + v * (top ? 190 : 170)); d[i + 1] = Math.round(40 + v * (top ? 180 : 215)); d[i + 2] = Math.round(90 + v * 165);
+    }
+    g.putImageData(im, 0, 0);
+    if (holoTint5.size > 64) holoTint5.clear();
+    holoTint5.set(src, tint);
+  }
+  ctx.save();
+  // cone do projetor
+  ctx.globalAlpha = t ? 0.1 + 0.05 * Math.sin(t * 0.7) : 0.12;
+  ctx.fillStyle = '#7af0ff';
+  const cx = x + src.width / 2; ctx.beginPath(); ctx.moveTo(fx - 3, fy - 3); ctx.lineTo(cx - 8, y + 2); ctx.lineTo(cx + 8, y + 2); ctx.lineTo(fx + 3, fy - 3); ctx.closePath(); ctx.fill();
+  // figura inteira em ciano, brilho que pulsa, linha de varredura que sobe e, de vez em quando, um tremido de 2 px
+  ctx.globalAlpha = t ? 0.8 + 0.15 * Math.abs(Math.sin(t * 0.45)) : 0.9;
+  const jump = t && t % 23 < 2 ? (t % 2 ? 2 : -2) : 0;
+  ctx.drawImage(tint, x + jump, y);
+  if (t) {
+    const r = src.height - 1 - ((t * 2) % (src.height + 6));
+    if (r >= 0) { ctx.globalAlpha = 0.9; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(tint, 0, r, src.width, 1, x + jump, y + r, src.width, 1); }
+  }
+  ctx.restore();
+}
+
 export function paintScene5(ctx: CanvasRenderingContext2D, sc: Scene5, t = 0, cache?: Map<Px, CanvasImageSource>): void {
   const img = (p: Px): CanvasImageSource => { const hit = cache?.get(p); if (hit) return hit; const c = p.canvas(); cache?.set(p, c); return c; };
   const { W, fy } = sc;
@@ -241,6 +318,13 @@ export function paintScene5(ctx: CanvasRenderingContext2D, sc: Scene5, t = 0, ca
     ctx.fillStyle = i % 6 === 0 ? '#ff4fa0' : i % 6 === 2 ? '#4ff0ff' : '#7a5af0';
     ctx.fillRect(x + i, y + h - v, 1, v);
   }
+  // chamas da ribalta a gás: tremulam e mudam de tom
+  sc.lamps.forEach(([x, y], i) => {
+    const k = (t + i * 3) % 5, hgt = k === 0 ? 3 : 2;
+    ctx.fillStyle = k % 2 ? '#ffd27a' : '#ffb040'; ctx.fillRect(x, y - hgt + 1, 1, hgt);
+    ctx.fillStyle = '#fff4c0'; ctx.fillRect(x, y, 1, 1);
+    ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#ffc060'; ctx.fillRect(x - 3, y - 4, 7, 6); ctx.restore();
+  });
   // fachos de luz (balançam devagar)
   ctx.save();
   ctx.globalAlpha = 0.14;
@@ -251,7 +335,11 @@ export function paintScene5(ctx: CanvasRenderingContext2D, sc: Scene5, t = 0, ca
   });
   ctx.restore();
   const frame = t ? Math.floor(t / 2) % 4 : 1;
-  const draw = (a: Actor5) => { const sp = avatarSprite(a.look, { year: sc.year, role: a.role as never, pose: a.pose, dir: a.dir, frame: a.pose === 'play' ? frame : 0 }); ctx.drawImage(sp.c, a.x - sp.ax, a.y - sp.ay); };
+  const draw = (a: Actor5) => {
+    const sp = avatarSprite(a.look, { year: sc.year, role: a.role as never, pose: a.pose, dir: a.dir, frame: a.pose === 'play' ? frame : 0 });
+    if (a.holo) return holo5(ctx, sp.c, a.x - sp.ax, a.y - sp.ay, a.x, a.y, t);
+    ctx.drawImage(sp.c, a.x - sp.ax, a.y - sp.ay);
+  };
   for (const a of sc.actors) if (!a.front) draw(a);
   // plateia: as fileiras sobem 1 px em quadros alternados (pulando no ritmo)
   ctx.drawImage(img(sc.crowd[0]), 0, t && (t >> 1) % 2 ? -1 : 0);

@@ -28,8 +28,11 @@ import { charDefaults29, lookFor29, refreshChar29 } from '../ps/char29model';
 import { CAREER_SHORT27, careerOpen27, clampYear27, quickDefaults27 } from '../ps/home27model';
 import { ERAS5, PRIMARY5, SIZES5, SIZE_NAME5, TRAITS5, durOf5, histOn5, quickRun5Config, realOn5, story5, yearsOfDur5, type Dur5, type QuickRun5 } from './newrun5model';
 import { logo5, mountStage5 } from './stage5ui';
+import { tut5Enabled } from './tut5entry'; // R31 onda 5 (TUT): chave "Tutorial guiado" (só com exp5.tut)
 import './newrun5.css';
 
+/** Chave "Tutorial guiado" do começo rápido (desligada por padrão; não vai para a ficha nem para o código de run). */
+const tutQ5: { on: boolean } = { on: false };
 /** A última ficha (o botão "Começo rápido" da configuração completa volta para ela). */
 let last5: QuickRun5 | null = null;
 const top5 = () => { try { window.scrollTo(0, 0); } catch { /* sem janela */ } };
@@ -236,6 +239,7 @@ export function quickRun5Screen(root: HTMLElement, onStart: () => void, q0?: Qui
   };
   const real = sw('real', l('Nomes reais (artistas, gravadoras, obras)', 'Real names (acts, labels, works)'), () => realOn5(quickRun5Config(q)), (v) => { q.real5 = v; });
   const hist = sw('hist', l('Mundo segue a história real', 'World follows real history'), () => histOn5(quickRun5Config(q)), (v) => { q.hist5 = v; });
+  const tut = tut5Enabled() ? sw('tut', l('Tutorial guiado (mentor da época)', 'Guided tutorial (era mentor)'), () => !!tutQ5.on, (v) => { tutQ5.on = v; }) : null;
 
   // ---- começar
   let busy = false;
@@ -243,7 +247,7 @@ export function quickRun5Screen(root: HTMLElement, onStart: () => void, q0?: Qui
     if (busy) return;
     busy = true; err.textContent = ''; go.disabled = true; go.textContent = t(l('Gerando seu mundo…', 'Generating your world…'));
     setTimeout(() => {
-      try { launchRun27(quickRun5Config(q), onStart); } catch (e) {
+      try { const cfg = quickRun5Config(q); if (tutQ5.on && tut5Enabled()) cfg.tut5 = { from: 'quick' }; launchRun27(cfg, onStart); } catch (e) {
         console.error(e);
         busy = false; go.disabled = false; go.textContent = goLabel();
         err.textContent = t(l('Não foi possível gerar o mundo ({e}). Suas escolhas continuam; tente de novo.', 'Could not generate the world ({e}). Your choices are kept; try again.'), { e: String((e as Error)?.message ?? e).slice(0, 120) });
@@ -274,6 +278,7 @@ export function quickRun5Screen(root: HTMLElement, onStart: () => void, q0?: Qui
       h('div', null, lab('6', S.difficulty), diff.el),
       h('div', null, lab('7', l('Duração', 'Length')), durBox)),
     h('div', { class: 'n5-2 n5-blk' }, real, hist),
+    tut ? h('div', { class: 'n5-blk' }, tut) : null,
     err,
     go,
     h('div', { class: 'n5-links' },

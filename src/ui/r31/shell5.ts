@@ -52,7 +52,7 @@ export interface Shell5Host {
 
 interface Paper5State { obj: string; marker: Open5 }
 /** Estado da casca (só interface; não vai para o save). */
-export const SH5: { region: Region5; paper: Paper5State | null; pause: boolean; help: boolean; flash?: string; house: number; rebind?: string } = {
+export const SH5: { region: Region5; paper: Paper5State | null; pause: boolean; help: boolean; flash?: string; house: number; rebind?: string; /** região de onde se chegou clicando na cena (cidade da sede aberta do mapa-múndi): Esc volta a ela */ cameFrom?: Region5; /** recados abertos (escolha do jogador); sem escolha, recolhem sozinhos quando cobririam a sede */ rcOpen?: boolean } = {
   region: 'sede', paper: null, pause: false, help: false, house: 0,
 };
 
@@ -97,12 +97,27 @@ const rectOf5 = (id: string): TransRect | undefined => {
 };
 type TransRect = { x: number; y: number; w: number; h: number };
 
-/** Viagem (botões de baixo, ⇧1…4, H). */
-export function travel5go(r: Region5): void {
+/** Um nível abaixo dentro de uma região (ex.: cidade de outro país visitada dentro do Mundo). Quem desenha a região
+ *  registra aqui o rótulo do nível de cima (undefined = já está no topo) e como subir. */
+export const UP5: Partial<Record<Region5, { label: () => L | undefined; go: () => void }>> = {};
+/** Para onde Esc/Backspace/"◂" sobem agora: o nível de cima da região ou a região de onde se veio pela cena. */
+export function up5(): { label: L; go: () => void } | undefined {
+  const u = UP5[SH5.region];
+  const lb = u?.label();
+  if (u && lb) return { label: lb, go: u.go };
+  const from = SH5.cameFrom;
+  return from && from !== SH5.region ? { label: REGION_L5[from], go: () => travel5go(from) } : undefined;
+}
+
+/** Viagem (botões de baixo, ⇧1…4, H). Viajar para a região em que já se está sobe ao topo dela (⇧4 na cidade visitada
+ *  = mapa-múndi). `from` = viagem pedida por um clique na cena (Esc volta para lá). */
+export function travel5go(r: Region5, from?: 'scene'): void {
   const s = game();
   if (!s) return;
+  if (r === SH5.region && !SH5.paper) { const u = UP5[r]; if (u?.label()) { u.go(); return; } }
+  const came = from === 'scene' && SH5.region !== r ? SH5.region : undefined;
   TRANS5.run({ kind: 'travel', from: SH5.region, to: r, year: s.year }, () => {
-    SH5.region = r; SH5.paper = null; SH5.pause = false; SH5.help = false; SH5.flash = undefined;
+    SH5.region = r; SH5.paper = null; SH5.pause = false; SH5.help = false; SH5.flash = undefined; SH5.cameFrom = came;
     const to = travelTarget5(s, r);
     if (to.tab) setTab(to.tab[0], to.tab[1]); // POL5: Mundo volta sempre ao mapa (não à última aba aberta da página)
     store.area = to.area as typeof store.area;
@@ -113,14 +128,13 @@ export function travel5go(r: Region5): void {
 /** Esc: fecha a ajuda, a pausa ou o papel; sem nada aberto, abre a pausa. */
 export function esc5(): void {
   if (SH5.rebind) { SH5.rebind = undefined; redraw(); return; }
-  const pops = typeof document !== 'undefined' ? [...document.querySelectorAll<HTMLElement>('.s5-pop:not([hidden])')] : [];
+  const pops = typeof document !== 'undefined' ? [...document.querySelectorAll<HTMLElement>('.s5-pop:not([hidden]), .b5-drawer:not([hidden]), .m5-ccard:not([hidden])')] : [];
   if (pops.length) { for (const x of pops) x.hidden = true; return; } // lista da sala aberta: Esc só fecha a lista
   if (SH5.help) { SH5.help = false; redraw(); return; }
   if (SH5.pause) { SH5.pause = false; redraw(); return; }
   if (SH5.paper) { closePaper5(); return; }
-  // QA5: cidade visitada pelo mundo (ou o cartão dela) — Esc volta ao mapa-múndi (o teclado do mapa só ouvia com o foco nele)
-  const visitBack = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.app5 [data-esc5], .app5 .m5-visit .m5-vhead button') : null;
-  if (visitBack) { visitBack.click(); return; }
+  const up = up5();
+  if (up) { up.go(); return; } // cidade visitada → mundo (um nível) antes da pausa
   SH5.pause = true; redraw();
 }
 export function closePaper5(): void {
@@ -178,6 +192,7 @@ export function shellKey5(e: KeyboardEvent): boolean {
   if (SH5.pause || SH5.help) return false;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { HOST?.save(); return true; }
   if (c === '{' || c === '}') return markerStep5(c === '}' ? 1 : -1);
+  if (e.key === 'Backspace' && !SH5.paper) { const up = up5(); if (up) { up.go(); return true; } }
   if (c === 'tab') return !e.defaultPrevented && house5(); // na casa, o chaveiro da CASA (casa5) já tratou o Tab
   return false;
 }
@@ -185,7 +200,6 @@ export function shellKey5(e: KeyboardEvent): boolean {
 // ---------------------------------------------------------------- ganchos e teclado (uma vez)
 
 let installed = false;
-let pinCard5: string | undefined;
 /** Liga a casca aos ganchos de nav5 (só agem com exp5.nav ligado) e o Alt (mostrar nomes) e a troca de teclas. */
 export function install5(host: Shell5Host): void {
   HOST = host;
@@ -202,8 +216,9 @@ export function install5(host: Shell5Host): void {
     if (e.key === 'Alt') { alt(true); if (document.querySelector('.app5')) e.preventDefault(); }
   }, true);
   window.addEventListener('keyup', (e) => { if (e.key === 'Alt') alt(false); });
-  // QA5: o clique fora fecha o cartão de ações no pointerdown; guarda qual estava aberto para o "+ fixar"
-  window.addEventListener('pointerdown', (e) => { if ((e.target as Element | null)?.closest?.('.b5-pin')) pinCard5 = document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card; }, true);
+  // o cartão de ações (ACOES5) fecha no apertar fora (captura no document); a janela vê antes e guarda qual estava aberto
+  window.addEventListener('pointerdown', (e) => { if ((e.target as HTMLElement | null)?.closest?.('.b5-pin')) cardAtDown5 = document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card; }, true);
+  document.addEventListener('click', (e) => { const t0 = e.target as HTMLElement | null; if (!t0?.closest('.b5-pinw, .b5-drawer')) document.querySelectorAll<HTMLElement>('.b5-drawer').forEach((x) => { x.hidden = true; }); }); // gaveta do "+ fixar" fecha ao clicar fora
   window.addEventListener('blur', () => alt(false));
 }
 
@@ -223,18 +238,18 @@ function doRebind(e: KeyboardEvent): void {
 function topBar5(s: GameState, host: Shell5Host): HTMLElement {
   const rep = s.player.reputation;
   const fame = Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4);
-  const hint = (k: string, label: L, on: () => void) => h('button', { type: 'button', class: 't5-k', onclick: on }, kbd5(k), h('span', null, t(label)));
+  const hint = (k: string, label: L, on: () => void, id?: string) => h('button', { type: 'button', class: 't5-k', 'data-t5': id, onclick: on }, kbd5(k), h('span', null, t(label)));
   return h('header', { class: 't5' },
     h('b', { class: 't5-brand' }, s.config.companyName || t(l('Seu selo', 'Your label'))),
-    h('span', { class: 't5-chip' }, dateLabel(s)),
-    h('span', { class: 't5-chip' }, `${t(l('Caixa', 'Cash'))} `, h('b', { class: s.player.cash < 0 ? 'bad' : 'gold' }, $(s.player.cash))),
-    h('span', { class: 't5-chip', title: t(l('Fama', 'Fame')) }, `★ ${fame}`),
+    h('span', { class: 't5-chip', 'data-t5': 'date' }, dateLabel(s)),
+    h('span', { class: 't5-chip', 'data-t5': 'cash' }, `${t(l('Caixa', 'Cash'))} `, h('b', { class: s.player.cash < 0 ? 'bad' : 'gold' }, $(s.player.cash))),
+    h('span', { class: 't5-chip', 'data-t5': 'fame', title: t(l('Fama', 'Fame')) }, `★ ${fame}`),
     host.saveChip(),
     h('span', { class: 't5-sp' }),
     hint('Ctrl K', l('buscar', 'search'), host.search),
-    hint('?', l('teclas', 'keys'), help5),
+    hint('?', l('teclas', 'keys'), help5, 'help'),
     hint(chordLabel5(key5('sys:home')?.chord ?? 'h'), l('sede', 'HQ'), () => travel5go('sede')),
-    hint('Esc', l('pausa', 'pause'), esc5),
+    hint('Esc', l('pausa', 'pause'), esc5, 'pause'),
     h('div', { class: 't5-adv' },
       h('button', { type: 'button', class: 't5-go', title: 'Ctrl+Enter', onclick: () => { SH5.paper = null; host.advance(); } }, '▶ ', t(l('Avançar mês', 'Advance month')), s.decisions.length ? raw5('i', 'bg5', String(s.decisions.length)) : null),
       host.advMore()));
@@ -242,26 +257,32 @@ function topBar5(s: GameState, host: Shell5Host): HTMLElement {
 
 // ---------------------------------------------------------------- barra de baixo: viagem + bolso
 
+let cardAtDown5: string | undefined;
+
 function bottom5(s: GameState): HTMLElement {
   const tr = travel5(s);
   const cur = SH5.region;
   const pocket = pocketView5(s);
   const pinned = new Set(pocketIds5(s));
-  // QA5: "+ fixar" fixa o papel aberto ou o objeto do cartão de ações aberto; sem nada aberto, diz o que fazer (antes ficava apagado)
-  const pinTarget = (): string | undefined => {
-    const card = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card : undefined;
-    const id = SH5.paper?.obj ?? card ?? pinCard5;
-    pinCard5 = undefined;
-    return id && object5(id) ? id : undefined;
-  };
-  const pinBtn = h('button', { type: 'button', class: 'b5-pin',
-    title: t(l('Fixar no bolso o objeto aberto (papel ou cartão)', 'Pin the open object (paper or card) to the pocket')),
-    onclick: () => {
-      const id = pinTarget();
-      if (!id) { toast(t(l('Clique num objeto e depois em "+ fixar" para guardá-lo no bolso.', 'Click an object, then "+ pin" to keep it in the pocket.')), 'info'); return; }
-      if (pinned.has(id)) { toast(t(l('Já está no bolso.', 'Already in the pocket.')), 'info'); return; }
-      const why = pin5(s, id); if (why) toast(t(why), 'bad'); redraw();
-    } }, `+ ${t(l('fixar', 'pin'))}`);
+  const canPin = !!SH5.paper && !!object5(SH5.paper.obj) && !pinned.has(SH5.paper.obj);
+  // "+ fixar" sempre clicável: com papel aberto fixa ele; sem papel, abre a gaveta com os objetos deste lugar
+  const full = pocket.length >= POCKET_MAX5;
+  const here = objects5().filter((o) => !o.career && !isPlace5(o) && regionOf5(o.place) === SH5.region && !pinned.has(o.id));
+  const drawer = h('div', { class: 'b5-drawer', hidden: true, role: 'menu', 'aria-label': t(l('Fixar no bolso', 'Pin to pocket')) },
+    h('b', { class: 'b5-dh' }, t(l('Fixar no bolso', 'Pin to pocket')), h('small', null, ` · ${tl5(REGION_L5[SH5.region])}`)),
+    here.length ? h('ul', null, ...here.map((o) => h('li', null, h('button', { type: 'button', role: 'menuitem', 'data-pin5': o.id, onclick: () => { const why = pin5(s, o.id); if (why) toast(t(why), 'bad'); else toast(t(l('{o} no bolso.', '{o} in the pocket.'), { o: tl5(o.label) }), 'good'); redraw(); } },
+      kbd5(chordLabel5(key5(`obj:${o.id}`)?.chord ?? '')), txt5(tl5(o.label)))))) : h('p', { class: 'muted' }, t(l('Todos os objetos daqui já estão no bolso.', 'Every object here is already in the pocket.'))));
+  const pinBtn = h('button', { type: 'button', class: `b5-pin${full ? ' full' : ''}`, 'aria-haspopup': canPin ? undefined : 'menu',
+    title: full ? t(l('O bolso está cheio (8). Tire um objeto (×) antes.', 'The pocket is full (8). Remove one (×) first.')) : canPin ? t(l('Fixar o papel aberto no bolso', 'Pin the open paper to the pocket')) : t(l('Escolher um objeto deste lugar para fixar', 'Pick an object from this place to pin')),
+    onclick: (e: Event) => {
+      if (full) { toast(t(l('O bolso está cheio (8). Tire um objeto (×) antes de fixar outro.', 'The pocket is full (8). Remove one (×) before pinning another.')), 'bad'); return; }
+      if (canPin && SH5.paper) { const why = pin5(s, SH5.paper.obj); if (why) toast(t(why), 'bad'); redraw(); return; }
+      // cartão de ações aberto (ACOES5): fixa o objeto do cartão
+      const card = cardAtDown5 ?? (typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card : undefined); cardAtDown5 = undefined;
+      if (card && object5(card) && !pinned.has(card)) { const why = pin5(s, card); if (why) toast(t(why), 'bad'); else toast(t(l('{o} no bolso.', '{o} in the pocket.'), { o: tl5(object5(card)!.label) }), 'good'); redraw(); return; }
+      e.stopPropagation(); drawer.hidden = !drawer.hidden;
+      if (!drawer.hidden) { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); drawer.style.left = `${Math.max(8, Math.min(r.left, (window.innerWidth || 1280) - 316))}px`; drawer.style.bottom = `${(window.innerHeight || 800) - r.top + 8}px`; }
+    } }, `+ ${t(l('fixar', 'pin'))}`, full ? h('small', null, ' 8/8') : null);
   return h('footer', { class: 'b5' },
     h('nav', { class: 'b5-travel', 'aria-label': t(l('Viagem', 'Travel')) }, ...tr.map((x, i) => {
       const on = x.id === cur && !SH5.paper;
@@ -275,7 +296,8 @@ function bottom5(s: GameState): HTMLElement {
       ...pocket.map((p) => h('span', { class: `b5-pi${SH5.paper?.obj === p.id ? ' on' : ''}` },
         h('button', { type: 'button', class: 'b5-pb', 'data-pocket': p.id, onclick: () => open5(p.id) }, kbd5(p.key ? chordLabel5(p.key) : ''), txt5(tl5(p.label)), p.bang ? raw5('i', 'bg5', String(p.bang)) : null),
         h('button', { type: 'button', class: 'b5-px', title: t(l('Tirar do bolso', 'Remove from pocket')), 'aria-label': `${t(l('Tirar do bolso', 'Remove from pocket'))}: ${tl5(p.label)}`, onclick: () => { pin5(s, p.id); redraw(); } }, '×'))),
-      pocket.length < POCKET_MAX5 ? pinBtn : null));
+      h('span', { class: 'b5-pinw' }, pinBtn)),
+    drawer); // a gaveta fica fora da faixa do bolso (que corta o que passa da altura)
 }
 
 // ---------------------------------------------------------------- recados (secretária eletrônica)
@@ -287,8 +309,12 @@ function recados5(s: GameState): HTMLElement {
   const sec = object5('secretaria');
   const form = sec?.forms?.find((f) => s.year >= f.era[0] && s.year <= f.era[1]);
   const head = form ? tl5(form.label) : t(l('Recados', 'Messages'));
-  return h('aside', { class: 'rc5', 'aria-label': head },
-    h('button', { type: 'button', class: 'rc5-h', onclick: () => open5('secretaria'), title: `${head} (${chordLabel5(key5('obj:secretaria')?.chord ?? '')})` }, t(l('Recados', 'Messages')), h('small', null, ` · ${head}`)),
+  const tog = h('button', { type: 'button', class: 'rc5-tog', 'aria-expanded': SH5.rcOpen === false ? 'false' : 'true',
+    title: t(l('Recolher / abrir os recados', 'Collapse / expand messages')), onclick: (e: Event) => { const el = (e.currentTarget as HTMLElement).closest('.rc5')!; const min = !el.classList.contains('min'); el.classList.toggle('min', min); SH5.rcOpen = !min; } },
+    raw5('span', 'rc5-n', String(xs.length)), raw5('span', 'rc5-ch', '▾'));
+  return h('aside', { class: `rc5${SH5.rcOpen === false ? ' min' : ''}`, 'aria-label': head },
+    h('div', { class: 'rc5-top' },
+      h('button', { type: 'button', class: 'rc5-h', onclick: () => open5('secretaria'), title: `${head} (${chordLabel5(key5('obj:secretaria')?.chord ?? '')})` }, t(l('Recados', 'Messages')), h('small', null, ` · ${head}`)), tog),
     xs.length ? h('ul', null, ...xs.map((p) => {
       const g = resolveGoto5(s, p);
       const who = p.personId ? s.persons[p.personId] : undefined;
@@ -307,9 +333,16 @@ function recados5(s: GameState): HTMLElement {
 function region5(s: GameState, host: Shell5Host, bangs: Record<string, number>): HTMLElement {
   const r = SH5.region;
   if (r === 'sede') {
-    return h('div', { class: 'reg5 reg5-sede' },
-      sedeScene5({ s, bangs, open: clickOpen5, flash: SH5.flash }),
-      recados5(s));
+    const rc = recados5(s);
+    const reg = h('div', { class: 'reg5 reg5-sede' }, sedeScene5({ s, bangs, open: clickOpen5, flash: SH5.flash }), rc);
+    // janela baixa/estreita: se os recados cobririam a sede (salas, objetos), viram uma aba recolhida (clique abre)
+    if (SH5.rcOpen === undefined && typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(() => {
+      if (!rc.isConnected) return;
+      const r = rc.getBoundingClientRect();
+      const hit = [...reg.querySelectorAll<HTMLElement>('.s5-roomw, .s5-obj, .s5-lock')].some((x) => { const q = x.getBoundingClientRect(); return q.width > 0 && q.left < r.right && q.right > r.left && q.top < r.bottom && q.bottom > r.top; });
+      rc.classList.toggle('min', hit);
+    });
+    return reg;
   }
   const old = () => host.page(travelTarget5(s, r).area);
   const reg = regionOfR5(r);
@@ -317,7 +350,27 @@ function region5(s: GameState, host: Shell5Host, bangs: Record<string, number>):
   if (reg) {
     try { el = reg({ s, region: r, open: (id, m) => open5(id, m), goto: (x) => goto5(s, x), travel: travel5go, rerender: redraw, bangs, old }); } catch (e) { console.error('[nav5] região', r, e); el = null; }
   }
-  return h('div', { class: `reg5 reg5-${r}` }, el ?? h('div', { class: 'reg5-old page21-host' },
+  // o mapa-múndi da região se ajusta à altura que sobra (map.ts), sem rolar a região
+  el?.querySelectorAll('.wmap-stage').forEach((x) => x.classList.add('wmap-fit5'));
+  // casa larga que encolheu para caber: os rótulos (tamanho fixo) se encavalariam; ficam para o passar do mouse e o Alt
+  if (r === 'casa' && el && typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(() => {
+    const v = el!.querySelector<HTMLElement>('.r5-view');
+    if (v) el!.classList.toggle('r5-tight', v.getBoundingClientRect().height < 300);
+    const sc = el!.querySelector<HTMLElement>('.r5-scroll');
+    if (sc && sc.scrollWidth > sc.clientWidth + 4 && !sc.parentElement?.querySelector('.r5-pg')) {
+      const wrap = h('div', { class: 'r5-pgw', style: 'position:relative' });
+      sc.replaceWith(wrap); wrap.append(sc);
+      const step = (d: number) => sc.scrollBy({ left: d * sc.clientWidth * 0.8 });
+      const l0 = h('button', { type: 'button', class: 'r5-pg l', 'aria-label': t(l('Cômodo à esquerda', 'Room to the left')), onclick: () => step(-1) }, '◂');
+      const r0 = h('button', { type: 'button', class: 'r5-pg r', 'aria-label': t(l('Cômodo à direita', 'Room to the right')), onclick: () => step(1) }, '▸');
+      const upd = () => { l0.disabled = sc.scrollLeft < 4; r0.disabled = sc.scrollLeft > sc.scrollWidth - sc.clientWidth - 4; };
+      sc.addEventListener('scroll', upd); upd();
+      wrap.append(l0, r0);
+    }
+  });
+  const up = up5();
+  const upBtn = up ? h('button', { type: 'button', class: 'up5', title: `${tl5(up.label)} (Esc)`, onclick: () => up.go() }, raw5('span', 'up5-a', '◂'), txt5(tl5(up.label)), kbd5('Esc')) : null;
+  return h('div', { class: `reg5 reg5-${r}${up ? ' has-up5' : ''}` }, upBtn, el ?? h('div', { class: 'reg5-old page21-host' },
     h('div', { class: 's5-where' }, h('b', null, tl5(REGION_L5[r])), ` · ${s.year}`),
     old()));
 }
@@ -363,7 +416,7 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
   const head = h('div', { class: 'p5-head' },
     h('span', { class: 'p5-ttl' }, h('h1', { class: 'p5-t' }, txt5(title)), h('small', { class: 'p5-sub' }, txt5(sub))),
     h('span', { class: 't5-sp' }),
-    o ? h('button', { type: 'button', class: `p5-pin${pinned ? ' on' : ''}`, onclick: () => { pin5(s, o.id); redraw(); } }, pinned ? t(l('no bolso ✓', 'in pocket ✓')) : `+ ${t(l('fixar no bolso', 'pin to pocket'))}`) : null,
+    o ? h('button', { type: 'button', class: `p5-pin${pinned ? ' on' : ''}`, title: pinned ? t(l('Tirar do bolso', 'Remove from pocket')) : t(l('Fixar no bolso', 'Pin to pocket')), onclick: () => { const why = pin5(s, o.id); if (why) toast(t(why), 'bad'); redraw(); } }, pinned ? t(l('no bolso ✓', 'in pocket ✓')) : `+ ${t(l('fixar no bolso', 'pin to pocket'))}`) : null,
     h('button', { type: 'button', class: 'p5-x', onclick: closePaper5 }, kbd5('Esc'), t(l('fechar', 'close'))));
   const tabs = h('nav', { class: 'p5-tabs', role: 'tablist', 'aria-label': t(l('Marcadores', 'Markers')) }, ...ms.map((m) => {
     const on = sameMark(m, p.marker);

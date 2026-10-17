@@ -13,13 +13,17 @@ import { getLang, t } from '../../i18n/strings';
 import type { GameState } from '../../sim/types';
 import { nav5On } from '../../sim/r31/exp5';
 import { registerRegion5 } from './nav5';
-import { SH5, shell5On, show5, travel5go } from './shell5';
+import { SH5, UP5, shell5On, show5, travel5go } from './shell5';
+import { TRANS5 } from './nav5';
+import { paper5Canvas, paper5Px } from '../pixel/exp5paper';
+import { travelQuote } from '../../sim/sys/mapx8';
+import { playerActs } from '../../sim/util';
 import { buildScene18, drawFrame18, env18 } from '../pixel/campus18px';
 import { mapLms27 } from '../pixel/city27';
 import { skylineThumbImg29 } from '../pixel/geo29';
 import { LOTS18, DIST18 } from '../../sim/sys/campus18';
 import { citySheet27, type Go27 } from '../sys/mundo27model';
-import { genreName, pill, rerender } from '../common';
+import { $, N as fmtN, genreName, pill, rerender } from '../common';
 import { h } from '../dom';
 import { registerArea } from '../registry';
 import { store } from '../store';
@@ -61,7 +65,7 @@ function goArea5(area: string): void {
   const s = store.game;
   if (s && shell5On(s)) {
     const r = area === 'campus18' ? 'cidade' : area === 'world' || area === CITY_AREA5 ? 'mundo' : null;
-    if (r) { if (SH5.region === r) rerender(); else travel5go(r); return; }
+    if (r) { if (SH5.region === r) rerender(); else travel5go(r, 'scene'); return; } // 'scene': Esc volta à região de onde se veio
     show5(area); return;
   }
   (store as { area: string }).area = area; rerender();
@@ -77,10 +81,53 @@ export function pointWorld5(s: GameState, key: string, city?: string): void {
   WORLD5.want = cc ? { lon: cc.lon, lat: cc.lat, span: 14 } : c ? { lon: c.lon, lat: c.lat, span: c.span } : undefined;
   goArea5('world');
 }
-/** Clicar numa cidade do mundo: a da sede abre "Nosso mundo"; as outras, o mapa daquela cidade. */
-export function openCityMap5(s: GameState, id: string): void {
+/** Entra na cidade (depois do cartão): a da sede abre "Nosso mundo"; as outras, o mapa daquela cidade, com a viagem. */
+export function enterCity5(s: GameState, id: string): void {
+  document.querySelectorAll('.m5-ccard').forEach((x) => x.remove());
   if (id === s.config.homeCity) { goArea5('campus18'); return; }
-  WORLD5.city = id; goArea5(CITY_AREA5);
+  const go = () => { WORLD5.city = id; goArea5(CITY_AREA5); };
+  if (shell5On(s)) TRANS5.run({ kind: 'travel', from: 'mundo', to: 'cidade', year: s.year }, go); else go();
+}
+/** Clicar numa cidade do mundo (ou na lista do país): com a casca nova abre primeiro o CARTÃO da cidade (pedido do dono);
+ *  "Ir para a cidade" entra. Sem a casca, entra direto como sempre. */
+export function openCityMap5(s: GameState, id: string): void {
+  if (!shell5On(s)) { enterCity5(s, id); return; }
+  cityCard5(s, id);
+}
+
+/** Cartão da cidade em pixel (papel de ficha): país, público e mercado da época, gêneros em alta, casas, rádios e
+ *  festivais, seus artistas e fãs lá, custo e tempo de viagem da sua cidade. Só leitura. */
+export function cityCard5(s: GameState, id: string): HTMLElement | null {
+  const sh = citySheet27(s, id);
+  if (!sh) return null;
+  document.querySelectorAll('.m5-ccard').forEach((x) => x.remove());
+  let q: ReturnType<typeof travelQuote> | undefined;
+  try { q = id === s.config.homeCity ? undefined : travelQuote(s, id); } catch { q = undefined; }
+  const mine = playerActs(s).map((a) => s.acts[a]).filter((a) => a && a.city === id && a.status !== 'retired');
+  const row = (k: L, v: Node | string | null) => (v ? h('div', { class: 'm5-cc-r' }, h('b', null, T(k)), h('span', null, v)) : null);
+  const list = (xs: string[]) => (xs.length ? xs.join(' · ') : null);
+  const close = () => card.remove();
+  const W = 230, H = 190;
+  const bg = paper5Canvas(paper5Px('form', W, H, { seed: 3 }), 2); bg.className = 'm5-cc-bg px';
+  const card = h('div', { class: 'm5-ccard', role: 'dialog', 'aria-label': T(sh.name), 'data-m5': 'ccard', 'data-city': id, onkeydown: (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } } },
+    bg,
+    h('div', { class: 'm5-cc-in' },
+      h('header', { class: 'm5-cc-h' }, h('h3', null, T(sh.name)), h('small', null, `${T(sh.country)}${sh.market ? ` · ${T(sh.market)}` : ''} · ${s.year}`)),
+      h('div', { class: 'm5-cc-b' },
+        row(l('Público', 'Audience'), sh.audience.popM !== undefined ? `${fmtN(Math.round(sh.audience.popM))} mi ${T(l('no país', 'in the country'))}${sh.audience.marketM !== undefined ? ` · ${T(l('mercado', 'market'))} ${fmtN(Math.round(sh.audience.marketM))} mi` : ''}` : null),
+        row(l('Em alta', 'Hot'), list(sh.scene.genres.map((g) => `${genreName(g.id)}${g.hot ? ' ▲' : ''}`)) ?? list(sh.scene.native.map(genreName))),
+        row(l('Casas de show', 'Venues'), list(sh.venues.map((v) => v.name))),
+        row(l('Rádios e TV', 'Radio and TV'), list(sh.radios.map((r) => r.name))),
+        row(l('Festivais', 'Festivals'), list(sh.festivals)),
+        row(l('Seus lá', 'Yours there'), mine.length || sh.audience.yourFans ? `${mine.length ? `${mine.map((a) => a!.name).join(', ')} · ` : ''}${fmtN(sh.audience.yourFans)} ${T(l('fãs seus', 'of your fans'))}${sh.audience.distributes ? ` · ${T(l('você distribui aqui', 'you distribute here'))}` : ''}` : T(l('ninguém seu ainda', 'nobody of yours yet'))),
+        row(l('Viagem', 'Trip'), id === s.config.homeCity ? T(l('é a sua cidade', 'it is your city')) : q ? `${$(q.cost)} · ${q.days} ${T(l('dias', 'days'))}${q.visa ? ` · ${T(l('visto', 'visa'))}` : ''}` : null),
+        sh.closed.length ? h('p', { class: 'm5-cc-x' }, sh.closed.map((x) => T(x)).join(' ')) : null),
+      h('div', { class: 'm5-cc-act' },
+        h('button', { type: 'button', class: 'm5-cc-go', 'data-m5': 'cgo', onclick: () => enterCity5(s, id) }, T(l('Ir para a cidade', 'Go to the city')), ' ▸'),
+        h('button', { type: 'button', class: 'm5-cc-x2', onclick: close }, h('kbd', { class: 'kb5' }, 'Esc'), ' ', T(l('Fechar', 'Close'))))));
+  (document.querySelector('.reg5-mundo') ?? document.querySelector('main') ?? document.body).append(card);
+  queueMicrotask(() => card.querySelector<HTMLElement>('.m5-cc-go')?.focus({ preventScroll: true }));
+  return card;
 }
 
 registerFind5('cidade', (s, q) => find5(s, q).filter((x) => x.region === 'cidade').map((x) => ({
@@ -94,6 +141,11 @@ registerFind5('mundo', (s, q) => find5(s, q).filter((x) => x.region === 'mundo')
 // com exp5.nav ligado já vem sem lista. Registrar devolve essa página; a casca põe topo, viagem e bolso em volta.
 registerRegion5('cidade', (c) => c.old());
 registerRegion5('mundo', (c) => (WORLD5.city ? visitCity5(c.s, WORLD5.city) : c.old())); // cidade de outro país = o mapa dela, dentro do Mundo
+// Um nível acima da cidade visitada é o mapa-múndi (botão "◂ Mundo", Esc/Backspace e ⇧4 na casca)
+UP5.mundo = {
+  label: () => (WORLD5.city ? l('Mundo', 'World') : undefined),
+  go: () => { const s = store.game; const id = WORLD5.city; WORLD5.city = undefined; if (s && id) { WORLD5.country = country5(s, id)?.id; WORLD5.focus = WORLD5.country; } rerender(); },
+};
 
 // ---------------------------------------------------------------- cidade: placas, "!", teclado, apontar
 
