@@ -1842,11 +1842,11 @@ const TILES: Record<string, TileF> = {
   w_acoustic: (x, y, m) => { const u = x % 8, v = y % 8, k = Math.max(Math.abs(u - 3.5), Math.abs(v - 3.5)); const c = m.fab2; return k > 3 ? lv(c, 0.8) : u < v ? lv(c, 2) : lv(c, 3.6); },
   w_white_matte: (x, y) => { const n = noise(x, y, 341); return n > 0.92 ? C('#e6e4de') : n < 0.05 ? C('#f8f7f4') : C('#f2f1ec'); },
   w_concrete: (x, y) => paintAt(6, x, y),
-  w_led_paint: (x, y, m) => (x % 8 === 0 || y % 8 === 0 ? lv(m.acc, 4.4) : (x + y) % 16 < 8 ? C('#d0d4d8') : C('#c4c8ce')),
+  w_led_paint: (x, y) => (x === 0 ? C('#a8acb4') : y === 15 && x > 1 && x < 15 ? C('#bfe8f0') : y === 0 ? C('#e4e8ec') : mix(C('#d4d8dc'), C('#c4c8ce'), y / 16)), // painéis grandes com filete de luz embaixo
   g_parquet: (x, y) => floorAt(0, x, y),
   g_mosaic: (x, y) => { const u = x % 8, v = y % 8; if (u === 0 || v === 0) return C('#d8d0c0'); const r = Math.hypot(u - 4, v - 4); return r < 1.5 ? C('#c83a32') : Math.abs(u - v) < 1 || Math.abs(u + v - 8) < 1 ? C('#2a5a8a') : C('#e8dcc0'); },
   g_terrazzo: (x, y) => { const n = noise(x, y, 351); return x % 16 === 0 || y % 16 === 0 ? C('#c09048') : n > 0.9 ? C('#2a2a30') : n < 0.08 ? C('#a8584a') : C('#e6dcc8'); },
-  g_checker: (x, y) => (x % 8 === 0 && y % 8 === 0 ? C('#8a8a90') : (Math.floor(x / 8) + Math.floor(y / 8)) % 2 ? ((x + y) % 7 === 0 ? C('#2e2e36') : C('#1e1e24')) : C('#f0ece4')),
+  g_checker: (x, y) => { const k = (Math.floor(x / 4) + Math.floor(y / 4)) % 2, edge = x % 4 === 0 || y % 4 === 0; return k ? (edge ? C('#34343c') : C('#24242a')) : (edge ? C('#d8d2c6') : (x + y) % 9 === 0 ? W : C('#ece6da')); }, // ladrilho 4×4 com rejunte (escala do boneco)
   g_shag: (x, y) => floorAt(3, x, y),
   g_disco_floor: (x, y) => { const k = (Math.floor(x / 8) + Math.floor(y / 8) * 3) % 4; const c = [C('#ff5ab0'), C('#5ae0ff'), C('#f0e040'), C('#a06aff')][k]; return x % 8 === 0 || y % 8 === 0 ? C('#1a1a24') : (x % 8 === 1 || y % 8 === 1) ? lv(c, 5) : c; },
   g_grey_carpet: (x, y) => { const n = noise(x, y, 361); return n > 0.9 ? C('#8a8c94') : n > 0.55 ? C('#7a7c84') : C('#6a6c74'); },
@@ -2219,3 +2219,60 @@ export function upgPx(id: string, year: number, o: { cond?: DCond; lit?: boolean
 }
 /** Todos os modelos de upgrade, na ordem do catálogo. */
 export const UPG_IDS: string[] = UPG31.map((u) => u.id);
+
+// ---------------------------------------------------------------- enfeites fixos das cenas (casa da onda 5)
+
+/** Criado-mudo da época com abajur em cima. */
+function nightstand(d: Dc): void {
+  const { p, s, m, lit, w, h } = d, fl = h - 1, top = fl - 11;
+  const c = s === 4 ? W : s === 7 ? C('#2a2c34') : s === 6 ? m.wood : s === 1 ? BLACK : m.wood;
+  blk(p, 0, top, w, 3, c); blk(p, 1, top + 3, w - 2, fl - top - 4, lv(c, s === 4 ? 4 : 2.4)); p.hline(2, w - 3, top + 6, lv(c, 1.6)); p.put(w / 2, top + 5, m.metal);
+  if (s === 2 || s === 6) { p.line(1, fl - 2, 0, fl, m.wood2); p.line(w - 2, fl - 2, w - 1, fl, m.wood2); } else { p.rect(1, fl - 1, 2, 2, lv(c, 1)); p.rect(w - 3, fl - 1, 2, 2, lv(c, 1)); }
+  const cx = w / 2, sh = [C('#e8c8a0'), C('#f0e8d8'), m.acc, m.fab, m.fab2, C('#e8dcc0'), W, C('#c8ccd8')][s];
+  if (s === 7) { ball(p, cx, top - 3, 2.5, lit ? C('#f8f0ff') : sh); glow(d, cx, top - 3, 4, C('#ff9ae0')); return; }
+  p.vline(cx, top - 4, top - 1, m.metal); p.poly([[cx - 4, top - 4], [cx + 4, top - 4], [cx + 2.5, top - 9], [cx - 2.5, top - 9]], lit ? lv(sh, 4.6) : sh); glow(d, cx, top - 4, 5);
+}
+/** Cadeira da escrivaninha da época. */
+function deskChair(d: Dc): void {
+  const { p, s, m, h } = d, fl = h - 1;
+  if (s <= 2) { const c = s === 2 ? m.wood : m.wood2; blk(p, 1, 0, 2, fl - 8, c); for (let y = 2; y < fl - 10; y += 3) p.hline(1, 6, y, c); p.vline(6, 1, fl - 9, c); blk(p, 0, fl - 9, 9, 2, c); p.vline(1, fl - 7, fl, c); p.vline(7, fl - 7, fl, c); return; }
+  const seat = [0, 0, 0, C('#d8782a'), C('#26262c'), C('#3a4a5a'), W, C('#2a2c34')][s];
+  blk(p, 0, 0, 6, fl - 9, seat); blk(p, 0, fl - 9, 9, 3, seat); p.vline(4, fl - 6, fl - 2, s === 3 ? CHROME : DGREY); p.hline(0, 8, fl - 1, s === 3 ? CHROME : DGREY); p.put(0, fl, BLACK); p.put(8, fl, BLACK);
+}
+/** Móvel baixo sob a janela (aparador/rack da época). */
+function lowUnit(d: Dc): void { cabinet({ ...d, s: d.s <= 2 ? d.s : d.s === 3 ? 0 : d.s === 4 ? 1 : 2 }); }
+/** TV/rádio da época para a sala. */
+function sceneTv(d: Dc): void {
+  const s = d.s;
+  if (s <= 1) { cathedral(d); return; }
+  if (s <= 3) { tv50(d); return; }
+  if (s <= 5) { vcrTv(d); return; }
+  flatTv(d);
+}
+export type SceneDeco = 'coat' | 'lamp' | 'night' | 'chair' | 'crate' | 'tv' | 'low' | 'plant' | 'couch' | 'curtain' | 'picture';
+const SCENE: Record<SceneDeco, { f: (d: Dc) => void; w: number; h: number }> = {
+  coat: { f: coatstand, w: 12, h: 34 }, lamp: { f: floorlamp, w: 10, h: 34 }, night: { f: nightstand, w: 12, h: 20 }, chair: { f: deskChair, w: 9, h: 20 },
+  crate: { f: recordbin, w: 18, h: 13 }, tv: { f: sceneTv, w: 22, h: 26 }, low: { f: lowUnit, w: 38, h: 14 }, plant: { f: bigplant, w: 16, h: 28 },
+  couch: { f: sofa, w: 48, h: 20 }, curtain: { f: curtain, w: 56, h: 36 }, picture: { f: painting, w: 26, h: 18 },
+};
+const cacheS = new Map<string, Px>();
+/**
+ * Enfeite fixo de cena na arte da DECO-A, no estilo da época do ano (cabideiro, abajur, criado-mudo, cadeira, caixote de
+ * discos, TV, rack, planta, sofá, cortina, quadro), com margem DPAD. `w`/`h` trocam o tamanho padrão (cortina e quadro
+ * seguem a janela e a moldura da cena). Cortina: os painéis ficam nas laterais, o meio fica livre para a vista.
+ */
+export function sceneDecoPx(kind: SceneDeco, year: number, o: { w?: number; h?: number; lit?: boolean } = {}): Px {
+  const e = styOf(year), def = SCENE[kind], w = o.w ?? def.w, h = o.h ?? def.h, lit = o.lit ?? true;
+  const key = `${kind}|${e}|${w}x${h}|${lit ? 1 : 0}`;
+  const hit = cacheS.get(key);
+  if (hit) return hit;
+  // cortina: variantes só de painéis laterais (as que usam o vão DWIN trocam por drapeado da época)
+  const v = kind === 'curtain' ? [0, 1, 2, 3, 4, 2, 6, 6][e] : kind === 'plant' ? [0, 1, 2, 3, 4, 5, 6, 7][e] : e;
+  const layer = new Px(w, h), fx = new Px(w, h);
+  def.f({ p: layer, fx, s: v, m: M[e], e, lit, w, h, name: '' });
+  const out = new Px(w + 2 * DPAD, h + 2 * DPAD);
+  out.blit(layer, DPAD, DPAD); out.outline(INK); out.blit(fx, DPAD, DPAD);
+  if (cacheS.size > 300) cacheS.clear();
+  cacheS.set(key, out);
+  return out;
+}
