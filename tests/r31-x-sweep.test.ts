@@ -10,7 +10,8 @@ import { FICTION31 } from '../src/data/fiction31';
 import { CUR31 } from '../src/data/cur31';
 import { POP31 } from '../src/data/pop31';
 import { homage31 } from '../src/data/homage31';
-import { disp31, setDisplay31 } from '../src/data/realdisp31';
+import { disp31, notEntity31, setDisplay31 } from '../src/data/realdisp31';
+import { UI_INTEXT31, UI_WHOLE31 } from '../src/data/uiwords31';
 import { allRealNames31, keep31, realPairsOff31, realShown31, setRealShown31, syncRealShow31 } from '../src/sim/r31/realshow31';
 import { REAL_ALL, realDataOf } from '../src/sim/sys/realworld';
 import { REAL_ACTS } from '../src/data/realnames';
@@ -49,7 +50,7 @@ describe('X · varredura de nomes reais', () => {
 
   it('família Fossati nunca é trocada', () => {
     const p = realPairsOff31();
-    setDisplay31(p.names, p.titles);
+    setDisplay31(p.names, p.titles, p.keep);
     for (const n of ['Efro Fossati', 'Lucia Fossati', 'Sonia Fossati', 'Antonella Fossati', 'Para Efro, Lucia, Antonella e Sonia']) expect(disp31(n)).toBe(n);
     setDisplay31([], []);
   });
@@ -80,6 +81,8 @@ describe('X · varredura de nomes reais', () => {
       setRealShown31(s, false);
       expect(realShown31(s)).toBe(false);
       const names = realPairsOff31().names.map(([a]) => a);
+      // R31 (NOMES): número, sigla de 1–2 caracteres e palavra da interface nunca trocam (homônimo não protegível)
+      const ui = (x: string) => notEntity31(x) || UI_WHOLE31.includes(x.trim());
       const leaks: string[] = [];
       let checked = 0;
       for (const a of Object.values(s.acts)) {
@@ -88,10 +91,10 @@ describe('X · varredura de nomes reais', () => {
         if (keep31(real)) continue; // lugar, tecla ou número ("Chicago", "883"): o interruptor não troca
         checked++;
         const shown = disp31(a.name);
-        if (shown === real) leaks.push(`ato ${real}`);
+        if (shown === real && !ui(real)) leaks.push(`ato ${real}`);
         for (const pid of a.members) {
           const pn = s.persons[pid]?.name;
-          if (pn && disp31(pn) === pn && names.includes(pn)) leaks.push(`integrante ${pn}`);
+          if (pn && disp31(pn) === pn && names.includes(pn) && !ui(pn) && !UI_INTEXT31.includes(pn)) leaks.push(`integrante ${pn}`);
         }
       }
       for (const r of Object.values(s.releases)) {
@@ -100,10 +103,10 @@ describe('X · varredura de nomes reais', () => {
         if (keep31(r.title)) continue; // "1984", "Berlin", "V": ano, lugar ou letra na tela
         const shown = disp31(r.title);
         const realAct = realDataOf(a);
-        if (realAct?.al?.some((x) => x[0] === r.title) && shown === r.title) leaks.push(`disco ${r.title}`);
+        if (realAct?.al?.some((x) => x[0] === r.title) && shown === r.title && !ui(r.title)) leaks.push(`disco ${r.title}`);
       }
       // frase com nomes reais em qualquer ponto
-      const sample = names.slice(0, 400);
+      const sample = names.filter((n) => !UI_INTEXT31.includes(n) && !ui(n)).slice(0, 400);
       for (const n of sample) { const out = disp31(`Hoje, ${n} lançou um disco.`); if (words(out, n)) leaks.push(`frase ${n}`); }
       expect(checked).toBeGreaterThan(5);
       expect(leaks.slice(0, 20)).toEqual([]);

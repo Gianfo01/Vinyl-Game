@@ -27,7 +27,7 @@ import { quickRun5Screen } from './newrun5';
 import './home5.css';
 
 /** Épocas e cidades da vitrine quando não há partida salva (sorteio só de interface). */
-export const SHOW5: [number, string][] = [[1905, 'rio'], [1927, 'chicago'], [1956, 'memphis'], [1962, 'london'], [1967, 'san_francisco'], [1977, 'new_york'], [1984, 'london'], [1995, 'rio'], [2008, 'sao_paulo'], [2025, 'new_york'], [2032, 'tokyo']];
+export const SHOW5: [number, string][] = [[1889, 'paris'], [1905, 'rio'], [1927, 'chicago'], [1956, 'memphis'], [1962, 'london'], [1967, 'san_francisco'], [1977, 'new_york'], [1984, 'london'], [1995, 'rio'], [2008, 'sao_paulo'], [2025, 'new_york'], [2032, 'tokyo'], [2036, 'seoul'], [2040, 'los_angeles']];
 const monthName = (m: number) => new Date(2000, m, 1).toLocaleString(locale(), { month: 'short' });
 const top5 = () => { try { window.scrollTo(0, 0); } catch { /* sem janela */ } };
 
