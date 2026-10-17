@@ -19,6 +19,7 @@ import { festivalSlot, gigEstimate } from './live';
 import { grantPlayerContract } from './worldgen';
 import { MORE_EVENTS } from './events_more';
 import { MORE_EVENTS_11 } from './events_more11';
+import { MUNDO33_EVENTS } from './r33/mundo33';
 import { narrate, narratorPace } from './narrator13';
 import { scandal } from './scandal17';
 import { allReleases17 } from './relidx17';
@@ -809,6 +810,7 @@ export const EVENTS: EventDef[] = [
   },
   ...MORE_EVENTS,
   ...MORE_EVENTS_11,
+  ...MUNDO33_EVENTS, // r33 MUNDO: cartões atrás de exp33.crise/exp33.censura (desligados)
 ];
 
 function mergeLabelsSync(s: GameState, buyer: string, target: string): void {
