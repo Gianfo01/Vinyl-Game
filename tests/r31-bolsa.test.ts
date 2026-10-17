@@ -51,10 +51,14 @@ describe('r31 E · valor por empresa', () => {
     // dívida do rival: o valor cai exatamente a dívida (nada mais reage a ela)
     const b = clone(s);
     const w0 = companyValue31(b, lb.id);
-    b.labels[lb.id].debt = (b.labels[lb.id].debt ?? 0) + 3e8;
+    // QA33: a dívida é metade do valor do rival (antes 3e8 fixos; o rival desta semente passou a valer ~1,5e8 com as bases
+    // da R31 e a dívida fixa batia no piso de liquidação, que é outra regra)
+    const D = Math.round(w0.total / 2);
+    b.labels[lb.id].debt = (b.labels[lb.id].debt ?? 0) + D;
     const w1 = companyValue31(b, lb.id);
-    expect(w0.total - w1.total).toBe(3e8);
-    expect(part(w0, 'debt') - part(w1, 'debt')).toBe(3e8);
+    expect(w1.parts.some((p) => p.k === 'floor')).toBe(false);
+    expect(w0.total - w1.total).toBe(D);
+    expect(part(w0, 'debt') - part(w1, 'debt')).toBe(D);
   });
 
   it('sobe com hit e com contrato longo de estrela', () => {
