@@ -1,4 +1,4 @@
-// R33 · POL33-A itens 4 e 5 — MERCH E ITENS EXCLUSIVOS PELO SISTEMA DE RELÍQUIAS (`exp33.pol.merch`, desligado no código).
+// R33 · POL33-A itens 4 e 5 — MERCH E ITENS EXCLUSIVOS PELO SISTEMA DE RELÍQUIAS (`exp33.pol.merch`, ligado por padrão desde 17/10, pedido do dono).
 // Desligado: nada daqui roda (o gancho mensal sai na 1ª linha; o estado só nasce numa ação do jogador).
 // Ligado, cada peça é uma `Relic` de sim/sys/relics9 (dono registrado, valor em dólar real, tipo com desenho próprio em
 // relic28, níveis e história pelo relic31, vitrine/leilão/garantia pelo relic33), comprada ou ganha em:
@@ -33,7 +33,7 @@ import './int1'; // o INT-1 registra o seu `INT33.acts/run` primeiro: o merch en
 
 export const SW_MERCH33 = 'exp33.pol.merch';
 registerSwitch({
-  id: SW_MERCH33, def: false, scope: 'game',
+  id: SW_MERCH33, def: true, scope: 'game',
   desc: l('R33 POL · merch e itens exclusivos pelo sistema de relíquias (festival, casas, lojas, estádio, museu, aeroporto), marca própria, banca na turnê, pirataria, vitrine para a rua e colecionadores rivais.',
     'R33 POL · merch and exclusive items through the relic system (festival, venues, shops, stadium, museum, airport), own label, tour stand, bootlegs, street window and rival collectors.'),
 });

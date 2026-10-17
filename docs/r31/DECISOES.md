@@ -765,3 +765,6 @@ antes desta frente (conferido com `git stash`).
 - **Ficou para depois / limites.** Clube de jazz, boate e estádio compram merch pelo hub/cartão do bar, não pelo interior próprio do
   INT-2 (a tabela de ações do INT-2 é fixa); aeroporto e museu só pelo hub. Os 30 pontos de outdoor só aparecem em lote comum:
   numa cidade pequena (1962, só o centro) são cerca de 8. Prints dos outdoors com campanha sua dependem de artista no elenco.
+
+## R33 · outdoors e merch ligados por padrão (17/10)
+- O dono pediu: `exp33.pol.outdoors` e `exp33.pol.merch` passam a nascer ligados na versão 33 (antes desligados no código). Goldens r27-p2a/p2b/m3 e r16-playbot não mudaram; os testes "desligado" agora desligam o interruptor explicitamente.

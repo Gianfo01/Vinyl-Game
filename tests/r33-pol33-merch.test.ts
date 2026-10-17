@@ -17,9 +17,10 @@ const game = (seed: string, year = 1990): GameState => createGame(defaultConfig(
 const WH = Object.keys(WHERE33) as Where33[];
 
 describe('R33 POL33-A · merch', () => {
-  it('nasce desligado: sem ofertas, sem estado e o mês passa igual', () => {
-    expect(switchDef(SW_MERCH33)?.def).toBe(false);
+  it('nasce ligado; desligado: sem ofertas, sem estado e o mês passa igual', () => {
+    expect(switchDef(SW_MERCH33)?.def).toBe(true);
     const s = game('mc-off');
+    setSw(s, SW_MERCH33, false);
     expect(merchOn(s)).toBe(false);
     for (const w of WH) expect(offers33(s, w)).toEqual([]);
     advanceMonth(s);

@@ -1,4 +1,4 @@
-// R33 · POL33-A item 3 — OUTDOORS ESPALHADOS, ALUGUEL E COMPRA (`exp33.pol.outdoors`, desligado no código).
+// R33 · POL33-A item 3 — OUTDOORS ESPALHADOS, ALUGUEL E COMPRA (`exp33.pol.outdoors`, ligado por padrão desde 17/10, pedido do dono).
 // Desligado: nada daqui roda (o gancho mensal sai na 1ª linha, o estado só nasce numa ação do jogador) e o mapa mostra os
 // outdoors de sempre (`billboards31`). Ligado:
 //  · 18 PONTOS fixos pela cidade (avenida, esquina, estação, beira-rio, casas de show, centro financeiro, estádio,
@@ -24,7 +24,7 @@ import { billboards31, type Billboard31 } from '../r31/city31';
 
 export const SW_OUT33 = 'exp33.pol.outdoors';
 registerSwitch({
-  id: SW_OUT33, def: false, scope: 'game',
+  id: SW_OUT33, def: true, scope: 'game',
   desc: l('R33 POL · outdoors espalhados pela cidade com aluguel por meses e compra (renda alugando a terceiros) e anúncio pago na rádio e na TV.',
     'R33 POL · billboards spread across the city with monthly rental and purchase (income by renting to others), plus paid radio and TV spots.'),
 });

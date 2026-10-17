@@ -17,9 +17,10 @@ const game = (seed: string, year = 1962): GameState => createGame(defaultConfig(
 const freeSite = (s: GameState): string => SITES33.find((x) => s.year >= x.from && slot33(s, x).who === 'free')!.id;
 
 describe('R33 POL33-A · outdoors', () => {
-  it('nasce desligado: nada de estado, sem pontos no mapa e a ação trava com motivo', () => {
-    expect(switchDef(SW_OUT33)?.def).toBe(false);
+  it('nasce ligado; desligado: nada de estado, sem pontos no mapa e a ação trava com motivo', () => {
+    expect(switchDef(SW_OUT33)?.def).toBe(true);
     const s = game('ob-off');
+    setSw(s, SW_OUT33, false);
     expect(outOn(s)).toBe(false);
     expect(boards33(s, new Set(SITES33.map((x) => `fl:${x.lot}`)))).toEqual([]);
     expect(rentSite33(s, 'avenida', 1)).toBeTruthy();
