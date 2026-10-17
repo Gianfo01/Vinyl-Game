@@ -243,15 +243,15 @@ export function tripOptions33(s: GameState): TripOpt33[] {
 }
 export const tripNow33 = (s: GameState): Trip33 | undefined => (vida33(s) as Vida33 & { trip?: Trip33 }).trip;
 /** Viagem de lazer a um destino do mapa: paga do bolso, 3 semanas de férias, alivia o estresse pela distância. */
-export function takeTrip33(s: GameState, cityId: string): L | null {
+export function takeTrip33(s: GameState, cityId: string, paid = false): L | null { // QA33: `paid` = a estação de trem já cobrou
   if (!on(s, SW33.rotina)) return l('Viagens de lazer estão desligadas.', 'Leisure trips are switched off.');
   const o = ownerP(s);
   if (!o) return l('Sem dono.', 'No owner.');
   if (o.vacationUntil && o.vacationUntil > s.week) return l('Já está de férias.', 'Already on vacation.');
   const opt = tripOptions33(s).find((x) => x.city === cityId);
   if (!opt) return l('Destino indisponível este mês.', 'Destination not available this month.');
-  if (o.wealth < opt.cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  purse(s, -opt.cost, 'leisure', 'trip33', { who: o });
+  if (!paid && o.wealth < opt.cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
+  if (!paid) purse(s, -opt.cost, 'leisure', 'trip33', { who: o });
   o.vacationUntil = s.week + 3;
   o.stress = clamp01(o.stress - opt.relief);
   o.health = clamp01(o.health + 2);

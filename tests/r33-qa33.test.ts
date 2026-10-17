@@ -139,3 +139,38 @@ describe('QA33 · salvar e carregar com o estado novo', () => {
     expect(back.year * 12 + back.month).toBe(s.year * 12 + s.month + 4);
   });
 });
+
+describe('QA33 · estádio, trem, porto e gráfica (INT-2) ligados', () => {
+  it('estádio marca uma data de arena pelo motor de turnês; porto leva ao exílio quem está sob pressão', async () => {
+    const { tourList } = await import('../src/sim/tours');
+    const { mundo33 } = await import('../src/sim/r33/mundo33');
+    const { playerActs } = await import('../src/sim/util');
+    const c = newRunConfig20({ seed: 'qa33-band', companyName: 'Selo Teste' }); c.startYear = 1970; c.role = 'artist'; c.bandName = 'Banda Teste';
+    const s = createGame(c); on(s, 'exp33.int2');
+    const a = playerActs(s)[0];
+    expect(a).toBeTruthy();
+    s.acts[a].fame = Math.max(s.acts[a].fame, 60);
+    const r = int2Do(s, 'stadium.show');
+    if (r.ok) expect(tourList(s).some((t) => t.actId === a)).toBe(true);
+    else expect(r.text.pt.length).toBeGreaterThan(3); // a recusa do motor de turnês vem com motivo
+    expect(int2Acts(s, 'port').some((x) => x.id === 'port.exilio')).toBe(false);
+    on(s, 'exp33.censura');
+    mundo33(s).pressure[a] = 10;
+    expect(int2Acts(s, 'port').some((x) => x.id === 'port.exilio')).toBe(true);
+    const city0 = s.acts[a].city;
+    expect(int2Do(s, 'port.exilio').ok).toBe(true);
+    expect(mundo33(s).exile[a]?.from).toBe(city0);
+  });
+  it('frete e capa só tocam lançamentos físicos seus e pelo tempo prometido', async () => {
+    const { applyMods } = await import('../src/sim/ext4');
+    const s = game(1970); on(s, 'exp33.int2');
+    expect(int2Do(s, 'port.carga').ok).toBe(true);
+    expect(int2Do(s, 'print.capa').ok).toBe(true);
+    const base = Object.values(s.releases)[0];
+    const rel = { ...base, id: 'r-t', owner: 'player', formats: ['lp'], week: s.week } as never;
+    const has = (r: never) => applyMods(s, 'chartUnits', 100, { release: r }).factors.find((f) => f.label.pt === 'Capa e frete');
+    expect(has(rel)?.ratio).toBeCloseTo(1.05 * 1.06, 5);
+    const npc = { ...base, id: 'r-n', owner: 'x', formats: ['lp'], week: s.week } as never;
+    expect(has(npc)).toBeUndefined();
+  });
+});

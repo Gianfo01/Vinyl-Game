@@ -205,7 +205,7 @@ const ACTS: Record<Int2Id, ActDef[]> = {
     A('retiro', 'Internação de descanso (você)', 'Rest cure (you)', 'Dois meses longe do escritório: saúde +20 e estresse −30.', 'Two months away from the office: health +20 and stress −30.', { cost: 6000, cd: 26, hidden: true }),
   ],
   stadium: [
-    A('show', 'Reservar show de estádio', 'Book a stadium show', 'Uma noite para multidões: reputação comercial sobe.', 'A night for crowds: commercial reputation rises.', { cost: 5000, rep: ['commercial', 0.8], cd: 12 }),
+    A('show', 'Reservar show de estádio', 'Book a stadium show', 'Uma data de arena para o seu artista mais famoso, pelo motor de turnês.', 'An arena date for your most famous act, via the touring engine.', { cost: 5000, rep: ['commercial', 0.8], cd: 12 }),
     A('jogo', 'Ver o jogo da cidade', 'Watch the city match', 'Uma tarde de arquibancada: estresse menor.', 'An afternoon in the stands: lower stress.', { cost: 40, stress: -4, cd: 2 }),
   ],
   jazz: [
@@ -245,7 +245,7 @@ const ACTS: Record<Int2Id, ActDef[]> = {
     A('visitar', 'Passar o dia no festival', 'Spend the day at the festival', 'Um dia na grama, ouvindo música: estresse menor.', 'A day on the grass listening to music: lower stress.', { cost: 40, stress: -4, cd: 2 }),
   ],
   print: [
-    A('capa', 'Encomendar capa melhor', 'Order a better cover', 'Arte de capa feita por um artista gráfico: prestígio artístico.', 'Cover art by a graphic artist: artistic prestige.', { cost: 700, rep: ['artistic', 0.4], cd: 8 }),
+    A('capa', 'Encomendar capa melhor', 'Order a better cover', 'Arte de capa feita por um artista gráfico: o disco físico vende mais.', 'Cover art by a graphic artist: the physical record sells more.', { cost: 700, rep: ['artistic', 0.4], cd: 8 }),
     A('cartaz', 'Imprimir cartazes', 'Print posters', 'Cartazes para a cidade: fama comercial.', 'Posters for the city: commercial fame.', { cost: 150, rep: ['commercial', 0.2], cd: 4 }),
   ],
   pirate: [
@@ -254,11 +254,12 @@ const ACTS: Record<Int2Id, ActDef[]> = {
   ],
   station: [
     A('viagem', 'Viajar de trem', 'Take the train', 'Uma viagem longa e calma: estresse menor.', 'A long calm trip: lower stress.', { cost: 150, stress: -4, cd: 4 }),
-    A('bagagem', 'Despachar discos pelo trem', 'Ship records by rail', 'Frete ferroviário de discos para outras cidades: fama comercial.', 'Rail freight of records to other cities: commercial fame.', { cost: 250, rep: ['commercial', 0.2], cd: 6 }),
+    A('bagagem', 'Despachar discos pelo trem', 'Ship records by rail', 'Frete ferroviário de discos para outras cidades: vendas físicas sobem por 8 semanas.', 'Rail freight of records to other cities: physical sales rise for 8 weeks.', { cost: 250, rep: ['commercial', 0.2], cd: 6 }),
   ],
   port: [
     A('embarque', 'Passagem de navio', 'Ship passage', 'Travessia de navio: estresse menor (viagem lenta antes do avião).', 'A sea crossing: lower stress (slow travel before the plane).', { cost: 400, stress: -3, cd: 6 }),
-    A('carga', 'Despachar discos pelo mar', 'Export records by sea', 'Exportação de discos: fama comercial.', 'Exporting records: commercial fame.', { cost: 300, rep: ['commercial', 0.2], cd: 6 }),
+    A('exilio', 'Embarcar para o exílio', 'Sail into exile', 'Um artista seu sob pressão do regime parte de navio; volta quando o regime cair.', 'One of your acts under regime pressure leaves by ship; returns when the regime falls.', { cost: 900, cd: 26, hidden: true }),
+    A('carga', 'Despachar discos pelo mar', 'Export records by sea', 'Exportação de discos: vendas físicas sobem por 8 semanas.', 'Exporting records: physical sales rise for 8 weeks.', { cost: 300, rep: ['commercial', 0.2], cd: 6 }),
   ],
 };
 export const int2ActDefs = (id: Int2Id): { id: string; label: L }[] => ACTS[id].map((a) => ({ id: a.id, label: a.label }));

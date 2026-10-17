@@ -13,14 +13,17 @@
 
 import { clamp } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { registerSimHook } from '../ext4';
+import { registerMod, registerSimHook } from '../ext4';
+import { FORMATS } from '../../data/rules';
+import { tourList } from '../tours';
+import { bookRoutedTour } from '../sys/route8';
 import { oldRel19 } from '../sys/revival19';
 import { LOTS18 } from '../sys/campus18';
 import { ownsLot31 } from '../sys/lots31';
 import { ownerOf } from '../sys/people/owner';
 import { releasesNow27 } from '../tickcache27';
 import type { GameState } from '../types';
-import { fmtL, money, nextId, post } from '../util';
+import { fmtL, money, nextId, playerActs, post } from '../util';
 import { registerBot33 } from './bots33';
 import { FCW33, LOAN_X33 } from './hooks33';
 import { on33, peek33 } from './cat33';
@@ -30,12 +33,12 @@ import { INT2, INT2_BLOCK, INT2_HOOKS, INT2_NOW, INT2_WHEN, int2Acts, int2Do, in
 import { INT2P27, npcName27, type Place27 } from '../sys/place27';
 import { learnWidth33 } from './learn33';
 import { lotFor33, mapaOn33, setWant33 } from './mapa33';
-import { creditCrisis33, crise33On, memes33On } from './mundo33';
+import { creditCrisis33, crise33On, exileAct33, exileCand33, memes33On } from './mundo33';
 import { setCatalogSurge33 } from './pessoas33';
 import { collateral33, pledge33, seize33, unpledge33 } from './relic33';
 import { resurface33, resurfaced33, tribute33 } from './resurf33';
 import { caseOdds33, openCases33, openReqs33, answerReq33, resolveCase33 } from './sample33';
-import { SW33 as VIDA33, setRoutine33, treatOwner33, vida33 } from './vida33';
+import { SW33 as VIDA33, setRoutine33, takeTrip33, treatOwner33, tripOptions33, vida33 } from './vida33';
 import { sw } from '../r31/switches';
 
 const ok = (text: L): Int2Res => ({ ok: true, text });
@@ -224,3 +227,71 @@ export function int2FestPlace33(s: GameState): Place27 | null {
   return { id: FEST_PL33, lot: -1, k: 'int2', int2: 'festival', name: t.name, what: int2What('festival', s.year), owner, ownerK: 'npc', now: int2Now(s, 'festival'),
     people: [{ name: owner, role: r0, staff: true, job: 0 }, { name: npcName27(s, 'i2fest|1'), role: r1, staff: true, job: 1 }], also: [], src: 'fill', draw: 'fest' };
 }
+
+// ================================================================ estádio, trem, porto e gráfica (INT-2) → turnês, MUNDO, VIDA, físico
+
+/** Estado pequeno das ligações (só nasce quando uma ação usa): capa melhor por lançamento e frete até a semana. */
+interface Lig33 { cover: Record<string, number>; freight: number; fmult: number }
+const lig = (s: GameState): Lig33 => { const x = s.x4 as unknown as { lig33?: Lig33 }; return (x.lig33 ??= { cover: {}, freight: 0, fmult: 1 }); };
+const peekLig = (s: GameState): Lig33 | undefined => (s.x4 as unknown as { lig33?: Lig33 }).lig33;
+const physicalFmt = (f: string): boolean => !!FORMATS.find((x) => x.id === f)?.physical;
+const freeAct = (s: GameState) => playerActs(s).map((id) => s.acts[id]).filter((a) => a && a.status !== 'retired' && a.status !== 'split' && !a.deceased)
+  .filter((a) => !tourList(s).some((t) => t.actId === a.id && (t.status === 'planned' || t.status === 'running'))).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1))[0];
+
+/** Estádio → turnês: uma data de arena na cidade, pelo motor de turnês (bilheteria, cachê e fãs de verdade). */
+INT2_HOOKS['stadium.show'] = (s) => {
+  const a = freeAct(s);
+  if (!a) return null; // sem artista livre: o efeito simples (reputação)
+  const r = bookRoutedTour(s, a.id, [s.config.homeCity], { format: 'arena', fee: 1, split: 1, support: 1, rider: 1, intensity: 'normal', price: 1 }, 21, `Estádio — ${a.name}`);
+  return 'tourId' in r ? ok(fmtL(l('{a} vai lotar o estádio daqui a 3 semanas (bilheteria e fãs pelo motor de turnês).', '{a} will play the stadium in 3 weeks (door and fans via the touring engine).'), { a: a.name })) : no(r);
+};
+
+/** Porto → MUNDO: com a censura ligada, o artista seu sob pressão do regime embarca para o exílio. */
+INT2_WHEN['port.exilio'] = (s) => !!exileCand33(s);
+INT2_HOOKS['port.exilio'] = (s) => {
+  const id = exileCand33(s);
+  if (!id) return no(l('Ninguém seu está sob pressão do regime.', 'None of yours is under regime pressure.'));
+  const e = exileAct33(s, id);
+  return e ? no(e) : ok(fmtL(l('{a} embarca para o exílio: volta quando o regime cair, como símbolo.', '{a} sails into exile: returns when the regime falls, as a symbol.'), { a: s.acts[id]?.name ?? '?' }));
+};
+
+/** Trem → VIDA: a viagem de trem é a viagem de lazer do mês (destino sorteado, férias curtas). */
+INT2_HOOKS['station.viagem'] = (s) => {
+  if (!vidaOn(s, 'rotina')) return null;
+  const o = tripOptions33(s)[0];
+  if (!o) return null;
+  const e = takeTrip33(s, o.city, true);
+  return e ? no(e) : ok(fmtL(l('Você embarca no trem para {c}: três semanas fora e menos estresse.', 'You take the train to {c}: three weeks away and less stress.'), { c: o.name }));
+};
+
+/** Trem e porto → MUNDO: frete de discos dá fôlego às vendas físicas por 8 semanas; em crise o frete rende metade. */
+function freight(s: GameState, mult: number, what: L): Int2Res {
+  const c = creditOn(s) ? creditCrisis33(s) : null, st = lig(s);
+  st.freight = s.week + 8; st.fmult = c?.active ? 1 + (mult - 1) / 2 : mult;
+  return ok(fmtL(l('{w}: vendas físicas +{p}% por 8 semanas{c}.', '{w}: physical sales +{p}% for 8 weeks{c}.'), { w: what, p: Math.round((st.fmult - 1) * 100), c: c?.active ? l(' (crise: frete caro, metade do efeito)', ' (crisis: dear freight, half the effect)') : l('', '') }));
+}
+INT2_HOOKS['station.bagagem'] = (s) => freight(s, 1.04, l('Discos seguem de trem para o interior', 'Records ship by rail inland'));
+INT2_HOOKS['port.carga'] = (s) => freight(s, 1.06, l('Discos embarcam para fora', 'Records ship abroad'));
+
+/** Gráfica → físico: a capa encomendada vale para o próximo lançamento seu (ou o que saiu há até 8 semanas). */
+INT2_HOOKS['print.capa'] = (s) => {
+  const rel = Object.values(s.releases).filter((r) => r.owner === 'player' && s.week - r.week <= 8 && r.formats.some(physicalFmt)).sort((a, b) => b.week - a.week)[0];
+  const st = lig(s), key = rel ? rel.id : 'next';
+  st.cover[key] = s.week + 26;
+  return ok(rel ? fmtL(l('"{t}" ganha capa nova: +5% nas vendas físicas.', '"{t}" gets a new cover: +5% on physical sales.'), { t: rel.title }) : l('A capa fica pronta para o seu próximo lançamento físico (+5%).', 'The cover is ready for your next physical release (+5%).'));
+};
+registerMod('chartUnits', 'ligar33', (s, v, { release }) => {
+  const st = peekLig(s);
+  if (!st || !release || release.owner !== 'player' || !release.formats.some(physicalFmt)) return null;
+  let m = 1;
+  if ((st.cover[release.id] ?? 0) >= s.week) m *= 1.05;
+  if (st.freight >= s.week) m *= st.fmult;
+  return m === 1 ? null : { value: v * m, label: l('Capa e frete', 'Cover and freight') };
+});
+/** A capa "do próximo" encontra o disco quando ele sai (no gancho da semana; o modificador só lê — a previsão também passa por ele). */
+registerSimHook('week', 'ligar33.cover', (s) => {
+  const st = peekLig(s);
+  if (!st?.cover.next) return;
+  const rel = Object.values(s.releases).find((r) => r.owner === 'player' && r.week <= s.week && s.week - r.week <= 1 && r.formats.some(physicalFmt) && !st.cover[r.id]);
+  if (rel) { st.cover[rel.id] = st.cover.next; delete st.cover.next; }
+});

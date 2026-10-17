@@ -219,6 +219,24 @@ registerMod('chartUnits', 'mundo33', (s, v, ctx) => {
 // ================================================================ virada do mês
 
 const exileCity = (reg: string): string => (reg === 'br' ? 'london' : reg === 'latam' ? 'paris' : reg === 'asia' ? 'los_angeles' : reg === 'africa' ? 'paris' : 'london');
+
+/** QA33 (porto da INT-2): artista seu sob pressão do regime que ainda não partiu (o mesmo critério do cartão). */
+export function exileCand33(s: GameState): string | undefined {
+  if (!censura33On(s)) return undefined;
+  const st = mundo33(s);
+  return playerActs(s).find((id) => s.acts[id] && !st.exile[id] && (st.pressure[id] ?? 0) >= 8);
+}
+/** QA33: parte para o exílio pelo porto (mesmo efeito da opção do cartão; quem cobra a passagem é o porto). */
+export function exileAct33(s: GameState, actId: string): L | null {
+  const a = s.acts[actId];
+  if (!a) return l('Artista inválido.', 'Invalid act.');
+  const st = mundo33(s), reg = cityById[a.city]?.market ?? 'eu', city = exileCity(reg);
+  st.exile[a.id] = { since: s.week, from: a.city, reg };
+  a.city = city; st.pressure[a.id] = 0;
+  EH.trust(a, 6); EH.mood(s, a, 'inspiration', 15); EH.mood(s, a, 'morale', -8);
+  EH.log(s, 'exile33', '{a} embarca para o exílio em {c}.', '{a} sails into exile in {c}.', { a: a.name, c: cityById[city]?.name ?? city }, a.id, true);
+  return null;
+}
 const actMarket = (s: GameState, id: string) => cityById[s.acts[id]?.city ?? '']?.market;
 
 registerSimHook('month', 'mundo33', (s) => {
