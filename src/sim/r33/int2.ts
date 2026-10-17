@@ -38,9 +38,11 @@ export interface Int2Type {
   /** só nestas cidades (ausente = qualquer) */ cities?: string[];
   /** precisa de cidade com porto/água */ water?: boolean;
   /** letreiro curto na fachada (fonte do jogo, sem acento) */ tag: string;
+  /** arte do mapa isométrico enquanto o PRED não tem desenho próprio (id de `Art31`, ui/pixel/pred31) */ mapArt: string;
 }
+const MAP_ART: Record<Int2Id, string> = { bank: 'office', court: 'office', hospital: 'hotel', stadium: 'arena', jazz: 'venue', nightclub: 'venue', church: 'museum', tvstudio: 'tv', adagency: 'office', samba: 'arena', print: 'press', pirate: 'alley', station: 'platform', port: 'plant' };
 const T = (id: Int2Id, pt: string, en: string, tag: string, lot: [number, number], where: Int2Where, from: number, to = 9999, x: Partial<Int2Type> = {}): Int2Type =>
-  ({ id, name: l(pt, en), tag, lot: { w: lot[0], d: lot[1] }, where, from, to, ...x });
+  ({ id, name: l(pt, en), tag, lot: { w: lot[0], d: lot[1] }, where, from, to, mapArt: MAP_ART[id], ...x });
 
 /** Cidades com porto de verdade (rio, mar ou lago grande) entre as do jogo. */
 export const PORT_CITIES33: string[] = ['rio', 'salvador', 'recife', 'belem', 'fortaleza', 'manaus', 'sao_luis', 'florianopolis', 'porto_alegre', 'new_york', 'los_angeles', 'new_orleans',
