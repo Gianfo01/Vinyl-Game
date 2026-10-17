@@ -245,6 +245,28 @@ export const LOTS18: Lot18[] = [
   { gx: 35, gy: 29, w: 4, d: 3, name: l('Quadra das seguradoras', 'Insurers\' block'), pm: 1.1, vis: 0.95 },
   { gx: 39, gy: 29, w: 4, d: 3, name: l('Ponta financeira', 'Financial tip'), pm: 1, vis: 0.85 },
 ];
+// R33 (MAPA33): dois bairros novos na borda (periferia leste e orla sul), só ACRESCENTANDO (índices 58–83; os 0–57 não mudam).
+// Ficam fechados enquanto `exp33.mapa` estiver desligado (dist18 limita a DIST_BASE18) — o mapa de sempre é idêntico.
+// Rua nova em gx 44–45 (periferia) e avenida nova em gy 32–33 (orla sul); mapa até 56×40. Regras de onde cada tipo fica: sim/r33/mapa33.ts.
+const EXT33: [number, number, number, number, string, string, number, number][] = [
+  // periferia leste (gx 46–55; avenidas em gy 7, 16, 24 continuam)
+  [46, 0, 5, 6, 'Terreno do estádio', 'Stadium grounds', 0.9, 0.8], [51, 0, 5, 6, 'Estacionamento do estádio', 'Stadium car park', 0.7, 0.6],
+  [46, 9, 5, 6, 'Ginásio do leste', 'East arena plot', 0.9, 0.8], [51, 9, 5, 6, 'Parque de exposições', 'Exhibition park', 0.75, 0.65],
+  [46, 18, 5, 6, 'Zona industrial', 'Industrial zone', 0.7, 0.6], [51, 18, 5, 6, 'Galpões da periferia', 'Outskirts sheds', 0.65, 0.55],
+  [46, 26, 5, 6, 'Pátio de manobras', 'Shunting yard', 0.65, 0.55], [51, 26, 5, 6, 'Chácaras do fim da linha', 'End-of-line smallholdings', 0.6, 0.5],
+  // orla sul (gy 34–36 e 37–39)
+  [0, 34, 4, 3, 'Calçadão oeste', 'West promenade', 0.8, 0.8], [4, 34, 5, 3, 'Largo da orla', 'Waterfront square', 0.9, 0.9],
+  [11, 34, 5, 3, 'Avenida da orla', 'Waterfront avenue', 0.95, 0.95], [16, 34, 4, 3, 'Esquina do mirante', 'Lookout corner', 0.85, 0.85],
+  [22, 34, 4, 3, 'Quadra do hospital', 'Hospital block', 0.85, 0.8], [26, 34, 3, 3, 'Beco da orla', 'Waterfront alley', 0.7, 0.65],
+  [31, 34, 4, 3, 'Doca nova', 'New dock', 0.8, 0.75], [35, 34, 4, 3, 'Terminal de cargas', 'Cargo terminal', 0.75, 0.7],
+  [39, 34, 4, 3, 'Píer leste', 'East pier', 0.75, 0.7], [46, 34, 5, 3, 'Arrabalde da orla', 'Edge-of-town strip', 0.65, 0.55],
+  [51, 34, 5, 3, 'Ponta da periferia', 'Outskirts tip', 0.6, 0.5],
+  [0, 37, 4, 3, 'Vila da orla oeste', 'West shore village', 0.7, 0.55], [4, 37, 5, 3, 'Quadras do fundo', 'Back blocks', 0.7, 0.55],
+  [11, 37, 5, 3, 'Parque da orla', 'Shore park', 0.75, 0.65], [16, 37, 4, 3, 'Conjunto do mirante', 'Lookout estate', 0.7, 0.55],
+  [22, 37, 4, 3, 'Fundos do hospital', 'Behind the hospital', 0.7, 0.55], [31, 37, 4, 3, 'Armazéns do cais novo', 'New quay warehouses', 0.65, 0.55],
+  [35, 37, 4, 3, 'Fundos do terminal', 'Terminal back lot', 0.6, 0.5],
+];
+LOTS18.push(...EXT33.map(([gx, gy, w, d, pt, en, pm, vis]) => ({ gx, gy, w, d, name: l(pt, en), pm, vis })));
 export const HOME_LOT18 = 11;
 /** R31 (H): lote da sua casa — o escolhido pelo jogador (city31.chooseHomeLot31) ou o residencial de sempre. */
 export const homeLot18 = (s: GameState): number => { const h = (s as unknown as { x4?: { campus18?: Campus18 } }).x4?.campus18?.home; return h !== undefined && h > 0 && h < LOTS18.length ? h : HOME_LOT18; };
@@ -263,7 +285,15 @@ export const DIST18: Dist18[] = [
   { name: l('Porto e estação', 'Harbour and station'), end: 44, gw: 44, gh: 32, hq: 5, year: 2015 },
   { name: l('Zona das casas de show', 'Venue district'), end: 52, gw: 44, gh: 32, hq: 6, year: 2025 },
   { name: l('Centro financeiro', 'Financial district'), end: 58, gw: 44, gh: 32, hq: 6, year: 2035 },
+  // R33 (MAPA33): só abrem com `exp33.mapa` ligado e só quando FALTA lote (hq/ano inalcançáveis; a regra de terreno livre e os pedidos
+  // do registro de tipos novos abrem o bairro) — ver MAPA33 e dist18.
+  { name: l('Periferia leste', 'East outskirts'), end: 66, gw: 56, gh: 32, hq: 99, year: 9999 },
+  { name: l('Orla sul', 'South shore'), end: 84, gw: 56, gh: 40, hq: 99, year: 9999 },
 ];
+/** R33: quantos bairros existem com `exp33.mapa` desligado (0–6 = o mapa de sempre). */
+export const DIST_BASE18 = 7;
+/** R33 (MAPA33): ganchos do registro de tipos (sim/r33/mapa33). `on`: interruptor; `need`: há tipo novo pedido sem lote livre nos `end` primeiros. */
+export const MAPA33: { on?: (s: GameState) => boolean; /** lotes dos tipos novos pedidos agora (ficam fora do preenchimento) */ reserved?: (s: GameState) => Set<number>; need?: (s: GameState, end: number, free: number[]) => boolean } = {};
 export const MIN_FREE18 = 3;
 
 // ---------------------------------------------------------------- prédios derivados do estado
@@ -414,10 +444,11 @@ function layoutN(s: GameState, bs: Bld18[], n: number): Map<string, number> {
     else if (st.lot[b.id] !== undefined && !used.has(st.lot[b.id])) fix(b.id, st.lot[b.id]);
   }
   for (const p of st.proj) used.add(p.lot);
+  const res = MAPA33.reserved?.(s); // R33: lotes dos tipos novos pedidos ficam livres para eles
   const order = bs.filter((b) => b.zone === 'campus' && !m.has(b.id)).sort((a, b) => a.since - b.since || (a.id < b.id ? -1 : 1));
   for (const b of order) {
     const hl = homeLot18(s);
-    const k = LOTS18.findIndex((_, i) => i < n && !used.has(i) && i !== hl);
+    const k = LOTS18.findIndex((_, i) => i < n && !used.has(i) && i !== hl && !res?.has(i));
     if (k < 0) break;
     fix(b.id, k);
   }
@@ -425,18 +456,20 @@ function layoutN(s: GameState, bs: Bld18[], n: number): Map<string, number> {
 }
 const freeN = (s: GameState, bs: Bld18[], n: number): number[] => {
   const used = new Set(layoutN(s, bs, n).values());
-  return LOTS18.map((_, i) => i).filter((i) => i < n && i !== 0 && !used.has(i) && !(i === homeLot18(s) && (P(s).owner?.house ?? -1) >= 0));
+  const res = MAPA33.reserved?.(s);
+  return LOTS18.map((_, i) => i).filter((i) => i < n && i !== 0 && !used.has(i) && !res?.has(i) && !(i === homeLot18(s) && (P(s).owner?.house ?? -1) >= 0));
 };
 /** r27 (LOTS): bairros abertos agora (índice em DIST18). Puro: o que já abriu (save), a época, o tamanho do selo e
  *  — a regra que garante terreno — a falta de lote livre (abre o próximo bairro até sobrarem MIN_FREE18). */
 export function dist18(s: GameState, bs: Bld18[] = buildings18(s)): number {
-  const st = campus18(s), last = DIST18.length - 1;
+  const st = campus18(s), last = MAPA33.on?.(s) ? DIST18.length - 1 : DIST_BASE18 - 1;
   let d = Math.max(0, Math.min(last, st.dist ?? 0));
   while (d < last && (s.player.hq >= DIST18[d + 1].hq || s.year >= DIST18[d + 1].year)) d++;
   // lote já usado num bairro (save, obra em curso) mantém o bairro aberto
   const top = Math.max(-1, ...Object.values(st.lot), ...st.proj.map((p) => p.lot), ...bs.map((b) => b.lot ?? -1));
   while (d < last && top >= DIST18[d].end) d++;
   while (d < last && freeN(s, bs, DIST18[d].end).length < MIN_FREE18) d++;
+  while (d < last && MAPA33.need?.(s, DIST18[d].end, freeN(s, bs, DIST18[d].end))) d++; // R33: tipo novo pedido sem lote
   return d;
 }
 /** Quantos lotes (prefixo de LOTS18) estão abertos agora. */
