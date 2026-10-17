@@ -62,7 +62,15 @@ mocks em `docs/r33/mocks/mock33-*.png`.
 | **APARELHOS33** | **Botão CELULAR** (menu de baixo, o último, atalho 5, só de 1983 em diante) e **computador** (PC da mesa, 1982+, sem atalho), com as 5 versões de cada aparelho e todos os apps.<br>Cada ação chama a função que já existe.<br>Apps: Vídeos que descobrem artista, Compras de objetos, Encontros com gente da cidade, minijogos jogáveis por época (cobrinha), toques como formato, demo caseira, ligação por época, assistente de IA, denúncia de pirataria, assinatura de fãs, vazamento do álbum, cambistas e preço dinâmico, deepfake de voz.<br>Interruptor `exp33.aparelhos`, ligado. | Opus |
 | **REDES33** | **Redes sociais** como feed sobre os fatos do jogo (`facts17`), o **Jornal reformulado** (a rede social antes de 2004, com Manchete, Música, Coluna social de boatos, Mundo, Paradas, Cartas, Nascimentos e casamentos, Classificados que são os apps antes do celular), posts que mexem no mundo, conta hackeada (2010+), viralizar um trecho (2018+), live e post com ganho próprio.<br>Frases que se combinam (~600 núcleos × tom × aberturas e fechos × gíria da época), sem repetir as últimas 50 do mesmo artista.<br>Interruptor `exp33.redes`, ligado. | Sonnet |
 
-As duas: testes mínimos (tsc + o próprio teste), prints das telas em 1962, 1983/1997, 2008, 2025 e 2035, sem PR.
+As duas: **tudo na mesma arte do resto do jogo** (dono, 2026-10-17). Os mocks mostram conteúdo e fluxo, não o visual
+final. As telas do celular, do PC, das redes e do Jornal usam:
+- os mesmos componentes e cores das telas atuais: cartão de ações ACOES5, painéis da sede, Recados, Jornal na mesa de
+  hoje, fontes do jogo;
+- objetos e aparelhos desenhados em `Px` pelas regras de pixel art do PLANO (contorno INK, luz de cima à esquerda,
+  paleta da época).
+
+Nada de estilo de site, app real ou fonte nova fora das que o jogo já usa. Sem mocks novos: seguir as telas existentes.
+Testes mínimos (tsc + o próprio teste), prints das telas em 1962, 1983/1997, 2008, 2025 e 2035, sem PR.
 APARELHOS33 é dona do botão e da casca do celular e do PC. REDES33 é dona do app Redes e do Jornal e entrega o app
 pelo gancho de app do celular (sem editar a casca).
 

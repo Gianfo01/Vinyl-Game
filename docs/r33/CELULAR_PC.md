@@ -19,6 +19,15 @@ Pedidos do dono (2026-10-17):
 
 ## Regras
 
+**Arte (dono, 2026-10-17): tudo na MESMA arte do resto do jogo.** Os mocks mostram conteúdo e fluxo, não o visual
+final. As telas do celular, do PC, das redes e do Jornal usam:
+- os mesmos componentes e cores das telas atuais: cartão de ações ACOES5, painéis da sede, Recados, Jornal na mesa de
+  hoje, fontes do jogo;
+- objetos e aparelhos desenhados em `Px` pelas regras de pixel art do PLANO (contorno INK, luz de cima à esquerda,
+  paleta da época).
+
+Nada de estilo de site, app real ou fonte nova fora das que o jogo já usa. Sem mocks novos: seguir as telas existentes.
+
 1. **Nenhuma regra nova paralela.** Cada ação chama uma função que já existe (nome entre crases nas tabelas). A ação
    faz ali mesmo, ou abre o mesmo cartão de ações (ACOES5), ou leva ao lugar certo. Custos e chances são os da função.
 2. **Sistema desligado = app escondido.** Ação sem dinheiro ou sem bolinha aparece cinza, com o motivo (o mesmo

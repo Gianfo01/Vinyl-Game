@@ -485,3 +485,5 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - Frases: em vez de ~40 modelos, ~600 núcleos combináveis por tom, abertura e fecho e gíria da época, sem repetir as
   últimas 50 do mesmo artista (o dono achou que 40 repetiria rápido).
 - Ordem: entra **antes do POL33**, em duas frentes paralelas (APARELHOS33 em Opus, REDES33 em Sonnet), depois do QA33.
+- Dono aprovou o escopo e os mocks: **tudo na mesma arte do resto do jogo** (componentes, cores e fontes atuais, pixel
+  art pelas regras do PLANO). Os mocks valem só como conteúdo e fluxo. Não fazer mocks novos.
