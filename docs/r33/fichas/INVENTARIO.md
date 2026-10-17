@@ -126,3 +126,13 @@ after18, agenda17, airport31, auction31, awards, bauc31, biz17, cal17, calendar1
 
 ## Prioridade sugerida
 1. Fichas (artista, pessoa, disco, selo). 2. Janelas de jogo do dia a dia: negociar, estúdio, composição, turnê, show, crise, diretoria, campanha, favores, antes de avançar/virar o mês, ações rápidas. 3. Casa/cidade (casa5, city31ui, lots31ui, decoshop31ui, socio31ui, leilões). 4. Páginas antigas mais abertas: talento/olheiros, contratos, mercado, regiões e política, notícias, indústria, finanças. 5. Utilitários (saves, opções, atalhos, glossário, créditos) por último.
+
+## FICHAS33-B (17/10)
+Migrado: botões de ação das páginas antigas dentro do papel → cartão numerado (todas as 68 áreas acima, por colheita;
+linhas com ação viram seleção); papéis do elenco com miolo antigo (agenda, chefe); pausa e teclas; painéis da cidade
+(`c27-pn`/`c27-sheet`), interiores (`in31-pn`) e cartão da cidade (`m5-ccard`); menus `am20`/`cx27`; `navsheet27`;
+barra de fora do celular/computador; Arrumar (`deco5`); escolha da época do tutorial e balão do tour. Varredura:
+`node scripts/r33/fb-sweep.mjs` (linhas no cartão, linhas de seleção e `.btn` à vista por área). Prints em `b/`.
+Ainda fora: as ~110 janelas `modal(` já estão no papel desde FICHAS33; a cena do Mural segue sem cartão próprio (ações
+pelo menu numerado); o balão do mentor do tutorial guiado (já é papel do jogo) não ganhou números (as teclas 1–9 são
+dos passos do tutorial).

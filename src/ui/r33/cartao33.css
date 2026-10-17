@@ -156,3 +156,32 @@ body:has(.app5) :is(.am20-head, .cx27-head)::after { content: 'Esc'; position: a
 .tour18-bub { --panel: #fbf6e8; --ink: #1c1612; --muted: #5f584c; --line: #c8b898; color-scheme: light; background: #fbf6e8 !important; color: #1c1612 !important; border: 2px solid #170e12 !important; border-radius: 0 !important; box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5) !important; }
 .tour18-bub :is(b, h3, h4, strong):first-child { display: inline-block; align-self: flex-start; padding: 2px 8px; border: 2px solid #170e12; background: #fffdf6; font: 700 12px/1.2 var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; }
 .tour18-bub .btn { border-radius: 0 !important; border: 2px solid #170e12 !important; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
+
+/* ==== tamanho do texto (Opções: 90–130%, no font-size da raiz): o cartão em papel acompanha (rem no lugar de px) ==== */
+.ac5.ac5-in33 { font-size: 0.8125rem; }
+.ac5.ac5-in33 .ac5-h b { font-size: 1rem; }
+.ac5.ac5-in33 .ac5-a { font-size: 0.875rem; }
+.ac5.ac5-in33 .ac5-n { font-size: 0.6875rem; line-height: 1.35; }
+.ac5.ac5-in33 .ac5-t { font-size: 0.75rem; }
+.ac5.ac5-in33 .lk31-why { font-size: 0.6875rem; }
+:is(.ob33-col, .pz5-sheet) .ac5.ac5-in33 .ac5-nums li b { font-size: 0.8125rem; }
+.ac5.ac5-in33 .ac5-nums li span { font-size: 0.75rem; }
+.pz5-sheet .pz5-row { font-size: 0.8125rem; }
+.pz5-sheet .pz5-row small { font-size: 0.6875rem; }
+.pz5-sheet .hk5-body li { font-size: 0.8125rem; }
+body:has(.app5) :is(.am20, .cx27) { font-size: 0.875rem; }
+.deco5 .deco5-card, .deco5 .deco5-side .deco5-it { font-size: 0.8125rem; }
+.deco5 .deco5-hint { font-size: 0.75rem; }
+.app5 .c27-pn, .app5 .in31-pn { font-size: 0.8125rem; }
+.app5 .c27-pn { min-width: 0; }
+.app5 .c27-pn .c27-ph { flex-wrap: wrap; row-gap: 4px; }
+.app5 .c27-pn .c27-ph > div { min-width: 0; flex: 1 1 8em; }
+.app5 .c27-pn .c27-ph b, .app5 .in31-pn > b:first-child { font-size: 0.875rem; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+.app5 .c27-pn .c27-kv dd { min-width: 0; overflow-wrap: anywhere; }
+.app5 .ob33-pcol .ac5.ac5-in33 .ac5-h b { font-size: 0.75rem; }
+.pz5-back > .pz5-sheet { max-height: calc(100vh - 168px); min-height: 0; }
+.pz5-back > .pz5-sheet .pp33-main { min-height: 0; max-height: 100%; overflow: hidden; }
+.pz5-back > .pz5-sheet .pp33-paper { min-height: 0; overflow: hidden; }
+.pz5-back > .pz5-sheet .pp33-main { grid-template-rows: minmax(0, 1fr); }
+.pz5-back > .pz5-sheet .pp33-paper { max-height: 100%; height: 100%; }
+.pz5-back > .pz5-sheet .pp33-cardcol { align-self: start; }

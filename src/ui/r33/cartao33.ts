@@ -11,8 +11,12 @@ import { h } from '../dom';
 import { card33, rowOfBtn33, txt33, type Row33 } from './paper33';
 import './cartao33.css';
 
-/** Largura que o cartão ocupa ao lado do papel (px de tela; a casca tira do papel). */
+/** Largura que o cartão ocupa ao lado do papel (px de tela; a casca tira do papel), com o "tamanho do texto". */
 export const CARD_W33 = 276;
+export function cardW33(): number {
+  const fs = typeof document !== 'undefined' ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16 : 16;
+  return Math.round(CARD_W33 * Math.max(1, fs / 16));
+}
 
 /** Onde um botão NÃO é ação (leitura/seleção): abas, marcadores, cabeçalho de tabela, controles de mapa, o próprio cartão. */
 const SKIP33 = '.tabs, .cats17, [role=tablist], [role=toolbar], th, summary, .wmap-ctl, .w19-ctl, .ac5, .p5-tabs, [data-keep33], .lk31-why, [hidden], .ob33-col, .el5-tabs, .help18-index';

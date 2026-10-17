@@ -731,3 +731,31 @@ proibido sem pedido do dono.
   (RCA Victor, Columbia, K-tel, "Victor Talking Machine Co." — nome extinto em 1929 —, Gramophone Company of India,
   ou independente/aposentado); Elvis Presley aparece "separado" em 1985/1995 e "aposentado" em 2022 (morreu em 1977);
   o ato Elvis Presley tem 4 integrantes (com Scotty Moore). Prints antes/depois em `docs/r33/fichas/`.
+## R33 · FICHAS33-B — o que faltou do padrão de papel ("ajuste isso", 17/10)
+- **Páginas antigas dentro do papel (`src/ui/r33/cartao33.ts`, ligado em `paper5` da casca).** Os botões de ação
+  (`button.btn`) de `.p5-old` e dos papéis do elenco com miolo antigo (agenda, chefe de gabinete…) saem da página e vão
+  para o CARTÃO DE AÇÕES numerado (o mesmo `.ac5`/`card33`/`lockBtn31`), na mesa à direita do papel; o papel encolhe
+  (miolo registrado é refeito com a largura nova, para as páginas desenhadas em retângulos). A linha clica o MESMO
+  botão; travado mostra o motivo do botão (`lk31` ou `title`) e "→ Libera quando…"; sem motivo no botão: "Libera
+  quando a condição mostrada na página mudar". Ficam na página: abas (marcadores), filtros (fileira com um aceso, ou
+  `aria-pressed`), nomes (links), campos, controles de mapa e "ir para… →/↗" (navegação, como os links).
+- **Linhas viram seleção.** Botão que se repete por linha (tabela, lista, fileira de cartões: tr/li ou 3+ irmãos com
+  ação) não vai como N linhas soltas: a linha da página fica selecionável (contorno; escolhida em amarelo; Enter/Espaço
+  pelo teclado) e o cartão mostra "Escolhido: <nome>" + as ações dela; o resto vem abaixo, em "Na página". A escolha
+  sobrevive ao redesenho (por página e nome). Teclas 1–9 no papel aberto (captura antes dos atalhos de objeto).
+- **Pausa e teclas** (shell5): papel com plaqueta. Pausa = índice no papel (consulta) + menu no cartão (1–9).
+  Teclas = marcadores Nesta tela / Todos os objetos / O que mudou (`[ ]`), linha escolhida + "Trocar a tecla" /
+  "Voltar todas ao padrão" no cartão (trava com motivo para tecla fixa).
+- **Painéis do lugar** (por observação do DOM, sem tocar nas telas — os interiores são da POL33-A): painel do bairro
+  (`.c27-pn`, e a folha `.c27-sheet` do celular) e do interior (`.in31-pn`) com plaqueta em pixel, × → "Esc fechar",
+  ações na lista numerada do pé (aqui "ir/entrar" conta como ação); painel do interior em papel. Cartão da cidade no
+  mapa (`m5-ccard`): "Ir para a cidade" é a linha 1.
+- **Menus de ações** (`am20`, `cx27`) na casca: cartão em papel, plaqueta, linhas numeradas tracejadas, "→" no motivo
+  da trava, Esc na plaqueta; 1–9 escolhem. **navsheet27** (celular, casca antiga): papel, plaqueta, abas → marcadores.
+  **Celular/computador**: só a barra de fora (plaqueta + "Esc fechar"); a tela do aparelho segue com a arte dele.
+  **Arrumar** (`deco5`): mesa de madeira, plaqueta, abas → marcadores, lateral em papel com as peças numeradas (1–9).
+  **Tutorial**: escolha da época numerada (1–5) e legível (antes: texto escuro sobre azul-marinho); balão do tour em papel.
+- **Tamanho do texto:** letras do cartão e dos menus em `rem` (acompanham 90–130%); o cartão alarga na mesma proporção.
+  Conferido em 1912×867 e 1366×768, PT e EN, 130%: nada estoura (prints em `docs/r33/fichas/b/`).
+- **Não mudou:** simulação (goldens r27-p2a/p2b/m3, r16-playbot iguais). Mural de cortiça segue como está (clique =
+  ficha; o menu de ações de botão direito agora é o cartão numerado); o mentor do tutorial guiado já é papel do jogo.

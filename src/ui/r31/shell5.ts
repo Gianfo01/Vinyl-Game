@@ -20,7 +20,7 @@ import { iconPx, type IconName } from '../pixel/icons';
 import { icon17Px } from '../pixel/icons17';
 import { icon31Px } from '../pixel/icons31';
 import { dockCar5, type DockCar5 } from './dockcar5';
-import { CARD_W33, oldCard33 } from '../r33/cartao33';
+import { cardW33, oldCard33 } from '../r33/cartao33';
 import { card33, type Row33 } from '../r33/paper33';
 import { FS_KEY33, FS_LABEL33, fsAble33, fsOn33, toggleFs33 } from '../r33/tela33';
 import { rgba, type Px } from '../pixel/px';
@@ -459,7 +459,7 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
   };
   let content = build();
   let ob = oldCard33(content, `${p.obj}|${p.marker.area}|${p.marker.tab?.join('/') ?? ''}`, title);
-  if (ob) { cw = CARD_W33; if (reg) { content = build(); ob = oldCard33(content, `${p.obj}|${p.marker.area}|${p.marker.tab?.join('/') ?? ''}`, title) ?? ob; } }
+  if (ob) { cw = cardW33(); if (reg) { content = build(); ob = oldCard33(content, `${p.obj}|${p.marker.area}|${p.marker.tab?.join('/') ?? ''}`, title) ?? ob; } }
   const key = o ? key5(`obj:${o.id}`)?.chord ?? (o.keyRef ? key5(o.keyRef)?.chord : undefined) : undefined;
   const sub = [o ? tl5(PLACES5[o.place] ?? l('', '')) : '', key ? `${t(l('tecla', 'key'))} ${chordLabel5(key)}` : '', o ? tl5(FRAME_L5[o.frame]) : ''].filter(Boolean).join(' · ');
   const pinned = o ? pocketIds5(s).includes(o.id) : false;
@@ -474,7 +474,7 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
     return h('button', { type: 'button', role: 'tab', class: `p5-tab${on ? ' on' : ''}`, 'aria-selected': on ? 'true' : 'false', onclick: () => show5(m.area, m.tab, o?.id) }, txt5(markLabel5(m, host)));
   }), ms.length > 1 ? h('small', { class: 'p5-tk' }, '{ }') : null);
   const bodyEl = h('div', { class: 'p5-body', tabindex: '-1' }, content);
-  const sheet = h('section', { class: `p5 p5-${kind}${ob ? ' ob33-on' : ''}`, 'data-paper': p.obj, role: 'dialog', 'aria-label': title, style: ob ? `--ob33-w:${CARD_W33}px` : undefined }, cv, head, tabs, bodyEl, ob?.el ?? null);
+  const sheet = h('section', { class: `p5 p5-${kind}${ob ? ' ob33-on' : ''}`, 'data-paper': p.obj, role: 'dialog', 'aria-label': title, style: ob ? `--ob33-w:${cw}px` : undefined }, cv, head, tabs, bodyEl, ob?.el ?? null);
   const put = (el: HTMLElement, r: Rect5, W: number, H: number) => { el.style.left = `${(r.x / W) * 100}%`; el.style.top = `${(r.y / H) * 100}%`; el.style.width = `${(r.w / W) * 100}%`; el.style.height = `${(r.h / H) * 100}%`; };
   let last = '';
   const fit = (cw: number, ch: number): void => {
