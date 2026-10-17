@@ -310,8 +310,25 @@ digital reduz a chance (mesma linha do `setGuard33`).
 | 2018 | vídeo curto |
 | 2030 | avatar |
 
-**Complexidade:** média-baixa. Não precisa de estado novo para o feed. O trabalho é o texto (modelos de frase para os
-tipos de fato mais comuns, uns 40 cobrem a maioria) e poucas ações. A parte nova de verdade é só a conta hackeada e o
+**Frases sem repetir** (dono: "40 vai se repetir muito rápido"). O post é montado a partir de partes que se combinam:
+
+| Parte | Quantidade |
+|---|---|
+| núcleos por tipo de fato | ~60 tipos de fato mais comuns × 10 núcleos = **~600 núcleos** |
+| tom do artista | humilde, arrogante, engraçado, misterioso, político, romântico (o mesmo núcleo muda de forma) |
+| aberturas e fechos | ~80 de cada |
+| gíria da época | 6 faixas (`ep5Of`) |
+| encaixes | cidade, música, rival, número, fã, lugar da cidade |
+
+- Cada artista guarda os últimos 50 núcleos usados e não repete.
+- Os rivais têm as próprias frases-marca (bordões), que aparecem às vezes.
+- Os tipos de fato raros usam um núcleo genérico do grupo (vida, carreira, mundo, crime).
+- Isso dá dezenas de milhares de combinações. Teste: 1.000 posts seguidos do mesmo artista sem frase igual entre
+  vizinhos.
+- Português e inglês, como o resto.
+
+**Complexidade:** média-baixa. Não precisa de estado novo para o feed, só a memória curta de frases usadas. O trabalho
+é o texto e poucas ações. A parte nova de verdade é só a conta hackeada e o
 "post mexe no mundo", que chama funções prontas.
 
 ## Antes do celular e do computador

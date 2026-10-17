@@ -52,6 +52,20 @@ prédios `pred31px`, decoração `deco31px`, objetos `exp5px`):
 INT-1/INT-2 desenham os lugares e expõem ganchos; as regras de banco, hospital, cartório e fábrica que mexem em
 dinheiro e pessoas ficam com GESTÃO/VIDA/CATÁLOGO (combinar pelo gancho, sem editar o arquivo do outro).
 
+## Antes do polimento: APARELHOS33 e REDES33 (dono, 2026-10-17)
+
+Entram depois do QA33 e antes do POL33. As duas rodam em paralelo. Escopo completo em `docs/r33/CELULAR_PC.md`;
+mocks em `docs/r33/mocks/mock33-*.png`.
+
+| Frente | O quê | Modelo |
+|---|---|---|
+| **APARELHOS33** | **Botão CELULAR** (menu de baixo, o último, atalho 5, só de 1983 em diante) e **computador** (PC da mesa, 1982+, sem atalho), com as 5 versões de cada aparelho e todos os apps.<br>Cada ação chama a função que já existe.<br>Apps: Vídeos que descobrem artista, Compras de objetos, Encontros com gente da cidade, minijogos jogáveis por época (cobrinha), toques como formato, demo caseira, ligação por época, assistente de IA, denúncia de pirataria, assinatura de fãs, vazamento do álbum, cambistas e preço dinâmico, deepfake de voz.<br>Interruptor `exp33.aparelhos`, ligado. | Opus |
+| **REDES33** | **Redes sociais** como feed sobre os fatos do jogo (`facts17`), o **Jornal reformulado** (a rede social antes de 2004, com Manchete, Música, Coluna social de boatos, Mundo, Paradas, Cartas, Nascimentos e casamentos, Classificados que são os apps antes do celular), posts que mexem no mundo, conta hackeada (2010+), viralizar um trecho (2018+), live e post com ganho próprio.<br>Frases que se combinam (~600 núcleos × tom × aberturas e fechos × gíria da época), sem repetir as últimas 50 do mesmo artista.<br>Interruptor `exp33.redes`, ligado. | Sonnet |
+
+As duas: testes mínimos (tsc + o próprio teste), prints das telas em 1962, 1983/1997, 2008, 2025 e 2035, sem PR.
+APARELHOS33 é dona do botão e da casca do celular e do PC. REDES33 é dona do app Redes e do Jornal e entrega o app
+pelo gancho de app do celular (sem editar a casca).
+
 ## Fechamento da 33 (depois que todas as frentes estiverem juntas)
 | Frente | O quê | Modelo |
 |---|---|---|
@@ -81,7 +95,7 @@ Pedidos do dono para o POL33 (2026-10-17, vistos no mapa de Londres 1962):
   5. **Vitrine para a rua**: disco ou relíquia exposto na fachada da sua loja/sede dá um pouco de movimento ao bairro.
   6. **Colecionadores rivais**: NPCs que disputam o mesmo item no leilão e às vezes oferecem compra direta.
 
-Ordem: frentes → junção → QA33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono.
+Ordem: frentes → junção → QA33 → APARELHOS33 + REDES33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono.
 
 ## Fica para a onda 6 (fechamento), não para a 33
 (11) começar tarde rende pouco (meta 3× × hoje ~1,1×) e o padrão de cada interruptor; metas e fim de jogo num motor

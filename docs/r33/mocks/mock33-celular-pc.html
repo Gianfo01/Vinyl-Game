@@ -74,6 +74,46 @@ canvas{image-rendering:pixelated;display:block}
 .card .a kbd{font-family:var(--pix);font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:2px;border-radius:3px;padding:2px 4px;color:#fff}
 .card .a.hi{background:#2a2a24;color:var(--gold);font-weight:700}
 .ring{position:absolute;border:3px solid var(--gold);border-radius:4px;box-shadow:0 0 0 2px #1a1018,0 0 14px #f0c06099}
+
+.paper2{position:absolute;background:#efe6cf;color:#2a2018;border:3px solid #5a3a1e;box-shadow:0 14px 40px #000a;font-family:'Source Serif 4',Georgia,serif}
+.mast{text-align:center;border-bottom:3px double #2a2018;padding:6px 0 4px}
+.mast b{display:block;font-family:'UnifrakturMaguntia',serif;font-size:40px;line-height:1;font-weight:400}
+.mast span{font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.cols{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:0;padding:0 8px}
+.col{padding:6px 9px;border-right:1px solid #8a7a66}
+.col:last-child{border-right:none}
+.sec{font-family:var(--pix);font-size:9.5px;letter-spacing:.14em;background:#2a2018;color:#efe6cf;padding:3px 6px;margin:4px 0 5px}
+.art{margin-bottom:7px;position:relative}
+.art h3{margin:0 0 2px;font-size:17px;line-height:1.1}
+.art h3.big{font-size:25px}
+.art p{margin:0;font-size:12.5px;line-height:1.25}
+.art .src{font-family:'Barlow Semi Condensed';font-size:11px;color:#7a5a3a}
+.acts2{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;font-family:'Barlow Semi Condensed'}
+.acts2 span{font-size:11.5px;background:#fff6dd;border:1px solid #2a2018;padding:1px 6px}
+.acts2 span.k{background:#f0c060;font-weight:700}
+.art.lit{outline:3px solid #f0c060;outline-offset:2px;background:#fff6dd}
+.rum{border:1px dashed #7a5a3a;padding:4px 6px;background:#f6edd6}
+.clas{font-size:11.5px;line-height:1.2;border-bottom:1px dotted #8a7a66;padding:3px 0;font-family:'Barlow Semi Condensed'}
+.clas b{font-family:'Source Serif 4';}
+.chart{font-size:12px;font-family:'Barlow Semi Condensed'}
+.chart div{display:flex;justify-content:space-between;border-bottom:1px dotted #8a7a66;padding:1px 0}
+.post{background:#fff;color:#1f2430;border-bottom:1px solid #d8d2c4;padding:6px 8px;font-size:12px;line-height:1.25;position:relative}
+.post .who{padding-left:30px;display:flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px}
+.post .who span{font-weight:400;color:#7a8090;font-size:11px}
+.post .tx{margin:3px 0 3px 36px}
+.post .ac{margin-left:36px;display:flex;gap:4px;flex-wrap:wrap}
+.post .ac span{font-size:10.5px;border:1px solid #1a1018;padding:0 5px;background:#eef1f5}
+.post .ac span.k{background:#f0c060;font-weight:700}
+.post .fx{margin-left:36px;font-size:10.5px;color:#2f7a3a;font-weight:600}
+.post .fx.r{color:#b0441e}
+.post.hack{background:#ffe8e0;border-left:4px solid #e04848}
+.post.sel{outline:3px solid #f0c060;outline-offset:-3px}
+.tagw{display:inline-block;font-size:9.5px;font-family:var(--pix);background:#2a2018;color:#fff;padding:1px 4px;margin-left:4px}
+.eraP{position:absolute;top:120px;width:208px;height:400px;background:#0f1d2c;border:1px solid #3a5070;border-radius:6px;overflow:hidden}
+.eraP h6{margin:0;padding:6px 8px;font-family:var(--pix);font-size:11px;color:var(--gold);background:#0b141e;letter-spacing:.1em}
+.eraP h6 span{color:#93a3b8;font-family:'Barlow Semi Condensed';letter-spacing:0;font-size:12.5px}
+.eraP .bd{padding:0}
+.eraP .cap{position:absolute;left:0;right:0;bottom:0;padding:6px 8px;font-size:12.5px;line-height:1.25;background:#16263a;color:#e9e2d0;border-top:1px solid #3a5070}
 </style></head><body>
 <img id="bg">
 <div id="root"></div>
@@ -190,7 +230,7 @@ function roundBtn(k){return pcanvas(14,14,3,(R)=>{const c=k==='x'?'#e04848':k===
  if(k==='heart'){R(4,4,2,1,c);R(8,4,2,1,c);R(3,5,8,2,c);R(4,7,6,1,c);R(5,8,4,1,c);R(6,9,2,1,c)}
  if(k==='star'){R(6,3,2,2,c);R(3,5,8,2,c);R(5,7,4,2,c);R(4,9,2,2,c);R(8,9,2,2,c)}});}
 // ---------- background ----------
-document.getElementById('bg').src=M==='cel'?'sede25.png':'sede25.png';
+document.getElementById('bg').src=(M==='jornal')?'sede1962.png':'sede25.png';
 
 if(M==='cel'||M==='cel2'||M==='cel3'){
  add('<div class="dim"></div>');
@@ -305,6 +345,101 @@ if(M==='cel3'){
  '<div class="it"><b>Match</b> usa a chance do "chamar para sair". Pode virar namoro, caso ou fofoca na imprensa (paparazzi, reputação pessoal).</div>'+
  '<div class="it"><b>Regras</b>: só adultos; a <b>família Fossati nunca aparece</b>; casado(a) curtindo vira risco de traição (Amor).</div>'+
  '<div class="it"><b>Por época</b>: 1889 anúncio de jornal ("coração solitário") → 1965 encontro por computador (cartão perfurado) → 1996 sala de bate-papo → 2003 site de namoro → 2012 arrastar para o lado → 2032 encontro em holograma.</div>';
+}
+
+function avatar(c1,c2,sc=2){return pcanvas(14,14,sc,(R)=>{R(0,0,14,14,INK);R(1,1,12,12,c2);R(4,3,6,6,'#e8b080');R(3,2,8,3,c1);R(3,10,8,4,c1);R(5,5,1,1,INK);R(8,5,1,1,INK)});}
+if(M==='jornal'){
+ add('<div class="dim" style="background:#050a12b0"></div>');
+ add('<div class="title">JORNAL NA MESA <span>· reformulado: a "rede social" antes da internet · 1962</span></div>');
+ const pp=add('<div class="paper2" style="left:120px;top:100px;width:820px;height:560px"></div>');
+ pp.innerHTML='<div class="mast"><b>Diário de Londres</b><span>Quarta, 14 de fevereiro de 1962 · edição da tarde · 3 pence</span></div>';
+ const cols=$('<div class="cols"></div>');pp.appendChild(cols);
+ cols.innerHTML=`<div class="col">
+  <div class="sec">MANCHETE</div>
+  <div class="art"><h3 class="big">Roy Orbison desponta em Nashville</h3><p>Voz de três oitavas lota o Ryman pela terceira noite. Selos de Londres já mandam olheiros.</p><div class="src">fato: chart · público</div><div class="acts2"><span>Mandar olheiro</span><span>Ver na parada</span></div></div>
+  <div class="sec">MÚSICA</div>
+  <div class="art lit"><h3>Selo Agulha abre as portas no Soho</h3><p>Novo selo promete "o som dos porões". Dono não deu entrevista.</p><div class="src">fato: deal · você</div><div class="acts2"><span class="k">Dar entrevista</span><span>Escrever ao editor</span><span>Comprar anúncio</span></div></div>
+  <div class="art"><h3>Asha Bhosle vira lenda em Mumbai</h3><p>Mais de mil gravações e nenhuma pausa.</p></div>
+  <div class="sec">CARTAS DO LEITOR</div>
+  <div class="art"><p><i>"Quando um selo de Londres vai gravar a turma do skiffle? Estamos cansados de crooner."</i> — Margaret, Camden</p><div class="src">fãs: motivos e gosto da cena</div><div class="acts2"><span>Responder como selo</span></div></div>
+ </div>
+ <div class="col">
+  <div class="sec">COLUNA SOCIAL</div>
+  <div class="art rum"><h3>Visto no 2i's Coffee Bar…</h3><p>…o guitarrista dos Faíscas saindo de mãos dadas com a cantora da gravadora rival. Haverá contrato ou casamento?</p><div class="src">fato: affair · ainda boato</div><div class="acts2"><span>Desmentir</span><span>Plantar outra nota ($)</span><span>Deixar correr</span></div></div>
+  <div class="art"><h3>Briga no Marquee</h3><p>Dois baixistas, um amplificador e nenhum pedido de desculpas.</p><div class="src">fato: feud</div></div>
+  <div class="sec">MUNDO</div>
+  <div class="art"><h3>Rádio estatal veta letras "indecentes"</h3><p>Lista proibida chega às emissoras na segunda.</p><div class="src">MUNDO: censura</div><div class="acts2"><span>Ver suas músicas na lista</span></div></div>
+  <div class="sec">NASCIMENTOS E CASAMENTOS</div>
+  <div class="art"><p><b>Casam-se</b> o pianista Tom Hale e a cantora Ruby Kay, no sábado, em Chelsea.</p><div class="src">fato: marriage</div><div class="acts2"><span>Mandar flores</span><span>Convidar para gravar juntos</span></div></div>
+ </div>
+ <div class="col">
+  <div class="sec">PARADAS</div>
+  <div class="chart"><div><span>1. Let's Twist Again</span><b>▲</b></div><div><span>2. Moon River</span><b>▼</b></div><div><span>3. Walkin' Back to Happiness</span><b>=</b></div></div>
+  <div class="sec">CLASSIFICADOS</div>
+  <div class="clas"><b>Coração solitário</b>, 27, enfermeira, gosta de jazz e de dançar, procura moço educado. Cx. 214. <i>(Encontros)</i></div>
+  <div class="clas"><b>Vende-se</b> sobrado na Denmark Street, ideal p/ editora musical. <i>(Imóveis)</i></div>
+  <div class="clas"><b>Catálogo pelo correio</b>: jukebox nova, entrega em 6 semanas. <i>(Compras)</i></div>
+  <div class="clas"><b>Procura-se</b> baterista com carro. Tratar no Soho. <i>(Talentos)</i></div>
+  <div class="clas"><b>Leilão</b> sábado: violão de Django, lote 12. <i>(Leilão)</i></div>
+ </div>`;
+ add(`<div class="callout" style="left:960px;top:100px;width:390px;line-height:1.35;font-size:14px"><b>Cada matéria sai de um FATO do jogo</b> (o mesmo barramento das redes sociais). Antes de 2004 a rede social é o jornal:<br>· <b>Manchete e Música</b>: fatos públicos grandes.<br>· <b>Coluna social</b>: fatos ainda <b>boato</b>; desmentir, plantar nota ou deixar correr (vira público).<br>· <b>Mundo</b>: crises, censura e memes.<br>· <b>Classificados</b>: são os apps antes do celular (Encontros, Imóveis, Compras, Talentos, Leilão).<br>Toda matéria clicável abre o cartão de ações.</div>`);
+ add(`<div class="note" style="left:960px;top:356px;width:390px;font-size:13.5px"><h4>MUDA COM A ÉPOCA</h4>
+ <div class="it"><b>1889</b> folha única, gravura, anúncio de "coração solitário"</div>
+ <div class="it"><b>1920</b> jornal + revista de rádio · <b>1950</b> revista de fofoca e paradas</div>
+ <div class="it"><b>1980</b> TV e fanzines · <b>1995</b> jornal + portal</div>
+ <div class="it"><b>2004+</b> vira <b>Redes</b> no celular e no PC (o jornal continua na mesa)</div></div>`);
+}
+if(M==='redes'){
+ add('<div class="dim"></div>');
+ add('<div class="title">REDES <span>· feed de posts feito dos fatos do jogo · 2025</span></div>');
+ add('<div class="dock"></div>');{const b=add('<div class="btn" style="left:374px;border-color:#f0c060"><div class="k">⇧5</div><div class="lb" style="color:#f0c060">CELULAR</div><div class="bang">2</div></div>');const pi=dockPhone();pi.style.cssText='position:absolute;left:23px;top:7px';b.appendChild(pi);}
+ add('<div class="sep" style="left:466px"></div>');add('<div class="bolso" style="left:486px">BOLSO</div>');add('<div class="fixar" style="left:576px">+ fixar</div>');
+ const PT=96,P2L=150;const f2=bigPhone();f2.style.cssText=`position:absolute;left:${P2L}px;top:${PT}px;width:280px;height:528px`;root.appendChild(f2);
+ const sc=add(`<div class="scr" style="left:${P2L+20}px;top:${PT+20}px;width:240px;height:472px;background:#f4f6fa"></div>`);
+ sc.innerHTML='<div class="sbar" style="background:#2a1f3d"><span>10:05</span><span>REDES</span><span>▮▮▮ 80%</span></div><div class="apphead" style="font-size:12.5px">Para você <span>Seguindo · Mundo</span></div>';
+ const posts=[
+  ['Neon Rain','@neonrain · seu elenco','#e04848','#3a2a5a','Último ensaio antes da turnê. Londres, sexta a gente se vê.','',['Repostar','Responder'],'+hype pequeno (fato: show marcado)',''],
+  ['Kira Vale','@kiravale · Crown Records','#5aa0e8','#1a3a5a','Tem gente que copia refrão e chama de inspiração. Tô só observando.','sel',['Responder','Ignorar','Diretor de imprensa'],'indireta: esquenta a briga com Neon Rain','r'],
+  ['Notícias Agora','@noticias · mundo','#f0c060','#5a3a14','Bolsas caem 7%. Turnês nos EUA são canceladas e o crédito encarece.','',['Ver no Mundo'],'MUNDO: crise · mexe em shows e crédito',''],
+  ['Neon Rain','@neonrain · seu elenco','#e04848','#3a2a5a','GANHE DINHEIRO FÁCIL!! clique no link >>>','hack',['Recuperar conta ($2 mil)','Pedir desculpa'],'conta invadida? reputação caindo','r'],
+  ['fã_do_soho','@fa_do_soho','#5cbf6a','#1a3a1a','Vi o baterista do Neon Rain saindo da clínica ontem... tudo bem com ele?','',['Desmentir','Ficar quieto'],'boato virando público','r'],
+ ];
+ for(const [n,h,c1,c2,tx,cl,ac,fx,fr] of posts){const p=$(`<div class="post ${cl}"><div class="who">${n}<span>${h}</span></div><div class="tx">${tx}</div>${fx?`<div class="fx ${fr}">${fx}</div>`:''}<div class="ac">${ac.map((a,i)=>`<span class="${i===0&&cl==='sel'?'k':''}">${a}</span>`).join('')}</div></div>`);const av=avatar(c1,c2,2);av.style.cssText='position:absolute;left:6px;top:7px';p.appendChild(av);sc.appendChild(p)}
+ // compose box (seu artista)
+ const P3L=470;const f3=bigPhone();f3.style.cssText=`position:absolute;left:${P3L}px;top:${PT}px;width:280px;height:528px`;root.appendChild(f3);
+ const s3=add(`<div class="scr" style="left:${P3L+20}px;top:${PT+20}px;width:240px;height:472px;background:#f4f6fa;color:#1f2430"></div>`);
+ s3.innerHTML='<div class="sbar" style="background:#2a1f3d"><span>10:06</span><span>POSTAR COMO</span><span>▮▮▮ 80%</span></div><div class="apphead" style="font-size:12.5px">Neon Rain <span>seu elenco · 128 mil</span></div>'+
+ '<div style="padding:6px 8px;font-size:12px;color:#6d5a44">Responder à Kira Vale (indireta):</div>'+
+ '<div class="opt sel"><b>Ficar acima</b>"Cada um com o seu som. Sexta tem show."<em> esfria a briga · +fãs fiéis</em></div>'+
+ '<div class="opt"><b>Rebater</b>"Inspiração é ler o próprio caderno."<em class="r"> briga sobe · +hype dos dois · risco de escândalo</em></div>'+
+ '<div class="opt"><b>Pedir desculpa</b>"Se alguém se sentiu copiado, a gente conversa."<em> esfria · reputação estável</em></div>'+
+ '<div class="opt"><b>Deixar o diretor de imprensa</b><em>ele escolhe pelo perfil dele</em></div>'+
+ '<div class="feed" style="background:#eef1f5;color:#1f2430;border-color:#c0c8d4">O texto muda a cada vez: núcleos por tipo de fato, tom do artista e gíria da época.</div>';
+ add(`<div class="callout" style="left:${P3L+286}px;top:${PT+120}px;width:140px">Escolher a resposta chama o que já existe: briga, hype, fãs, reputação.</div>`);
+ add(`<div class="note" style="left:916px;top:96px;width:432px;font-size:13.5px"><h4>DE ONDE VÊM OS POSTS</h4>
+ <div class="it"><b>Fatos do jogo</b> (prêmio, show, briga, término, escândalo, lançamento, saúde, crise do mundo…) viram posts na voz de quem viveu.</div>
+ <div class="it"><b>Tom pelo artista</b>: humilde, arrogante, engraçado, misterioso, político (persona e temperamento).</div>
+ <div class="it"><b>Sem repetir</b>: cerca de 600 núcleos de frase × aberturas e fechos × gíria por época; o mesmo artista não repete frase nas últimas 50.</div>
+ <div class="it"><b>Mexe no mundo</b>: boato vira público, indireta esquenta briga, apoio aproxima, polêmica derruba reputação, post de lançamento ajuda pré-save, meme entra no Mundo.</div>
+ <div class="it"><b>Conta hackeada</b> (2010+): rara, maior com fama e sem segurança; recuperar custa.</div>
+ <div class="it"><b>Vale para todos</b>: artistas de rivais também postam, brigam e erram.</div></div>`);
+}
+if(M==='redesera'){
+ add('<div class="dim" style="background:#050a12e0"></div>');
+ add('<div class="title">REDES POR ÉPOCA <span>· a mesma vista sobre os fatos, com a forma de cada época</span></div>');
+ const xs=[14,236,458,680,902,1124];
+ const P=(i,t,y,html,cap)=>{const e=add(`<div class="eraP" style="left:${xs[i]}px"><h6>${y} <span>${t}</span></h6><div class="bd">${html}</div><div class="cap">${cap}</div></div>`);return e};
+ P(0,'coluna social','1962',`<div style="background:#efe6cf;color:#2a2018;margin:8px;padding:6px;font-family:'Source Serif 4';font-size:12px;line-height:1.25;border:2px solid #5a3a1e"><div style="font-family:UnifrakturMaguntia;font-size:20px;text-align:center;border-bottom:2px double #2a2018">Diário</div><b>Visto no 2i's…</b> o guitarrista dos Faíscas com a cantora rival.<br><br><b>Briga no Marquee:</b> dois baixistas e um amplificador.</div>`,'Jornal na mesa. Boato → desmentir, plantar nota ou deixar correr.');
+ P(1,'perfil','2004',`<div style="background:#dfe6f4;margin:8px;padding:6px;color:#1f2430;font-size:11.5px;border:2px solid #2a3a9a"><div style="background:#2a3a9a;color:#fff;padding:2px 5px;font-weight:700">Neon Rain · perfil</div><div style="display:flex;gap:6px;margin-top:5px"><div id="pf04"></div><div>▶ toca: <b>Neon Rain - Glass</b><br>plays: 41.233<br>amigos: 8.120</div></div><div style="margin-top:6px"><b>Top 8:</b> Kira Vale, The Lowlights, Mira…</div><div style="margin-top:4px;background:#fff;padding:3px">"show sexta no Camden!!"</div></div>`,'Perfil com 4 músicas e plays (no PC). Amigos = quem você conhece.');
+ P(2,'post curto','2008',`<div style="background:#fff;margin:8px;color:#1f2430;font-size:11.5px;border:2px solid #5aa0e8"><div style="background:#5aa0e8;color:#fff;padding:2px 5px;font-weight:700">o que está acontecendo?</div><div style="padding:4px 6px;border-bottom:1px solid #ddd"><b>Neon Rain</b>: estúdio até as 4. disco novo vem aí.</div><div style="padding:4px 6px;border-bottom:1px solid #ddd"><b>Kira Vale</b>: tem gente copiando refrão...</div><div style="padding:4px 6px"><b>Notícias</b>: crise do crédito fecha casas de show.</div></div>`,'Frases curtas, respostas rápidas: briga esquenta mais rápido.');
+ P(3,'foto','2014',`<div id="ph14" style="margin:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px"></div><div style="margin:0 8px;color:#e9e2d0;font-size:11.5px">12 mil curtidas · "bastidor do clipe"</div>`,'Foto da Câmera vira post. Paparazzi também posta.');
+ P(4,'vídeo curto','2020',`<div id="vd20" style="margin:8px auto;width:120px;height:210px;background:#1a1012;border:3px solid #fff;position:relative"><div style="position:absolute;bottom:6px;left:6px;right:6px;color:#fff;font-size:10.5px">dança do refrão #neonrain<br>2,1 mi views</div></div>`,'Trecho viral puxa o single antes do lançamento.');
+ P(5,'avatar','2032',`<div id="av32" style="margin:8px;height:220px;background:#0a2a2a;border:2px solid #7fe0e8;position:relative"><div style="position:absolute;bottom:8px;left:8px;right:8px;color:#c8f8ff;font-size:11px">show de avatar · 400 mil online</div></div>`,'Avatar e show virtual; deepfake de voz entra aqui.');
+ {const g=document.getElementById('ph14');for(const c of [photo(),bedroom(),photo(),bedroom()]){c.style.cssText='width:100%;height:78px;border:2px solid #fff';g.appendChild(c)}
+  const pf=avatar('#e04848','#3a2a5a',4);pf.style.cssText='border:2px solid #1a1018';document.getElementById('pf04').appendChild(pf);
+  const dancer=pcanvas(30,52,4,(R)=>{R(0,0,30,52,'#2a1020');R(0,40,30,12,'#4a2030');for(let i=0;i<8;i++)R((i*7)%30,(i*5)%30,1,1,'#e86aa0');R(12,10,6,6,'#e8b080');R(11,9,8,3,'#3a2414');R(11,16,8,12,'#e04848');R(7,15,4,2,'#e8b080');R(19,13,4,2,'#e8b080');R(22,10,2,4,'#e8b080');R(11,28,3,12,'#2a2a44');R(16,28,3,10,'#2a2a44');R(18,37,4,3,'#2a2a44')});dancer.style.cssText='width:114px;height:198px';document.getElementById('vd20').prepend(dancer);
+  const holo=pcanvas(48,52,4,(R)=>{R(0,0,48,52,'#0a2a2a');R(14,44,20,4,'#1a1018');R(15,45,18,2,'#5a6a7a');for(let y=0;y<44;y+=1){if(y%4===0)R(16,y,16,1,'#2a8a9a55')}R(21,6,6,6,'#7fe0e8');R(20,12,8,14,'#2a8a9a');R(20,12,8,2,'#7fe0e8');R(16,13,4,2,'#7fe0e8');R(28,13,4,2,'#7fe0e8');R(20,26,3,14,'#2a8a9a');R(25,26,3,14,'#2a8a9a');for(let y=6;y<40;y+=3)R(18,y,12,1,'#c8f8ff33')});holo.style.cssText='width:100%;height:100%';document.getElementById('av32').prepend(holo);}
+ add(`<div class="callout" style="left:14px;top:536px;width:1338px;font-size:14px">Em todas as épocas: os posts saem dos <b>fatos</b> que o jogo já registra; o tom vem do artista; as ações chamam o que já existe (briga, hype, fãs, reputação, boato → público).</div>`);
 }
 
 if(M==='pc'){

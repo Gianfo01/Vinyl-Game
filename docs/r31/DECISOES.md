@@ -457,3 +457,31 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - **2026-10-17 · MAPA33 (R33):** cidade expandida atrás de `exp33.mapa` (desligado): bairros 7–8 (periferia leste, lotes 58–65; orla sul, 66–83; mapa até 56×40) só abrem quando falta lote; registro aberto tipo → onde (`registerSite33`/`setWant33`/`lotFor33`, estádio na periferia, banco no centro, porto só com água, escola de samba só no Rio). Desligado = mapa idêntico (`DIST_BASE18 = 7`; r27-lots ajustado em 2 linhas). Ver `docs/r33/mapa33.md`.
 - **2026-10-17 · R33 VIDA (complemento).** Cartões de ação da vida (sofá, porta, cofre, mapa), evento `r33_scandal` e viagem de lazer (`takeTrip33`), tudo atrás dos mesmos exp33.* desligados.
 - **2026-10-17 · INT-2 (v33): 15 prédios novos com interior.** `exp33.int2` (desligado): registro `src/sim/r33/int2.ts` (lote, onde, cidades e épocas; samba só no Rio, porto só com água, jazz até 1979 e boate de 1970; terreno do festival com cena própria), ações pequenas em formato de cartão de lugar, ganchos `INT2_HOOKS` para GESTÃO/VIDA/CATÁLOGO/MUNDO. Arte NO PADRÃO DO JOGO: `src/ui/r33/int2px.ts` monta `Interior27` + adereços novos no gancho `extra` do `drawInterior27` (casca `cut27`, bonecos `avatarSprite`), 23 lojas da época no mesmo corte, fachada = arte isométrica existente (`mapArt`). Prints em `docs/r33/mocks/int2/`; detalhes em `docs/r33/int2.md`.
+
+## 2026-10-17 · Celular, computador e redes sociais (versão 33)
+- O dono pediu e aprovou, a partir dos mocks em `docs/r33/mocks/`:
+  - **botão CELULAR** no menu de baixo (o último, atalho 5, só de 1983 em diante);
+  - **computador** no PC da mesa (1982+, sem atalho);
+  - **5 versões de cada aparelho**, apps e **ações por época**, tudo ligado às mecânicas que já existem;
+  - Vídeos que descobrem artista novo, Compras de objetos, cobrinha jogável, Encontros com NPCs da cidade (nunca
+    Fossati nem menores);
+  - **redes sociais** como feed sobre os fatos (`facts17`), com posts que mexem no mundo, e o **Jornal
+    reformulado**.
+- Mecânicas novas aprovadas ("incluir tudo"):
+  - minijogos;
+  - toques como formato;
+  - demo caseira;
+  - live e post;
+  - curtir em Encontros;
+  - ligação por época;
+  - assistente de IA;
+  - denúncia de pirataria;
+  - assinatura de fãs;
+  - viralizar trecho;
+  - vazamento do álbum;
+  - cambistas e preço dinâmico;
+  - conta hackeada;
+  - deepfake de voz.
+- Frases: em vez de ~40 modelos, ~600 núcleos combináveis por tom, abertura e fecho e gíria da época, sem repetir as
+  últimas 50 do mesmo artista (o dono achou que 40 repetiria rápido).
+- Ordem: entra **antes do POL33**, em duas frentes paralelas (APARELHOS33 em Opus, REDES33 em Sonnet), depois do QA33.
