@@ -139,9 +139,15 @@ beforeAll(() => {
   // Com todas as chaves base31.* desligadas (base31br, base31it, base31hits, base31stars = false) voltam os valores antigos (conferido).
   // R31 · BASE-BR 3ª rodada + DBTAM (de propósito): +251 atos brasileiros com notoriedade própria (nt); a divisão por tamanho põe
   // outro núcleo BR na base Média: 1109567 / 1382068899 / 3840120958 / 3918718534 → 703829 / 3703042045 / 3137463213 / 2738656355.
-  expect(s.player.cash).toBe(703829);
-  expect(hashString(JSON.stringify(s.acts))).toBe(3137463213);
-  expect(hashString(rngSnapshot19(s))).toBe(2738656355);
+  // QA33 (exp33.* ligados por padrão, decisão do dono 2026-10-17 — docs/r31/DECISOES.md e docs/r33/qa33.md): as nove frentes
+  // da 33 rodam no golden (crise, censura, vida do dono, catálogo, pessoas, gestão, mapa, interiores): caixa, turnês, acts e rng
+  // mudam. Com a 33 desligada (cfg.sw31, helper tests/helpers/off33) mede-se 703827 / 3703042045 / 2129952192 / 2738656355: a
+  // diferença para os valores antigos é a correção do save (market.launchNpcRelease copia os territórios do selo — antes o
+  // lançamento NPC dividia a lista com o selo, e um lançamento que ia para fora levava o selo junto; carregar um save desfazia
+  // o laço e o jogo divergia). Antes: 703829 / 3703042045 / 3137463213 / 2738656355.
+  expect(s.player.cash).toBe(367837);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3737846083);
+  expect(hashString(rngSnapshot19(s))).toBe(3431896346);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);

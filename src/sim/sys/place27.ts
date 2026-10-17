@@ -340,7 +340,9 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
     const free = (p: Place27) => p.src === 'fill' && !p.venue && !p.org && !p.deco31 && FLAVOR27.includes(p.k) && p.k !== 'instruments';
     const j = out.findIndex((p) => free(p) && p.k === 'apartments');
     const i = j >= 0 ? j : out.findIndex(free);
-    if (i >= 0) { const lot = out[i].lot; out[i] = { id: `pl:${lot}`, lot, k: 'apartments', name: fam.name, what: fam.what, owner: fam.owner, ownerK: 'npc', now: fam.now, people: fam.people, also: [], src: 'fill', draw: DRAW27.apartments, fam31: true }; }
+    const home = (lot: number): Place27 => ({ id: `pl:${lot}`, lot, k: 'apartments', name: fam.name, what: fam.what, owner: fam.owner, ownerK: 'npc', now: fam.now, people: fam.people, also: [], src: 'fill', draw: DRAW27.apartments, fam31: true });
+    if (i >= 0) out[i] = home(out[i].lot);
+    else if (i2.length) out.push(home(i2.pop()!.lot)); // QA33: cidade pequena sem prédio comum livre — a casa da família vem antes do prédio da INT-2
   }
   const em = UNDER27.bar?.(s) ?? [];
   const bar = out.find((p) => p.k === 'bar');

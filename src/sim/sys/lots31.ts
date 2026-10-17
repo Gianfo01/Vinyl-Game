@@ -30,7 +30,7 @@ import { LAND18, LOTS18, buildings18, campus18, homeLot18, layout18, lotsOpen18 
 import { famCity31, famNow31 } from './fossati31';
 import { meetHere31, scoutHere31 } from './gente31';
 import { hoodStats19, nb19 } from './hood19';
-import { FAMHOME27, INT33, LOTS27, PLACE_X27, type PAct27, type Person27, type Place27 } from './place27';
+import { FAMHOME27, LOTS27, PLACE_X27, type PAct27, type Person27, type Place27 } from './place27';
 import { where31 } from './where31';
 import { met31, meNode31, node31 } from '../social31';
 
@@ -240,7 +240,7 @@ LAND18.mult = ownLotBuildMult31;
  *  repetida em outro prédio (a cidade comum repete escritórios e hotéis) também não. */
 export function functional31(s: GameState, p: Place27): boolean {
   if (p.lot31 || p.fam31 || p.deco31 || p.lot < 0) return true; // casa nossa, Casa Fossati (frente FOS), lugar real (frente H), loja de decoração (DECO-L)
-  if (p.int2 || INT33.need?.(s).includes(p.k as never)) return true; // R33: prédio da INT-2 em lote reservado; hotel/escritório/apartamentos com ação (INT-1)
+  if (p.int2) return true; // R33 (QA33): prédio da INT-2 no lote reservado do MAPA33
   if (p.src === 'nb' || p.venue || p.outlet || p.org || p.k === 'police' || p.k === 'market' || p.k === 'label') return true;
   if (eraBiz31(s, p)) return true;
   if (p.k === 'apartments') return false;
