@@ -42,6 +42,10 @@ import './redes33.css';
 
 interface Sheet { el: HTMLElement; body: HTMLElement; close: () => void; redraw: () => void }
 let OPEN: Sheet | null = null;
+/** Tela embutida no aparelho (celular/PC da APARELHOS33): redesenha e fecha o aparelho em vez da folha avulsa. */
+const EMB: { redraw: (() => void) | null; close: (() => void) | null } = { redraw: null, close: null };
+const redrawAll = (): void => { (OPEN?.redraw ?? EMB.redraw)?.call(null); };
+const leave = (): void => { if (OPEN) OPEN.close(); else EMB.close?.(); };
 function sheet(build: (s: GameState, sh: Sheet) => HTMLElement, title: () => string, sub: () => string): Sheet | null {
   const s = store.game;
   if (!s || typeof document === 'undefined') return null;
@@ -166,7 +170,7 @@ export function cardItem33(s: GameState, it: JItem33): Card5 {
     default:
       if (mine && it.fid) acts.push(A('r33.j.note', l('Mandar uma nota sobre isso', 'Send a note about it'), (g) => ownPost33(g, it.actId!, 'post', it.fid)));
   }
-  if (it.actId && it.kind !== 'anuncio' && it.kind !== 'oferta') acts.push({ id: 'r33.j.act', label: l('Ver o artista', 'See the act'), kind: 'ui', run: (_g, c) => { c.close(); OPEN?.close(); inspect.act(it.actId!); } });
+  if (it.actId && it.kind !== 'anuncio' && it.kind !== 'oferta') acts.push({ id: 'r33.j.act', label: l('Ver o artista', 'See the act'), kind: 'ui', run: (_g, c) => { c.close(); leave(); inspect.act(it.actId!); } });
   if (!acts.length) acts.push({ id: 'r33.j.ok', label: l('Ok', 'OK'), kind: 'ui', run: (_g, c) => c.close() });
   return { id: 'r33.item', title, nums: [], lines, acts };
 }
@@ -174,14 +178,14 @@ export function cardItem33(s: GameState, it: JItem33): Card5 {
 function openCard(e: Event, build: (s: GameState) => Card5): void {
   const s = store.game;
   if (!s) return;
-  showAdhoc5(s, build(s), rectOf(e), () => { const g = store.game; if (!g) return undefined; OPEN?.redraw(); return build(g); });
+  showAdhoc5(s, build(s), rectOf(e), () => { const g = store.game; if (!g) return undefined; redrawAll(); return build(g); });
 }
 
 // ================================================================ o Jornal
 
 // ---------------------------------------------------------------- imagens e links (o que já existe no jogo)
 
-const goto = (fn: () => void) => (e?: Event): void => { e?.stopPropagation(); OPEN?.close(); fn(); };
+const goto = (fn: () => void) => (e?: Event): void => { e?.stopPropagation(); leave(); fn(); };
 /** Retrato do líder do ato (o mesmo sprite das fichas e da sede) — abre a ficha da pessoa. */
 function faceOf(s: GameState, a: Act | undefined, px = 2): HTMLElement | null {
   const p = a ? leadOf18(s, a) : undefined;
@@ -295,7 +299,7 @@ function pickAct(s: GameState): Act | undefined {
 }
 function btn(label: string, run: () => Res33 | void, why?: L | null, title?: string): HTMLElement {
   return h('span', null,
-    h('button', { type: 'button', class: 'r33-btn', disabled: !!why, title, onclick: () => { const r = run(); if (r) toast(t(r.text), r.ok ? 'good' : 'bad'); OPEN?.redraw(); rerender(); } }, label),
+    h('button', { type: 'button', class: 'r33-btn', disabled: !!why, title, onclick: () => { const r = run(); if (r) toast(t(r.text), r.ok ? 'good' : 'bad'); redrawAll(); rerender(); } }, label),
     why ? h('div', { class: 'r33-why' }, t(why)) : null);
 }
 function postRow(s: GameState, p: FeedItem33, form: Form33): HTMLElement {
@@ -356,6 +360,15 @@ export function openRedes33(): void {
   sheet((s, sh) => redesView(s, sh), () => t(l('Redes', 'Social')), () => { const s = store.game; return s ? `${t(formName33(s.year))} · ${s.year}` : ''; });
 }
 
+/** A tela das Redes como elemento, para dentro da tela do aparelho (celular/PC da APARELHOS33). `close` fecha o aparelho. */
+export function embedRedes33(close?: () => void): HTMLElement {
+  const box = h('div', { class: `r33-sheet r33-embed ep${ep5Of(store.game?.year ?? 2025)}` });
+  const draw = (): void => { const g = store.game; if (g) box.replaceChildren(redesView(g, { el: box, body: box, close: () => close?.(), redraw: draw })); };
+  EMB.redraw = draw; EMB.close = close ?? null;
+  draw();
+  return box;
+}
+
 // ================================================================ registro do app para a casca do celular/PC
 
 export interface RedesApp33 {
@@ -391,8 +404,8 @@ const R33SRC = 'ui/r33/redes33ui';
 const REG: Record<string, ActDef5> = {
   'r33.jornal': { label: l('Ler o jornal', 'Read the newspaper'), kind: 'ui', src: [R33SRC, 'openJornal33'], fn: openJornal33, when: redes33On, run: (_s, c) => { c.close(); openJornal33(); } },
   'r33.redes': { label: l('Abrir as redes', 'Open social'), kind: 'ui', src: [R33SRC, 'openRedes33'], fn: openRedes33, when: (s) => redes33On(s) && s.year >= 2004, run: (_s, c) => { c.close(); openRedes33(); } },
-  'r33.cl.compras': { label: l('Pedir o catálogo pelo correio', 'Order from the mail catalogue'), kind: 'ui', src: ['ui/r31/decoshop31ui', 'openDecoShop31'], fn: openDecoShop31, run: (_s, c) => { c.close(); OPEN?.close(); openDecoShop31('mail'); } },
-  'r33.cl.leilao': { label: l('Ir ao leilão', 'Go to the auction'), kind: 'ui', src: ['ui/r31/quick31', 'goDest31'], fn: goDest31, run: (_s, c) => { c.close(); OPEN?.close(); goDest31({ area: 'auction31' }); } },
+  'r33.cl.compras': { label: l('Pedir o catálogo pelo correio', 'Order from the mail catalogue'), kind: 'ui', src: ['ui/r31/decoshop31ui', 'openDecoShop31'], fn: openDecoShop31, run: (_s, c) => { c.close(); leave(); openDecoShop31('mail'); } },
+  'r33.cl.leilao': { label: l('Ir ao leilão', 'Go to the auction'), kind: 'ui', src: ['ui/r31/quick31', 'goDest31'], fn: goDest31, run: (_s, c) => { c.close(); leave(); goDest31({ area: 'auction31' }); } },
 };
 Object.assign(ACTS_CAT5, REG);
 for (const card of ['jornal', 'jornalpredio']) {

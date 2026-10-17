@@ -21,6 +21,8 @@ import { CARDS5 } from '../src/ui/r31/acoes5data';
 import { cardBoato33, cardItem33, cardPost33, redesApp33 } from '../src/ui/r33/redes33ui';
 import { ICON33, redesIcon33, THUMB33, thumb33, MASTHEAD33, masthead33 } from '../src/ui/r33/redes33px';
 import { ep5Of } from '../src/ui/pixel/exp5px';
+import { apps33, extraApps33 } from '../src/ui/r33/aparelhos33model';
+import '../src/ui/r33/redes33phone';
 import { era33 } from '../src/sim/r33/frases33';
 
 const game = (year = 1975): GameState => createGame(defaultConfig('r33-redes', { startYear: year }));
@@ -314,5 +316,13 @@ describe('r33 redes · telas, cartões e o app', () => {
     expect([m.w, m.h]).toEqual([MASTHEAD33.w, MASTHEAD33.h]);
     expect(new Set(Array.from(m.d)).size).toBeGreaterThan(4);
     for (const y of [1889, 1919, 1920, 1949, 1950, 1969, 1970, 1989, 1990, 2009, 2010, 2040]) expect(era33(y)).toBe(ep5Of(y));
+  });
+  it('o app Redes está registrado no celular e aparece de 2007 em diante (2004 na tabela do PC); some com o sistema desligado', () => {
+    expect(extraApps33('phone').some((a) => a.id === 'redes' && a.de === 2004)).toBe(true);
+    expect(apps33(game(2012), 'phone')).toContain('redes');
+    expect(apps33(game(1997), 'phone')).not.toContain('redes');
+    const s = game(2012);
+    setSw(s, SW_REDES33, false);
+    expect(apps33(s, 'phone')).not.toContain('redes');
   });
 });

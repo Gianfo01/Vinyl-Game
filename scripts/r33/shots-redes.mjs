@@ -77,4 +77,12 @@ for (const [y, name] of [[2008, 'redes-2008'], [2025, 'redes-2025'], [2035, 'red
   await shot(name, true);
   if (y === 2025) { const post = p.locator('.r33-post').first(); if (await post.count()) { await post.click(); await p.waitForTimeout(500); await shot('redes-2025-cartao'); } }
 }
+if (!ONLY || ONLY === 'celular') {
+  await scene(2012, 20);
+  await p.locator('button', { hasText: /celular/i }).last().click(); await p.waitForTimeout(900);
+  const app = p.locator('[data-app33="redes"]');
+  console.log('app Redes no celular:', await app.count());
+  if (await app.count()) { await app.first().click(); await p.waitForTimeout(900); }
+  await shot('celular-redes-2012');
+}
 await b.close();

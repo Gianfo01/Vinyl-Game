@@ -31,6 +31,8 @@ export const NAV5: {
   travel?: (r: Region5) => void;
   /** casca (NAV): abre o papel do objeto `id` no marcador `t` (sem o gancho: `go(t)`) */
   open?: (id: string, t: Open5) => void;
+  /** R33 APARELHOS33: abre/fecha o celular (⇧5); devolve false quando ainda não há celular (antes de 1983) */
+  phone?: () => boolean;
 } = {};
 
 // ---------------------------------------------------------------- registro das frentes (PAPEL, ELENCO, CASA, MAPA, TRN)
@@ -96,6 +98,10 @@ export const TRANS5: { run: (t: TransIn5, swap: () => void) => void } = { run: (
  *  (ações e números) em vez do papel; a página inteira só abre por "ver tudo ▸" no cartão ou pelo índice da pausa.
  *  `take` devolve true quando abriu o cartão (a casca não abre o papel). */
 export const CARD5: { take?: (id: string, t: Open5) => boolean } = {};
+
+/** R33 APARELHOS33: botões a mais no menu de baixo (o celular, depois dos 4 de viagem), uma tela por cima da cena (o
+ *  aparelho aberto) e quem fecha primeiro no Esc. Quem registra é ui/r33/aparelhos33.ts; sem registro, nada muda. */
+export const DOCK5: { btns: ((s: GameState) => HTMLElement | null)[]; over?: (s: GameState) => HTMLElement | null; esc?: () => boolean } = { btns: [] };
 
 // ---------------------------------------------------------------- abrir um objeto
 
@@ -279,5 +285,6 @@ export function keyNav5(s: GameState | undefined, e: KeyEv5): boolean {
   if (a.kind === 'travel') { travelGo5(s, a.id); return true; }
   if (a.kind === 'sys' && a.id === 'pause' && NAV5.pause) { NAV5.pause(); return true; }
   if (a.kind === 'sys' && a.id === 'keys' && NAV5.help) { NAV5.help(keyRows5()); return true; }
+  if (a.kind === 'sys' && a.id === 'phone') return !!NAV5.phone?.();
   return false; // busca, avançar, marcadores { }: continuam com o código de hoje
 }

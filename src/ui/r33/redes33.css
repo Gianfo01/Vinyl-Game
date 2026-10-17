@@ -71,3 +71,18 @@
 .r33-sec.k-paradas .r33-it { align-items: center; }
 .r33-sec.k-classificados .r33-it { border: 1px dashed var(--ink); background: rgba(255, 253, 246, 0.55); margin-bottom: 6px; }
 .r33-sec.k-cartas .r33-it b { font-weight: 400; font-style: italic; }
+
+.r33-sheet.r33-embed { width: 100%; max-height: 100%; overflow-y: auto; padding: 6px; box-shadow: none; border-width: 0; font-size: 12px; }
+/* dentro do aparelho a tela é estreita: o post empilha (retrato e texto lado a lado, capa pequena embaixo) */
+.r33-embed .r33-post { flex-wrap: wrap; gap: 6px; }
+.r33-embed .r33-post .r33-body { flex: 1 1 90px; text-align: left; }
+.r33-embed .r33-post .who { text-align: left; }
+.r33-embed .r33-post .who .r33-lk { text-align: left; }
+.r33-embed .r33-img.cov img { width: 52px; height: 52px; }
+.r33-embed .r33-img canvas { max-width: 56px; height: auto; }
+.r33-embed .r33-bar select { min-width: 0; max-width: 100%; }
+.r33-embed .r33-post { display: block; }
+.r33-embed .r33-post:has(> .r33-img:first-child) { display: grid; grid-template-columns: 56px 1fr; align-items: start; }
+.r33-embed .r33-post .r33-body { min-width: 0; }
+.r33-embed .r33-post > .r33-img.cov { grid-column: 2; justify-self: start; }
+.r33-embed .r33-post .txt { overflow-wrap: anywhere; }
