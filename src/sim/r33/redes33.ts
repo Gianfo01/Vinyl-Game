@@ -455,24 +455,37 @@ export function react33(s: GameState, postId: string, how: Reaction33, myAct?: s
 
 // ================================================================ diretor de imprensa
 
-/** Delegar o post (boato ou escândalo seu) ao diretor de imprensa: `pressPick33` escolhe pela linha da casa. */
-export function delegate33(s: GameState, postId: string): Res33 {
+/** Delegar o post (ou o boato) ao diretor de imprensa: `pressPick33` escolhe pela linha da casa. `ref` = id do post ou do fato. */
+export function delegate33(s: GameState, ref: string): Res33 {
   if (!redes33On(s)) return no('As redes estão desligadas.', 'Social networks are off.');
-  const p = redes33(s).posts.find((x) => x.id === postId);
-  if (!p || !p.mine) return no('Só posts do seu elenco.', 'Only posts from your roster.');
+  const p = redes33(s).posts.find((x) => x.id === ref);
+  const f = factById(s, p?.fid ?? ref);
+  const actId = p?.who ?? (f ? f.actors.map((x) => (s.acts[x] ? x : Object.values(s.acts).find((a) => a.members.includes(x))?.id)).find(Boolean) : undefined);
+  if (!actId || !mineAct(s.acts[actId])) return no('Só posts e boatos do seu elenco.', 'Only posts and rumours from your roster.');
   if (!dirOn33(s)) return no('Ligue os diretores (exp33.dir) para delegar.', 'Turn the directors on (exp33.dir) to delegate.');
   const dir = director33(s, 'press');
   if (!dir) return no('Falta um diretor de imprensa com o cargo e a delegação ligada.', 'You need a press director in the role with delegation switched on.');
-  const f = p.fid ? factById(s, p.fid) : undefined;
+  const kind = p?.kind ?? f?.kind ?? 'career';
   const opts: { id: string }[] = [];
   if (f?.visibility === 'rumor') opts.push({ id: 'statement' });
-  if (NEG.has(p.kind)) opts.push({ id: 'apologize' });
+  if (NEG.has(kind)) opts.push({ id: 'apologize' });
   opts.push({ id: 'silence' });
   const d = { options: opts, defaultOption: 'silence' } as unknown as Decision;
   const pick = pressPick33(d, quality(s, dir).q);
   const mode: OwnMode33 = pick === 'statement' ? 'deny' : pick === 'apologize' ? 'apologize' : 'quiet';
-  const res = ownPost33(s, p.who, mode, p.fid);
+  const res = ownPost33(s, actId, mode, f?.id);
   return res.ok ? { ok: true, text: fmtL(l('{n} cuidou: {t}', '{n} handled it: {t}'), { n: dir.name, t: res.text }) } : res;
+}
+
+/** Mandar parabéns (nascimento, casamento): aproxima do protagonista do fato (social31). */
+export function congrats33(s: GameState, fid: string): Res33 {
+  const f = factById(s, fid);
+  if (!f) return no('Essa notícia já saiu de circulação.', 'That story is gone.');
+  const me = meNode31(s);
+  const pid = f.actors.map((x) => (x.startsWith('p:') ? x.slice(2) : x)).find((x) => s.persons[x]);
+  if (!pid || isFossati31(s, pid) && ROMANCE.has(f.kind)) return no('Não há a quem mandar os parabéns.', 'Nobody to send congratulations to.');
+  shiftTie31(s, me, pid, { i: 2, r: 1 }, 'press');
+  return yes('Parabéns enviados: um gesto que se lembra.', 'Congratulations sent: a gesture people remember.');
 }
 
 // ================================================================ conta hackeada (2010+)

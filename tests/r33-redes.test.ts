@@ -15,6 +15,13 @@ import { OPEN33, CLOSE33, SLANG33 } from '../src/sim/r33/frases33tone';
 import { vida33 } from '../src/sim/r33/vida33';
 import { Rng } from '../src/core/rng';
 import type { Act, GameState } from '../src/sim/types';
+import { card5 } from '../src/ui/r31/acoes5model'; // primeiro: a ordem de carga dos cartões (ciclo de hoje)
+import { ACTS_CAT5 } from '../src/ui/r31/acoes5cat';
+import { CARDS5 } from '../src/ui/r31/acoes5data';
+import { cardBoato33, cardItem33, cardPost33, redesApp33 } from '../src/ui/r33/redes33ui';
+import { ICON33, redesIcon33, THUMB33, thumb33, MASTHEAD33, masthead33 } from '../src/ui/r33/redes33px';
+import { ep5Of } from '../src/ui/pixel/exp5px';
+import { era33 } from '../src/sim/r33/frases33';
 
 const game = (year = 1975): GameState => createGame(defaultConfig('r33-redes', { startYear: year }));
 const acts = (s: GameState): Act[] => Object.values(s.acts).filter((a) => a.status !== 'retired' && a.status !== 'split' && a.members.length > 0 && !a.catalogNo);
@@ -223,6 +230,20 @@ describe('r33 jornal', () => {
     expect(j.sections.cartas).toHaveLength(3);
     expect(cartas33(s)[0].text.pt.length).toBeGreaterThan(10);
   });
+  it('as publicações não repetem texto: cada uma conta do seu jeito, reparte as seções e tem cartas próprias', () => {
+    const s = game(1962);
+    const a = mineAct(s);
+    for (let i = 0; i < 4; i++) emitFact(s, { kind: 'show', actors: [a.id], severity: 40 + i, visibility: 'public', text: { pt: `Show ${i} de A.`, en: `Show ${i} by A.` } });
+    const j = jornal33(s);
+    const heads = (p: string) => Object.values(j.byPaper[p]).flat().filter((x) => x.kind !== 'anuncio').map((x) => x.head.pt);
+    const [x, y] = [heads('fofoca'), heads('paradas')];
+    expect(x.filter((h) => y.includes(h))).toEqual([]);
+    const letters = (p: string) => j.byPaper[p].cartas.map((c) => c.head.pt);
+    expect(new Set(letters('fofoca')).size).toBe(3);
+    expect(letters('fofoca')).not.toEqual(letters('jornal'));
+    const txt = jornal33(s).byPaper.fofoca.musica.map((m) => m.head.pt).join('|');
+    expect(txt).toMatch(/Exclusivo|Boca pequena|Sem querer|E tem mais|Quem diria|Contem/);
+  });
   it('classificados: toda ação é de um app antes do celular e existe', () => {
     for (const c of CLASSIFIED33) { expect(c.acts.length).toBeGreaterThan(0); expect(c.body.pt && c.body.en && c.head.en).toBeTruthy(); }
     expect(CLASSIFIED33.find((c) => c.id === 'coracao')!.acts).toContain('chamarSair');
@@ -240,5 +261,58 @@ describe('r33 jornal', () => {
     const all = [...feed33(s).map((x) => x.text.pt), ...Object.values(j.sections).flat().map((x) => x.head.pt), ...boatos33(s).map((x) => x.f.text.pt)].join(' | ');
     expect(all).not.toContain('FOSSATI');
     expect(feed33(s).some((x) => x.kind === 'romance')).toBe(true);
+  });
+});
+
+describe('r33 redes · telas, cartões e o app', () => {
+  it('classificados: cada anúncio abre o cartão com as ações certas, que existem no catálogo', () => {
+    const s = game(1962);
+    for (const c of CLASSIFIED33) for (const a of c.acts) expect(ACTS_CAT5[a], `${c.id}:${a}`).toBeTruthy();
+    for (const id of ['r33.cl.compras', 'r33.cl.leilao']) { expect(ACTS_CAT5[id].src?.length).toBe(2); expect(typeof ACTS_CAT5[id].fn).toBe('function'); }
+    const item = (ad: string) => jornal33(s).sections.classificados.find((x) => x.ad === ad)!;
+    const ids = (ad: string) => cardItem33(s, item(ad)).acts.map((a) => a.id);
+    expect(ids('coracao')).toContain('chamarSair'); // 'encontro' só aparece quando há com quem jantar
+    expect(ids('musico')).toEqual(expect.arrayContaining(['garimpar', 'contratarArtista']));
+    expect(ids('correio')).toEqual(['r33.cl.compras']);
+    expect(ids('leilao')).toEqual(['r33.cl.leilao']);
+    expect(ids('vagas')).toContain('contratarFunc');
+  });
+  it('cartão de post: seu artista (postar, desmentir, desculpa, quieto, delegar); de outro (curtir, repostar, responder, ignorar)', () => {
+    const s = game(2012);
+    const a = mineAct(s), rival = acts(s)[1];
+    const st = redes33(s);
+    st.posts.push({ id: 'cp1', w: s.week, y: s.year, m: s.month, who: a.id, kind: 'award', vis: 'public', sev: 40, text: { pt: 'p', en: 'p' }, core: 'award#0', tone: 'humilde', mine: true });
+    st.posts.push({ id: 'cp2', w: s.week, y: s.year, m: s.month, who: rival.id, kind: 'chart', vis: 'public', sev: 40, text: { pt: 'p', en: 'p' }, core: 'chart#0', tone: 'humilde', mine: false });
+    const fd = feed33(s, { limit: 100 });
+    expect(cardPost33(s, fd.find((x) => x.id === 'cp1')!).acts.map((x) => x.id)).toEqual(['r33.post', 'r33.deny', 'r33.sorry', 'r33.quiet', 'r33.delegate']);
+    expect(cardPost33(s, fd.find((x) => x.id === 'cp2')!).acts.map((x) => x.id)).toEqual(['r33.like', 'r33.repost', 'r33.reply', 'r33.ignore']);
+    const f = emitFact(s, { kind: 'affair', actors: [a.id], severity: 40, visibility: 'rumor', text: { pt: 'b', en: 'b' } });
+    expect(cardBoato33(s, f.id, a.id).acts.map((x) => x.id)).toEqual(['r33.b.post', 'r33.b.deny', 'r33.b.plant', 'r33.b.run', 'r33.b.delegate']);
+  });
+  it('o Jornal na mesa ganha "Ler o jornal" e, de 2004, "Abrir as redes"', () => {
+    expect(CARDS5.jornal.acts).toEqual(expect.arrayContaining(['r33.jornal', 'r33.redes']));
+    const mk = (y: number) => card5(game(y), 'jornal')!.acts.map((x) => x.id);
+    expect(mk(1962)).toContain('r33.jornal');
+    expect(mk(1962)).not.toContain('r33.redes');
+    expect(mk(2010)).toEqual(expect.arrayContaining(['r33.jornal', 'r33.redes']));
+  });
+  it('app Redes: registro pronto para a casca, formas por ano, ícone e arte diferentes por forma e por época', () => {
+    expect(redesApp33.id).toBe('redes');
+    expect(redesApp33.forms.map((f) => `${f.y}:${f.id}`)).toEqual(['2004:perfil', '2006:micro', '2010:foto', '2018:video', '2030:avatar']);
+    expect(redesApp33.when(game(2003))).toBe(false);
+    expect(redesApp33.when(game(2010))).toBe(true);
+    expect(typeof redesApp33.open).toBe('function');
+    const forms = ['jornal', 'perfil', 'micro', 'foto', 'video', 'avatar'] as const;
+    const sig = forms.map((f) => Array.from(redesIcon33(f, 2025).d).join(','));
+    expect(new Set(sig).size).toBe(forms.length);
+    for (const f of forms) { const p = redesIcon33(f, 2025); expect(p.w).toBe(ICON33 + 2); expect(new Set(Array.from(p.d).filter(Boolean)).size).toBeGreaterThan(3); }
+    expect(Array.from(redesIcon33('perfil', 1962).d).join()).not.toBe(Array.from(redesIcon33('perfil', 2025).d).join());
+    const th = thumb33('award', 'x', 2012, 'video');
+    expect([th.w, th.h]).toEqual([THUMB33.w, THUMB33.h]);
+    expect(new Set(Array.from(th.d)).size).toBeGreaterThan(5);
+    const m = masthead33('folha', 'A Folha', 1905);
+    expect([m.w, m.h]).toEqual([MASTHEAD33.w, MASTHEAD33.h]);
+    expect(new Set(Array.from(m.d)).size).toBeGreaterThan(4);
+    for (const y of [1889, 1919, 1920, 1949, 1950, 1969, 1970, 1989, 1990, 2009, 2010, 2040]) expect(era33(y)).toBe(ep5Of(y));
   });
 });

@@ -91,24 +91,46 @@ const LETTERS: [string, string][] = [
   ['Parabéns à redação pela cobertura de {a}. Mais disso, por favor.', 'Congratulations to the newsroom for its coverage of {a}. More of this, please.'],
   ['Li que {a} anda cansado. Que descanse, que a gente espera.', 'I read that {a} is tired. Let them rest, we will wait.'],
   ['Comprei o disco de {a} e a capa é a coisa mais bonita que já vi.', 'I bought the record by {a} and the sleeve is the prettiest thing I have seen.'],
+  ['Por que ninguém toca {a} nas rádios de {c}? Reclamo em nome do bairro inteiro.', 'Why does nobody play {a} on the radio in {c}? I complain on behalf of the whole neighbourhood.'],
+  ['Fui ao show de {a} e voltei rouco. Valeu cada centavo do ingresso.', 'I went to the {a} show and came back hoarse. Worth every penny of the ticket.'],
+  ['Discordo do crítico: {a} é o melhor que apareceu em {c} nos últimos anos.', 'I disagree with the critic: {a} is the best thing to come out of {c} in years.'],
+  ['Meu filho quer aprender violão por causa de {a}. A culpa é de vocês.', 'My son wants to learn guitar because of {a}. You are to blame.'],
+  ['Alguém sabe a letra completa de {a}? Aposto uma rodada com o meu cunhado.', 'Does anyone know the full lyrics of {a}? I bet my brother-in-law a round.'],
+  ['Cansei de ler fofoca sobre {a}. Falem da música, que é o que importa.', 'I am tired of gossip about {a}. Talk about the music, which is what matters.'],
+  ['Guardei o recorte da entrevista de {a} na carteira desde março.', 'I have kept the clipping of the {a} interview in my wallet since March.'],
+  ['Tocaram {a} no casamento da minha prima e a festa só acabou de manhã.', 'They played {a} at my cousin\'s wedding and the party only ended at dawn.'],
+  ['Vocês exageram nos elogios a {a}. Bom, sim; gênio, calma.', 'You overpraise {a}. Good, yes; genius, easy now.'],
+  ['Escrevo de {c}, onde {a} virou assunto até na fila do pão.', 'I write from {c}, where {a} has become the talk even in the bread queue.'],
+  ['Pedi {a} três vezes na rádio e o locutor me atendeu. Ele merece um aumento.', 'I requested {a} three times on the radio and the host obliged. He deserves a raise.'],
+  ['Antes eu achava {a} barulho. Agora acho que o barulho era eu.', 'I used to think {a} was noise. Now I think the noise was me.'],
+  ['Sugiro que a redação publique a história de vida de {a}. Dá um livro.', 'I suggest the newsroom publish the life story of {a}. It would make a book.'],
+  ['Dancei {a} a noite toda em {c}. Hoje só ando de chinelo.', 'I danced to {a} all night in {c}. Today I can only wear slippers.'],
+  ['O disco de {a} chegou riscado. Quem me ajuda a reclamar?', 'My {a} record arrived scratched. Who can help me complain?'],
+  ['Digam a {a} que {c} espera. Estamos arrumando a praça.', 'Tell {a} that {c} is waiting. We are tidying up the square.'],
 ];
 export interface Letter33 { id: string; actId: string; text: L; done: boolean }
-/** Três cartas por mês sobre os seus artistas (ou os mais famosos, sem elenco). Determinístico por mês. */
-export function cartas33(s: GameState): Letter33[] {
+/** Três cartas por mês e por publicação, de artistas e modelos diferentes. Determinístico. */
+export function cartas33(s: GameState, paper = ''): Letter33[] {
   const mine = playerActs(s).map((id) => s.acts[id]).filter((a): a is Act => !!a);
-  const pool = mine.length ? mine : Object.values(s.acts).filter((a) => a.fame >= 40).slice(0, 12);
+  const famous = Object.values(s.acts).filter((a) => a.fame >= 35).sort((a, b) => b.fame - a.fame || (a.id < b.id ? -1 : 1)).slice(0, 24);
+  const pool = [...mine, ...famous.filter((a) => !mine.includes(a))];
   if (!pool.length) return [];
-  const r = Rng.fromSeed(`${s.config.seed}|cartas33|${s.year}|${s.month}`);
+  const r = Rng.fromSeed(`${s.config.seed}|cartas33|${paper}|${s.year}|${s.month}`);
   const st = redes33(s);
+  const usedA = new Set<string>(), usedT = new Set<number>();
   return [0, 1, 2].map((i) => {
-    const a = pool[r.int(0, pool.length - 1)], t = LETTERS[r.int(0, LETTERS.length - 1)];
-    const id = `${s.year}-${s.month}-${i}`;
-    return { id, actId: a.id, done: st.fx[`carta:${id}`] === '1', text: fmtL(l(t[0], t[1]), { a: a.name, c: cityById[a.city]?.name ?? l('nossa cidade', 'our town') }) };
+    let a = pool[r.int(0, pool.length - 1)], k = 0;
+    while (usedA.has(a.id) && k++ < 12) a = pool[r.int(0, pool.length - 1)];
+    let ti = r.int(0, LETTERS.length - 1); k = 0;
+    while (usedT.has(ti) && k++ < 12) ti = r.int(0, LETTERS.length - 1);
+    usedA.add(a.id); usedT.add(ti);
+    const id = `${paper ? `${paper}-` : ''}${s.year}-${s.month}-${i}`;
+    return { id, actId: a.id, done: st.fx[`carta:${id}`] === '1', text: fmtL(l(LETTERS[ti][0], LETTERS[ti][1]), { a: a.name, c: cityById[a.city]?.name ?? l('nossa cidade', 'our town') }) };
   });
 }
 /** Responder a carta (ou ignorar): fã atendido rende um pouco de hype ao artista seu. */
 export function answerLetter33(s: GameState, letter: string, how: 'answer' | 'ignore'): Res33 {
-  const st = redes33(s), c = cartas33(s).find((x) => x.id === letter);
+  const st = redes33(s), c = [...papers33(s.year).flatMap((p) => cartas33(s, p.id)), ...cartas33(s)].find((x) => x.id === letter);
   if (!c) return { ok: false, text: l('Essa carta já saiu da mesa.', 'That letter is gone from the desk.') };
   if (c.done) return { ok: false, text: l('Você já tratou dessa carta.', 'You already dealt with that letter.') };
   st.fx[`carta:${letter}`] = '1';
@@ -134,7 +156,7 @@ const toItem = (s: GameState, sec: JSec33, f: Fact, kind: JKind33 = 'noticia'): 
 };
 
 /** Monta uma seção do Jornal a partir dos fatos e do estado. */
-export function section33(s: GameState, sec: JSec33): JItem33[] {
+export function section33(s: GameState, sec: JSec33, paper = ''): JItem33[] {
   if (!redes33On(s)) return [];
   const romanceFossati = (f: Fact): boolean => ['romance', 'affair', 'marriage', 'breakup'].includes(f.kind) && f.actors.some((x) => isFossati31(s, x));
   switch (sec) {
@@ -174,18 +196,51 @@ export function section33(s: GameState, sec: JSec33): JItem33[] {
       const rel = s.releases[e.releaseId], a = rel ? s.acts[rel.actId] : undefined;
       return { id: `paradas:${e.releaseId}`, sec: 'paradas' as const, kind: 'parada' as const, head: l(`${e.pos}. ${rel?.title ?? '?'}`, `${e.pos}. ${rel?.title ?? '?'}`), body: l(a?.name ?? '?', a?.name ?? '?'), actId: a?.id, releaseId: e.releaseId, tag: l(`${e.weeks} sem.`, `${e.weeks} wk`) };
     });
-    case 'cartas': return cartas33(s).map((c) => ({ id: `cartas:${c.id}`, sec: 'cartas' as const, kind: 'carta' as const, head: c.text, actId: c.actId, letter: c.id, tag: c.done ? l('respondida', 'answered') : undefined }));
+    case 'cartas': return cartas33(s, paper).map((c) => ({ id: `cartas:${c.id}`, sec: 'cartas' as const, kind: 'carta' as const, head: c.text, actId: c.actId, letter: c.id, tag: c.done ? l('respondida', 'answered') : undefined }));
     case 'nascimentos': return publicFacts(s, 12).filter((f) => BIRTHS.has(f.kind) && !romanceFossati(f)).slice(0, 6).map((f) => ({ ...toItem(s, 'nascimentos', f), kind: 'nasc' as const }));
     case 'classificados': return classifieds33(s.year).map((c) => ({ id: `cl:${c.id}`, sec: 'classificados' as const, kind: 'anuncio' as const, head: c.head, body: c.body, ad: c.id, tag: c.app }));
   }
 }
 
-export interface Jornal33 { year: number; papers: Paper33[]; voice: L; sections: Record<JSec33, JItem33[]> }
+/** Voz de cada publicação: a mesma notícia sai com outro jeito de contar (abertura e fecho próprios por jornal/revista). */
+const VOICE33: Record<string, { pre: string[]; post: string[] }> = {
+  folha: { pre: ['Consta que|It is reported that', 'Sabe-se que|It is known that', 'Informam-nos que|We are informed that'], post: ['', ''] },
+  jornal: { pre: ['', ''], post: ['', ''] },
+  radio: { pre: ['Ouvintes, atenção:|Listeners, attention:', 'Direto da emissora:|Straight from the station:', 'Ao microfone:|On the air:'], post: ['Fiquem na sintonia.|Stay tuned.', 'Volto já.|Back in a moment.', ''] },
+  fofoca: { pre: ['Exclusivo:|Exclusive:', 'Boca pequena:|Whispers say:', 'Sem querer fofocar, mas:|Not to gossip, but:'], post: ['E tem mais.|And there is more.', 'Quem diria.|Who would have thought.', 'Contem para as amigas.|Tell your friends.'] },
+  paradas: { pre: ['Nas paradas:|On the charts:', 'Placar da semana:|This week\'s scoreboard:'], post: ['Acompanhe a subida.|Follow the climb.', ''] },
+  tv: { pre: ['Na telinha:|On the screen:', 'Hoje na programação:|On tonight\'s schedule:', 'Imagens ao vivo:|Live pictures:'], post: ['Não perca.|Do not miss it.', ''] },
+  fanzine: { pre: ['Zine #3:|Zine #3:', 'Recortado e colado:|Cut and pasted:', 'Direto da garagem:|Straight from the garage:'], post: ['Xerox livre.|Photocopy freely.', 'Passe adiante.|Pass it on.'] },
+  portal: { pre: ['Veja:|See:', 'Em alta:|Trending:', 'Última hora:|Latest:'], post: ['Leia mais.|Read more.', 'Compartilhe.|Share.', ''] },
+};
+const hs = (x: string): number => { let h = 2166136261; for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const pair = (x: string): L => { const i = x.indexOf('|'); return i < 0 ? l(x, x) : l(x.slice(0, i), x.slice(i + 1)); };
+function voiced(p: string, it: JItem33): JItem33 {
+  const v = VOICE33[p];
+  if (!v || it.kind === 'anuncio' || it.kind === 'carta' || it.kind === 'parada') return it;
+  const h0 = hs(`${p}|${it.id}`), pre = pair(v.pre[h0 % v.pre.length]), post = pair(v.post[(h0 >>> 4) % v.post.length]);
+  if (!pre.pt && !post.pt) return it;
+  const low = (x: string): string => (pre.pt && /[:,]$/.test(pre.pt) ? x.charAt(0).toLowerCase() + x.slice(1) : x);
+  const head = l(`${pre.pt ? `${pre.pt} ` : ''}${low(it.head.pt)}${post.pt ? ` ${post.pt}` : ''}`, `${pre.en ? `${pre.en} ` : ''}${pre.en && /[:,]$/.test(pre.en) ? it.head.en.charAt(0).toLowerCase() + it.head.en.slice(1) : it.head.en}${post.en ? ` ${post.en}` : ''}`);
+  return { ...it, head };
+}
+
+export interface Jornal33 { year: number; papers: Paper33[]; voice: L; sections: Record<JSec33, JItem33[]>; /** o que cada publicação traz: as seções repartidas entre elas e na voz de cada uma */ byPaper: Record<string, Record<JSec33, JItem33[]>> }
 export function jornal33(s: GameState): Jornal33 {
   const papers = papers33(s.year);
   const need = new Set(papers.flatMap((p) => p.secs));
   const sections = {} as Record<JSec33, JItem33[]>;
   for (const k of Object.keys(JSEC33) as JSec33[]) sections[k] = need.has(k) ? section33(s, k) : [];
-  return { year: s.year, papers, voice: WORLD_VOICE33(s.year), sections };
+  const byPaper: Record<string, Record<JSec33, JItem33[]>> = {};
+  for (const p of papers) byPaper[p.id] = Object.fromEntries((Object.keys(JSEC33) as JSec33[]).map((k) => [k, []])) as unknown as Record<JSec33, JItem33[]>;
+  for (const k of Object.keys(JSEC33) as JSec33[]) {
+    const carriers = papers.filter((p) => p.secs.includes(k));
+    carriers.forEach((p, i) => {
+      let items = k === 'cartas' ? section33(s, k, p.id) : sections[k];
+      if (carriers.length > 1 && k !== 'cartas' && k !== 'classificados' && items.length >= carriers.length) items = items.filter((_, j) => j % carriers.length === i);
+      byPaper[p.id][k] = items.map((it) => voiced(p.id, it));
+    });
+  }
+  return { year: s.year, papers, voice: WORLD_VOICE33(s.year), sections, byPaper };
 }
 export { factById };

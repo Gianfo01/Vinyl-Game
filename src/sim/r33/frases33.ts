@@ -28,8 +28,10 @@ function fill(t: L, sl: Slots33): L {
     const v = (sl as Record<string, string | undefined>)[k];
     return v ?? FALLBACK[k][lang];
   });
-  return l(sub(t.pt, 'pt'), sub(t.en, 'en'));
+  return l(contract33(sub(t.pt, 'pt')), sub(t.en, 'en'));
 }
+/** Contrações do português: "em o teatro" → "no teatro", "de a praça" → "da praça". */
+export const contract33 = (x: string): string => x.replace(/\bem (o|a|os|as) /gi, (_, a: string) => `n${a} `).replace(/\bde (o|a|os|as) /gi, (_, a: string) => `d${a} `);
 
 /** Quantos núcleos existem (e quais ids). Id = `${tipo}#${i}` ou `g:${grupo}#${i}` para o genérico. */
 export const coreTotal33 = (): number => Object.values(CORE_TEXT33).reduce((t, v) => t + v.length, 0);
