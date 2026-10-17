@@ -39,6 +39,7 @@ Estado: ✅ resolvido · ⏳ com a frente dona (ainda não chegou) · ❌ aberto
 | 24 | Pedido do dono: tirar as abas "Sua sede / Nosso mundo" da cidade (os botões de viagem de baixo já fazem isso) | ⇧3 | `qa5-17-cidade-sem-abas.png` | QA5 | ✅ (`placeTabs27` não desenha com a casca) |
 | 26 | Pedido do dono: tirar também o título "Nosso mundo — Selo Agulha" da cidade | ⇧3 | `qa5-18-cidade-sem-titulo.png` | QA5 | ✅ (`shell5.css`, só com a casca) |
 | 25 | Pergunta do dono: o que é "Vizinhanças boas"? | ⇧3, chip do topo | — | — | ℹ️ bônus de vizinhança entre os SEUS prédios (`world19.ts`, ADJ19: estúdio ao lado da sede, loja em esquina movimentada, casa dos artistas perto do estúdio…; fábrica barulhenta é negativa). Fica 0 enquanto só há a sede |
+| 27 | Pedido da integração: janela da cena do modo Arrumar (DECO-M) com prédios cinza genéricos | Casa → ⇧O | — | DECO-A | ✅ (já corrigido no 971a04de: `window31` com a cidade e a época à noite; conferido 1962 casa e sede) · Arrumar entrou no robô (abrir, cômodo, casa/sede, gaveta, Esc) |
 
 ## Robô (`scripts/r31/qa5.mjs` + `tests/r31-qa5.test.ts`)
 `node scripts/r31/qa5.mjs [--quick] [--out x.json] [--shots pasta]` sobe o vite com `VITE_EXP5NAV=1`, começa pela Nova

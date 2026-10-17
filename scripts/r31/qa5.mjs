@@ -1,7 +1,7 @@
 // R31 · onda 5 · QA5 — robô de navegação com `exp5.nav` ligado (o jogo como o dono joga).
 // Sobe o vite com VITE_EXP5NAV=1, começa partidas pela tela de Nova run (começo rápido) e percorre: cada objeto da sede e
 // da casa (cartão de ações, cada ação, "ver tudo", Esc), a cidade (prédio de cada tipo, entrar e voltar), o mundo
-// (país → cidade → voltar), a viagem (⇧1–4, H), a pausa e o índice, a ajuda (?), a busca (Ctrl+K), o bolso e avançar mês.
+// (país → cidade → voltar), o modo Arrumar (⇧O: cômodo, sede, gaveta, Esc), a viagem (⇧1–4, H), a pausa e o índice, a ajuda (?), a busca (Ctrl+K), o bolso e avançar mês.
 // Falha (código 1) se aparecer, fora da lista de conhecidos (scripts/r31/qa5-known.json):
 //   erro         erro de página / console
 //   sem-volta    tela aberta que o Esc não fecha até voltar à cena da região (ou que cai na pausa)
@@ -256,6 +256,25 @@ async function sweepSystem() {
   if (await pinBar.count() && await pinBar.isEnabled()) { const b0 = await sig(); await pinBar.click(); await wait(400); if (b0 === (await sig())) flag('sem-efeito', 'barra>+ fixar'); await escBack('fixar', { pauseOk: true }); }
 }
 
+/** Modo Arrumar (DECO-M, ⇧O): abrir na casa, trocar cômodo, trocar para a sede, abrir a gaveta de um lugar, Esc fecha. */
+async function sweepArrumar() {
+  step = 'arrumar';
+  await goRegion('Shift+Digit2', 'casa');
+  await p.keyboard.press('Shift+KeyO'); await wait(900);
+  if (!(await p.locator('.deco5-x').count())) { flag('sem-efeito', 'arrumar.tecla ⇧O'); return; }
+  await checkScroll('arrumar');
+  await shot('arrumar');
+  const click = async (sel, where) => { const b = p.locator(sel).first(); if (!(await b.count())) return; const b0 = await sig(); await b.click({ timeout: 2500 }); await wait(500); if (b0 === (await sig())) flag('sem-efeito', where); };
+  await click('.deco5-room:not(.on)', 'arrumar.cômodo');
+  await click('.deco5-tab:not(.on)', 'arrumar.casa/sede');
+  await click('.deco5-spot', 'arrumar.gaveta');
+  await p.keyboard.press('Escape'); await wait(500);
+  if (await p.locator('.deco5-x').count()) { await p.keyboard.press('Escape'); await wait(500); }
+  if (await p.locator('.deco5-x').count()) flag('sem-volta', 'arrumar', 'Esc não fecha');
+  if (await p.locator('.pz5').count()) flag('sem-volta', 'arrumar', 'Esc caiu na pausa');
+  await escBack('arrumar', { pauseOk: true });
+}
+
 async function advance(n) {
   for (let i = 0; i < n; i++) {
     const d0 = await p.locator('.t5-chip').first().textContent();
@@ -287,7 +306,7 @@ for (const run of RUNS) {
     const parts = [
       ['sede', () => sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', QUICK ? 3 : 99)],
       ['casa', () => sweepObjects('casa', 'Shift+Digit2', '.app5 main .r5-spot', 'aria-label', QUICK ? 3 : 99)],
-      ['cidade', sweepCity], ['mundo', sweepWorld], ['sistema', sweepSystem],
+      ['arrumar', sweepArrumar], ['cidade', sweepCity], ['mundo', sweepWorld], ['sistema', sweepSystem],
       ['mes', () => advance(QUICK ? 1 : 3)],
       ['sede-depois', () => sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', 0)],
     ];
