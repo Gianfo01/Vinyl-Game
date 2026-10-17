@@ -17,7 +17,7 @@ import {
 } from '../../data/deco31';
 import {
   DECO_HOOK31, DECO_WHY31, buyDeco31, decoFx31, decoOfObj31, decoOn31, decoPlaces31, decoPrice31, drawer31, parseSpot31, placeDeco31, reqKey31,
-  reqLevel31, setReq31, spotKey31, takeDeco31, upgOfObj31, type DecoPlaceDef31, type DecoRoom31,
+  reqLevel31, reqNeighbor31, setReq31, spotKey31, swapReq31, takeDeco31, upgOfObj31, type DecoPlaceDef31, type DecoRoom31,
 } from '../../sim/r31/deco31';
 import { obj31, type ObjInst } from '../../sim/r31/object';
 import { nav5On } from '../../sim/r31/exp5';
@@ -37,7 +37,7 @@ let SHOP5: ((c: DecoShopCtx5) => void) | null = null;
 export function registerDecoShop5(fn: (c: DecoShopCtx5) => void): void { SHOP5 = fn; }
 
 /** Estado só da interface (não vai para o save). */
-const UI = { open: false, place: 'home', room: '', sel: '' as string, shop: false };
+const UI = { open: false, place: 'home', room: '', sel: '' as string, shop: false, moving: '' as string };
 
 // ---------------------------------------------------------------- disposição do cômodo (PURO)
 
@@ -113,7 +113,7 @@ export const arrumarOk5 = (s: GameState | undefined): boolean => !!s && decoOn31
 export function openArrumar5(place?: string): void {
   const s = game();
   if (!arrumarOk5(s)) return;
-  UI.open = true; UI.sel = ''; UI.shop = false;
+  UI.open = true; UI.sel = ''; UI.shop = false; UI.moving = '';
   if (place) { UI.place = place; UI.room = ''; }
   draw5();
 }
@@ -152,6 +152,8 @@ function head5(s: GameState, places: DecoPlaceDef31[], p: DecoPlaceDef31, r: Dec
 
 const SC = 4;
 let dragObj = '';
+/** lugar de onde saiu o arrasto (peça posta ou obrigatório); vazio = veio da gaveta */
+let dragKey = '';
 function scene5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31): HTMLElement {
   const { px, lay } = paintRoom5(s, p.key, r);
   const cv = upscale(px.canvas(), lay.W * SC, lay.H * SC);
@@ -161,24 +163,56 @@ function scene5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31): HTMLElement {
   for (const b of lay.boxes) {
     const filled = b.kind === 'req' ? true : !!st.at[b.key];
     const name = b.kind === 'req' ? reqDef31(b.req!)!.name : SLOT31_L[b.slot];
+    // BUGS33: obrigatórios (cofre, arquivo, telefone…) também arrastam — trocam de lugar com outro do mesmo grupo
     const btn = h('button', {
-      type: 'button', class: `deco5-spot ${b.kind}${filled ? ' full' : ''}${UI.sel === b.key ? ' sel' : ''}`,
-      title: t(name), 'aria-label': t(name),
+      type: 'button', class: `deco5-spot ${b.kind}${filled ? ' full' : ''}${UI.sel === b.key ? ' sel' : ''}${UI.moving === b.key ? ' moving' : ''}`,
+      title: t(name), 'aria-label': t(name), 'data-key': b.key,
       style: `left:${(b.x / lay.W) * 100}%;top:${(b.y / lay.H) * 100}%;width:${(b.w / lay.W) * 100}%;height:${(b.h / lay.H) * 100}%`,
-      draggable: b.kind === 'spot' && filled ? 'true' : undefined,
-      onclick: () => { UI.sel = b.key; UI.shop = false; draw5(); },
+      draggable: filled ? 'true' : undefined,
+      onclick: () => { if (UI.moving && UI.moving !== b.key) { move5(s, p, r, UI.moving, b.key); return; } UI.moving = ''; UI.sel = b.key; UI.shop = false; draw5(); },
     }, filled ? null : h('i', { class: 'deco5-pin', 'aria-hidden': 'true' }));
-    if (b.kind === 'spot') {
-      btn.addEventListener('dragstart', (e) => { dragObj = st.at[b.key] ?? ''; (e as DragEvent).dataTransfer?.setData('text/plain', dragObj); });
-      btn.addEventListener('dragover', (e) => { e.preventDefault(); btn.classList.add('over'); });
-      btn.addEventListener('dragleave', () => btn.classList.remove('over'));
-      btn.addEventListener('drop', (e) => { e.preventDefault(); const id = (e as DragEvent).dataTransfer?.getData('text/plain') || dragObj; dragObj = ''; if (id) put5(s, id, b.key); });
-    }
+    btn.addEventListener('dragstart', (e) => { dragKey = b.key; dragObj = b.kind === 'spot' ? st.at[b.key] ?? '' : ''; (e as DragEvent).dataTransfer?.setData('text/plain', b.key); });
+    btn.addEventListener('dragend', () => { dragKey = ''; });
+    btn.addEventListener('dragover', (e) => { e.preventDefault(); btn.classList.add('over'); });
+    btn.addEventListener('dragleave', () => btn.classList.remove('over'));
+    btn.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const from = dragKey; const id = dragObj; dragKey = ''; dragObj = '';
+      if (from) move5(s, p, r, from, b.key); else if (id && b.kind === 'spot') put5(s, id, b.key); // da gaveta: põe
+    });
     layer.append(btn);
   }
   return h('div', { class: 'deco5-scroll' }, h('div', { class: 'deco5-stage', style: `width:max(100%, ${Math.round(lay.W * 2.5)}px);aspect-ratio:${lay.W} / ${lay.H}` }, cv, layer));
 }
 const deco31peek = (s: GameState) => (s as unknown as { x4?: { deco31?: { at: Record<string, string>; req: Record<string, string> } } }).x4?.deco31 ?? { at: {}, req: {} };
+
+/** BUGS33: muda de lugar o que está em `from` para `to` no mesmo cômodo (arrastar, "Mover" + clique ou setas). */
+function move5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31, from: string, to: string): void {
+  UI.moving = '';
+  if (from === to) { draw5(); return; }
+  const a = parseSpot31(from).spot, b = parseSpot31(to).spot;
+  const ra = r.req.includes(a), rb = r.req.includes(b);
+  if (ra !== rb) { toast(t(ra ? l('Item obrigatório só troca de lugar com outro obrigatório.', 'A fixed item only swaps places with another fixed item.') : DECO_WHY31.req), 'bad'); draw5(); return; }
+  if (ra) {
+    const x = swapReq31(s, p.key, r.id, a, b);
+    if (!x.ok) toast(t(x.why === 'wrong_slot' ? l('Esse fica na mesa e aquele no chão: troque mesa com mesa, chão com chão.', 'One goes on the desk and the other on the floor: swap desk with desk, floor with floor.') : DECO_WHY31[x.why]), 'bad');
+    UI.sel = from; // a chave do obrigatório é o próprio item: ele continua escolhido, agora no outro lugar
+    draw5(); return;
+  }
+  const id = deco31peek(s).at[from];
+  if (!id) { draw5(); return; }
+  put5(s, id, to);
+}
+/** Lugar vizinho (setas): obrigatório → o vizinho do mesmo grupo; peça posta → o próximo lugar do mesmo tipo. */
+function neighbor5(p: DecoPlaceDef31, r: DecoRoom31, key: string, dir: -1 | 1): string | undefined {
+  const sp = parseSpot31(key).spot;
+  if (r.req.includes(sp)) { const n = reqNeighbor31(r.req, sp, dir); return n ? spotKey31(p.key, r.id, n) : undefined; }
+  const boxes = lay5(p.key, r).boxes;
+  const me = boxes.find((x) => x.key === key);
+  if (!me) return undefined;
+  const same = boxes.filter((x) => x.kind === 'spot' && x.slot === me.slot).sort((x, y) => x.x - y.x || x.y - y.y);
+  return same[same.indexOf(me) + dir]?.key;
+}
 
 function put5(s: GameState, id: string, key: string): void {
   const r = placeDeco31(s, id, key);
@@ -200,7 +234,7 @@ const objName5 = (o: ObjInst): L => (decoOfObj31(o) ?? upgOfObj31(o))?.name ?? l
 function side5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31): HTMLElement {
   const key = UI.sel;
   if (!key) return h('aside', { class: 'deco5-side' }, h('p', { class: 'deco5-hint' }, t(l('Clique num lugar marcado para abrir a gaveta. Arraste uma peça para outro lugar para mudar de lugar (a mesma peça); solte na gaveta para tirar.', 'Click a marked spot to open the drawer. Drag an item to another spot to move it (the same item); drop it on the drawer to take it down.'))),
-    h('p', { class: 'deco5-hint' }, t(l('Itens obrigatórios (telefone, mesa de som…) não saem: só trocam de modelo ou sobem de nível.', 'Fixed items (phone, mixing desk…) never leave: they only change model or level up.'))));
+    h('p', { class: 'deco5-hint' }, t(l('Itens obrigatórios (telefone, cofre, mesa de som…) não saem do cômodo, mas trocam de lugar entre si: arraste um sobre o outro (mesa com mesa, chão com chão). Teclado: clique num lugar e use as setas ← →.', 'Fixed items (phone, safe, mixing desk…) never leave the room, but they swap places with each other: drag one onto another (desk with desk, floor with floor). Keyboard: click a spot and use the ← → arrows.'))));
   const { spot } = parseSpot31(key);
   if (r.req.includes(spot)) return reqSide5(s, p, r, key, spot);
   const box = lay5(p.key, r).boxes.find((b) => b.key === key);
@@ -211,6 +245,7 @@ function side5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31): HTMLElement {
   const aside = h('aside', { class: 'deco5-side' },
     h('h4', null, `${t(SLOT31_L[slot])} · ${t(r.name)}`),
     curO ? h('div', { class: 'deco5-cur' }, mini5(decoPx5(decoOfObj31(curO)!, s.year)), h('span', null, t(objName5(curO))),
+      moveBtn5(key),
       h('button', { type: 'button', class: 'btn small', onclick: () => { const x = takeDeco31(s, key); if (!x.ok) toast(t(DECO_WHY31[x.why]), 'bad'); draw5(); } }, t(l('Tirar daqui', 'Take down')))) : null,
     h('div', { class: 'deco5-dr-h' }, t(l('Na gaveta', 'In the drawer')), ` (${list.length})`),
     list.length ? h('ul', { class: 'deco5-list' }, list.map((o) => {
@@ -227,6 +262,10 @@ function side5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31): HTMLElement {
   aside.addEventListener('drop', (e) => { e.preventDefault(); const id = (e as DragEvent).dataTransfer?.getData('text/plain') || dragObj; dragObj = ''; const k = Object.entries(deco31peek(s).at).find(([, v]) => v === id)?.[0]; if (k) { takeDeco31(s, k); draw5(); } });
   return aside;
 }
+
+/** "Mover": o próximo clique num lugar do cômodo leva a peça para lá (alternativa ao arrastar). */
+const moveBtn5 = (key: string): HTMLElement => h('button', { type: 'button', class: `btn small${UI.moving === key ? ' primary' : ''}`, 'data-deco5': 'move', onclick: () => { UI.moving = UI.moving === key ? '' : key; draw5(); } },
+  UI.moving === key ? t(l('Clique no novo lugar…', 'Click the new spot…')) : t(l('Mover (← →)', 'Move (← →)')));
 
 function shop5(s: GameState, p: DecoPlaceDef31, key: string, slot?: DecoSlot31, req?: string): void {
   if (SHOP5) { SHOP5({ s, slot, kind: p.kind, req, spot: key, done: draw5 }); return; }
@@ -255,7 +294,8 @@ function reqSide5(s: GameState, p: DecoPlaceDef31, r: DecoRoom31, key: string, r
     h('h4', null, `${t(def.name)} · ${t(r.name)}`),
     h('div', { class: 'deco5-cur' }, mini5(reqPx5(req, cur.lv, s.year, cur.upg), 60),
       h('span', null, h('b', null, cur.upg ? t(cur.upg.name) : t(l('Modelo de fábrica', 'Stock model'))), h('small', null, t(l('Nível {n}', 'Level {n}'), { n: cur.lv }), cur.upg?.fx ? ` · ${t(fxText5(cur.upg.fx.k, cur.upg.fx.v))}` : ''))),
-    h('p', { class: 'deco5-hint' }, t(l('Item obrigatório: não sai do lugar; troque o modelo ou suba o nível.', 'Fixed item: it stays; change the model or level it up.'))),
+    h('p', { class: 'deco5-hint' }, t(l('Item obrigatório: não sai do cômodo; troque o modelo, suba o nível ou mude de lugar com outro obrigatório.', 'Fixed item: it stays in the room; change the model, level it up or swap places with another fixed item.'))),
+    moveBtn5(key),
     owned.length ? h('ul', { class: 'deco5-list' }, owned.map((o) => { const u = upgOfObj31(o)!; return h('li', null, h('button', { type: 'button', class: 'deco5-it', onclick: () => { const x = setReq31(s, key, o.id); if (!x.ok) toast(t(DECO_WHY31[x.why]), 'bad'); draw5(); } },
       mini5(reqPx5(req, u.lv, s.year, u)), h('span', null, h('b', null, t(u.name)), h('small', null, t(l('Instalar · nível {n}', 'Install · level {n}'), { n: u.lv }))))); })) : null,
     cur.lv > 0 ? h('button', { type: 'button', class: 'btn small', onclick: () => { setReq31(s, key, ''); draw5(); } }, t(l('Voltar ao modelo de fábrica', 'Back to stock model'))) : null,
@@ -295,7 +335,18 @@ const placeOfScene5 = (): string => (document.querySelector('.reg5-casa, .casa5-
 
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', (e) => {
-    if (UI.open && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); closeArrumar5(); return; }
+    if (UI.open && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); if (UI.moving) { UI.moving = ''; draw5(); return; } closeArrumar5(); return; }
+    // BUGS33: setas ← → movem o lugar escolhido para o vizinho (troca quando ocupado)
+    if (UI.open && UI.sel && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      const s = game(); const pl = s && decoPlaces31(s).find((x) => x.key === UI.place); const rm = pl?.rooms.find((x) => x.id === UI.room);
+      if (s && pl && rm) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        const to = neighbor5(pl, rm, UI.sel, e.key === 'ArrowLeft' ? -1 : 1);
+        if (to) { const filled = rm.req.includes(parseSpot31(UI.sel).spot) || !!deco31peek(s).at[UI.sel]; if (filled) move5(s, pl, rm, UI.sel, to); else { UI.sel = to; draw5(); } }
+        document.querySelector<HTMLElement>(`.deco5-spot[data-key="${UI.sel}"]`)?.focus();
+      }
+      return;
+    }
     const tg = e.target as HTMLElement | null;
     if (tg && /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)) return;
     const c = chordOf5(e);
