@@ -61,6 +61,7 @@ Shift+1…6 do menu) e nada muda.
 | Esc | Fecha o papel aberto; sem papel aberto, abre o menu de pausa | nova |
 | Alt | Segurar: mostra o nome e a tecla de todos os objetos | nova |
 | Tab | Troca de casa (várias carreiras ativas) | nova |
+| ⇧5 | Celular (5º botão do menu de baixo, 1983+) | nova |
 
 ### Viagem (botões fixos)
 
@@ -107,9 +108,9 @@ Shift+1…6 do menu) e nada muda.
 | Y | Porta-retratos | igual |
 | Z | Livro-caixa | igual |
 | ⇧0 | Caderno na estante | nova |
-| ⇧5 | Pilha de demos | nova |
 | ⇧7 | Estante de lembranças | nova |
 | ⇧8 | Piano | nova |
+| ⇧9 | Pilha de demos | nova |
 | ⇧A | Aeroporto e porto | nova |
 | ⇧B | Bar | nova |
 | ⇧C | Arquivo de aço | nova |
@@ -174,8 +175,9 @@ Shift+1…6 do menu) e nada muda.
 | C | Compromissos | Quadro de planejamento (a mesma página, com o elenco por mês) | Mesma página, objeto novo: nos mocks C era o calendário; o calendário virou a agenda (G) e C abre o quadro de planejamento. |
 | ⇧1 | Menu: Hoje | Viagem: Sede | Botões de viagem Sede, Casa, Cidade, Mundo em Shift+1…4. "Hoje" virou a mesa do mês (tecla 1). |
 | ⇧2 | Menu: Sede | Viagem: Casa | "Você" virou a sua casa (EXP-6) e entra no segundo botão de viagem. |
-| ⇧5 | Menu: Você | Pilha de demos (talentos) | Você agora é Shift+2 (Casa). Shift+dígito livre vira "irmão" do objeto do dígito: 5 olheiro, Shift+5 demos. |
+| ⇧5 | Menu: Você | Celular (5º botão do menu de baixo, 1983+) | Você agora é Shift+2 (Casa). Os botões do menu de baixo são Shift+1…5; o celular (versão 33) é o quinto. |
 | ⇧6 | Menu: Listas | (livre) | Listas some (o índice completo fica no menu de pausa). |
+| ⇧9 | (livre) | Pilha de demos (talentos) | A pilha de demos saiu do Shift+5, que virou o celular (versão 33). |
 | Esc | Fecha janelas | Fecha o papel aberto; sem nada aberto, menu de pausa | Pausa com salvar, opções, ajuda, editor e índice (mock da pausa). |
 | Alt | (sem uso) | Segurar mostra nomes e teclas dos objetos | Rótulos só ao passar o mouse ou com Alt (decisão do dono sobre os mocks). |
 | ⇧A … ⇧Z | Mesma página da letra minúscula | Objetos sem tecla antes (arquivo de aço, telefone, bar, aeroporto…) | Hoje Shift+letra repete a letra; na onda 5 é a segunda camada, para dar tecla a todo objeto sem tirar nenhuma das atuais. |
