@@ -13,7 +13,7 @@ import { calendar19 } from '../src/sim/calendar19';
 import { P } from '../src/sim/sys/people/state';
 import { press } from '../src/sim/sys/press9';
 import {
-  CB19, answer360, antiMonth19, audit19, bid19, bodyOf19, certMonth19, certUnits19, ghost19, ghostMonth19, mka19, pickTest19, review19, revoke19,
+  CB19, answer360, antiMonth19, antiTh19, share19, audit19, bid19, bodyOf19, certMonth19, certUnits19, ghost19, ghostMonth19, mka19, pickTest19, review19, revoke19,
   scenesMonth19, star360Month19, streamYear19, test19, testBonus19, thOf19, tierOf19,
 } from '../src/sim/sys/market19a';
 import type { Act, GameState, Release, Song } from '../src/sim/types';
@@ -137,7 +137,10 @@ describe('r19 T6 N12/N15/N21 — playlists, promotora 360, antitruste', () => {
   it('fusão acima do limiar → remédio, leilão, lote vai para alguém', () => {
     const s = game(2005);
     const lb = Object.values(s.labels).find((x) => x.active)!;
-    for (let i = 0; i < 80; i++) { const a = spawnProceduralAct(s, rng19(s, 'act'), { fame: 20 }); a.owner = lb.id; lb.roster.push(a.id); rel(s, a, { owner: lb.id, totalUnits: 20000 + i * 1000 }); }
+    // QA33: cresce o selo até passar o limiar da época (antes eram 80 atos fixos; com as bases maiores da R31 os outros
+    // selos têm mais elenco e 80 atos davam 11,4% < 12% — o teste deixava de ser "acima do limiar")
+    for (let i = 0; i < 80 || (share19(s, lb.id) < antiTh19(s.year) + 0.01 && i < 400); i++) { const a = spawnProceduralAct(s, rng19(s, 'act'), { fame: 20 }); a.owner = lb.id; lb.roster.push(a.id); rel(s, a, { owner: lb.id, totalUnits: 20000 + i * 1000 }); }
+    expect(share19(s, lb.id)).toBeGreaterThanOrEqual(antiTh19(s.year));
     const x = review19(s, lb.id, { pt: 'teste', en: 'test' })!;
     expect(x).not.toBeNull();
     expect(msgs(s, 'mka19_divest').length).toBe(1);
