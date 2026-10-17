@@ -107,6 +107,43 @@ andar para a direita é avançar no tempo (1889 → 2035), com uma onda de som d
   - letreiro e menu sem sobreposição (regra do `fitHead5`);
   - 60 fps leve, que pausa quando a aba sai.
 
+## GENTE33 — mais gente com papel (dono, 2026-10-17)
+
+**Parte A (já rodando, Opus).** Só ações que o jogador escolhe fazer, para não mexer nos goldens:
+
+- **Diretor(a) de filial.** Uma pessoa real do jogo, contratada pela filial: executivo de rival, equipe ou gente da
+  cidade.
+  - O que faz: garimpa e contrata na região, marca shows e divulga localmente, cuida do orçamento da filial e manda
+    relatório mensal.
+  - Você define a linha (ousado ou conservador) e o teto de gasto.
+  - Riscos: ser roubado por rival, sair com o elenco regional, desviar dinheiro (submundo) e brigar com a sede.
+  - Um ex-artista da cena local ganha bônus regional.
+- **CEO da empresa.** O jogador vira presidente do conselho: só aprova as grandes decisões e recebe relatórios. Liga
+  com a delegação, a sucessão e os herdeiros.
+- **Conselho e acionistas.** Reunião anual, voto contra e tentativa de tirar o jogador (ligado à bolsa e às compras
+  hostis).
+- **Equipe pessoal.** Motorista, segurança (ligado ao paparazzi), personal trainer e médico particular (ligados a saúde
+  e estresse).
+- **Pessoas fixas.** Presidente do fã-clube, jornalista que acompanha a sua carreira e representante do sindicato.
+
+**Parte B (depois que o QA33 for juntado).** Mexe em todas as pessoas e muda os goldens.
+
+- **Três camadas de detalhe:**
+  - **completa:** artistas, executivos, quem você contrata, família, rivais, romances;
+  - **leve:** quem trabalha na cidade (nome, rosto, idade, profissão, 2–3 traços, opinião sobre você), sem custo mensal;
+  - **multidão:** sem identidade.
+- **Promoção e rebaixamento na hora,** sempre a mesma pessoa. Ao descer de camada, guarda um resumo do passado e as
+  relações fortes.
+- **Talento escondido** de quem trabalha na cidade, descoberto pelos canais que já existem (`discover18`).
+- **Volta por cima** por olheiro, vídeo viral nas Redes ou catálogo que volta.
+- **Ganchos:**
+  - o bartender que você recusou vira estrela num rival;
+  - post nas Redes sobre ex-artista atrás do balcão;
+  - romance com quem vira artista do seu selo.
+
+O ciclo bartender ↔ artista do `gente31` (bico, larga a vaga ao assinar, volta quando a carreira afunda) continua a
+base.
+
 ## Fechamento da 33 (depois que todas as frentes estiverem juntas)
 | Frente | O quê | Modelo |
 |---|---|---|

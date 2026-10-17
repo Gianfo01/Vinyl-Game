@@ -508,3 +508,14 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - Igual para todas as carreiras.
   - Só 6 variantes, pela faixa de época de início. Termina mostrando o resumo "Sua história" da ficha.
   - O loop da tela inicial continua separado.
+
+## 2026-10-17 · GENTE33
+- O dono pediu:
+  - diretor de filial, CEO da empresa e conselho, equipe pessoal e pessoas fixas;
+  - mais NPCs, ligados ao ciclo bartender ↔ artista.
+- Decidido:
+  - **Parte A** roda já (Opus). Tudo opt-in (só quando o jogador contrata), para não mudar os goldens enquanto o QA33
+    mede.
+  - **Parte B** (três camadas de detalhe, promoção e rebaixamento com resumo do passado, talento escondido, volta por
+    cima) só depois de juntar o QA33, porque mexe em todas as pessoas e nos goldens.
+  - Nem todos os NPCs terão o mesmo detalhe: as camadas seguem a pessoa, não o emprego.
