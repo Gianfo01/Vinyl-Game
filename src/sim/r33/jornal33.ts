@@ -141,7 +141,7 @@ export function answerLetter33(s: GameState, letter: string, how: 'answer' | 'ig
 
 // ---------------------------------------------------------------- seções
 
-const MUSIC = new Set(['release', 'chart', 'award', 'show', 'tour_done', 'tour_cancel', 'review', 'playlist', 'comeback', 'milestone', 'viral', 'remix_hit', 'revival_hit', 'contest_winner', 'signing', 'charity_show', 'charity_single']);
+const MUSIC = new Set(['release', 'chart', 'award', 'show', 'tour_done', 'tour_cancel', 'review', 'playlist', 'comeback', 'milestone', 'viral', 'remix_hit', 'revival_hit', 'contest_winner', 'signing', 'charity_show', 'charity_single', 'comeback33', 'talent33', 'hire33']);
 const BIRTHS = new Set(['birth', 'marriage']);
 const publicFacts = (s: GameState, months: number): Fact[] => {
   const since = s.week - Math.round(months * 4.35), out: Fact[] = [];

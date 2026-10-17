@@ -784,6 +784,8 @@ const G: Record<string, string[]> = {
 };
 
 export const CORE_KINDS33 = Object.keys(K);
+/** Tipos de fato de outras frentes que usam os núcleos de um tipo parecido (GENTE33: volta por cima, contratação, talento, voto do conselho). */
+export const ALIAS33: Record<string, string> = { comeback33: 'comeback', hire33: 'hire', talent33: 'signing', board_vote33: 'deal', missed33: 'career' };
 export const CORE_TEXT33: Record<string, string[]> = { ...K, ...Object.fromEntries(Object.entries(G).map(([k, v]) => [`g:${k}`, v])) };
 
 /** Grupo de um tipo de fato (para o núcleo genérico e a mistura lateral). */

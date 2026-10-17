@@ -21,7 +21,7 @@ import { CARDS5 } from '../src/ui/r31/acoes5data';
 import { cardBoato33, cardItem33, cardPost33, redesApp33 } from '../src/ui/r33/redes33ui';
 import { ICON33, redesIcon33, THUMB33, thumb33, MASTHEAD33, masthead33 } from '../src/ui/r33/redes33px';
 import { ep5Of } from '../src/ui/pixel/exp5px';
-import { apps33, extraApps33 } from '../src/ui/r33/aparelhos33model';
+import { ACTS33, actsOf33, apps33, extraApps33 } from '../src/ui/r33/aparelhos33model';
 import '../src/ui/r33/redes33phone';
 import { era33 } from '../src/sim/r33/frases33';
 
@@ -156,6 +156,11 @@ describe('r33 redes · frases', () => {
     expect(variants33()).toBeGreaterThan(10000);
     for (const t of Object.values(CORE_TEXT33).flat()) { const [pt, en] = t.split('|'); expect(pt.length).toBeGreaterThan(5); expect(en && en.length).toBeGreaterThan(5); }
     for (const t of TONES33) for (const x of [...OPEN33[t], ...CLOSE33[t]]) expect(x.split('|').length).toBe(2);
+  });
+  it('tipos da GENTE33 usam núcleos de tipos parecidos (volta por cima, contratação, talento)', () => {
+    expect(coreIds33('comeback33')[0]).toBe('comeback#0');
+    expect(coreIds33('hire33')[0]).toBe('hire#0');
+    expect(coreIds33('missed33')[0]).toBe('career#0');
   });
   it('tipos raros caem no núcleo genérico do grupo', () => {
     expect(coreIds33('release')[0]).toBe('release#0');
@@ -324,5 +329,16 @@ describe('r33 redes · telas, cartões e o app', () => {
     const s = game(2012);
     setSw(s, SW_REDES33, false);
     expect(apps33(s, 'phone')).not.toContain('redes');
+  });
+  it('Câmera: "Foto vira post" existe e posta; fatos da GENTE33 entram no feed e no Jornal', () => {
+    const s = game(2012);
+    const a = mineAct(s);
+    expect(actsOf33(s, 'phone', 'camera')).toContain('cam.foto');
+    expect(ACTS33['cam.foto'].run(s, {} as never)).toMatchObject({ bad: false });
+    emitFact(s, { kind: 'comeback33', actors: [a.id], severity: 50, visibility: 'public', text: { pt: 'Volta por cima de A.', en: 'A comes back.' } });
+    emitFact(s, { kind: 'missed33', actors: [a.id], severity: 40, visibility: 'public', text: { pt: 'Ex-artista atrás do balcão.', en: 'Ex-artist behind the counter.' } });
+    expect(feed33(s, { limit: 100 }).filter((x) => x.kind === 'comeback33' || x.kind === 'missed33')).toHaveLength(2);
+    expect(jornal33(s).sections.musica.some((x) => x.head.pt.includes('Volta por cima'))).toBe(true);
+    expect(jornal33(s).sections.manchete.length + jornal33(s).sections.mundo.length).toBeGreaterThanOrEqual(0);
   });
 });

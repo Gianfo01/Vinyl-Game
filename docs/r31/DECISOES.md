@@ -630,3 +630,4 @@ escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Le
 docs/r33/CENARIOS33.md §9.
 
 **Revisto no mesmo dia:** o dono voltou atrás — o POL33 fica onde estava (depois de QA33 e REDES33, antes da `Masters_33.html`). A prévia `Masters_33_previa.html` vai antes, só para ver.
+- **2026-10-17 · R33 REDES (complemento).** Base mesclada (APARELHOS33 + GENTE33). Câmera → post: ação `cam.foto` ("Foto vira post", 2007+, `registerAct33`) posta pelo primeiro artista do elenco com `ownPost33`. Fatos da GENTE33 (`comeback33`, `hire33`, `talent33`, `board_vote33`, `missed33` = ex-artista atrás do balcão) usam núcleos de tipos parecidos (`ALIAS33`) e entram no feed e na seção Música do Jornal.

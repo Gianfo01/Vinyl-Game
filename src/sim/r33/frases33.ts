@@ -6,7 +6,7 @@
 
 import type { Rng } from '../../core/rng';
 import { l, type L } from '../../data/world';
-import { CORE_KINDS33, CORE_TEXT33, NUM33, groupOf33 } from './frases33data';
+import { ALIAS33, CORE_KINDS33, CORE_TEXT33, NUM33, groupOf33 } from './frases33data';
 import { CLOSE33, OPEN33, SLANG33, TONES33, type Tone33 } from './frases33tone';
 
 export { TONES33, type Tone33 } from './frases33tone';
@@ -35,8 +35,9 @@ export const contract33 = (x: string): string => x.replace(/\bem (o|a|os|as) /gi
 
 /** Quantos núcleos existem (e quais ids). Id = `${tipo}#${i}` ou `g:${grupo}#${i}` para o genérico. */
 export const coreTotal33 = (): number => Object.values(CORE_TEXT33).reduce((t, v) => t + v.length, 0);
-export const hasCores33 = (kind: string): boolean => CORE_KINDS33.includes(kind);
-export function coreIds33(kind: string): string[] {
+export const hasCores33 = (kind: string): boolean => CORE_KINDS33.includes(ALIAS33[kind] ?? kind);
+export function coreIds33(kind0: string): string[] {
+  const kind = ALIAS33[kind0] ?? kind0;
   const key = hasCores33(kind) ? kind : `g:${groupOf33(kind)}`;
   return (CORE_TEXT33[key] ?? []).map((_, i) => `${key}#${i}`);
 }
