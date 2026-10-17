@@ -194,3 +194,9 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
    área da região é a tela menos o topo (56px) e a barra (92px), e o painel começa abaixo do título/abas da página */
 .app5 .reg5 .c27-side { max-height: max(240px, calc(100dvh - 330px)); }
 .app5 .reg5 .map27-body > .sheet27 { max-height: max(240px, calc(100dvh - 275px)); overflow: auto; }
+
+/* QA5: janelas antigas (ficha do disco, casas à venda…) maiores que a tela pareciam cortadas (rolava a camada inteira,
+   sem barra à vista, e o título/✕ sumiam). Na casca nova: cabe na tela, título fixo, o miolo rola com barra visível. */
+body:has(.app5) .overlay .modal { display: flex; flex-direction: column; max-height: calc(100dvh - 8vh); }
+body:has(.app5) .overlay .modal > header { flex: none; }
+body:has(.app5) .overlay .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #6a7a96 transparent; }

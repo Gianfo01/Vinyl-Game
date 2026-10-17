@@ -34,6 +34,7 @@ Estado: ✅ resolvido · ⏳ com a frente dona (ainda não chegou) · ❌ aberto
 | 19 | Painel da direita da cidade (prédio/placas) e do país no mundo cortava atrás da barra de baixo — **relato do dono durante o QA** | ⇧3 → prédio; ⇧4 → país | `qa5-13-cidade-painel-ok.png` (depois) | QA5 | ✅ (`shell5.css`: altura máxima pela área da região, rola por dentro) |
 | 20 | Ficha da cidade: o ✕ não fazia nada no cartão novo nem na cidade visitada | ⇧4 → cidade | `qa5-14-cartao-cidade.png` | QA5 | ✅ (fecha o cartão; na visita sai o ✕, fica "Voltar ao mundo"/Esc) |
 | 21 | Lugares por dentro (CENAS5): cena pequena no meio da área, muito vazio escuro em volta | Cidade → Bar → Entrar | — | CENAS5 (terminou) | ❌ anotado (polimento; não quebra) |
+| 22 | Janelas antigas maiores que a tela (ficha do disco "Supersonic", casas à venda…) pareciam cortadas: rolava a camada inteira sem barra visível e o título/✕ sumiam — **relato do dono durante o QA** | Cidade → outdoor "Nº 1" | `qa5-15-janela-disco-ok.png` (depois) | QA5 | ✅ (`shell5.css`, só com a casca: janela cabe na tela, título fixo, miolo rola) |
 
 ## Robô (`scripts/r31/qa5.mjs` + `tests/r31-qa5.test.ts`)
 `node scripts/r31/qa5.mjs [--quick] [--out x.json] [--shots pasta]` sobe o vite com `VITE_EXP5NAV=1`, começa pela Nova
