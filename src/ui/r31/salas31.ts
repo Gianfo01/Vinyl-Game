@@ -34,6 +34,10 @@ import { salaHook31 } from './salahook31';
 import { AREA_SALA31, CAREERS31, ROOMS31, ROOM_SALA31, RUN31, SALA_NAME31, activeCareers31, auditSala31, salaModel31, SALAS31, type Btn31, type Chip31, type Do31, type Hot31, type SalaId31, type SalaM31 } from './salas31model';
 import { drawSala31, youSprite31, type Rect31 } from './salas31px';
 import './salaart31'; // r31 ART2: objetos novos das salas (registra pontos, área e pintura)
+import { nav5On } from '../../sim/r31/exp5';
+import { NAV5 } from './nav5';
+import { help5Of } from './cenas5model';
+import { arrows5, bindBack5, placeStrip5, setHelp5 } from './cenas5';
 import './salas31.css';
 
 export const SALA_AREA31 = 'sala31';
@@ -121,7 +125,7 @@ function scaleFor(W: number, compact: boolean): number {
 /** O palco da cena (desenho + botões + você + painel). Também usado no topo das páginas (`compact`). */
 export function salaStage31(s: GameState, m: SalaM31, o: { compact?: boolean } = {}): HTMLElement {
   const p0 = pref();
-  const showAll = !!p0.all || s.week < 52; // rótulos sempre no começo da partida; depois, opcionais
+  const showAll = !nav5On(s) && (!!p0.all || s.week < 52); // rótulos sempre no começo da partida; depois, opcionais (exp5.nav: com Alt)
   const cv = h('canvas', { class: 's31-cv px', 'aria-hidden': 'true' }) as HTMLCanvasElement;
   const look = (pid: string | undefined, seed: string) => lookOf((pid ? s.persons[pid] : undefined) ?? { id: seed });
   const d = drawSala31(cv, m, { look });
@@ -183,6 +187,17 @@ export function salaStage31(s: GameState, m: SalaM31, o: { compact?: boolean } =
       }, 90);
     }
   }
+  // R31 onda 5 (CENAS5): com exp5.nav, só o cenário — sem "mostrar tudo", sem a caixa de ajuda e sem a lista de pontos;
+  // nomes com Alt (e no passar do mouse/foco), setas e Tab percorrem os pontos, ajuda da sala no "?" da casca
+  if (nav5On(s)) {
+    const pts = m.hots.filter((x) => d.lay.hits[x.id]).map((x) => ({ id: x.id, ...d.lay.hits[x.id], label: x.label, tip: x.tip }));
+    arrows5(layer, pts, 'data-hot');
+    setHelp5(`sala:${m.id}`, help5Of(m.title, m.intro, pts));
+    return h('div', { class: `s31 cn5-sala${o.compact ? ' compact' : ''}`, 'data-sala': m.id, 'data-help5': `sala:${m.id}` },
+      m.alerts.length ? h('ul', { class: 's31-alerts', 'aria-label': t(l('Exceções', 'Exceptions')) }, m.alerts.map((a) => h('li', null, chipEl(a)))) : null,
+      !m.you.here ? h('p', { class: 's31-away small', role: 'note' }, ic('plane'), ' ', t(m.you.where)) : null,
+      h('div', { class: 's31-scroll' }, stage), panel);
+  }
   const scroll = h('div', { class: 's31-scroll' }, stage);
   const toggle = h('button', { type: 'button', class: 'btn small ghost', 'aria-pressed': showAll ? 'true' : 'false', onclick: () => {
     const on = !stage.classList.contains('show-all');
@@ -226,6 +241,15 @@ function salaPage(s: GameState): HTMLElement {
   const p0 = pref();
   const skip = h('label', { class: 'small s31-skip' }, h('input', { type: 'checkbox', checked: p0.skip ? true : undefined, onchange: (e: Event) => setPref({ skip: (e.target as HTMLInputElement).checked }) }),
     ' ', t(l('Na sede, abrir direto as telas (pular as cenas)', 'At HQ, open the screens directly (skip the scenes)')));
+  // R31 onda 5 (CENAS5): faixa de lugar ("◂ Sede"), Esc/Backspace volta; as listas e a tira de salas ficam no "Ver detalhes"
+  if (nav5On(s)) {
+    const el = h('div', { class: 's31-page cn5-salapage', 'data-tabs': SALA_AREA31, 'data-cur': id },
+      placeStrip5({ title: t(m.title), sub: [t(m.sub)], back: { label: l('Sede', 'HQ'), go: () => NAV5.travel ? NAV5.travel('sede') : goDest31({ area: 'sede25' }) },
+        extra: [h('button', { type: 'button', class: 'btn small', onclick: () => run31(s, m.details, m) }, ic('note'), ' ', t(l('Ver detalhes', 'See details')))] }),
+      salaStage31(s, m));
+    bindBack5(el, () => NAV5.travel ? NAV5.travel('sede') : goDest31({ area: 'sede25' }));
+    return el;
+  }
   return h('div', { class: 's31-page', 'data-tabs': SALA_AREA31, 'data-cur': id },
     h('header', { class: 's31-head' },
       h('div', null, h('h1', { class: 'page21' }, t(m.title)), h('small', { class: 'muted' }, t(m.sub))),
