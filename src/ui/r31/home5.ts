@@ -84,7 +84,44 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
     h('footer', { class: 'h5-foot' },
       h('span', null, 'PIXEL STUDIO EDITION', ' · ', link(t(l('Editor de base', 'Database editor')), () => { baseEditorScreen31(root, redraw); top5(); }, { 'data-link': 'base31' })),
       h('span', null, 'R32'))));
+  fitHead5(root, stage);
   top5();
+}
+
+/** O título nunca cobre o letreiro do palco (AO VIVO / RÁDIO / STREAM): o canvas usa object-fit cover (corta em cima
+ *  nas janelas largas e baixas), então mede onde o letreiro caiu na tela e sobe/encolhe o cabeçalho até caber acima dele. */
+function fitHead5(root: HTMLElement, stage: { el: HTMLCanvasElement; signTop: () => number; floorY: () => number }): void {
+  const head = root.querySelector<HTMLElement>('.h5-head'), logo = head?.querySelector<HTMLElement>('canvas');
+  if (!head || !logo) return;
+  const fit = () => {
+    if (!head.isConnected) { window.removeEventListener('resize', fit); return; }
+    const cv = stage.el;
+    head.style.top = ''; logo.style.width = ''; cv.style.objectPosition = '';
+    const W = cv.width, H = cv.height;
+    let r = cv.getBoundingClientRect();
+    if (!W || !H || !r.height) return;
+    const k = Math.max(r.width / W, r.height / H), extra = r.height - H * k; // < 0: o cover corta em cima/embaixo
+    const signAt = (py: number) => r.top + extra * py + stage.signTop() * k - 8; // folga acima dos cabos
+    let hr = head.getBoundingClientRect();
+    if (hr.bottom <= signAt(0.7)) return;
+    // 1) mostra mais céu (corta mais da plateia embaixo), até 25%, sem o piso do palco descer até os botões
+    const menu = root.querySelector<HTMLElement>('.h5-menu')?.getBoundingClientRect().top ?? Infinity;
+    const floorAt = (y: number) => r.top + extra * y + stage.floorY() * k;
+    let py = 0.7;
+    while (py > 0.25 && hr.bottom > signAt(py) && floorAt(py - 0.05) <= menu - 4) py -= 0.05;
+    cv.style.objectPosition = `center ${Math.round(py * 100)}%`;
+    r = cv.getBoundingClientRect();
+    const sign = signAt(py);
+    if (hr.bottom <= sign) return;
+    // 2) sobe o cabeçalho; 3) só então encolhe o logo
+    head.style.top = `${Math.max(Math.max(6, r.top + 6), hr.top - (hr.bottom - sign))}px`;
+    hr = head.getBoundingClientRect();
+    if (hr.bottom <= sign) return;
+    const lb = logo.getBoundingClientRect();
+    logo.style.width = `${Math.max(160, lb.width * Math.max(0.3, (lb.height - (hr.bottom - sign)) / lb.height))}px`;
+  };
+  window.addEventListener('resize', fit);
+  requestAnimationFrame(fit);
 }
 
 /** "Carregar": saves do perfil (mais recentes primeiro), importar e a lista completa (perfis, renomear, apagar). */
