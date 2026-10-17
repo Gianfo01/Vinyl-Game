@@ -14,6 +14,7 @@ import { object5, type Open5 } from './objects5';
 import { CARDS5 } from './acoes5data';
 import { ACTS_CAT5, LINES_CAT5, NUMS_CAT5 } from './acoes5cat';
 import '../r33/vida33ui'; // R33 VIDA: ações da vida nos cartões (exp33.*, só aparecem ligadas)
+import '../r33/redes33ui'; // R33 REDES: "Ler o jornal" e "Abrir as redes" nos cartões do Jornal (exp33.redes, ligado)
 import '../r33/gente33ui'; // R33 GENTE33: filial, CEO, conselho, equipe pessoal e pessoas fixas nos cartões (exp33.gente, opt-in)
 
 export type ActKind5 = 'do' | 'ui' | 'open';
