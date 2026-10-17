@@ -220,8 +220,8 @@ async function sweepSystem() {
   await escBack('carregar');
   await p.keyboard.press('Escape'); await wait(500);
   const rows = await p.locator('.pz5-row').count();
-  const step = QUICK ? Math.max(1, Math.floor(rows / 12)) : 1;
-  for (let i = 0; i < rows; i += step) {
+  const every = QUICK ? Math.max(1, Math.floor(rows / 12)) : 1;
+  for (let i = 0; i < rows; i += every) {
     if (!(await p.locator('.pz5').count())) { await escBack('indice', { pauseOk: true }); await p.keyboard.press('Escape'); await wait(450); }
     const row = p.locator('.pz5-row').nth(i);
     const area = await row.getAttribute('data-area');
