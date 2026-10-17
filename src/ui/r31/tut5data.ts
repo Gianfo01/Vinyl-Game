@@ -40,7 +40,7 @@ export const CHAPTERS5: Chapter5[] = [
   ] },
   { id: 'contratar', title: l('Contratar a banda', 'Signing the band'), mins: 1.5, steps: [
     open('fichario', 'fichario', l('Os contatos ficam no fichário (tecla {k}). Abra.', 'Contacts live in the rolodex (key {k}). Open it.')),
-    { id: 'assinar', say: l('Ache o cartão de {b}, abra a ficha e proponha um contrato. Se pedirem mais, aceite a contraproposta.', 'Find {b}\'s card, open their file and offer a contract. If they ask for more, accept the counter-offer.'),
+    { id: 'assinar', say: l('Ache o cartão de {b}, abra a ficha e proponha um contrato. Se pedirem mais, aceite a contraproposta; se recusarem, melhore a proposta e tente de novo.', 'Find {b}\'s card, open their file and offer a contract. If they ask for more, accept the counter-offer; if they refuse, sweeten it and try again.'),
       target: { paper: true }, done: (c) => c.band?.owner === 'player', do: { bot: 'sign' } },
   ] },
   { id: 'planejar', title: l('Marcar a gravação', 'Booking the recording'), mins: 1.5, steps: [
@@ -87,7 +87,8 @@ export const CHAPTERS5: Chapter5[] = [
       done: (c) => energyLeft(c.s) < c.b.energy, do: { bot: 'rest' } },
   ] },
   { id: 'teclas', title: l('Teclas e bolso', 'Keys and pocket'), mins: 1, steps: [
-    open('agenda', 'agenda', l('Volte à sede pela agenda de couro (tecla {k}): ela abre de qualquer lugar.', 'Get back via the leather planner (key {k}): it opens from anywhere.')),
+    { id: 'agenda', say: l('A agenda de couro (tecla {k}) abre de qualquer lugar. Abra e peça "ver tudo ▸".', 'The leather planner (key {k}) opens from anywhere. Open it and ask for "see all ▸".'),
+      target: { obj: 'agenda' }, free: [{ paper: true }], done: (c) => c.v.paper === 'agenda', do: { open: 'agenda' } },
     { id: 'fixar', say: l('O que você mais usa vai no bolso: aperte "+ fixar".', 'What you use most goes in the pocket: press "+ pin".'), target: { shell: 'pin' }, free: [{ paper: true }],
       done: (c) => pocketIds5(c.s).length > c.b.pocket, do: { shell: 'pin' } },
     { id: 'ajuda', say: l('Esqueceu uma tecla? "?" mostra todas — e dá para trocar.', 'Forgot a key? "?" shows them all — and you can change them.'), target: { shell: 'help' },

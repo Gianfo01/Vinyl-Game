@@ -64,8 +64,13 @@ function act(s: GameState, step: Step5): void {
   if ('bot' in d) {
     if (d.bot === 'close') { view = { ...view, paper: undefined }; return; }
     if (d.bot === 'sign') {
-      const r = offerNow(s, rng19(s, 'act'), defaultOffer(s, band));
-      if (r.result === 'counter' && r.offer) acceptCounter(s, r.offer.id);
+      // como o jogador: se recusarem, melhora a proposta (royalty, controle criativo) e tenta de novo
+      for (let i = 0; i < 4 && band.owner !== 'player'; i++) {
+        const o = defaultOffer(s, band);
+        o.royalty = Math.min(0.3, o.royalty + 0.03 * i); o.creativeControl = i >= 2;
+        const r = offerNow(s, rng19(s, 'act'), o);
+        if (r.result === 'counter' && r.offer) acceptCounter(s, r.offer.id);
+      }
       return;
     }
     if (d.bot === 'plan') { const p = reservePlan(s, band.id, 'record', monthIndex(s) + 1); expect('pt' in p).toBe(false); return; }

@@ -2,8 +2,8 @@
    diploma e telefone do mentor. Fica por cima da casca (.app5) e não pega clique (o bloqueio é por código, tut5ui.ts). */
 .tu5 { position: fixed; inset: 0; z-index: 900; pointer-events: none; }
 .tu5 .tu5-ui { pointer-events: auto; }
-/* recorte: um buraco do tamanho do alvo com a sombra enorme escurecendo o resto */
-.tu5-hole { position: fixed; box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0.66); border-radius: 2px; transition: left .18s, top .18s, width .18s, height .18s; }
+/* recorte: quatro painéis escuros em volta do alvo (só o alvo fica claro) */
+.tu5-dim { position: fixed; background: rgba(4, 6, 12, 0.78); }
 .tu5-ring { position: fixed; border: 3px solid #f0c040; outline: 2px solid #1a1214; box-shadow: 0 0 0 5px rgba(240, 192, 64, 0.28), 0 0 18px 4px rgba(255, 216, 104, 0.55);
   image-rendering: pixelated; animation: tu5-glow 1.6s steps(4) infinite; transition: left .18s, top .18s, width .18s, height .18s; }
 .tu5.hint .tu5-ring { border-style: dashed; animation-duration: 2.4s; }
@@ -12,8 +12,8 @@
 @keyframes tu5-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
 .tu5-here { position: fixed; padding: 3px 8px; border: 2px solid #1a1214; background: #f0c040; color: #1a1408; font: 700 12px/1.2 var(--pixel, monospace); white-space: nowrap; }
 /* movimento reduzido: sem brilho pulsando nem tremor (o aviso "primeiro aqui" basta) */
-.reduced-motion .tu5-ring, .reduced-motion .tu5-ring.shake, .reduced-motion .tu5-hole { animation: none; transition: none; }
-@media (prefers-reduced-motion: reduce) { .tu5-ring, .tu5-ring.shake, .tu5-hole { animation: none; transition: none; } }
+.reduced-motion .tu5-ring, .reduced-motion .tu5-ring.shake { animation: none; transition: none; }
+@media (prefers-reduced-motion: reduce) { .tu5-ring, .tu5-ring.shake { animation: none; transition: none; } }
 
 /* mentor + balão */
 .tu5-box { position: fixed; left: 16px; bottom: 104px; display: flex; align-items: flex-end; gap: 6px; max-width: min(560px, calc(100vw - 32px)); }

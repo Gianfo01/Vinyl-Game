@@ -28,7 +28,7 @@ export type Tgt5 =
   | { region: Region5 }
   | { key: string };
 
-/** O que a casca está mostrando (só interface). `card` = cartão de ações ao lado do objeto (EXP-13); `paper` = o papel
+/** O que a casca está mostrando (só interface). `card` = cartão de ações ao lado do objeto (EXP-13, acoes5.ts); `paper` = o papel
  *  inteiro ("ver tudo ▸"). O alvo `{ paper: true }` vale para os dois: "o que o objeto abriu". */
 export interface View5 { region: Region5; paper?: string; card?: string; marker?: string; pause: boolean; help: boolean }
 /** O objeto `id` está aberto (cartão de ações ou papel)? */

@@ -56,8 +56,8 @@ for (const year of [1925, 1975]) {
     if (c.si === 0) await shot(`${String(guard).padStart(2, '0')}-${c.ch}`);
     if (!blocked && c.ch === 'contratar' && c.st === 'fichario') {
       // clique fora do alvo: nada acontece, "primeiro aqui" e o tremor
-      await p.locator('.s5-obj[data-obj="trofeus"], .s5-obj[data-obj="revista"]').first().click({ force: true }).catch(() => undefined);
-      await p.waitForTimeout(250); await shot('bloqueado');
+      await p.locator('.b5-tr[data-travel="mundo"]').click({ force: true }).catch(() => undefined);
+      await p.waitForTimeout(100); await p.screenshot({ path: `${out}/onda5-tut-${year}-bloqueado.png` }); console.log('captura', year, 'bloqueado');
       await p.keyboard.press('Escape'); await shot('esc');
       await p.keyboard.press('Escape'); await p.waitForTimeout(300);
       blocked = true;
@@ -67,6 +67,8 @@ for (const year of [1925, 1975]) {
     else if (d.open) {
       const el = p.locator(`.s5-obj[data-obj="${d.open}"]`);
       if (await el.count() && !(await p.locator('.p5').count())) await el.first().click(); else await p.evaluate(async (id) => (await import('/src/ui/r31/nav5.ts')).open5(id), d.open);
+      // passo que pede o papel inteiro: "ver tudo ▸" no cartão de ações
+      if (c.st === 'agenda') { await p.waitForTimeout(600); const all = p.locator('.ac5 .ac5-all'); if (await all.count()) { await shot('cartao-acoes'); await all.first().click(); } }
     } else if (d.travel) await p.locator(`.b5-tr[data-travel="${d.travel}"]`).click();
     else if (d.shell === 'advance') { await p.locator('.t5-go').click(); await p.waitForTimeout(1200); await shot('virada-atividade'); await clear(true); await shot('virada-transicao'); await clear(false); }
     else if (d.shell === 'pin') await p.locator('.b5-pin').click();
@@ -81,7 +83,7 @@ for (const year of [1925, 1975]) {
         const band = s.acts[s.x4.tut5.band];
         const rng = (await import('/src/sim/rng19.ts')).rng19;
         try {
-          if (what === 'sign') { const ct = await import('/src/sim/contracts.ts'); const r = ct.offerNow(s, rng(s, 'act'), ct.defaultOffer(s, band)); if (r.result === 'counter' && r.offer) ct.acceptCounter(s, r.offer.id); }
+          if (what === 'sign') { const ct = await import('/src/sim/contracts.ts'); for (let i = 0; i < 4 && band.owner !== 'player'; i++) { const o = ct.defaultOffer(s, band); o.royalty = Math.min(0.3, o.royalty + 0.03 * i); o.creativeControl = i >= 2; const r = ct.offerNow(s, rng(s, 'act'), o); if (r.result === 'counter' && r.offer) ct.acceptCounter(s, r.offer.id); } }
           if (what === 'plan') { const cp = await import('/src/sim/capacity.ts'); cp.reservePlan(s, band.id, 'record', cp.monthIndex(s) + 1); }
           if (what === 'record') (await import('/src/sim/studio.ts')).startSession(s, band.id, band.songs.slice(0, 2), 0, 'live');
           if (what === 'release') {

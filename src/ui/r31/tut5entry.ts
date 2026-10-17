@@ -38,7 +38,7 @@ export function tutEraPicker5(onStart: () => void, company?: string): void {
     const cv = mentorCanvas5(y, 2); cv.className = 'px tu5-pickav'; cv.setAttribute('aria-hidden', 'true');
     const d = scenarioById[tutScenarioId5(y)];
     return h('button', { type: 'button', class: 'tu5-pick', 'data-tut5': String(y), onclick: () => { close(); startTutRun5(y, onStart, company); } },
-      cv, h('span', null, h('b', null, String(y)), h('small', null, `${m.name} · ${t(m.role)}`), h('small', { class: 'muted' }, t(d.desc).split(':')[0])));
+      cv, h('span', null, h('b', null, String(y)), h('small', null, document.createTextNode(m.name), ` · ${t(m.role)}`), h('small', { class: 'muted' }, t(d.desc).split(':')[0])));
   };
   close = modal(t(l('Aprender a jogar', 'Learn to play')), h('div', { class: 'tu5-picker' },
     h('p', null, t(l('Um mentor da época mostra o jogo fazendo: 12 capítulos curtos (uns 15 minutos), cada um pode ser pulado. Escolha quando começar:',

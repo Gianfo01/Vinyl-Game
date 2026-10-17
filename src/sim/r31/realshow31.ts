@@ -57,11 +57,14 @@ const COMMON31 = new Set(('yes kiss heart queen prince boston chicago america eu
   + 'punk metal rap reggae ska house techno trance gospel country folk mpb forró axé sertanejo pagode tango salsa '
   // nomes reais que são palavras comuns da interface ou de frases (pt/en): só trocam como texto inteiro ou entre aspas
   + 'elenco nada menor magro alemão dente levante clara area gala mango city culture focus jet winter sabotage bender accept '
-  + 'deluxe random melody shade hub jun jul flood youth vinyl friends friday savage gazebo syria variety').split(/\s+/));
+  + 'deluxe random melody shade hub jun jul flood youth vinyl friends friday savage gazebo syria variety '
+  // verbos de botão da interface que também são nomes reais (ex.: Fazer, do N-Dubz, virava "Fazmann" em "Fazer contatos")
+  + 'fazer ver abrir jogar fechar pular comprar vender gravar lançar contratar marcar ligar avançar sair').split(/\s+/));
 
 // teclas e palavras curtas da interface (rótulos de tecla e botões que não passam por t()): nunca trocadas
 const UIWORDS31 = ['Enter', 'Esc', 'Tab', 'Alt', 'Ctrl', 'Shift', 'Space', 'Espaço', 'Home', 'End', 'Delete', 'Backspace',
-  'OK', 'Ok', 'No', 'Go', 'Up', 'On', 'Off', 'So', 'Be', 'Re', 'Do', 'Oh'];
+  'OK', 'Ok', 'No', 'Go', 'Up', 'On', 'Off', 'So', 'Be', 'Re', 'Do', 'Oh',
+  'Fazer', 'Ver', 'Abrir', 'Jogar', 'Fechar', 'Pular', 'Comprar', 'Vender', 'Gravar', 'Lançar', 'Contratar', 'Marcar', 'Ligar', 'Avançar', 'Sair'];
 
 let PLACES31: Set<string> | null = null;
 /** nomes de lugar: cidades, países e mercados (pt e en), inteiros */

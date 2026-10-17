@@ -30,7 +30,7 @@ const game = (): GameState | null => store.game ?? null;
 
 /** O que a casca mostra agora (cartão de ações do EXP-13 lido do DOM, quando existir). */
 export function view5(): View5 {
-  const card = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('[data-card5]')?.dataset.card5 : undefined;
+  const card = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card : undefined; // cartão de ações (ACOES5)
   return { ...VIEW0, region: SH5.region, paper: SH5.paper?.obj, marker: SH5.paper?.marker.area, card, pause: SH5.pause, help: SH5.help };
 }
 
@@ -44,7 +44,7 @@ export function selOf5(x: Tgt5): string {
   if ('obj' in x) return `[data-obj="${x.obj}"]`;
   if ('travel' in x) return `.b5-tr[data-travel="${x.travel}"]`;
   if ('shell' in x) return SHELL_SEL[x.shell] ?? '.t5';
-  if ('paper' in x) return '[data-card5], .p5';
+  if ('paper' in x) return '.ac5, .p5';
   if ('region' in x) return `.reg5-${x.region}`;
   return '.t5';
 }
@@ -82,8 +82,8 @@ function install(): void {
     if (!guided(s) || UI5.menu) return;
     const el = e.target as HTMLElement | null;
     if (!el || el.closest(ALWAYS)) return;
-    const { target, all } = allowedEls(s);
-    if (target && all.some((a) => a.contains(el))) return; // alvo fora da tela (outro lugar): só a tecla dele vale
+    const { all } = allowedEls(s);
+    if (all.some((a) => a.contains(el))) return; // alvo fora da tela (outro lugar): a tecla dele e o que o passo libera
     e.preventDefault(); e.stopImmediatePropagation();
     if (e.type === 'click') nudge();
   };
@@ -124,7 +124,18 @@ function nudge(): void {
 // ---------------------------------------------------------------- posição do recorte (rAF enquanto montado)
 
 function follow(root: HTMLElement): void {
-  const hole = root.querySelector<HTMLElement>('.tu5-hole');
+  const dims = [...root.querySelectorAll<HTMLElement>('.tu5-dim')];
+  /** Escurece tudo menos o retângulo (4 painéis em volta do alvo; sem alvo, a tela toda). */
+  const cut = (x: number, y: number, w: number, hh: number) => {
+    if (dims.length !== 4) return;
+    const W = window.innerWidth, H = window.innerHeight;
+    const [t, b, l, r] = dims;
+    const px = (n: number) => `${Math.max(0, n)}px`;
+    Object.assign(t.style, { left: '0px', top: '0px', width: px(W), height: px(y) });
+    Object.assign(b.style, { left: '0px', top: px(y + hh), width: px(W), height: px(H - y - hh) });
+    Object.assign(l.style, { left: '0px', top: px(y), width: px(x), height: px(hh) });
+    Object.assign(r.style, { left: px(x + w), top: px(y), width: px(W - x - w), height: px(hh) });
+  };
   const ring = root.querySelector<HTMLElement>('.tu5-ring');
   const here = root.querySelector<HTMLElement>('.tu5-here');
   const box = root.querySelector<HTMLElement>('.tu5-box');
@@ -133,11 +144,13 @@ function follow(root: HTMLElement): void {
     if (!root.isConnected) return;
     const s = game();
     const c = s ? cur5(s) : undefined;
-    const el = c ? elsOf(c.step.target)[0] : undefined;
-    if (el && hole && ring) {
+    // alvo fora da tela: acende o que o passo libera (ex.: o cartão de ações já aberto)
+    const el = c ? elsOf(c.step.target)[0] ?? (c.step.free ?? []).flatMap(elsOf)[0] : undefined;
+    if (el && ring) {
       const r = el.getBoundingClientRect();
       const pad = 4;
-      for (const x of [hole, ring]) { x.hidden = false; x.style.left = `${r.left - pad}px`; x.style.top = `${r.top - pad}px`; x.style.width = `${r.width + pad * 2}px`; x.style.height = `${r.height + pad * 2}px`; }
+      ring.hidden = false; ring.style.left = `${r.left - pad}px`; ring.style.top = `${r.top - pad}px`; ring.style.width = `${r.width + pad * 2}px`; ring.style.height = `${r.height + pad * 2}px`;
+      cut(r.left - pad, r.top - pad, r.width + pad * 2, r.height + pad * 2);
       if (here) { here.style.left = `${r.left}px`; here.style.top = `${Math.max(4, r.top - 26)}px`; }
       // balão longe do alvo: canto de baixo à esquerda, ou em cima à direita se o alvo estiver lá embaixo à esquerda;
       // alvo grande (papel, cena inteira): o balão desce para cima da barra de viagem (que fica bloqueada mesmo)
@@ -147,7 +160,7 @@ function follow(root: HTMLElement): void {
       if (k !== lastFocus) { lastFocus = k; if (!el.contains(document.activeElement) && !document.activeElement?.closest('.tu5-ui')) { (el.matches('button, a, input, [tabindex]') ? el : el.querySelector<HTMLElement>('button, a, input, [tabindex]'))?.focus({ preventScroll: false }); } }
     } else {
       // alvo fora da tela (objeto de outro lugar): tudo escuro e a tecla dele no balão
-      if (hole) { hole.hidden = !root.classList.contains('dim'); hole.style.left = '50%'; hole.style.top = '-8px'; hole.style.width = '0px'; hole.style.height = '0px'; }
+      cut(0, window.innerHeight, 0, 0);
       if (ring) ring.hidden = true;
       if (box) { box.classList.remove('top'); box.classList.remove('low'); }
     }
@@ -158,16 +171,36 @@ function follow(root: HTMLElement): void {
 
 // ---------------------------------------------------------------- balão do mentor
 
+/** Nome do mentor como nó de texto cru: o filtro "Nomes e obras reais" não troca personagem do tutorial (ex.: "Celeste"
+ *  também é nome de artista real). Devolve as partes do texto com cada ocorrência de `names` protegida. */
+function nm(text: string, ...names: string[]): (string | Text)[] {
+  const ns = names.filter(Boolean).sort((a, b) => b.length - a.length);
+  const out: (string | Text)[] = [];
+  let rest = text;
+  for (let guard = 0; guard < 20 && rest; guard++) {
+    let at = -1, hit = '';
+    for (const n of ns) { const i = rest.indexOf(n); if (i >= 0 && (at < 0 || i < at)) { at = i; hit = n; } }
+    if (at < 0) break;
+    if (at > 0) out.push(rest.slice(0, at));
+    out.push(document.createTextNode(hit));
+    rest = rest.slice(at + hit.length);
+  }
+  if (rest) out.push(rest);
+  return out;
+}
+const short5 = (name: string): string => { const w = name.split(' '); return w[0] === 'Seu' || w[0] === 'Dona' ? w.slice(0, 2).join(' ') : w[0]; };
+
 function mentorBox(s: GameState, title: string, body: L, kids: (HTMLElement | null)[], o: { live?: boolean; cls?: string } = {}): HTMLElement {
   const m = mentor5(s.year);
   const face = mentorCanvas5(s.year, 3); face.className = 'tu5-mentor px'; face.setAttribute('aria-hidden', 'true');
   const bub = h('div', { class: 'tu5-bub' },
     h('canvas', { class: 'tu5-bubcv px', 'aria-hidden': 'true' }),
-    h('p', { class: 'tu5-who' }, h('b', null, m.name), ` · ${t(m.role)}`),
+    h('p', { class: 'tu5-who' }, h('b', null, ...nm(m.name, m.name)), ` · ${t(m.role)}`),
     title ? h('h2', { class: 'tu5-t' }, title) : null,
-    h('p', { class: 'tu5-say', 'aria-live': o.live === false ? undefined : 'polite' }, t(body)),
+    h('p', { class: 'tu5-say', 'aria-live': o.live === false ? undefined : 'polite' }, ...nm(t(body), m.name, short5(m.name))),
     h('div', { class: 'tu5-acts' }, ...kids));
-  const el = h('div', { class: `tu5-box tu5-ui ${o.cls ?? ''}`, role: 'dialog', 'aria-label': `${m.name}: ${t(l('tutorial', 'tutorial'))}` }, face, bub);
+  const el = h('div', { class: `tu5-box tu5-ui ${o.cls ?? ''}`, role: 'dialog' }, face, bub);
+  el.setAttribute('aria-label', `${m.name}: ${t(l('tutorial', 'tutorial'))}`);
   // moldura do balão em pixel (redesenha no tamanho do texto, também quando ele muda)
   let last = '';
   const paint = () => {
@@ -205,15 +238,16 @@ function diploma(s: GameState, tt: Tut5): HTMLElement {
         h('p', null, t(l('Certifico que', 'This certifies that')), ' ', h('b', null, s.config.companyName || t(l('o seu selo', 'your label'))), ' ',
           t(l('aprendeu o ofício: sede, contratos, gravação, lançamento, cidade, mundo e casa.', 'has learned the trade: HQ, contracts, recording, release, city, world and home.'))),
         h('p', { class: 'tu5-dipsm' }, t(l('{n} capítulos concluídos · {y}', '{n} chapters completed · {y}'), { n: tt.done.length, y: s.year })),
-        h('p', { class: 'tu5-sign' }, h('span', null, m.name), h('small', null, t(m.role)))),
-      h('p', { class: 'tu5-dipnote' }, t(l('A partida segue livre neste mesmo save. {m} fica no {p} para dicas.', 'The run continues freely in this same save. {m} stays on the {p} for tips.'), { m: m.name, p: t(m.phone) })),
+        h('p', { class: 'tu5-sign' }, h('span', null, ...nm(m.name, m.name)), h('small', null, t(m.role)))),
+      h('p', { class: 'tu5-dipnote' }, ...nm(t(l('A partida segue livre neste mesmo save. {m} fica no {p} para dicas.', 'The run continues freely in this same save. {m} stays on the {p} for tips.'), { m: m.name, p: t(m.phone) }), m.name)),
       h('button', { type: 'button', class: 'tu5-b main', onclick: close }, t(l('Continuar jogando', 'Keep playing')))));
 }
 
 function phone(s: GameState): HTMLElement {
   const m = mentor5(s.year);
-  const chip = h('button', { type: 'button', class: 'tu5-phone tu5-ui', 'aria-expanded': UI5.phone ? 'true' : 'false', title: t(l('Ligar para {m}', 'Call {m}'), { m: m.name }),
-    onclick: () => { UI5.phone = !UI5.phone; RERENDER(); } }, (() => { const c = phoneCanvas5(s.year, 2); c.className = 'px tu5-phi'; c.setAttribute('aria-hidden', 'true'); return c; })(), t(l('Ligar para {m}', 'Call {m}'), { m: m.name.split(' ')[0] === 'Seu' || m.name.split(' ')[0] === 'Dona' ? m.name.split(' ').slice(0, 2).join(' ') : m.name.split(' ')[0] }));
+  const chip = h('button', { type: 'button', class: 'tu5-phone tu5-ui', 'aria-expanded': UI5.phone ? 'true' : 'false',
+    onclick: () => { UI5.phone = !UI5.phone; RERENDER(); } }, (() => { const c = phoneCanvas5(s.year, 2); c.className = 'px tu5-phi'; c.setAttribute('aria-hidden', 'true'); return c; })(), ...nm(t(l('Ligar para {m}', 'Call {m}'), { m: short5(m.name) }), short5(m.name)));
+  chip.setAttribute('title', t(l('Ligar para {m}', 'Call {m}'), { m: m.name }));
   if (!UI5.phone) return chip;
   let tip: L = l('Tudo em dia. Experimente outro país no mapa-múndi, ou um disco cheio quando tiver músicas.', 'All caught up. Try another country on the world map, or a full album once you have songs.');
   let go: (() => void) | null = null;
@@ -257,7 +291,7 @@ export function tutLayer5(s: GameState, rerender: () => void): HTMLElement | nul
   ];
   const box = mentorBox(s, head, text, acts);
   const root = h('div', { class: `tu5${hint ? ' hint' : ' dim'}`, 'data-step': `${c.ch.id}/${c.step.id}` },
-    hint ? null : h('div', { class: 'tu5-hole', 'aria-hidden': 'true' }),
+    ...(hint ? [] : ['t', 'b', 'l', 'r'].map((k) => h('div', { class: `tu5-dim tu5-dim-${k}`, 'aria-hidden': 'true' }))),
     h('div', { class: 'tu5-ring', 'aria-hidden': 'true', hidden: true }),
     h('div', { class: 'tu5-here tu5-ui', hidden: true, role: 'status' }, t(l('primeiro aqui ↓', 'first here ↓'))),
     h('div', { class: 'tu5-prog tu5-ui', 'aria-hidden': 'true' }, ...Array.from({ length: c.of }, (_, i) => h('i', { class: i < c.ci ? 'ok' : i === c.ci ? 'on' : '' }))),
