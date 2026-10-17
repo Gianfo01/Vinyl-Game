@@ -18,14 +18,14 @@ import type { GameState } from '../../sim/types';
 import { $, modal, pill, rerender, section, toast } from '../common';
 import { h, select } from '../dom';
 import { avatarSprite, lookOf } from '../pixel/avatar';
-import { decoIcon31 } from '../pixel/decol31px';
 import { registerArea } from '../registry';
+import { registerObject5 } from './objects5';
 import { PLACE_UI31 } from '../sys/place27ui';
 import { lockBtn31 } from './lock31';
 import { goDest31 } from './quick31';
 import { blitPx31, sceneView31 } from './scene31';
 import { MON31 } from './scene31model';
-import { SH31, SW31, paintDecoShop31, paintEst31, type EstItem31 } from './decol31px';
+import { SH31, SW31, paintDecoShop31, paintEst31, pieceIcon31, type EstItem31 } from './decol31px';
 import type { Painted31 } from './shop31px';
 
 export const DECO_AREA31 = 'deco31';
@@ -40,7 +40,7 @@ const FX_L: Record<string, L> = { rest: l('descanso', 'rest'), prestige: l('pres
 const PLACE_L: Record<string, L> = { home: l('casa', 'home'), sede: l('sede', 'HQ'), venue: l('negócios', 'venues') };
 const fxTxt = (d: DecoDef31): string | null => (d.fx ? `${t(FX_L[d.fx.k])} +${Math.round(d.fx.v * 100)}%` : null);
 function icon(d: DecoDef31, year: number): HTMLElement {
-  const cv = decoIcon31(d, year);
+  const cv = pieceIcon31(d, year);
   cv.className = 'dl31-ic';
   cv.style.width = `${cv.width * 2}px`; cv.style.height = `${cv.height * 2}px`; cv.style.imageRendering = 'pixelated';
   return cv;
@@ -146,18 +146,22 @@ function places(s: GameState): HTMLElement {
   const pub = placePub31(s, p.key);
   const fx = (['crowd', 'prestige', 'rest', 'opinion', 'rec', 'cap'] as const).map((k) => [k, decoFx31(s, k, p.key)] as const).filter(([, v]) => v > 0);
   const stolen = mine.filter((m) => m.stolen);
+  // chegou agora (correio/internet nas últimas 4 semanas), com onde foi parar
+  const fresh = mine.filter((m) => (m.o.origin === 'mail' || m.o.origin === 'net') && s.week - (m.o.history[0]?.w ?? -99) <= 4);
   return h('div', null,
     h('div', { class: 'row wrap' },
       select(p.key, ps.map((x) => ({ value: x.key, label: t(x.name) })), (v) => { UI.place = v; UI.room = ''; rerender(); }),
       p.rooms.length > 1 ? select(UI.room || p.rooms[0].id, p.rooms.map((r) => ({ value: r.id, label: t(r.name) })), (v) => { UI.room = v; rerender(); }) : null,
       pub ? pill(t(l('aberto ao público', 'open to the public')), 'gold') : pill(t(l('fechado', 'private'))),
       ...fx.map(([k, v]) => pill(`${t(FX_L[k])} +${Math.round(v * 100)}%`, 'good'))),
+    fresh.length ? h('div', { class: 'card dl31-arrived' }, h('b', null, t(l('Chegou na porta', 'Arrived at the door'))), h('ul', { class: 'attr-list' }, fresh.map((m) => h('li', null, icon(m.def, s.year), ' ', h('b', null, t(m.def.name)), ' · ',
+      t(m.o.origin === 'mail' ? l('pelo correio', 'by mail') : l('pela internet', 'online')), ' · ', m.at ? t(l('já posta: {p}', 'already placed: {p}'), { p: t(decoPlaces31(s).find((x) => x.key === m.at!.split('|')[0])?.name ?? l('?', '?')) }) : t(l('na gaveta', 'in the drawer')))))) : null,
     placeScene(s, p),
     section(t(l('Peças aqui', 'Pieces here')), here.length ? h('ul', { class: 'attr-list' }, here.map((m) => { const sel = { to: others[0]?.key ?? '' };
       return h('li', null, icon(m.def, s.year), ' ', h('b', null, t(m.def.name)), ` · ${t(STYLE31_L[m.def.style])} `,
         others.length ? [select(sel.to, others.map((x) => ({ value: x.key, label: t(x.name) })), (v) => { sel.to = v; }), h('button', { class: 'btn small', onclick: () => say(moveTo31(s, m.o.id, sel.to)) }, t(l('Levar para lá', 'Take it there')))] : null); }))
       : h('p', { class: 'small muted' }, t(l('Nada posto aqui ainda.', 'Nothing placed here yet.')))),
-    section(t(l('Na gaveta (suas peças fora do lugar)', 'In the drawer (your pieces not placed)')), (() => { const dr = drawer31(s, undefined, p.kind); return dr.length ? h('ul', { class: 'attr-list' }, dr.map((o) => { const m = mine.find((x) => x.o.id === o.id); return m ? h('li', null, icon(m.def, s.year), ' ', h('b', null, t(m.def.name)), ' ', h('button', { class: 'btn small', onclick: () => say(moveTo31(s, o.id, p.key)) }, t(l('Pôr aqui', 'Place here')))) : null; })) : h('p', { class: 'small muted' }, t(l('Gaveta vazia para este lugar.', 'Drawer empty for this place.'))); })()),
+    section(t(l('Na gaveta (suas peças fora do lugar)', 'In the drawer (your pieces not placed)')), (() => { const dr = drawer31(s, undefined, p.kind); return dr.length ? h('ul', { class: 'attr-list' }, dr.map((o) => { const m = mine.find((x) => x.o.id === o.id); return m ? h('li', null, icon(m.def, s.year), ' ', h('b', null, t(m.def.name)), ' ', h('button', { class: 'btn small', onclick: () => say(moveTo31(s, o.id, p.key, UI.room || undefined)) }, t(l('Pôr aqui', 'Place here')))) : null; })) : h('p', { class: 'small muted' }, t(l('Gaveta vazia para este lugar.', 'Drawer empty for this place.'))); })()),
     stolen.length ? section(t(l('Roubadas', 'Stolen')), h('ul', { class: 'attr-list' }, stolen.map((m) => h('li', null, h('b', null, t(m.def.name)), ' · ', t(l('roubada na semana {w}; quem está com ela é gente do submundo', 'stolen in week {w}; underworld people have it'), { w: m.stolen!.w }))))) : null,
     section(t(l('Conjuntos por época', 'Sets by era')), h('div', { class: 'row wrap' }, setProgress31(s).map((x) => pill(`${t(STYLE31_L[x.style])} ${x.have}/${x.of}`, x.done ? 'gold' : '')))));
 }
@@ -178,6 +182,9 @@ export function decoShop31Page(s: GameState): HTMLElement {
     body);
 }
 
+// onda 5: as lojas de decoração são prédios da cidade (Shift+O: decOração)
+registerObject5({ id: 'decoracao', label: l('Lojas de decoração', 'Decoration shops'), place: 'cidade.loja', frame: 'predio', key: 'shift+o', opens: [{ area: DECO_AREA31 }],
+  note: l('Móveis, antiquário, eletrônicos, galeria, correio/internet e os seus lugares decorados.', 'Furniture, antiques, electronics, gallery, mail/online and your decorated places.') });
 registerArea({ id: DECO_AREA31, label: l('Lojas de decoração', 'Decoration shops'), icon: 'house', key: '', render: (s) => decoShop31Page(s), visible: () => false });
 // o prédio da loja no mapa: "Entrar na loja" (uma por loja quando o centro comercial junta várias)
 PLACE_UI31.extra.push((s, p) => (p.deco31 ? h('span', { class: 'row wrap' }, [p.deco31, ...(p.deco31x ?? [])].map((k) =>

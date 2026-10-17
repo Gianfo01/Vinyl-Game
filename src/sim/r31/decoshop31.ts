@@ -373,13 +373,14 @@ export function autoPlace31(s: GameState, objId: string, how: DecoHow31): string
   return undefined;
 }
 /** Leva a peça (a MESMA instância) para o primeiro lugar livre que serve num lugar seu (casa, sede, estabelecimento). */
-export function moveTo31(s: GameState, objId: string, placeKey: string): { ok: boolean; text: L } {
+export function moveTo31(s: GameState, objId: string, placeKey: string, room?: string): { ok: boolean; text: L } {
   const d = decoDef31(obj31(s).objs[objId]?.modelId.slice(5) ?? '');
   const p = decoPlace31(s, placeKey);
   if (!d || !p) return NO('Lugar ou peça não encontrados.', 'Place or piece not found.');
   if (!d.places.includes(p.kind)) return NO('Essa peça não combina com esse lugar.', 'This piece does not suit that place.');
   const used = deco31(s).at;
-  for (const slot of d.slots) for (const r of p.rooms) for (const sp of r.spots) {
+  const rooms = room ? [...p.rooms.filter((r) => r.id === room), ...p.rooms.filter((r) => r.id !== room)] : p.rooms;
+  for (const slot of d.slots) for (const r of rooms) for (const sp of r.spots) {
     const key = `${p.key}|${r.id}|${sp.id}`;
     if (sp.slot !== slot || (used[key] && used[key] !== objId)) continue;
     const res = placeDeco31(s, objId, key);

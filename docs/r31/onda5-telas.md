@@ -7,8 +7,8 @@ Padrão aprovado (PLANO, onda 5): cada tela é um objeto do mundo aberto por cim
 próprio objeto; topo fixo (data, caixa, fama, avançar); embaixo os botões de viagem e o bolso; Esc fecha; cada objeto tem tecla própria.
 Nesta etapa (TEC) o objeto ainda abre a página antiga (`open5`); a lista abaixo é o endereço de cada página no mundo novo.
 
-Inventário: **108 páginas** registradas hoje (base + `registerArea` + virtuais) e **314 abas** (`TABS_REG27`).
-81 objetos; 3 páginas ficam no menu de pausa; 33 páginas não estavam no mapa (marcadas com ⚑).
+Inventário: **109 páginas** registradas hoje (base + `registerArea` + virtuais) e **314 abas** (`TABS_REG27`).
+82 objetos; 3 páginas ficam no menu de pausa; 34 páginas não estavam no mapa (marcadas com ⚑).
 
 Como ler: **Lugar** = região › cômodo/prédio; **Papel** = a moldura que abre; **Marcadores** = abas que ficam no papel
 (as que chegam de outra página vêm marcadas com ←); **"!"** = o que acende o ponto de novidade (por padrão, pendências únicas
@@ -597,6 +597,14 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **Marcadores:** — (papel de uma folha só)
 - **"!":** —
 
+### Lojas de decoração · tecla ⇧O
+- **Lugar:** Cidade › Loja de instrumentos
+- **Papel:** fachada do prédio (cena)
+- **Páginas (dono):** `deco31` (Lojas de decoração) ⚑
+- **Marcadores:** — (papel de uma folha só)
+- **"!":** pendências com dono nestas páginas
+- **Nota:** Móveis, antiquário, eletrônicos, galeria, correio/internet e os seus lugares decorados.
+
 ## Mundo
 
 ### Mundo · tecla ⇧4 (viagem: mundo)
@@ -680,6 +688,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 | `crime` Crime | Beco do submundo | Cidade › Beco do submundo | fachada do prédio (cena) | ; | sim | 6/0 |
 | `critics` Críticos | Jornal na mesa | Sede › Sua sala | jornal | ' | sim | 0/0 |
 | `customs31` Alfândega | Aeroporto e porto | Cidade › Aeroporto e porto | fachada do prédio (cena) | ⇧A | ⚑ não | 0/0 |
+| `deco31` Lojas de decoração | Lojas de decoração | Cidade › Loja de instrumentos | fachada do prédio (cena) | ⇧O | ⚑ não | 0/0 |
 | `deleg31` Delegação | Chefe de gabinete | Sede › Sua sala | conversa com a pessoa + "ver números" | ⇧D | sim | 0/0 |
 | `desk` Mesa do mês | Mesa do mês | Sede › Sua sala | cena em pixel art | 1 | sim | 0/0 |
 | `diary` Diário da run | Diário na gaveta | Sede › Sua sala | caderno | D | sim | 0/0 |

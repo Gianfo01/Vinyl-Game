@@ -122,6 +122,7 @@ Shift+1…6 do menu) e nada muda.
 | ⇧K | Prefeitura | nova |
 | ⇧L | Lounge (artistas sentados) | nova |
 | ⇧M | QG da banda | nova |
+| ⇧O | Lojas de decoração | nova |
 | ⇧P | Estúdios e produtores | nova |
 | ⇧Q | Sua mesa no jornal | nova |
 | ⇧R | Mesa de reunião | nova |

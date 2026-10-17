@@ -50,6 +50,12 @@ export function piece31(g: G, d: DecoDef31, x: number, base: number, k: number):
   const p = g.p, id = d.id, year = g.pl.year;
   const has = (re: RegExp) => re.test(id);
   if (d.cat === 'light') return light31(g, d, x + (w >> 1), base - h);
+  if (d.cat === 'ground') { // tapete/piso enrolado em pé, com a ponta aberta mostrando a estampa
+    const a = col(d), b = col(d, 1);
+    prim27.blk(p, x, base - 7, 22, 7, a); p.ellipse(x + 22, base - 3.5, 2, 3.5, b); for (let i = 2; i < 20; i += 4) p.vline(x + i, base - 6, base - 2, b);
+    prim27.blk(p, x + 2, base - 16, 6, 9, lv(a, 2.6)); p.ellipse(x + 5, base - 16, 3, 1.4, b);
+    return { w: 24, h: 16 };
+  }
   if (d.cat !== 'hifi') { const own = art31(g, d, x, base); if (own) return own; }
   switch (d.cat) {
     case 'furniture':
@@ -316,7 +322,12 @@ export function paintEst31(a: EstArt31): Painted31 {
   const desk = a.items.filter((i) => i.slot === 'desk');
   const hasDesk = a.room.spots.some((s) => s.slot === 'desk');
   const kx = X(0.36), kw = X(0.64) - kx, kh = 16;
-  if (hasDesk) {
+  if (hasDesk && a.room.id !== 'bar' && a.room.id !== 'shop') { // casa, sede, escritório: mesa no meio do cômodo
+    const tx = X(0.42), tw = X(0.58) - tx;
+    prim27.desk(g, tx, fy, tw);
+    let dx = tx + 3;
+    for (const it of desk) { const sz = piece31(g, it.d, dx, fy - 12, hk(it.d.id)); dx += sz.w + 3; }
+  } else if (hasDesk) {
     const top = a.room.id === 'bar' ? C('#6a3a20') : pal.wood;
     prim27.blk(front, kx, fy - kh, kw, kh, top); front.rect(kx - 2, fy - kh - 2, kw + 4, 3, lv(top, 4.4));
     for (let i = 0; i < kw - 6; i += 8) front.rect(kx + 3 + i, fy - kh + 4, 5, kh - 7, lv(top, 2));
@@ -328,9 +339,34 @@ export function paintEst31(a: EstArt31): Painted31 {
   const px = cutEnd27(c, { name: a.name, dim: a.room.id === 'stage', facade: facadeCol27(a.year, 'instruments') });
   if (sg) { const t = a.room.id === 'bar' ? 'BAR' : a.room.id === 'stage' ? (a.year < 1950 ? 'BAILE' : 'AO VIVO') : a.room.id === 'shop' ? 'DISCOS' : 'ABERTO'; const q = new Px(SW31, SH31); const sz = sign31({ ...g, p: q }, sg.d, 0, 40, t); q.outline(INK); px.blit(q, X(0.5) - (sz.w >> 1), y0 + 14 - 40 + sz.h - 10); }
   const people: Person31px[] = [{ id: 'you', x: X(0.12), y: fy, dir: 'SE' }];
-  if (hasDesk) people.push({ id: 'clerk', x: kx + (kw >> 1), y: fy, dir: 'SW', behind: true });
+  if (hasDesk && (a.room.id === 'bar' || a.room.id === 'shop')) people.push({ id: 'clerk', x: kx + (kw >> 1), y: fy, dir: 'SW', behind: true });
   if (a.pub) people.push({ id: 'cust1', x: X(0.3), y: fy, dir: 'SE' }, { id: 'cust2', x: X(0.78), y: fy, dir: 'SW' }, { id: 'cust3', x: X(0.9), y: fy, dir: 'SW' });
   spots.push({ id: 'room', x: x0, y: y0, w: w0, h: fy - y0, label: l('Arrumar este cômodo', 'Arrange this room'), tip: l('Levar peças para cá ou daqui para outro lugar seu', 'Bring pieces here or move them to another of your places'), go: { panel: 'room' }, quiet: true });
   return { px, front, spots, people, texts: sg ? [sg.d.name.pt] : [] };
 }
 export { cityView31 };
+
+// ---------------------------------------------------------------- ícone dos cartões (o mesmo desenho da cena)
+
+const ICUT = new Map<number, Cut27>();
+/** Ícone da peça para os cartões da loja e do catálogo: o desenho da cena, com contorno, num canvas do tamanho dela. */
+export function pieceIcon31(d: DecoDef31, year: number): HTMLCanvasElement {
+  const era = year < 1920 ? 1905 : year < 1950 ? 1935 : year < 1970 ? 1960 : year < 1990 ? 1980 : year < 2010 ? 2000 : 2025;
+  let c = ICUT.get(era);
+  if (!c) { c = cut27(SW31, era, { floor: 'lounge', dim: false, seed: 5, city: 'rio' }); ICUT.set(era, c); }
+  const sz = pieceSize31(d);
+  const W = Math.max(14, Math.min(64, sz.w + 30)), H = Math.max(14, Math.min(64, sz.h + 30));
+  const q = new Px(W, H);
+  if (d.cat === 'paper' || d.cat === 'ground' || d.cat === 'window') { const a = col(d), b = col(d, 1); prim27.blk(q, 4, 4, W - 8, H - 8, a); for (let y = 7; y < H - 6; y += 4) for (let x = 7 + (y % 8 ? 2 : 0); x < W - 6; x += 4) q.put(x, y, b); }
+  else if (d.cat === 'light') light31({ ...c.g, p: q }, d, W >> 1, 1);
+  else piece31({ ...c.g, p: q }, d, 4, H - 3, hk(d.id));
+  q.outline(INK);
+  // apara o que sobrou em volta
+  let x0 = W, y0 = H, x1 = 0, y1 = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (q.get(x, y)) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  const cv = q.canvas();
+  if (x1 < x0) return cv;
+  const out = document.createElement('canvas'); out.width = x1 - x0 + 3; out.height = y1 - y0 + 3;
+  out.getContext('2d')?.drawImage(cv, x0 - 1, y0 - 1, out.width, out.height, 0, 0, out.width, out.height);
+  return out;
+}
