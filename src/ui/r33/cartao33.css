@@ -3,7 +3,7 @@
 .p5.ob33-on { right: calc(12px + var(--ob33-w, 276px)); }
 .p5 > .ob33-col { position: absolute; top: 0; left: calc(100% + 12px); width: calc(var(--ob33-w, 276px) - 12px); max-height: 100%; overflow-y: auto; scrollbar-width: thin; z-index: 2; }
 .ob33-col .ac5.ac5-in33 { margin: 0 0 4px; }
-.ob33-col .ac5.ac5-in33 .ac5-nums li b { white-space: normal; text-align: right; font: 700 13px/1.25 var(--sans, sans-serif); letter-spacing: 0; text-transform: none; }
+:is(.ob33-col, .pz5-sheet) .ac5.ac5-in33 .ac5-nums li b { white-space: normal; text-align: right; font: 700 13px/1.25 var(--sans, sans-serif); letter-spacing: 0; text-transform: none; }
 .ob33-sep { margin: 4px 0 0; font: 700 10px var(--pixel, monospace); letter-spacing: 0.12em; text-transform: uppercase; color: #5a4a3a; }
 .p5-body .ob33-moved { display: none !important; }
 .p5-body .ob33-it { cursor: pointer; outline-offset: -2px; }
@@ -13,3 +13,61 @@
 .p5-body tr.ob33-it.ob33-sel > td { background-color: var(--p33-hi-lt, #f8e4a0) !important; }
 /* papel aberto: a cena inteira escurece (os recados da sede, z 5, ficavam acesos ao lado do cartão) */
 .m5.has-paper > .p5-dim { z-index: 6; }
+
+/* ==== pausa e tela de teclas como papel (shell5: sheet5): plaqueta, papel para ler, cartão numerado para fazer ==== */
+.pz5-back:has(> .pz5-sheet) { padding: 64px 20px 100px; }
+.pz5-back > .pz5-sheet { width: min(1120px, 100%); max-height: 100%; height: auto; }
+.pz5-back > .pz5-sheet.pz5 { display: flex; grid-template-columns: none; gap: 8px; }
+.pz5-sheet .pp33-main { grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); }
+.pz5-sheet .pp33-paper { max-height: 100%; }
+.pz5-sheet .pp33-cardcol { max-height: 100%; }
+.pz5-sheet .pz5-ix, .pz5-sheet .hk5-body { max-height: none; padding: 14px 18px 18px; background-color: transparent; border: 0; box-shadow: none; color: #22201c; }
+.pz5-sheet :is(.pz5-ix, .hk5-body) h2 { margin: 0 0 8px; font: 700 14px/1.2 var(--pixel, monospace); color: #1a160f; text-transform: uppercase; letter-spacing: 0.08em; }
+.pz5-sheet :is(.pz5-ix, .hk5-body) h2 small { color: #5f584c; text-transform: none; letter-spacing: 0; font-family: var(--sans, sans-serif); }
+.pz5-sheet :is(.pz5-ix, .hk5-body) h3 { margin: 12px 0 4px; font: 700 11px/1.2 var(--pixel, monospace); color: #5f584c; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px dashed #b9a07a; padding-bottom: 2px; }
+.pz5-sheet .pz5-f { margin-bottom: 4px; border: 2px solid #170e12; background: #fffdf6; color: #22201c; }
+.pz5-sheet .pz5-row { color: #22201c; }
+.pz5-sheet .pz5-row small { color: #6a5e4e; }
+.pz5-sheet .pz5-row:hover, .pz5-sheet .pz5-row:focus-visible { background: var(--p33-hi-lt, #f8e4a0); outline: none; }
+.pz5-sheet .pz5-ix ul { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.pz5-sheet .hk5-body ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2px 14px; }
+.pz5-sheet .hk5-body li { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 2px 8px; padding: 3px 6px; font-size: 13px; cursor: pointer; border: 2px solid transparent; }
+.pz5-sheet .hk5-body li:hover { border-color: #8a7458; border-style: dashed; }
+.pz5-sheet .hk5-body li:focus-visible { outline: 2px solid var(--p33-mk, #2a5ab0); }
+.pz5-sheet .hk5-body li.on { background: var(--p33-hi-lt, #f8e4a0); border: 2px solid #170e12; }
+.pz5-sheet .hk5-body li.wait { outline: 3px solid var(--p33-mk, #2a5ab0); }
+.pz5-sheet .hk5-body li > small { grid-column: 2; color: #5f584c; }
+.pz5-sheet .hk5-body .hk5-wait { color: var(--p33-mk, #2a5ab0); font-weight: 700; }
+.pz5-sheet .hk5-body .hk5-ch li { cursor: default; grid-template-columns: 70px 1fr; }
+.pz5-sheet .hk5-body .muted { color: #5f584c; }
+.pz5-sheet .ac5-in33 .ac5-a { min-height: 34px; }
+@media (max-width: 1100px) { .pz5-sheet .pp33-main { grid-template-columns: 1fr; } .pz5-sheet.pz5 .pp33-paper { display: none; } }
+.pz5-back > .pz5-sheet.hk5 { padding: 0; background: none; border: 0; box-shadow: none; overflow: visible; color: #1c1612; }
+.pz5-sheet.hk5 > header { margin: 0; }
+
+/* ==== painéis do lugar (cidade .c27-pn, interiores .in31-pn): plaqueta em fonte de pixel, "Esc fechar" escrito,
+   ações na lista numerada do pé do painel (mesmo .ac5) ==== */
+.app5 .c27-pn .c27-ph b, .app5 .in31-pn > b:first-child { font: 700 15px/1.15 var(--pixel, monospace); letter-spacing: 0.06em; overflow-wrap: normal; word-break: normal; text-transform: uppercase; }
+.app5 .ob33-pcol { margin-top: 10px; }
+.app5 .ob33-pcol .ac5.ac5-in33 { margin: 0; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35); }
+.app5 .ob33-pcol .ac5-h b { font: 700 12px var(--pixel, monospace); letter-spacing: 0.12em; text-transform: uppercase; }
+.app5 .ob33-pcol .ac5-a { color: #1c1612; }
+.app5 .ob33-pn .ob33-moved { display: none !important; }
+.app5 .ob33-pn .ob33-it { cursor: pointer; }
+.app5 .ob33-pn .ob33-it.ob33-sel { outline: 2px solid #170e12; background: var(--p33-hi-lt, #f8e4a0); color: #1c1612; }
+.app5 button.ob33-x { width: auto !important; height: auto !important; display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px !important; border: 2px solid #170e12 !important; background: var(--p33-plate, #fbf6e8) !important;
+  color: #1c1612 !important; font: 12px var(--sans, sans-serif); white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); }
+.app5 button.ob33-x kbd, .app5 .m5-cc-x2 kbd { padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px var(--pixel, monospace); border: 1px solid #0c121c; }
+/* cartão da cidade no mapa-múndi: "Ir para a cidade" é a linha 1 do cartão */
+.app5 .m5-ccard .m5-cc-h h3 { font-family: var(--pixel, monospace); letter-spacing: 0.1em; text-transform: uppercase; }
+.app5 .m5-ccard .m5-cc-go::before { content: '1'; display: inline-block; min-width: 16px; margin-right: 6px; padding: 0 4px; border: 1px solid #170e12; background: #fffdf6; box-shadow: 1px 1px 0 #170e12;
+  color: #170e12; font: 700 10px/1.4 var(--pixel, monospace); text-align: center; }
+/* painel do interior (cena da cidade): papel como os outros, plaqueta com o nome */
+.app5 .in31-pane:has(> .in31-pn) { background: var(--p33-paper, #f6eedb); color: #22201c; border: 2px solid #170e12; box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 4px #170e12, 5px 5px 0 4px rgba(0, 0, 0, 0.35);
+  --bg: var(--p33-paper, #f6eedb); --panel: #fffaf0; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; color-scheme: light; }
+.app5 .in31-pane:has(> .in31-pn) :is(h3, h4) { color: #1a160f; text-shadow: none; }
+.app5 .in31-pane:has(> .in31-pn) .muted { color: #5f584c; }
+.app5 .in31-ph { align-items: center; }
+.app5 .in31-ph > b { padding: 3px 10px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); color: #170e12;
+  font: 700 13px/1.15 var(--pixel, monospace) !important; letter-spacing: 0.08em; text-transform: uppercase; }
+.app5 .in31-pane:has(> .in31-pn) .in31-pn > h4:first-child { display: none; } /* o nome já está na plaqueta */

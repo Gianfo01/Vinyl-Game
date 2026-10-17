@@ -30,8 +30,8 @@ function filterRow33(b: HTMLButtonElement): boolean {
 }
 
 /** Botões de ação de uma página antiga. */
-export function actionBtns33(root: HTMLElement): HTMLButtonElement[] {
-  return [...root.querySelectorAll<HTMLButtonElement>('button.btn')].filter((b) => !b.closest(SKIP33) && !b.hasAttribute('aria-pressed') && !b.getAttribute('role') && hasWord(txt33(b)) && !isNav33(txt33(b)) && !filterRow33(b));
+export function actionBtns33(root: HTMLElement, nav = false): HTMLButtonElement[] {
+  return [...root.querySelectorAll<HTMLButtonElement>('button.btn')].filter((b) => !b.closest(SKIP33) && !b.hasAttribute('aria-pressed') && !b.getAttribute('role') && hasWord(txt33(b)) && (nav || !isNav33(txt33(b))) && !filterRow33(b));
 }
 
 /** Texto de leitura de um elemento sem os botões (nome da linha). */
@@ -71,11 +71,11 @@ const SEL33 = new Map<string, string>();
 export interface OldCard33 { el: HTMLElement; refresh: () => void }
 
 /** Monta o cartão de ações de uma página antiga já desenhada em `root`. Sem ação nenhuma: null (o papel fica inteiro). */
-export function oldCard33(root: HTMLElement, key: string, title: string): OldCard33 | null {
-  if (!actionBtns33(root).length) return null;
+export function oldCard33(root: HTMLElement, key: string, title: string, o: { nav?: boolean } = {}): OldCard33 | null {
+  if (!actionBtns33(root, o.nav).length) return null;
   const col = h('div', { class: 'ob33-col' });
   const refresh = (): void => {
-    const acts = actionBtns33(root);
+    const acts = actionBtns33(root, o.nav);
     const items = new Map<HTMLElement, HTMLButtonElement[]>();
     const loose: HTMLButtonElement[] = [];
     for (const b of acts) {
@@ -119,7 +119,7 @@ export function oldCard33(root: HTMLElement, key: string, title: string): OldCar
   if (typeof MutationObserver !== 'undefined') {
     let q = false;
     const mo = new MutationObserver((ms) => {
-      if (q || ms.every((m) => m.type === 'attributes' && m.attributeName !== 'disabled')) return;
+      if (q || ms.every((m) => col.contains(m.target) || (m.type === 'attributes' && m.attributeName !== 'disabled'))) return;
       q = true;
       queueMicrotask(() => { q = false; if (!root.isConnected) { mo.disconnect(); return; } refresh(); });
     });
@@ -128,15 +128,59 @@ export function oldCard33(root: HTMLElement, key: string, title: string): OldCar
   return { el: col, refresh };
 }
 
-// teclas 1–9: a linha do cartão do papel aberto (antes dos atalhos de objeto da casca)
+// ---------------------------------------------------------------- painéis da casca (cidade, interiores)
+// O painel lateral do bairro (.c27-pn; no celular a folha .c27-sheet) e o painel do interior (.in31-pn) já são o
+// "cartão" do lugar: as ações espalhadas viram a lista numerada no pé do painel (ir para a cidade/entrar conta como
+// ação aqui). Ligado por observação do DOM, sem mexer nas telas (POL33-A cuida da escala dos interiores).
+const PANELS33 = '.c27-pn, .in31-pn';
+function panel33(el: HTMLElement): void {
+  if (el.dataset.ob33) return;
+  el.dataset.ob33 = '1';
+  const hd = el.querySelector('.c27-ph b, h3, h4, b');
+  const name = hd ? txt33(hd) : '';
+  const ob = oldCard33(el, `pn|${name}`, t(l('Ações', 'Actions')), { nav: true });
+  if (!ob) return;
+  ob.el.classList.add('ob33-pcol');
+  el.classList.add('ob33-pn');
+  el.append(ob.el);
+}
+/** Botão de fechar dos painéis: "Esc fechar" escrito (como no papel), no lugar do × solto. */
+function closer33(b: HTMLButtonElement): void {
+  if (b.dataset.ob33) return;
+  b.dataset.ob33 = '1';
+  b.classList.add('ob33-x');
+  b.replaceChildren(h('kbd', null, 'Esc'), ' ', t(l('fechar', 'close')));
+}
+function scan33(root: ParentNode): void {
+  if (!document.querySelector('.app5')) return;
+  root.querySelectorAll<HTMLElement>(PANELS33).forEach(panel33);
+  root.querySelectorAll<HTMLButtonElement>('.c27-pn .w19-x, .c27-sheet .w19-x, .in31-ph > button.icon').forEach(closer33);
+}
+if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
+  let q = false;
+  const mo = new MutationObserver(() => {
+    if (q) return;
+    q = true;
+    queueMicrotask(() => { q = false; scan33(document); });
+  });
+  const go = () => mo.observe(document.body, { childList: true, subtree: true });
+  if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+}
+
+/** Linhas numeradas à vista, por ordem de prioridade: papel aberto, painel do lugar, cartão da cidade no mapa. */
+function digitRows33(): HTMLButtonElement[] {
+  const col = document.querySelector('.p5 .ob33-col') ?? [...document.querySelectorAll<HTMLElement>('.ob33-pcol')].find((x) => x.offsetParent);
+  if (col) return [...col.querySelectorAll<HTMLButtonElement>('.ac5-a')];
+  const cc = document.querySelector<HTMLButtonElement>('.m5-ccard .m5-cc-go');
+  return cc ? [cc] : [];
+}
+// teclas 1–9: a linha do cartão à vista (antes dos atalhos de objeto da casca)
 if (typeof window !== 'undefined') window.addEventListener('keydown', (e) => {
   if (!/^[1-9]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey) return;
   const tg = e.target as HTMLElement | null;
   if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT' || tg.isContentEditable)) return;
-  if (document.querySelector('.overlay, .pz5-back, .am20, .cx27, .ac5[data-card]')) return;
-  const col = document.querySelector('.p5 .ob33-col');
-  if (!col) return;
-  const b = col.querySelectorAll<HTMLButtonElement>('.ac5-a')[Number(e.key) - 1];
+  if (!document.querySelector('.app5') || document.querySelector('.overlay, .pz5-back, .am20, .cx27, .ac5[data-card]')) return;
+  const b = digitRows33()[Number(e.key) - 1];
   if (!b) return;
   e.preventDefault(); e.stopImmediatePropagation();
   if (!b.disabled) b.click();

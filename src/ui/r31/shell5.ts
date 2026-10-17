@@ -21,6 +21,7 @@ import { icon17Px } from '../pixel/icons17';
 import { icon31Px } from '../pixel/icons31';
 import { dockCar5, type DockCar5 } from './dockcar5';
 import { CARD_W33, oldCard33 } from '../r33/cartao33';
+import { card33, type Row33 } from '../r33/paper33';
 import { FS_KEY33, FS_LABEL33, fsAble33, fsOn33, toggleFs33 } from '../r33/tela33';
 import { rgba, type Px } from '../pixel/px';
 import { inbox5Layout, inbox5Look, inbox5Px, paper5Canvas, paper5Layout, paper5Px, type Paper5, type Rect5 } from '../pixel/exp5paper';
@@ -231,6 +232,7 @@ export function install5(host: Shell5Host): void {
   const alt = (on: boolean) => { const was = document.body.classList.contains('alt5'); document.body.classList.toggle('alt5', on && !!document.querySelector('.app5')); if (on && !was) declutter5(); };
   window.addEventListener('keydown', (e) => {
     if (SH5.rebind && document.querySelector('.app5')) { e.preventDefault(); e.stopImmediatePropagation(); doRebind(e); return; }
+    if (document.querySelector('.app5') && !document.querySelector('.overlay') && sheetKey5(e)) { e.preventDefault(); e.stopImmediatePropagation(); return; } // FICHAS33-B
     if (e.key === 'Alt') { alt(true); if (document.querySelector('.app5')) e.preventDefault(); }
   }, true);
   window.addEventListener('keyup', (e) => { if (e.key === 'Alt') alt(false); });
@@ -536,49 +538,65 @@ function geo5(kind: Paper5 | 'inbox', year: number, cw: number, ch: number): { p
 
 // ---------------------------------------------------------------- pausa e índice
 
+/** FICHAS33-B: plaqueta + papel (o que se lê) + cartão de ações numerado (o que se faz), no mesmo desenho das janelas. */
+function sheet5(o: { cls: string; plate: string; sub?: string; label: string; marks?: HTMLElement | null; body: HTMLElement; card: HTMLElement; close: () => void }): HTMLElement {
+  return h('div', { class: `pz5-back ${o.cls}-back`, onclick: (e: Event) => { if (e.target === e.currentTarget) o.close(); } },
+    h('section', { class: `pp33 wide has-card pz5-sheet ${o.cls}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': o.label },
+      h('header', { class: 'pp33-hd' },
+        h('div', { class: 'pp33-hl' }, h('div', { class: 'pp33-plate' }, h('b', { class: 'pp33-pt' }, o.plate), o.sub ? h('small', { class: 'pp33-ps' }, o.sub) : null), o.marks ?? null),
+        h('span', { class: 'pp33-sp' }),
+        h('button', { type: 'button', class: 'pp33-x', onclick: o.close }, h('kbd', null, 'Esc'), ' ', t(l('fechar', 'close')))),
+      h('div', { class: 'pp33-main' }, h('div', { class: 'pp33-paper' }, o.body), h('div', { class: 'pp33-cardcol' }, o.card))));
+}
+
 function pause5(s: GameState, host: Shell5Host): HTMLElement {
-  const item = (label: L, hint: string | HTMLElement | null, on: () => void, primary = false) =>
-    h('button', { type: 'button', class: `pz5-i${primary ? ' on' : ''}`, onclick: on }, h('span', null, t(label)), typeof hint === 'string' ? h('small', null, hint) : hint);
+  const back = () => { SH5.pause = false; redraw(); };
+  const row = (label: L, run: () => void, hint?: string, primary = false): Row33 => ({ label: hint ? `${t(label)} · ${hint}` : t(label), run, primary });
   const ix = index5();
   const groups = [...REGIONS5, 'pausa' as const].map((r) => ({ r, rows: ix.filter((x) => x.region === r) })).filter((g) => g.rows.length);
   const filter = h('input', { type: 'search', class: 'pz5-f', placeholder: t(l('filtrar páginas…', 'filter pages…')), 'aria-label': t(l('Filtrar o índice', 'Filter the index')),
     oninput: (e: Event) => { const q = (e.target as HTMLInputElement).value.trim().toLowerCase(); idx.querySelectorAll<HTMLElement>('li').forEach((li) => { li.hidden = !!q && !(li.textContent ?? '').toLowerCase().includes(q); }); } });
-  const idx = h('div', { class: 'pz5-ix', id: 'pz5-ix' },
+  const idx = h('div', { class: 'pz5-ix modal-body pp33-body', id: 'pz5-ix' },
     h('h2', null, t(l('Índice completo', 'Full index')), h('small', null, ` · ${t(l('consulta (opcional)', 'reference (optional)'))}`)), filter,
     ...groups.map((g) => h('section', null, h('h3', null, g.r === 'pausa' ? t(l('Fora do mundo', 'Outside the world')) : tl5(REGION_L5[g.r])),
       h('ul', null, ...g.rows.filter((x) => host.has(x.open.area) || g.r === 'pausa').map((x) => h('li', null,
         h('button', { type: 'button', class: 'pz5-row', 'data-area': x.open.area, onclick: () => { SH5.pause = false; show5(x.open.area, x.open.tab, x.obj); } },
           h('span', null, txt5(host.label(x.open.area))), x.obj ? h('small', null, txt5(tl5(object5(x.obj)!.label))) : null)))))));
   const editor = host.has('editor31');
-  return h('div', { class: 'pz5-back', onclick: (e: Event) => { if (e.target === e.currentTarget) { SH5.pause = false; redraw(); } } },
-    h('div', { class: 'pz5', role: 'dialog', 'aria-modal': 'true', 'aria-label': t(l('Pausa', 'Pause')) },
-      h('div', { class: 'pz5-menu' },
-        h('h1', null, t(l('Pausa', 'Pause'))),
-        item(l('Continuar', 'Continue'), kbd5('Esc'), () => { SH5.pause = false; redraw(); }, true),
-        item(l('Salvar', 'Save'), 'Ctrl S', () => { host.save(); }),
-        item(l('Carregar', 'Load'), null, () => { SH5.pause = false; redraw(); host.files(); }),
-        item(l('Opções', 'Options'), t(l('nomes reais, som, teclas', 'real names, sound, keys')), () => { SH5.pause = false; redraw(); host.options(); }),
-        fsAble33() ? item(fsOn33() ? l('Sair da tela cheia', 'Exit fullscreen') : FS_LABEL33, FS_KEY33, () => { void toggleFs33().then(() => redraw()); }) : null, // BUGS33 item 5
-        item(l('Teclas de atalho', 'Shortcut keys'), kbd5('?'), help5),
-        item(l('Ajuda e tutorial', 'Help and tutorial'), null, () => show5('tut18')),
-        item(l('Créditos', 'Credits'), null, () => openCredits31()),
-        editor ? item(l('Editor', 'Editor'), t(l('modo editor', 'editor mode')), () => show5('editor31')) : null,
-        item(l('Índice completo', 'Full index'), t(l('consulta (opcional)', 'reference (optional)')), () => filter.focus()),
-        item(l('Menu principal', 'Main menu'), null, () => { SH5.pause = false; host.mainMenu(); })),
-      idx));
+  const rows: Row33[] = [
+    row(l('Continuar', 'Continue'), back, 'Esc', true),
+    row(l('Salvar', 'Save'), () => { host.save(); }, 'Ctrl S'),
+    row(l('Carregar', 'Load'), () => { SH5.pause = false; redraw(); host.files(); }),
+    row(l('Opções', 'Options'), () => { SH5.pause = false; redraw(); host.options(); }, t(l('nomes reais, som, teclas', 'real names, sound, keys'))),
+    ...(fsAble33() ? [row(fsOn33() ? l('Sair da tela cheia', 'Exit fullscreen') : FS_LABEL33, () => { void toggleFs33().then(() => redraw()); }, FS_KEY33)] : []), // BUGS33 item 5
+    row(l('Teclas de atalho', 'Shortcut keys'), help5, '?'),
+    row(l('Ajuda e tutorial', 'Help and tutorial'), () => show5('tut18')),
+    row(l('Créditos', 'Credits'), () => openCredits31()),
+    ...(editor ? [row(l('Editor', 'Editor'), () => show5('editor31'), t(l('modo editor', 'editor mode')))] : []),
+    row(l('Menu principal', 'Main menu'), () => { SH5.pause = false; host.mainMenu(); }),
+  ];
+  return sheet5({ cls: 'pz5', plate: t(l('Pausa', 'Pause')), sub: `${s.config.companyName || t(l('Seu selo', 'Your label'))} · ${dateLabel(s)}`, label: t(l('Pausa', 'Pause')),
+    body: idx, card: card33({ title: t(l('Pausa', 'Pause')), rows, note: t(l('Números 1–9 escolhem; o índice ao lado é só consulta.', 'Numbers 1–9 pick; the index beside it is just for reference.')) }), close: back });
 }
 
 // ---------------------------------------------------------------- ajuda de teclas (? ) e troca de teclas
 
+/** Marcador e linha escolhidos na tela de teclas (FICHAS33-B). */
+const HK5: { mark: 'here' | 'all' | 'changes'; sel?: string } = { mark: 'here' };
+
 function help5el(s: GameState): HTMLElement {
+  void s;
   const all = keys5();
+  const close = () => { SH5.help = false; SH5.rebind = undefined; redraw(); };
   const row = (b: Bind5) => {
-    const can = !b.fixed && b.scope === 'global';
     const waiting = SH5.rebind === b.id;
     const def = defaultChord5(b.id);
-    return h('li', { class: waiting ? 'wait' : '' }, kbd5(chordLabel5(b.chord)), h('span', null, txt5(tl5(b.label))),
+    const on = HK5.sel === b.id;
+    return h('li', { class: `${waiting ? 'wait' : ''}${on ? ' on' : ''}`, tabindex: '0', role: 'option', 'aria-selected': on ? 'true' : 'false', 'data-key5': b.id,
+      onclick: () => { HK5.sel = b.id; redraw(); }, onkeydown: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); HK5.sel = b.id; redraw(); } } },
+      kbd5(chordLabel5(b.chord)), h('span', null, txt5(tl5(b.label))),
       def && def !== b.chord ? h('small', { class: 'muted' }, `${t(l('padrão', 'default'))} ${chordLabel5(def)}`) : null,
-      can ? h('button', { type: 'button', class: 'hk5-re', onclick: () => { SH5.rebind = b.id; redraw(); } }, waiting ? t(l('aperte a nova tecla… (Esc cancela)', 'press the new key… (Esc cancels)')) : t(l('trocar', 'change'))) : null);
+      waiting ? h('small', { class: 'hk5-wait' }, t(l('aperte a nova tecla… (Esc cancela)', 'press the new key… (Esc cancels)'))) : null);
   };
   const here: Bind5[] = [];
   let where: string;
@@ -595,20 +613,56 @@ function help5el(s: GameState): HTMLElement {
   const travel = all.filter((b) => b.act.kind === 'travel');
   const sys = all.filter((b) => b.act.kind === 'sys' && b.scope === 'global');
   const others = all.filter((b) => b.scope === 'global' && (b.act.kind === 'object' || b.act.kind === 'marker') && !here.includes(b));
-  return h('div', { class: 'pz5-back', onclick: (e: Event) => { if (e.target === e.currentTarget) { SH5.help = false; SH5.rebind = undefined; redraw(); } } },
-    h('div', { class: 'hk5', role: 'dialog', 'aria-modal': 'true', 'aria-label': t(l('Teclas', 'Keys')) },
-      h('header', null, h('h1', null, t(l('Teclas', 'Keys')), h('small', null, ` · ${where}`)),
-        h('button', { type: 'button', class: 'hk5-reset', onclick: () => { resetKeys5(); toast(t(l('Teclas de volta ao padrão.', 'Keys back to default.')), 'info'); redraw(); } }, t(l('voltar ao padrão', 'reset to default'))),
-        h('button', { type: 'button', class: 'p5-x', onclick: () => { SH5.help = false; SH5.rebind = undefined; redraw(); } }, kbd5('Esc'), t(l('fechar', 'close')))),
-      h('div', { class: 'hk5-cols' },
-        h('section', null, helpHere5(SH5.paper ? '.p5' : undefined), // R31 onda 5 (CENAS5): a ajuda do lugar à vista (interior, sala…)
-          h('h2', null, t(l('Nesta tela', 'On this screen'))), h('ul', null, ...here.map(row)),
-          h('h2', null, t(l('Viagem', 'Travel'))), h('ul', null, ...travel.map(row)),
-          h('h2', null, t(l('Sistema', 'System'))), h('ul', null, ...sys.map(row)),
-          h('p', { class: 'muted small' }, t(l('Segure Alt para ver o nome e a tecla de todos os objetos da cena.', 'Hold Alt to see every object\'s name and key.')))),
-        h('section', null, h('h2', null, t(l('Todos os objetos', 'All objects'))), h('ul', null, ...others.map(row)),
-          h('details', null, h('summary', null, t(l('O que mudou (para quem já joga)', 'What changed (for current players)'))),
-            h('ul', { class: 'hk5-ch' }, ...KEY_CHANGES5.map((c) => h('li', null, kbd5(chordLabel5(c.chord)), h('span', null, `${t(c.before)} → `, h('b', null, t(c.after))), h('small', { class: 'muted' }, t(c.why))))))))));
+  const shown = HK5.mark === 'here' ? [...here, ...travel, ...sys] : HK5.mark === 'all' ? others : [];
+  if (shown.length && !shown.some((b) => b.id === HK5.sel)) HK5.sel = (shown.find((b) => !b.fixed && b.scope === 'global') ?? shown[0]).id;
+  const list = (xs: Bind5[]) => h('ul', { role: 'listbox' }, ...xs.map(row));
+  const MARKS: { id: typeof HK5.mark; label: L; n: number }[] = [
+    { id: 'here', label: l('Nesta tela', 'On this screen'), n: here.length + travel.length + sys.length },
+    { id: 'all', label: l('Todos os objetos', 'All objects'), n: others.length },
+    { id: 'changes', label: l('O que mudou', 'What changed'), n: KEY_CHANGES5.length },
+  ];
+  const marks = h('nav', { class: 'pp33-mks', role: 'tablist', 'aria-label': t(l('Marcadores', 'Markers')) }, ...MARKS.map((m) =>
+    h('button', { type: 'button', role: 'tab', class: `pp33-mk${HK5.mark === m.id ? ' on' : ''}`, 'aria-selected': HK5.mark === m.id ? 'true' : 'false', onclick: () => { HK5.mark = m.id; redraw(); } }, t(m.label), h('small', null, String(m.n)))));
+  const body = h('div', { class: 'hk5-body modal-body pp33-body' },
+    HK5.mark === 'here' ? h('div', null, helpHere5(SH5.paper ? '.p5' : undefined), // R31 onda 5 (CENAS5): a ajuda do lugar à vista (interior, sala…)
+      h('h2', null, t(l('Nesta tela', 'On this screen'))), list(here),
+      h('h2', null, t(l('Viagem', 'Travel'))), list(travel),
+      h('h2', null, t(l('Sistema', 'System'))), list(sys),
+      h('p', { class: 'muted small' }, t(l('Segure Alt para ver o nome e a tecla de todos os objetos da cena.', 'Hold Alt to see every object\'s name and key.'))))
+      : HK5.mark === 'all' ? h('div', null, h('h2', null, t(l('Todos os objetos', 'All objects'))), list(others))
+        : h('div', null, h('h2', null, t(l('O que mudou (para quem já joga)', 'What changed (for current players)'))),
+          h('ul', { class: 'hk5-ch' }, ...KEY_CHANGES5.map((c) => h('li', null, kbd5(chordLabel5(c.chord)), h('span', null, `${t(c.before)} → `, h('b', null, t(c.after))), h('small', { class: 'muted' }, t(c.why)))))));
+  const sel = HK5.sel ? all.find((b) => b.id === HK5.sel) : undefined;
+  const can = !!sel && !sel.fixed && sel.scope === 'global';
+  const rows: Row33[] = [
+    { label: SH5.rebind ? t(l('Cancelar a troca', 'Cancel the change')) : t(l('Trocar a tecla', 'Change the key')), primary: true,
+      lock: !sel ? l('Nenhuma tecla escolhida.', 'No key picked.') : !can ? l('Tecla fixa do sistema ou de dentro de um papel.', 'Fixed system key or a key inside a paper.') : null,
+      run: () => { SH5.rebind = SH5.rebind ? undefined : sel!.id; redraw(); } },
+    { label: t(l('Voltar todas ao padrão', 'Reset all to default')), run: () => { resetKeys5(); toast(t(l('Teclas de volta ao padrão.', 'Keys back to default.')), 'info'); redraw(); } },
+  ];
+  const card = card33({ title: t(l('Teclas', 'Keys')), nums: sel ? [{ label: t(l('Escolhida', 'Picked')), value: `${chordLabel5(sel.chord)} · ${tl5(sel.label)}` }] : undefined, rows,
+    note: SH5.rebind ? t(l('Aperte a nova tecla agora (Esc cancela).', 'Press the new key now (Esc cancels).')) : t(l('Clique numa linha para escolher a tecla; [ ] trocam de marcador.', 'Click a row to pick the key; [ ] switch markers.')) });
+  return sheet5({ cls: 'hk5', plate: t(l('Teclas', 'Keys')), sub: where, label: t(l('Teclas', 'Keys')), marks, body, card, close });
+}
+
+/** Teclas da pausa e da tela de teclas (FICHAS33-B): 1–9 = linha do cartão; [ ] = marcador. Devolve true quando tratou. */
+function sheetKey5(e: KeyboardEvent): boolean {
+  if (!SH5.pause && !SH5.help) return false;
+  const tg = e.target as HTMLElement | null;
+  if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.tagName === 'SELECT')) return false;
+  if (e.ctrlKey || e.metaKey || e.altKey) return false;
+  if (/^[1-9]$/.test(e.key)) {
+    const b = document.querySelectorAll<HTMLButtonElement>('.pz5-sheet .ac5-a')[Number(e.key) - 1];
+    if (b && !b.disabled) b.click();
+    return !!b;
+  }
+  if (SH5.help && (e.key === '[' || e.key === ']')) {
+    const ids = ['here', 'all', 'changes'] as const;
+    HK5.mark = ids[(ids.indexOf(HK5.mark) + (e.key === ']' ? 1 : 2)) % 3];
+    redraw();
+    return true;
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------- a casca inteira
