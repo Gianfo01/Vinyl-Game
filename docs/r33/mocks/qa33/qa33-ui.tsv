@@ -1,0 +1,96 @@
+1889	prep	OK	{"escola":"ok","museu":"ok","fabrica":"ok","plataforma":"Ainda não existe nesta época (a partir de 2005).","agencia":"Ainda não existe nesta época (a partir de 1930).","filial":"Abra filiais a partir do Loft."}
+1889	int2-banco	OK	5 pontos · ação ok: Empréstimo aprovado: 14% ao ano em 36 meses.
+1889	int2-cartório	OK	8 pontos · ação ok: Registrar obras: feito.
+1889	int2-hospital	OK	5 pontos · ação ok: Consulta feita: saúde +8 e estresse −8.
+1889	int2-estádio	fora da época/cidade	
+1889	int2-clube	fora da época/cidade	
+1889	int2-boate	fora da época/cidade	
+1889	int2-igreja	OK	5 pontos · ação ok: Missa e coral: feito.
+1889	int2-estúdio	fora da época/cidade	
+1889	int2-agência	fora da época/cidade	
+1889	int2-escola	fora da época/cidade	
+1889	int2-gráfica	OK	5 pontos · ação ok: Encomendar capa melhor: feito.
+1889	int2-rádio	fora da época/cidade	
+1889	int2-estação	OK	5 pontos · ação ok: Viajar de trem: feito.
+1889	int2-porto	OK	5 pontos · ação ok: Passagem de navio: feito.
+1889	int2-festival	OK	7 pontos · ação bloqueada
+1889	int1-museu	OK	9 pontos · ação bloqueada
+1889	int1-escola	OK	8 pontos · ação bloqueada
+1889	int1-fábrica	OK	9 pontos · ação bloqueada
+1889	int1-hotel	AUSENTE	
+1889	int1-escritorio	AUSENTE	
+1889	int1-apartamentos	AUSENTE	
+1889	int1-rival	OK	8 pontos · ação bloqueada
+1962	prep	OK	{"escola":"ok","museu":"ok","fabrica":"ok","plataforma":"Ainda não existe nesta época (a partir de 2005).","agencia":"ok","filial":"Abra filiais a partir do Loft."}
+1962	int2-banco	OK	5 pontos · ação ok: Empréstimo aprovado: 11% ao ano em 36 meses.
+1962	int2-cartório	OK	8 pontos · ação ok: Registrar obras: feito.
+1962	int2-hospital	OK	5 pontos · ação ok: Consulta feita: saúde +8 e estresse −8.
+1962	int2-estádio	OK	5 pontos · ação ok: Reservar show de estádio: feito.
+1962	int2-clube	OK	5 pontos · ação ok: Tocar uma noite: feito.
+1962	int2-boate	fora da época/cidade	
+1962	int2-igreja	OK	5 pontos · ação ok: Missa e coral: feito.
+1962	int2-estúdio	OK	5 pontos · ação ok: Programa de calouros: feito.
+1962	int2-agência	OK	5 pontos · ação ok: Encomendar um jingle: feito.
+1962	int2-escola	fora da época/cidade	
+1962	int2-gráfica	OK	5 pontos · ação ok: Encomendar capa melhor: feito.
+1962	int2-rádio	OK	5 pontos · ação ok: Tocar na rádio pirata: feito.
+1962	int2-estação	OK	5 pontos · ação ok: Viajar de trem: feito.
+1962	int2-porto	OK	5 pontos · ação ok: Passagem de navio: feito.
+1962	int2-festival	OK	7 pontos · ação bloqueada
+1962	int1-escola	OK	8 pontos · ação bloqueada
+1962	int1-fábrica	OK	9 pontos · ação bloqueada
+1962	int1-museu	OK	9 pontos · ação bloqueada
+1962	int1-agência	OK	7 pontos · ação bloqueada
+1962	int1-hotel	AUSENTE	
+1962	int1-escritorio	AUSENTE	
+1962	int1-apartamentos	AUSENTE	
+1962	int1-rival	OK	10 pontos · ação bloqueada
+2025	prep	OK	{"escola":"ok","museu":"ok","fabrica":"ok","plataforma":"ok","agencia":"ok","filial":"Abra filiais a partir do Loft."}
+2025	int2-banco	OK	5 pontos · ação ok: Empréstimo aprovado: 12% ao ano em 36 meses.
+2025	int2-cartório	OK	8 pontos · ação ok: Registrar obras: feito.
+2025	int2-hospital	OK	6 pontos · ação ok: Consulta feita: saúde +8 e estresse −8.
+2025	int2-estádio	OK	5 pontos · ação ok: Reservar show de estádio: feito.
+2025	int2-clube	fora da época/cidade	
+2025	int2-boate	OK	5 pontos · ação ok: Tocar na pista: feito.
+2025	int2-igreja	OK	5 pontos · ação ok: Missa e coral: feito.
+2025	int2-estúdio	OK	5 pontos · ação ok: Programa de calouros: feito.
+2025	int2-agência	OK	5 pontos · ação ok: Encomendar um jingle: feito.
+2025	int2-escola	fora da época/cidade	
+2025	int2-gráfica	OK	5 pontos · ação ok: Encomendar capa melhor: feito.
+2025	int2-rádio	OK	5 pontos · ação ok: Tocar na rádio pirata: feito.
+2025	int2-estação	OK	5 pontos · ação ok: Viajar de trem: feito.
+2025	int2-porto	OK	5 pontos · ação ok: Passagem de navio: feito.
+2025	int2-festival	OK	7 pontos · ação bloqueada
+2025	int1-escola	OK	8 pontos · ação bloqueada
+2025	int1-fábrica	OK	9 pontos · ação bloqueada
+2025	int1-museu	OK	9 pontos · ação bloqueada
+2025	int1-agência	OK	7 pontos · ação bloqueada
+2025	int1-plataforma	OK	8 pontos · ação bloqueada
+2025	int1-hotel	AUSENTE	
+2025	int1-escritorio	AUSENTE	
+2025	int1-apartamentos	AUSENTE	
+2025	int1-rival	OK	10 pontos · ação bloqueada
+2035	prep	OK	{"escola":"ok","museu":"ok","fabrica":"ok","plataforma":"ok","agencia":"ok","filial":"Abra filiais a partir do Loft."}
+2035	int2-banco	OK	5 pontos · ação ok: Empréstimo aprovado: 11% ao ano em 36 meses.
+2035	int2-cartório	OK	8 pontos · ação ok: Registrar obras: feito.
+2035	int2-hospital	OK	6 pontos · ação ok: Consulta feita: saúde +8 e estresse −8.
+2035	int2-estádio	OK	5 pontos · ação ok: Reservar show de estádio: feito.
+2035	int2-clube	fora da época/cidade	
+2035	int2-boate	OK	5 pontos · ação ok: Tocar na pista: feito.
+2035	int2-igreja	OK	5 pontos · ação ok: Missa e coral: feito.
+2035	int2-estúdio	OK	5 pontos · ação ok: Programa de calouros: feito.
+2035	int2-agência	OK	5 pontos · ação ok: Encomendar um jingle: feito.
+2035	int2-escola	fora da época/cidade	
+2035	int2-gráfica	OK	5 pontos · ação ok: Encomendar capa melhor: feito.
+2035	int2-rádio	OK	5 pontos · ação ok: Tocar na rádio pirata: feito.
+2035	int2-estação	OK	5 pontos · ação ok: Viajar de trem: feito.
+2035	int2-porto	OK	5 pontos · ação ok: Passagem de navio: feito.
+2035	int2-festival	OK	7 pontos · ação bloqueada
+2035	int1-escola	OK	8 pontos · ação bloqueada
+2035	int1-fábrica	OK	9 pontos · ação bloqueada
+2035	int1-museu	OK	9 pontos · ação bloqueada
+2035	int1-agência	OK	7 pontos · ação bloqueada
+2035	int1-plataforma	OK	8 pontos · ação bloqueada
+2035	int1-hotel	AUSENTE	
+2035	int1-escritorio	AUSENTE	
+2035	int1-apartamentos	AUSENTE	

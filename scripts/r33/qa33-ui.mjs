@@ -78,7 +78,8 @@ async function enterBy(year, label, tag) {
   if (!ok) { row(year, tag, 'AUSENTE', 'sem prédio no mapa'); return; }
   try { await p.locator('[data-qa33="1"]').click({ force: true, timeout: 3000 }); } catch (e) { row(year, tag, 'ERRO', `clique: ${e.message.slice(0, 60)}`); return; }
   await wait(700);
-  const enter = p.getByText(/Entrar \(ver por dentro\)|^Entrar$|^Ver por dentro$/).first();
+  if (await p.locator('.overlay').count()) { row(year, tag, 'OK', 'abre a ficha (janela), sem interior'); await esc(); return; }
+  const enter = p.getByRole('button', { name: /Entrar \(ver por dentro\)|^Entrar$|Ver por dentro/ }).first();
   if (!(await enter.count()) || !(await enter.isVisible().catch(() => false))) { if (!(await p.locator('.c2-in').count())) { await p.screenshot({ path: `${SHOTS}/${year}-${tag}-semEntrar.png` }); row(year, tag, 'SEM ENTRAR', ok.slice(0, 60)); await esc(); return; } }
   else { await enter.click(); await wait(1300); }
   await inside(year, tag);
@@ -116,7 +117,7 @@ for (const y of YEARS) {
   await p.screenshot({ path: `${SHOTS}/${y}-cidade.png` });
   if (await hscroll()) row(y, 'cidade', 'ROLAGEM-H');
   const labels = await p.evaluate(() => [...document.querySelectorAll('.w19-hs')].map((e) => e.getAttribute('aria-label') ?? ''));
-  writeFileSync(resolve(SHOTS, `${y}-labels.json`), JSON.stringify(labels, null, 1));
+  
   for (const n of INT2N) if (labels.some((x) => x.startsWith(`${n} · `))) await enterBy(y, `${n} · `, `int2-${n.split(' ')[0].toLowerCase()}`);
   else row(y, `int2-${n.split(' ')[0].toLowerCase()}`, 'fora da época/cidade');
   // terreno do festival pelo cartão (tecla J na cidade)
@@ -124,7 +125,7 @@ for (const y of YEARS) {
   const fb = p.locator('.ac5 button', { hasText: 'Entrar no terreno do festival' }).first();
   if (await fb.count()) { await fb.click(); await wait(1500); await inside(y, 'int2-festival'); } else { row(y, 'int2-festival', 'SEM BOTÃO', 'cartão do festival'); await esc(); }
   // INT-1: prédios próprios (rótulo começa pelo nome do prédio) e lugares com ações (hotel, escritório, apartamentos, rival)
-  const own = labels.filter((x) => / · (Escola|Fábrica|Museu|Plataforma|Agência|Filial)/.test(x) && !/^(Agência de publicidade|Escola de samba) · /.test(x));
+  const own = labels.filter((x) => / · (Escola|Fábrica|Museu|Plataforma|Agência|Filial)[^·]* · /.test(x));
   for (const x of own) await enterBy(y, x.split(' · ')[0] + ' · ', `int1-${x.split(' · ')[1].split(' ')[0].toLowerCase()}`);
   for (const [re, tag] of [[/ · Hotel/, 'int1-hotel'], [/ · Escritórios/, 'int1-escritorio'], [/ · (Prédio de apartamentos|Casa de cômodos)/, 'int1-apartamentos'], [/ · Sede de gravadora| \(escritório\) — /, 'int1-rival']]) {
     const x = labels.find((l) => re.test(l)); if (x) await enterBy(y, x.split(' — ')[0], tag); else row(y, tag, 'AUSENTE');
