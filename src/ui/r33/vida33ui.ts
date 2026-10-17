@@ -27,8 +27,8 @@ const routine = (r: Routine33, label: L, ok: L): ActDef5 =>
 const ADD: Record<string, ActDef5> = {
   'v33.sono': routine('sleep', l('Rotina: dormir bem', 'Routine: sleep well'), l('Rotina: sono em dia.', 'Routine: sleep on track.')),
   'v33.hobby': routine('hobby', l('Rotina: hobby', 'Routine: hobby'), l('Rotina: hobby toda semana.', 'Routine: a weekly hobby.')),
-  'v33.checkup': A(l('Check-up médico (US$ 700)', 'Medical check-up (US$ 700)'), treatOwner33, 'treatOwner33', (s) => on(s, SW33.saude), (s) => treatOwner33(s, 'checkup'), l('Check-up feito.', 'Check-up done.'), 'casa.sofa'),
-  'v33.rehab': A(l('Retiro de recuperação (US$ 6 mil)', 'Recovery retreat (US$ 6k)'), treatOwner33, 'treatOwner33', (s) => on(s, SW33.saude) && ownerOf(s).stress >= 60, (s) => treatOwner33(s, 'rehab'), l('Você voltou renovado.', 'You came back renewed.'), 'casa.sofa'),
+  'v33.checkup': A(l('Check-up médico (US$ 700)', 'Medical check-up (US$ 700)'), treatOwner33, 'treatOwner33', (s) => on(s, SW33.saude), (s) => treatOwner33(s, 'checkup'), l('Check-up feito.', 'Check-up done.'), 'casa.voce'),
+  'v33.rehab': A(l('Retiro de recuperação (US$ 6 mil)', 'Recovery retreat (US$ 6k)'), treatOwner33, 'treatOwner33', (s) => on(s, SW33.saude) && ownerOf(s).stress >= 60, (s) => treatOwner33(s, 'rehab'), l('Você voltou renovado.', 'You came back renewed.'), 'casa.voce'),
   'v33.muro': A(l('Construir muro (US$ 12 mil)', 'Build a wall (US$ 12k)'), buildWall33, 'buildWall33', (s) => on(s, SW33.paparazzi) && !vida33(s).wall, buildWall33, l('Muro erguido.', 'Wall built.'), 'casa.porta'),
   'v33.guarda': A(l('Contratar segurança', 'Hire security'), setGuard33, 'setGuard33', (s) => on(s, SW33.paparazzi) && vida33(s).guard < 2, (s) => { setGuard33(s, vida33(s).guard + 1); return null; }, l('Segurança reforçada.', 'Security stepped up.'), 'casa.porta'),
   'v33.doar': A(l('Doar US$ 4 mil', 'Donate US$ 4k'), donate33, 'donate33', (s) => on(s, SW33.rep), (s) => donate33(s, 4000), l('Doação feita.', 'Donation made.'), 'cofrecasa'),
@@ -51,7 +51,8 @@ function put(card: string, acts: string[], nums: string[]): void {
   for (const a of acts) if (!c.acts.includes(a)) c.acts.push(a);
   for (const n of nums) if (!c.nums.includes(n)) c.nums.push(n);
 }
-put('casa.sofa', ['v33.sono', 'v33.hobby', 'v33.checkup', 'v33.rehab'], []);
+put('casa.sofa', ['v33.sono', 'v33.hobby'], []);
+put('casa.voce', ['v33.checkup', 'v33.rehab'], []);
 put('casa.porta', ['v33.muro', 'v33.guarda'], []);
 put('cofrecasa', ['v33.doar', 'v33.fundacao'], []);
 put('casa.sofa', [], ['v33.rep']);
