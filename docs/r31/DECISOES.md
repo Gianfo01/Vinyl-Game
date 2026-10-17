@@ -503,3 +503,8 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - o mesmo motor serve de fundo em loop na tela inicial (no lugar do carrossel de épocas);
   - e de intro curta na primeira abertura, pulável.
 - Frente INTRO33 (Sonnet), em paralelo ao QA33.
+- INTRO33, ajuste do dono: a intro deixa de ser "primeira abertura" e vira a **intro da partida**.
+  - Protagonista: o personagem criado pelo jogador.
+  - Igual para todas as carreiras.
+  - Só 6 variantes, pela faixa de época de início. Termina mostrando o resumo "Sua história" da ficha.
+  - O loop da tela inicial continua separado.

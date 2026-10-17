@@ -82,7 +82,12 @@ andar para a direita é avançar no tempo (1889 → 2035), com uma onda de som d
 - **Desenho:** por código, em `Px` e na arte do jogo; sem arquivo de vídeo.
 - **A mesma animação serve em dois lugares:**
   - **fundo da tela inicial** em loop de ~40 s, substituindo o carrossel de épocas;
-  - **intro** curta (~15 s), só na primeira abertura, pulável com qualquer tecla.
+  - **intro da partida** (mudança do dono): toca ao "Começar minha história".
+    - O protagonista é o personagem criado na ficha. Ele anda pela rua enquanto o tempo corre e para na faixa de época
+      escolhida (6 variantes, `ep5Of`).
+    - Aparece digitado o mesmo resumo "Sua história" da ficha, com o nome do personagem e a cidade, e a cena passa para
+      o jogo.
+    - Não varia por carreira. É pulável e pode ser desligada nas Opções.
 - **Trechos e ordem:**
 
   | Ano | Trecho |
