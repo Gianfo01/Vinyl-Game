@@ -9,7 +9,10 @@ import type { GameState } from '../../sim/types';
 import { runVit31, vitItems31, type VitBtn31, type VitPlace31, type VitRun31 } from '../../sim/r31/vitrine31';
 import { audioAvailable, nowPlaying, play, stopAll } from '../../audio/engine';
 import { buildSongSpec } from '../../audio/spec';
-import { inspect, rerender, toast } from '../common';
+import { inspect, modal, rerender, toast } from '../common';
+import { fmtL } from '../../sim/util';
+import { nav5On } from '../../sim/r31/exp5';
+import type { Spot31 } from './scene31model';
 import { h } from '../dom';
 import { go18 } from '../sys/inbox18';
 import { openFicha13 } from '../sys/persona13';
@@ -68,8 +71,9 @@ function card(s: GameState, m: VitPanel31, show: (p?: string) => void, back: () 
 export function vitPanelEl31(s: GameState, id: string, show: (p?: string) => void, back: () => void): HTMLElement {
   const m = vitPanel31(s, id);
   if (!m) return h('div', { class: 'in31-pn' }, h('p', { class: 'small muted' }, t(l('Isso já saiu da vitrine.', 'That has left the showcase.'))));
+  // R31 onda 5 (CENAS5): no jogo explorável não há "ver como lista" (a vitrine inteira é o objeto "Vitrine do mês" da cena)
   return h('div', { class: 'in31-pn vit31' }, card(s, m, show, back),
-    h('button', { type: 'button', class: 'btn small ghost', onclick: () => show('vitlist') }, t(l('Ver como lista', 'See as a list'))));
+    nav5On(s) ? null : h('button', { type: 'button', class: 'btn small ghost', onclick: () => show('vitlist') }, t(l('Ver como lista', 'See as a list'))));
 }
 
 /** "Ver como lista": tudo o que o interior tem no mês, com as ações. */
@@ -82,10 +86,32 @@ export function vitListEl31(s: GameState, x: Pick<InsideT31, 'k' | 'vit'>, show:
 
 /** Faixa da vitrine para as telas que não são interiores (aeroporto, casa de leilões). */
 export function vitStrip31(s: GameState, p: VitPlace31): HTMLElement | null {
+  if (nav5On(s)) return null; // R31 onda 5 (CENAS5): no jogo explorável a vitrine é um objeto da cena (vitSpot5)
   const ids = vitItems31(s, p).map((it) => it.id);
   if (!ids.length) return null;
   const noop = (): void => rerender();
   return h('details', { class: 'vit31-strip', open: true },
     h('summary', null, t(l('Vitrine do mês', 'Showcase of the month')), ` (${ids.length})`),
     h('div', null, ids.map((id) => vitPanel31(s, id)).filter((m): m is VitPanel31 => !!m).map((m) => card(s, m, noop, noop, true))));
+}
+
+// ---------------------------------------------------------------- R31 onda 5 (CENAS5): a vitrine como objeto da cena
+
+/** No jogo explorável (exp5.nav), a vitrine do mês do aeroporto/leilões é uma placa no canto da cena (nada de faixa em lista). */
+export function vitSpot5(s: GameState, p: VitPlace31, W: number): Spot31[] {
+  if (!nav5On(s)) return [];
+  const n = vitItems31(s, p).length;
+  if (!n) return [];
+  return [{ id: 'vit5', x: W - 50, y: 14, w: 46, h: 12, label: l('Vitrine do mês', 'Showcase of the month'),
+    tip: fmtL(l('O que o lugar tem neste mês ({n}); some na virada.', 'What the place has this month ({n}); gone at the month turn.'), { n }),
+    go: { panel: 'vit5' }, badge: { text: fmtL(l('{n} no mês', '{n} this month'), { n }), level: 'info', sym: '✦' } }];
+}
+/** Abre a vitrine do mês (os mesmos cartões e botões da faixa de hoje) numa janela por cima da cena. */
+export function vitOpen5(s: GameState, p: VitPlace31): void {
+  const xs = vitItems31(s, p).map((it) => vitPanel31(s, it.id)).filter((m): m is VitPanel31 => !!m);
+  let close = (): void => {};
+  const again = (): void => { close(); rerender(); };
+  close = modal(t(l('Vitrine do mês', 'Showcase of the month')), h('div', { class: 'in31-pn vit31' },
+    h('p', { class: 'small muted' }, t(l('Vitrine do mês: sorteada na virada do mês; olhar não muda nada.', 'Showcase of the month: drawn at the month turn; looking changes nothing.'))),
+    ...xs.map((m) => card(s, m, again, again, true))), { wide: true });
 }

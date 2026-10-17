@@ -28,7 +28,7 @@ import { relicArtOf28, relicPx28 } from '../pixel/relic28';
 import { registerArea } from '../registry';
 import { lockBtn31 } from './lock31';
 import { registerQuick31 } from './quick31core';
-import { vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
+import { vitOpen5, vitSpot5, vitStrip31 } from './vit31'; // r31 (VIT): vitrine do mês
 import { blitPx31, moreBtn31, runGo31, sceneView31 } from './scene31';
 import { auction31Model, cityName31, ROOM_NAME31, type Auc31 } from './auction31model';
 
@@ -277,9 +277,10 @@ export function auction31View(s: GameState): HTMLElement {
     m.sess ? h('b', null, T(l('Lote {i} de {n}', 'Lot {i} of {n}'), { i: m.lotIdx + 1, n: m.sess.lots.length })) : null,
     m.sess && m.sess.lots.length > 1 ? h('button', { type: 'button', class: 'btn small ghost', 'aria-label': T(l('Próximo lote', 'Next lot')), onclick: () => { ui.lot = Math.min(m.sess!.lots.length - 1, m.lotIdx + 1); again(); } }, '›') : null);
   host.appendChild(sceneView31(s, {
-    id: 'auction', title: m.title, W: m.W, H: m.H, spots: m.spots,
+    id: 'auction', title: m.title, W: m.W, H: m.H, spots: [...m.spots, ...vitSpot5(s, 'auction', m.W)],
     paint: (cv) => paintScene(cv, s, m),
     panels: {
+      vit5: () => vitOpen5(s, 'auction'),
       lot: () => lotPanel(s, m), owners: () => ownersPanel(s, m), bid: () => bidPanel(s, m), seat: (a?: string) => seatPanel(s, m, a),
       catalog: () => { let c = (): void => {}; c = modal(T(l('Catálogo dos próximos pregões', 'Catalogue of upcoming sales')), catalogList(s, m, () => c()), { wide: true }); },
       consign: () => consignPanel(s), door: () => runGo31({ area: 'lendas', tab: ['lendas9', 'relics'] }),
