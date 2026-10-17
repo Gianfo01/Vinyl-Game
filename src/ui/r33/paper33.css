@@ -1,0 +1,96 @@
+/* R33 · FICHAS33 — papel comum das janelas (paper33.ts). Pixel art: bordas duras de 2px, sombra em degrau, cantos
+   retos, sem desfoque nem cantos arredondados. Mesa de madeira por baixo; papel creme com tinta escura em toda época
+   (como os miolos do PAPEL da casca, POL5). Na casca nova a mesa fica entre a barra de cima (56px) e a doca (92px). */
+
+.overlay.pp33-back { display: block; padding: 0; background: transparent; overflow: hidden; }
+.pp33-desk { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 14px 16px;
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 46px, rgba(0, 0, 0, 0.22) 46px 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 6px, rgba(0, 0, 0, 0.03) 6px 14px),
+    #5b3b22;
+  border: 4px solid #2a1a10; box-shadow: inset 0 0 0 2px #7a5232; image-rendering: pixelated; }
+body:has(.app5) .pp33-desk { top: 56px; bottom: 92px; }
+/* janela comum (formulário, pergunta): o papel por cima da cena escurecida (como o papel da casca, .p5-dim); a mesa de
+   madeira é das fichas (papel grande; pasta sobre pasta cobre a de trás) */
+.pp33-desk.dim { background: rgba(6, 10, 16, 0.62); border-color: transparent; box-shadow: none; }
+
+.pp33 { position: relative; display: flex; flex-direction: column; gap: 8px; width: min(600px, 100%); max-height: 100%; min-height: 0; color: #1c1612; font: 14px var(--sans); }
+.pp33.wide { width: min(980px, 100%); }
+.pp33.has-card { width: min(1060px, 100%); }
+.pp33.wide.has-card { width: min(1360px, 100%); }
+.pp33.big { width: 100% !important; height: 100%; }
+
+/* ---- cabeçalho: plaqueta + marcadores à esquerda; bolso e fechar à direita */
+.pp33-hd { flex: none; display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.pp33-hl { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; max-width: 100%; }
+.pp33-sp { flex: 1; }
+.pp33-plate { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; max-width: 100%; padding: 5px 12px 6px; background: #fbf6e8; border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); }
+.pp33-pt { font: 700 17px/1.1 var(--pixel, monospace); letter-spacing: 0.16em; text-transform: uppercase; color: #170e12; overflow-wrap: anywhere; }
+.pp33-ps { font: 700 10px/1.2 var(--pixel, monospace); letter-spacing: 0.12em; text-transform: uppercase; color: #3a2e24; }
+.pp33-mks { display: flex; flex-wrap: wrap; gap: 4px; max-width: 100%; }
+.pp33-mks[hidden] { display: none; }
+.pp33-mk { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 12px 3px; border: 2px solid #170e12; border-bottom-width: 3px; background: #f8f2e2; color: #1e1a16; font: 600 13px/1.2 var(--sans, sans-serif); cursor: pointer; white-space: nowrap; }
+.pp33-mk small { font: 700 9px var(--pixel, monospace); color: #5a4a3a; }
+.pp33-mk:hover, .pp33-mk:focus-visible { background: #f0c060; outline: none; }
+.pp33-mk.on { background: #2a5ab0; color: #fff; border-color: #14306a; }
+.pp33-mk.on small { color: #dfe8ff; }
+.pp33-pin, .pp33-x { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 2px solid #170e12; background: #fbf6e8; color: #1c1612; font: 13px var(--sans); cursor: pointer; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.pp33-pin.on { background: #f0c040; }
+.pp33-pin:hover, .pp33-x:hover, .pp33-pin:focus-visible, .pp33-x:focus-visible { background: #f0c060; outline: none; }
+.pp33-x kbd { padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px var(--pixel, monospace); border: 1px solid #0c121c; }
+
+/* ---- miolo */
+.pp33-main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.pp33.has-card .pp33-main { grid-template-columns: minmax(0, 1fr) minmax(260px, 420px); }
+.pp33.big .pp33-main { align-items: stretch; }
+.pp33-cardcol[hidden] { display: none; }
+.pp33-cardcol { min-height: 0; max-height: 100%; overflow-y: auto; padding: 4px 8px 8px 4px; scrollbar-width: thin; }
+
+/* papel: tinta escura sobre creme em toda época (variáveis do tema redefinidas aqui dentro) */
+.pp33-paper { --bg: #f6eedb; --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6;
+  --accent: #8a3a20; --accent-ink: #fff6dd; --accent-2: #6e2c16; --h1-ink: #1a160f; --gold: #7a5a10; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514;
+  --card-shadow: none; --shadow: none; color-scheme: light;
+  position: relative; display: flex; flex-direction: column; min-height: 0; max-height: 100%; background: #f6eedb; color: #22201c;
+  border: 2px solid #170e12; box-shadow: 0 0 0 2px #f6eedb, 0 0 0 4px #170e12, 6px 6px 0 4px rgba(0, 0, 0, 0.35); }
+.pp33-body.modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 18px 18px; outline: none; scrollbar-width: thin; scrollbar-color: #8a7458 transparent;
+  background-image: repeating-linear-gradient(180deg, transparent 0 27px, rgba(120, 96, 60, 0.12) 27px 28px); }
+.pp33.big .pp33-paper { height: 100%; }
+.pp33-paper :is(h2, h3, h4) { color: #1a160f; }
+.pp33-paper .card, .pp33-paper section.card { background: var(--panel); border-color: var(--line); }
+
+/* pasta manila (fichas): orelha com o nome, papel preso dentro */
+.pp33-folder { position: relative; display: flex; flex-direction: column; min-height: 0; max-height: 100%; height: 100%; padding-top: 22px; }
+.pp33-ftab { position: absolute; top: 0; left: 0; z-index: 1; min-width: 180px; max-width: 60%; padding: 4px 14px 6px; background: #e6cf98; border: 2px solid #170e12; border-bottom: 0;
+  font: 700 10px var(--pixel, monospace); letter-spacing: 0.16em; text-transform: uppercase; color: #3a2a14; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp33-fin { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 14px; background: #e6cf98; border: 2px solid #170e12; box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4); }
+.pp33-fin > .pp33-paper { flex: 1 1 auto; box-shadow: 0 0 0 2px #f6eedb, 0 0 0 3px #b89a5c; border-color: #b89a5c; }
+
+/* cartão de ações no papel: o mesmo .ac5 da casca, parado na coluna */
+.ac5.ac5-in33 { position: static; width: auto; max-width: none; max-height: none; overflow: visible; animation: none; margin: 4px; }
+.ac5.ac5-in33 .ac5-h b { font-size: 16px; }
+.ac5.ac5-in33 .ac5-nums li { grid-template-columns: 1fr auto; padding: 4px 8px; }
+.ac5.ac5-in33 .ac5-nums li b { font: 700 10px var(--pixel, monospace); letter-spacing: 0.08em; text-transform: uppercase; }
+.ac5.ac5-in33 .ac5-acts { gap: 6px; }
+.ac5.ac5-in33 .ac5-a { padding: 6px 8px; font-size: 14px; }
+.ac5.ac5-in33 .ac5-a.pp33-pri { background: #f8e4a0; }
+.ac5.ac5-in33 .ac5-a.pp33-pri:hover, .ac5.ac5-in33 .ac5-a.pp33-pri:focus-visible { background: #f0c060; }
+.pp33-rowp { display: grid; gap: 4px; }
+.pp33-panel { padding: 6px 8px; background: #fffdf6; border: 2px dashed #8a7458; color: #1c1612; font-size: 13px;
+  --bg: #fffdf6; --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; color-scheme: light; }
+.pp33-note { margin-top: 8px; }
+.pp33-panel > details > summary { display: none; } /* o bloco "Ações" de antes já abre aberto pela linha do cartão */
+
+/* telas estreitas: o cartão desce para baixo do papel */
+@media (max-width: 1100px) {
+  .pp33.has-card .pp33-main { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .pp33.big .pp33-paper, .pp33-folder { height: auto; }
+}
+@media (max-width: 700px) { .pp33-desk { padding: 6px; } .pp33-pt { font-size: 14px; } }
+@media (prefers-reduced-motion: no-preference) { .pp33 { animation: pp33-in 0.12s steps(3) both; } }
+@keyframes pp33-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* miolos antigos dentro do papel: cantos retos e borda dura (pílulas, botões e abas viram peças de papel) */
+.pp33-paper *, .pp33-panel * { border-radius: 0 !important; }
+.pp33-paper :is(.tabs, .cats17) button { border: 2px solid #170e12; background: #f8f2e2; color: #1e1a16; box-shadow: none; }
+.pp33-paper :is(.tabs, .cats17) button.on, .pp33-paper :is(.tabs, .cats17) button[aria-selected='true'] { background: #2a5ab0; color: #fff; border-color: #14306a; }
+.pp33-paper .btn { border-width: 2px; border-color: #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); }

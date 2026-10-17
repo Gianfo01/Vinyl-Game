@@ -16,7 +16,7 @@ import { h, select } from './dom';
 import { store } from './store';
 import { money } from '../sim/util';
 import { l } from '../data/world';
-import { openActPage, openPersonPage } from './pages';
+import { OPEN33, openActPage, openPersonPage } from './pages';
 import { reviewCard, reviewSummary } from './reviewView';
 import { pageTabs } from './registry';
 import { rightsFieldset } from './rightsView';
@@ -54,9 +54,16 @@ export const RELEASE_EXTRAS: ((s: GameState, r: Release) => HTMLElement | null)[
 const TYPE_NAME: Record<string, ReturnType<typeof l>> = { single: l('Single', 'Single'), ep: l('EP', 'EP'), lp: l('Álbum (LP)', 'Album (LP)') };
 
 export function openRelease(id: string): void {
+  if (OPEN33.release?.(id)) return; // R33 (FICHAS33): a ficha nova do disco (papel)
   const s = g();
   const r = s.releases[id];
   if (!r) return;
+  const x = releaseParts(s, r);
+  modal(r.title, h('div', { class: 'ficha' }, x.head, x.grid, ...x.tracks, ...x.extras, x.reviews, x.autopsy), { wide: true });
+}
+
+/** Partes da ficha do disco (a página antiga e a ficha nova usam as mesmas). */
+export function releaseParts(s: GameState, r: Release): { head: HTMLElement; grid: HTMLElement; tracks: HTMLElement[]; extras: (HTMLElement | null)[]; reviews: HTMLElement | null; autopsy: HTMLElement | null } {
   const mine = r.owner === 'player' || s.acts[r.actId]?.playerBand;
   const act = s.acts[r.actId];
   const tracks = trackList(s, r);
@@ -65,8 +72,8 @@ export function openRelease(id: string): void {
   const producer = r.songs.map((x) => s.songs[x]?.producerId).find(Boolean);
   const writers = [...new Set(r.songs.flatMap((x) => s.songs[x]?.writers ?? []))].map((w) => s.persons[w]).filter(Boolean);
   const show = (v: number) => (mine ? Math.round(v) : '~' + Math.round(v / 10) * 10);
-  const body = h('div', { class: 'ficha' },
-    h('div', { class: 'ficha-head' }, cover(s, r, 140),
+  return {
+    head: h('div', { class: 'ficha-head' }, cover(s, r, 140),
       h('div', null,
         h('h3', null, r.title, ' ', pill(t(TYPE_NAME[r.type] ?? l(r.type))), r.certified ? pill(r.certified, 'gold') : null, r.reissueOf ? pill(t(l('reedição', 'reissue'))) : null, r.hist ? pill(t(l('antes da run', 'before the run'))) : null),
         h('div', null, actLink(s, r.actId), ' · ', labelLink(s, r.owner), ` · ${r.year}`),
@@ -83,7 +90,7 @@ export function openRelease(id: string): void {
         relHype12(s, r),
       ),
     ),
-    h('div', { class: 'grid2' },
+    grid: h('div', { class: 'grid2' },
       h('div', null,
         kv(t(l('Gênero', 'Genre')), genreName(act?.genre ?? '')),
         kv(t(l('Duração', 'Length')), `${fmtSecs(total)} · ${tracks.length} ${t(l('faixas', 'tracks'))}`),
@@ -97,7 +104,7 @@ export function openRelease(id: string): void {
         r.kind && r.kind !== 'standard' ? kv(t(l('Edição', 'Edition')), r.kind) : null,
       ),
     ),
-    h('h4', null, t(l('Faixas', 'Tracklist'))),
+    tracks: [h('h4', null, t(l('Faixas', 'Tracklist'))),
     h('table', { class: 'tbl compact' },
       h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, t(S.title)), h('th', null, t(l('Duração', 'Length'))), h('th', null, 'Q'), h('th', null, t(S.melody)), h('th', null, t(S.lyrics)), h('th', null, t(S.performance)), h('th', null, t(S.production)), h('th', null, t(S.originality)))),
       h('tbody', null, tracks.map((tr) => {
@@ -107,10 +114,10 @@ export function openRelease(id: string): void {
           so ? h('td', null, h('b', null, show(so.q))) : h('td', { class: 'muted' }, '—'),
           ...(so ? [so.melody, so.lyrics, so.performance, so.production, so.originality].map((v) => h('td', null, v > 0 ? show(v) : '—')) : [h('td', { class: 'muted', colspan: 5 }, t(l('sem ficha técnica guardada', 'no stored credits')))]));
       })),
-    ),
-    ...RELEASE_EXTRAS.map((f) => f(s, r)),
-    s.reviews[r.id]?.length ? h('div', null, h('h4', null, t(l('Críticas', 'Reviews'))), reviewSummary(s, r), ...s.reviews[r.id].map((rv) => reviewCard(s, r, rv, { open: false }))) : null,
-    mine && r.autopsy ? h('div', null,
+    )],
+    extras: RELEASE_EXTRAS.map((f) => f(s, r)),
+    reviews: s.reviews[r.id]?.length ? h('div', null, h('h4', null, t(l('Críticas', 'Reviews'))), reviewSummary(s, r), ...s.reviews[r.id].map((rv) => reviewCard(s, r, rv, { open: false }))) : null,
+    autopsy: mine && r.autopsy ? h('div', null,
       h('h4', null, t(S.autopsy)),
       h('p', { class: 'muted small' }, t(S.autopsyNote)),
       h('table', { class: 'tbl compact' }, h('tbody', null, r.autopsy.map((f) => h('tr', null,
@@ -122,8 +129,7 @@ export function openRelease(id: string): void {
       h('p', { class: 'muted small' }, basisTag31('fact'), ' ', t(l('Vendas, paradas e críticas acima são fatos observados; os fatores são a conta do jogo sobre eles.', 'Sales, charts and reviews above are observed facts; the factors are the game\'s math on them.')), ' ', t(ONE_RESULT31)),
       r.shortage > 0 ? h('p', { class: 'bad' }, t(l('Falta de estoque custou vendas: aumente a tiragem ou reprense.', 'Stock-outs cost sales: press more or repress.'))) : null,
     ) : null,
-  );
-  modal(r.title, body, { wide: true });
+  };
 }
 
 /** Extras na ficha do selo (rodada 8: participação acionária e negociação). */
@@ -133,6 +139,7 @@ export const LABEL_EXTRAS: ((s: GameState, labelId: string, close: () => void) =
 export const labelOpener: { f?: (id: string) => void } = {};
 
 export function openLabel(id: string): void {
+  if (OPEN33.label?.(id)) return; // R33 (FICHAS33): a ficha nova do selo (papel)
   if (labelOpener.f) return labelOpener.f(id);
   const s = g();
   const lb = s.labels[id];

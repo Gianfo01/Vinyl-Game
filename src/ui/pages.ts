@@ -56,6 +56,9 @@ function g(): GameState {
   return store.game!;
 }
 
+/** R33 (FICHAS33): a ficha nova (papel) abre no lugar da página antiga quando ligada (r33/fichas33.ts). */
+export const OPEN33: { act?: (id: string, tab?: string) => boolean; person?: (id: string, tab?: string) => boolean; release?: (id: string) => boolean; label?: (id: string, tab?: string) => boolean } = {};
+
 const GROUPS: AttrGroup[] = ['tech', 'create', 'stage', 'mind', 'body'];
 
 /** Abas extras das páginas (rodada 8: relações entre artistas, feats). */
@@ -89,32 +92,32 @@ export function pageTabs(items: { id: string; label: L; icon?: string; count?: n
 
 const tone = (v: number): string => (v >= 80 ? 'elite' : v >= 65 ? 'good' : v >= 45 ? 'mid' : 'low');
 
-function ovrBadge(v: number | string, big = false): HTMLElement {
+export function ovrBadge(v: number | string, big = false): HTMLElement {
   const n = typeof v === 'number' ? v : Number(String(v).split('–')[0]);
   return h('span', { class: `ovr ${tone(n)} ${big ? 'big' : ''}`, title: t(l('Nota geral', 'Overall rating')) }, String(v));
 }
 
-function formIcon(f: number): HTMLElement {
+export function formIcon(f: number): HTMLElement {
   const arrows = ['⇊', '↓', '→', '↑', '⇈'];
   const names = [l('Péssima', 'Awful'), l('Ruim', 'Poor'), l('Normal', 'Normal'), l('Boa', 'Good'), l('Excelente', 'Excellent')];
   return h('span', { class: `form f${f + 2}`, title: `${t(l('Forma', 'Form'))}: ${t(names[f + 2])}` }, arrows[f + 2]);
 }
 
 /** Largura da incerteza dos atributos conforme o grau de conhecimento (r31: tabela única do sim, know.ts). */
-function fuzz(deg: number, mine: boolean): number {
+export function fuzz(deg: number, mine: boolean): number {
   return mine ? 0 : KNOW_WIDTHS.attrs.byDeg[Math.max(0, Math.min(5, deg))];
 }
 
-function personDegree(s: GameState, p: Person): { act?: Act; mine: boolean; deg: number } {
+export function personDegree(s: GameState, p: Person): { act?: Act; mine: boolean; deg: number } {
   const act = Object.values(s.acts).find((a) => a.members.includes(p.id));
   // rodada 15: dados privados vêm de olheiros ou relação próxima (knownLevel); fama não revela atributos
   const k = knownLevel(s, p.id);
   return { act, mine: k.mine, deg: k.mine ? 5 : k.priv };
 }
-const hid15 = (): HTMLElement => h('span', { class: 'muted', title: t(HINT15) }, '?');
+export const hid15 = (): HTMLElement => h('span', { class: 'muted', title: t(HINT15) }, '?');
 
 /** Valor mostrado: exato, faixa (r31: nunca centrada no valor real — desvio do know.ts por pessoa e campo) ou "?". */
-function shown(s: GameState, id: string, f: string, v: number, w: number): string {
+export function shown(s: GameState, id: string, f: string, v: number, w: number): string {
   return bandText(band(s, id, f, v, w));
 }
 
@@ -139,6 +142,7 @@ export function personCard(s: GameState, p: Person, opts: { onClick?: () => void
 }
 
 export function openPersonPage(id: string, tab?: string): void {
+  if (OPEN33.person?.(id, tab)) return;
   const s = g();
   const p = s.persons[id];
   if (!p) return;
@@ -151,7 +155,6 @@ export function openPersonPage(id: string, tab?: string): void {
 
 function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () => void, tab?: string): HTMLElement {
   const { act, mine, deg } = personDegree(s, p);
-  const vis = visibleFields(deg);
   const w = fuzz(deg, mine);
   const ovr = overall(s, p);
   const portraitBox = h('div', { class: 'pg-portrait' }, portraitCanvas(p, s, 4));
@@ -185,7 +188,15 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
         act ? h('button', { ...ent27('act', act.id), class: 'btn small ghost', onclick: () => { closeAll(); openActPage(act.id); } }, ic('guitar'), ' ', t(l('Página do artista', 'Artist page'))) : null),
     ),
   );
-  return h('div', { class: 'ficha pg' }, head, pageTabs([
+  return h('div', { class: 'ficha pg' }, head, pageTabs(personItems(s, p, closeAll, redraw), tab));
+}
+
+/** As abas da página da pessoa (a ficha nova usa as mesmas, como marcadores). */
+export function personItems(s: GameState, p: Person, closeAll: () => void, redraw: () => void): PageTab[] {
+  const { mine, deg } = personDegree(s, p);
+  const vis = visibleFields(deg);
+  const w = fuzz(deg, mine);
+  return [
     { id: 'attrs', label: l('Atributos', 'Attributes'), icon: 'chart-up', render: () => attrsTab(s, p, w, mine) },
     { id: 'profile', label: l('Perfil', 'Profile'), icon: 'bulb', render: () => profileTab(s, p, vis) },
     { id: 'inst', label: l('Instrumentos', 'Instruments'), icon: 'guitar', render: () => (mine || deg >= 1 ? instrumentsTab(s, p, mine || !!p.isPlayer, redraw) : h('p', { class: 'muted' }, t(HINT15))) },
@@ -194,7 +205,7 @@ function personBody(s: GameState, p: Person, closeAll: () => void, redraw: () =>
     { id: 'career', label: l('Carreira', 'Career'), icon: 'trophy', render: () => careerTab(s, p) },
     mine && !p.isPlayer ? { id: 'train', label: l('Treino', 'Training'), icon: 'sparkle', render: () => trainTab(s, p, redraw) } : null,
     ...PERSON_TABS.map((f) => f(s, p, closeAll)),
-  ].filter((x): x is NonNullable<typeof x> => !!x), tab));
+  ].filter((x): x is NonNullable<typeof x> => !!x);
 }
 
 function attrsTab(s: GameState, p: Person, w: number, mine: boolean): HTMLElement {
@@ -331,6 +342,7 @@ function trainTab(s: GameState, p: Person, redraw: () => void): HTMLElement {
 // ================================================================== página do artista
 
 export function openActPage(id: string, tab?: string): void {
+  if (OPEN33.act?.(id, tab)) return;
   const s = g();
   const a = s.acts[id];
   if (!a) return;
@@ -345,7 +357,6 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
   const kl = knownLevel(s, a.id);
   const mine = kl.mine;
   const deg = mine ? 5 : kl.priv;
-  const vis = visibleFields(deg);
   const ms = a.members.map((x) => s.persons[x]).filter((p): p is Person => !!p);
   const teamOvr = ms.length ? Math.round(ms.reduce((t0, p) => t0 + overall(s, p), 0) / ms.length) : 0;
   const w = fuzz(deg, mine);
@@ -364,7 +375,17 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
         !mine && s.config.role !== 'artist' && a.status !== 'retired' && a.status !== 'split' ? h('button', { ...ent27('act', a.id), class: 'btn small', onclick: () => { close(); openDossier(a.id); } }, t(l('Dossiê de A&R', 'A&R dossier'))) : null),
     ),
   );
-  return h('div', { class: 'ficha pg' }, head, pageTabs([
+  return h('div', { class: 'ficha pg' }, head, pageTabs(actItems(s, a, close), tab));
+}
+
+/** As abas da página do artista (a ficha nova usa as mesmas, como marcadores). `count` = integrantes atuais. */
+export function actItems(s: GameState, a: Act, close: () => void): (PageTab & { count?: number })[] {
+  const kl = knownLevel(s, a.id);
+  const mine = kl.mine;
+  const deg = mine ? 5 : kl.priv;
+  const vis = visibleFields(deg);
+  const ms = a.members.map((x) => s.persons[x]).filter((p): p is Person => !!p);
+  return [
     { id: 'overview', label: l('Visão geral', 'Overview'), icon: 'star', render: () => overviewTab(s, a, deg, mine) },
     { id: 'members', label: l('Integrantes', 'Members'), icon: 'fans', count: ms.length, render: () => (canSee(s, a.id, 'bio') ? membersTab(s, a, ms) : h('p', { class: 'muted' }, `${ms.length} ${t(l('integrante(s)', 'member(s)'))} · `, t(HINT15))) },
     { id: 'disco', label: l('Discografia', 'Discography'), icon: 'disc', render: () => discoTab(s, a, mine) },
@@ -373,7 +394,7 @@ function actBody(s: GameState, a: Act, close: () => void, tab?: string): HTMLEle
     (a.contractId && (mine || deg >= 3)) || mgmtOf29(s, a.id) ? { id: 'contract', label: S.contract, icon: 'contract', render: () => contractTab(s, a) } : null, // R29: o ato que você empresaria também
     ...ACT_TABS.map((f) => f(s, a, close)),
     ...extraPageTabs('act', s, a.id).map((x) => ({ id: x.id, label: x.label, icon: x.icon, render: () => x.render(s, a.id) })),
-  ].filter((x): x is NonNullable<typeof x> => !!x), tab));
+  ].filter((x): x is NonNullable<typeof x> => !!x);
 }
 
 /** Blocos extras no fim da visão geral do artista (rodada 8: assinatura sonora). */
@@ -416,7 +437,7 @@ function overviewGrid(s: GameState, a: Act, deg: number, mine: boolean): HTMLEle
   );
 }
 
-function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
+export function membersTab(s: GameState, a: Act, ms: Person[]): HTMLElement {
   const former = exMembers29(s, a).map((x) => ({ f: x, p: s.persons[x.pid] })); // R29 (CONNECT): mesma fonte da ficha da pessoa (r27 F: quem voltou não é ex)
   const why = { left: l('saiu', 'left'), died: l('faleceu', 'died'), retired: l('aposentou-se', 'retired'), fired: l('foi demitido', 'was fired') };
   return h('div', null,
@@ -480,7 +501,7 @@ function contractTab(s: GameState, a: Act): HTMLElement {
 }
 
 /** r31 F #11: valor de mercado — exato do que é seu; de terceiros, faixa a partir do conhecimento profissional (nunca centrada). */
-function valueShown(s: GameState, p: Person, act: Act | undefined, mine: boolean): string {
+export function valueShown(s: GameState, p: Person, act: Act | undefined, mine: boolean): string {
   const v = money(s, marketValue(s, p, act?.fame ?? 0));
   if (mine) return $(v);
   const w = know(s, p.id).width('potential');
