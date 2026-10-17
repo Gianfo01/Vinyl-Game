@@ -1,0 +1,15 @@
+/* R33 · FICHAS33-B — cartão de ações das páginas antigas (cartao33.ts): o papel encolhe e o cartão fica na mesa, à
+   direita (como a pasta do artista no mock). Linhas com ação viram seleção (contorno; a escolhida em amarelo). */
+.p5.ob33-on { right: calc(12px + var(--ob33-w, 276px)); }
+.p5 > .ob33-col { position: absolute; top: 0; left: calc(100% + 12px); width: calc(var(--ob33-w, 276px) - 12px); max-height: 100%; overflow-y: auto; scrollbar-width: thin; z-index: 2; }
+.ob33-col .ac5.ac5-in33 { margin: 0 0 4px; }
+.ob33-col .ac5.ac5-in33 .ac5-nums li b { white-space: normal; text-align: right; font: 700 13px/1.25 var(--sans, sans-serif); letter-spacing: 0; text-transform: none; }
+.ob33-sep { margin: 4px 0 0; font: 700 10px var(--pixel, monospace); letter-spacing: 0.12em; text-transform: uppercase; color: #5a4a3a; }
+.p5-body .ob33-moved { display: none !important; }
+.p5-body .ob33-it { cursor: pointer; outline-offset: -2px; }
+.p5-body .ob33-it:hover { outline: 2px dashed #8a7458; }
+.p5-body .ob33-it:focus-visible { outline: 2px solid var(--p33-mk, #2a5ab0); }
+.p5-body .ob33-it.ob33-sel { outline: 3px solid #170e12; background-color: var(--p33-hi-lt, #f8e4a0) !important; }
+.p5-body tr.ob33-it.ob33-sel > td { background-color: var(--p33-hi-lt, #f8e4a0) !important; }
+/* papel aberto: a cena inteira escurece (os recados da sede, z 5, ficavam acesos ao lado do cartão) */
+.m5.has-paper > .p5-dim { z-index: 6; }

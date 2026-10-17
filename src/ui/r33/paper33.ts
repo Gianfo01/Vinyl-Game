@@ -46,7 +46,19 @@ export interface Open33 { close: () => void; redraw: () => void; go: (mark: stri
 
 /** Barras de ação das janelas antigas: os botões delas vão para o cartão (a linha clica o MESMO botão). */
 export const ACTION_BARS33 = ['.actions', '.a27-actions'];
-const txt33 = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+export const txt33 = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+/** Uma linha do cartão que espelha um botão da tela (a linha clica o MESMO botão; travado → motivo e condição). */
+export function rowOfBtn33(b: HTMLButtonElement, id: string, label?: string): Row33 {
+  const wrap = b.parentElement?.classList.contains('lk31') ? b.parentElement : null;
+  const why = wrap?.querySelector('.lk31-why > span:not(.lk31-cond)');
+  const cond = wrap?.querySelector('.lk31-cond');
+  const t0 = (b.getAttribute('title') ?? '').replace(/^\S*🔒\S*\s*/u, '');
+  const lock: Lock31 | L | null = !b.disabled ? null
+    : why ? { why: l(txt33(why), txt33(why)), unlock: l(txt33(cond ?? why).replace(/^→\s*/, ''), txt33(cond ?? why).replace(/^→\s*/, '')) }
+      : l(t0 || t(l('Indisponível agora.', 'Unavailable now.')), t0 || t(l('Indisponível agora.', 'Unavailable now.')));
+  return { id, label: label ?? txt33(b), lock, primary: b.classList.contains('primary'), run: () => { if (b.isConnected && !b.disabled) b.click(); } };
+}
 
 /** Colhe os botões das barras de ação do miolo (esconde os originais; o cartão os espelha). */
 function harvestBars33(body: HTMLElement): Row33[] {
@@ -55,13 +67,7 @@ function harvestBars33(body: HTMLElement): Row33[] {
   return bs.map((b, i) => {
     const wrap = b.parentElement?.classList.contains('lk31') ? b.parentElement : null;
     (wrap ?? b).classList.add('pp33-moved');
-    const why = wrap?.querySelector('.lk31-why > span:not(.lk31-cond)');
-    const cond = wrap?.querySelector('.lk31-cond');
-    const t0 = (b.getAttribute('title') ?? '').replace(/^\S*🔒\S*\s*/u, '');
-    const lock: Lock31 | L | null = !b.disabled ? null
-      : why ? { why: l(txt33(why), txt33(why)), unlock: l(txt33(cond ?? why).replace(/^→\s*/, ''), txt33(cond ?? why).replace(/^→\s*/, '')) }
-        : l(t0 || t(l('Indisponível agora.', 'Unavailable now.')), t0 || t(l('Indisponível agora.', 'Unavailable now.')));
-    return { id: `bar${i}`, label: txt33(b), lock, primary: b.classList.contains('primary'), run: () => { if (b.isConnected && !b.disabled) b.click(); } };
+    return rowOfBtn33(b, `bar${i}`);
   });
 }
 

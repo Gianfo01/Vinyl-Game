@@ -20,6 +20,7 @@ import { iconPx, type IconName } from '../pixel/icons';
 import { icon17Px } from '../pixel/icons17';
 import { icon31Px } from '../pixel/icons31';
 import { dockCar5, type DockCar5 } from './dockcar5';
+import { CARD_W33, oldCard33 } from '../r33/cartao33';
 import { FS_KEY33, FS_LABEL33, fsAble33, fsOn33, toggleFs33 } from '../r33/tela33';
 import { rgba, type Px } from '../pixel/px';
 import { inbox5Layout, inbox5Look, inbox5Px, paper5Canvas, paper5Layout, paper5Px, type Paper5, type Rect5 } from '../pixel/exp5paper';
@@ -440,16 +441,23 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
   const seenL = new Set<string>();
   const ms = ms0.filter((m) => { const k = markLabel5(m, host); if (seenL.has(k) && !sameMark(m, p.marker)) return false; seenL.add(k); return true; });
   const old = () => host.page(p.marker.area);
-  const est = size5(null);
-  const g0 = geo5(kind, s.year, est.w, est.h);
-  const box = { w: g0.br.w, h: g0.br.h, pages: g0.pages };
-  let body: HTMLElement | null = null;
   const reg = o ? paperOf5(o.id) : undefined;
-  if (reg && o) {
-    try { body = reg({ s, obj: o, marker: p.marker, markers: ms, mark: (m) => show5(m.area, m.tab, o.id), open: (id, m) => open5(id, m), goto: (x) => goto5(s, x), close: closePaper5, rerender: redraw, old, box }); } catch (e) { console.error('[nav5] papel', o.id, e); body = null; }
-  }
-  const content = body ?? h('div', { class: 'p5-old page21-host' }, old());
   const title = o ? tl5(o.label) : host.label(p.marker.area);
+  // FICHAS33-B: botões de ação da página vão para o cartão numerado na mesa, à direita; o papel encolhe para ele
+  let cw = 0;
+  const build = (): HTMLElement => {
+    const est = size5(null, cw);
+    const g0 = geo5(kind, s.year, est.w, est.h);
+    const box = { w: g0.br.w, h: g0.br.h, pages: g0.pages };
+    let body: HTMLElement | null = null;
+    if (reg && o) {
+      try { body = reg({ s, obj: o, marker: p.marker, markers: ms, mark: (m) => show5(m.area, m.tab, o.id), open: (id, m) => open5(id, m), goto: (x) => goto5(s, x), close: closePaper5, rerender: redraw, old, box }); } catch (e) { console.error('[nav5] papel', o.id, e); body = null; }
+    }
+    return body ?? h('div', { class: 'p5-old page21-host' }, old());
+  };
+  let content = build();
+  let ob = oldCard33(content, `${p.obj}|${p.marker.area}|${p.marker.tab?.join('/') ?? ''}`, title);
+  if (ob) { cw = CARD_W33; if (reg) { content = build(); ob = oldCard33(content, `${p.obj}|${p.marker.area}|${p.marker.tab?.join('/') ?? ''}`, title) ?? ob; } }
   const key = o ? key5(`obj:${o.id}`)?.chord ?? (o.keyRef ? key5(o.keyRef)?.chord : undefined) : undefined;
   const sub = [o ? tl5(PLACES5[o.place] ?? l('', '')) : '', key ? `${t(l('tecla', 'key'))} ${chordLabel5(key)}` : '', o ? tl5(FRAME_L5[o.frame]) : ''].filter(Boolean).join(' · ');
   const pinned = o ? pocketIds5(s).includes(o.id) : false;
@@ -464,7 +472,7 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
     return h('button', { type: 'button', role: 'tab', class: `p5-tab${on ? ' on' : ''}`, 'aria-selected': on ? 'true' : 'false', onclick: () => show5(m.area, m.tab, o?.id) }, txt5(markLabel5(m, host)));
   }), ms.length > 1 ? h('small', { class: 'p5-tk' }, '{ }') : null);
   const bodyEl = h('div', { class: 'p5-body', tabindex: '-1' }, content);
-  const sheet = h('section', { class: `p5 p5-${kind}`, 'data-paper': p.obj, role: 'dialog', 'aria-label': title }, cv, head, tabs, bodyEl);
+  const sheet = h('section', { class: `p5 p5-${kind}${ob ? ' ob33-on' : ''}`, 'data-paper': p.obj, role: 'dialog', 'aria-label': title, style: ob ? `--ob33-w:${CARD_W33}px` : undefined }, cv, head, tabs, bodyEl, ob?.el ?? null);
   const put = (el: HTMLElement, r: Rect5, W: number, H: number) => { el.style.left = `${(r.x / W) * 100}%`; el.style.top = `${(r.y / H) * 100}%`; el.style.width = `${(r.w / W) * 100}%`; el.style.height = `${(r.h / H) * 100}%`; };
   let last = '';
   const fit = (cw: number, ch: number): void => {
@@ -480,7 +488,7 @@ function paper5(s: GameState, host: Shell5Host): HTMLElement {
     sheet.dataset.ink = ink.ink; if (ink.plate) sheet.dataset.plate = '1'; else delete sheet.dataset.plate;
     put(head, { ...g.hr, h: Math.max(g.hr.h, 12) }, PW, PH); put(tabs, g.tr, PW, PH); put(bodyEl, g.br, PW, PH);
   };
-  const size = () => size5(sheet.parentElement);
+  const size = () => size5(sheet.parentElement, cw);
   queueMicrotask(() => { const z = size(); fit(z.w, z.h); });
   { const z = size(); fit(z.w, z.h); }
   if (typeof ResizeObserver !== 'undefined') {
@@ -505,11 +513,11 @@ export function headInk5(p: Px, r: Rect5): { ink: 'dark' | 'light'; plate: boole
 }
 
 /** Tamanho do papel na tela (o espaço da cena menos a margem); antes de entrar no DOM, a conta pela janela. */
-function size5(parent: HTMLElement | null): { w: number; h: number } {
+function size5(parent: HTMLElement | null, card = 0): { w: number; h: number } {
   const r = parent?.getBoundingClientRect();
-  if (r && r.width > 50) return { w: r.width - 24, h: r.height - 20 };
+  if (r && r.width > 50) return { w: r.width - 24 - card, h: r.height - 20 };
   const W = typeof window !== 'undefined' ? window.innerWidth || 1280 : 1280, H = typeof window !== 'undefined' ? window.innerHeight || 800 : 800;
-  return { w: Math.max(640, W - 24), h: Math.max(360, H - 56 - 92 - 20) };
+  return { w: Math.max(640 - card, W - 24 - card), h: Math.max(360, H - 56 - 92 - 20) };
 }
 /** Moldura e áreas do papel (px lógicos = px de tela / 2): título, marcadores, miolo e as páginas do miolo. */
 function geo5(kind: Paper5 | 'inbox', year: number, cw: number, ch: number): { px: Px; hr: Rect5; tr: Rect5; br: Rect5; pages: Rect5[] } {
