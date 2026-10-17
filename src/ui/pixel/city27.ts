@@ -22,7 +22,7 @@ import type { Style18 } from '../../sim/sys/campus18';
 import { cityById, l, type L } from '../../data/world';
 import type { GameState } from '../../sim/types';
 import { fmtL, playerActs } from '../../sim/util';
-import { KIND18, LOTS18, buildings18, campus18, dormPeople, layout18, lotsOpen18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
+import { KIND18, LOTS18, MAPA33, buildings18, campus18, dormPeople, layout18, lotsOpen18, storeIncome18, type BKind, type Bld18 } from '../../sim/sys/campus18';
 import { NB19, live19ev, nb19, type Nb19 } from '../../sim/sys/hood19';
 import { rel18 } from '../../sim/sys/relics18';
 import { school18 } from '../../sim/sys/school18';
@@ -227,7 +227,7 @@ export function forSale27(s: GameState): Sale27[] {
   const busy = new Set(st.proj.map((p) => p.lot));
   const out: Sale27[] = [];
   LOTS18.forEach((_, lot) => {
-    if (lot === 0 || lot >= open || used.has(lot) || nbl.has(lot) || busy.has(lot) || ownsLot31(s, lot)) return; // r31 (LOTE): terreno seu não está à venda
+    if (lot === 0 || lot >= open || used.has(lot) || MAPA33.reserved?.(s)?.has(lot) || nbl.has(lot) || busy.has(lot) || ownsLot31(s, lot)) return; // r31 (LOTE): terreno seu não está à venda
     const p = lotPop19(s, lot);
     if (!p || !p.opts.length) return;
     const ok = p.opts.filter((o) => !o.dis);

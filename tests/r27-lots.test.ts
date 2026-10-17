@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { advanceMonth, advanceWeek } from '../src/sim/tick';
-import { BLD19, DIST18, HOME_LOT18, LOTS18, MIN_FREE18, buildings18, campus18, dist18, freeLots18, layout18, lotsOpen18, sync18 } from '../src/sim/sys/campus18';
+import { BLD19, DIST18, DIST_BASE18, HOME_LOT18, LOTS18, MIN_FREE18, buildings18, campus18, dist18, freeLots18, layout18, lotsOpen18, sync18 } from '../src/sim/sys/campus18';
 import { nb19 } from '../src/sim/sys/hood19';
 import { lotPop19 } from '../src/sim/sys/world19';
 import { SALE_MAX27, fillerLots27, forSale27 } from '../src/ui/pixel/city27';
@@ -159,7 +159,7 @@ describe('r27 LOTS: mapa maior sem sobreposição', () => {
   it('a cidade cresce com as décadas e com o tamanho do selo', () => {
     expect(dist18(game(1889))).toBe(0);
     expect(dist18(game(2010))).toBe(3); // R31 (H): os bairros 4–6 abrem em 2015/2025/2035 ou com a sede nível 5–6
-    expect(dist18(game(2036))).toBe(DIST18.length - 1);
+    expect(dist18(game(2036))).toBe(DIST_BASE18 - 1); // R33: os bairros 7–8 (periferia leste, orla sul) só abrem com exp33.mapa ligado
     const g = game(1889);
     g.player.hq = 4;
     expect(dist18(g)).toBeGreaterThanOrEqual(3);
@@ -179,8 +179,8 @@ describe('r27 LOTS: crescer não mexe no resto', () => {
     const nb0 = nb19(g).map((x) => [x.lot, x.k]);
     const lay0 = [...layout18(g, buildings18(g))];
     for (const x of nb0) expect(x[0]).toBeLessThan(DIST18[0].end);
-    campus18(g).dist = DIST18.length - 1; // como se a cidade tivesse crescido toda
-    expect(lotsOpen18(g)).toBe(LOTS18.length);
+    campus18(g).dist = DIST_BASE18 - 1; // como se a cidade tivesse crescido toda (R33: sem exp33.mapa, os 7 bairros de sempre)
+    expect(lotsOpen18(g)).toBe(DIST18[DIST_BASE18 - 1].end);
     expect(nb19(g).map((x) => [x.lot, x.k])).toEqual(nb0);
     expect([...layout18(g, buildings18(g))]).toEqual(lay0);
     expect(forSale27(g).length).toBe(SALE_MAX27);

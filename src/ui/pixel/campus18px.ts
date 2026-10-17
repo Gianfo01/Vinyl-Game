@@ -37,13 +37,15 @@ export const iso = (gx: number, gy: number): [number, number] => isoAt18(G, gx, 
 const unIso = (x: number, y: number): [number, number] => { const a = (x - G.ox) / 8, b = (y - OY) / 4; return [(a + b) / 2, (b - a) / 2]; };
 /** r27 (LOTS): avenidas (início em gy, 2 de largura) e ruas (início em gx). O centro só tem a avenida 7 e a rua 9;
  *  as outras aparecem quando o bairro abre (fora da grade não se desenha nada). */
-const HROADS = [7, 16, 24], VROADS = [9, 20, 29]; // R31 (H): avenida 24 e rua 29 dos bairros novos (mapa até 44×32)
-const hIn = () => HROADS.filter((b) => b + 2 <= G.gh), vIn = () => VROADS.filter((a) => a + 2 <= G.gw);
-const hAt = (gy: number) => HROADS.find((b) => gy >= b && gy < b + 2), vAt = (gx: number) => VROADS.find((a) => gx >= a && gx < a + 2);
+const H0 = [7, 16, 24], V0 = [9, 20, 29]; // R31 (H): avenida 24 e rua 29 dos bairros novos (mapa até 44×32)
+// R33 (MAPA33): avenida 32 e rua 44 só existem nos mapas dos bairros novos (56 de largura / 40 de altura): o mapa de sempre não muda
+const HROADS_ = (): number[] => (G.gh >= 34 ? [...H0, 32] : H0), VROADS_ = (): number[] => (G.gw >= 46 ? [...V0, 44] : V0);
+const hIn = () => HROADS_().filter((b) => b + 2 <= G.gh), vIn = () => VROADS_().filter((a) => a + 2 <= G.gw);
+const hAt = (gy: number) => HROADS_().find((b) => gy >= b && gy < b + 2), vAt = (gx: number) => VROADS_().find((a) => gx >= a && gx < a + 2);
 const ROAD = (gx: number, gy: number) => hAt(gy) !== undefined || vAt(gx) !== undefined;
 /** Célula de avenida ou rua (todas, abertas ou não) — os testes conferem que nenhum lote cai na rua. */
-export const roadAt18 = ROAD;
-const WALK = (gx: number, gy: number) => !ROAD(gx, gy) && (HROADS.some((b) => gy >= b - 0.4 && gy < b + 2.4) || VROADS.some((a) => gx >= a - 0.4 && gx < a + 2.4));
+export const roadAt18 = (gx: number, gy: number): boolean => [...H0, 32].some((b) => gy >= b && gy < b + 2) || [...V0, 44].some((a) => gx >= a && gx < a + 2);
+const WALK = (gx: number, gy: number) => !ROAD(gx, gy) && (HROADS_().some((b) => gy >= b - 0.4 && gy < b + 2.4) || VROADS_().some((a) => gx >= a - 0.4 && gx < a + 2.4));
 
 // ---------------------------------------------------------------- ambiente (estação, clima)
 
@@ -672,7 +674,7 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
         if (hb !== undefined && Math.abs(gy - hb - 1) < 0.06 && Math.floor(gx * 2) % 2 === 0 && va === undefined) c = lc;
         if (va !== undefined && Math.abs(gx - va - 1) < 0.06 && Math.floor(gy * 2) % 2 === 0 && hb === undefined) c = lc;
         // faixas de pedestre em cada cruzamento (r27: também nos dos bairros novos)
-        if (Math.floor((gx + gy) * 5) % 2 === 0 && VROADS.some((a) => HROADS.some((b) => (gx >= a - 0.1 && gx < a + 2.1 && gy > b - 0.5 && gy < b + 0.1) || (gy >= b - 0.1 && gy < b + 2.1 && gx > a + 2 && gx < a + 2.5)))) c = C('#e8e8e8');
+        if (Math.floor((gx + gy) * 5) % 2 === 0 && VROADS_().some((a) => HROADS_().some((b) => (gx >= a - 0.1 && gx < a + 2.1 && gy > b - 0.5 && gy < b + 0.1) || (gy >= b - 0.1 && gy < b + 2.1 && gx > a + 2 && gx < a + 2.5)))) c = C('#e8e8e8');
       }
       if (env.snow && noise(px, py, 2) < 0.18) c = mix(c, C('#f4f8fc'), 0.7); // neve só nas bordas: a rua continua escura e legível
       if (env.rain) { c = shade(c, -0.1); if (noise(px, py, 8) < 0.04) c = shade(c, 0.35); } // poças refletindo
@@ -735,8 +737,8 @@ function groundCanvas(env: Env18, seed: number, used: Set<number>, sprites: Spri
  *  (no mar e na baía a rua acaba no calçadão ou no cais). Só as faixas de rua/avenida que cruzam aquela borda. */
 function roadOut31(gx: number, gy: number, at: At31): 'road' | 'bridge' | null {
   const inX = gx >= 0 && gx < G.gw, inY = gy >= 0 && gy < G.gh;
-  const va = inX && !inY ? VROADS.find((a) => a + 2 <= G.gw && gx >= a && gx < a + 2) : undefined;
-  const hb = inY && !inX ? HROADS.find((b) => b + 2 <= G.gh && gy >= b && gy < b + 2) : undefined;
+  const va = inX && !inY ? VROADS_().find((a) => a + 2 <= G.gw && gx >= a && gx < a + 2) : undefined;
+  const hb = inY && !inX ? HROADS_().find((b) => b + 2 <= G.gh && gy >= b && gy < b + 2) : undefined;
   if (va === undefined && hb === undefined) return null;
   const riv = at.w && isRiver31(at.w);
   if (at.w && riv && at.w.w > 8) return at.t === 'land' && at.e < at.w.o ? 'road' : null; // rio largo demais: sem ponte
@@ -1006,7 +1008,7 @@ export function buildScene18(bs: Bld18[], lots: Map<string, number>, env: Env18,
   const top = Math.max(0, ...used, ...(x.sale ?? []).map((q) => q.lot), ...(x.filler ?? []), ...nbs.map((q) => q.lot));
   const dist = Math.max(x.dist ?? 0, DIST18.findIndex((q) => top < q.end));
   G = geoDist18(dist < 0 ? DIST18.length - 1 : dist);
-  if (x.minGw && x.minGw > G.gw) G = geo18(Math.min(44, x.minGw), G.gh); // R31 (H): terrenos reservados dos lugares reais
+  if (x.minGw && x.minGw > G.gw) G = geo18(Math.min(56, x.minGw), G.gh); // R31 (H): terrenos reservados dos lugares reais
   const geo = G;
   const look = cityLook27(env.city, env.lat, env.year), era = era27(env.year);
   const sprites: Sprite18[] = [];
