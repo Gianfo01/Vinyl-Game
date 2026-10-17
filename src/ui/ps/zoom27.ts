@@ -11,6 +11,7 @@ import { store } from '../store';
 import { ic } from '../vis';
 import { SEDE25 } from './nav25';
 import { trnMode31, trnOn31 } from '../../sim/r31/exp5trn';
+import { nav5On } from '../../sim/r31/exp5';
 import './zoom27.css';
 
 /** Pedido de chegada: o mapa abre aproximado na sede e se afasta (consumido pelo mapa). */
@@ -34,6 +35,8 @@ export const toHq27 = (): void => goArea(SEDE25);
 
 /** Abas "Sua sede | Nosso mundo" (as duas vistas do mesmo lugar) + botão de afastar. */
 export function placeTabs27(on: 'hq' | 'city', zoomEl?: () => HTMLElement | null): HTMLElement {
+  // QA5 (pedido do dono): na casca nova os botões de viagem (Sede, Cidade) já fazem isso; as abas saem
+  if (store.game && nav5On(store.game)) return h('div', { class: 'z27-tabs', hidden: true });
   const tab = (k: 'hq' | 'city', icon: string, label: string, go: () => void) => h('button', { type: 'button', role: 'tab', class: `z27-tab ${on === k ? 'on' : ''}`, 'aria-selected': String(on === k), onclick: on === k ? undefined : go }, ic(icon), ' ', label);
   return h('div', { class: 'z27-tabs', role: 'tablist', 'aria-label': t(l('Vistas do seu lugar', 'Views of your place')) },
     tab('hq', 'house', t(l('Sua sede', 'Your HQ')), toHq27),
