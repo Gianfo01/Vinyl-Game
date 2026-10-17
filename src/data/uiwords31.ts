@@ -562,6 +562,7 @@ export const UI_WHOLE31: readonly string[] = [
   "Publicist",
   "Publishing",
   "Qualquer lugar",
+  "R",
   "Radio",
   "Radio host",
   "Rain",
