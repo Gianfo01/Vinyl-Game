@@ -4,7 +4,7 @@
 // Família Fossati fica fora: tudo aqui só olha o dono (P(s).owner) e os filhos dele (owner.kids).
 
 import type { Rng } from '../../core/rng';
-import { l, type L } from '../../data/world';
+import { CITIES, l, type L } from '../../data/world';
 import { registerExt4, registerMod, registerSimHook } from '../ext4';
 import { purse } from '../r31/purse31';
 import { registerSwitch, sw } from '../r31/switches';
@@ -214,4 +214,47 @@ registerSimHook('month', 'vida33', (s, r) => { if (ownerP(s)) vidaMonth33(s, r);
 export function inheritedBump33(s: GameState, kidIdx: number): { attr: (typeof ATTRS)[number]; bonus: number } | null {
   const k = on(s, SW33.herdeiros) ? vida33(s).kids[kidIdx] : undefined;
   return k ? { attr: k.interest, bonus: 6 } : null;
+}
+
+// ---------------------------------------------------------------- viagem de lazer (destino no mapa)
+
+export interface Trip33 { city: string; week: number }
+const R_EARTH = 6371;
+function km33(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const rad = Math.PI / 180, dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R_EARTH * Math.asin(Math.min(1, Math.sqrt(x)));
+}
+export interface TripOpt33 { city: string; name: L; km: number; cost: number; relief: number }
+/** Até 4 destinos de lazer do mês (determinísticos por semente+mês), com custo e alívio pela distância e pela época. */
+export function tripOptions33(s: GameState): TripOpt33[] {
+  const home = CITIES.find((c) => c.id === s.config.homeCity);
+  if (!home) return [];
+  const slow = s.year < 1930 ? 1.8 : s.year < 1960 ? 1.3 : 1; // navio e trem custam mais
+  const rest = CITIES.filter((c) => c.id !== home.id).map((c) => ({ c, km: km33(home, c) }));
+  let h = 0;
+  for (const ch of `${s.config.seed}:trip33:${s.year}:${s.month}`) h = (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0;
+  rest.sort((a, b) => ((Math.imul(a.c.id.length + a.km | 0, 2654435761) ^ h) >>> 0) - ((Math.imul(b.c.id.length + b.km | 0, 2654435761) ^ h) >>> 0));
+  return rest.slice(0, 4).sort((a, b) => a.km - b.km).map(({ c, km }) => ({
+    city: c.id, name: c.name, km: Math.round(km),
+    cost: money(s, Math.round((900 + km * 0.35) * slow)), relief: Math.min(30, Math.round(12 + km / 700)),
+  }));
+}
+export const tripNow33 = (s: GameState): Trip33 | undefined => (vida33(s) as Vida33 & { trip?: Trip33 }).trip;
+/** Viagem de lazer a um destino do mapa: paga do bolso, 3 semanas de férias, alivia o estresse pela distância. */
+export function takeTrip33(s: GameState, cityId: string): L | null {
+  if (!on(s, SW33.rotina)) return l('Viagens de lazer estão desligadas.', 'Leisure trips are switched off.');
+  const o = ownerP(s);
+  if (!o) return l('Sem dono.', 'No owner.');
+  if (o.vacationUntil && o.vacationUntil > s.week) return l('Já está de férias.', 'Already on vacation.');
+  const opt = tripOptions33(s).find((x) => x.city === cityId);
+  if (!opt) return l('Destino indisponível este mês.', 'Destination not available this month.');
+  if (o.wealth < opt.cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
+  purse(s, -opt.cost, 'leisure', 'trip33', { who: o });
+  o.vacationUntil = s.week + 3;
+  o.stress = clamp01(o.stress - opt.relief);
+  o.health = clamp01(o.health + 2);
+  (vida33(s) as Vida33 & { trip?: Trip33 }).trip = { city: cityId, week: s.week };
+  remember(s, 'trip33', fmtL(l('{o} viaja para {c}.', '{o} travels to {c}.'), { o: o.name, c: opt.name }));
+  return null;
 }

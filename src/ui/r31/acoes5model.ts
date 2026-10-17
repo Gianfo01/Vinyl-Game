@@ -13,6 +13,7 @@ import { paperOf5 } from './nav5';
 import { object5, type Open5 } from './objects5';
 import { CARDS5 } from './acoes5data';
 import { ACTS_CAT5, LINES_CAT5, NUMS_CAT5 } from './acoes5cat';
+import '../r33/vida33ui'; // R33 VIDA: ações da vida nos cartões (exp33.*, só aparecem ligadas)
 
 export type ActKind5 = 'do' | 'ui' | 'open';
 /** Resultado de uma ação "do": a frase do toast (erro da regra de hoje = bad). */
