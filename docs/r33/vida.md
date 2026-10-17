@@ -14,4 +14,10 @@ Ações (sem tela nova; a interface liga pelo cartão de ações): `buildWall33`
 
 **Gancho INT-2 (hospital/reabilitação):** `treatOwner33(s, 'checkup' | 'rehab')`. Cobra do patrimônio pessoal; rehab = +20 saúde, -30 estresse, 8 semanas de férias.
 
-Pontos tocados em arquivos meus: `owner.ts` (`ownerBonus`, `succession`), `sys/life.ts` (`maxEnergy`). Ficou de fora: tela/cartões para as ações, evento próprio de escândalo (hoje só paparazzi chama `scandal33`), viagem como destino no mapa.
+**Cartões de ação (EXP-13, sem tela nova):** `src/ui/r33/vida33ui.ts` acrescenta ações e números aos cartões existentes, só visíveis com o interruptor ligado (`when`): sofá (rotina sono/hobby, check-up, retiro, imagem pessoal), porta da casa (muro, segurança), cofre (doar, fundação), mapa na parede (viagem de lazer + próximo destino). Importado por `acoes5model.ts`.
+
+**Escândalo pessoal:** evento de vida `r33_scandal` (`src/sim/r33/vida33ev.ts`), no sorteio mensal de `lifeevents10`; peso > 0 só com `exp33.reppessoal` e fama > 25 (sobe com estresse alto e paparazzi recente). Respostas: desculpas, doar, negar, ficar quieto; mexem na imagem pessoal, não na reputação da empresa.
+
+**Viagem de lazer (`exp33.rotina`):** `tripOptions33` sorteia 4 destinos por mês (determinístico), custo e alívio pela distância e pela época (navio/trem mais caros antes de 1960); `takeTrip33` paga do bolso, 3 semanas de férias.
+
+Pontos tocados em arquivos meus: `owner.ts` (`ownerBonus`, `succession`), `sys/life.ts` (`maxEnergy`); em outros: `sys/index.ts` (import do evento) e `ui/r31/acoes5model.ts` (import da UI).

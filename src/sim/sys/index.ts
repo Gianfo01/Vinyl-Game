@@ -404,3 +404,4 @@ import '../r31/decoshop31'; // R31 DECO-L: lojas de decoração (estoque pela vi
 import './lots31'; // R31 onda 4 (LOTE): registro de lotes da cidade — prédio sem função vira casa (CEO, artista, família Fossati) ou terreno vago à venda
 import './amor31'; // R31 onda 4 (AMOR): chamar qualquer pessoa para sair, ser amante, romance com o mercado (interruptores amor31.*)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
+import '../r33/vida33ev'; // R33 VIDA: evento de escândalo pessoal (exp33.reppessoal)

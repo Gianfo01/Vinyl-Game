@@ -446,3 +446,4 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 
 - **2026-10-17 · versão 33 com testes mínimos (dono).** Frentes da 33 rodam só tsc + o próprio teste novo; goldens só na junção das frentes de simulação; suíte inteira, robô completo e save/load ficam para o QA33 no fim, seguido do POL33 (polimento). Ver `docs/r33/PLANO.md`.
 - **2026-10-17 · R33 VIDA (Sonnet).** Dono como pessoa atrás de exp33.saude/paparazzi/rotina/reppessoal/herdeiros (desligados): estresse alto tira 1 de tempo livre, saúde baixa piora gravação e negociação, paparazzi só em mansão (muro/segurança cortam), reputação pessoal separada da empresa, filhos herdam interesse/talento. Gancho `treatOwner33` para o hospital da INT-2. `docs/r33/vida.md`, teste `tests/r33-vida.test.ts`.
+- **2026-10-17 · R33 VIDA (complemento).** Cartões de ação da vida (sofá, porta, cofre, mapa), evento `r33_scandal` e viagem de lazer (`takeTrip33`), tudo atrás dos mesmos exp33.* desligados.

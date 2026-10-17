@@ -6,7 +6,10 @@ import { setSw } from '../src/sim/r31/switches';
 import { Rng } from '../src/core/rng';
 import { energyLeft, maxEnergy } from '../src/sim/sys/life';
 import { ownerBonus, ownerOf, HOUSES } from '../src/sim/sys/people/owner';
-import { SW33, buildWall33, donate33, foundFoundation33, frail33, papChance33, repLevel33, scandal33, treatOwner33, vida33, vidaMonth33, setRoutine33, kidInterest33 } from '../src/sim/r33/vida33';
+import { rollLifeEvents, defOf } from '../src/sim/sys/lifeevents10';
+import { setSw as _s } from '../src/sim/r31/switches';
+import { card5 } from '../src/ui/r31/acoes5model';
+import { SW33, takeTrip33, tripOptions33, buildWall33, donate33, foundFoundation33, frail33, papChance33, repLevel33, scandal33, treatOwner33, vida33, vidaMonth33, setRoutine33, kidInterest33 } from '../src/sim/r33/vida33';
 
 const mk = (seed: string) => createGame(defaultConfig(seed));
 
@@ -65,5 +68,30 @@ describe('R33 VIDA', () => {
     vidaMonth33(s, Rng.fromSeed('k'));
     expect(kidInterest33(s, 0)).toBe('ear');
     expect(o.kids[0].aptitude).toBeGreaterThan(20);
+  });
+  it('viagem de lazer: destino do mapa, paga do bolso, alivia o estresse', () => {
+    const s = mk('vida33f'); const o = ownerOf(s); o.wealth = 1e9; o.stress = 70;
+    expect(takeTrip33(s, 'x')).not.toBeNull(); // desligado
+    setSw(s, SW33.rotina, true);
+    const opts = tripOptions33(s); expect(opts.length).toBe(4);
+    expect(takeTrip33(s, opts[0].city)).toBeNull();
+    expect(o.stress).toBeLessThan(70); expect(o.vacationUntil).toBeGreaterThan(s.week);
+  });
+  it('escândalo pessoal: evento existe e só pesa ligado', () => {
+    const s = mk('vida33g'); const d = defOf('r33_scandal')!;
+    expect(d).toBeTruthy();
+    const env = { s, fame: 60, stress: 80 } as never;
+    expect(d.w(env)).toBe(0);
+    setSw(s, SW33.rep, true);
+    expect(d.w(env)).toBeGreaterThan(0);
+    expect(typeof rollLifeEvents).toBe('function');
+  });
+  it('cartões de ação: ações da vida só com o interruptor', () => {
+    const s = mk('vida33h'); _s(s, 'exp5.nav', true);
+    const ids = (c: string) => card5(s, c)!.acts.map((a) => a.id);
+    expect(ids('cofrecasa')).not.toContain('v33.doar');
+    setSw(s, SW33.rep, true); setSw(s, SW33.paparazzi, true);
+    expect(ids('cofrecasa')).toContain('v33.doar');
+    expect(ids('casa.porta')).toContain('v33.muro');
   });
 });
