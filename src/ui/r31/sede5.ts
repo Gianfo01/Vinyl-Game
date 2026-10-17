@@ -280,6 +280,12 @@ export function sedeScene5(o: SedeIn5): HTMLElement {
     const lay = sedeLay5(d.plan, has);
     stage.style.width = `${Math.round(d.plan.W * k)}px`;
     stage.style.height = `${Math.round(d.plan.H * k)}px`;
+    // a sobra da tela em volta da cena (escala em quartos) continua o céu em cima e a rua embaixo: nada de faixa preta
+    try {
+      const cx = cv.getContext('2d');
+      const px = (y: number) => { const v = cx!.getImageData(1, y, 1, 1).data; return `rgb(${v[0]},${v[1]},${v[2]})`; };
+      if (cx && cv.height > 2) wrap.style.background = `linear-gradient(to bottom, ${px(0)} 0 50%, ${px(cv.height - 1)} 50% 100%)`;
+    } catch { /* canvas sem leitura (testes): fica o fundo da casca */ }
     layer.replaceChildren(
       ...lay.items.map((it) => objBtn(d.plan, it, o.bangs[it.id] ?? 0, s.year, Math.ceil(k), o.open, o.flash === it.id)),
       ...lay.rooms.map((r) => roomChip(d.plan, r, o.bangs, o.open, lay.items.some((x) => x.id === o.flash) ? undefined : o.flash)),

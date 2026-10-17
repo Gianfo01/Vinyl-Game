@@ -82,9 +82,16 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .s5-lock:hover { background: #1d2a3e; }
 
 /* recados (secretária eletrônica) */
-.reg5-sede { flex-direction: row; }
+.reg5-sede { flex-direction: row; position: absolute; }
 .reg5-casa, .reg5-cidade, .reg5-mundo { justify-content: center; }
-.rc5 { flex: none; align-self: flex-start; margin: 30px 12px 0 0; width: 270px; max-height: calc(100% - 40px); overflow: auto; font-size: 13px; padding: 8px; background: rgba(13, 21, 32, 0.94); border: 1px solid var(--c5-line); box-shadow: 3px 3px 0 rgba(0,0,0,.5); z-index: 5; }
+/* POL5: a casa enche a região (céu em cima, chão embaixo, cena maior quando cabe na largura) */
+.reg5-casa > .casa5-root { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--r5-sky, transparent); }
+.reg5-casa > .casa5-root::before { content: ''; flex: 1; }
+.reg5-casa > .casa5-root::after { content: ''; flex: 1; background: var(--r5-ground, transparent); }
+.reg5-casa > .casa5-root > .r5-head { padding: 0 16px; }
+.reg5-casa .r5-scroll { flex: none; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.reg5-casa .r5-view { --hv: max(min(50vh, 400px), min(calc((100vw - 32px) / var(--ar)), calc(100dvh - 260px))) !important; }
+.rc5 { position: absolute; right: 12px; top: 30px; flex: none; width: 270px; max-height: calc(100% - 40px); overflow: auto; font-size: 13px; padding: 8px; background: rgba(13, 21, 32, 0.94); border: 1px solid var(--c5-line); box-shadow: 3px 3px 0 rgba(0,0,0,.5); z-index: 5; }
 .rc5-h { display: block; width: 100%; padding: 2px 4px 6px; border: 0; background: none; text-align: left; font: 700 11px/1.3 var(--pixel, monospace); color: var(--c5-mut); text-transform: uppercase; letter-spacing: 0.06em; }
 .rc5-h small { text-transform: none; letter-spacing: 0; font-family: var(--sans, sans-serif); }
 .rc5 ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
@@ -101,8 +108,13 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .p5-cv { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 .p5-head { position: absolute; display: flex; align-items: center; gap: 12px; min-width: 0; color: #1e1a16; }
 .p5 .p5-head .p5-t { margin: 0; color: inherit !important; font: 700 18px/1 var(--pixel, monospace); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
-.p5-sub { font: 600 11px/1.2 var(--pixel, monospace); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.p5-charts .p5-head, .p5-cork .p5-head, .p5-inbox .p5-head, .p5-ledger .p5-head, .p5-agenda .p5-head, .p5-rolodex .p5-head { color: #fff4dc; text-shadow: 1px 1px 0 #000; }
+.p5-ttl { display: flex; align-items: baseline; gap: 12px; min-width: 0; overflow: hidden; }
+.p5-sub { font: 600 11px/1.2 var(--pixel, monospace); color: #4a4036; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* contraste pela moldura (headInk5): letra clara em moldura escura, escura em clara, etiqueta própria em textura */
+.p5[data-ink="light"] .p5-head { color: #fff4dc; text-shadow: 1px 1px 0 #000; }
+.p5[data-ink="light"] .p5-sub { color: #e6d6b4; }
+.p5[data-ink="dark"] .p5-head .p5-t { text-shadow: 1px 1px 0 rgba(255,255,255,.45); }
+.p5[data-plate] .p5-ttl { align-items: center; padding: 1px 8px; max-height: 100%; background: #f6eed8; border: 2px solid #1e1a16; box-shadow: 2px 2px 0 rgba(0,0,0,.45); }
 .p5-pin, .p5-x { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border: 1px solid rgba(0,0,0,.4); background: rgba(255,255,255,.75); color: #1e1a16; font-size: 12px; white-space: nowrap; }
 .p5-pin.on { background: #f0c040; }
 .p5-tabs { position: absolute; display: flex; align-items: stretch; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }

@@ -144,6 +144,12 @@ export function casaView5(s: GameState): HTMLElement {
     return { sp, label: o.label, tip: o.tip, key: chord5(o.obj), bang: bang.has(o.id), act: (at) => act5(s, at, o) };
   }), [d.top, d.H - 12]));
   const sc = root.lastElementChild as HTMLElement;
+  // POL5: a sobra da tela em volta da casa continua o céu (em cima) e o chão (embaixo), sem faixa preta
+  try {
+    const cx = sc.querySelector<HTMLCanvasElement>('canvas.r5-cv')?.getContext('2d');
+    const px = (y: number) => { const v = cx!.getImageData(1, y, 1, 1).data; return `rgb(${v[0]},${v[1]},${v[2]})`; };
+    if (cx) { root.style.setProperty('--r5-sky', px(Math.max(0, d.top))); root.style.setProperty('--r5-ground', px(Math.max(0, d.H - 13))); }
+  } catch { /* sem canvas (testes) */ }
   sc.querySelector('.r5-view')!.append(roomsBar5(d.rooms.map((r) => ({ label: ROOM5_L[r.id], x: r.x, w: r.w })), d.W));
   // cômodos: um botão por cômodo rola a cena até ele (casa larga não cabe inteira na tela)
   if (d.rooms.length > 1) root.querySelector('.r5-head')!.append(h('span', { class: 'r5-roomsnav' }, d.rooms.map((r) => h('button', { type: 'button', class: 'r5-rbtn',
@@ -173,7 +179,7 @@ function stage5(W: number, H: number, paint: (cv: HTMLCanvasElement) => void, pt
   const st = h('div', { class: 'r5-stage', style: `top:${pct(-crop[0], ch)};height:${pct(H, ch)}` }, cv);
   // altura: cômodos (casa, garagem) ~50vh; prédio alto cresce com os andares (até 82vh) para as salas não ficarem miúdas
   const hv = ch > 190 ? `min(70vh, ${Math.round(ch * 2.2)}px)` : 'var(--r5-h)';
-  const view = h('div', { class: 'r5-view', style: `height:${hv};width:calc(${hv} * ${(W / ch).toFixed(4)})` }, st);
+  const view = h('div', { class: 'r5-view', style: `--hv:${hv};--ar:${(W / ch).toFixed(4)};height:var(--hv);width:calc(var(--hv) * var(--ar))` }, st);
   const layer = h('div', { class: 'r5-layer' });
   for (const p of pts) {
     const b = h('button', { type: 'button', class: `r5-spot${p.bang ? ' bang' : ''}`, title: `${t(p.label)}: ${t(p.tip)}${p.key ? ` (${p.key})` : ''}`, 'aria-label': `${t(p.label)}: ${t(p.tip)}`,
@@ -284,16 +290,6 @@ export function maqueteView5(s: GameState): HTMLElement {
 // API da casca (NAV, nav5.ts): a região 'casa' e o papel da maquete.
 registerRegion5('casa', (c) => casaView5(c.s));
 registerPaper5('maquete', (c) => h('div', null, maqueteView5(c.s), c.old()));
-
-/** Gancho TEMPORÁRIO enquanto a casca (shell5) não existe: com `exp5.nav` ligado, app.ts troca a página da área pela
- *  cena nova ('replace') ou põe a cena acima dela ('top'). A sede ('sede25') é da casca: ela pode chamar `sedeView5`
- *  (ou só o modelo `sedeObjs5`/`maquete5`) e apagar esta tabela (DECISOES, 31.5 CASA). */
-export const AREA5: Record<string, { mode: 'replace' | 'top'; render: (s: GameState) => HTMLElement }> = {
-  casa31: { mode: 'replace', render: casaView5 },
-  sede25: { mode: 'replace', render: (s) => sedeView5(s) },
-  hq: { mode: 'top', render: maqueteView5 },
-};
-export const area5Of = (area: string) => AREA5[area];
 
 /** Tab troca de casa/sede (chaveiro) quando a casa ou a sede nova está na tela. */
 if (typeof document !== 'undefined') document.addEventListener('keydown', (e) => {
