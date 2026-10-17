@@ -27,7 +27,8 @@ function game(seed: string, year: number): GameState {
   return s;
 }
 const bad: string[] = [];
-const fin = (s: GameState, what: string, v: unknown): void => { if (typeof v !== 'number' || !Number.isFinite(v)) bad.push(`${s.year}-${s.month} ${what}=${String(v)}`); };
+const flag = (x: string): void => { if (!bad.includes(x)) console.log(`PROBLEMA ${x}`); bad.push(x); };
+const fin = (s: GameState, what: string, v: unknown): void => { if (typeof v !== 'number' || !Number.isFinite(v)) flag(`${s.year}-${s.month} ${what}=${String(v)}`); };
 function check(s: GameState): void {
   fin(s, 'cash', s.player.cash); const o = ownerOf(s); fin(s, 'wealth', o.wealth); fin(s, 'stress', o.stress); fin(s, 'health', o.health);
   for (const k of ['artistic', 'commercial', 'artists', 'institutional'] as const) fin(s, `rep.${k}`, s.player.reputation[k]);
@@ -35,8 +36,8 @@ function check(s: GameState): void {
   for (const a of Object.values(s.acts)) if (a.owner === 'player') { fin(s, `fame.${a.id}`, a.fame); fin(s, `mom.${a.id}`, a.momentum); fin(s, `fans.${a.id}`, a.fans.casual); }
   for (const r of Object.values(s.releases)) if (r.owner === 'player' && s.week - r.week < 60) { fin(s, `units.${r.id}`, r.totalUnits); fin(s, `rev.${r.id}`, r.revenue); }
   const cr = toReal(s.player.cash, s.year), wr = toReal(o.wealth, s.year);
-  if (Math.abs(cr) > 5e9) bad.push(`${s.year}-${s.month} caixa absurdo US$ ${Math.round(cr)}`);
-  if (Math.abs(wr) > 5e9) bad.push(`${s.year}-${s.month} patrimônio absurdo US$ ${Math.round(wr)}`);
+  if (Math.abs(cr) > 5e9) flag(`${s.year}-${s.month} caixa absurdo US$ ${Math.round(cr)}`);
+  if (Math.abs(wr) > 5e9) flag(`${s.year}-${s.month} patrimônio absurdo US$ ${Math.round(wr)}`);
 }
 const x4 = (s: GameState) => s.x4 as unknown as Record<string, any>;
 function counters(s: GameState): string {
@@ -50,15 +51,17 @@ function counters(s: GameState): string {
 let seg = 0, s = game(`qa33-${car}-${seg}`, y0), errs = 0, months = 0, lastY = s.year;
 const t0 = Date.now(), restarts: string[] = [];
 let minCash = Infinity, maxCash = -Infinity;
-while (s.year < y1 || (s.year === y1 && s.month < 12)) {
+process.on('SIGTERM', () => { console.log(`PARADO em ${s.year}`); console.log(bad.length ? `PROBLEMAS ${bad.length}:\n${[...new Set(bad)].slice(0, 40).join('\n')}` : 'SEM PROBLEMAS'); process.exit(0); });
+while (s.year < y1 || (s.year === y1 && s.month < 11)) {
   try { playMonth(s, prof); advanceMonth(s); months++; }
-  catch (e) { errs++; bad.push(`${s.year}-${s.month} ERRO ${(e as Error).stack?.split('\n').slice(0, 4).join(' | ')}`); if (errs > 5) break; s = game(`qa33-${car}-${++seg}`, s.year + 1); continue; }
+  catch (e) { errs++; flag(`${s.year}-${s.month} ERRO ${(e as Error).stack?.split('\n').slice(0, 4).join(' | ')}`); if (errs > 5) break; s = game(`qa33-${car}-${++seg}`, s.year + 1); continue; }
   check(s);
   const cr = toReal(s.player.cash, s.year); minCash = Math.min(minCash, cr); maxCash = Math.max(maxCash, cr);
   if (s.year !== lastY) {
     lastY = s.year;
     console.log(`${car} ${s.year}\tcaixa ${Math.round(cr / 1000)}k\tpessoal ${Math.round(toReal(ownerOf(s).wealth, s.year) / 1000)}k\t${counters(s)}\t${Math.round((Date.now() - t0) / 1000)}s`);
   }
+  if (s.ended && s.year >= y1) break; // fim da linha do tempo
   if (s.ended) { restarts.push(`${s.year} (${(s.ended as { ending?: string }).ending ?? '?'})`); s = game(`qa33-${car}-${++seg}`, Math.min(y1, s.year + 1)); }
 }
 console.log(`FIM ${car}: ${months} meses, ${restarts.length} recomeço(s) [${restarts.join(', ')}], caixa min ${Math.round(minCash / 1000)}k max ${Math.round(maxCash / 1000)}k, ${Math.round((Date.now() - t0) / 1000)}s`);
