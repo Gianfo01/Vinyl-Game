@@ -117,6 +117,8 @@ function bookable(s: GameState, d: VDef): Act[] {
     .sort((a, b) => (b.city === d.city ? 10 : 0) + b.potential * 0.3 + b.fame - ((a.city === d.city ? 10 : 0) + a.potential * 0.3 + a.fame)).slice(0, 12);
 }
 
+/** r31 (DECO-L): decoração exposta na casa atrai um pouco mais de público (fração, teto pequeno; sem item = 0). */
+export const VENUE_DECO17: { occ?: (s: GameState, venueId: string) => number } = {};
 /** Estimativa do mês (a mesma conta do fechamento, sem sorteio). */
 export function monthEst17(s: GameState, o: Own17): { att: number; net: number; nights: number; door: number; bar: number; fees: number; upkeep: number; why: L[] } {
   const d = vdef(o.id)!;
@@ -124,7 +126,7 @@ export function monthEst17(s: GameState, o: Own17): { att: number; net: number; 
   const scene = sceneFam(s, d.city, d.fam);
   const res = o.actId ? s.acts[o.actId] : undefined;
   const pull = o.policy === 'residency' && res ? clamp(0.35 + res.fame / 120, 0.3, 1.1) : o.policy === 'commercial' ? 0.6 : o.policy === 'rental' ? 0.7 : 0.5 + o.rep / 140;
-  const occ = clamp(pull * pr.occ * (0.75 + Math.min(0.35, scene / 40)) * (0.7 + o.cond / 330) * (0.85 + d.prestige / 500), 0.08, 1);
+  const occ = clamp(pull * pr.occ * (0.75 + Math.min(0.35, scene / 40)) * (0.7 + o.cond / 330) * (0.85 + d.prestige / 500) * (1 + (VENUE_DECO17.occ?.(s, o.id) ?? 0)), 0.08, 1);
   const nights = P.nights;
   const att = Math.round(d.cap * occ * nights);
   const ticket = money(s, 4 + d.prestige / 12) * pr.mult;
