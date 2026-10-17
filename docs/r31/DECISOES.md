@@ -432,3 +432,5 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - Interface: área `deco31` (abas por loja, correio, internet, "Seus lugares"); botão "Entrar na loja" no prédio; objeto `decoracao` na onda 5 (Shift+U — Shift+O é o modo Arrumar da DECO-M; lugar `cidade.loja`); docs onda5-telas/teclas regenerados.
 
 - **2026-10-17 · tela inicial: 1889 e hologramas (dono).** A vitrine começa em Paris 1889 (Torre Eiffel da Exposição ao fundo, fonógrafo de cilindro de Edison, ribalta a gás com chamas que tremulam, letreiro FONÓGRAFO) e termina no futuro: de 2030 em diante a vocal e o guitarrista são hologramas (projetor no chão, cone de luz, figura em ciano/violeta que pulsa, linha de varredura e tremido), letreiro HOLO. Vitrine: 1889 Paris → … → 2036 Seul → 2040 Los Angeles.
+
+- **2026-10-17 · versão 33 planejada (dono).** Tudo da conversa de ideias (mecânicas soltas, prédios com interior, conexões de vida real) vai para a 33, em 8 frentes (VIDA, CIDADE, CATÁLOGO, GESTÃO, PESSOAS, MUNDO, INT-1, INT-2) — `docs/r33/PLANO.md`. Começa depois que TUT e QA5 estiverem juntos e a `Masters_32.html` enviada.
