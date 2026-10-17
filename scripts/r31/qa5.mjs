@@ -224,6 +224,7 @@ async function sweepSystem() {
   for (let i = 0; i < areas.length; i += every) {
     const area = areas[i];
     if (!(await p.locator('.pz5').count())) { await escBack('indice', { pauseOk: true }); await p.keyboard.press('Escape'); await wait(450); }
+    if (!(await p.locator('.pz5').count())) { await p.keyboard.press('Escape'); await wait(450); } // na cidade o 1º Esc fecha o painel do prédio que voltou aberto
     if (!(await p.locator('.pz5').count())) { flag('sem-efeito', `indice.depois-de.${areas[i - every] ?? ''}`, 'Esc não abre a pausa'); await p.keyboard.press('Shift+Digit1'); await wait(900); await escBack('indice', { pauseOk: true }); await p.keyboard.press('Escape'); await wait(450); }
     const row = p.locator(`.pz5-row[data-area="${area}"]`).first();
     if (!(await row.count())) continue;

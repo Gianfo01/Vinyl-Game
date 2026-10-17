@@ -51,6 +51,11 @@ conhecidos ficam em `scripts/r31/qa5-known.json` com o dono; qualquer outro repr
 gravadora, 1280×720 (~4 min); completo = 1925 artista 1366×768, 1962 gravadora 1280×720, 1985 festival 1600×700,
 2015 gravadora 1920×1080.
 
+## Última rodada do robô completo (4 épocas × janelas, ~37 min)
+Sem erro de página, sem rolagem horizontal, sem tela sem volta, sem página antiga aberta sem "ver tudo", sem botão sem efeito.
+O único aviso restante era do próprio robô (na cidade, o 1º Esc fecha o painel do prédio que volta aberto; o 2º abre a pausa) e foi ajustado.
+Falsos alarmes analisados e descartados: "Avançar mês" parado em 1925 (a atividade "Sessão de composição" pede Jogar/Resolver rápido; Esc adia, com aviso).
+
 ## O que funcionou (1962, gravadora, 1280×720)
 - Começo rápido em ~2,5 s; sem erro de página no começo nem em 6 meses avançados.
 - Busca (Ctrl+K → "fin" → Enter abre o Livro-caixa), ajuda de teclas (?), pausa (Esc), Salvar (toast "Jogo salvo."),
