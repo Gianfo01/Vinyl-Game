@@ -30,7 +30,8 @@ import {
 } from './mundo27model';
 import './mundo27.css';
 import { ent27 } from '../ps/ent27'; // r27 (CTX)
-import { nav5On } from '../../sim/r31/exp5'; // R31 onda 5 (MAPA): mundo só pelo mapa atrás de exp5.nav
+import { nav5On } from '../../sim/r31/exp5';
+import { openPaper5, shell5On } from '../r31/shell5'; // R31 onda 5 (MAPA): mundo só pelo mapa atrás de exp5.nav
 import { country5 } from '../r31/map5model';
 import { CITY5_SHEET, WORLD5, countryKeys5, countryPanel5, openCityMap5, pinTelex5, telexCard5, worldHint5, worldIdle5 } from '../r31/map5ui';
 
@@ -51,6 +52,8 @@ export function go27(x: Go27): void {
   if (x.layer) layers.add(x.layer);
   const scroll = () => { if (x.anchor) document.getElementById(x.anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   if ((store as { area: string }).area === x.area) { rerender(); requestAnimationFrame(scroll); return; }
+  // casca nova: trocar só `store.area` não mostra nada — a outra página abre como papel por cima do mapa
+  if (x.area !== 'world' && shell5On(store.game)) { openPaper5(x.area); requestAnimationFrame(scroll); return; }
   (store as { area: string }).area = x.area;
   rerender();
   requestAnimationFrame(scroll);

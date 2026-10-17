@@ -144,6 +144,16 @@ export function closePaper5(): void {
   const obj = SH5.paper.obj;
   TRANS5.run({ kind: 'close', obj, year: s.year }, () => { SH5.paper = null; redraw(); });
 }
+/** Abre a página `area` direto no papel do objeto dono (sem cartão de ações): botões "ir para a página X" de dentro de
+ *  outra página (ex.: "Mercado e política do país" no painel do país), que antes trocavam `store.area` e não apareciam. */
+export function openPaper5(area: string, tab?: [string, string]): void {
+  const o = objectFor5(area, tab);
+  SH5.paper = { obj: o?.id ?? `page:${area}`, marker: { area, tab } };
+  SH5.pause = false; SH5.help = false;
+  if (tab) setTab(tab[0], tab[1]);
+  store.area = area as typeof store.area;
+  redraw();
+}
 export const help5 = (): void => { SH5.help = true; SH5.pause = false; redraw(); };
 export const paperId5 = (): string | undefined => SH5.paper?.obj;
 
