@@ -27,3 +27,4 @@ import './exp5ini'; // R31 onda 5 (INI): tela inicial e nova run novas (interrup
 import './exp5trn'; // R31 onda 5 (TRN): transições entre telas (interruptor e modo no editor)
 import '../r33/cidade33'; // R33 CIDADE: lojas, base de turnê, terrenos e cenas locais (exp33.cidade.*, desligados)
 import './deco31'; // R31 DECO-M: decoração de casa, sede e estabelecimentos (lugares, upgrades, efeitos com teto)
+import '../r33/catalogo33'; // R33 CATÁLOGO: relíquias, sampling, catálogo que reaparece, royalties em cadeia, ciclos de formato (exp33.*)

@@ -342,7 +342,9 @@ export function raise31(s: GameState, rid: string, amount: number): L | null {
 export function dropBid31(s: GameState, rid: string): void { const rl = relics(s).list.find((x) => x.id === rid); if (rl) rl.bid = undefined; }
 
 /** Peças suas que podem ir a consignação. */
-export const consignable31 = (s: GameState): Relic[] => relics(s).list.filter((x) => x.st === 'player' && !x.meta?.fix && !isRelicFixed9(x) && !x.ln && !x.brw);
+/** R33 CATÁLOGO: peça barrada da consignação (empenhada como garantia — sim/r33/relic33). */
+export const consignGuard31: { f: ((s: GameState, rid: string) => boolean) | null } = { f: null };
+export const consignable31 = (s: GameState): Relic[] => relics(s).list.filter((x) => x.st === 'player' && !x.meta?.fix && !isRelicFixed9(x) && !x.ln && !x.brw && !consignGuard31.f?.(s, x.id));
 /** Mandar uma peça sua ao balcão de consignação: entra no próximo pregão adequado. */
 export function consign31(s: GameState, rid: string): L | null {
   if (!auctionOn31(s)) return l('A casa de leilões está desligada nesta partida.', 'The auction house is off in this game.');
