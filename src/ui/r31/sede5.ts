@@ -203,7 +203,7 @@ function roomChip(pl: Plan27, r: Room5, bangs: Record<string, number>, on: (id: 
   const name = tl5(ROOM_L5[r.kind] ?? l('Sala', 'Room'));
   const list = h('div', { class: 's5-pop', role: 'menu', hidden: true },
     h('b', null, txt5(`${name} · ${t(l('{n} objetos', '{n} objects'), { n: r.objs.length })}`)),
-    ...r.objs.map((id) => h('button', { type: 'button', role: 'menuitem', class: 's5-pop-i', onclick: () => on(id) },
+    ...r.objs.map((id) => h('button', { type: 'button', role: 'menuitem', class: 's5-pop-i', 'data-obj': id, onclick: () => on(id) },
       h('span', null, txt5(tl5(object5(id)!.label))), bangs[id] ? raw5('i', 'bg5', String(bangs[id])) : null, kbd5(keyOf5(id)))),
     h('small', null, t(l('Clique num objeto ou use a tecla.', 'Click an object or use its key.'))));
   const lit = !!flash && r.objs.includes(flash);

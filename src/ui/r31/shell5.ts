@@ -210,18 +210,18 @@ function doRebind(e: KeyboardEvent): void {
 function topBar5(s: GameState, host: Shell5Host): HTMLElement {
   const rep = s.player.reputation;
   const fame = Math.round((rep.artistic + rep.commercial + rep.artists + rep.institutional) / 4);
-  const hint = (k: string, label: L, on: () => void) => h('button', { type: 'button', class: 't5-k', onclick: on }, kbd5(k), h('span', null, t(label)));
+  const hint = (k: string, label: L, on: () => void, id?: string) => h('button', { type: 'button', class: 't5-k', 'data-t5': id, onclick: on }, kbd5(k), h('span', null, t(label)));
   return h('header', { class: 't5' },
     h('b', { class: 't5-brand' }, s.config.companyName || t(l('Seu selo', 'Your label'))),
-    h('span', { class: 't5-chip' }, dateLabel(s)),
-    h('span', { class: 't5-chip' }, `${t(l('Caixa', 'Cash'))} `, h('b', { class: s.player.cash < 0 ? 'bad' : 'gold' }, $(s.player.cash))),
-    h('span', { class: 't5-chip', title: t(l('Fama', 'Fame')) }, `★ ${fame}`),
+    h('span', { class: 't5-chip', 'data-t5': 'date' }, dateLabel(s)),
+    h('span', { class: 't5-chip', 'data-t5': 'cash' }, `${t(l('Caixa', 'Cash'))} `, h('b', { class: s.player.cash < 0 ? 'bad' : 'gold' }, $(s.player.cash))),
+    h('span', { class: 't5-chip', 'data-t5': 'fame', title: t(l('Fama', 'Fame')) }, `★ ${fame}`),
     host.saveChip(),
     h('span', { class: 't5-sp' }),
     hint('Ctrl K', l('buscar', 'search'), host.search),
-    hint('?', l('teclas', 'keys'), help5),
+    hint('?', l('teclas', 'keys'), help5, 'help'),
     hint(chordLabel5(key5('sys:home')?.chord ?? 'h'), l('sede', 'HQ'), () => travel5go('sede')),
-    hint('Esc', l('pausa', 'pause'), esc5),
+    hint('Esc', l('pausa', 'pause'), esc5, 'pause'),
     h('div', { class: 't5-adv' },
       h('button', { type: 'button', class: 't5-go', title: 'Ctrl+Enter', onclick: () => { SH5.paper = null; host.advance(); } }, '▶ ', t(l('Avançar mês', 'Advance month')), s.decisions.length ? raw5('i', 'bg5', String(s.decisions.length)) : null),
       host.advMore()));
