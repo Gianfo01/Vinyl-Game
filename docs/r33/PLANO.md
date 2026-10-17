@@ -7,8 +7,13 @@ de vida real) vai para a 33. Começa quando o TUT (tutorial EXP-12) e o QA5 da o
 Regras de sempre: estilo pixel antigo, sem emoji, nada flutuando, sem placeholder, sem selo "simulado"; família
 Fossati sempre presente, não envelhece nem morre (Sonia só se aposenta), nunca romance; foco PC; toda tela no padrão
 dos mocks aprovados; EXP-13 (ações no objeto, o mínimo de telas). Cada mecânica nova atrás de um interruptor próprio
-(`exp33.*`); goldens só mudam com explicação no teste e em DECISOES. TESTES LEVES: tsc, testes do tema, goldens
-r27-p2a, r27-p2b, r27-m3, r16-playbot e fumaça.
+(`exp33.*`); goldens só mudam com explicação no teste e em DECISOES.
+
+TESTES MÍNIMOS (dono, 2026-10-17 — o QA completo fica para o fim): cada frente roda só `tsc` e o PRÓPRIO teste
+novo (um arquivo, poucos casos, sem rodar jogo longo). Nada de suíte, goldens ou fumaça dentro da frente; prints só nas
+frentes de arte (INT-1, INT-2, MAPA33), um por lugar novo. Na junção o coordenador roda tsc + o teste da frente +
+uiwords; os goldens (r27-p2a, r27-p2b, r27-m3, r16-playbot) só nas frentes que mexem na simulação (VIDA, CIDADE,
+CATÁLOGO, GESTÃO, PESSOAS, MUNDO), e se mudarem fica anotado para o QA33 conferir.
 
 ## Frentes
 
@@ -27,6 +32,14 @@ r27-p2a, r27-p2b, r27-m3, r16-playbot e fumaça.
 
 INT-1/INT-2 desenham os lugares e expõem ganchos; as regras de banco, hospital, cartório e fábrica que mexem em
 dinheiro e pessoas ficam com GESTÃO/VIDA/CATÁLOGO (combinar pelo gancho, sem editar o arquivo do outro).
+
+## Fechamento da 33 (depois que todas as frentes estiverem juntas)
+| Frente | O quê | Modelo |
+|---|---|---|
+| **QA33** | suíte inteira e goldens re-medidos com explicação; robô jogando 1889→2040 em várias carreiras com todos os `exp33.*` ligados; abrir cada prédio e interior novo; save/load com o estado novo; consertar tudo que quebrar (sem desligar teste); relatório com o que ficou | Opus |
+| **POL33** | polimento visual depois do QA: varrer telas, cenas e interiores novos em 1962 e 2025 (e 1889/2035 nos novos), textos cortados ou sobrepostos, padrão pixel, letreiros, cartão de ações; prints antes/depois | Sonnet |
+
+Ordem: frentes → junção → QA33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono.
 
 ## Fica para a onda 6 (fechamento), não para a 33
 (11) começar tarde rende pouco (meta 3× × hoje ~1,1×) e o padrão de cada interruptor; metas e fim de jogo num motor
