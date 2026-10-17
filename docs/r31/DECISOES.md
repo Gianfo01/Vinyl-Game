@@ -509,6 +509,57 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - Só 6 variantes, pela faixa de época de início. Termina mostrando o resumo "Sua história" da ficha.
   - O loop da tela inicial continua separado.
 
+## 2026-10-17 · GENTE33
+- O dono pediu:
+  - diretor de filial, CEO da empresa e conselho, equipe pessoal e pessoas fixas;
+  - mais NPCs, ligados ao ciclo bartender ↔ artista.
+- Decidido:
+  - **Parte A** roda já (Opus). Tudo opt-in (só quando o jogador contrata), para não mudar os goldens enquanto o QA33
+    mede.
+  - **Parte B** (três camadas de detalhe, promoção e rebaixamento com resumo do passado, talento escondido, volta por
+    cima) só depois de juntar o QA33, porque mexe em todas as pessoas e nos goldens.
+  - Nem todos os NPCs terão o mesmo detalhe: as camadas seguem a pessoa, não o emprego.
+
+## 2026-10-17 · INTRO33 — o que foi feito (frente INTRO33, Sonnet)
+- **Rua que atravessa as épocas**, desenhada só por código (nenhum arquivo de vídeo, nenhuma imagem embutida; o arquivo único
+  não cresceu): cortes isométricos de 1889 (sobrado com piano, gramofone e ribalta a gás), 1920 (rádio com torre e faíscas),
+  1950 (loja de discos com toldo e jukebox), 1965 (estúdio de fita), 1975 (palco com plateia e luzes coloridas), 1995 (estúdio
+  digital com telas) e 2035 (cidade de vidro com UM único holograma de cantora, reaproveitando a cor do `holo5`). Gente com
+  roupa da época (`crowdLook27` + `avatarSprite`), carros de cada época, postes (gás → elétrico → LED), janelas que acendem com
+  a onda, rio com ponte de pedra nas pontas. A onda de luz muda de cor (dourado → laranja → rosa → roxo → ciano) e puxa a câmera.
+- **Arte**: `Px`, contorno `INK` por `inked`, luz de cima à esquerda, rampas `lv`, faixas de época `ep5Of`. Os adereços e os
+  prédios do fundo são caixas isométricas (`sbox`); o que é alto (torre, chaminés) nasce de trás do telhado, e nada fica solto
+  no ar (revisado depois de achados do dono: antena, chaminés, luminárias, placa, alto-falantes e bateria).
+- **Dois usos do mesmo motor** (`src/ui/r33/intro33px.ts` puro + `intro33.ts` canvas):
+  1. **Fundo da tela inicial**, loop de ~40 s, no lugar de `cycleShow5`/`SHOW5` (que continuam para o interruptor desligado).
+     Escala inteira (`k = round(altura/270)`), ~30 quadros por segundo, pausa com a aba oculta ou fora da tela, "movimento
+     reduzido" = um quadro parado (a rua acesa até o palco de 1975). O título segue `fitHead5`, que agora respeita o topo das
+     placas e das torres (`signTop`).
+  2. **Intro da partida** (decisão do coordenador, que valeu mais que o pedido original de "só na 1ª abertura"): ao apertar
+     "Começar minha história" (começo rápido e configuração completa, os dois passam por `launchRun27`), o personagem criado
+     na ficha, com a mesma aparência, anda pela rua até a época escolhida (6 paradas = as faixas de `ep5Of`; a de 1950–69 tem
+     dois cortes), o resumo da ficha aparece digitado com o nome dele e a imagem escurece. 12 a 15 s, pulável com qualquer tecla
+     ou clique (atalhos como F5 e Ctrl seguem funcionando). Movimento reduzido: imagem final parada, resumo e botão
+     "Continuar". Texto vem de `story5` (o mesmo da ficha).
+- **Interruptor** `exp33.intro` (ligado por padrão; editor e Opções). Desligado: tela inicial de antes e início direto da partida.
+  Em Opções: caixa "Intro da partida e rua animada na tela inicial" e botão "Rever a intro".
+- **Easter eggs** (pequenos, na mesma arte, valem para o fundo e para a intro): gato preto nos telhados do sobrado e do estúdio de
+  fita; pombos que voam quando a onda passa; disco voador nos anos 50; disco de vinil que rola pela pista; patinho de borracha no
+  canal; violonista de rua com o estojo aberto entre 1965 e 1975.
+- **Testes**: `tests/r33-intro.test.ts` (cada trecho desenha sem DOM e sem bloco de uma cor, o loop volta ao começo, um só
+  holograma, movimento reduzido não anima, roteiro e duração da intro, easter eggs). Prints em `docs/r33/intro/`.
+- **Achado de processo**: o observador de visibilidade entrega o primeiro aviso antes de o canvas entrar na página; ler só o
+  primeiro pausava o laço para sempre. Vale o último aviso.
+
+## R33 · CENARIOS em duas levas (17/10)
+Dono pediu lugares, interiores, objetos e NPCs inspirados em filmes e séries, cassino com mecânicas e minijogos.
+Decisão: inspirar sem copiar (nome trocado, sem logo/rosto), mesma arte, cada lugar = lote com função (lots31) e cada
+ação chama função existente. Para não ficar complexo demais: leva 1 na versão 34 (10 lugares, cassino com 4
+mecânicas, 6 "quem resolve", 5 minijogos simples); o resto na leva 2. Plano em docs/r33/CENARIOS33.md.
+
+## R33 · Tela inicial volta ao vídeo de show (17/10)
+Dono prefere o vídeo de show (palco por época) na tela inicial. A rua animada da INTRO33 fica só na intro da
+partida; exp33.intro agora controla só a intro ("Intro da partida" nas Opções). mountHome33 segue no código, sem uso.
 ## 2026-10-17 · APARELHOS33 (celular e computador)
 - Atrás de `exp33.aparelhos` (**ligado** por padrão, só com a casca `exp5.nav`). Escopo `docs/r33/CELULAR_PC.md`; notas e gancho em `docs/r33/aparelhos.md`.
 - **Celular** = 5º botão do menu de baixo (⇧5), de 1983 em diante; "!" = soma das pendências dos apps (`bangs5`). Abre por cima da cena (EXP-13). A **pilha de demos saiu do ⇧5 para o ⇧9** (docs de teclas regeneradas pelo próprio r31-w5-tec com UPDATE5=1).
@@ -530,3 +581,52 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - **App no celular/PC:** `src/ui/r33/redes33phone.ts` registra `redes` pelo gancho da APARELHOS33 (`registerPhoneApp33`/`registerPcApp33`) e embute a tela (`embedRedes33`). Branch da APARELHOS33 foi mesclada aqui para ligar. Entrada provisória: cartão do Jornal na mesa (`'`) com "Ler o jornal" e, de 2004, "Abrir as redes".
   - Testes: `tests/r33-redes.test.ts` + `r31-uiwords`; goldens não rodados (regra da 33; o estado novo `x4.redes33` muda o hash do save).
 
+- **2026-10-17 · R33 GENTE33 parte A (Opus).** Diretor(a) de filial, CEO e conselho, equipe pessoal e pessoas fixas em
+  `src/sim/r33/gente33.ts`, atrás de `exp33.gente` (ligado; ligado não muda nada até o jogador agir).
+  - **Diretor(a) de filial:** pessoa real (equipe, executivo de rival, gente da cidade do `gente31` ou ex-artista).
+    Garimpa (`addSignal`), contrata local (`acceptOffer`), marca shows e divulga (`playGigs`) dentro do teto, e manda
+    relatório mensal na Caixa. O jogador escolhe a linha (ousado/conservador) e o teto. Riscos com sorteio próprio:
+    roubo por rival, saída com o elenco regional abrindo selo (`foundLabel17`), desvio (fato do submundo) e briga com a
+    sede. Ex-artista da cena local ganha bônus.
+  - **CEO:** só com sede Complexo ou 25 anos de casa. Aplica "multinacional" na delegação única, guarda a anterior e a
+    devolve ao sair. Leva grandes decisões ao conselho (`repelRaider`, ampliar sede, abrir ou ampliar filial) e segura
+    a sucessão.
+  - **Conselho:** só com sócios ou ações. Reunião anual com voto dos `holders`; raiders hostis votam contra; maioria
+    contra abre uma moção.
+  - **Equipe pessoal:** motorista, segurança (`setGuard33`), trainer e médico (saúde e estresse do dono).
+  - **Pessoas fixas:** fã-clube, jornalista (coluna como fato `column33`) e representante do sindicato (confiança do
+    `union20`).
+  - **Regras:** Fossati e gente de ato real ficam fora. Ações nos cartões ACOES5 (mapa da parede, mesa de reunião,
+    porta, garagem, espelho, mural, jornal, quadro da equipe), sem tela nova. Estado só nasce na 1ª ação; sem ele o mês
+    não sorteia.
+  - **Goldens:** os 4 rodados e iguais.
+  - Ver `docs/r33/gente.md` (com as pendências da parte B). Teste `tests/r33-gente-a.test.ts`; prints em
+    `docs/r33/gente/`.
+- **2026-10-17 · R33 GENTE33, pendências da parte B (pedido do dono).** Feito o que não é da REDES33 nem da POL33,
+  ainda opt-in:
+  - quem você contrata da cidade larga a vaga do `gente31` e não é recontratado enquanto trabalha para você
+    (`leaveJob31`/`BUSY31`, dois ganchos pequenos no gente31; sem contratação, a virada é a de antes);
+  - diretor ou CEO que sai vivo vira executivo livre no mercado (`leaders10`), com o cargo no currículo;
+  - ficha da passagem e opinião de verdade sobre você;
+  - camada leve (`light33`) nas linhas do quadro da equipe.
+  - Goldens rodados e iguais. O resto do PLANO da parte B (camadas para todos, talento escondido, volta por cima)
+    segue para depois do QA33. Ver `docs/r33/gente.md`.
+- **2026-10-17 · R33 GENTE33 parte B (pedido do dono, antes do QA33).** Em `src/sim/r33/gente33b.ts`, cada parte atrás
+  do seu interruptor, desligado por padrão:
+  - três camadas de pessoas (`exp33.camadas`): rebaixar guarda o resumo do passado e as relações fortes; promover
+    devolve a pessoa inteira, com o mesmo id;
+  - talento escondido de quem trabalha na cidade (`exp33.talento`), com o gancho do bartender recusado que vira
+    estrela num rival;
+  - volta por cima por catálogo, olheiro ou vídeo viral (`exp33.volta`);
+  - romance com quem vira artista do seu selo (`exp33.romance33`).
+  - Desligados, os goldens não mudam (rodados e iguais). O QA33 liga e mede. Teste `tests/r33-gente-b.test.ts`; ver
+    `docs/r33/gente.md`.
+
+## R33 · POL33 cancelado (17/10)
+Dono: cancelar o POL33 e mandar a build; seguir com o planejamento da leva 1 (e talvez 2) de CENARIOS e só depois
+polir. A 33 sai com QA33 + REDES33 juntadas, sem polimento. Os itens do POL33 (outdoors com compra/aluguel, merch e
+itens exclusivos, as 6 ideias, controles, tutorial, festival a céu aberto, interiores antigos pequenos, tela de
+escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Leva 1 detalhada em
+docs/r33/CENARIOS33.md §9.
+
+**Revisto no mesmo dia:** o dono voltou atrás — o POL33 fica onde estava (depois de QA33 e REDES33, antes da `Masters_33.html`). A prévia `Masters_33_previa.html` vai antes, só para ver.

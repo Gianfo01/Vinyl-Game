@@ -25,6 +25,9 @@ import { addProfile17, askNewProfile31, curProfile17, deleteProfile17, lastSave1
 import { SaveError20 } from '../../core/save20';
 import { pasteCode20 } from '../newgame17';
 import { launchRun27, newGameScreen, randomSeed } from '../newgame';
+import { intro33On, playIntro33 } from '../r33/intro33'; // R33 INTRO33
+import { setIntro33 } from '../../sim/r33/intro33sw';
+import { randomLook } from '../pixel/avatar';
 import { scenarioScreen } from '../sys/live/goals';
 import { setTutorials19, tutorialsOff19, TUTOFF_LABEL19 } from '../tutoff19';
 import { ic } from '../vis';
@@ -81,7 +84,10 @@ export function options27(redraw: () => void): void {
     h('label', null, t(S.textSize), ': ', h('span', { class: 'ts-val' }, `${p.textScale}%`), h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { const el = e.target as HTMLInputElement; p.textScale = Number(el.value); savePrefs(); const v = el.parentElement?.querySelector('.ts-val'); if (v) v.textContent = `${p.textScale}%`; } })), // o número acompanha o controle
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); } }), ' ', t(TUTOFF_LABEL19)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.contrast)),
-    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.reducedMotion)));
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.reducedMotion)),
+    // R33 INTRO33: intro ao começar a partida (ligada por padrão; a tela inicial fica com o vídeo de show)
+    h('label', { class: 'check' }, h('input', { type: 'checkbox', 'data-opt': 'intro33', checked: intro33On(), onchange: (e: Event) => { setIntro33((e.target as HTMLInputElement).checked); close(); redraw(); options27(redraw); } }), ' ', t(l('Intro da partida', 'Run intro'))),
+    intro33On() ? h('button', { type: 'button', class: 'btn small ghost', 'data-opt': 'intro33-replay', onclick: () => { close(); playIntro33({ name: '', line: t(l('Londres, 1962: o beat está nascendo nos porões. Você começa como selo iniciante.', 'London, 1962: beat music is being born in the basements. You start as a new label.')), year: 1962, look: randomLook('intro33-replay'), lang: p.lang === 'en' ? 'en' : 'pt' }, () => undefined); } }, t(l('Rever a intro', 'Watch the intro again'))) : null);
   close = modal(t(l('Opções', 'Options')), body);
 }
 

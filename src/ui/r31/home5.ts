@@ -54,6 +54,7 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const sc = homeScene5();
   const lang5 = (): 'pt' | 'en' => (store.prefs.lang === 'en' ? 'en' : 'pt');
+  // R33: o dono prefere o vídeo de show na tela inicial; a rua animada (intro33) fica só na intro da partida
   const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: lang5() }, 'h5-stage');
   cycleShow5(stage, sc.i, lang5);
 
