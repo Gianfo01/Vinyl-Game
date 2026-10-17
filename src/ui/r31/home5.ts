@@ -21,7 +21,7 @@ import { dedication31, openCredits31 } from './credits31';
 import { baseEditorScreen31 } from '../base31ui';
 import { homeScreen27, options27 } from '../ps/home27';
 import { quickDefaults27, quickRunConfig27 } from '../ps/home27model';
-import { last5 } from './ini5sw';
+import type { StageOpts5 } from './stage5px';
 import { logo5, mountStage5 } from './stage5ui';
 import { quickRun5Screen } from './newrun5';
 import './home5.css';
@@ -31,13 +31,15 @@ export const SHOW5: [number, string][] = [[1905, 'rio'], [1927, 'chicago'], [195
 const monthName = (m: number) => new Date(2000, m, 1).toLocaleString(locale(), { month: 'short' });
 const top5 = () => { try { window.scrollTo(0, 0); } catch { /* sem janela */ } };
 
-/** Época e cidade da cena: a última partida salva neste perfil, senão uma da vitrine. */
-export function homeScene5(): { year: number; city: string; career: string } {
-  const last = last5();
-  if (last) return last;
-  const [year, city] = SHOW5[Math.floor(Math.random() * SHOW5.length)];
-  return { year, city, career: 'label' };
+/** Época e cidade da cena. Dono (2026-10-17): a vitrine passa pelas épocas em ordem, independente do save; começa num
+ *  ponto sorteado. `i` = índice em SHOW5. */
+export function homeScene5(i = Math.floor(Math.random() * SHOW5.length)): { year: number; city: string; career: string; i: number } {
+  const k = ((i % SHOW5.length) + SHOW5.length) % SHOW5.length;
+  const [year, city] = SHOW5[k];
+  return { year, city, career: 'label', i: k };
 }
+/** Tempo em cada época da vitrine (ms) e do escurecer/clarear da troca. */
+const SHOW_MS5 = 7000, FADE_MS5 = 450;
 
 export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   const redraw = () => homeScreen5(root, onStart);
@@ -49,7 +51,9 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
   };
   const runCode = () => { const cfg = quickRunConfig27(quickDefaults27(randomSeed(), t(l('Selo Agulha', 'Needle Records')))); pasteCode20(cfg, () => newGameScreen(root, onStart, cfg, 5)); };
   const sc = homeScene5();
-  const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: store.prefs.lang === 'en' ? 'en' : 'pt' }, 'h5-stage');
+  const lang5 = (): 'pt' | 'en' => (store.prefs.lang === 'en' ? 'en' : 'pt');
+  const stage = mountStage5({ year: sc.year, city: sc.city, career: sc.career, lang: lang5() }, 'h5-stage');
+  cycleShow5(stage, sc.i, lang5);
 
   const btn = (label: string, fn: () => void, cls = '', extra: Record<string, string> = {}) => h('button', { type: 'button', class: `h5-b ${cls}`, onclick: fn, ...extra }, label);
   const cont = btn(t(S.continue).toUpperCase(), () => undefined, '', { 'data-h5': 'continue', disabled: 'true' }) as HTMLButtonElement;
@@ -87,6 +91,26 @@ export function homeScreen5(root: HTMLElement, onStart: () => void): void {
       h('span', null, 'R32'))));
   fitHead5(root, stage);
   top5();
+}
+
+/** A vitrine troca de época sozinha (escurece, troca a cena, clareia); para quando a tela sai ou com movimento reduzido. */
+function cycleShow5(stage: { el: HTMLCanvasElement; set: (o: StageOpts5) => void }, start: number, lang: () => 'pt' | 'en'): void {
+  let reduced = false;
+  try { reduced = !!store.prefs.reducedMotion || matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* sem janela */ }
+  if (reduced) return;
+  let i = start;
+  const el = stage.el;
+  el.style.transition = `opacity ${FADE_MS5}ms ease`;
+  const tick = window.setInterval(() => {
+    if (!el.isConnected) { window.clearInterval(tick); return; }
+    el.style.opacity = '0';
+    window.setTimeout(() => {
+      if (!el.isConnected) return;
+      const n = homeScene5(++i);
+      stage.set({ year: n.year, city: n.city, career: n.career, lang: lang() });
+      el.style.opacity = '1';
+    }, FADE_MS5);
+  }, SHOW_MS5);
 }
 
 /** O título nunca cobre o letreiro do palco (AO VIVO / RÁDIO / STREAM): o canvas usa object-fit cover (corta em cima
