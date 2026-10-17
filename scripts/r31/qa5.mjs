@@ -150,6 +150,7 @@ async function sweepCity() {
     await wait(700);
     if (before === (await sig())) flag('sem-efeito', where, 'clique no prédio');
     await checkScroll(where);
+    if (await p.locator('.overlay').count()) { await escBack(where); continue; } // outdoor/marco abre a ficha (janela) e o Esc a fecha
     const enter = p.getByText(/Entrar \(ver por dentro\)|^Entrar$/).first();
     if (await enter.count() && await enter.isVisible().catch(() => false)) {
       await enter.click(); await wait(1200);
@@ -277,13 +278,21 @@ for (const run of RUNS) {
     await newGame(run);
     await checkScroll('sede');
     await shot('sede');
-    await sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', QUICK ? 3 : 99);
-    await sweepObjects('casa', 'Shift+Digit2', '.app5 main .r5-spot', 'aria-label', QUICK ? 3 : 99);
-    await sweepCity();
-    await sweepWorld();
-    await sweepSystem();
-    await advance(QUICK ? 1 : 3);
-    await sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', 0);
+    const parts = [
+      ['sede', () => sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', QUICK ? 3 : 99)],
+      ['casa', () => sweepObjects('casa', 'Shift+Digit2', '.app5 main .r5-spot', 'aria-label', QUICK ? 3 : 99)],
+      ['cidade', sweepCity], ['mundo', sweepWorld], ['sistema', sweepSystem],
+      ['mes', () => advance(QUICK ? 1 : 3)],
+      ['sede-depois', () => sweepObjects('sede', 'Shift+Digit1', '.s5-obj', 'data-obj', 0)],
+    ];
+    // cada parte isolada: um passo do robô que trava (clique coberto) vira achado daquela parte, e o resto continua
+    for (const [name, fn] of parts) {
+      try { await fn(); } catch (e) {
+        flag('erro', `robo.${name}`, String(e.message ?? e).split('\n')[0].slice(0, 160));
+        await shot(`robo-erro-${name}`);
+        await escBack(`robo.${name}`, { pauseOk: true }).catch(() => {});
+      }
+    }
   } catch (e) {
     flag('erro', 'robo', String(e.message ?? e).split('\n')[0].slice(0, 160));
     await shot('robo-erro');
