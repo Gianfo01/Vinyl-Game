@@ -78,7 +78,7 @@ export function options27(redraw: () => void): void {
   let close = () => {};
   const body = h('div', { class: 'form h27-opts' },
     h('div', { class: 'h27-langrow' }, h('span', null, t(S.language)), langToggle5((v) => { p.lang = v; savePrefs(); close(); redraw(); options27(redraw); })),
-    h('label', null, `${t(S.textSize)}: ${p.textScale}%`, h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { p.textScale = Number((e.target as HTMLInputElement).value); savePrefs(); } })),
+    h('label', null, t(S.textSize), ': ', h('span', { class: 'ts-val' }, `${p.textScale}%`), h('input', { type: 'range', min: 90, max: 130, step: 5, value: p.textScale, oninput: (e: Event) => { const el = e.target as HTMLInputElement; p.textScale = Number(el.value); savePrefs(); const v = el.parentElement?.querySelector('.ts-val'); if (v) v.textContent = `${p.textScale}%`; } })), // o número acompanha o controle
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tutorialsOff19(p), onchange: (e: Event) => { setTutorials19(p, !(e.target as HTMLInputElement).checked); savePrefs(); } }), ' ', t(TUTOFF_LABEL19)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.contrast, onchange: (e: Event) => { p.contrast = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.contrast)),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.reducedMotion, onchange: (e: Event) => { p.reducedMotion = (e.target as HTMLInputElement).checked; savePrefs(); } }), ' ', t(S.reducedMotion)));
