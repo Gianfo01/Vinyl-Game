@@ -70,7 +70,9 @@ const say = (s: GameState, t: L) => { const st = kin15(s); st.log.unshift([s.yea
 export interface KinX15 { sub?: KinSub27; from?: number; to?: number; src?: Prov27 }
 type Edge = [string, Rel15, KinX15?];
 type Edges = Record<string, Edge[]>;
-const cache = new WeakMap<GameState, { n: number; e: Edges }>();
+const cache = new WeakMap<GameState, { m: number; g: number; np: number; seq: number; e: Edges }>();
+/** quem cria pessoa avança s.idSeq (makePerson/nextId) ou o contador próprio da gente31 (pessoas novas dos lugares) */
+const seq15 = (s: GameState): number => s.idSeq * 1e6 + ((s.x4 as unknown as { gente31?: { n?: number } }).gente31?.n ?? 0);
 const add = (e: Edges, a: string, b: string, r: Rel15, x?: KinX15) => {
   if (a === b) return;
   const la = (e[a] ??= []); if (!la.some((y) => y[0] === b)) la.push(x ? [b, r, x] : [b, r]);
@@ -91,6 +93,15 @@ export function marriage15(meta: KinMeta27 | undefined, base: 'spouse' | 'ex', y
   return 'spouse';
 }
 const ALL_ROWS = (): KinRow[] => [...KIN15, ...KIN27, ...KINR27];
+/** QA33 (desempenho): todo nome citado nos laços reais — quem nasce com outro nome e sem parentId não muda o grafo */
+let NAMES33: Set<string> | null = null;
+function kinNames33(): Set<string> {
+  if (NAMES33) return NAMES33;
+  const m = new Set<string>();
+  for (const row of ALL_ROWS()) for (const x of split27(row).ns) m.add(canonKey(x));
+  for (const row of KIN25) { m.add(canonKey(row[0] as string)); m.add(canonKey(row[2] as string)); }
+  return (NAMES33 = m);
+}
 /** pais declarados (de sangue/genéricos) por nome canônico — mesmo de quem não existe no jogo (ex.: Ronaldo Bôscoli, Cynthia) */
 let PARENTS27: Map<string, Set<string>> | null = null;
 function declaredParents27(): Map<string, Set<string>> {
@@ -110,10 +121,19 @@ export function halfByParents27(a: string, b: string, shared: string): boolean {
 
 /** Arestas reais (do dataset, casando por nome) + geradas. */
 function graph(s: GameState): Edges {
-  // QA33 (save/load): a chave conta também quantas pessoas existem — gente nascida no meio do mês entrava no grafo só no
-  // jogo carregado (que monta o cache do zero) e o original seguia com o grafo velho até o mês seguinte
-  const n = mIdx(s) + Object.keys(s.persons).length * 1e7, st = kin15(s), c = cache.get(s);
-  if (c && c.n === n + st.g.length * 100000) return c.e;
+  // QA33 (save/load): quem nasce no meio do mês conta — antes só o jogo carregado (que monta o cache do zero) via a pessoa
+  // nova no grafo e o original seguia com o grafo velho até o mês seguinte. Contar as pessoas a cada consulta (kinOf15 roda
+  // por integrante em feuds/inherit) custava 18 s/mês na base Enorme: o contador de ids diz se alguém nasceu, e quem nasce
+  // sem parentId e com nome fora dos laços reais não muda o grafo (o cache só avança a contagem).
+  const m = mIdx(s), st = kin15(s), c = cache.get(s), q = seq15(s);
+  if (c && c.m === m && c.g === st.g.length && c.seq === q) return c.e; // ninguém nasceu desde a última vez: sem varrer as pessoas
+  const ids = Object.keys(s.persons);
+  if (c && c.m === m && c.g === st.g.length && ids.length >= c.np) {
+    const N = kinNames33();
+    let same = true;
+    for (let i = c.np; i < ids.length && same; i++) { const p = s.persons[ids[i]]; same = !p.parentId && !N.has(canonKey(p.name)); }
+    if (same) { c.np = ids.length; c.seq = q; return c.e; }
+  }
   const idx: Record<string, string> = {};
   for (const p of Object.values(s.persons)) { const k = canonKey(p.name); if (!(k in idx) || (!s.persons[idx[k]].alive && p.alive)) idx[k] = p.id; }
   const e: Edges = {};
@@ -164,7 +184,7 @@ function graph(s: GameState): Edges {
       else if (r === 'sibling' && (!xo?.sub || xo.sub === 'half')) { add(e, pid, o, 'uncle'); for (const [c, rc, xc] of e[o] ?? []) if (rc === 'child' && blood(xc)) add(e, pid, c, 'cousin'); }
     }
   }
-  cache.set(s, { n: n + st.g.length * 100000, e });
+  cache.set(s, { m, g: st.g.length, np: ids.length, seq: q, e });
   return e;
 }
 
