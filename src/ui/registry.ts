@@ -170,10 +170,12 @@ export function openScene(title: L | string, render: (close: () => void) => HTML
   };
   const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { close(); e.preventDefault(); } }; // QA5: a casca nova não usa o mesmo Esc
   const label = typeof title === 'string' ? title : t(title);
-  root = h('div', { class: 'scene-overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': label },
+  // R33 (FICHAS33): a cena abre como PAPEL (plaqueta em fonte de pixel + "Esc fechar"); classes antigas mantidas
+  root = h('div', { class: 'scene-overlay pp33s', role: 'dialog', 'aria-modal': 'true', 'aria-label': label },
     h('div', { class: `scene-box ${opts.wide === false ? '' : 'wide'}` },
-      h('header', { class: 'scene-head' }, h('h2', null, label), h('button', { class: 'icon', 'aria-label': t({ pt: 'Fechar', en: 'Close' }), onclick: close }, '✕')),
-      h('div', { class: 'scene-body' }, render(close)),
+      h('header', { class: 'scene-head' }, h('div', { class: 'pp33-plate' }, h('h2', { class: 'pp33-pt' }, label)), h('span', { class: 'pp33-sp' }),
+        h('button', { type: 'button', class: 'pp33-x', 'aria-label': t({ pt: 'Fechar', en: 'Close' }), onclick: close }, h('kbd', null, 'Esc'), ' ', t({ pt: 'fechar', en: 'close' }))),
+      h('div', { class: 'scene-body pp33-paper' }, render(close)),
     ));
   document.body.appendChild(root);
   document.addEventListener('keydown', onKey);

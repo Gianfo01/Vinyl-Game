@@ -1,0 +1,203 @@
+/* R33 · FICHAS33 — papel comum das janelas (paper33.ts). Pixel art: bordas duras de 2px, sombra em degrau, cantos
+   retos, sem desfoque nem cantos arredondados. Mesa de madeira por baixo; papel creme com tinta escura em toda época
+   (como os miolos do PAPEL da casca, POL5). Na casca nova a mesa fica entre a barra de cima (56px) e a doca (92px). */
+
+.overlay.pp33-back { display: block; padding: 0; background: transparent; overflow: hidden; }
+.pp33-desk { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 14px 16px;
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 46px, rgba(0, 0, 0, 0.22) 46px 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 6px, rgba(0, 0, 0, 0.03) 6px 14px),
+    var(--p33-wood, #5b3b22);
+  border: 4px solid var(--p33-wood-dk, #2a1a10); box-shadow: inset 0 0 0 2px var(--p33-wood-lt, #7a5232); image-rendering: pixelated; }
+body:has(.app5) .pp33-desk { top: 56px; bottom: 92px; }
+/* janela comum (formulário, pergunta): o papel por cima da cena escurecida (como o papel da casca, .p5-dim); a mesa de
+   madeira é das fichas (papel grande; pasta sobre pasta cobre a de trás) */
+.pp33-desk.dim { background: rgba(6, 10, 16, 0.62); border-color: transparent; box-shadow: none; }
+
+.pp33 { position: relative; display: flex; flex-direction: column; gap: 8px; width: min(600px, 100%); max-height: 100%; min-height: 0; color: #1c1612; font: 14px var(--sans); }
+.pp33.wide { width: min(980px, 100%); }
+.pp33.has-card { width: min(1060px, 100%); }
+.pp33.wide.has-card { width: min(1360px, 100%); }
+.pp33.big { width: 100% !important; height: 100%; }
+
+/* ---- cabeçalho: plaqueta + marcadores à esquerda; bolso e fechar à direita */
+.pp33-hd { flex: none; display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.pp33-hl { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; max-width: 100%; }
+.pp33-sp { flex: 1; }
+.pp33-plate { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; max-width: 100%; padding: 5px 12px 6px; background: var(--p33-plate, #fbf6e8); border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); }
+.pp33-pt { font: 700 17px/1.1 var(--pixel, monospace); letter-spacing: 0.16em; text-transform: uppercase; color: #170e12; overflow-wrap: anywhere; }
+.pp33-ps { font: 700 10px/1.2 var(--pixel, monospace); letter-spacing: 0.12em; text-transform: uppercase; color: #3a2e24; }
+.pp33-mks { display: flex; flex-wrap: wrap; gap: 4px; max-width: 100%; }
+.pp33-mks[hidden] { display: none; }
+.pp33-mk { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 12px 3px; border: 2px solid #170e12; border-bottom-width: 3px; background: #f8f2e2; color: #1e1a16; font: 600 13px/1.2 var(--sans, sans-serif); cursor: pointer; white-space: nowrap; }
+.pp33-mk small { font: 700 9px var(--pixel, monospace); color: #5a4a3a; }
+.pp33-mk:hover, .pp33-mk:focus-visible { background: var(--p33-hi, #f0c060); outline: none; }
+.pp33-mk.on { background: var(--p33-mk, #2a5ab0); color: #fff; border-color: var(--p33-mk-dk, #14306a); }
+.pp33-mk.on small { color: #dfe8ff; }
+.pp33-pin, .pp33-x { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 2px solid #170e12; background: var(--p33-plate, #fbf6e8); color: #1c1612; font: 13px var(--sans); cursor: pointer; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.pp33-pin.on { background: #f0c040; }
+.pp33-pin:hover, .pp33-x:hover, .pp33-pin:focus-visible, .pp33-x:focus-visible { background: var(--p33-hi, #f0c060); outline: none; }
+.pp33-x kbd { padding: 0 4px; background: #1e2a3c; color: #e8eef8; font: 700 9px var(--pixel, monospace); border: 1px solid #0c121c; }
+
+/* ---- miolo */
+.pp33-main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.pp33.has-card .pp33-main { grid-template-columns: minmax(0, 1fr) minmax(260px, 420px); }
+.pp33.big .pp33-main { align-items: stretch; }
+.pp33-cardcol[hidden] { display: none; }
+.pp33-cardcol { min-height: 0; max-height: 100%; overflow-y: auto; padding: 4px 8px 8px 4px; scrollbar-width: thin; }
+
+/* papel: tinta escura sobre creme em toda época (variáveis do tema redefinidas aqui dentro) */
+.pp33-paper { --bg: var(--p33-paper, #f6eedb); --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6;
+  --accent: #8a3a20; --accent-ink: #fff6dd; --accent-2: #6e2c16; --h1-ink: #1a160f; --gold: #7a5a10; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514;
+  --card-shadow: none; --shadow: none; color-scheme: light;
+  position: relative; display: flex; flex-direction: column; min-height: 0; max-height: 100%; background: var(--p33-paper, #f6eedb); color: #22201c;
+  border: 2px solid #170e12; box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 4px #170e12, 6px 6px 0 4px rgba(0, 0, 0, 0.35); }
+.pp33-body.modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 18px 18px; outline: none; scrollbar-width: thin; scrollbar-color: #8a7458 transparent;
+  background-image: repeating-linear-gradient(180deg, transparent 0 27px, rgba(120, 96, 60, 0.12) 27px 28px); }
+.pp33.big .pp33-paper { height: 100%; }
+.pp33-paper :is(h2, h3, h4) { color: #1a160f; }
+.pp33-paper .card, .pp33-paper section.card { background: var(--panel); border-color: var(--line); }
+
+/* pasta manila (fichas): orelha com o nome, papel preso dentro */
+.pp33-folder { position: relative; display: flex; flex-direction: column; min-height: 0; max-height: 100%; height: 100%; padding-top: 22px; }
+.pp33-ftab { position: absolute; top: 0; left: 0; z-index: 1; min-width: 180px; max-width: 60%; padding: 4px 14px 6px; background: var(--p33-folder, #e6cf98); border: 2px solid #170e12; border-bottom: 0;
+  font: 700 10px var(--pixel, monospace); letter-spacing: 0.16em; text-transform: uppercase; color: #3a2a14; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp33-fin { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 14px; background: var(--p33-folder, #e6cf98); border: 2px solid #170e12; box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4); }
+.pp33-fin > .pp33-paper { flex: 1 1 auto; box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 3px #b89a5c; border-color: #b89a5c; }
+
+/* cartão de ações no papel: o mesmo .ac5 da casca, parado na coluna */
+.ac5.ac5-in33 { position: static; width: auto; max-width: none; max-height: none; overflow: visible; animation: none; margin: 4px; }
+.ac5.ac5-in33 .ac5-h b { font-size: 16px; }
+.ac5.ac5-in33 .ac5-nums li { grid-template-columns: 1fr auto; padding: 4px 8px; }
+.ac5.ac5-in33 .ac5-nums li b { font: 700 10px var(--pixel, monospace); letter-spacing: 0.08em; text-transform: uppercase; }
+.ac5.ac5-in33 .ac5-acts { gap: 6px; }
+.ac5.ac5-in33 .ac5-a { padding: 6px 8px; font-size: 14px; }
+.ac5.ac5-in33 .ac5-a.pp33-pri { background: var(--p33-hi-lt, #f8e4a0); }
+.ac5.ac5-in33 .ac5-a.pp33-pri:hover, .ac5.ac5-in33 .ac5-a.pp33-pri:focus-visible { background: var(--p33-hi, #f0c060); }
+.pp33-rowp { display: grid; gap: 4px; }
+.pp33-panel { padding: 6px 8px; background: #fffdf6; border: 2px dashed #8a7458; color: #1c1612; font-size: 13px;
+  --bg: #fffdf6; --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; color-scheme: light; }
+.pp33-note { margin-top: 8px; }
+.pp33-panel > details > summary { display: none; } /* o bloco "Ações" de antes já abre aberto pela linha do cartão */
+
+/* telas estreitas: o cartão desce para baixo do papel */
+@media (max-width: 1100px) {
+  .pp33.has-card .pp33-main { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .pp33.big .pp33-paper, .pp33-folder { height: auto; }
+}
+@media (max-width: 700px) { .pp33-desk { padding: 6px; } .pp33-pt { font-size: 14px; } }
+@media (prefers-reduced-motion: no-preference) { .pp33 { animation: pp33-in 0.12s steps(3) both; } }
+@keyframes pp33-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* miolos antigos dentro do papel: cantos retos e borda dura (pílulas, botões e abas viram peças de papel) */
+.pp33-paper *, .pp33-panel * { border-radius: 0 !important; }
+.pp33-paper :is(.tabs, .cats17) button { border: 2px solid #170e12; background: #f8f2e2; color: #1e1a16; box-shadow: none; }
+.pp33-paper :is(.tabs, .cats17) button.on, .pp33-paper :is(.tabs, .cats17) button[aria-selected='true'] { background: var(--p33-mk, #2a5ab0); color: #fff; border-color: var(--p33-mk-dk, #14306a); }
+.pp33-paper .btn { border-width: 2px; border-color: #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); }
+
+/* botões das barras de ação de antes: moram no cartão (a linha clica o mesmo botão) */
+.pp33-body .pp33-moved { display: none !important; }
+
+/* ---- cenas (registry.openScene: popup do mapa, festival, capa, momentos…) no mesmo papel */
+.scene-overlay.pp33s { background: rgba(6, 10, 16, 0.62); padding: 14px 16px; }
+body:has(.app5) .scene-overlay.pp33s { top: 56px; bottom: 92px; }
+.scene-overlay.pp33s .scene-box { display: flex; flex-direction: column; gap: 8px; background: none; border: 0; border-radius: 0; box-shadow: none; max-height: 100%; color: #1c1612; }
+.scene-overlay.pp33s .scene-head { display: flex; align-items: flex-start; gap: 10px; padding: 0; border: 0; }
+.scene-overlay.pp33s .scene-head h2.pp33-pt { margin: 0; font: 700 17px/1.1 var(--pixel, monospace) !important; }
+.scene-overlay.pp33s .scene-body.pp33-paper { display: block; overflow: auto; padding: 14px 18px 18px; min-height: 0; }
+@media (max-width: 700px) { .scene-overlay.pp33s { padding: 6px; } .scene-overlay.pp33s .scene-box { height: 100%; } }
+
+/* ---- perguntas do jogo (ask31): papel com plaqueta */
+.overlay.ask31 { background: rgba(6, 10, 16, 0.62); }
+.overlay.ask31 .modal.ask31-panel { border-radius: 0; background: var(--p33-paper, #f6eedb); color: #22201c; border: 2px solid #170e12; box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 4px #170e12, 6px 6px 0 4px rgba(0, 0, 0, 0.35);
+  --bg: var(--p33-paper, #f6eedb); --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --accent: #8a3a20; --accent-ink: #fff6dd; color-scheme: light; }
+.overlay.ask31 .modal.ask31-panel > header { background: none; border: 0; padding: 10px 14px 0; }
+.overlay.ask31 .modal.ask31-panel > header h2 { display: inline-block; margin: 0; padding: 5px 12px 6px; background: var(--p33-plate, #fbf6e8); color: #170e12; border: 2px solid #170e12; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+  font: 700 15px/1.2 var(--pixel, monospace) !important; letter-spacing: 0.12em; text-transform: uppercase; }
+.overlay.ask31 .modal.ask31-panel * { border-radius: 0 !important; }
+.overlay.ask31 .modal.ask31-panel .btn { border: 2px solid #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); }
+
+/* ---- Mundo: painéis do mapa (cidade, país, lugar da visita) como papel preso ao lado do mapa */
+.card.sheet27 { border-radius: 0 !important; background: var(--p33-paper, #f6eedb) !important; border: 2px solid #170e12 !important; --bg: var(--p33-paper, #f6eedb); --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --gold: #7a5a10; --accent: #8a3a20; --accent-ink: #fff6dd; color-scheme: light;
+  background: var(--p33-paper, #f6eedb); color: #22201c; border: 2px solid #170e12; border-radius: 0; box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 4px #170e12, 5px 5px 0 4px rgba(0, 0, 0, 0.35); margin: 4px; }
+.card.sheet27 * { border-radius: 0 !important; }
+.card.sheet27 .sheet27-h h3 { display: inline-block; margin: 0; padding: 4px 10px 5px; background: var(--p33-plate, #fbf6e8); color: #170e12; border: 2px solid #170e12; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  font: 700 14px/1.2 var(--pixel, monospace) !important; letter-spacing: 0.12em; text-transform: uppercase; }
+.card.sheet27 .sheet27-blk h4 { font: 700 10px/1.2 var(--pixel, monospace) !important; letter-spacing: 0.18em; text-transform: uppercase; color: #1a160f; padding-bottom: 3px; border-bottom: 2px dashed #b9a07a; }
+.card.sheet27 .btn { border: 2px solid #170e12; background: #fffdf6; color: #1c1612; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); }
+.card.sheet27 .btn:hover, .card.sheet27 .btn:focus-visible { background: var(--p33-hi, #f0c060); }
+
+/* ---- páginas das regiões na casca nova (Mundo, Cidade…): as abas em pílula do alto viram MARCADORES do papel */
+.app5 .reg5 .hub > .tabs-wrap > :is(.tabs, .cats17) { gap: 4px; }
+.app5 .reg5 .hub > .tabs-wrap > :is(.tabs, .cats17) > button { border-radius: 0 !important; border: 2px solid #170e12; border-bottom-width: 3px; background: #f8f2e2; color: #1e1a16;
+  box-shadow: none; padding: 3px 12px; font: 600 13px/1.2 var(--sans, sans-serif); }
+.app5 .reg5 .hub > .tabs-wrap > :is(.tabs, .cats17) > button:hover { background: var(--p33-hi, #f0c060); }
+.app5 .reg5 .hub > .tabs-wrap > :is(.tabs, .cats17) > button:is(.on, [aria-selected='true']) { background: var(--p33-mk, #2a5ab0); color: #fff; border-color: var(--p33-mk-dk, #14306a); }
+.app5 .reg5 .hub > .tabs-wrap > :is(.tabs, .cats17) > button :is(img, canvas, .ic) { filter: none; }
+.card.sheet27 .sheet27-h > div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+
+/* janela comum (altura pelo conteúdo, até a mesa): o miolo inteiro rola dentro da mesa — nada fica cortado embaixo */
+.pp33:not(.big) .pp33-main { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #8a7458 transparent; padding: 0 8px 8px 0; }
+.pp33:not(.big) .pp33-paper { max-height: none; }
+.pp33:not(.big) .pp33-body.modal-body { overflow: visible; }
+.pp33:not(.big) .pp33-cardcol { position: sticky; top: 0; max-height: none; overflow: visible; }
+/* o papel do painel cabe na área do mapa (rola por dentro); antes passava da área e a região cortava o fim */
+.app5 .reg5 .map27-body > .card.sheet27 { box-sizing: border-box; max-height: calc(100% - 10px) !important; min-height: 0; align-self: start; }
+
+/* ==== R33 (FICHAS33) — páginas das regiões na casca nova (Mundo, Cidade): o miolo antigo vira PAPEL sobre a mesa de
+   madeira (fim do fundo vinho do tema escuro, dos cartões arredondados e dos botões-pílula); marcadores ficam em cima. */
+.app5 :is(.reg5-mundo, .reg5-cidade) {
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 46px, rgba(0, 0, 0, 0.22) 46px 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 6px, rgba(0, 0, 0, 0.03) 6px 14px), var(--p33-wood, #5b3b22);
+  box-shadow: inset 0 0 0 4px var(--p33-wood-dk, #2a1a10), inset 0 0 0 6px var(--p33-wood-lt, #7a5232); }
+.app5 .reg5-mundo .hub > .tabs-wrap > :is(.tabs, .cats17) { padding: 8px 12px 0; background: none; border: 0; }
+.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17),
+.app5 .reg5-cidade .m5-city > .card {
+  --bg: var(--p33-paper, #f6eedb); --panel: #fffaf0; --panel-2: #f1e8d2; --ink: #22201c; --muted: #5f584c; --line: #b9a07a; --input-bg: #fffdf6; --h1-ink: #1a160f;
+  --accent: #8a3a20; --accent-ink: #fff6dd; --accent-2: #6e2c16; --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; --gold: #7a5a10; --card-shadow: none; --shadow: none; color-scheme: light;
+  background: var(--p33-paper, #f6eedb) !important; color: #22201c; border: 2px solid #170e12 !important; border-radius: 0 !important;
+  box-shadow: 0 0 0 2px var(--p33-paper, #f6eedb), 0 0 0 4px #170e12, 6px 6px 0 4px rgba(0, 0, 0, 0.35) !important; margin: 8px 14px 12px; padding: 10px 14px; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(*, *::before, *::after) { border-radius: 0 !important; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.card, section.card, .sheet27-blk, .c27-side, .c27-pn) {
+  background: #fffaf0; border-color: #b9a07a; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18); }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(h2, h3) { color: #1a160f; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) .card > h3:first-child {
+  font: 700 11px/1.2 var(--pixel, monospace) !important; letter-spacing: 0.2em; text-transform: uppercase; padding-bottom: 4px; border-bottom: 2px dashed #b9a07a; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.btn, .chip, .pill, .wmap-btn, .z27-tabs button) {
+  border: 2px solid #170e12; background: #fffdf6; color: #1c1612; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25); }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.btn.primary, .btn.on, .wmap-btn.on, .chip.on, [aria-pressed='true'].btn, .z27-tabs button.on) {
+  background: var(--p33-hi, #f0c060); color: #1c1612; border-color: #170e12; }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) :is(.btn, .wmap-btn):hover { background: var(--p33-hi-lt, #f8e4a0); }
+:is(.app5 .reg5-mundo .hub > .tabs-wrap > :not(.tabs):not(.cats17), .app5 .reg5-cidade .m5-city > .card, .p5-old, .pp33-body, .scene-body.pp33-paper) .pill { box-shadow: none; border-width: 1px; }
+/* o mapa (canvas) lê --ink da própria .wmap para os nomes: mantém tinta clara do mapa escuro; o resto da .wmap (barra,
+   legenda, dica) volta à tinta do papel */
+.app5 .reg5-mundo .wmap { --ink: #f3e8cc; }
+.app5 .reg5-mundo .wmap > * { --ink: #22201c; }
+
+/* ==== a arte do papel muda com a era (mesmo estilo da interface por época: html[data-era-skin], skins31) ====
+   mesa (madeira/laminado), papel, pasta, marcador ativo e destaque. Jukebox (1946–64) = o mock aprovado. */
+:root[data-era-skin='gazeta'] { --p33-wood: #4a2e1a; --p33-wood-dk: #20120a; --p33-wood-lt: #6a4428; --p33-paper: #efe4c8; --p33-plate: #f4ecd6; --p33-folder: #d9c08a; --p33-mk: #7d2214; --p33-mk-dk: #4a120a; --p33-hi: #e3c27a; --p33-hi-lt: #efdcae; }
+:root[data-era-skin='deco'] { --p33-wood: #3e2416; --p33-wood-dk: #160c06; --p33-wood-lt: #b08a3a; --p33-paper: #f1e6cc; --p33-plate: #f6eedb; --p33-folder: #dcb664; --p33-mk: #6b4a12; --p33-mk-dk: #2e1f06; --p33-hi: #dcb664; --p33-hi-lt: #ecd9a6; }
+:root[data-era-skin='hifi'] { --p33-wood: #6b3d1c; --p33-wood-dk: #2e1808; --p33-wood-lt: #a0602c; --p33-paper: #f4ead2; --p33-plate: #f8f0dc; --p33-folder: #e8c27a; --p33-mk: #c25a12; --p33-mk-dk: #6a2e06; --p33-hi: #f2a33c; --p33-hi-lt: #f8d29a; }
+:root[data-era-skin='fosforo'] { --p33-wood: #5a5a52; --p33-wood-dk: #26261f; --p33-wood-lt: #7e7e74; --p33-paper: #eef2e6; --p33-plate: #f2f5ec; --p33-folder: #c9c3a8; --p33-mk: #1d6b2b; --p33-mk-dk: #0c3a14; --p33-hi: #9be0a0; --p33-hi-lt: #cdeccd; }
+:root[data-era-skin='janelas'] { --p33-wood: #8a8578; --p33-wood-dk: #3e3b34; --p33-wood-lt: #b0aa9a; --p33-paper: #fbfbf6; --p33-plate: #e8e8e2; --p33-folder: #e2d6a8; --p33-mk: #000080; --p33-mk-dk: #00004a; --p33-hi: #ffe680; --p33-hi-lt: #fff2bb; }
+:root[data-era-skin='portal'] { --p33-wood: #7d7f86; --p33-wood-dk: #3a3c42; --p33-wood-lt: #a4a6ac; --p33-paper: #ffffff; --p33-plate: #f4f6fa; --p33-folder: #f0d890; --p33-mk: #1f56b8; --p33-mk-dk: #0e2e6a; --p33-hi: #ffc070; --p33-hi-lt: #ffe0b8; }
+:root[data-era-skin='plano'] { --p33-wood: #b8a68a; --p33-wood-dk: #5e5240; --p33-wood-lt: #d4c4a6; --p33-paper: #fafafa; --p33-plate: #ffffff; --p33-folder: #f2e2b0; --p33-mk: #00796b; --p33-mk-dk: #00463e; --p33-hi: #ffd180; --p33-hi-lt: #ffe8bf; }
+:root[data-era-skin='vidro'] { --p33-wood: #1e1b33; --p33-wood-dk: #0a0816; --p33-wood-lt: #3c3670; --p33-paper: #f7f7fb; --p33-plate: #ffffff; --p33-folder: #e9e2c6; --p33-mk: #5b4bd0; --p33-mk-dk: #2a2070; --p33-hi: #8ef0ff; --p33-hi-lt: #c8f8ff; }
+/* Fósforo (anos 80): formulário contínuo zebrado de impressora matricial no miolo */
+:root[data-era-skin='fosforo'] .pp33-body.modal-body { background-image: repeating-linear-gradient(180deg, transparent 0 28px, rgba(60, 140, 70, 0.10) 28px 56px); }
+/* Vidro e Plano: mesa lisa (sem veio de tábua) */
+:root:is([data-era-skin='vidro'], [data-era-skin='plano'], [data-era-skin='portal']) :is(.pp33-desk:not(.dim), .app5 .reg5-mundo, .app5 .reg5-cidade) { background-image: none !important; }
+
+/* páginas antigas dentro do papel da casca (.p5-old, inventário FICHAS33) e miolo das janelas: abas em pílula viram
+   marcadores; o miolo já tem as cores do papel (shell5 POL5 / paper33) */
+.p5-old :is(.tabs, .cats17) > button, .pp33-body :is(.tabs, .cats17) > button { border-radius: 0 !important; border: 2px solid var(--p33-ink, #170e12); border-bottom-width: 3px;
+  background: #f8f2e2; color: #1e1a16; box-shadow: none; padding: 3px 12px; font: 600 13px/1.2 var(--sans, sans-serif); }
+.p5-old :is(.tabs, .cats17) > button:hover, .pp33-body :is(.tabs, .cats17) > button:hover { background: var(--p33-hi, #f0c060); }
+.p5-old :is(.tabs, .cats17) > button:is(.on, [aria-selected='true']), .pp33-body :is(.tabs, .cats17) > button:is(.on, [aria-selected='true']) {
+  background: var(--p33-mk, #2a5ab0); color: #fff; border-color: var(--p33-mk-dk, #14306a); }
+.p5-old :is(.tabs, .cats17), .pp33-body :is(.tabs, .cats17) { gap: 4px; }
+.p5-old, .p5-old :is(*, *::before, *::after) { border-radius: 0 !important; }
+/* tons de bom/ruim/aviso do papel também nas páginas antigas dentro do papel da casca (antes vinham do tema escuro) */
+.p5-body:has(> .p5-old) { --good: #2f7d4f; --bad: #b33a2e; --warn: #9a6514; }

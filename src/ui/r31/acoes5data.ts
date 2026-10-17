@@ -89,6 +89,7 @@ export const CARDS5: Record<string, CardSpec5> = {
   aeroporto: C(['irMundo'], ['caixa']),
   leiloes: C(['remaster'], ['caixaLivre']),
   loja: C(['comprarLoja', 'veiculo'], ['pessoal']),
+  decoracao: C(['comprarLoja'], ['pessoal']), // lojas de decoração (DECO-L): o cartão leva à loja; o catálogo abre por "ver tudo"
   festival: C(['aceitarConvite', 'marcarShow'], ['artistas']),
   fossati: C(['almocoLucia', 'visitarFossati'], ['filhos']),
   // ======================================================== MUNDO

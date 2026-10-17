@@ -5,6 +5,7 @@ import { S, getLang, locale, t } from '../i18n/strings';
 import type { Act, GameState, Release } from '../sim/types';
 import { coverUrl, logoUrl } from './art';
 import { h } from './dom';
+import { paperSheet33 } from './r33/paper33'; // R33 (FICHAS33): o papel comum das janelas
 import { eraGenre23 } from '../sim/genre23';
 import { store } from './store';
 import { nameSvg20 } from './ux20';
@@ -115,27 +116,10 @@ export function kv(label: string, value: Node | string | number): HTMLElement {
   return h('div', { class: 'kv' }, h('span', { class: 'k' }, label), h('span', { class: 'v' }, value as Node));
 }
 
+/** Janela do jogo. R33 (FICHAS33): abre como PAPEL por cima da cena (paperSheet33) — plaqueta em fonte de pixel,
+ *  "Esc fechar"; o fundo continua `.overlay` e o miolo `.modal-body` (mesma API e mesmo fechar de antes). */
 export function modal(title: string, content: HTMLElement, opts: { wide?: boolean; onClose?: () => void } = {}): () => void {
-  const prev = document.activeElement as HTMLElement | null;
-  const close = () => {
-    overlay.remove();
-    document.removeEventListener('keydown', onKey);
-    opts.onClose?.();
-    prev?.focus?.();
-  };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { close(); e.preventDefault(); } // QA5: a casca nova não abre a pausa com o mesmo Esc
-  };
-  const overlay = h('div', { class: 'overlay', onclick: (e: Event) => { if (e.target === overlay) close(); } },
-    h('div', { class: `modal ${opts.wide ? 'wide' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
-      h('header', null, h('h2', null, title), h('button', { class: 'icon', onclick: close, 'aria-label': t(S.close) }, '✕')),
-      h('div', { class: 'modal-body' }, content),
-    ),
-  );
-  document.body.appendChild(overlay);
-  document.addEventListener('keydown', onKey);
-  (overlay.querySelector('button, input, select') as HTMLElement | null)?.focus();
-  return close;
+  return paperSheet33({ plate: title, body: content, wide: opts.wide, onClose: opts.onClose }).close;
 }
 
 export function toast(msg: string, kind = 'info'): void {

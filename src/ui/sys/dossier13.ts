@@ -23,7 +23,7 @@ import type { Act, GameState, Person } from '../../sim/types';
 import { $, N, actLink, cityName, genreName, kv, modal, pill, releaseLink, sparkline, strategyName } from '../common';
 import { bar, h } from '../dom';
 import { LABEL_EXTRAS, labelOpener } from '../ficha';
-import { ACT_TABS, PERSON_TABS, openPersonPage, pageTabs as pageTabs17 } from '../pages';
+import { ACT_TABS, OPEN33, PERSON_TABS, openPersonPage, pageTabs as pageTabs17 } from '../pages';
 import { pageTabs } from '../registry';
 import { store } from '../store';
 import { chips, ic, lineChart, stat } from '../vis';
@@ -38,7 +38,7 @@ import { publicKinds, see, seen } from '../../sim/know';
 const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const why = (x: L) => h('p', { class: 'dos13-why' }, t(x));
 const empty = (x: L) => h('p', { class: 'muted small' }, t(x));
-const ARCH: Record<string, L> = { empire: l('Império', 'Empire'), scene_hunter: l('Caçador de cenas', 'Scene hunter'), hitmaker: l('Fábrica de hits', 'Hitmaker'), catalog: l('Catálogo', 'Catalog'), boutique: l('Butique', 'Boutique') };
+export const ARCH: Record<string, L> = { empire: l('Império', 'Empire'), scene_hunter: l('Caçador de cenas', 'Scene hunter'), hitmaker: l('Fábrica de hits', 'Hitmaker'), catalog: l('Catálogo', 'Catalog'), boutique: l('Butique', 'Boutique') };
 const FAM: Record<string, L> = { A: l('Estrelas e escala', 'Stars & scale'), B: l('Descoberta e cenas', 'Discovery & scenes'), C: l('Hits e comunicação', 'Hits & publicity'), D: l('Patrimônio e catálogo', 'Heritage & catalog') };
 const labelBtn = (s: GameState, id: string) => h('button', { class: 'link', ...ent27('label', id), onclick: (e: Event) => { e.stopPropagation(); openLabelDossier(id); } }, labelName13(s, id));
 
@@ -55,6 +55,7 @@ function awardsList(s: GameState, xs: Award13[]): HTMLElement {
 // ================================================================== dossiê do selo
 
 export function openLabelDossier(id: string, tab?: string): void {
+  if (OPEN33.label?.(id, tab)) return; // R33 (FICHAS33): a ficha nova do selo (papel)
   const s = store.game;
   if (!s || (!isPlayerLabel(id) && !s.labels[id])) return;
   let close = () => {};
@@ -69,7 +70,6 @@ export function labelDossier(s: GameState, id: string, close: () => void, tab?: 
   const rank = standingRanking(s).findIndex((x) => x.id === id) + 1;
   const roster = labelRoster13(s, id);
   const stats = labelStats13(s, id);
-  const hype = (() => { try { return hypeMeter(s, `l:${id}`, l('Hype do selo', 'Label hype')); } catch { return null; } })();
   const ld = me ? undefined : leaderOf(s, id);
   const revLast = me ? s.player.revenueByYear[s.year - 1] ?? 0 : lb.revenueLastYear;
   const head = h('div', { class: 'dos13-head', style: 'display:flex;gap:0.8rem;align-items:flex-start' },
@@ -86,8 +86,17 @@ export function labelDossier(s: GameState, id: string, close: () => void, tab?: 
         stat('fire', Math.round(st.pop), l('popularidade', 'popularity')),
       )),
   );
+  return h('div', { class: 'ficha pg dossier13' }, head, tabbed(labelItems13(s, id, close), tab));
+}
+
+/** As abas do dossiê do selo (a ficha nova usa as mesmas, como marcadores). */
+export function labelItems13(s: GameState, id: string, close: () => void): { id: string; label: L; icon: string; render: () => HTMLElement | null }[] {
+  const me = isPlayerLabel(id);
+  const st = standingOf(s, id);
+  const hype = (() => { try { return hypeMeter(s, `l:${id}`, l('Hype do selo', 'Label hype')); } catch { return null; } })();
+  const lb = s.labels[id];
   const extras = pageTabs('label', s, id).filter((x) => x.id !== 'standing9').map((x) => ({ id: `x-${x.id}`, label: x.label, icon: x.icon, render: () => x.render(s, id) }));
-  return h('div', { class: 'ficha pg dossier13' }, head, tabbed([
+  return [
     { id: 'overview', label: l('Visão geral', 'Overview'), icon: 'building', render: () => overviewTab(s, id) },
     { id: 'standing', label: l('Prestígio e hype', 'Standing and hype'), icon: 'star', render: () => h('div', null,
       why(l('Reconhecimento = peso histórico (prêmios, hits, catálogo). Popularidade = quanto o público ouve agora. Momento = tendência do ano. Crítica = notas das resenhas. Confiança = como artistas veem o selo (pesa em contratações).', 'Recognition = historical weight (awards, hits, catalog). Popularity = how much the public listens now. Momentum = this year\'s trend. Critics = review scores. Trust = how artists see the label (matters for signings).')),
@@ -104,7 +113,7 @@ export function labelDossier(s: GameState, id: string, close: () => void, tab?: 
     { id: 'scenes', label: l('Cenas', 'Scenes'), icon: 'fire', render: () => scenesTab(s, id) },
     { id: 'history', label: l('História', 'History'), icon: 'book', render: () => historyTab(s, id, close) },
     ...extras,
-  ].filter((x): x is NonNullable<typeof x> => !!x), tab));
+  ].filter((x): x is NonNullable<typeof x> => !!x);
 }
 
 function overviewTab(s: GameState, id: string): HTMLElement {
