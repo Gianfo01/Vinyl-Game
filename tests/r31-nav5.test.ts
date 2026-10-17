@@ -129,7 +129,7 @@ describe('NAV · alcance', () => {
     for (const hq of [1, 2, 3, 4, 5]) for (const y of [1905, 1962, 1985, 2025]) {
       const lay = sedeLay5(plan27({ hq, year: y }), sedeHas5(s));
       const listed = new Set(lay.rooms.flatMap((r) => r.objs));
-      for (const [id] of SEDE_OBJS5) if (id !== 'chaveiro') expect(listed.has(id), `${hq}/${y}/${id}`).toBe(true);
+      for (const [id] of SEDE_OBJS5) if (id !== 'chaveiro' && object5(id) && sedeHas5(s)(id)) expect(listed.has(id), `${hq}/${y}/${id}`).toBe(true); // R33: o PC só existe com o upgrade instalado
       // desenhados não se sobrepõem (fora os pontos sobre a mobília da sala) e ficam dentro da sala
       const art = lay.items.filter((x) => x.art);
       for (const it of art) {

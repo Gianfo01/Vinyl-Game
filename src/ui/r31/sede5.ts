@@ -25,15 +25,24 @@ import { store } from '../store';
 
 type Mount5 = 'floor' | 'wall' | 'desk' | 'spot' | 'list';
 /** Objeto da sede: id (objects5), arte (exp5px; null = ponto sobre o desenho da sala), salas preferidas, montagem. */
-type Def5 = [id: string, art: Art5 | null, rooms: Kind27[], mount: Mount5];
+type Def5 = [id: string, art: Art5 | string | null, rooms: Kind27[], mount: Mount5];
+
+/** R33 (APARELHOS33): objetos da sede com arte de outra frente (o computador da mesa, o catálogo pelo correio) — tamanho
+ *  sem a margem e o desenho por estado; `SEDE_HAS5` diz quando o objeto existe (época, upgrade instalado). */
+export const SEDE_ART5 = new Map<string, { w: number; h: number; canvas: (year: number, st: St5, k: number) => HTMLCanvasElement }>();
+export const SEDE_HAS5: Record<string, (s: GameState) => boolean> = {};
+const artDef5 = (art: Art5 | string): { w: number; h: number } => SEDE_ART5.get(art) ?? obj5Def(art as Art5);
+const artCanvas5 = (art: Art5 | string, year: number, st: St5, k: number): HTMLCanvasElement => SEDE_ART5.get(art)?.canvas(year, st, k) ?? obj5Canvas(art as Art5, year, st, k);
 
 /** Onde mora cada objeto da sede (ordem = prioridade dentro da sala). */
 export const SEDE_OBJS5: Def5[] = [
   ['mesames', 'monthdesk', ['office'], 'floor'],
+  ['computador', 'pc33', ['office'], 'floor'], // R33 APARELHOS33: o PC da mesa (upgrade do livro-caixa), mesinha ao lado da mesa do mês
   ['arquivoaco', 'filing', ['office'], 'floor'],
   ['cofre', 'safe', ['office'], 'floor'],
   ['livrocaixa', 'ledger', ['office'], 'desk'],
   ['telefone', 'phone', ['office'], 'desk'],
+  ['catalogo', 'catalog33', ['office'], 'desk'], // R33 APARELHOS33: catálogo de vendas pelo correio (1889–1999)
   ['fichario', 'rolodex', ['office'], 'desk'],
   ['correspondencia', 'mail', ['office'], 'desk'],
   ['jornal', 'paper', ['office'], 'desk'],
@@ -76,7 +85,7 @@ export const ROOM_L5: Partial<Record<Kind27, L>> = {
   studioB: l('Estúdio B', 'Studio B'), garden: l('Jardim', 'Garden'), neural: l('Sala imersiva', 'Immersive room'),
 };
 
-export interface Item5 { id: string; art: Art5 | null; room: Kind27; mount: Mount5; x: number; y: number; w: number; h: number }
+export interface Item5 { id: string; art: Art5 | string | null; room: Kind27; mount: Mount5; x: number; y: number; w: number; h: number }
 export interface Room5 { kind: Kind27; cell: Cell27; objs: string[] }
 export interface SedeLay5 { plan: Plan27; items: Item5[]; rooms: Room5[]; bare: Kind27[] }
 
@@ -115,7 +124,7 @@ export function sedeLay5(plan: Plan27, has: (id: string) => boolean = () => true
       items.push({ id, art: null, room: k, mount, x: c.x + Math.round(c.w * r[0]), y: c.y + 14, w: Math.round(c.w * (r[1] - r[0])), h: c.h - 16 });
       continue;
     }
-    const d = obj5Def(art!);
+    const d = artDef5(art!);
     if (mount === 'floor') {
       const x = cursor.get(c.kind) ?? c.x + (c.kind === 'lobby' ? 2 : 5);
       if (x + d.w > c.x + c.w - 4) continue;
@@ -155,7 +164,7 @@ export function sedeLay5(plan: Plan27, has: (id: string) => boolean = () => true
 }
 
 /** Objetos que existem agora: o chaveiro só com 2+ carreiras ativas. */
-export const sedeHas5 = (s: GameState) => (id: string): boolean => id !== 'chaveiro' || careers(s).active.length >= 2;
+export const sedeHas5 = (s: GameState) => (id: string): boolean => (SEDE_HAS5[id] ? SEDE_HAS5[id](s) : true) && (id !== 'chaveiro' || careers(s).active.length >= 2);
 
 // ---------------------------------------------------------------- desenho
 
@@ -190,8 +199,8 @@ function objBtn(pl: Plan27, it: Item5, n: number, year: number, k: number, on: (
   const kids: (HTMLElement | null)[] = [];
   if (it.art) {
     const st: St5 = n ? 'new' : 'idle';
-    const a = obj5Canvas(it.art, year, st, k); a.className = 'px s5-art';
-    const b = obj5Canvas(it.art, year, 'lit', k); b.className = 'px s5-lit';
+    const a = artCanvas5(it.art, year, st, k); a.className = 'px s5-art';
+    const b = artCanvas5(it.art, year, 'lit', k); b.className = 'px s5-lit';
     kids.push(a, b);
   } else if (n) kids.push(h('i', { class: 's5-bang', 'aria-hidden': 'true' }, '!'));
   const tag = store.game ? worldTag5(store.game, it.id) : undefined; // ACOES5: o número mora no objeto (caixa no livro-caixa, fama no jornal…)

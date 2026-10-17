@@ -8,7 +8,7 @@ próprio objeto; topo fixo (data, caixa, fama, avançar); embaixo os botões de 
 Nesta etapa (TEC) o objeto ainda abre a página antiga (`open5`); a lista abaixo é o endereço de cada página no mundo novo.
 
 Inventário: **109 páginas** registradas hoje (base + `registerArea` + virtuais) e **314 abas** (`TABS_REG27`).
-82 objetos; 3 páginas ficam no menu de pausa; 34 páginas não estavam no mapa (marcadas com ⚑).
+84 objetos; 3 páginas ficam no menu de pausa; 34 páginas não estavam no mapa (marcadas com ⚑).
 
 Como ler: **Lugar** = região › cômodo/prédio; **Papel** = a moldura que abre; **Marcadores** = abas que ficam no papel
 (as que chegam de outra página vêm marcadas com ←); **"!"** = o que acende o ponto de novidade (por padrão, pendências únicas
@@ -229,7 +229,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **Marcadores:** Procurar · Funil · Decidir · Lista e relatórios · Leilões · Olheiros e equipe · Feiras · Dossiês e faro de A&R
 - **"!":** contrapropostas e talentos prontos para proposta (pendências "offer_counter")
 
-### Pilha de demos · tecla ⇧5
+### Pilha de demos · tecla ⇧9
 - **Lugar:** Sede › A&R
 - **Papel:** cena em pixel art
 - **Páginas (dono):** `talent18` (Talentos e formação)
@@ -309,6 +309,22 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 - **Páginas (dono):** `awards` (Premiações), `rockhall` (Hall da Fama)
 - **Marcadores:** — (papel de uma folha só)
 - **"!":** indicação ou prêmio novo
+
+### Computador · tecla —
+- **Lugar:** Sede › Sua sala · existe de 1982 a 2040
+- **Papel:** tela (rádio/TV/monitor)
+- **Atalho para:** `finance` (Finanças) (dono: Livro-caixa)
+- **Marcadores:** — (papel de uma folha só)
+- **"!":** —
+- **Nota:** Upgrade "Computador com planilha" do livro-caixa (1982+); "Ligar o PC" abre a tela do monitor (5 versões).
+
+### Catálogo pelo correio · tecla —
+- **Lugar:** Sede › Sua sala · existe de 1889 a 1999
+- **Papel:** revista
+- **Atalho para:** `deco31` (Lojas de decoração) (dono: Lojas de decoração)
+- **Marcadores:** — (papel de uma folha só)
+- **"!":** —
+- **Nota:** Compra a distância das lojas de decoração (decoshop31), com prazo de semanas.
 
 ## Casa
 
@@ -748,7 +764,7 @@ cujo dono é uma destas páginas, `nav5.bangs5`); **Sai daqui** = abas que vão 
 | `studio` Estúdio | Mesa de som | Sede › Estúdio | cena em pixel art | S | sim | 5/0 |
 | `studio12` Estúdio e produtor | Seu estúdio | Cidade › Prédio da carreira (★; é a sede quando é a carreira principal) | cena em pixel art | ] | ⚑ não | 0/0 |
 | `supply18` Cadeia física & acordos | Fábrica | Cidade › Fábrica | fachada do prédio (cena) | ⇧I | sim | 5/0 |
-| `talent18` Talentos e formação | Pilha de demos | Sede › A&R | cena em pixel art | ⇧5 | sim | 5/0 |
+| `talent18` Talentos e formação | Pilha de demos | Sede › A&R | cena em pixel art | ⇧9 | sim | 5/0 |
 | `team` Equipe e ritmo | Quadro de funcionários | Sede › RH | quadro na parede | T | sim | 0/0 |
 | `tour12` Agente e promotor | Agência | Cidade › Prédio da carreira (★; é a sede quando é a carreira principal) | cena em pixel art | [ | ⚑ não | 0/0 |
 | `tribute19` Tributos e covers | Prateleiras de masters | Sede › Arquivo | cena em pixel art | 7 | ⚑ não | 4/0 |

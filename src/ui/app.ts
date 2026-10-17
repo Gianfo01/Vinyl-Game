@@ -133,6 +133,7 @@ import { pendingList } from '../sim/r31/pending';
 import { settingsTrn31, transition31, trnBack31, trnGate31 } from './r31/trn31'; // R31 onda 5 (TRN): transições entre telas
 import { cardInfo31, monthInfo31, type TrnPend31, type TrnPlace31 } from './r31/trn31model';
 import { settingsLook31 } from './r31/look31ui'; // R31 (AP): opção Pressão estética
+import './r33/aparelhos33'; // R33 APARELHOS33: botão CELULAR, computador da mesa e catálogo pelo correio (exp33.aparelhos; depois de tudo: só registra ganchos)
 
 registerIconRenderer((name, scale = 1) => ((ICON_NAMES as readonly string[]).includes(name) ? pxIcon(name as IconName, scale) : icon17(name, scale) ?? (isIcon31(name) ? pxEmoImg31(name, undefined, scale) : null))); // r17: + ícones do menu; r31 EMO: + icons31
 registerPortrait((p, size) => {

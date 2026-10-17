@@ -18,7 +18,7 @@
 import { l, type L } from '../../data/world';
 
 export type Region5 = 'sede' | 'casa' | 'cidade' | 'mundo';
-export type Sys5 = 'search' | 'search2' | 'advance' | 'keys' | 'prevTab' | 'nextTab' | 'pause' | 'names' | 'houses' | 'home';
+export type Sys5 = 'search' | 'search2' | 'advance' | 'keys' | 'prevTab' | 'nextTab' | 'pause' | 'names' | 'houses' | 'home' | 'phone';
 
 /** O que a tecla faz. */
 export type Act5 =
@@ -135,6 +135,8 @@ export const BASE_KEYS5: Bind5[] = [
   travel('casa', 'shift+2', l('Viagem: Casa', 'Travel: Home'), 'shift+5'),
   travel('cidade', 'shift+3', l('Viagem: Cidade', 'Travel: City'), 'shift+3'),
   travel('mundo', 'shift+4', l('Viagem: Mundo', 'Travel: World'), 'shift+4'),
+  // R33 APARELHOS33: o 5º botão do menu de baixo (só existe de 1983 em diante, com exp33.aparelhos)
+  sys('phone', 'shift+5', l('Celular (5º botão do menu de baixo, 1983+)', 'Phone (5th bottom-menu button, 1983+)'), undefined, false),
   // teclas de marcador: atalhos de hoje de páginas que viraram marcador de um objeto (continuam valendo)
   mark('people', 'p', 'mural', l('Mural do elenco › Pessoas', 'Roster board › People')),
   mark('critics', 'q', 'jornal', l('Jornal › Críticos', 'Newspaper › Critics')),
@@ -239,10 +241,12 @@ export const KEY_CHANGES5: Change5[] = [
     why: l('Botões de viagem Sede, Casa, Cidade, Mundo em Shift+1…4. "Hoje" virou a mesa do mês (tecla 1).', 'Travel buttons HQ, Home, City, World on Shift+1…4. "Today" became the monthly desk (key 1).') },
   { chord: 'shift+2', before: l('Menu: Sede', 'Menu: HQ'), after: l('Viagem: Casa', 'Travel: Home'),
     why: l('"Você" virou a sua casa (EXP-6) e entra no segundo botão de viagem.', '"You" became your home (EXP-6) and is the second travel button.') },
-  { chord: 'shift+5', before: l('Menu: Você', 'Menu: You'), after: l('Pilha de demos (talentos)', 'Demo pile (talent)'),
-    why: l('Você agora é Shift+2 (Casa). Shift+dígito livre vira "irmão" do objeto do dígito: 5 olheiro, Shift+5 demos.', 'You is now Shift+2 (Home). A free Shift+digit becomes a "sibling" of the digit\'s object: 5 scout, Shift+5 demos.') },
+  { chord: 'shift+5', before: l('Menu: Você', 'Menu: You'), after: l('Celular (5º botão do menu de baixo, 1983+)', 'Phone (5th bottom-menu button, 1983+)'),
+    why: l('Você agora é Shift+2 (Casa). Os botões do menu de baixo são Shift+1…5; o celular (versão 33) é o quinto.', 'You is now Shift+2 (Home). The bottom-menu buttons are Shift+1…5; the phone (version 33) is the fifth.') },
   { chord: 'shift+6', before: l('Menu: Listas', 'Menu: Lists'), after: l('(livre)', '(free)'),
     why: l('Listas some (o índice completo fica no menu de pausa).', 'Lists goes away (the full index stays in the pause menu).') },
+  { chord: 'shift+9', before: l('(livre)', '(free)'), after: l('Pilha de demos (talentos)', 'Demo pile (talent)'),
+    why: l('A pilha de demos saiu do Shift+5, que virou o celular (versão 33).', 'The demo pile left Shift+5, which became the phone (version 33).') },
   { chord: 'escape', before: l('Fecha janelas', 'Closes windows'), after: l('Fecha o papel aberto; sem nada aberto, menu de pausa', 'Closes the open paper; with nothing open, pause menu'),
     why: l('Pausa com salvar, opções, ajuda, editor e índice (mock da pausa).', 'Pause with save, options, help, editor and index (pause mock).') },
   { chord: 'alt', before: l('(sem uso)', '(unused)'), after: l('Segurar mostra nomes e teclas dos objetos', 'Hold to show object names and keys'),

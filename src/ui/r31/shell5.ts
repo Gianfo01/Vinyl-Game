@@ -25,7 +25,7 @@ import { setTab } from '../vis';
 import { CAREER_PAGE17 } from '../nav17';
 import { openCredits31 } from './credits31';
 import { KEY_CHANGES5, chordLabel5, chordOf5, defaultChord5, key5, keys5, rebind5, resetKeys5, type Bind5, type Region5 } from './keys5';
-import { CARD5, NAV5, REGIONS5, TRANS5, bangs5, goto5, index5, open5, paperOf5, pin5, pocketView5, regionOfR5, resolveGoto5, travel5, travelTarget5, type GotoIn5 } from './nav5';
+import { CARD5, DOCK5, NAV5, REGIONS5, TRANS5, bangs5, goto5, index5, open5, paperOf5, pin5, pocketView5, regionOfR5, resolveGoto5, travel5, travelTarget5, type GotoIn5 } from './nav5';
 import { FRAME_L5, PLACES5, REGION_L5, movedInto5, object5, objectFor5, objects5, regionOf5, type Obj5, type Open5 } from './objects5';
 import { declutter5, kbd5, raw5, sedeScene5, tl5, txt5 } from './sede5';
 import { helpHere5 } from './cenas5'; // R31 onda 5 (CENAS5): ajuda do lugar no "?"
@@ -128,6 +128,7 @@ export function travel5go(r: Region5, from?: 'scene'): void {
 /** Esc: fecha a ajuda, a pausa ou o papel; sem nada aberto, abre a pausa. */
 export function esc5(): void {
   if (SH5.rebind) { SH5.rebind = undefined; redraw(); return; }
+  if (DOCK5.esc?.()) return; // R33: o aparelho aberto fecha (ou volta à tela inicial) antes de tudo
   const pops = typeof document !== 'undefined' ? [...document.querySelectorAll<HTMLElement>('.s5-pop:not([hidden]), .b5-drawer:not([hidden]), .m5-ccard:not([hidden])')] : [];
   if (pops.length) { for (const x of pops) x.hidden = true; return; } // lista da sala aberta: Esc só fecha a lista
   if (SH5.help) { SH5.help = false; redraw(); return; }
@@ -290,7 +291,7 @@ function bottom5(s: GameState): HTMLElement {
       return h('button', { type: 'button', class: `b5-tr${x.id === cur ? ' on' : ''}`, 'data-travel': x.id, 'aria-current': x.id === cur ? 'page' : undefined,
         title: `${tl5(x.label)} (${chordLabel5(x.key)})`, onclick: () => travel5go(x.id) },
         raw5('small', 'b5-k', x.key ? chordLabel5(x.key) : `⇧${i + 1}`), ic, h('span', null, txt5(tl5(x.label))), x.bang ? raw5('i', 'bg5', x.bang > 9 ? '9+' : String(x.bang)) : null);
-    })),
+    }), ...DOCK5.btns.map((f) => f(s))),
     h('div', { class: 'b5-pocket', role: 'group', 'aria-label': t(l('Bolso', 'Pocket')) },
       h('b', { class: 'b5-pl' }, t(l('Bolso', 'Pocket'))),
       ...pocket.map((p) => h('span', { class: `b5-pi${SH5.paper?.obj === p.id ? ' on' : ''}` },
@@ -569,7 +570,7 @@ export function shell5(s: GameState, host: Shell5Host): HTMLElement {
   const bangs = bangs5(s);
   const reg = region5(s, host, bangs);
   const paper = SH5.paper ? paper5(s, host) : null;
-  const main = h('main', { id: 'main', class: `m5${paper ? ' has-paper' : ''}`, tabindex: '-1' }, reg, paper ? h('div', { class: 'p5-dim' }) : null, paper);
+  const main = h('main', { id: 'main', class: `m5${paper ? ' has-paper' : ''}`, tabindex: '-1' }, reg, paper ? h('div', { class: 'p5-dim' }) : null, paper, DOCK5.over?.(s) ?? null);
   return h('div', { class: `app5 era5-${Math.floor(s.year / 10) * 10}` },
     topBar5(s, host),
     main,
