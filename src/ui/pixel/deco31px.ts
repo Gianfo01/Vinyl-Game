@@ -1,47 +1,41 @@
 // R31 · DECO-A — ARTE da decoração (casa, sede e estabelecimentos) e dos UPGRADES dos itens obrigatórios.
 //
-// Mesmo padrão aprovado de exp5px/props31: corte lateral, luz de cima à esquerda, pé em sombra, contorno escuro
-// quente (INK) de 1 px na silhueta, escala dos bonecos (avatarSprite 24×34: o sofá bate no joelho, o abajur de pé
-// passa da cabeça, o vaso cabe na mesa). Nada flutua: quadro tem prego e barbante, lustre tem fio até o teto (y = 0),
-// móvel de chão pisa na última linha, objeto de mesa tem base na última linha.
+// Desenha CADA item do catálogo da DECO-M (`src/data/deco31.ts`: DECO31 e UPG31) no tamanho do catálogo. Mesmo padrão
+// aprovado de exp5px/props31: corte lateral, luz de cima à esquerda, pé em sombra, contorno escuro quente (INK) de 1 px
+// na silhueta, escala dos bonecos (avatarSprite 24×34). Nada flutua: quadro tem prego e barbante, lustre e planta
+// pendurada têm fio até o teto (y = 0), móvel de chão pisa na última linha, objeto de mesa tem base na última linha.
 //
-// Oito ESTILOS de época (deco.md): art nouveau, art déco, anos 50, anos 70, anos 80, anos 90, minimalista e casa
-// inteligente. Cada item existe num conjunto de estilos e tem desenho próprio em cada um; estado "novo" ou "usado"
-// (vintage: desbotado, riscado, manchado); luzes acendem. Papéis de parede e pisos são LADRILHOS que se repetem sem
-// costura (função periódica de x, y). Letreiros e placas aceitam o nome do selo.
+// Oito ESTILOS de época (art nouveau, art déco, anos 50, 70, 80, 90, minimalista, casa inteligente). Item com estilo
+// tem o desenho do seu estilo em qualquer ano (uma poltrona déco continua déco em 1980); item "sem época" (any) muda
+// com a época do ano pedido (moldura, madeira, tecido, pés). Estados: "novo" e "usado/vintage" (desbotado, riscado,
+// manchado); o que tem luz acende. Papéis de parede e pisos são LADRILHOS 16×16 que se repetem sem costura (função
+// periódica de x, y). Cortinas e molduras deixam o vão DWIN livre (a vista da cidade continua). Letreiros aceitam o
+// nome do selo. Upgrades: cada modelo de UPG31 no tamanho fixo do seu item obrigatório; nível maior = visivelmente melhor.
 //
-//   styOf(ano)                         — PURO: estilo da época de um ano;
-//   decoPx(id, estilo, op)             — PURO (só Px): o item com margem DPAD; tamanho fixo por item;
-//   decoTilePx / decoFillPx            — PURO: ladrilho e área preenchida dos padrões (papel, pintura, piso);
-//   upgPx(id, ano, nível, op)          — PURO: item obrigatório no nível de upgrade (1..n), na época do ano;
-//   decoArtId(idDoCatálogo)            — ponte entre os ids do catálogo da DECO-M e os desenhos daqui.
+//   decoStyleOf(id, ano)          — PURO: índice do estilo com que o item é desenhado (o dele, ou o da época);
+//   decoPx(id, ano, op)           — PURO (só Px): o item com margem DPAD (contorno); padrões devolvem o ladrilho;
+//   decoTilePx / decoFillPx       — PURO: ladrilho e área preenchida dos padrões (papel de parede, piso);
+//   upgPx(id, ano, op)            — PURO: modelo de upgrade (id de UPG31) no tamanho do item obrigatório.
 // Tudo determinístico (sem sorteio): mesma entrada, mesmos pixels. Nada vai para o save. Só aparência.
 
 import { C, INK, Px, lv, mix, noise, rgba, pack, withAlpha, type Col } from './px';
 import { abbrText, drawText, textWidth } from './font';
-import { ep5Of } from './exp5px';
+import { DECO31, STYLE31, STYLE31_FROM, UPG31, decoDef31, upgDef31, type DecoDef31, type DecoStyle31 } from '../../data/deco31';
 
 // ---------------------------------------------------------------- estilos de época
 
-export const DSTY = ['nouveau', 'deco', 's50', 's70', 's80', 's90', 'mini', 'smart'] as const;
-export type DSty = (typeof DSTY)[number];
-export const DSTY_LABEL: Record<DSty, { pt: string; en: string; years: string }> = {
-  nouveau: { pt: 'Art nouveau', en: 'Art nouveau', years: '1889–1919' },
-  deco: { pt: 'Art déco', en: 'Art deco', years: '1920–1944' },
-  s50: { pt: 'Anos 50', en: '1950s', years: '1945–1964' },
-  s70: { pt: 'Anos 70', en: '1970s', years: '1965–1981' },
-  s80: { pt: 'Anos 80', en: '1980s', years: '1982–1991' },
-  s90: { pt: 'Anos 90', en: '1990s', years: '1992–2003' },
-  mini: { pt: 'Minimalista', en: 'Minimalist', years: '2004–2014' },
-  smart: { pt: 'Casa inteligente', en: 'Smart home', years: '2015–2040' },
-};
+/** Os 8 estilos, na ordem do catálogo (STYLE31). */
+export const DSTY: DecoStyle31[] = STYLE31;
 /** Ano típico de cada estilo (galeria e testes). */
-export const DSTY_YEAR: Record<DSty, number> = { nouveau: 1905, deco: 1932, s50: 1956, s70: 1974, s80: 1986, s90: 1997, mini: 2009, smart: 2025 };
-/** Estilo (índice 0..7) da época de um ano. */
+export const DSTY_YEAR: number[] = [1905, 1935, 1958, 1974, 1985, 1996, 2008, 2025];
+/** Estilo (índice 0..7) da época de um ano, nos mesmos cortes do catálogo (STYLE31_FROM). */
 export function styOf(year: number): number {
-  return year < 1920 ? 0 : year < 1945 ? 1 : year < 1965 ? 2 : year < 1982 ? 3 : year < 1992 ? 4 : year < 2004 ? 5 : year < 2015 ? 6 : 7;
+  let k = 0;
+  STYLE31.forEach((st, i) => { if (year >= STYLE31_FROM[st]) k = i; });
+  return k;
 }
-const styIx = (s: DSty | number): number => (typeof s === 'number' ? s : DSTY.indexOf(s));
+/** Primeiro e último ano de cada estilo como época. */
+export const styRange = (i: number): [number, number] => [STYLE31_FROM[STYLE31[i]], i < 7 ? STYLE31_FROM[STYLE31[i + 1]] - 1 : 2040];
 
 /** Materiais de cada estilo: madeira, tecido, metal e acentos (cada cor vira rampa com lv). */
 interface Mat { wood: Col; wood2: Col; fab: Col; fab2: Col; metal: Col; acc: Col; acc2: Col; glass: Col; wall: Col; floor: Col }
@@ -55,103 +49,20 @@ const M: Mat[] = [
   { wood: C('#e2cfaa'), wood2: C('#b89a70'), fab: C('#c4c4c0'), fab2: C('#f2f0ea'), metal: C('#2a2a2e'), acc: C('#6a7a6a'), acc2: C('#c8784a'), glass: C('#d8e4e8'), wall: C('#ecebe6'), floor: C('#c8c0b0') },
   { wood: C('#9a7250'), wood2: C('#6a4a34'), fab: C('#4c4e56'), fab2: C('#8a8c96'), metal: C('#d8dce4'), acc: C('#5ae0ff'), acc2: C('#2a2c34'), glass: C('#30404c'), wall: C('#d0d4d8'), floor: C('#7a7a80') },
 ];
-export const decoWall = (s: DSty | number): Col => M[styIx(s)].wall;
-export const decoFloor = (s: DSty | number): Col => M[styIx(s)].floor;
+export const decoWall = (s: number): Col => M[s].wall;
+export const decoFloor = (s: number): Col => M[s].floor;
 
-// ---------------------------------------------------------------- catálogo da arte (ids provisórios até o catálogo da DECO-M)
-
-export type DSlot = 'wall' | 'floor' | 'desk' | 'ceil' | 'paper' | 'floorcover' | 'window' | 'sign';
-export type DFam =
-  | 'quadro' | 'relogio' | 'espelho' | 'prateleira' | 'sofa' | 'poltrona' | 'estante' | 'jukebox' | 'aquario' | 'planta'
-  | 'luz' | 'mesa' | 'som' | 'escultura' | 'bar' | 'piano' | 'objeto' | 'papel' | 'piso' | 'tapete' | 'cortina' | 'letreiro';
-export interface DecoArt {
-  id: string; fam: DFam; slot: DSlot; w: number; h: number;
-  /** estilos (índices de DSTY) em que o item existe */
-  sty: number[];
-  /** tem luz própria (abajur, lustre, jukebox, aquário, neon): estado aceso */
-  light?: boolean;
-  /** escreve o nome do selo */
-  label?: boolean;
-  /** padrão que se repete (w × h = ladrilho) */
-  tile?: boolean;
-  pt: string; en: string;
-}
-const ALL = [0, 1, 2, 3, 4, 5, 6, 7];
-const A = (id: string, fam: DFam, slot: DSlot, w: number, h: number, pt: string, en: string, o: Partial<DecoArt> = {}): DecoArt => ({ id, fam, slot, w, h, sty: ALL, pt, en, ...o });
-export const DECO_ART: DecoArt[] = [
-  // parede
-  A('poster', 'quadro', 'wall', 18, 24, 'Pôster de show', 'Gig poster'),
-  A('painting', 'quadro', 'wall', 28, 20, 'Quadro', 'Painting'),
-  A('goldrec', 'quadro', 'wall', 16, 20, 'Disco emoldurado', 'Framed record'),
-  A('clock', 'relogio', 'wall', 14, 16, 'Relógio de parede', 'Wall clock'),
-  A('wallmirror', 'espelho', 'wall', 16, 22, 'Espelho decorativo', 'Decorative mirror'),
-  A('wallshelf', 'prateleira', 'wall', 28, 14, 'Prateleira com enfeites', 'Shelf with ornaments'),
-  // chão
-  A('sofa', 'sofa', 'floor', 46, 22, 'Sofá', 'Sofa'),
-  A('armchair', 'poltrona', 'floor', 22, 26, 'Poltrona', 'Armchair'),
-  A('bookcase', 'estante', 'floor', 26, 40, 'Estante', 'Bookcase'),
-  A('jukebox', 'jukebox', 'floor', 22, 34, 'Jukebox', 'Jukebox', { sty: [1, 2, 3, 4, 5, 6, 7], light: true }),
-  A('aquarium', 'aquario', 'floor', 30, 30, 'Aquário', 'Aquarium', { light: true }),
-  A('bigplant', 'planta', 'floor', 16, 32, 'Planta grande', 'Big plant'),
-  A('floorlamp', 'luz', 'floor', 12, 40, 'Abajur de pé', 'Floor lamp', { light: true }),
-  A('coffeetable', 'mesa', 'floor', 28, 12, 'Mesa de centro', 'Coffee table'),
-  A('stereo', 'som', 'floor', 30, 24, 'Aparelho de som', 'Stereo'),
-  A('sculpture', 'escultura', 'floor', 14, 32, 'Escultura no pedestal', 'Sculpture on a plinth'),
-  A('barcart', 'bar', 'floor', 22, 22, 'Bar / carrinho de bebidas', 'Drinks cart'),
-  A('piano', 'piano', 'floor', 34, 30, 'Piano', 'Piano'),
-  A('rug', 'tapete', 'floorcover', 44, 8, 'Tapete', 'Rug'),
-  // sobre a mesa
-  A('tablelamp', 'luz', 'desk', 10, 16, 'Abajur de mesa', 'Table lamp', { light: true }),
-  A('smallplant', 'planta', 'desk', 10, 12, 'Vasinho', 'Small plant'),
-  A('vase', 'objeto', 'desk', 8, 14, 'Vaso de flores', 'Flower vase'),
-  A('globe', 'objeto', 'desk', 10, 14, 'Globo de mesa', 'Desk globe'),
-  // teto
-  A('chandelier', 'luz', 'ceil', 24, 20, 'Lustre / pendente', 'Chandelier / pendant', { light: true }),
-  A('ceilfan', 'luz', 'ceil', 30, 12, 'Ventilador de teto', 'Ceiling fan'),
-  // padrões
-  A('wallpaper', 'papel', 'paper', 16, 16, 'Papel de parede', 'Wallpaper', { tile: true }),
-  A('paint', 'papel', 'paper', 16, 16, 'Pintura e textura', 'Paint and texture', { tile: true }),
-  A('floor', 'piso', 'floorcover', 16, 8, 'Piso', 'Floor', { tile: true }),
-  // janela (o miolo fica vazio: a vista da cidade continua)
-  A('curtain', 'cortina', 'window', 36, 40, 'Cortina', 'Curtains'),
-  A('winframe', 'cortina', 'window', 36, 40, 'Moldura da janela', 'Window frame'),
-  // fachada e placas (escrevem o nome do selo)
-  A('sign', 'letreiro', 'sign', 64, 18, 'Letreiro da fachada', 'Front sign', { label: true, light: true }),
-  A('logo', 'letreiro', 'wall', 40, 22, 'Placa com o logo', 'Logo plaque', { label: true }),
-];
-export const DECO_ART_IDS = DECO_ART.map((d) => d.id);
-const BY_ID = new Map(DECO_ART.map((d) => [d.id, d]));
-export const decoArt = (id: string): DecoArt | undefined => BY_ID.get(id);
 /** Vão da janela dentro de cortina/moldura (transparente: a vista da cidade aparece por trás). */
 export const DWIN = { x: 6, y: 6, w: 24, h: 30 } as const;
 
-/**
- * Ponte com o catálogo da DECO-M (`src/data/deco31.ts`): id do catálogo → desenho daqui. Aceita o id igual, um alias
- * desta tabela, ou o padrão `<família>-<qualquer coisa>` com a família igual a um id daqui (ex.: 'sofa-chesterfield').
- */
-export const DECO_ALIAS: Record<string, string> = {
-  quadro: 'painting', pintura: 'painting', poster: 'poster', cartaz: 'poster', disco: 'goldrec', discoouro: 'goldrec', relogio: 'clock',
-  espelho: 'wallmirror', prateleira: 'wallshelf', poltrona: 'armchair', estante: 'bookcase', aquario: 'aquarium', planta: 'bigplant',
-  vaso: 'vase', vasinho: 'smallplant', abajur: 'tablelamp', luminaria: 'floorlamp', lustre: 'chandelier', pendente: 'chandelier',
-  ventilador: 'ceilfan', mesacentro: 'coffeetable', som: 'stereo', vitrola: 'stereo', escultura: 'sculpture', bar: 'barcart',
-  tapete: 'rug', papel: 'wallpaper', papelparede: 'wallpaper', pintura_parede: 'paint', piso: 'floor', cortina: 'curtain',
-  moldura: 'winframe', letreiro: 'sign', logo: 'logo', placa: 'logo', globo: 'globe',
-};
-export function decoArtId(catId: string): string | undefined {
-  if (BY_ID.has(catId)) return catId;
-  const a = DECO_ALIAS[catId];
-  if (a) return a;
-  const head = catId.split(/[-_:.]/)[0];
-  return BY_ID.has(head) ? head : DECO_ALIAS[head];
-}
-
 // ---------------------------------------------------------------- peças comuns
 
-interface Dc { p: Px; fx: Px; s: number; m: Mat; lit: boolean; w: number; h: number; name: string }
+/** s = forma (variante do desenho) · m = materiais (estilo) · e = estilo da época (itens sem época mudam com ela). */
+interface Dc { p: Px; fx: Px; s: number; m: Mat; e: number; lit: boolean; w: number; h: number; name: string }
 
 const W = C('#f8f4ec'), PAPER = C('#efe6cc'), RED = C('#c83a32'), GOLD = C('#e0b048'), BRASS = C('#c09048'), CHROME = C('#b8bcc8');
 const BLACK = C('#1e1c22'), GREY = C('#8a8c94'), DGREY = C('#4a4c56'), GLOW = C('#ffe08a'), LEAF = C('#3c8a3c'), LEAF2 = C('#5cb04c');
-const BULB = C('#fff4c0');
+const BULB = C('#fff4c0'), LED = C('#ff4a3a');
 
 /** Bloco com luz de cima à esquerda e pé em sombra (mesma conta de exp5px). */
 const blk = (p: Px, x: number, y: number, w: number, h: number, c: Col): void => {
@@ -327,30 +238,6 @@ function painting(d: Dc): void {
   if (s === 7) { p.put(w - 3, h - 2, lit ? m.acc : DGREY); glow(d, w / 2, h / 2 + 1, 12, C('#5ae0ff')); }
 }
 
-/** Disco emoldurado: 78 rpm sobre veludo → disco de prata → disco de ouro com plaqueta → ouro em nogueira → platina → CD multiplatina → vinil colorido flutuando → ouro com borda de LED. */
-function goldrec(d: Dc): void {
-  const { p, s, m, lit, w, h } = d;
-  const y0 = 3;
-  hang(p, w >> 1, 3, w - 4, y0);
-  const fr = [C('#d8a840'), BLACK, m.wood, C('#5a3418'), BLACK, C('#c8c8cc'), W, C('#2a2a30')][s];
-  const mat = [m.fab, C('#e6dac0'), W, C('#e8d8b0'), C('#2a2a32'), C('#2a3a6a'), W, C('#14141a')][s];
-  framed(p, 0, y0, w, h - y0, s === 6 ? 1 : 2, fr, mat);
-  const disc = [BLACK, C('#c8ccd4'), GOLD, GOLD, C('#e8ecf4'), C('#d8dce8'), BLACK, GOLD][s];
-  const cx = w / 2, cy = y0 + 7.5;
-  if (s === 5) { // dois discos: CD e vinil
-    p.disc(cx - 2, cy, 4, disc); p.disc(cx - 2, cy, 1, mat); p.disc(cx + 3, cy + 1, 3, C('#c8ccd8')); p.disc(cx + 3, cy + 1, 0.8, mat); p.line(cx + 1, cy - 1, cx + 4, cy + 2, C('#f0a0e0'));
-  } else {
-    p.disc(cx, cy, 5, disc);
-    for (let r = 2; r < 5; r++) p.ring(cx, cy, r + 0.3, lv(disc, s === 0 || s === 6 ? 2.4 : 2));
-    p.disc(cx, cy, 1.8, s === 6 ? m.acc2 : s === 0 ? RED : s === 3 ? C('#d8782a') : s === 4 ? C('#6a4ad0') : RED);
-    p.put(cx - 2, cy - 3, lv(disc, 5));
-  }
-  if (s >= 2 && s !== 6) { p.rect(cx - 3, h - 5, 6, 2, s === 4 ? CHROME : GOLD); p.hline(cx - 2, cx + 1, h - 4, lv(GOLD, 1.6)); }
-  if (s === 0) { p.rect(cx - 3, h - 5, 6, 2, PAPER); }
-  if (s === 1) { p.hline(3, w - 4, h - 4, m.metal); }
-  if (s === 6) p.hline(1, w - 2, h - 2, C('#d8d8d8'));
-  if (s === 7) { p.hline(1, w - 2, y0 + 1, lit ? lv(m.acc, 5) : lv(m.acc, 2)); glow(d, cx, cy, 7, GOLD); }
-}
 
 /** Relógio de parede: de pêndulo → raios déco → atômico → laranja → quadrado neon → escritório → sem números → digital. */
 function clock(d: Dc): void {
@@ -369,8 +256,9 @@ function clock(d: Dc): void {
     for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; p.line(cx, cy, cx + Math.cos(a) * 6.5, cy + Math.sin(a) * 6.5, i % 2 ? m.metal : lv(m.metal, 2)); }
     p.disc(cx, cy, 4, C('#e6dac0')); p.ring(cx, cy, 4.2, BLACK); hands(7, cy, 4, BLACK);
   } else if (s === 2) {
-    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const x = cx + Math.cos(a) * 6, y = cy + Math.sin(a) * 6; p.line(cx, cy, x, y, m.wood2); ball(p, x, y, 1.2, i % 2 ? m.acc : m.acc2); }
-    p.disc(cx, cy, 3, m.wood); hands(7, cy, 3, BLACK);
+    const R = Math.min(w, h - 1) / 2 - 1.5, n = R > 7 ? 12 : 8;
+    for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; const x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R; p.line(cx, cy, x, y, i % 2 ? BRASS : m.wood2); ball(p, x, y, R > 7 ? 1.6 : 1.2, i % 2 ? m.acc : m.acc2); }
+    p.disc(cx, cy, R * 0.45, m.wood); p.ring(cx, cy, R * 0.45, BRASS); hands(Math.floor(cx), cy, Math.max(3, R * 0.45), BLACK);
   } else if (s === 3) {
     p.disc(cx, cy, 6, m.fab); p.disc(cx, cy, 4.5, C('#f8ecd0')); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; p.put(cx + Math.cos(a) * 3.6 - 0.5, cy + Math.sin(a) * 3.6 - 0.5, m.wood2); } hands(7, cy, 4, m.wood2);
   } else if (s === 4) {
@@ -401,28 +289,6 @@ function wallmirror(d: Dc): void {
   else { p.put(w >> 1, 0, GREY); blk(p, 0, 2, w, h - 2, C('#2a2a30')); p.rect(1, 3, w - 2, h - 4, mix(gl, C('#20303a'), 0.5)); drawText(p, '21', 2, 5, lit ? m.acc : lv(m.acc, 2)); p.disc(11.5, 6.5, 1.4, lit ? C('#f0c040') : DGREY); p.hline(2, 8, 12, lit ? lv(m.acc, 4) : DGREY); glow(d, w / 2, 8, 7, m.acc); }
 }
 
-/** Prateleira de parede com os enfeites da época. */
-function wallshelf(d: Dc): void {
-  const { p, s, m, lit, w, h } = d;
-  const sy = h - 4;
-  const board = [m.wood, CHROME, m.wood, m.wood, m.acc, m.wood, W, m.wood][s];
-  blk(p, 0, sy, w, 2, board);
-  // suportes presos à parede
-  if (s === 0) for (const x of [3, w - 5]) { p.line(x, sy + 2, x + 2, h - 1, m.wood2); p.put(x + 1, h - 1, m.wood2); p.put(x, sy + 3, m.wood2); }
-  else if (s === 1) for (const x of [2, w - 4]) { p.rect(x, sy + 2, 2, 2, m.metal); p.rect(x, sy - 6, 2, 6, m.metal); }
-  else if (s === 4) { p.poly([[2, sy + 2], [6, sy + 2], [2, h]], m.fab); p.poly([[w - 6, sy + 2], [w - 2, sy + 2], [w - 2, h]], m.fab2); }
-  else if (s === 6 || s === 7) { p.rect(1, sy + 2, w - 2, 1, lv(board, 1)); if (s === 7) { p.hline(1, w - 2, sy + 2, lit ? lv(m.acc, 5) : lv(m.acc, 2)); if (lit) d.fx.rect(1, sy + 3, w - 2, 2, withAlpha(m.acc, 70)); } }
-  else for (const x of [3, w - 5]) { p.rect(x, sy + 2, 2, h - sy - 2, s === 2 ? BRASS : GREY); p.hline(x, x + 1, h - 1, lv(GREY, 1)); }
-  const yb = sy - 1;
-  if (s === 0) { p.poly([[3, yb + 1], [8, yb + 1], [7, yb - 5], [4, yb - 5]], C('#4a7a6a')); p.rect(5, yb - 7, 1, 2, C('#4a7a6a')); p.rect(12, yb - 1, 3, 2, m.metal); p.vline(13, yb - 6, yb - 2, m.metal); p.put(13, yb - 7, W); books(p, 18, yb, 8, 7, 1, [m.fab, C('#3a5a3a'), C('#5a3a20')]); }
-  else if (s === 1) { books(p, 4, yb, 8, 6, 2, [BLACK, C('#e6dac0'), m.acc]); p.poly([[15, yb], [20, yb - 5], [22, yb - 4], [18, yb]], m.metal); p.put(21, yb - 6, m.metal); p.rect(14, yb, 9, 1, BLACK); }
-  else if (s === 2) { p.ellipse(6, yb - 2, 3, 2, C('#48a8a0')); p.put(9, yb - 3, C('#48a8a0')); p.put(3, yb - 3, BLACK); blk(p, 13, yb - 4, 3, 5, C('#c86a3a')); foliage(p, 14.5, yb - 6, 2, 2, 7); p.ellipse(22, yb - 2, 2.5, 2, C('#f0a0a8')); p.put(24, yb - 3, C('#f0a0a8')); }
-  else if (s === 3) { blk(p, 2, yb - 3, 4, 4, C('#a8401a')); foliage(p, 4, yb - 6, 3, 3, 9, C('#5a7a2a'), C('#7a9a3a')); p.disc(12, yb - 3, 2.5, C('#8a6a3a')); p.put(11, yb - 4, W); p.put(13, yb - 4, W); p.put(12, yb - 2, C('#e0a040')); blk(p, 17, yb - 2, 7, 3, BLACK); p.rect(18, yb - 1, 5, 1, C('#e8d8b0')); }
-  else if (s === 4) { blk(p, 3, yb - 4, 5, 5, C('#3ac0d0')); p.rect(4, yb - 3, 3, 3, lit ? C('#ff5ab0') : C('#a03a80')); glow(d, 5.5, yb - 1.5, 4, C('#ff5ab0')); for (let i = 0; i < 3; i++) blk(p, 11 + i * 4, yb - 6, 3, 7, BLACK); p.vline(12, yb - 5, yb - 1, W); p.disc(24, yb - 2, 2, C('#f0e040')); }
-  else if (s === 5) { for (let i = 0; i < 6; i++) { p.rect(3 + i * 2, yb - 5, 1, 6, [C('#c8ccd8'), C('#3a6ac8'), C('#e04848'), C('#2a2a2a')][i % 4]); } blk(p, 16, yb - 4, 4, 5, C('#d8a030')); p.rect(17, yb - 6, 2, 2, C('#f0c8a0')); blk(p, 22, yb - 2, 4, 3, C('#3a6a3a')); }
-  else if (s === 6) { p.poly([[5, yb + 1], [9, yb + 1], [8, yb - 6], [6, yb - 6]], C('#e8e4dc')); p.vline(7, yb - 9, yb - 7, LEAF); p.put(8, yb - 9, LEAF); blk(p, 15, yb - 1, 9, 2, m.acc); blk(p, 16, yb - 3, 7, 2, C('#e8d8b8')); }
-  else { blk(p, 4, yb - 6, 5, 7, C('#3a3c44')); for (let y = yb - 5; y < yb; y += 2) p.hline(5, 7, y, C('#2a2a30')); p.hline(5, 7, yb - 6, lit ? m.acc : DGREY); glow(d, 6.5, yb - 6, 3, m.acc); blk(p, 13, yb - 2, 6, 3, W); p.put(15, yb - 1, lit ? m.acc : GREY); foliage(p, 23, yb - 3, 2.5, 3, 13); p.rect(21, yb - 1, 5, 2, C('#d8d0c0')); }
-}
 
 // ---------------------------------------------------------------- chão
 
@@ -586,41 +452,6 @@ function jukebox(d: Dc): void {
   }
 }
 
-/** Aquário: globo de vidro em pedestal de ferro → caixa déco → móvel anos 50 → aquário com luz ambar → neon → tanque de vidro em rack → retângulo branco → aquário com tela e LED. */
-function aquarium(d: Dc): void {
-  const { p, s, m, lit, w, h } = d;
-  const water = lit ? C('#6ad0f0') : C('#3a8ab8');
-  const fish = (x: number, y: number, c: Col, r = false) => { p.rect(x, y, 3, 2, c); p.put(r ? x - 1 : x + 3, y, lv(c, 2)); p.put(r ? x - 1 : x + 3, y + 1, lv(c, 2)); p.put(r ? x + 2 : x, y, BLACK); };
-  if (s === 0) {
-    p.disc(w / 2, 10, 9, withAlpha(water, 220)); p.ellipse(w / 2, 2, 5, 1.2, withAlpha(W, 160)); p.line(w / 2 - 6, 6, w / 2 - 3, 3, withAlpha(W, 180));
-    fish(w / 2 - 3, 9, C('#f08a30')); fish(w / 2 + 2, 13, C('#e04848'), true); foliage(p, w / 2 + 4, 15, 2, 3, 3);
-    p.rect(w / 2 - 3, 19, 6, 2, m.metal); p.vline(w / 2, 21, h - 4, BLACK); p.line(w / 2, h - 5, w / 2 - 6, h - 1, BLACK); p.line(w / 2, h - 5, w / 2 + 6, h - 1, BLACK);
-    p.disc(w / 2 - 6, h - 1, 0.9, BLACK); p.disc(w / 2 + 6, h - 1, 0.9, BLACK); for (let i = 0; i < 3; i++) p.put(w / 2 - 2 + i * 2, 22 + i, BLACK);
-    glow(d, w / 2, 10, 10, C('#9ae0ff'));
-    return;
-  }
-  const ty = s === 2 || s === 5 ? 2 : 4, th = s === 6 ? 16 : 14, tx = s === 6 ? 1 : 2, tw = w - 2 * tx;
-  const rim = [0, m.metal, m.wood, m.wood2, BLACK, DGREY, W, C('#2a2c34')][s];
-  blk(p, tx, ty, tw, 2, rim);
-  p.rect(tx, ty + 2, tw, th, water); p.vline(tx, ty + 2, ty + th + 1, lv(rim, 2)); p.vline(tx + tw - 1, ty + 2, ty + th + 1, lv(rim, 2));
-  p.hline(tx + 1, tx + tw - 2, ty + th, C('#d8c088')); p.hline(tx + 1, tx + tw - 2, ty + th + 1, C('#c8a868'));
-  foliage(p, tx + 4, ty + th - 3, 2, 4, 5 + s); foliage(p, tx + tw - 6, ty + th - 2, 2, 3, 9 + s);
-  fish(tx + 7, ty + 6, s === 4 ? C('#ff5ab0') : C('#f08a30')); fish(tx + 15, ty + 10, s === 3 ? C('#f0c040') : C('#e04848'), true); if (s >= 5) fish(tx + 11, ty + 4, C('#3ac0d0'));
-  p.line(tx + 2, ty + 3, tx + 5, ty + 6, withAlpha(W, 140));
-  if (s === 3) p.rect(tx, ty + 2, tw, th, withAlpha(C('#f0a040'), 40));
-  if (s === 4) { p.hline(tx, tx + tw - 1, ty + 2, lit ? C('#ff5ab0') : C('#a03a80')); }
-  if (s === 7) { blk(p, tx + tw - 7, ty + 3, 5, 3, C('#1a1a1e')); drawText(p, '24', tx + tw - 7, ty + 3, lit ? m.acc : DGREY); }
-  // móvel
-  const sy = ty + th + 2;
-  if (s === 1) { blk(p, 0, sy, w, h - sy, m.wood2); p.hline(1, w - 2, sy + 1, m.metal); for (let i = 0; i < 3; i++) p.hline(3 + i * 2, w - 4 - i * 2, h - 4 + i, lv(m.wood2, 3)); }
-  else if (s === 2) { blk(p, 1, sy, w - 2, 7, m.wood); p.vline(w >> 1, sy + 1, sy + 5, lv(m.wood, 1.4)); legs(d, 2, w - 3, sy + 7); }
-  else if (s === 3) { blk(p, 0, sy, w, h - sy, m.wood); for (let x = 2; x < w - 2; x += 2) p.vline(x, sy + 2, h - 2, lv(m.wood, 1.8)); }
-  else if (s === 4) { blk(p, 1, sy, w - 2, h - sy, m.wood2); p.rect(3, sy + 3, w - 6, 2, m.acc); p.disc(6, h - 4, 1.5, m.fab); }
-  else if (s === 5) { p.hline(1, w - 2, sy, GREY); for (const x of [1, w - 2]) p.vline(x, sy, h - 1, GREY); p.hline(1, w - 2, h - 5, GREY); blk(p, 4, h - 4, 6, 3, C('#3a6a3a')); }
-  else if (s === 6) { blk(p, 0, sy, w, h - sy, W); p.hline(2, w - 3, sy + 4, lv(W, 2)); }
-  else { blk(p, 0, sy, w, h - sy, C('#2a2c34')); p.hline(1, w - 2, h - 1, lit ? lv(m.acc, 5) : lv(m.acc, 2)); if (lit) d.fx.hline(0, w - 1, h - 1, withAlpha(m.acc, 110)); }
-  glow(d, w / 2, ty + th / 2, 14, C('#9ae0ff'));
-}
 
 /** Planta grande: palmeira em cachepô de faiança → strelitzia em vaso déco → costela-de-adão em vaso de pés → samambaia no macramê → ficus em vaso laqueado → árvore-da-felicidade em vaso de barro → oliveira em vaso de concreto → horta inteligente com luz. */
 function bigplant(d: Dc): void {
@@ -680,21 +511,6 @@ function stereo(d: Dc): void {
   blk(p, 3, 7, 5, 4, C('#d8dce4')); p.rect(4, 8, 3, 2, lit ? C('#3a5ac8') : C('#14141a'));
 }
 
-/** Escultura no pedestal: busto clássico → gazela déco → forma orgânica → totem de resina → torre geométrica → peça de sucata → monólito branco → escultura de luz. */
-function sculpture(d: Dc): void {
-  const { p, s, m, lit, w, h } = d;
-  const ped = s === 6 ? W : s === 7 ? C('#2a2c34') : s === 4 ? m.acc2 : s === 1 ? BLACK : s === 5 ? C('#8a8c94') : C('#e8e4d8');
-  const py = 16;
-  blk(p, 1, py, w - 2, h - py, ped); blk(p, 0, py, w, 2, lv(ped, 4)); blk(p, 0, h - 2, w, 2, lv(ped, 2.4));
-  if (s === 0) { const mb = C('#ece8dc'); p.poly([[2, py], [w - 2, py], [w - 3, 11], [3, 11]], mb); p.rect(5, 9, 4, 3, mb); p.ellipse(7, 6, 3, 3.5, mb); p.put(5, 4, lv(mb, 2)); p.put(9, 6, lv(mb, 1.6)); p.hline(3, w - 4, 11, lv(mb, 4.4)); }
-  else if (s === 1) { p.poly([[2, py], [w - 2, py], [w - 3, py - 2], [3, py - 2]], m.metal); p.line(3, py - 3, 10, 7, m.metal); p.line(4, py - 3, 11, 7, m.metal); p.line(6, 10, 3, 6, m.metal); p.line(10, 8, 12, 3, m.metal); p.put(12, 2, m.metal); p.rect(9, 6, 3, 2, m.metal); }
-  else if (s === 2) { p.ellipse(7, 9, 4.5, 6.5, C('#3a2a20')); p.disc(7, 7, 1.6, ped); p.ellipse(7, 13, 2, 1.5, C('#e8e4d8')); p.line(4, 5, 5, 3, lv(C('#3a2a20'), 4)); }
-  else if (s === 3) { for (let y = 2; y < py; y++) { const r = 2.5 + Math.sin(y * 0.6) * 1.5; p.hline(Math.round(7 - r), Math.round(7 + r), y, [m.fab, m.acc, m.fab2, m.acc2][Math.floor(y / 4) % 4]); } }
-  else if (s === 4) { blk(p, 3, 9, 8, 7, m.acc); p.poly([[4, 9], [10, 9], [7, 2]], m.fab); p.disc(11, 4, 2, m.fab2); p.line(2, 6, 5, 2, BLACK); }
-  else if (s === 5) { p.line(4, py - 1, 9, 3, C('#8a6a4a')); p.line(10, py - 1, 5, 6, C('#5a5a62')); p.rect(6, 7, 3, 3, C('#b84a2a')); p.disc(9, 3, 1.4, C('#c8ccd4')); p.put(3, 10, C('#5a5a62')); }
-  else if (s === 6) { blk(p, 4, 1, 6, py - 1, C('#f2f0ea')); p.line(5, 2, 5, py - 2, lv(C('#f2f0ea'), 3)); }
-  else { for (let y = 2; y < py; y++) p.put(7 + Math.round(Math.sin(y * 0.8) * 3), y, lit ? lv(m.acc, 5) : lv(m.acc, 2)); for (let y = 2; y < py; y++) p.put(7 + Math.round(Math.cos(y * 0.8) * 3), y, lit ? C('#ff9ae0') : C('#6a3a5a')); if (lit) d.fx.disc(7, 9, 7, withAlpha(m.acc, 50)); p.hline(3, w - 4, py + 1, lit ? m.acc : DGREY); }
-}
 
 /** Bar: armário de bebidas → carrinho déco espelhado → carrinho de latão → bar de canto acolchoado → carrinho Memphis → carrinho de metal → carrinho preto fino → adega climatizada. */
 function barcart(d: Dc): void {
@@ -748,7 +564,7 @@ function rug(d: Dc): void {
   const at = (x: number, y: number) => {
     const u = x / w, v = y / h, edge = x < 2 || x >= w - 2 || y === 0 || y === h - 1;
     switch (s) {
-      case 0: return edge ? C('#d8b878') : (Math.abs(u - 0.5) * 4 + Math.abs(v - 0.5) * 2) < 0.6 ? C('#2a3a6a') : (x + y * 2) % 6 === 0 ? C('#d8b878') : C('#8a2a2a');
+      case 0: return edge ? m.acc2 : (Math.abs(u - 0.5) * 4 + Math.abs(v - 0.5) * 2) < 0.6 ? lv(m.wood2, 1.4) : (x + y * 2) % 6 === 0 ? m.acc2 : (m.fab === C('#e6dac0') ? C('#8a2a2a') : m.fab);
       case 1: return edge ? BLACK : (x % 8 < 4) === (y < h / 2) ? C('#e6dac0') : C('#2a7a7a');
       case 2: { const r = ((u - 0.5) * 2) ** 2 + ((v - 0.5) * 2) ** 2; return r > 1 ? 0 : C(['#c84a3a', '#e8d8b0', '#48a8a0', '#f0a0a8'][Math.floor(Math.sqrt(r) * 4) % 4]); }
       case 3: return y === 0 ? lv(C('#c8a060'), 4) : noise(x, y, 99) > 0.5 ? C('#c8a060') : C('#b08848');
@@ -805,21 +621,6 @@ function smallplant(d: Dc): void {
   if (s === 7) { p.rect(w - 3, py + 1, 1, 2, lit ? C('#48b85c') : DGREY); glow(d, 1.5, py, 2.5, m.acc); }
 }
 
-/** Vaso de flores: vaso de opalina com lírios → vaso de cristal facetado com copo-de-leite → vaso pescoço fino → vaso de cerâmica rústica → vaso Memphis → girassóis no vaso de vidro → um galho num vaso de vidro → vaso com flores e luz. */
-function vase(d: Dc): void {
-  const { p, s, m, lit, w, h } = d;
-  const fl = h - 1, cx = w / 2;
-  const stem = (x0: number, x1: number, top: number) => p.line(x0, 7, x1, top, LEAF);
-  const fl1 = (x: number, y: number, c: Col) => { p.put(x, y, c); p.put(x - 1, y, c); p.put(x + 1, y, c); p.put(x, y - 1, c); p.put(x, y, lv(c, 5)); };
-  if (s === 0) { stem(3, 2, 1); stem(4, 5, 0); stem(5, 6, 2); fl1(2, 1, C('#f8f0f0')); fl1(5, 1, C('#f0a0c0')); fl1(6, 3, C('#f8f0f0')); p.ellipse(cx, 11, 3, 3, C('#9ac8b0')); p.rect(cx - 1, 7, 2, 2, C('#9ac8b0')); p.hline(cx - 2, cx + 1, 7, lv(C('#9ac8b0'), 4)); }
-  else if (s === 1) { stem(3, 2, 2); stem(4, 5, 1); p.poly([[1, 2], [3, 1], [3, 4]], W); p.poly([[5, 1], [7, 0], [6, 3]], W); p.put(3, 3, C('#f0d040')); p.poly([[1, 7], [7, 7], [6, fl + 1], [2, fl + 1]], withAlpha(C('#c8d8e0'), 220)); for (let y = 8; y < fl; y += 2) p.put(2 + (y % 4 ? 0 : 3), y, W); p.hline(1, 6, 7, W); }
-  else if (s === 2) { stem(4, 3, 0); stem(4, 6, 2); fl1(3, 0, RED); fl1(6, 2, C('#f0d040')); p.vline(3, 6, 8, m.acc); p.vline(4, 6, 8, m.acc); p.ellipse(cx, 11, 3.5, 2.5, m.acc); p.put(2, 10, lv(m.acc, 5)); }
-  else if (s === 3) { foliage(p, cx, 3, 3.5, 3, 111, C('#a8862a'), C('#d8b040')); for (let i = 0; i < 3; i++) p.put(2 + i * 2, 2 + (i % 2), C('#c8501a')); p.poly([[1, 6], [7, 6], [8, 10], [6, fl + 1], [2, fl + 1], [0, 10]], C('#8a5a3a')); p.hline(1, 6, 9, C('#c8a060')); }
-  else if (s === 4) { stem(4, 3, 1); fl1(3, 1, C('#f0e040')); p.poly([[1, 6], [7, 6], [4, fl + 1]], m.fab); p.rect(1, 6, 6, 3, m.fab2); for (let x = 2; x < 7; x += 2) p.put(x, 7, BLACK); }
-  else if (s === 5) { stem(3, 2, 2); stem(4, 6, 1); for (const [x, y] of [[2, 2], [6, 1]] as const) { p.disc(x + 0.5, y + 0.5, 1.6, C('#f0c030')); p.put(x, y, C('#6a3a1a')); } p.rect(2, 7, 4, fl - 6, withAlpha(m.glass, 200)); p.hline(2, 5, 7, W); p.hline(2, 5, 10, withAlpha(LEAF, 200)); }
-  else if (s === 6) { p.line(4, 7, 3, 1, C('#5a4a3a')); p.line(3, 3, 6, 0, C('#5a4a3a')); p.put(6, 0, LEAF2); p.put(2, 1, LEAF2); p.rect(3, 7, 2, fl - 6, withAlpha(m.glass, 220)); p.vline(3, 8, fl - 1, W); }
-  else { stem(3, 2, 2); stem(4, 5, 1); fl1(2, 2, C('#f0a0e0')); fl1(5, 1, C('#a0c0ff')); blk(p, 2, 7, 4, fl - 6, C('#d8dce4')); p.hline(2, 5, fl, lit ? lv(m.acc, 5) : lv(m.acc, 2)); glow(d, cx, fl, 3, m.acc); }
-}
 
 /** Globo de mesa: globo em suporte de latão → globo déco com meridiano cromado → globo iluminado azul → globo de plástico laranja → globo inflável → globo de madeira → globo de arame → globo flutuante magnético com luz. */
 function globe(d: Dc): void {
@@ -852,27 +653,11 @@ function chandelier(d: Dc): void {
   else if (s === 2) { cord(7, BRASS); ball(p, cx, 9, 2, BRASS); for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2; const x = cx + Math.cos(a) * 10, y = 9 + Math.sin(a) * 6; p.line(cx, 9, x, y, BRASS); p.disc(x, y, 1, lit ? BULB : W); } glow(d, cx, 9, 11); }
   else if (s === 3) { cord(5, m.wood2); ball(p, cx, 11, 6, lit ? lv(m.fab, 4.6) : m.fab); p.hline(cx - 6, cx + 5, 11, lv(m.fab, 1.6)); p.ellipse(cx, 16, 3, 1, lit ? BULB : lv(m.fab, 1.4)); if (lit) d.fx.poly([[cx - 4, 17], [cx + 4, 17], [cx + 9, h + 4], [cx - 9, h + 4]], withAlpha(GLOW, 60)); glow(d, cx, 11, 9, C('#ffb060')); }
   else if (s === 4) { p.rect(1, 0, w - 2, 2, BLACK); p.hline(1, w - 2, 0, C('#3a3a42')); for (const x of [4, 12, 20]) { p.vline(x, 2, 4, BLACK); p.poly([[x - 2, 5], [x + 2, 5], [x + 3, 10], [x - 1, 10]], x === 12 ? m.acc : C('#2a2a30')); p.put(x + 1, 10, lit ? BULB : DGREY); if (lit) d.fx.poly([[x - 1, 11], [x + 3, 11], [x + 6, h + 4], [x - 2, h + 4]], withAlpha(BULB, 60)); } }
-  else if (s === 5) { cord(3, W); p.disc(cx, 10, 7, lit ? C('#fff8e8') : C('#f2ece0')); for (let y = 5; y < 16; y += 2) p.hline(cx - Math.round(Math.sqrt(Math.max(0, 49 - (y - 10) ** 2))) + 1, cx + Math.round(Math.sqrt(Math.max(0, 49 - (y - 10) ** 2))) - 1, y, lv(C('#f2ece0'), 2.6)); glow(d, cx, 10, 10); }
+  else if (s === 5) { const r = Math.min(7, w / 2 - 1, (h - 4) / 2), cy = h - 1 - r; cord(Math.floor(cy - r), W); p.disc(cx, cy, r, lit ? C('#fff8e8') : C('#f2ece0')); for (let y = Math.ceil(cy - r) + 1; y < cy + r; y += 2) { const hw = Math.round(Math.sqrt(Math.max(0, r * r - (y - cy) ** 2))); p.hline(cx - hw + 1, cx + hw - 1, y, lv(C('#f2ece0'), 2.6)); } glow(d, cx, cy, r + 3); }
   else if (s === 6) { p.rect(cx - 6, 0, 12, 1, m.metal); for (const [x, len] of [[cx - 5, 10], [cx, 14], [cx + 5, 8]] as const) { p.vline(x, 1, len, m.metal); p.rect(x - 1, len + 1, 2, 2, m.metal); p.ellipse(x, len + 5, 1.8, 2.5, withAlpha(C('#e8d8b0'), 220)); p.vline(x, len + 3, len + 6, lit ? C('#ffc040') : C('#8a6a2a')); if (lit) d.fx.disc(x, len + 5, 3.5, withAlpha(C('#ffc060'), 90)); } }
   else { p.vline(cx - 7, 0, 8, m.metal); p.vline(cx + 7, 0, 8, m.metal); p.ellipse(cx, 10, 11, 3, C('#2a2c34')); p.ellipse(cx, 10, 9, 1.5, lit ? lv(m.acc, 5) : lv(m.acc, 1.4)); p.ellipse(cx, 11, 9, 1, lit ? C('#f8f8ff') : C('#3a3c44')); if (lit) d.fx.ellipse(cx, 13, 11, 4, withAlpha(m.acc, 60)); }
 }
 
-/** Ventilador de teto: pás de vime → cromado déco → pás de madeira clara → pás de bambu com luminária → pás pretas finas → pás de pinho com lustre → pás brancas sem luz → pás com anel de LED. */
-function ceilfan(d: Dc): void {
-  const { p, s, m, lit, w } = d;
-  const cx = w >> 1;
-  const blade = [C('#c8a060'), m.metal, m.wood, C('#c8a868'), BLACK, m.wood, W, C('#d8dce4')][s];
-  const motor = [m.wood2, m.metal, BRASS, m.wood2, BLACK, BRASS, W, C('#2a2c34')][s];
-  p.rect(cx - 2, 0, 4, 1, lv(motor, 2)); p.vline(cx, 1, 3, motor);
-  blk(p, cx - 3, 4, 6, 3, motor);
-  const bl = s === 4 || s === 6 ? 12 : 11;
-  blk(p, cx - 3 - bl, 5, bl, 2, blade); blk(p, cx + 3, 5, bl, 2, blade);
-  p.ellipse(cx, 6, 2, 1, lv(blade, 2.6)); // pá de frente (encurtada)
-  if (s === 0) for (let x = cx - 3 - bl; x < cx - 3; x += 2) p.put(x, 5, lv(blade, 1.6));
-  if (s === 3 || s === 5) { p.ellipse(cx, 9, 3, 2, lit ? lv(C('#f0e0b0'), 5) : C('#f0e0b0')); glow(d, cx, 10, 6); }
-  else if (s === 7) { p.hline(cx - 3, cx + 2, 7, lit ? lv(m.acc, 5) : lv(m.acc, 1.6)); glow(d, cx, 8, 6, m.acc); }
-  else { p.vline(cx, 7, 9, motor); p.put(cx, 10, s === 1 ? m.metal : GREY); }
-}
 
 // ---------------------------------------------------------------- padrões (ladrilhos sem costura: tudo é função periódica de x, y)
 
@@ -959,7 +744,6 @@ function floorAt(s: number, x: number, y: number): Col {
     default: return x === 0 || y === 0 ? C('#4a4a52') : (x + y) % 9 === 0 ? C('#9a9aa4') : C('#7a7a84'); // porcelanato grande
   }
 }
-const TILE: Record<string, (s: number, x: number, y: number) => Col> = { wallpaper: wallpaperAt, paint: paintAt, floor: floorAt };
 
 // ---------------------------------------------------------------- janela (o vão DWIN fica livre: a vista da cidade aparece)
 
@@ -1021,43 +805,1175 @@ function nameIn(p: Px, name: string, x: number, y: number, mw: number, mh: numbe
 function sign(d: Dc): void {
   const { p, s, m, lit, w, h, name } = d;
   const neon = (c: Col) => (lit ? lv(c, 5) : lv(c, 2.2));
-  if (s === 0) { for (const x of [6, w - 7]) { p.vline(x, 0, 3, GREY); p.put(x, 0, BLACK); } blk(p, 0, 3, w, h - 3, m.wood); p.rect(2, 5, w - 4, h - 7, lv(m.wood, 1.6)); for (const x of [1, w - 2]) p.put(x, 4, m.metal); nameIn(p, name, 3, 5, w - 6, h - 7, GOLD, lv(m.wood, 1)); }
+  if (s === 0) { const t = h < 14 ? 1 : 3; for (const x of [6, w - 7]) { p.vline(x, 0, t, GREY); p.put(x, 0, BLACK); } blk(p, 0, t, w, h - t, m.wood); p.rect(1, t + 1, w - 2, h - t - 2, lv(m.wood, 1.6)); for (const x of [1, w - 2]) p.put(x, t + 1, m.metal); nameIn(p, name, 2, t + 1, w - 4, h - t - 2, GOLD, lv(m.wood, 1)); }
   else if (s === 1) { blk(p, 4, 0, w - 8, h, BLACK); p.poly([[0, 4], [4, 0], [4, h], [0, h - 4]], m.metal); p.poly([[w, 4], [w - 4, 0], [w - 4, h], [w, h - 4]], m.metal); p.hline(5, w - 6, 2, m.metal); p.hline(5, w - 6, h - 3, m.metal); nameIn(p, name, 5, 3, w - 10, h - 6, GOLD); }
-  else if (s === 2) { blk(p, 0, 2, w, h - 2, C('#2a2a30')); for (const x of [8, w - 9]) p.rect(x, 0, 1, 2, GREY); nameIn(p, name, 2, 3, w - 4, h - 5, neon(C('#ff6a8a'))); p.ring(w - 5, 6, 2, neon(C('#6ae0ff'))); if (lit) { d.fx.rect(1, 3, w - 2, h - 5, withAlpha(C('#ff6a8a'), 40)); } }
-  else if (s === 3) { blk(p, 0, 1, w, h - 1, m.wood2); p.rect(2, 3, w - 4, h - 5, lit ? C('#f8e8c0') : C('#d8c8a0')); p.rect(2, 3, w - 4, 2, m.fab); p.rect(2, h - 4, w - 4, 2, m.fab); nameIn(p, name, 3, 5, w - 6, h - 9, m.wood2); glow(d, w / 2, h / 2, 12, C('#fff0c0')); p.vline(w >> 1, 0, 0, GREY); }
+  else if (s === 2) { blk(p, 0, 2, w, h - 2, C('#2a2a30')); for (const x of [8, w - 9]) p.rect(x, 0, 1, 2, GREY); nameIn(p, name, 2, 3, w - 11, h - 5, neon(C('#ff6a8a'))); p.ring(w - 5, 6, 2, neon(C('#6ae0ff'))); if (lit) { d.fx.rect(1, 3, w - 2, h - 5, withAlpha(C('#ff6a8a'), 40)); } }
+  else if (s === 3) { const sb = h < 14 ? 1 : 2; blk(p, 0, 1, w, h - 1, m.wood2); p.rect(1, 2, w - 2, h - 3, lit ? C('#f8e8c0') : C('#d8c8a0')); p.rect(1, 2, w - 2, sb, m.fab); p.rect(1, h - 1 - sb, w - 2, sb, m.fab); nameIn(p, name, 2, 2 + sb, w - 4, h - 3 - 2 * sb, m.wood2); glow(d, w / 2, h / 2, 12, C('#fff0c0')); p.vline(w >> 1, 0, 0, GREY); }
   else if (s === 4) { blk(p, 0, 2, w, h - 2, BLACK); for (let x = 2; x < w - 2; x += 4) p.vline(x, 3, h - 2, C('#1a1a30')); p.hline(1, w - 2, 3, neon(C('#3ac0d0'))); p.hline(1, w - 2, h - 2, neon(C('#3ac0d0'))); nameIn(p, name, 2, 4, w - 4, h - 6, neon(C('#ff5ab0'))); p.vline(w >> 1, 0, 1, GREY); if (lit) d.fx.rect(0, 2, w, h - 2, withAlpha(C('#ff5ab0'), 35)); }
   else if (s === 5) { for (const x of [10, w - 11]) { p.line(x, 0, x + 2, 3, DGREY); p.rect(x + 1, 3, 3, 1, DGREY); if (lit) d.fx.poly([[x, 4], [x + 5, 4], [x + 9, h], [x - 4, h]], withAlpha(BULB, 60)); } blk(p, 0, 5, w, h - 5, C('#c8ccd4')); nameIn(p, name, 2, 5, w - 4, h - 5, m.fab, undefined); }
-  else if (s === 6) { nameIn(p, name, 0, 2, w, h - 2, C('#b8bcc4'), C('#5a5c64')); }
+  else if (s === 6) { blk(p, 0, 1, w, h - 1, C('#e4e2dc')); for (const x of [2, w - 3]) p.put(x, 2, GREY); nameIn(p, name, 1, 1, w - 2, h - 1, C('#7a7c86'), C('#c4c6cc')); }
   else { blk(p, 0, 1, w, h - 1, C('#14141a')); for (let y = 3; y < h - 1; y += 2) for (let x = 2; x < w - 1; x += 2) p.put(x, y, C('#1e1e26')); nameIn(p, name, 2, 3, w - 4, h - 4, lit ? m.acc : lv(m.acc, 1.6)); glow(d, w / 2, h / 2, 10, m.acc); p.vline(w >> 1, 0, 0, GREY); }
 }
 
-/** Placa com o logo (parede interna): oval de latão gravado → distintivo cromado com asas → bumerangue → madeira com círculos → triângulo neon → disco de acrílico → placa branca → acrílico com borda de LED. */
-function logo(d: Dc): void {
-  const { p, s, m, lit, w, h, name } = d;
-  const ini = (name.trim()[0] ?? 'S').toUpperCase();
-  const mark = (cx: number, cy: number, c: Col) => drawText(p, ini, cx - 1, cy - 2, c);
-  const label = (y: number, c: Col, x0 = 2, x1 = w - 2) => nameIn(p, name, x0, y, x1 - x0, 7, c);
-  if (s === 0) { hang(p, w >> 1, 6, w - 7, 3); p.ellipse(w / 2, 12.5, w / 2 - 0.5, 9, BRASS); p.ellipse(w / 2, 12.5, w / 2 - 2.5, 7, lv(BRASS, 3.2)); p.ellipse(w / 2, 9, 3, 3, BRASS); mark(w / 2, 9, C('#4a2a10')); label(13, C('#4a2a10'), 5, w - 5); }
-  else if (s === 1) { p.put(w >> 1, 0, GREY); p.poly([[0, 7], [12, 4], [12, 12]], m.metal); p.poly([[w, 7], [w - 12, 4], [w - 12, 12]], m.metal); for (let i = 0; i < 3; i++) { p.hline(2 + i * 3, 11, 6 + i * 2, lv(m.metal, 2)); p.hline(w - 12, w - 3 - i * 3, 6 + i * 2, lv(m.metal, 2)); } p.disc(w / 2, 8, 6, BLACK); p.ring(w / 2, 8, 6, m.metal); mark(w / 2, 8, m.metal); blk(p, 3, 14, w - 6, 8, BLACK); label(14, m.metal, 4, w - 4); }
-  else if (s === 2) { p.put(w >> 1, 0, GREY); p.poly([[2, 4], [w - 4, 1], [w - 1, 6], [w / 2, 9], [w - 2, 18], [3, 21], [0, 15], [w / 2 - 4, 11]], m.acc); p.poly([[5, 6], [w - 6, 4], [w - 4, 7], [w / 2, 10], [6, 9]], C('#f4ecd0')); label(4, m.acc, 6, w - 6); p.disc(8, 16, 2.5, m.acc2); mark(8.5, 16, BLACK); }
-  else if (s === 3) { hang(p, w >> 1, 5, w - 6, 3); blk(p, 0, 3, w, h - 3, m.wood); for (let i = 0; i < 3; i++) p.disc(7 + i * 3, 10, 5 - i, [m.fab, m.fab2, C('#f0c060')][i]); mark(9, 10, m.wood2); label(14, C('#f0e0b0')); }
-  else if (s === 4) { p.put(w >> 1, 0, GREY); p.rect(0, 1, w, h - 1, BLACK); const c = lit ? lv(C('#ff5ab0'), 5) : lv(C('#ff5ab0'), 2.2); p.line(4, h - 9, 11, 3, c); p.line(11, 3, 18, h - 9, c); p.hline(4, 18, h - 9, c); mark(11, 9, lit ? lv(C('#3ac0d0'), 5) : lv(C('#3ac0d0'), 2)); label(h - 8, lit ? lv(C('#3ac0d0'), 5) : lv(C('#3ac0d0'), 2), 20, w - 1); glow(d, 11, 8, 8, C('#ff5ab0')); }
-  else if (s === 5) { for (const x of [2, w - 3]) p.put(x, 2, GREY); p.rect(0, 1, w, h - 1, withAlpha(C('#d8e8f0'), 200)); p.hline(0, w - 1, 1, W); p.disc(9, 11, 6, C('#c8ccd8')); p.disc(9, 11, 1.4, withAlpha(C('#d8e8f0'), 200)); p.line(5, 8, 12, 14, C('#f0a0e0')); mark(9, 5, C('#2a3a6a')); label(8, C('#2a3a6a'), 17, w - 1); }
-  else if (s === 6) { for (const x of [2, w - 3]) p.put(x, 3, GREY); blk(p, 0, 2, w, h - 4, W); p.rect(4, 6, 6, 6, BLACK); drawText(p, ini, 6, 6.5, W); label(7, BLACK, 12, w - 2); p.hline(12, w - 4, 15, m.acc2); }
-  else { p.put(w >> 1, 0, GREY); p.rect(0, 1, w, h - 1, withAlpha(C('#30404c'), 210)); p.hline(0, w - 1, 1, lit ? lv(m.acc, 5) : lv(m.acc, 2)); p.hline(0, w - 1, h - 1, lit ? lv(m.acc, 5) : lv(m.acc, 2)); p.disc(8, 11, 5, lit ? m.acc : lv(m.acc, 1.6)); mark(8, 11, C('#14141a')); label(8, lit ? W : CHROME, 15, w - 1); glow(d, w / 2, h / 2, 12, m.acc); }
+
+
+// ---------------------------------------------------------------- itens específicos do catálogo · móveis
+
+/** Moldura da época (itens sem época): dourada, laca preta, madeira clara, nogueira, branca, pinho, preta fina, alumínio. */
+const eraFrame = (e: number, m: Mat): Col => [C('#d8a840'), BLACK, m.wood, C('#5a3418'), W, C('#c8a070'), C('#2a2a2e'), C('#c8ccd4')][e];
+/** Quadro pendurado (prego, barbante e moldura): devolve o miolo. */
+function hungFrame(d: Dc, fr: Col, t: number, y0 = 3): { x: number; y: number; w: number; h: number } {
+  const { p, w, h } = d;
+  hang(p, w >> 1, Math.min(4, w >> 2), w - 1 - Math.min(4, w >> 2), y0);
+  blk(p, 0, y0, w, h - y0, fr);
+  if (t >= 2) p.hline(1, w - 2, y0 + 1, lv(fr, 4.6));
+  return { x: t, y: y0 + t, w: w - 2 * t, h: h - y0 - 2 * t };
 }
+
+/** Chaise longue de vime curvado (madeira vergada, encosto em voluta). */
+function chaise(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  const wood = m.wood;
+  for (let x = 2; x < w - 2; x++) { const y = 10 + Math.round(2 * Math.sin((x / (w - 4)) * Math.PI)); p.put(x, y, wood); p.put(x, y + 1, lv(wood, 2)); }
+  p.line(2, 10, 1, 3, wood); p.line(1, 3, 4, 1, wood); p.disc(5, 2.5, 1.5, wood); // voluta do encosto
+  for (let x = 4; x < 14; x++) for (let y = 4 + Math.round((14 - x) * 0.4); y < 10; y++) if ((x + y) % 2 === 0) p.put(x, y, C('#d8c090')); // palhinha
+  blk(p, 3, 7, w - 7, 3, m.fab); p.hline(4, w - 5, 7, lv(m.fab, 4.4)); blk(p, 2, 4, 4, 5, lv(m.fab, 2.4));
+  p.line(5, 12, 2, fl, wood); p.line(w - 6, 12, w - 3, fl, wood); p.line(w / 2, 13, w / 2 - 2, fl, wood);
+  for (const x of [2, w / 2 - 2, w - 3]) p.put(x, fl, m.metal);
+  p.line(4, fl - 2, w - 5, fl - 2, lv(wood, 2));
+}
+/** Biombo de seda pintada: 3 painéis em moldura entalhada com garça e galhos. */
+function screenFold(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1, pw = Math.floor(w / 3);
+  for (let i = 0; i < 3; i++) {
+    const x = i * pw, top = i === 1 ? 0 : 2;
+    blk(p, x, top, pw, fl - top - 1, m.wood);
+    p.rect(x + 2, top + 2, pw - 4, fl - top - 6, i === 1 ? C('#e8dcc0') : C('#e0d4b4'));
+    p.poly([[x + 2, top + 3], [x + pw / 2, top + 1], [x + pw - 2, top + 3]], m.wood2);
+    p.rect(x + 1, fl - 1, 2, 2, m.wood2); p.rect(x + pw - 3, fl - 1, 2, 2, m.wood2);
+  }
+  // pintura que atravessa os painéis: galho com flores e uma garça
+  for (let x = 3; x < w - 3; x++) { const y = 9 + Math.round(Math.sin(x * 0.35) * 3); if (x % pw > 1 && x % pw < pw - 2) { p.put(x, y, C('#4a3a30')); if (x % 4 === 0) p.put(x, y - 1, C('#e890a8')); } }
+  const gx = pw + pw / 2;
+  p.ellipse(gx, 20, 3, 2, W); p.line(gx + 2, 19, gx + 4, 14, W); p.put(gx + 5, 14, C('#c83a32')); p.line(gx - 1, 22, gx - 1, 26, C('#4a3a30')); p.line(gx + 1, 22, gx + 2, 26, C('#4a3a30'));
+  p.hline(2, w - 3, fl - 4, C('#8aa878'));
+}
+/** Aparador/bufê/credenza: corpo com portas e gavetas no estilo (vitral nouveau, marchetaria déco, teca de pés palito). */
+function cabinet(d: Dc): void {
+  const { p, s, m, w, h } = d;
+  const lh = s === 2 ? 6 : 3, top = s === 0 ? 3 : 0, bot = h - 1 - lh;
+  const c = s === 1 ? BLACK : m.wood;
+  blk(p, 0, top, w, bot - top + 1, c);
+  if (s === 0) { p.poly([[2, top + 1], [w / 2, 0], [w - 2, top + 1]], m.wood2); p.disc(w / 2, 1.5, 1.2, m.metal); }
+  const nd = s === 2 ? 3 : 2, dw = Math.floor((w - 4) / nd);
+  for (let i = 0; i < nd; i++) {
+    const x = 2 + i * dw, y = top + 4;
+    p.rect(x, y, dw - 1, bot - y - 1, lv(c, s === 1 ? 2.6 : 2.4)); p.hline(x, x + dw - 2, y, lv(c, 1.4));
+    if (s === 0) for (let yy = y + 1; yy < bot - 2; yy++) for (let xx = x + 1; xx < x + dw - 2; xx++) p.set(xx, yy, withAlpha([C('#c83a32'), C('#3a8a5a'), C('#d8a030'), C('#3a6ac8')][(Math.floor(xx / 3) + Math.floor(yy / 3)) % 4], 120));
+    if (s === 1) { const cx = x + (dw - 1) / 2; for (let k = 0; k < 5; k++) p.line(cx, bot - 2, x + 1 + k * ((dw - 3) / 4), y + 2, k % 2 ? m.metal : lv(m.metal, 2)); }
+    if (s === 2) p.hline(x + 2, x + dw - 4, y + 2, m.wood2);
+    p.put(x + dw - 3, y + Math.floor((bot - y) / 2), m.metal);
+  }
+  p.rect(2, top + 1, w - 4, 2, lv(c, s === 1 ? 2 : 3.2)); p.put(w / 2, top + 2, m.metal);
+  if (s === 1) { p.hline(0, w - 1, top, m.metal); blk(p, 2, bot + 1, w - 4, lh, BLACK); p.hline(3, w - 4, bot + 1, m.metal); }
+  else legs(d, 2, w - 3, bot + 1);
+  if (s === 2) { p.ellipse(w - 9, top - 1, 3, 1, m.acc); } // tigela de cerâmica em cima
+}
+/** Penteadeira déco: espelho redondo sobre cômoda escalonada com banqueta. */
+function vanity(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  p.disc(w / 2, 9, 8.5, m.wood2); p.disc(w / 2, 9, 7, m.glass); p.line(w / 2 - 4, 6, w / 2 - 1, 3, lv(m.glass, 5)); p.disc(w / 2, 9, 7.6, 0); p.ring(w / 2, 9, 7.5, m.metal);
+  blk(p, 1, 17, w - 2, fl - 17, m.wood2); blk(p, 4, 15, w - 8, 3, m.wood2); p.hline(2, w - 3, 18, m.metal);
+  for (const x of [3, w - 9]) { p.rect(x, 20, 6, 3, lv(m.wood2, 2.6)); p.put(x + 3, 21, m.metal); p.rect(x, 24, 6, 3, lv(m.wood2, 2.6)); p.put(x + 3, 25, m.metal); }
+  p.rect(w / 2 - 1, 15, 2, 1, C('#f0a0c0')); p.put(w / 2 + 3, 14, C('#c8d8e0'));
+}
+/** Escrivaninha/mesa: ébano com gaveteiros (déco), vidro e cromo (anos 80), regulável de pé (minimalista). */
+function deskF(d: Dc): void {
+  const { p, s, m, lit, w, h } = d, fl = h - 1;
+  if (s === 4) { // vidro e cromo
+    p.rect(0, 6, w, 2, withAlpha(m.glass, 210)); p.hline(0, w - 1, 6, W);
+    p.line(3, 8, 8, fl, CHROME); p.line(8, 8, 3, fl, CHROME); p.line(w - 4, 8, w - 9, fl, CHROME); p.line(w - 9, 8, w - 4, fl, CHROME);
+    blk(p, w / 2 - 6, 1, 8, 5, C('#e8e4dc')); p.rect(w / 2 - 5, 2, 6, 3, lit ? C('#80c0a0') : C('#2a4a3a')); p.rect(w / 2 + 4, 4, 5, 2, PAPER);
+    return;
+  }
+  if (s === 6) { // mesa de pé regulável
+    blk(p, 0, 9, w, 2, m.wood); p.rect(5, 11, 2, fl - 13, m.metal); p.rect(w - 7, 11, 2, fl - 13, m.metal); p.hline(2, 10, fl, m.metal); p.hline(w - 11, w - 3, fl, m.metal);
+    blk(p, w / 2 - 7, 0, 13, 8, BLACK); p.rect(w / 2 - 6, 1, 11, 6, lit ? C('#4a6ac8') : C('#1a2030')); p.vline(w / 2 - 1, 8, 8, m.metal); p.rect(w / 2 + 8, 7, 4, 2, W);
+    return;
+  }
+  // ébano déco
+  blk(p, 0, 6, w, 3, m.wood2); p.hline(0, w - 1, 8, m.metal);
+  for (const x of [1, w - 12]) { blk(p, x, 9, 11, fl - 9, m.wood2); for (let i = 0; i < 3; i++) { p.hline(x + 1, x + 9, 11 + i * 4, lv(m.wood2, 3)); p.put(x + 5, 12 + i * 4, m.metal); } }
+  p.rect(12, 9, w - 24, 2, lv(m.wood2, 2)); blk(p, 4, 2, 7, 4, C('#1e2a20')); p.vline(7, 2, 5, m.metal); p.poly([[4, 1], [10, 1], [8, 3], [6, 3]], C('#3a7a4a')); p.rect(w - 14, 3, 6, 3, C('#e6dac0')); p.put(w - 8, 2, BLACK);
+}
+/** Floreira de ferro batido com samambaia. */
+function plantstand(d: Dc): void {
+  const { p, w, h } = d, fl = h - 1, iron = C('#2a2a30');
+  foliage(p, w / 2, 5, 5.5, 4.5, 201); for (const x of [1, w - 2]) { p.line(w / 2, 6, x, 12, LEAF); p.put(x, 12, LEAF2); }
+  blk(p, 2, 8, w - 4, 4, C('#b8603a')); p.hline(1, w - 2, 12, iron);
+  p.line(3, 13, 1, fl, iron); p.line(w - 4, 13, w - 2, fl, iron); p.vline(w / 2, 13, fl - 3, iron);
+  p.ring(w / 2, 17, 2.5, iron); p.ring(w / 2, fl - 3, 1.5, iron); p.hline(2, w - 3, fl - 4, iron);
+}
+/** Poltrona de couro com banqueta (lounge de compensado moldado). */
+function lounge(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1, leather = C('#2a1e1a'), ply = m.wood;
+  p.poly([[1, 2], [7, 0], [11, 12], [4, 14]], ply); p.poly([[2, 3], [7, 1], [10, 11], [5, 12]], leather); p.line(3, 4, 7, 2, lv(leather, 4));
+  p.poly([[4, 12], [14, 10], [16, 14], [5, 16]], ply); p.poly([[5, 12], [14, 11], [15, 13], [6, 15]], leather);
+  blk(p, 8, 9, 7, 2, ply); p.hline(9, 13, 9, lv(leather, 4));
+  p.vline(9, 16, fl - 2, BLACK); p.line(9, fl - 2, 4, fl, BLACK); p.line(9, fl - 2, 14, fl, BLACK);
+  blk(p, w - 8, fl - 6, 7, 3, leather); p.hline(w - 8, w - 2, fl - 7, ply); p.vline(w - 5, fl - 3, fl - 1, BLACK); p.line(w - 5, fl - 1, w - 8, fl, BLACK); p.line(w - 5, fl - 1, w - 2, fl, BLACK);
+}
+/** Banco de lanchonete: dois bancos de vinil vermelho com mesa de fórmica e borda cromada. */
+function booth(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1, red = m.acc;
+  for (const x of [0, w - 9]) { blk(p, x, 2, 9, fl - 1, red); for (let y = 5; y < 12; y += 3) p.hline(x + 1, x + 7, y, lv(red, 1.6)); p.hline(x, x + 8, 12, CHROME); blk(p, x, 13, 9, fl - 12, lv(red, 2.4)); }
+  blk(p, 9, 10, w - 18, 2, C('#e8e0c0')); p.hline(9, w - 10, 11, CHROME); p.vline(w / 2, 12, fl - 1, CHROME); p.hline(w / 2 - 3, w / 2 + 3, fl, CHROME);
+  p.rect(13, 7, 2, 3, C('#e04848')); p.put(13, 6, W); p.rect(w - 16, 8, 3, 2, C('#f0d040')); p.rect(w / 2 - 1, 7, 2, 3, withAlpha(m.glass, 200));
+}
+/** Cama: cama d'água com moldura de madeira (anos 70), futon dobrável (anos 90), cama inteligente com luz (smart). */
+function bedF(d: Dc): void {
+  const { p, s, m, lit, w, h } = d, fl = h - 1;
+  if (s === 3) { blk(p, 0, 5, w, fl - 4, m.wood); p.rect(2, 3, w - 4, 4, C('#5a8ac8')); for (let x = 3; x < w - 3; x += 4) p.put(x, 4 + (x % 8 ? 0 : 1), C('#9ac0f0')); p.rect(2, 2, w - 4, 1, lv(C('#5a8ac8'), 4)); blk(p, 0, 0, 4, 6, m.wood); blk(p, 3, 1, 8, 3, W); p.hline(1, w - 2, 9, lv(m.wood, 1.6)); return; }
+  if (s === 5) { blk(p, 0, fl - 3, w, 4, m.wood); for (let x = 4; x < w - 4; x += 6) p.vline(x, fl - 3, fl, lv(m.wood, 1.6)); blk(p, 1, fl - 7, w - 2, 4, m.fab); p.hline(2, w - 3, fl - 7, lv(m.fab, 4.4)); for (let x = 6; x < w - 4; x += 8) p.put(x, fl - 5, lv(m.fab, 1.4)); blk(p, 2, fl - 10, 8, 3, m.fab2); p.poly([[w - 14, fl - 7], [w - 2, fl - 7], [w - 2, fl - 4]], C('#d8a030')); return; }
+  blk(p, 0, fl - 6, w, 6, C('#2a2c34')); p.hline(1, w - 2, fl, lit ? lv(m.acc, 5) : lv(m.acc, 2)); if (lit) d.fx.hline(0, w - 1, fl, withAlpha(m.acc, 120));
+  blk(p, 1, fl - 10, w - 2, 5, W); p.hline(2, w - 3, fl - 10, lv(W, 5)); blk(p, 0, 0, 6, fl - 5, m.fab); p.rect(1, 3, 4, 2, lit ? m.acc : DGREY);
+  blk(p, 6, fl - 12, 8, 3, C('#e8e8ec')); blk(p, 16, fl - 11, w - 17, 3, m.fab2); glow(d, 3, 4, 3, m.acc);
+}
+/** Cadeira suspensa de macramê: corda do teto (y = 0), cesto trançado e almofada. */
+function macrameChair(d: Dc): void {
+  const { p, m, w, h } = d, rope = C('#d8c8a0');
+  p.rect(w / 2 - 2, 0, 4, 1, GREY); p.vline(w / 2, 1, 8, rope); p.disc(w / 2, 9, 1.5, m.wood);
+  p.line(w / 2, 10, 1, 18, rope); p.line(w / 2, 10, w - 2, 18, rope);
+  for (let y = 18; y < h - 2; y++) { const r = (w / 2 - 1) * Math.sqrt(1 - ((y - 18) / (h - 18)) ** 2); for (let x = Math.round(w / 2 - r); x <= w / 2 + r; x++) p.put(x, y, (x + y) % 3 === 0 ? lv(rope, 2) : rope); }
+  p.ellipse(w / 2, 18, w / 2 - 1, 2, lv(rope, 3)); blk(p, 4, 19, w - 8, 4, m.fab); p.hline(5, w - 6, 19, lv(m.fab, 4.4));
+  for (let x = 3; x < w - 3; x += 2) p.vline(x, h - 3, h - 1, rope); // franja chega ao chão
+}
+/** Conjunto de vime: sofazinho de encosto em leque com almofadas. */
+function rattan(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1, cane = C('#c8a060');
+  for (let y = 1; y < 13; y++) for (let x = 2; x < w - 2; x++) { const dx = (x - w / 2) / (w / 2 - 2), top = 1 + Math.round(5 * dx * dx); if (y >= top) p.put(x, y, (x + y) % 2 ? cane : lv(cane, 2.2)); }
+  for (let i = 0; i < 9; i++) p.line(w / 2, 12, 3 + i * ((w - 6) / 8), 2 + Math.round(5 * ((3 + i * ((w - 6) / 8) - w / 2) / (w / 2 - 2)) ** 2), lv(cane, 1.4));
+  blk(p, 1, 12, w - 2, 5, cane); for (let x = 2; x < w - 2; x += 2) p.vline(x, 13, 16, lv(cane, 2)); blk(p, 4, 10, w - 8, 3, m.fab); p.vline(w / 2, 10, 12, lv(m.fab, 1.6));
+  for (const x of [2, w - 4]) { p.rect(x, 17, 2, fl - 16, lv(cane, 1.6)); } p.hline(2, w - 3, fl - 1, lv(cane, 1.6));
+}
+/** Fliperama: gabinete com tela acesa, painel de controle, moedeiro e arte lateral. */
+function arcade(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 0, 0, w, fl + 1, C('#1e1e2a')); p.rect(1, 1, w - 2, 5, lit ? m.acc : lv(m.acc, 1.4)); drawText(p, 'GO', 4, 1, BLACK);
+  p.poly([[2, 7], [w - 2, 7], [w - 3, 18], [3, 18]], C('#0a0a10')); p.rect(4, 8, w - 8, 9, lit ? C('#1a2a6a') : C('#10142a'));
+  if (true) { p.rect(6, 12, 2, 2, lit ? C('#f0e040') : C('#6a6a20')); for (let x = 9; x < w - 5; x += 2) p.put(x, 13, lit ? W : DGREY); p.rect(w - 7, 9, 2, 2, lit ? m.fab : lv(m.fab, 1.4)); }
+  blk(p, 0, 19, w, 4, m.fab2); p.vline(4, 17, 19, BLACK); p.disc(4.5, 17, 1, RED); p.disc(10, 20.5, 0.9, C('#f0e040')); p.disc(13, 20.5, 0.9, m.fab);
+  p.rect(w / 2 - 2, 26, 4, 3, C('#3a3a42')); p.rect(w / 2 - 1, 27, 1, 1, lit ? C('#ff4a3a') : DGREY); p.put(w / 2 + 1, 27, C('#c8ccd4'));
+  for (let y = 24; y < fl - 1; y += 3) p.hline(1, 2, y, m.fab); glow(d, w / 2, 12, 9, C('#6a8af0'));
+}
+/** Torre de CDs. */
+function cdtower(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 0, 0, w, fl + 1, m.metal); p.rect(1, 1, w - 2, fl - 2, lv(m.metal, 1.4));
+  for (let y = 2; y < fl - 2; y += 2) p.hline(2, w - 3, y, [C('#c8ccd8'), C('#3a6ac8'), C('#e04848'), C('#2a2a2a'), C('#d8a030'), W][(y >> 1) % 6]);
+  blk(p, -0, fl - 1, w, 2, lv(m.metal, 1));
+}
+/** Mesa de sinuca: feltro verde, tabela de madeira, caçapas, bolas e taco; pés da época. */
+function pooltable(d: Dc): void {
+  const { p, m, w } = d;
+  const felt = [C('#2a6a3a'), C('#2a6a3a'), C('#2a7a4a'), C('#3a6a2a'), C('#2a5a8a'), C('#7a2a3a'), C('#3a4a5a'), C('#2a3a6a')][d.e];
+  blk(p, 0, 4, w, 4, m.wood); p.rect(2, 3, w - 4, 2, felt); p.hline(2, w - 3, 3, lv(felt, 4));
+  for (const x of [1, w / 2, w - 2]) p.rect(x - 1, 3, 2, 1, BLACK);
+  ball(p, 9, 2, 1.3, W); ball(p, w - 12, 2, 1.3, C('#e04848')); ball(p, w - 9, 2, 1.3, C('#f0c040')); ball(p, w - 15, 2, 1.3, C('#2a4ab0'));
+  p.line(11, 1, w / 2 + 6, 0, C('#c8a060')); blk(p, 2, 8, w - 4, 3, lv(m.wood, 1.6)); p.hline(3, w - 4, 9, m.metal);
+  legs({ ...d, s: d.e }, 3, w - 4, 11);
+}
+/** Prateleira flutuante (minimalista): tábua fina presa invisível, com vasinho e livros. */
+function floatshelf(d: Dc): void {
+  const { p, m, w, h } = d;
+  blk(p, 0, h - 2, w, 2, m.wood); p.hline(1, w - 2, h - 1, lv(m.wood, 1.2));
+  books(p, 3, h - 3, 6, 4, 211, [C('#e8e4dc'), C('#2a2a2e'), m.acc2]); p.rect(14, h - 4, 3, 2, C('#e8e4dc')); p.put(15, h - 5, LEAF); blk(p, w - 9, h - 3, 6, 1, m.acc); p.rect(w - 8, h - 4, 4, 1, C('#e8d8b8'));
+}
+/** Banco de madeira maciça. */
+function bench(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 0, 2, w, 3, m.wood); for (let x = 3; x < w - 2; x += 9) p.vline(x, 3, 3, lv(m.wood, 3)); blk(p, 3, 5, 3, fl - 4, m.wood2); blk(p, w - 6, 5, 3, fl - 4, m.wood2); blk(p, 10, 1, 6, 1, m.fab);
+}
+/** Balcão de bar: tampo, frente almofadada/da época, prateleira de garrafas atrás e banquetas. */
+function barcounter(d: Dc): void {
+  const { p, m, w, h, e } = d, fl = h - 1;
+  for (let i = 0; i < 9; i++) { const x = 6 + i * 5, c = [C('#3a6a3a'), C('#8a3a1a'), C('#d8c8a0'), C('#2a4a6a'), C('#c8a040')][i % 5]; p.rect(x, 2, 2, 5, c); p.put(x, 1, c); p.put(x, 0, lv(c, 4)); }
+  p.hline(4, w - 5, 7, m.wood2); p.vline(4, 7, 9, m.wood2); p.vline(w - 5, 7, 9, m.wood2);
+  blk(p, 0, 10, w, 3, e === 0 || e === 1 ? C('#5a3418') : m.wood); p.hline(0, w - 1, 12, e >= 6 ? m.metal : BRASS);
+  const front = [m.wood2, BLACK, C('#c84a3a'), m.wood, C('#2a2a30'), m.wood, C('#e8e4dc'), C('#2a2c34')][e];
+  blk(p, 2, 13, w - 4, fl - 13, front);
+  if (e === 0 || e === 3 || e === 5) for (let x = 6; x < w - 4; x += 8) p.rect(x, 15, 6, fl - 17, lv(front, 2.6));
+  if (e === 1) for (let x = 6; x < w - 4; x += 4) p.vline(x, 14, fl - 2, m.metal);
+  if (e === 2) for (let y = 15; y < fl - 1; y += 3) p.hline(3, w - 4, y, lv(front, 1.6));
+  if (e === 7 || e === 4) p.hline(3, w - 4, fl - 1, e === 7 ? m.acc : C('#ff5ab0'));
+  p.hline(3, w - 4, fl - 3, m.metal); // descanso de pé
+  p.rect(w - 12, 8, 3, 2, withAlpha(m.glass, 200)); p.rect(10, 8, 2, 2, C('#c8a040'));
+}
+/** Arara de camisetas da casa: barra cromada, camisetas com o logo em cores. */
+function merchrack(d: Dc): void {
+  const { p, m, w, h, e } = d, fl = h - 1, bar = e >= 6 ? m.metal : CHROME;
+  p.hline(1, w - 2, 2, bar); p.vline(1, 2, fl, bar); p.vline(w - 2, 2, fl, bar); p.hline(0, 3, fl, bar); p.hline(w - 4, w - 1, fl, bar); p.put(1, fl, BLACK); p.put(w - 2, fl, BLACK);
+  const cols = [C('#2a2a30'), C('#c83a32'), W, C('#3a6ac8'), C('#48a050')];
+  for (let i = 0; i < 5; i++) { const x = 3 + i * 5, c = cols[(i + e) % 5]; p.put(x + 2, 3, GREY); p.poly([[x, 5], [x + 5, 5], [x + 6, 8], [x + 5, 9], [x + 5, 17], [x, 17], [x, 9], [x - 1, 8]], c); p.hline(x, x + 4, 5, lv(c, 4.4)); p.rect(x + 2, 9, 2, 2, c === W ? BLACK : m.acc2 === c ? W : lv(c, 5)); }
+  blk(p, 4, fl - 6, w - 8, 5, m.wood); p.hline(5, w - 6, fl - 4, lv(m.wood, 1.6)); for (let i = 0; i < 4; i++) p.rect(6 + i * 5, fl - 8, 4, 2, cols[(i + 2) % 5]);
+}
+/** Caixote de discos: lombadas e capas à mostra, madeira da época. */
+function recordbin(d: Dc): void {
+  const { p, m, w, h, e } = d, fl = h - 1;
+  for (let i = 0; i < 9; i++) { const x = 3 + i * 2.6, c = [C('#c83a32'), C('#2a2a2a'), C('#f0d040'), C('#3a6ac8'), C('#e8e0c8'), C('#48a050'), C('#e88a30')][(i + e) % 7]; p.rect(x, 2 + (i % 3), 2, 10, c); p.put(x, 2 + (i % 3), lv(c, 4.4)); }
+  p.rect(w - 9, 0, 7, 8, C('#e8e0c8')); p.disc(w - 5.5, 4, 2.2, BLACK); p.put(w - 6, 4, C('#c83a32'));
+  blk(p, 0, 7, w, fl - 6, e >= 6 ? m.wood : C('#a07a4a')); p.hline(1, w - 2, 7, lv(e >= 6 ? m.wood : C('#a07a4a'), 4.4)); for (let x = 1; x < w - 1; x += 7) p.vline(x, 8, fl - 1, lv(C('#a07a4a'), 1.6));
+  drawText(p, 'LP', w / 2 - 3, fl - 6, BLACK);
+}
+/** Banqueta de piano estofada (pés da época). */
+function pianobench(d: Dc): void {
+  const { p, m, w } = d;
+  blk(p, 0, 1, w, 4, m.fab); p.hline(1, w - 2, 1, lv(m.fab, 4.4)); for (let x = 3; x < w - 2; x += 4) p.put(x, 3, lv(m.fab, 1.4)); blk(p, 1, 5, w - 2, 2, m.wood);
+  legs({ ...d, s: d.e }, 1, w - 2, 7);
+}
+/** Cabideiro de pé com chapéu e casaco da época. */
+function coatstand(d: Dc): void {
+  const { p, m, w, h, e } = d, fl = h - 1, c = e >= 6 ? m.metal : e >= 4 ? C('#2a2a30') : m.wood;
+  p.vline(w / 2, 2, fl - 2, c); p.vline(w / 2 - 1, 3, fl - 2, lv(c, 3.8)); p.disc(w / 2, 1.5, 1.4, c);
+  for (const dx of [-1, 1]) { p.line(w / 2, 5, w / 2 + dx * 5, 2, c); p.line(w / 2, fl - 3, w / 2 + dx * 5, fl, c); }
+  const hat = [C('#2a2a30'), C('#3a3a3a'), C('#7a5a3a'), C('#a8603a'), C('#e04898'), C('#2a3a6a'), C('#c8c4bc'), C('#4a4c56')][e];
+  p.rect(0, 3, 4, 1, hat); p.rect(1, 1, 2, 2, hat);
+  p.poly([[w - 4, 3], [w - 2, 3], [w, 18], [w - 6, 18]], [C('#4a3a30'), C('#2a2a3a'), C('#8a6a3a'), C('#a8862a'), C('#3ac0d0'), C('#3a4a3a'), C('#e8e4dc'), C('#2a2c34')][e]);
+  if (e >= 3) p.poly([[1, 8], [3, 8], [4, 16], [0, 16]], C('#c83a32'));
+}
+
+// ---------------------------------------------------------------- itens específicos · quadros e parede
+
+/** Cartaz de cabaré (nouveau): dançarina de cancã com saia em babados sobre amarelo, letreiro no alto. */
+function cabaret(d: Dc): void {
+  const { p, m, w, h } = d;
+  p.rect(0, 0, w, h, C('#f0c850')); p.hline(0, w - 1, 0, lv(C('#f0c850'), 4.6)); p.rect(0, 0, w, 6, BLACK); p.hline(2, w - 3, 2, C('#f0c850')); p.hline(2, w - 7, 4, C('#e04848'));
+  const cx = w / 2;
+  p.disc(cx + 1, 10, 2, C('#f0d0b0')); p.rect(cx - 1, 8, 4, 1, BLACK); p.rect(cx, 12, 3, 4, BLACK);
+  for (let i = 0; i < 4; i++) p.ellipse(cx + 1, 17 + i, 6 - i, 1.5, i % 2 ? W : C('#e04848'));
+  p.line(cx + 2, 20, cx + 8, 12, C('#f0d0b0')); p.put(cx + 8, 11, BLACK); p.line(cx, 20, cx - 1, h - 5, C('#f0d0b0')); p.put(cx - 1, h - 4, BLACK);
+  p.line(cx - 4, 14, cx - 7, 11, C('#f0d0b0'));
+  for (let x = 1; x < w - 1; x += 3) p.put(x, h - 2, m.fab);
+  p.rect(0, 0, 1, 1, C('#e8e0c8', 220)); p.rect(w - 1, 0, 1, 1, C('#e8e0c8', 220));
+}
+/** Cartaz de transatlântico (déco): casco preto e vermelho, chaminés, mar em faixas. */
+function liner(d: Dc): void {
+  const { p, m, w, h } = d;
+  hungFrame(d, BLACK, 1, 3);
+  for (let y = 4; y < h - 1; y++) p.hline(1, w - 2, y, mix(C('#e8c890'), C('#d87a4a'), (y - 4) / (h - 6)));
+  for (let y = h - 9; y < h - 1; y++) p.hline(1, w - 2, y, (y % 2) ? C('#1a4a7a') : C('#2a5a8a'));
+  p.poly([[2, h - 14], [w - 2, h - 18], [w - 3, h - 9], [3, h - 8]], BLACK); p.poly([[3, h - 10], [w - 3, h - 12], [w - 3, h - 9], [3, h - 8]], C('#c83a32'));
+  for (let i = 0; i < 3; i++) { const x = 5 + i * 4; p.rect(x, h - 22 + i, 3, 7 - i, C('#c83a32')); p.rect(x, h - 22 + i, 3, 2, BLACK); }
+  p.hline(4, w - 5, h - 15, W); p.rect(2, 5, w - 4, 3, m.fab2); p.hline(3, w - 5, 6, m.metal);
+}
+/** Gravura do horizonte da cidade: traço sépia em passe-partout, moldura preta fina. */
+function skylineEtch(d: Dc): void {
+  const { p, w, h } = d;
+  const r = hungFrame(d, BLACK, 1, 3);
+  p.rect(r.x, r.y, r.w, r.h, C('#efe6cc')); p.rect(r.x + 2, r.y + 2, r.w - 4, r.h - 4, C('#e6d8b0'));
+  const ink = C('#5a4030'); let x = r.x + 3;
+  let i = 0;
+  while (x < r.x + r.w - 3) { const bw = 2 + Math.floor(noise(i, 1, 221) * 3), bh = 3 + Math.floor(noise(i, 2, 221) * (r.h - 8)); p.vline(x, r.y + r.h - 3 - bh, r.y + r.h - 3, ink); p.hline(x, x + bw, r.y + r.h - 3 - bh, ink); if (i === 3) { p.vline(x + 1, r.y + 2, r.y + r.h - 4 - bh, ink); } x += bw; i++; }
+  p.hline(r.x + 3, r.x + r.w - 4, r.y + r.h - 3, ink); p.hline(r.x + 3, w - 8, h - 2, C('#8a7050'));
+}
+/** Calendário de pin-up: ilustração em cima, grade de dias embaixo, preso num prego. */
+function pinup(d: Dc): void {
+  const { p, m, w, h } = d;
+  p.put(w >> 1, 0, GREY); p.rect(0, 1, w, h - 1, W); p.rect(1, 2, w - 2, 12, C('#a8d8e8'));
+  p.disc(w / 2, 5, 1.8, C('#f0c8a0')); p.rect(w / 2 - 2, 3, 4, 1, C('#e8c040')); p.poly([[w / 2 - 2, 7], [w / 2 + 2, 7], [w / 2 + 3, 12], [w / 2 - 3, 12]], m.acc); p.line(w / 2 + 2, 8, w / 2 + 5, 5, C('#f0c8a0')); p.line(w / 2 - 1, 12, w / 2 - 4, 13, C('#f0c8a0'));
+  p.rect(1, 15, w - 2, 2, m.acc); for (let y = 18; y < h - 1; y += 2) for (let x = 2; x < w - 2; x += 2) p.put(x, y, x === 6 && y === 20 ? m.acc : GREY);
+}
+/** Painel de macramê: vareta de madeira e nós em losango com franja. */
+function macrameWall(d: Dc): void {
+  const { p, m, w, h } = d, rope = C('#e8dcc0');
+  p.put(w >> 1, 0, GREY); p.line(w >> 1, 0, 2, 2, C('#4a3a30')); p.line(w >> 1, 0, w - 3, 2, C('#4a3a30'));
+  blk(p, 0, 2, w, 2, m.wood);
+  for (let x = 2; x < w - 1; x += 2) p.vline(x, 4, h - 8, rope);
+  for (let k = 0; k < 4; k++) { const cy = 8 + k * 5, rr = 4 - Math.abs(k - 1.5); for (let dx = -rr; dx <= rr; dx++) p.put(w / 2 + dx, cy + Math.abs(dx) - rr, lv(rope, 2)); }
+  for (let y = 6; y < h - 8; y += 4) p.hline(3, w - 4, y, lv(rope, 2.6));
+  p.poly([[3, h - 8], [w - 3, h - 8], [w / 2, h - 1]], rope); for (let x = 4; x < w - 4; x += 2) p.line(x, h - 8, w / 2 + (x - w / 2) * 0.4, h - 2, lv(rope, 2.6));
+  p.disc(w / 2, 12, 1.5, m.fab);
+}
+/** Tela de pôr do sol laranja: faixas de céu, sol, mar, sem moldura. */
+function sunset(d: Dc): void {
+  const { p, w, h } = d;
+  hang(p, w >> 1, 4, w - 5, 3);
+  for (let y = 3; y < h; y++) { const t = (y - 3) / (h - 3); p.hline(0, w - 1, y, t < 0.6 ? [C('#f0c060'), C('#f0a040'), C('#e07a30'), C('#c8501a')][Math.floor(t / 0.15)] : (y % 2 ? C('#7a3a1a') : C('#a84a1a'))); }
+  p.disc(w / 2, 3 + (h - 3) * 0.6, 5, C('#fff0b0')); p.rect(0, 3 + Math.round((h - 3) * 0.6), w, h, 0);
+  for (let y = 3 + Math.round((h - 3) * 0.6); y < h; y++) p.hline(0, w - 1, y, (y % 2 ? C('#7a3a1a') : C('#a84a1a')));
+  for (let y = 3 + Math.round((h - 3) * 0.6) + 1; y < h; y += 2) p.hline(w / 2 - 3, w / 2 + 2, y, C('#f0c060'));
+  p.line(3, 10, 6, 8, BLACK); p.line(6, 8, 9, 10, BLACK); p.vline(w - 1, 3, h - 1, C('#5a2a10'));
+}
+/** Quadro de néon (anos 80): palmeira e onda em tubo rosa e azul sobre placa preta. */
+function neonArt(d: Dc): void {
+  const { p, lit, w, h } = d;
+  p.put(w >> 1, 0, GREY); blk(p, 0, 1, w, h - 1, C('#16161e'));
+  const a = lit ? lv(C('#ff5ab0'), 5) : lv(C('#ff5ab0'), 2), b = lit ? lv(C('#3ac0d0'), 5) : lv(C('#3ac0d0'), 2);
+  p.line(9, h - 3, 10, 6, a); p.line(10, 6, 4, 4, a); p.line(10, 6, 15, 3, a); p.line(10, 6, 6, 9, a); p.line(10, 6, 15, 8, a);
+  for (let x = 16; x < w - 2; x++) p.put(x, h - 6 + Math.round(Math.sin(x * 0.7) * 2), b); p.disc(w - 6, 6, 3, 0); p.ring(w - 6, 6, 3, b);
+  if (lit) { d.fx.rect(0, 1, w, h - 1, withAlpha(C('#ff5ab0'), 30)); }
+}
+/** Pôster de turnê de estádio: palco com luzes, multidão e datas. */
+function tourPoster(d: Dc): void {
+  const { p, m, w, h } = d;
+  p.rect(0, 0, w, h, C('#14141e')); p.rect(0, 0, 2, 2, C('#e8e0c8', 220)); p.rect(w - 2, 0, 2, 2, C('#e8e0c8', 220));
+  for (let i = 0; i < 4; i++) p.line(3 + i * 4, 3, w / 2, 14, withAlpha([C('#f0e040'), C('#3ac0d0'), C('#e04848'), W][i], 200));
+  p.rect(2, 14, w - 4, 3, C('#3a3a48')); p.rect(w / 2 - 1, 11, 2, 3, W);
+  for (let x = 1; x < w - 1; x++) p.put(x, 18 + (x % 2), C('#2a2a38'));
+  p.rect(2, 21, w - 4, 2, m.acc); for (let y = 24; y < h - 1; y += 2) p.hline(3, 3 + ((y * 7) % (w - 8)) + 3, y, GREY);
+}
+/** Mural de flyers: vários papéis sobrepostos presos com fita e tachinha. */
+function flyerWall(d: Dc): void {
+  const { p, w, h } = d;
+  const fl: [number, number, number, number, Col][] = [[0, 2, 11, 13, C('#f0e040')], [9, 0, 10, 12, W], [18, 3, 12, 14, C('#e04848')], [2, 12, 12, 11, C('#3ac0d0')], [13, 11, 10, 13, C('#d0ccc4')], [22, 14, 10, 10, C('#f0a0c8')]];
+  fl.forEach(([x, y, fw, fh, c], i) => { const ww = Math.min(fw, w - x), hh = Math.min(fh, h - y); p.rect(x, y, ww, hh, c); p.hline(x, x + ww - 1, y, lv(c, 4.6)); p.rect(x + 2, y + 2, ww - 4, 3, BLACK); for (let yy = y + 7; yy < y + hh - 1; yy += 2) p.hline(x + 2, x + ww - 3 - (yy % 3), yy, lv(c, 1.4)); p.put(x + (ww >> 1), y, i % 2 ? RED : C('#3a6ac8')); });
+}
+/** Foto de palco em preto e branco: cantor no microfone sob o refletor, moldura da época. */
+function photoBW(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), e === 0 ? 2 : 1);
+  for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) { const g = Math.max(0, 1 - Math.hypot(x - r.w / 2, y) / (r.h * 1.1)); p.put(r.x + x, r.y + y, mix(C('#1a1a1a'), e === 0 ? C('#d8c8a0') : C('#e8e8e8'), g * 0.8)); }
+  const cx = r.x + r.w / 2;
+  p.rect(cx - 2, r.y + r.h - 7, 4, 7, C('#101010')); p.disc(cx, r.y + r.h - 9, 1.6, C('#101010')); p.vline(cx + 3, r.y + r.h - 8, r.y + r.h - 1, C('#808080')); p.put(cx + 3, r.y + r.h - 9, C('#c0c0c0'));
+}
+/** Tela branca com um traço (minimalista). */
+function canvasMin(d: Dc): void {
+  const { p, m, w, h } = d;
+  hang(p, w >> 1, 4, w - 5, 2);
+  p.rect(0, 2, w, h - 2, C('#f6f4ee')); p.hline(0, w - 1, 2, W); p.vline(w - 1, 2, h - 1, lv(C('#f6f4ee'), 2));
+  for (let x = 6; x < w - 6; x++) p.put(x, Math.round(h / 2 + Math.sin(x * 0.18) * 3), x % 7 === 0 ? lv(m.acc2, 2) : BLACK);
+}
+/** Placa de prêmio (disco de ouro / platina / bilhão de execuções) com moldura da época. */
+function award(d: Dc, disc: Col, kind: 'lp' | 'plat' | 'stream'): void {
+  const { p, m, e } = d;
+  const fr = eraFrame(e, m), mat = [m.fab, C('#e6dac0'), W, C('#e8d8b0'), C('#2a2a32'), C('#2a3a6a'), W, C('#14141a')][e];
+  const r = hungFrame(d, fr, 2);
+  p.rect(r.x, r.y, r.w, r.h, mat);
+  const cx = r.x + r.w / 2, cy = r.y + 7;
+  if (kind === 'stream') { blk(p, cx - 4, r.y + 2, 8, 12, BLACK); p.rect(cx - 3, r.y + 3, 6, 9, C('#1a2a4a')); p.poly([[cx - 1, r.y + 5], [cx - 1, r.y + 10], [cx + 2, r.y + 7.5]], disc); drawText(p, '1B', cx - 3, r.y + r.h - 7, disc); }
+  else { p.disc(cx, cy, 5, disc); for (let rr = 2; rr < 5; rr++) p.ring(cx, cy, rr + 0.3, lv(disc, 2.2)); p.disc(cx, cy, 1.6, kind === 'plat' ? C('#3a3a48') : RED); p.put(cx - 2, cy - 3, lv(disc, 5)); if (kind === 'plat') { p.disc(cx + 3, cy + 4, 2.2, lv(disc, 3)); p.disc(cx + 3, cy + 4, 0.6, mat); } }
+  p.rect(cx - 4, r.y + r.h - 4, 8, 2, e >= 6 ? CHROME : GOLD); p.hline(cx - 3, cx + 2, r.y + r.h - 3, lv(GOLD, 1.6));
+}
+/** Moldura digital de capas: tela fina mostrando uma capa de disco, pé de apoio. */
+function digitalFrame(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  p.put(w >> 1, 0, GREY); blk(p, 0, 1, w, h - 1, C('#e8e8ec')); p.rect(2, 3, w - 4, h - 5, lit ? C('#2a2040') : C('#121218'));
+  if (lit) { for (let y = 4; y < h - 3; y++) for (let x = 3; x < w - 3; x++) p.put(x, y, mix(C('#e85a3a'), C('#3a2a8a'), (x + y) / (w + h))); p.disc(w / 2, h / 2 + 1, 3.5, C('#14141a')); p.disc(w / 2, h / 2 + 1, 1, C('#f0c040')); }
+  p.put(w - 3, h - 2, lit ? m.acc : DGREY); glow(d, w / 2, h / 2, 9, C('#e85a3a'));
+}
+/** Painel de LED animado: matriz de pontos com ondas coloridas. */
+function ledWall(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  p.put(4, 0, GREY); p.put(w - 5, 0, GREY); blk(p, 0, 1, w, h - 1, C('#0e0e14'));
+  for (let y = 3; y < h - 2; y += 2) for (let x = 2; x < w - 2; x += 2) { const v = Math.sin(x * 0.3 + y * 0.2) + Math.cos(y * 0.5); p.put(x, y, lit ? (v > 0.6 ? m.acc : v > -0.2 ? C('#ff5ab0') : C('#3a2a6a')) : C('#24242e')); }
+  glow(d, w / 2, h / 2, 14, m.acc);
+}
+/** Guitarra pendurada na parede (modelo da época) num suporte. */
+function guitarWall(d: Dc): void {
+  const { p, m, e, w, h } = d;
+  const body = [C('#a8602a'), C('#c8803a'), C('#e8b048'), C('#c83a1a'), C('#1e1e24'), C('#2a8aa8'), C('#e8e4dc'), C('#7a3ac8')][e];
+  p.rect(w / 2 - 2, 0, 4, 2, C('#3a3a42')); p.put(w / 2 - 2, 2, C('#3a3a42')); p.put(w / 2 + 1, 2, C('#3a3a42'));
+  p.rect(w / 2 - 1, 1, 2, 4, e >= 4 ? BLACK : m.wood2); for (const y of [2, 4]) { p.put(w / 2 - 2, y, CHROME); p.put(w / 2 + 1, y, CHROME); }
+  p.rect(w / 2 - 0.5, 5, 1, 13, C('#5a3a20')); p.vline(w / 2, 5, 17, lv(C('#5a3a20'), 3)); for (let y = 7; y < 17; y += 3) p.put(w / 2, y, CHROME);
+  if (e >= 3 && e !== 6) { p.poly([[w / 2 - 4, 18], [w / 2 + 3, 17], [w / 2 + 5, 22], [w / 2 + 4, h - 2], [w / 2 - 5, h - 2], [w / 2 - 5, 24]], body); p.rect(w / 2 - 2, 23, 4, 1, CHROME); p.rect(w / 2 - 2, 26, 4, 1, CHROME); }
+  else { p.ellipse(w / 2, 21, 3.5, 3.5, body); p.ellipse(w / 2, h - 7, 5.5, 5.5, body); p.disc(w / 2, 22, 1.4, BLACK); p.rect(w / 2 - 2, h - 6, 4, 1, BLACK); }
+  p.put(w / 2 - 3, 20, lv(body, 5));
+}
+/** Mapa antigo emoldurado (moldura e cores da época). */
+function worldMapF(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), 2);
+  const sea = [C('#d8c08a'), C('#c8d8d0'), C('#5a8ac8'), C('#a8c8e0'), C('#4a8ae0'), C('#a8c0d0'), C('#e8e8e4'), C('#16243a')][e];
+  const land = [C('#a87a48'), C('#d8b878'), C('#e8d890'), C('#c8a870'), C('#48b85c'), C('#d8c8a0'), C('#2a2a2e'), C('#2a8a9a')][e];
+  p.rect(r.x, r.y, r.w, r.h, sea);
+  const cont: [number, number, number, number][] = [[0.2, 0.32, 0.12, 0.17], [0.3, 0.68, 0.06, 0.17], [0.49, 0.28, 0.06, 0.1], [0.52, 0.6, 0.07, 0.18], [0.72, 0.32, 0.16, 0.16], [0.84, 0.74, 0.06, 0.08]];
+  for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) { const u = (x + 0.5) / r.w, v = (y + 0.5) / r.h; if (cont.some(([cx, cy, rx, ry]) => ((u - cx) / rx) ** 2 + ((v - cy) / ry) ** 2 < 1 - noise(x, y, 231) * 0.35)) p.put(r.x + x, r.y + y, land); }
+  if (e === 0) { p.disc(r.x + r.w - 4, r.y + r.h - 4, 2, lv(sea, 2)); p.vline(r.x + r.w - 4, r.y + r.h - 7, r.y + r.h - 2, lv(land, 1)); }
+}
+/** Foto autografada de ídolo: retrato da época com assinatura, moldura pequena com pé ou prego. */
+function signedPhoto(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), 1);
+  const bg = e <= 1 ? C('#d8c8a0') : e === 2 ? C('#c8c8c8') : [C('#e8a060'), C('#c8a8f0'), C('#a8c8e0'), C('#e8e4dc'), C('#3a4a6a')][e - 3];
+  p.rect(r.x, r.y, r.w, r.h, bg);
+  const tone = e <= 2 ? (c: Col) => mix(c, C('#8a7a5a'), 0.6) : (c: Col) => c;
+  p.disc(r.x + r.w / 2, r.y + 5, 2.5, tone(C('#f0c8a0'))); p.rect(r.x + r.w / 2 - 3, r.y + 2, 6, 2, tone([C('#2a1a10'), C('#1a1a1a'), C('#3a2a1a'), C('#8a3a1e'), C('#dcb862'), C('#1a1a1a'), C('#6a4426'), C('#7fb8e8')][e]));
+  p.rect(r.x + 2, r.y + 8, r.w - 4, r.h - 8, tone([C('#2a2a3a'), C('#3a3a3a'), C('#2c4a7e'), C('#d8692a'), C('#e070a8'), C('#2a2a30'), C('#e4dccb'), C('#5e3c26')][e]));
+  for (let x = r.x + 2; x < r.x + r.w - 2; x++) p.put(x, r.y + r.h - 3 + Math.round(Math.sin(x * 1.3)), C('#1a2a6a'));
+}
+/** Capa de disco emoldurada (arte da capa da época). */
+function coverFrame(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), 1);
+  for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
+    const u = x / r.w, v = y / r.h;
+    const c = e <= 2 ? (v < 0.6 ? C('#2a5a8a') : C('#e8e0c8')) : e === 3 ? [C('#e88a30'), C('#a8401a'), C('#f0c060')][Math.floor(Math.hypot(u - 0.5, v - 0.5) * 9) % 3] : e === 4 ? (u + v > 1 ? C('#e04898') : C('#1a1a3a')) : e === 5 ? (Math.abs(u - 0.5) < 0.2 ? C('#e8e8e8') : C('#5a5a5a')) : e === 6 ? C('#f2f0ea') : mix(C('#3a2a8a'), C('#5ae0ff'), u);
+    p.put(r.x + x, r.y + y, c);
+  }
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  if (e <= 2) { p.disc(cx, r.y + 4, 2, C('#f0c8a0')); drawText(p, 'LP', r.x + 2, r.y + r.h - 6, C('#c83a32')); }
+  else if (e === 4) p.disc(cx + 2, cy - 2, 2.5, C('#f0e040'));
+  else if (e === 6) p.disc(cx, cy, 2, BLACK);
+  else if (e === 7) p.disc(cx, cy, 3, C('#14141a'));
+}
+/** Retrato de família: pais e criança, foto sépia em moldura oval (antigo) até foto colorida em moldura fina. */
+function familyPortrait(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), e === 0 ? 3 : 2);
+  const bg = e <= 1 ? C('#c8b090') : e === 2 ? C('#b8b8b0') : [C('#8ab0c8'), C('#c8a8d8'), C('#a8c8a0'), C('#e8e4dc'), C('#c8d8e8')][e - 3];
+  p.rect(r.x, r.y, r.w, r.h, bg);
+  const tone = e <= 2 ? (c: Col) => mix(c, C('#7a6a50'), 0.55) : (c: Col) => c;
+  const person = (x: number, y: number, sc: number, cloth: Col, hair: Col) => { p.disc(x, y, 1.6 * sc, tone(SKIN0)); p.rect(x - 2 * sc, y - 1.8 * sc, 4 * sc, sc, tone(hair)); p.rect(x - 2.5 * sc, y + 2 * sc, 5 * sc, r.y + r.h - (y + 2 * sc), tone(cloth)); };
+  person(r.x + r.w * 0.3, r.y + 6, 1, [C('#2a2a3a'), C('#3a3a3a'), C('#2c4a7e'), C('#7a4a24'), C('#e04898'), C('#2a2a30'), C('#6a7a6a'), C('#4c4e56')][e], C('#3a2a1a'));
+  person(r.x + r.w * 0.7, r.y + 7, 1, [C('#5a2a3a'), C('#6a5a4a'), C('#c83a32'), C('#d8a030'), C('#3ac0d0'), C('#4a6a8a'), C('#e8e4dc'), C('#8a8c96')][e], C('#6a4426'));
+  person(r.x + r.w * 0.5, r.y + r.h - 6, 0.8, C('#e8e0c8'), C('#8e3a1e'));
+  if (e === 0) { p.rect(r.x, r.y, 2, 2, eraFrame(0, m)); p.rect(r.x + r.w - 2, r.y, 2, 2, eraFrame(0, m)); }
+}
+const SKIN0 = C('#f0c8a0');
+/** Partitura emoldurada: pautas, notas e título. */
+function sheetFrame(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), 1);
+  p.rect(r.x, r.y, r.w, r.h, e <= 1 ? C('#ece0c0') : C('#f4f0e6'));
+  p.hline(r.x + 2, r.x + r.w - 3, r.y + 2, BLACK);
+  for (let k = 0; k < 3; k++) { const y0 = r.y + 5 + k * 5; for (let i = 0; i < 3; i++) p.hline(r.x + 1, r.x + r.w - 2, y0 + i, i === 1 ? lv(C('#9a9080'), 3) : C('#9a9080')); for (let x = r.x + 2; x < r.x + r.w - 2; x += 3) { const ny = y0 + ((x * 3 + k) % 3); p.put(x, ny, BLACK); p.vline(x + 1, ny - 2, ny, BLACK); } }
+}
+
+// ---------------------------------------------------------------- itens específicos · plantas e luminárias
+
+/** Vaso afunilado na base. */
+function potAt(p: Px, x: number, y: number, pw: number, yb: number, c: Col, taper = 1): void {
+  p.poly([[x, y], [x + pw, y], [x + pw - taper, yb + 1], [x + taper, yb + 1]], c); p.hline(x, x + pw - 1, y, lv(c, 4.4)); p.vline(x + 1, y + 1, yb - 1, lv(c, 3.6)); p.hline(x + taper, x + pw - taper - 1, yb, lv(c, 1.2));
+}
+/** Samambaia no pedestal (nouveau): frondes em arco caindo sobre coluna de madeira torneada. */
+function fern(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  for (let i = 0; i < 7; i++) { const dir = i < 3 ? -1 : i > 3 ? 1 : 0, len = 6 + (i % 2) * 2; for (let k = 0; k < len; k++) { const x = w / 2 + dir * k * (0.6 + Math.abs(i - 3) * 0.15), y = 7 - k * (dir === 0 ? 0.9 : 0.4) + (dir ? (k * k) * 0.09 : 0); p.put(x, y, LEAF); if (k % 2) { p.put(x, y - 1, LEAF2); p.put(x + dir, y + 1, LEAF); } } }
+  potAt(p, 4, 7, w - 8, 11, m.acc, 1); p.hline(4, w - 5, 9, m.metal);
+  p.rect(w / 2 - 1, 12, 3, fl - 14, m.wood); p.rect(w / 2 - 2, 15, 5, 2, lv(m.wood, 1.6)); blk(p, w / 2 - 4, fl - 2, 9, 3, m.wood2);
+}
+/** Palmeira de vaso (déco): leques de folhas sobre vaso preto com faixas douradas. */
+function palm(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1, py = fl - 9;
+  p.vline(w / 2, 10, py, C('#6a5030')); p.vline(w / 2 + 1, 12, py, C('#8a6a40'));
+  for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.48, ex = w / 2 + Math.cos(a) * 10, ey = 12 + Math.sin(a) * 10; p.line(w / 2, 12, ex, ey, LEAF); for (let k = 2; k < 9; k++) { const t = k / 9; p.put(w / 2 + (ex - w / 2) * t + (i < 3 ? -1 : 1), 12 + (ey - 12) * t + 1, LEAF2); } }
+  blk(p, 3, py, w - 6, fl - py + 1, BLACK); p.hline(3, w - 4, py + 2, m.metal); p.hline(3, w - 4, py + 5, m.metal);
+}
+/** Orquídea em vaso da época. */
+function orchid(d: Dc): void {
+  const { p, e, w, h } = d, fl = h - 1;
+  p.line(w / 2, 7, w / 2 - 1, 1, C('#4a5a2a')); p.line(w / 2 - 1, 1, w - 2, 2, C('#4a5a2a'));
+  const fc = [C('#f0e0f0'), C('#f8f0f0'), C('#f0a0c8'), C('#d8a0e0'), C('#ff5ab0'), C('#f8f0f8'), W, C('#c8a0ff')][e];
+  for (const [x, y] of [[w - 2, 2], [w / 2 + 1, 1], [w / 2 - 2, 3]] as const) { p.put(x, y, fc); p.put(x - 1, y, fc); p.put(x, y + 1, fc); p.put(x, y, lv(fc, 5)); }
+  p.ellipse(w / 2 - 1, 7, 3, 1, LEAF);
+  const pot = [C('#3a6ac8'), W, C('#f0d040'), C('#b8603a'), C('#e04898'), C('#c8d8e0'), C('#e8e6e0'), C('#2a2c34')][e];
+  potAt(p, 1, 8, w - 2, fl, pot, e === 5 ? 0 : 1);
+}
+/** Clorofito pendurado (anos 70): corrente do teto, vaso de macramê e folhas caindo. */
+function spider(d: Dc): void {
+  const { p, w, h } = d, rope = C('#d8c8a0');
+  p.rect(w / 2 - 2, 0, 4, 1, GREY); p.vline(w / 2, 1, 4, rope); p.line(w / 2, 4, 3, 9, rope); p.line(w / 2, 4, w - 4, 9, rope);
+  blk(p, 3, 9, w - 6, 4, C('#a8401a')); p.line(3, 10, w - 4, 12, rope); p.line(3, 12, w - 4, 10, rope);
+  for (let i = 0; i < 7; i++) { const x0 = 3 + i * ((w - 6) / 6), dir = x0 < w / 2 ? -1 : 1; p.line(x0, 9, x0 + dir * 3, 5 + (i % 2), C('#a8d070')); p.line(x0, 12, x0 + dir * 2, h - 2 - (i % 3), C('#7aa04a')); }
+  p.put(1, h - 4, LEAF2); p.put(w - 2, h - 3, LEAF2);
+}
+/** Falsa-seringueira (anos 70): folhas ovais escuras e brilhantes em vaso de barro. */
+function rubber(d: Dc): void {
+  const { p, w, h } = d, fl = h - 1, py = fl - 8;
+  p.vline(w / 2, 4, py, C('#5a3a2a'));
+  for (let i = 0; i < 9; i++) { const y = 3 + i * 3, dir = i % 2 ? 1 : -1, x = w / 2 + dir * 4; p.line(w / 2, y + 2, x, y + 1, C('#5a3a2a')); p.ellipse(x, y, 3, 1.6, C('#1e4a2a')); p.put(x - dir, y - 1, C('#4a8a5a')); }
+  potAt(p, 3, py, w - 6, fl, C('#b8603a'));
+}
+/** Bonsai em bandeja da época. */
+function bonsai(d: Dc): void {
+  const { p, e, w, h } = d, fl = h - 1;
+  p.line(w / 2, fl - 2, w / 2 - 2, 4, C('#6a4a2a')); p.line(w / 2 - 2, 4, w / 2 + 3, 2, C('#6a4a2a'));
+  foliage(p, w / 2 - 3, 3, 3, 1.8, 241, e === 3 ? C('#7a8a2a') : LEAF); foliage(p, w / 2 + 3, 2, 3, 1.6, 242, e === 3 ? C('#7a8a2a') : LEAF);
+  const tray = [C('#3a6ac8'), BLACK, C('#4a8a6a'), C('#8a4a2a'), C('#e04898'), C('#5a4a3a'), C('#b8b4ac'), C('#2a2c34')][e];
+  blk(p, 0, fl - 2, w, 3, tray); p.hline(1, w - 2, fl - 2, C('#6a5a3a'));
+}
+/** Trio de suculentas em potes de cimento (minimalista). */
+function succulents(d: Dc): void {
+  const { p, h } = d, fl = h - 1;
+  for (let i = 0; i < 3; i++) { const x = 1 + i * 4.5; blk(p, x, fl - 3, 4, 4, [C('#b8b4ac'), W, C('#c8784a')][i]); p.ellipse(x + 2, fl - 4, 2, 1.5, [C('#8ab08a'), C('#6a9a7a'), C('#a8c08a')][i]); p.put(x + 2, fl - 6 + (i % 2), lv(C('#8ab08a'), 4)); }
+}
+/** Jardim vertical (casa inteligente): painel de plantas com moldura e irrigação. */
+function greenWall(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  p.put(3, 0, GREY); p.put(w - 4, 0, GREY); blk(p, 0, 1, w, h - 1, C('#2a2c34'));
+  for (let y = 3; y < h - 2; y += 4) for (let x = 2; x < w - 2; x += 4) foliage(p, x + 2, y + 2, 2.6, 2.4, 250 + x * 7 + y, [LEAF, C('#2a6a3a'), C('#5a8a2a')][(x + y) % 3], LEAF2);
+  p.hline(1, w - 2, 1, lit ? lv(m.acc, 5) : lv(m.acc, 1.6)); for (let x = 4; x < w - 4; x += 8) p.put(x, 2, C('#6ab0f0')); glow(d, w / 2, 2, 8, m.acc);
+}
+/** Arandela a gás (nouveau): braço de latão na parede com chama em globo. */
+function gasSconce(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  blk(p, 0, h - 6, 3, 6, m.metal); p.line(2, h - 3, w - 3, h - 5, m.metal); p.vline(w - 3, h - 5, h - 3, m.metal);
+  p.ellipse(w - 3, h - 8, 2.5, 3, withAlpha(C('#f0e8d0'), 200)); p.put(w - 3, h - 8, lit ? C('#fff0a0') : C('#f0a040')); p.put(w - 3, h - 9, lit ? W : C('#e07a30'));
+  p.hline(w - 5, w - 2, h - 11, m.metal); glow(d, w - 3, h - 8, 5, C('#ffd080'));
+}
+/** Luminária de banqueiro: cúpula verde de vidro, base de latão, puxador. */
+function banker(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  p.ellipse(w / 2, 4, w / 2 - 0.5, 2.5, lit ? lv(C('#2a8a4a'), 4.4) : C('#2a7a4a')); p.hline(1, w - 2, 6, lit ? BULB : lv(C('#2a7a4a'), 1.6)); p.put(2, 3, lv(C('#2a7a4a'), 5));
+  p.vline(w / 2, 7, fl - 2, m.metal); p.vline(w - 3, 6, 9, m.metal); p.put(w - 3, 10, m.metal);
+  blk(p, 1, fl - 1, w - 2, 2, m.metal); glow(d, w / 2, 7, 6);
+}
+/** Luminária de arco (anos 50): base de mármore, arco cromado longo, cúpula em domo. */
+function arcLamp(d: Dc): void {
+  const { p, lit, w, h } = d, fl = h - 1;
+  blk(p, 1, fl - 3, 7, 4, C('#e8e4d8')); p.put(3, fl - 2, C('#b8b4a8'));
+  for (let t = 0; t <= 1; t += 0.01) { const x = 4 + (w - 9) * t, y = fl - 4 - Math.sin(t * Math.PI * 0.85) * (h - 10); p.put(x, y, CHROME); }
+  const ex = 4 + (w - 9), ey = Math.round(fl - 4 - Math.sin(0.85 * Math.PI) * (h - 10));
+  p.vline(ex, ey, ey + 4, CHROME); p.ellipse(ex, ey + 7, 5, 3, CHROME); p.hline(ex - 5, ex + 5, ey + 9, lit ? BULB : lv(CHROME, 1.6));
+  if (lit) d.fx.poly([[ex - 5, ey + 10], [ex + 5, ey + 10], [ex + 9, h + 4], [ex - 9, h + 4]], withAlpha(BULB, 60));
+}
+/** Lâmpada de lava. */
+function lava(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1, cx = w / 2;
+  p.poly([[cx - 1, 0], [cx + 1, 0], [w - 1, 8], [0, 8]], lit ? C('#f0a040') : C('#a8602a'));
+  p.disc(cx - 0.5, 5, 1.2, lit ? C('#ff5a3a') : C('#8a2a1a')); p.disc(cx + 0.5, 2, 0.7, lit ? C('#ff5a3a') : C('#8a2a1a'));
+  p.hline(cx - 1, cx, 0, m.metal); p.poly([[0, 8], [w, 8], [w - 1, fl + 1], [1, fl + 1]], m.metal); p.hline(0, w - 1, 9, lv(m.metal, 4));
+  glow(d, cx, 4, 5, C('#ff7a3a'));
+}
+/** Abajur cogumelo (anos 70): cúpula redonda de plástico laranja. */
+function mushroom(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  p.ellipse(w / 2, 4, w / 2 - 0.5, 4, lit ? lv(m.fab, 4.8) : m.fab); p.rect(0, 5, w, 4, 0);
+  for (let y = 5; y < 8; y++) p.hline(1, w - 2, y, 0);
+  p.hline(1, w - 2, 5, lit ? BULB : lv(m.fab, 1.6)); p.rect(w / 2 - 1, 6, 3, fl - 7, m.fab); p.ellipse(w / 2, fl, 3.5, 1, m.fab); glow(d, w / 2, 6, 6, C('#ffb060'));
+}
+/** Placa de néon "ON AIR" em caixa da época. */
+function onAir(d: Dc): void {
+  const { p, e, lit, w, h } = d;
+  const box = [C('#4a2a1a'), BLACK, C('#c8ccd4'), C('#7a4a24'), C('#1a1a24'), C('#3a3a42'), W, C('#2a2c34')][e];
+  p.put(3, 0, GREY); p.put(w - 4, 0, GREY); blk(p, 0, 1, w, h - 1, box); p.rect(1, 2, w - 2, h - 3, C('#14141a'));
+  const nc = lit ? lv(C('#ff4a3a'), 5) : lv(C('#ff4a3a'), 1.8);
+  drawText(p, 'ON', 2, 3, nc); drawText(p, 'AIR', 11, 3, nc); // espaço estreito: cabe na caixa
+  if (lit) d.fx.rect(0, 1, w, h - 1, withAlpha(C('#ff4a3a'), 40));
+}
+/** Luminária articulada (desde 1932): braço de molas na cor da época. */
+function tensor(d: Dc): void {
+  const { p, e, lit, h } = d, fl = h - 1;
+  const c = [BLACK, C('#2a2a2e'), C('#c83a32'), C('#e88a30'), C('#26262c'), C('#3a6ac8'), W, C('#d8dce4')][e];
+  blk(p, 0, fl - 1, 6, 2, c); p.line(3, fl - 1, 2, 6, c); p.line(2, 6, 8, 2, c); p.line(3, fl - 3, 3, 8, lv(c, 3)); p.put(4, 9, CHROME);
+  p.poly([[7, 1], [11, 3], [11, 6], [8, 5]], c); p.put(10, 6, lit ? BULB : DGREY); glow(d, 10, 7, 5, BULB);
+}
+/** Lanterna de papel de pé (anos 90): coluna de papel de arroz sobre pé de madeira. */
+function paperLantern(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 1, 1, w - 2, fl - 4, lit ? C('#fff4dc') : C('#ece4d0')); for (let y = 4; y < fl - 4; y += 4) p.hline(1, w - 2, y, lv(C('#ece4d0'), 2.4));
+  p.hline(1, w - 2, 1, m.wood); blk(p, 2, fl - 3, w - 4, 2, m.wood); p.vline(3, fl - 1, fl, m.wood); p.vline(w - 4, fl - 1, fl, m.wood); glow(d, w / 2, h / 2, 9);
+}
+/** Fita de LED colorida (parede). */
+function ledStrip(d: Dc): void {
+  const { p, lit, w, h } = d;
+  p.rect(0, 1, w, 2, C('#e8e8ec')); for (let x = 1; x < w; x += 2) p.put(x, 1, lit ? [C('#ff5ab0'), C('#5ae0ff'), C('#a0ff6a'), C('#f0e040')][(x >> 1) % 4] : C('#8a8a92'));
+  if (lit) d.fx.rect(0, 0, w, h, withAlpha(C('#ff9ae0'), 50));
+}
+
+// ---------------------------------------------------------------- itens específicos · som e aparelhos
+
+const knob = (p: Px, x: number, y: number, c: Col = CHROME): void => { p.disc(x, y, 1.2, c); p.put(x - 1, y - 1, W); };
+const grille = (p: Px, x: number, y: number, w: number, h: number, c: Col, step = 2): void => { for (let yy = y; yy < y + h; yy += step) p.hline(x, x + w - 1, yy, c); };
+/** Gramofone de corneta (nouveau, compacto). */
+function gramophone(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 1, fl - 7, w - 2, 8, m.wood); p.hline(2, w - 3, fl - 5, m.metal); p.rect(w - 3, fl - 4, 2, 1, m.metal); p.ellipse(w / 2, fl - 8, w / 2 - 2, 0.8, BLACK);
+  p.vline(w - 4, fl - 13, fl - 8, m.metal); p.line(w - 4, fl - 13, w / 2, fl - 17, m.metal);
+  p.poly([[w / 2, fl - 16], [1, 0], [0, 9], [w / 2 + 1, fl - 15]], m.metal); p.ellipse(1, 4.5, 1.5, 4.5, lv(m.metal, 1.2)); p.line(3, 2, 7, 8, lv(m.metal, 5));
+}
+/** Caixa de música (nouveau): caixinha de madeira entalhada com cilindro à mostra. */
+function musicBox(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 0, fl - 4, w, 5, m.wood); p.hline(1, w - 2, fl - 2, m.metal); p.poly([[0, fl - 4], [2, 0], [w - 2, 0], [w, fl - 4]], lv(m.wood, 2.4)); p.rect(2, 1, w - 4, 2, m.fab);
+  p.rect(2, fl - 3, w - 4, 1, CHROME); p.put(w - 1, fl - 2, m.metal);
+}
+/** Pianola: piano de armário com janela do rolo perfurado e pedais. */
+function playerPiano(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 1, 0, w - 2, 21, m.wood2); p.rect(5, 3, w - 10, 9, lv(m.wood2, 2.6)); p.rect(7, 4, w - 14, 7, PAPER); for (let y = 5; y < 11; y++) for (let x = 8; x < w - 8; x += 2) if (noise(x, y, 261) > 0.6) p.put(x, y, BLACK); p.vline(6, 4, 10, m.metal); p.vline(w - 7, 4, 10, m.metal);
+  blk(p, 0, 20, w, 3, m.wood2); p.rect(2, 20, w - 4, 2, W); for (let i = 2; i < w - 2; i += 3) p.vline(i, 20, 20, BLACK);
+  blk(p, 2, 23, w - 4, fl - 26, lv(m.wood2, 2)); p.rect(w / 2 - 4, fl - 3, 3, 1, m.metal); p.rect(w / 2 + 1, fl - 3, 3, 1, m.metal); legs({ ...d, s: 0 }, 2, w - 3, fl - 2);
+}
+/** Rádio capelinha (déco): arco de madeira, grade em vitral, botões. */
+function cathedral(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  p.disc(w / 2, 6, w / 2 - 0.5, m.wood); blk(p, 0, 6, w, fl - 5, m.wood); p.disc(w / 2, 6, w / 2 - 2.5, C('#c8a878'));
+  for (let x = 3; x < w - 3; x += 2) p.vline(x, 2, 9, m.wood); p.rect(2, 9, w - 4, 1, m.wood);
+  p.rect(3, 11, w - 6, 2, lit ? C('#f0c060') : C('#a8803a')); knob(p, 3.5, fl - 1.5); knob(p, w - 3.5, fl - 1.5); glow(d, w / 2, 12, 4, C('#f0c060'));
+}
+/** TV de móvel dos anos 50: tela arredondada, antena, pés palito. */
+function tv50(d: Dc): void {
+  const { p, m, lit, w } = d;
+  p.line(w / 2, 4, w / 2 - 5, 0, GREY); p.line(w / 2, 4, w / 2 + 5, 0, GREY);
+  blk(p, 0, 4, w, 18, m.wood); p.rect(2, 6, w - 9, 14, C('#1a1a1a')); p.rect(3, 7, w - 11, 12, lit ? C('#c8d8d0') : C('#4a5a52')); p.put(3, 7, C('#1a1a1a')); p.put(w - 9, 7, C('#1a1a1a'));
+  if (lit) { p.disc(w / 2 - 3, 12, 2, C('#7a8a82')); p.rect(w / 2 - 5, 14, 4, 4, C('#7a8a82')); }
+  knob(p, w - 4, 9); knob(p, w - 4, 14); grille(p, w - 6, 17, 4, 3, lv(m.wood, 1.6), 1);
+  legs({ ...d, s: 2 }, 2, w - 3, 22); glow(d, w / 2 - 3, 13, 9, C('#c8e0ff'));
+}
+/** Gravador de rolo doméstico: dois carretéis, cabeças, botões. */
+function reelDeck(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 0, 0, w, fl + 1, C('#c8ccd4')); p.rect(1, 1, w - 2, 12, C('#2a2a2e'));
+  for (const x of [6, w - 6]) { p.disc(x, 6.5, 4.5, C('#8a8c94')); p.disc(x, 6.5, 3.5, C('#5a4a3a')); p.disc(x, 6.5, 1, CHROME); for (let i = 0; i < 3; i++) { const a = i * 2.1; p.put(x + Math.cos(a) * 2.5 - 0.5, 6.5 + Math.sin(a) * 2.5 - 0.5, C('#8a8c94')); } }
+  p.line(6, 11, w - 6, 11, C('#5a4a3a')); p.rect(w / 2 - 2, 10, 4, 2, CHROME);
+  for (let i = 0; i < 5; i++) p.rect(2 + i * 4, 15, 3, 2, i === 1 ? RED : m.wood2); p.rect(2, 19, 6, 2, C('#f0e0a0')); knob(p, w - 4, 19.5);
+}
+/** Rádio-gravador portátil (anos 80): duas caixas, fita no meio, alça. */
+function boombox(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  p.hline(3, w - 4, 0, CHROME); p.vline(3, 0, 2, CHROME); p.vline(w - 4, 0, 2, CHROME);
+  blk(p, 0, 2, w, fl - 1, C('#2a2a30')); for (const x of [3.5, w - 3.5]) { p.disc(x, 6.5, 2.6, C('#4a4a52')); p.disc(x, 6.5, 1, BLACK); }
+  p.rect(w / 2 - 3, 4, 6, 4, C('#5a4a3a')); p.disc(w / 2 - 1.5, 6, 0.8, BLACK); p.disc(w / 2 + 1.5, 6, 0.8, BLACK); p.hline(w / 2 - 3, w / 2 + 2, 3, m.fab);
+}
+/** TV de tubo com videocassete, num rack com fitas. */
+function vcrTv(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 1, 0, w - 2, 14, C('#2a2a30')); p.rect(3, 2, w - 9, 10, lit ? C('#4a6ac8') : C('#1a2030')); if (lit) { p.rect(5, 4, 6, 2, C('#e04898')); p.hline(5, w - 9, 9, W); } knob(p, w - 3.5, 4, GREY); p.rect(w - 5, 8, 3, 3, BLACK);
+  blk(p, 2, 14, w - 4, 3, BLACK); p.rect(4, 15, 8, 1, C('#3a3a42')); p.rect(w - 9, 15, 4, 1, lit ? C('#48c860') : DGREY);
+  blk(p, 0, 17, w, fl - 16, m.wood2); for (let i = 0; i < 4; i++) p.rect(3 + i * 3, 19, 2, fl - 20, [BLACK, C('#e8e4dc'), BLACK, C('#c83a32')][i]);
+  glow(d, w / 2 - 2, 7, 9, C('#6a8af0'));
+}
+/** Micro system de CD (anos 90): unidade central e duas caixinhas. */
+function cdMicro(d: Dc): void {
+  const { p, lit, w, h } = d, fl = h - 1;
+  for (const x of [0, w - 5]) { blk(p, x, 1, 5, fl, C('#3a3a42')); p.disc(x + 2.5, 4, 1.3, BLACK); p.disc(x + 2.5, 7.5, 1.3, BLACK); }
+  blk(p, 5, 2, w - 10, fl - 1, C('#8a8c94')); p.rect(6, 3, w - 12, 2, lit ? C('#80f0a0') : C('#2a4a3a')); p.ellipse(w / 2, 6.5, 3, 1, C('#c8ccd8')); p.put(w / 2, 7, BLACK); glow(d, w / 2, 4, 4, C('#80f0a0'));
+}
+/** Caixa de som de palco (desde 1968): gabinete da época com cone e corneta. */
+function paSpeaker(d: Dc): void {
+  const { p, e, w, h } = d, fl = h - 1;
+  const box = [0, 0, 0, C('#3a2a1e'), C('#1e1e24'), C('#26262c'), C('#2a2a2e'), C('#1e2028')][Math.max(3, e)];
+  blk(p, 0, 0, w, fl + 1, box); p.rect(2, 2, w - 4, 8, C('#141418')); p.poly([[4, 4], [w - 4, 4], [w / 2 + 2, 8], [w / 2 - 2, 8]], C('#3a3a42'));
+  p.disc(w / 2, 19, w / 2 - 2.5, C('#3a3a42')); p.disc(w / 2, 19, w / 2 - 4.5, C('#2a2a30')); p.disc(w / 2, 19, 2, C('#4a4a52'));
+  p.disc(w / 2, fl - 6, 2.5, C('#2a2a30'));
+  for (const [x, y] of [[1, 1], [w - 2, 1], [1, fl - 1], [w - 2, fl - 1]] as const) p.put(x, y, CHROME);
+  if (e >= 5) p.hline(2, w - 3, fl - 2, e === 7 ? C('#5ae0ff') : DGREY);
+  if (e === 3) p.hline(2, w - 3, 11, C('#c0a060'));
+}
+/** TV de tela plana sobre rack fino. */
+function flatTv(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 2, 0, w - 4, 15, C('#1a1a1e')); p.rect(3, 1, w - 6, 13, lit ? C('#2a4a7a') : C('#10121a')); if (lit) { p.rect(5, 3, 8, 6, C('#e8a040')); p.hline(15, w - 6, 5, W); p.hline(15, w - 9, 8, C('#c8ccd8')); }
+  p.rect(w / 2 - 2, 15, 4, 2, C('#1a1a1e')); blk(p, 0, 17, w, fl - 16, m.wood); p.hline(1, w - 2, 19, lv(m.wood, 1.6)); glow(d, w / 2, 7, 12, C('#6a8af0'));
+}
+/** Alto-falante inteligente (cilindro com anel de luz). */
+function smartSpeaker(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 0, 2, w, fl - 1, C('#4c4e56')); p.ellipse(w / 2, 2, w / 2 - 0.5, 1.2, lit ? lv(m.acc, 5) : C('#3a3c44'));
+  for (let y = 4; y < fl - 1; y += 2) for (let x = 1 + (y % 4 === 0 ? 1 : 0); x < w - 1; x += 2) p.put(x, y, C('#3a3c46'));
+  glow(d, w / 2, 2, 4, m.acc);
+}
+/** Toca-discos com Bluetooth (revival): base de madeira, prato, braço, luzinha azul. */
+function vinylRevival(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 0, fl - 4, w, 5, m.wood); p.hline(1, w - 2, fl - 2, lv(m.wood, 1.6)); p.put(w - 3, fl - 2, lit ? C('#3a8aff') : DGREY);
+  p.ellipse(w / 2 - 2, fl - 5, 6, 1.2, BLACK); p.put(w / 2 - 2, fl - 5, m.acc2); p.line(w - 3, fl - 6, w - 6, fl - 5, CHROME); p.vline(w - 3, fl - 7, fl - 5, CHROME);
+  glow(d, w - 3, fl - 2, 2.5, C('#3a8aff'));
+}
+/** Projetor de holograma (2028+): base com lente e figura de luz sobre ela. */
+function holo(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  blk(p, 1, fl - 5, w - 2, 6, C('#2a2c34')); p.ellipse(w / 2, fl - 5, w / 2 - 2, 1.2, lit ? lv(m.acc, 5) : C('#3a3c44'));
+  const hc = lit ? withAlpha(lv(m.acc, 5), 170) : withAlpha(C('#4a6a7a'), 120);
+  p.disc(w / 2, 5, 2, hc); p.rect(w / 2 - 2, 8, 4, 8, hc); p.line(w / 2 - 2, 9, w / 2 - 5, 13, hc); p.line(w / 2 + 2, 9, w / 2 + 5, 6, hc); p.rect(w / 2 - 2, 16, 1, 7, hc); p.rect(w / 2 + 1, 16, 1, 7, hc);
+  if (lit) d.fx.poly([[w / 2 - 3, fl - 5], [w / 2 + 3, fl - 5], [w / 2 + 7, 1], [w / 2 - 7, 1]], withAlpha(m.acc, 40));
+}
+/** Máquina de karaokê (desde 1985): caixa da época com tela, microfone pendurado. */
+function karaoke(d: Dc): void {
+  const { p, e, lit, w, h } = d, fl = h - 1;
+  const body = [0, 0, 0, 0, C('#2a2a3a'), C('#3a3a42'), C('#e8e8ec'), C('#2a2c34')][Math.max(4, e)];
+  blk(p, 0, 6, w, fl - 5, body); p.rect(2, 8, w - 4, 6, lit ? C('#3a5ac8') : C('#14141a')); if (lit) { p.hline(3, w - 4, 10, C('#f0e040')); p.hline(3, w - 7, 12, W); }
+  p.disc(w / 2, 19, 3, C('#141418')); p.disc(w / 2, 19, 1.2, C('#4a4a52')); for (let i = 0; i < 3; i++) p.put(3 + i * 2, fl - 2, lit ? [C('#e04848'), C('#48c860'), C('#f0e040')][i] : DGREY);
+  blk(p, w - 4, 1, 3, 5, C('#2a2a30')); p.ellipse(w - 2.5, 1, 1.5, 1.2, GREY); p.line(w - 3, 6, w - 1, 9, BLACK);
+  glow(d, w / 2, 11, 7, C('#6a8af0'));
+}
+
+// ---------------------------------------------------------------- itens específicos · coleção e enfeites
+
+/** Relógio de pêndulo (nouveau): caixa alta com mostrador, pêndulo de latão atrás do vidro. */
+function grandfather(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  p.poly([[0, 3], [w / 2, 0], [w, 3]], m.wood2); blk(p, 0, 3, w, 11, m.wood); p.disc(w / 2, 8.5, 4, PAPER); p.ring(w / 2, 8.5, 4.2, m.metal); p.line(w / 2, 8, w / 2, 6, BLACK); p.line(w / 2, 8, w / 2 + 2, 9, BLACK);
+  blk(p, 2, 14, w - 4, fl - 18, m.wood); p.rect(4, 16, w - 8, fl - 24, lv(m.wood, 0.8)); p.rect(4, 16, w - 8, fl - 24, withAlpha(m.glass, 70)); p.vline(w / 2, 16, fl - 12, m.metal); p.disc(w / 2, fl - 11, 1.8, m.metal);
+  blk(p, 0, fl - 4, w, 5, m.wood2);
+}
+/** Metrônomo de madeira (cor da época). */
+function metronome(d: Dc): void {
+  const { p, m, e, w, h } = d, fl = h - 1;
+  const c = [m.wood, BLACK, C('#c48a52'), C('#7a4a24'), C('#c83a32'), C('#3a3a42'), W, C('#2a2c34')][e];
+  p.poly([[w / 2 - 1, 0], [w / 2, 0], [w - 1, fl + 1], [0, fl + 1]], c); p.line(w / 2, fl - 2, w / 2 + 1, 1, CHROME); p.put(w / 2 + 1, 4, GOLD); p.rect(1, fl - 1, w - 2, 1, lv(c, 2.6));
+}
+/** Estatueta de bailarina em bronze (déco) em pedestal de mármore. */
+function decoStatue(d: Dc): void {
+  const { p, w, h } = d, fl = h - 1, br = C('#a8783a');
+  p.disc(w / 2, 1.5, 1.2, br); p.line(w / 2, 3, w / 2, 8, br); p.line(w / 2, 4, 0, 1, br); p.line(w / 2, 4, w - 1, 2, br); p.line(w / 2, 8, w / 2 - 2, 12, br); p.line(w / 2, 8, w - 1, 9, br);
+  p.poly([[w / 2 - 1, 5], [w / 2 + 1, 5], [w / 2 + 2, 8], [w / 2 - 2, 8]], lv(br, 3)); blk(p, 0, 12, w, fl - 11, C('#2a2a30')); p.hline(0, w - 1, 12, C('#e8e4d8'));
+}
+/** Coqueteleira e taças (déco) numa bandeja. */
+function cocktail(d: Dc): void {
+  const { p, m, w, h } = d, fl = h - 1;
+  blk(p, 0, fl - 1, w, 2, m.metal); blk(p, 2, 1, 4, fl - 2, CHROME); p.rect(3, 0, 2, 1, CHROME); p.hline(2, 5, 3, lv(CHROME, 1.6));
+  for (const x of [8, 11]) { p.poly([[x - 1.5, 3], [x + 1.5, 3], [x, 6]], withAlpha(m.glass, 220)); p.vline(x, 6, fl - 2, CHROME); p.hline(x - 1, x + 1, fl - 2, CHROME); p.put(x, 4, C('#e04848')); }
+}
+/** Aquário de mesa (anos 50): tanque com tampa e base, peixes e plantas. */
+function tankSmall(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1, water = lit ? C('#6ad0f0') : C('#3a8ab8');
+  blk(p, 0, 0, w, 2, m.wood); p.rect(1, 2, w - 2, fl - 5, water); p.vline(0, 2, fl - 3, lv(m.wood, 2)); p.vline(w - 1, 2, fl - 3, lv(m.wood, 2));
+  p.hline(1, w - 2, fl - 4, C('#d8c088')); foliage(p, 4, fl - 7, 1.8, 3, 271); foliage(p, w - 5, fl - 6, 1.8, 2.5, 272);
+  p.rect(8, 6, 3, 2, C('#f08a30')); p.put(11, 6, lv(C('#f08a30'), 2)); p.rect(w - 11, 9, 3, 2, C('#e04848')); p.put(w - 12, 9, lv(C('#e04848'), 2));
+  blk(p, 0, fl - 2, w, 3, m.wood); p.put(w - 3, fl - 1, m.acc2); glow(d, w / 2, fl / 2, 11, C('#9ae0ff'));
+}
+/** Miniatura de jukebox. */
+function jukeboxMini(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  p.disc(w / 2, 3, w / 2 - 0.5, CHROME); blk(p, 0, 3, w, fl - 2, m.wood); p.disc(w / 2, 3, w / 2 - 1.5, lit ? lv(m.acc, 4.6) : m.acc); p.rect(1, 5, w - 2, 2, m.acc2); p.hline(1, w - 2, fl - 2, CHROME);
+}
+/** Globo espelhado (do teto, na corrente). */
+function discoBall(d: Dc): void {
+  const { p, lit, w, h } = d;
+  p.rect(w / 2 - 1, 0, 2, 1, GREY); p.vline(w / 2, 1, 2, GREY);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const dd = Math.hypot(x + 0.5 - w / 2, y + 0.5 - (h / 2 + 1.5)); if (dd > w / 2 - 1.5) continue; p.put(x, y, (x + y) % 2 ? C('#c8ccd8') : (x - y + 20) % 3 ? C('#8a8c96') : W); }
+  if (lit) for (const [x, y] of [[w / 2 - 3, h / 2], [w / 2 + 2, h / 2 + 3]] as const) d.fx.disc(x, y, 1.5, withAlpha(W, 200));
+}
+/** Cubo mágico. */
+function rubik(d: Dc): void {
+  const { p } = d;
+  const c = [C('#e04848'), C('#f0e040'), C('#48a8e0'), C('#48c860'), C('#f08a30'), W];
+  for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) p.put(x, y, c[(x * 3 + y * 5) % 6]);
+}
+/** Parede de fitas cassete. */
+function cassetteWall(d: Dc): void {
+  const { p, w } = d;
+  p.put(3, 0, GREY); p.put(w - 4, 0, GREY);
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const x = c * 7 + 1, y = r * 5 + 1, col = [C('#2a2a30'), C('#e8e4dc'), C('#c83a32'), C('#3a6ac8'), C('#f0e040')][(r * 4 + c) % 5]; p.rect(x, y, 7, 4, col); p.rect(x + 1, y + 1, 5, 1, col === C('#e8e4dc') ? C('#3a6ac8') : W); p.put(x + 2, y + 2, BLACK); p.put(x + 4, y + 2, BLACK); }
+}
+/** Videogame na estante: console e controle com fio. */
+function gameConsole(d: Dc): void {
+  const { p, lit, h } = d, fl = h - 1;
+  blk(p, 0, 1, 8, fl, C('#2a2a30')); p.hline(1, 6, 2, C('#6a4a2a')); p.rect(1, 4, 2, 1, lit ? C('#ff4a3a') : DGREY);
+  p.rect(9, fl - 1, 3, 2, C('#2a2a30')); p.put(10, fl - 2, RED); p.line(8, fl - 1, 9, fl, BLACK);
+}
+/** Prateleira de bonecos colecionáveis. */
+function figures(d: Dc): void {
+  const { p, m, w, h } = d;
+  blk(p, 0, h - 2, w, 2, m.wood); for (const x of [2, w - 4]) p.rect(x, h, 2, 1, GREY);
+  for (let i = 0; i < 6; i++) { const x = 2 + i * 4, c = [C('#e04848'), C('#3a6ac8'), C('#48c860'), C('#f0e040'), C('#8a4ab0'), C('#e88a30')][i]; p.rect(x, h - 7, 3, 5, c); p.rect(x, h - 9, 3, 2, C('#f0c8a0')); p.put(x + 1, h - 10, i % 2 ? BLACK : C('#dcb862')); if (i % 3 === 0) p.put(x + 3, h - 6, CHROME); }
+}
+/** Cristaleira de troféus (desde 1900): armário de vidro da época com taças e medalhas. */
+function trophyCase(d: Dc): void {
+  const { p, m, e, w, h } = d, fl = h - 1;
+  const fr = [m.wood, BLACK, m.wood, m.wood, C('#2a2a30'), m.wood, W, C('#2a2c34')][e];
+  blk(p, 0, 0, w, fl + 1, fr); p.rect(2, 2, w - 4, fl - 9, lv(fr, 0.8));
+  for (const y of [12, 22]) p.hline(2, w - 3, y, withAlpha(m.glass, 220));
+  for (let i = 0; i < 3; i++) { const x = 5 + i * 7; p.poly([[x - 2, 6], [x + 2, 6], [x + 1, 9], [x - 1, 9]], GOLD); p.vline(x, 9, 11, GOLD); p.hline(x - 1, x + 1, 11, lv(GOLD, 1.6)); p.ring(x - 2.5, 7, 1, GOLD); }
+  for (let i = 0; i < 3; i++) { p.disc(5 + i * 7, 18, 2, [GOLD, CHROME, C('#c8783a')][i]); p.vline(5 + i * 7, 14, 16, C('#3a6ac8')); }
+  p.rect(4, 26, w - 8, 3, C('#e6dac0')); p.rect(2, 2, w - 4, fl - 9, withAlpha(m.glass, 60)); p.line(4, 3, 9, 12, withAlpha(W, 120));
+  blk(p, 0, fl - 6, w, 7, lv(fr, 2.4)); p.put(w / 2, fl - 3, m.metal);
+  if (e === 7) p.hline(2, w - 3, 2, C('#5ae0ff'));
+}
+/** Pele de bumbo autografada na parede. */
+function drumhead(d: Dc): void {
+  const { p, e, w, h } = d;
+  p.put(w / 2, 0, GREY); p.vline(w / 2, 1, 1, C('#4a3a30'));
+  const rim = [0, 0, C('#c8c8c8'), C('#c8402a'), C('#1e1e24'), C('#2a5a9a'), C('#e8e4dc'), C('#7a3ac8')][Math.max(2, e)];
+  p.disc(w / 2, h / 2 + 1, w / 2 - 0.5, rim); p.disc(w / 2, h / 2 + 1, w / 2 - 2, C('#f4f0e6'));
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; p.put(w / 2 + Math.cos(a) * (w / 2 - 1) - 0.5, h / 2 + 1 + Math.sin(a) * (w / 2 - 1) - 0.5, CHROME); }
+  drawText(p, 'XO', w / 2 - 3, h / 2 - 2, C('#c83a32')); for (let x = 4; x < w - 4; x++) p.put(x, h / 2 + 4 + Math.round(Math.sin(x * 1.1)), C('#1a2a6a'));
+}
+/** Setlist de show histórico emoldurado (papel com fita e lista). */
+function setlist(d: Dc): void {
+  const { p, m, e } = d;
+  const r = hungFrame(d, eraFrame(e, m), 1);
+  p.rect(r.x, r.y, r.w, r.h, C('#f4f0e6')); p.rect(r.x + r.w / 2 - 1, r.y, 3, 1, C('#d8d0b0', 220));
+  for (let i = 0; i < 6; i++) p.hline(r.x + 1, r.x + r.w - 2 - (i * 3) % 4, r.y + 2 + i * 2, i === 0 ? C('#c83a32') : BLACK);
+}
+/** Vaso de cerâmica fosca (minimalista). */
+function ceramicMin(d: Dc): void {
+  const { p, w, h } = d, fl = h - 1, c = C('#d8d0c4');
+  p.poly([[w / 2 - 1, 0], [w / 2 + 1, 0], [w / 2 + 1, 3], [w - 1, 8], [w - 2, fl + 1], [1, fl + 1], [0, 8], [w / 2 - 1, 3]], c); p.vline(1, 8, fl - 1, lv(c, 3.6)); p.hline(1, w - 2, fl, lv(c, 1.4));
+  p.line(w / 2, 0, w / 2 + 2, -0, C('#5a4a3a'));
+}
+/** Aspirador robô. */
+function robotVac(d: Dc): void {
+  const { p, m, lit, w, h } = d, fl = h - 1;
+  p.ellipse(w / 2, fl - 1, w / 2 - 0.5, 1.5, C('#2a2c34')); p.hline(1, w - 2, fl - 2, C('#4a4c56')); p.put(w / 2, fl - 2, lit ? m.acc : DGREY); p.hline(2, w - 3, fl, BLACK);
+}
+/** Drone de filmagem na base. */
+function droneCam(d: Dc): void {
+  const { p, lit, w, h } = d, fl = h - 1;
+  blk(p, 1, fl - 1, w - 2, 2, C('#2a2c34')); p.rect(3, fl - 3, w - 6, 2, C('#e8e8ec')); p.put(w / 2, fl - 2, lit ? C('#48c860') : DGREY);
+  p.line(1, fl - 4, 3, fl - 3, C('#e8e8ec')); p.line(w - 2, fl - 4, w - 4, fl - 3, C('#e8e8ec')); p.hline(0, 2, fl - 5, GREY); p.hline(w - 3, w - 1, fl - 5, GREY); p.put(w / 2, fl - 1, BLACK);
+}
+/** Lareira (sem época): moldura da época, fogo aceso, lenha, cornija com enfeites. */
+function fireplace(d: Dc): void {
+  const { p, m, e, lit, w, h } = d, fl = h - 1;
+  const st = [C('#e8e4d8'), BLACK, C('#c8603a'), C('#8a6a4a'), C('#e8e4ec'), C('#b8603a'), C('#e8e6e0'), C('#2a2c34')][e];
+  blk(p, 0, 4, w, 3, e === 1 ? m.metal : lv(st, 2.6)); p.hline(0, w - 1, 6, lv(st, 1.4));
+  blk(p, 1, 7, w - 2, fl - 6, st);
+  if (e === 2 || e === 5) for (let y = 8; y < fl; y += 2) for (let x = 1 + ((y >> 1) % 2) * 2; x < w - 1; x += 4) p.put(x, y, lv(st, 1.6));
+  if (e === 1) for (let i = 0; i < 5; i++) p.line(w / 2, fl - 2, 4 + i * ((w - 8) / 4), 8, lv(m.metal, 2));
+  const ox = 6, ow = w - 12, oy = 11;
+  p.rect(ox, oy, ow, fl - oy, C('#1a1210')); if (e !== 7) p.poly([[ox, oy], [ox + ow, oy], [ox + ow - 2, oy - 2], [ox + 2, oy - 2]], C('#1a1210'));
+  blk(p, ox + 3, fl - 2, ow - 6, 2, C('#6a4a2a')); p.line(ox + 4, fl - 3, ox + ow - 5, fl - 4, C('#5a3a20'));
+  const fire = lit || e === 7 ? 1 : 0.5;
+  p.poly([[ox + 5, fl - 3], [ox + ow / 2, fl - 3 - 9 * fire], [ox + ow - 5, fl - 3]], C('#e0602a')); p.poly([[ox + 8, fl - 3], [ox + ow / 2 + 1, fl - 3 - 6 * fire], [ox + ow - 8, fl - 3]], C('#f0c040'));
+  if (e === 7) { p.rect(ox, oy, ow, 1, C('#5ae0ff')); }
+  p.rect(4, 1, 2, 3, GOLD); p.put(5, 0, C('#fff0a0')); blk(p, w - 9, 0, 5, 4, eraFrame(e, m)); p.rect(w - 8, 1, 3, 2, C('#a8c8e0')); p.rect(w / 2 - 1, 2, 3, 2, C('#c83a32'));
+  glow(d, w / 2, fl - 6, 9, C('#ffa040'));
+}
+/** Piano de cauda de sala (sem época): visto de lado, laca e pés da época, tampa aberta. */
+function grandPiano(d: Dc): void {
+  const { p, m, e, w, h } = d, fl = h - 1;
+  const c = [C('#3a2018'), BLACK, BLACK, C('#5a3418'), BLACK, C('#2a2a30'), W, BLACK][e];
+  p.line(5, 12, w - 6, 1, lv(c, 3)); p.line(5, 13, w - 6, 2, c); p.vline(w - 6, 2, 13, lv(c, 2)); p.line(7, 13, w - 7, 4, lv(c, 2.2));
+  blk(p, 0, 13, w, 7, c); p.hline(1, w - 2, 14, e === 6 ? CHROME : m.metal); p.rect(1, 15, 12, 2, W); for (let x = 2; x < 13; x += 2) p.put(x, 15, BLACK);
+  p.rect(14, 8, 6, 5, PAPER); p.vline(17, 8, 12, lv(PAPER, 2));
+  for (const x of [2, w / 2, w - 4]) { p.vline(x, 20, fl - 1, c); p.vline(x + 1, 20, fl - 1, lv(c, 2)); p.put(x, fl, m.metal); p.put(x + 1, fl, m.metal); }
+  p.line(14, 20, 15, fl - 4, m.metal); p.rect(12, fl - 4, 6, 1, m.metal);
+}
+/** Castiçal de prata (velas acesas). */
+function candles(d: Dc): void {
+  const { p, e, lit, w, h } = d, fl = h - 1, ag = [C('#d8dce4'), C('#c0c4cc'), C('#e0b048'), C('#c09048'), C('#2a2a30'), C('#a8acb4'), C('#2a2a2e'), C('#e8e8ec')][e], wax = [W, C('#f4ecd8'), C('#f0a0a8'), C('#d8782a'), C('#e04898'), C('#c83a32'), C('#e8e4dc'), C('#c8d8f0')][e];
+  blk(p, 2, fl - 1, w - 4, 2, ag); p.vline(w / 2, 7, fl - 1, ag); p.line(w / 2, 9, 1, 7, ag); p.line(w / 2, 9, w - 2, 7, ag);
+  for (const x of [1, w / 2, w - 2]) { p.rect(x, 3, 1, 4, wax); p.put(x, 2, lit ? C('#fff0a0') : C('#f0a040')); p.put(x, 7, ag); }
+  if (lit) for (const x of [1, w / 2, w - 2]) d.fx.disc(x + 0.5, 2, 2.5, withAlpha(C('#ffd080'), 90));
+}
+
+// ---------------------------------------------------------------- itens específicos · teto
+
+/** Pendente a gás de latão (nouveau): haste, braço com globo de vidro e chama. */
+function gasPendant(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  p.rect(w / 2 - 2, 0, 4, 1, m.metal); p.vline(w / 2, 1, 6, m.metal); p.hline(1, w - 2, 6, m.metal);
+  for (const x of [2, w - 3]) { p.vline(x, 6, 8, m.metal); p.ellipse(x, 10.5, 2, 2.5, withAlpha(C('#f0e8d0'), 210)); p.put(x, 11, lit ? C('#fff0a0') : C('#f0a040')); if (lit) d.fx.disc(x + 0.5, 11, 3, withAlpha(C('#ffd080'), 90)); }
+  p.disc(w / 2, 7.5, 1.3, m.metal); p.put(w / 2, h - 1, m.metal); p.vline(w / 2, 8, h - 2, m.metal);
+}
+/** Plafon de vidro jateado (déco): prato raso preso ao teto com aro de latão escalonado. */
+function decoDish(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  p.rect(w / 2 - 3, 0, 6, 2, m.metal); p.hline(w / 2 - 5, w / 2 + 4, 2, m.metal);
+  p.ellipse(w / 2, 3, w / 2 - 0.5, h - 4, lit ? C('#fff4dc') : C('#e8e0d0')); p.rect(0, 0, w, 3, 0);
+  for (let i = 0; i < 3; i++) p.hline(3 + i * 2, w - 4 - i * 2, 4 + i, lv(C('#e8e0d0'), 2.4));
+  p.hline(1, w - 2, 3, m.metal); glow(d, w / 2, h - 2, 8);
+}
+/** Calha fluorescente (sem época): luminária de tubo, corpo da época. */
+function fluorescent(d: Dc): void {
+  const { p, e, lit, w, h } = d;
+  const c = [C('#8a8478'), C('#6a7a6a'), C('#c8ccd4'), C('#d8c8a0'), C('#e8e8ec'), C('#a8acb4'), W, C('#2a2c34')][e];
+  p.put(3, 0, GREY); p.put(w - 4, 0, GREY); blk(p, 0, 1, w, 2, c); p.hline(1, w - 2, h - 1, lit ? C('#f0fff8') : C('#c8d0cc'));
+  if (lit) d.fx.rect(0, h - 1, w, 3, withAlpha(C('#e8fff0'), 90));
+}
+/** Refletores de palco coloridos (sem época): barra com latas PAR e gelatinas. */
+function stagePar(d: Dc): void {
+  const { p, e, lit, w } = d;
+  p.put(4, 0, GREY); p.put(w - 5, 0, GREY); p.hline(0, w - 1, 1, C('#3a3a42')); p.hline(0, w - 1, 2, C('#2a2a30'));
+  const cols = [C('#e04848'), C('#3a8af0'), C('#f0c040'), C('#48c860'), C('#ff5ab0')];
+  const n = e >= 4 ? 5 : 4;
+  for (let i = 0; i < n; i++) { const x = 2 + i * ((w - 6) / (n - 1)); p.vline(x + 1, 3, 3, C('#3a3a42')); blk(p, x - 1, 4, 5, 5, [C('#3a3a3a'), C('#3a3a3a'), C('#5a5a62'), C('#3a2a20'), C('#2a2a30'), C('#4a4a52'), BLACK, C('#d8dce4')][e]); p.hline(x, x + 2, 8, lit ? lv(cols[i], 5) : lv(cols[i], 1.8)); if (lit) d.fx.poly([[x - 1, 9], [x + 4, 9], [x + 7, 16], [x - 4, 16]], withAlpha(cols[i], 70)); }
+}
+/** Trilho de spots (anos 80, compacto). */
+function track(d: Dc): void {
+  const { p, lit, w } = d;
+  p.rect(0, 0, w, 2, BLACK); p.hline(0, w - 1, 0, C('#3a3a42'));
+  for (const x of [4, 12, 20, 28]) { p.vline(x, 2, 2, BLACK); p.poly([[x - 1, 3], [x + 2, 3], [x + 3, 6], [x - 1, 6]], x === 12 ? C('#e04898') : C('#2a2a30')); p.put(x + 1, 6, lit ? BULB : DGREY); if (lit) d.fx.poly([[x - 1, 6], [x + 3, 6], [x + 6, 14], [x - 3, 14]], withAlpha(BULB, 60)); }
+}
+/** Pendentes industriais (anos 90): cúpulas de metal em fio. */
+function industrial(d: Dc): void {
+  const { p, lit, w } = d;
+  for (const [x, len] of [[5, 6], [w / 2, 3], [w - 6, 6]] as const) { p.rect(x - 1, 0, 3, 1, C('#3a3a42')); p.vline(x, 1, len, BLACK); p.poly([[x - 4, len + 6], [x + 5, len + 6], [x + 2, len + 1], [x - 1, len + 1]], C('#4a5a5a')); p.hline(x - 4, x + 4, len + 6, lv(C('#4a5a5a'), 1.4)); p.put(x, len + 7, lit ? C('#ffc040') : C('#8a6a2a')); if (lit) d.fx.poly([[x - 4, len + 7], [x + 5, len + 7], [x + 8, len + 14], [x - 7, len + 14]], withAlpha(C('#ffd080'), 60)); }
+}
+/** Painel de LED embutido (minimalista). */
+function ledPanel(d: Dc): void {
+  const { p, lit, w, h } = d;
+  p.rect(0, 0, w, h, W); p.hline(0, w - 1, h - 1, C('#c8ccd4')); p.rect(2, 1, w - 4, h - 2, lit ? C('#f8fcff') : C('#e0e4e8'));
+  if (lit) d.fx.rect(0, h, w, 3, withAlpha(C('#f0f8ff'), 80));
+}
+/** Teto de luz que acompanha o dia (smart): painel com degradê do céu. */
+function smartCeiling(d: Dc): void {
+  const { p, m, lit, w, h } = d;
+  p.rect(0, 0, w, h, C('#e8eaee'));
+  for (let x = 1; x < w - 1; x++) p.vline(x, 1, h - 2, lit ? mix(C('#ffd0a0'), C('#a0d0ff'), x / w) : mix(C('#b8b0a8'), C('#a8b0b8'), x / w));
+  p.put(w - 2, 0, lit ? m.acc : DGREY); if (lit) d.fx.rect(0, h, w, 3, withAlpha(C('#ffe8d0'), 70));
+}
+/** Canhão de laser (anos 80): caixa presa no teto, feixes verdes. */
+function laser(d: Dc): void {
+  const { p, lit, w, h } = d;
+  p.rect(w / 2 - 3, 0, 6, 1, GREY); blk(p, 2, 1, w - 4, 5, C('#26262c')); p.rect(w / 2 - 1, 6, 3, 2, C('#3a3a42')); p.put(w / 2, 7, lit ? C('#80ff80') : C('#2a4a2a'));
+  p.put(4, 3, lit ? C('#e04848') : DGREY);
+  if (lit) for (let i = 0; i < 5; i++) d.fx.line(w / 2, 8, i * 4, h + 10, withAlpha(C('#80ff80'), 170));
+  else p.hline(4, w - 5, 2, C('#3a3a42'));
+}
+
+// ---------------------------------------------------------------- itens específicos · janela (o vão DWIN fica livre)
+
+/** Varão e suportes comuns às cortinas. */
+function rodTop(p: Px, w: number, c: Col): void { p.rect(1, 0, 2, 3, c); p.rect(w - 3, 0, 2, 3, c); p.hline(0, w - 1, 2, c); p.hline(0, w - 1, 1, lv(c, 4.2)); }
+/** Cortina de renda: painéis brancos translúcidos com motivo de flores, bandô de renda. */
+function lace(d: Dc): void {
+  const { p, m, w, h } = d;
+  rodTop(p, w, m.metal);
+  for (const [a, b] of [[0, 10], [w - 11, w - 1]] as const) for (let y = 3; y < h; y++) for (let x = a; x <= b; x++) { const motif = (Math.hypot((x % 6) - 3, (y % 6) - 3) < 1.6) || ((x + y) % 6 === 0); p.set(x, y, motif ? withAlpha(W, 235) : withAlpha(C('#f4f0e6'), 150)); }
+  for (let x = 0; x < w; x++) p.set(x, 3 + (x % 4 === 0 ? 2 : x % 2), withAlpha(W, 230)); for (let x = 0; x < w; x++) p.set(x, 3, withAlpha(W, 230));
+}
+/** Persiana de alumínio (déco em diante): lâminas horizontais recolhidas no alto, cordão. */
+function venetian(d: Dc): void {
+  const { p, w } = d;
+  const { x: wx, w: ww } = DWIN;
+  blk(p, wx - 2, 2, ww + 4, 2, CHROME); for (let y = 4; y < 14; y += 2) { p.hline(wx - 1, wx + ww, y, C('#c8ccd4')); p.hline(wx - 1, wx + ww, y + 1, lv(C('#c8ccd4'), 2)); }
+  p.vline(wx + 3, 14, 19, C('#e8e4dc')); p.put(wx + 3, 20, CHROME); p.vline(w - wx - 4, 14, 16, C('#e8e4dc')); p.put(w - wx - 4, 17, CHROME); p.rect(1, 0, 2, 3, GREY); p.rect(w - 3, 0, 2, 3, GREY);
+}
+/** Cortina de contas (anos 70): fios de contas coloridas caindo do varão, abertos no meio. */
+function beads(d: Dc): void {
+  const { p, w, h } = d;
+  rodTop(p, w, C('#7a4a24'));
+  const cols = [C('#d8782a'), C('#a8401a'), C('#f0c060'), C('#7a8a2a')];
+  for (let x = 0; x < w; x += 2) { if (x > 8 && x < w - 9) continue; for (let y = 3; y < h - 2; y += 2) p.put(x, y, cols[(x + y) % 4]); }
+}
+/** Cortina blecaute (anos 90): painéis grossos escuros abertos e enrolador em cima. */
+function blackout(d: Dc): void {
+  const { p, m, w, h } = d;
+  rodTop(p, w, m.metal);
+  for (const [a, b] of [[0, 7], [w - 8, w - 1]] as const) for (let y = 3; y < h; y++) for (let x = a; x <= b; x++) p.set(x, y, (x - a) % 3 === 0 ? lv(C('#2a3040'), 1.6) : C('#2a3040'));
+  blk(p, DWIN.x - 1, 3, DWIN.w + 2, 3, C('#3a4050')); p.put(DWIN.x + 2, 6, GREY);
+}
+/** Floreira de janela (sem época): caixa sob o peitoril com flores, suporte da época. */
+function planters(d: Dc): void {
+  const { p, m, e, h } = d;
+  const { x: wx, y: wy, w: ww, h: wh } = DWIN;
+  const box = [C('#2a2a30'), BLACK, C('#e8e0c8'), C('#b8603a'), C('#e04898'), C('#5a6a7a'), C('#e8e6e0'), C('#2a2c34')][e];
+  const fl = [[C('#c83a32'), C('#f0e0f0')], [C('#f8f0f0'), C('#f0d040')], [C('#e04848'), C('#f0a0c8')], [C('#f0d040'), W], [C('#ff5ab0'), C('#3ac0d0')], [C('#8a5ac8'), C('#c8a0e0')], [LEAF2, C('#8ab08a')], [C('#f0a0e0'), C('#a0c0ff')]][e];
+  const by = wy + wh + 2, bh = Math.min(5, h - by);
+  if (e === 0) { for (let x = wx - 3; x < wx + ww + 3; x += 2) p.vline(x, by, by + bh - 1, box); p.hline(wx - 3, wx + ww + 2, by, box); p.hline(wx - 3, wx + ww + 2, by + bh - 1, box); for (let x = wx - 2; x < wx + ww + 2; x += 4) p.ring(x + 1, by + 2, 1, box); }
+  else blk(p, wx - 3, by, ww + 6, bh, box);
+  if (e === 1) p.hline(wx - 3, wx + ww + 2, by + 1, m.metal);
+  for (let x = wx - 2; x < wx + ww + 2; x += 2) {
+    const tall = e === 6 ? 3 : e === 3 ? 5 : 4;
+    p.vline(x, by - tall + 1, by - 1, LEAF);
+    if (e === 6) { p.put(x, by - tall, LEAF2); continue; }
+    p.put(x, by - tall, fl[(x >> 1) % 2]); if (e === 3 || e === 5) p.put(x, by - tall - 1, fl[(x >> 1) % 2]);
+  }
+  if (e === 7) p.rect(wx + ww, by + 1, 2, 2, C('#5ae0ff'));
+  // mãos-francesas presas na parede (a floreira não flutua)
+  for (const x of [wx - 1, wx + ww]) p.line(x, by + bh, x - 2, Math.min(h - 1, by + bh + 2), box === BLACK ? C('#3a3a42') : lv(box, 1.4));
+}
+/** Vidro que escurece sozinho: moldura fina e vidro com película escura em degradê. */
+function smartGlass(d: Dc): void {
+  const { p, m, lit, w } = d;
+  const { x: wx, y: wy, w: ww, h: wh } = DWIN;
+  blk(p, wx - 1, wy - 1, ww + 2, 1, C('#2a2c34')); blk(p, wx - 1, wy + wh, ww + 2, 1, C('#2a2c34')); p.vline(wx - 1, wy, wy + wh - 1, C('#2a2c34')); p.vline(wx + ww, wy, wy + wh - 1, C('#2a2c34'));
+  for (let y = wy; y < wy + wh; y++) p.hline(wx, wx + ww - 1, y, withAlpha(C('#20283a'), Math.round(lit ? 60 : 30 + 140 * (1 - (y - wy) / wh))));
+  p.rect(wx + ww - 4, wy + wh - 3, 3, 2, lit ? m.acc : DGREY); p.rect(1, wy + wh + 1, w - 2, 2, C('#e8e8ec'));
+}
+
+// ---------------------------------------------------------------- itens específicos · letreiros (com o nome do selo)
+
+/** Letras douradas na vidraça (déco): nome em ouro com contorno preto sobre o vidro, filete. */
+function giltLetters(d: Dc): void {
+  const { p, m, w, h, name } = d;
+  p.rect(0, 0, w, h, withAlpha(m.glass, 230)); p.hline(0, w - 1, 0, W); nameIn(p, name, 1, 0, w - 2, h - 1, GOLD, lv(GOLD, 1.2)); p.hline(2, w - 3, h - 1, GOLD);
+}
+/** Marquise de lâmpadas (déco): caixa com borda de lâmpadas e o nome. */
+function marquee(d: Dc): void {
+  const { p, lit, w, h, name } = d;
+  blk(p, 0, 0, w, h, C('#c83a32')); p.rect(3, 3, w - 6, h - 6, C('#f4ecd0'));
+  for (let x = 1; x < w - 1; x += 3) { p.put(x, 1, lit ? BULB : C('#c8a040')); p.put(x, h - 2, lit ? BULB : C('#c8a040')); }
+  for (let y = 4; y < h - 3; y += 3) { p.put(1, y, lit ? BULB : C('#c8a040')); p.put(w - 2, y, lit ? BULB : C('#c8a040')); }
+  nameIn(p, name, 4, 3, w - 8, h - 6, BLACK); if (lit) d.fx.rect(0, 0, w, h, withAlpha(GLOW, 40));
+}
+/** Placa googie (anos 50): seta e estrela com o nome. */
+function googie(d: Dc): void {
+  const { p, m, lit, w, h, name } = d, fl = h - 1;
+  p.vline(w / 2, 18, fl, CHROME); p.vline(w / 2 + 1, 18, fl, lv(CHROME, 2));
+  p.poly([[0, 8], [w - 6, 6], [w - 6, 3], [w, 11], [w - 6, 19], [w - 6, 16], [0, 18]], m.acc); p.poly([[2, 10], [w - 8, 9], [w - 8, 15], [2, 16]], C('#f4ecd0'));
+  nameIn(p, name, 2, 9, w - 10, 7, m.acc);
+  const sx = 6, sy = 3; for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; p.line(sx, sy, sx + Math.cos(a) * (i % 2 ? 2 : 4), sy + Math.sin(a) * (i % 2 ? 2 : 4), lit ? C('#fff0a0') : m.acc2); }
+  for (let x = 4; x < w - 8; x += 3) p.put(x, 20, lit ? BULB : C('#c8a040'));
+  p.hline(w / 2 - 3, w / 2 + 4, fl, CHROME); glow(d, sx, sy, 5);
+}
+/** Logotipo gigante pintado (anos 70): faixas de arco-íris em curva e o nome. */
+function supergraphic(d: Dc): void {
+  const { p, w, h, name } = d;
+  const cols = [C('#a8401a'), C('#d8782a'), C('#f0c060'), C('#7a8a2a')];
+  for (let i = 0; i < 4; i++) for (let x = 0; x < w; x++) { const y = 2 + i * 2 + Math.round(Math.sin(x / w * Math.PI) * -1.5 + 1.5); p.put(x, y, cols[i]); p.put(x, y + 1, cols[i]); }
+  p.rect(0, 11, w, h - 11, C('#f0e0b0')); p.hline(0, w - 1, 11, lv(C('#f0e0b0'), 4));
+  nameIn(p, name, 1, 11, w - 2, h - 11, C('#4a2c18'));
+}
+/** Logo pequeno em relevo (minimalista): inicial em placa clara. */
+function minLogo(d: Dc): void {
+  const { p, w, h, name } = d;
+  const ini = (name.trim()[0] ?? 'S').toUpperCase();
+  for (const x of [1, w - 2]) p.put(x, 1, GREY); blk(p, 0, 0, w, h, C('#ecebe6')); drawText(p, ini, 2, 2.5, C('#2a2a2e')); p.hline(7, w - 3, 4, C('#8a8a86')); p.hline(7, w - 5, 6, C('#b8b6b0'));
+}
+/** Placa de latão gravada (sem época): placa de parede com o nome. */
+function brassPlate(d: Dc): void {
+  const { p, e, w, h, name } = d;
+  const c = [BRASS, C('#e0b048'), CHROME, C('#a87a3a'), C('#c8a8e0'), C('#b8a070'), C('#2a2a2e'), C('#d8dce4')][e];
+  blk(p, 0, 0, w, h, c); p.rect(1, 1, w - 2, h - 2, lv(c, 3.2)); for (const [x, y] of [[1, 1], [w - 2, 1], [1, h - 2], [w - 2, h - 2]] as const) p.put(x, y, lv(c, 1.4));
+  nameIn(p, name, 2, 1, w - 4, h - 2, e === 6 ? W : lv(c, 0.6));
+}
+/** Logo projetado na calçada (smart): elipse de luz com o nome. */
+function projection(d: Dc): void {
+  const { m, lit, w, h, name } = d, q = d.fx; // luz no chão: vai inteira para a camada de luz (sem contorno)
+  q.ellipse(w / 2, h / 2, w / 2 - 0.5, h / 2 - 0.5, lit ? withAlpha(lv(m.acc, 4), 150) : withAlpha(C('#8a9aa8'), 110));
+  q.ellipse(w / 2, h / 2, w / 2 - 3, h / 2 - 1.5, lit ? withAlpha(lv(m.acc, 5), 90) : withAlpha(C('#a8b8c8'), 70));
+  nameIn(q, name, 2, 0, w - 4, h, lit ? W : C('#4a5a68'));
+}
+
+// ---------------------------------------------------------------- padrões do catálogo (ladrilho 16×16, sem costura)
+
+/** Tamanho do ladrilho dos papéis de parede e pisos (o catálogo traz 0×0: cobrem a área toda). */
+export const DTILE = 16;
+type TileF = (x: number, y: number, m: Mat, e: number) => Col;
+const TILES: Record<string, TileF> = {
+  w_damask: (x, y) => { const u = wrapD(x, 8, 16), v = wrapD(y, 8, 16), k = (u / 5) ** 2 + (v / 7) ** 2; const u2 = wrapD(x, 0, 16), v2 = wrapD(y, 0, 16); return k < 1 && (k > 0.55 || (u < 1 && v < 4)) || (u2 < 2 && v2 < 2 && u2 + v2 < 3) ? C('#a83a48') : (x + y) % 4 === 0 ? C('#6a1a2a') : C('#7a2232'); },
+  w_floral_nouveau: (x, y) => wallpaperAt(0, x, y),
+  w_wood_panel: (x, y, m) => (x % 8 === 0 ? lv(m.wood2, 1.2) : x % 8 === 1 ? lv(m.wood, 4) : noise(x, y, 301) > 0.75 ? lv(m.wood, 2.4) : m.wood),
+  w_deco_fan: (x, y) => wallpaperAt(1, x, y),
+  w_deco_stripe: (x) => (x % 8 < 3 ? C('#1e1c22') : x % 8 === 3 ? C('#c8a040') : C('#efe4ca')),
+  w_atomic: (x, y) => wallpaperAt(2, x, y),
+  w_pastel: (x, y) => (noise(x, y, 391) > 0.93 ? C('#c8ecd8') : paintAt(2, x, y)),
+  w_psych: (x, y) => { const v = y + 3 * Math.sin((x / 16) * TAU) ; return [C('#e04898'), C('#f08a30'), C('#f0e040'), C('#7a3ac8')][Math.floor(((v % 16) + 16) % 16 / 4)]; },
+  w_orange_geo: (x, y) => wallpaperAt(3, x, y),
+  w_cork: (x, y) => { const n = noise(x, y, 311); return n > 0.8 ? C('#8a5a2a') : n < 0.2 ? C('#e0b070') : C('#c89050'); },
+  w_memphis: (x, y) => wallpaperAt(4, x, y),
+  w_grey_sponge: (x, y) => mix(C('#8a8c94'), C('#c8cad0'), (Math.sin((x / 16) * TAU) + Math.cos((y / 16) * TAU * 2) + noise(x, y, 321)) / 3 + 0.33),
+  w_brick: (x, y) => { const row = Math.floor(y / 4), off = (row % 2) * 4; const mort = y % 4 === 3 || (x + off) % 8 === 7; return mort ? C('#c8bca8') : noise(Math.floor((x + off) / 8), row, 331) > 0.6 ? C('#9a4a32') : (y % 4 === 0 ? C('#c0644a') : C('#a8543a')); },
+  w_acoustic: (x, y, m) => { const u = x % 8, v = y % 8, k = Math.max(Math.abs(u - 3.5), Math.abs(v - 3.5)); const c = m.fab2; return k > 3 ? lv(c, 0.8) : u < v ? lv(c, 2) : lv(c, 3.6); },
+  w_white_matte: (x, y) => { const n = noise(x, y, 341); return n > 0.92 ? C('#e6e4de') : n < 0.05 ? C('#f8f7f4') : C('#f2f1ec'); },
+  w_concrete: (x, y) => paintAt(6, x, y),
+  w_led_paint: (x, y, m) => (x % 8 === 0 || y % 8 === 0 ? lv(m.acc, 4.4) : (x + y) % 16 < 8 ? C('#d0d4d8') : C('#c4c8ce')),
+  g_parquet: (x, y) => floorAt(0, x, y),
+  g_mosaic: (x, y) => { const u = x % 8, v = y % 8; if (u === 0 || v === 0) return C('#d8d0c0'); const r = Math.hypot(u - 4, v - 4); return r < 1.5 ? C('#c83a32') : Math.abs(u - v) < 1 || Math.abs(u + v - 8) < 1 ? C('#2a5a8a') : C('#e8dcc0'); },
+  g_terrazzo: (x, y) => { const n = noise(x, y, 351); return x % 16 === 0 || y % 16 === 0 ? C('#c09048') : n > 0.9 ? C('#2a2a30') : n < 0.08 ? C('#a8584a') : C('#e6dcc8'); },
+  g_checker: (x, y) => (x % 8 === 0 && y % 8 === 0 ? C('#8a8a90') : (Math.floor(x / 8) + Math.floor(y / 8)) % 2 ? ((x + y) % 7 === 0 ? C('#2e2e36') : C('#1e1e24')) : C('#f0ece4')),
+  g_shag: (x, y) => floorAt(3, x, y),
+  g_disco_floor: (x, y) => { const k = (Math.floor(x / 8) + Math.floor(y / 8) * 3) % 4; const c = [C('#ff5ab0'), C('#5ae0ff'), C('#f0e040'), C('#a06aff')][k]; return x % 8 === 0 || y % 8 === 0 ? C('#1a1a24') : (x % 8 === 1 || y % 8 === 1) ? lv(c, 5) : c; },
+  g_grey_carpet: (x, y) => { const n = noise(x, y, 361); return n > 0.9 ? C('#8a8c94') : n > 0.55 ? C('#7a7c84') : C('#6a6c74'); },
+  g_laminate: (x, y) => floorAt(5, x, y),
+  g_polished_concrete: (x, y) => floorAt(6, x, y),
+  g_wide_oak: (x, y) => { const seam = y % 8 === 0 || (x + (Math.floor(y / 8) % 2) * 8) % 16 === 0; return seam ? C('#a88a60') : noise(x >> 1, y, 371) > 0.8 ? C('#d8bc90') : C('#e2c8a0'); },
+  g_heated: (x, y) => (x === 0 || y === 0 ? C('#9a9aa0') : (y === 8 && x % 4 < 2) ? C('#e8b8a0') : C('#c8c8cc')),
+  g_floating_studio: (x, y, m) => (y % 4 === 0 ? lv(m.wood2, 1.4) : (x + Math.floor(y / 4) * 5) % 16 === 0 ? lv(m.wood2, 2) : noise(x, y, 381) > 0.8 ? lv(m.wood, 2.4) : m.wood),
+};
+
+/** Busto de compositor (mesa): mármore sobre base. */
+function bustSmall(d: Dc): void {
+  const { p, w, h } = d, fl = h - 1, mb = C('#ece8dc');
+  p.ellipse(w / 2, 3.5, 2.5, 3, mb); p.rect(w / 2 - 3, 0, 6, 2, lv(mb, 2.4)); p.put(w / 2 + 1, 4, lv(mb, 1.6)); p.rect(w / 2 - 1, 6, 3, 2, mb);
+  p.poly([[1, 10], [w - 1, 10], [w - 2, 7], [2, 7]], mb); p.hline(2, w - 3, 7, lv(mb, 4.4)); blk(p, 2, 10, w - 4, fl - 9, C('#2a2a30'));
+}
+
+// ---------------------------------------------------------------- registro: id do catálogo → desenho
+
+interface Rec {
+  f: (d: Dc) => void;
+  /** forma do desenho de família (padrão: o estilo do item; nos itens sem época, o da época) */
+  v?: number;
+  /** troca de materiais (ex.: couro preto num sofá dos anos 90) */
+  mat?: Partial<Mat>;
+  /** desenha num tamanho próprio e cola centrado no tamanho do catálogo (encostado embaixo) */
+  nat?: [number, number];
+}
+const r = (f: (d: Dc) => void, o: Omit<Rec, 'f'> = {}): Rec => ({ f, ...o });
+const LEATHER = C('#7a3a24');
+const REC: Record<string, Rec> = {
+  // móveis
+  d_chaise_nouveau: r(chaise), d_armchair_nouveau: r(armchair, { v: 0 }), d_screen_nouveau: r(screenFold), d_sideboard_nouveau: r(cabinet, { v: 0 }),
+  d_bookcase_nouveau: r(bookcase, { v: 0 }), d_plantstand_nouveau: r(plantstand), d_sofa_deco: r(sofa, { v: 1, mat: { fab: LEATHER } }),
+  d_club_chair: r(armchair, { v: 1, mat: { fab: C('#8a4a2a') } }), d_bar_cart_deco: r(barcart, { v: 1 }), d_cabinet_deco: r(cabinet, { v: 1 }),
+  d_vanity_deco: r(vanity), d_desk_deco: r(deskF, { v: 1 }), d_sofa_fifties: r(sofa, { v: 2 }), d_eames_chair: r(lounge), d_diner_booth: r(booth),
+  d_boomerang_table: r(coffeetable, { v: 2 }), d_credenza_fifties: r(cabinet, { v: 2 }), d_shell_chair: r(armchair, { v: 6 }), d_bean_bag: r(armchair, { v: 3 }),
+  d_conversation_pit: r(sofa, { v: 3 }), d_egg_chair: r(armchair, { v: 2 }), d_waterbed: r(bedF, { v: 3 }), d_macrame_chair: r(macrameChair), d_rattan_set: r(rattan),
+  d_sofa_eighties: r(sofa, { v: 6, mat: { fab: C('#8a8c94'), metal: C('#26262c') } }), d_glass_desk: r(deskF, { v: 4 }), d_memphis_shelf: r(bookcase, { v: 4 }), d_arcade_cab: r(arcade),
+  d_futon: r(bedF, { v: 5 }), d_leather_sofa90: r(sofa, { v: 5, mat: { fab: C('#26262c') } }), d_cd_tower: r(cdtower), d_pool_table: r(pooltable),
+  d_lowsofa_min: r(sofa, { v: 6 }), d_floating_shelf: r(floatshelf), d_standing_desk: r(deskF, { v: 6 }), d_bench_min: r(bench), d_smart_sofa: r(sofa, { v: 7 }),
+  d_massage_chair: r(armchair, { v: 7 }), d_pod_bed: r(bedF, { v: 7 }), d_bar_counter: r(barcounter), d_merch_rack: r(merchrack), d_record_bin: r(recordbin),
+  d_piano_bench: r(pianobench), d_coat_stand: r(coatstand),
+  // quadros e parede
+  a_mucha_print: r(poster, { v: 0 }), a_oil_landscape: r(painting, { v: 0 }), a_family_portrait: r(familyPortrait), a_sheet_frame: r(sheetFrame),
+  a_cabaret_poster: r(cabaret), a_deco_mirror: r(wallmirror, { v: 2 }), a_ocean_liner: r(liner), a_jazz_poster: r(poster, { v: 1 }), a_skyline_etch: r(skylineEtch),
+  a_gold_78: r((d) => award(d, GOLD, 'lp')), a_pinup: r(pinup), a_abstract_fifties: r(painting, { v: 2 }), a_starburst_clock: r(clock, { v: 2 }),
+  a_rocknroll_poster: r(poster, { v: 2 }), a_gold_lp: r((d) => award(d, GOLD, 'lp')), a_psych_poster: r(poster, { v: 3 }), a_macrame_wall: r(macrameWall),
+  a_sunset_canvas: r(sunset), a_platinum: r((d) => award(d, C('#e8ecf4'), 'plat')), a_neon_art: r(neonArt), a_pop_print: r(painting, { v: 5 }),
+  a_mtv_poster: r(poster, { v: 4 }), a_tour_poster90: r(tourPoster), a_grunge_flyer: r(flyerWall), a_photo_bw: r(photoBW), a_canvas_min: r(canvasMin),
+  a_streaming_plaque: r((d) => award(d, C('#5ae0a0'), 'stream')), a_digital_frame: r(digitalFrame), a_led_wall: r(ledWall), a_guitar_wall: r(guitarWall),
+  a_world_map: r(worldMapF), a_signed_photo: r(signedPhoto), a_cover_frame: r(coverFrame),
+  // plantas
+  p_fern: r(fern), p_palm: r(palm), p_orchid: r(orchid), p_cactus: r(smallplant, { v: 1 }), p_spider: r(spider), p_rubber: r(rubber), p_bonsai: r(bonsai),
+  p_ficus: r(bigplant, { v: 4, nat: [16, 32] }), p_succulents: r(succulents), p_monstera: r(bigplant, { v: 2, nat: [16, 30] }), p_green_wall: r(greenWall),
+  p_hydro: r(bigplant, { v: 7, nat: [16, 28] }),
+  // luminárias
+  l_tiffany: r(tablelamp, { v: 0, nat: [10, 16] }), l_gas_sconce: r(gasSconce), l_deco_floor: r(floorlamp, { v: 1 }), l_banker: r(banker), l_arc: r(arcLamp),
+  l_atomic: r(floorlamp, { v: 2 }), l_lava: r(lava), l_mushroom: r(mushroom), l_neon_sign: r(onAir), l_halogen: r(floorlamp, { v: 4 }), l_desk_tensor: r(tensor),
+  l_paper_lantern: r(paperLantern), l_led_strip: r(ledStrip), l_smart_bulb: r(tablelamp, { v: 7 }),
+  // som e aparelhos
+  h_gramophone: r(gramophone), h_music_box: r(musicBox), h_player_piano: r(playerPiano), h_cathedral_radio: r(cathedral), h_console_radio: r(stereo, { v: 1 }),
+  h_jukebox: r(jukebox, { v: 2 }), h_hifi_tube: r(stereo, { v: 2 }), h_tv_fifties: r(tv50), h_reel_deck: r(reelDeck), h_quad_stereo: r(stereo, { v: 3 }),
+  h_boombox: r(boombox), h_vcr_tv: r(vcrTv), h_cd_micro: r(cdMicro), h_pa_speaker: r(paSpeaker), h_flat_tv: r(flatTv), h_smart_speaker: r(smartSpeaker),
+  h_vinyl_revival: r(vinylRevival), h_holo: r(holo), h_karaoke: r(karaoke),
+  // coleção e enfeites
+  c_bust: r(bustSmall), c_globe: r(globe), c_grandfather_clock: r(grandfather), c_metronome: r(metronome), c_deco_statue: r(decoStatue), c_cocktail_set: r(cocktail),
+  c_aquarium: r(tankSmall), c_jukebox_mini: r(jukeboxMini), c_disco_ball: r(discoBall), c_rubik: r(rubik), c_cassette_wall: r(cassetteWall), c_gameconsole: r(gameConsole),
+  c_action_figures: r(figures), c_trophy_case: r(trophyCase), c_drumhead: r(drumhead), c_setlist_frame: r(setlist), c_ceramic_min: r(ceramicMin),
+  c_robot_vac: r(robotVac), c_drone_cam: r(droneCam), c_fireplace: r(fireplace), c_piano_grand: r(grandPiano), c_candles: r(candles),
+  // tapetes (com tamanho)
+  g_persian: r(rug, { v: 0 }), g_rug_kilim: r(rug, { v: 5 }),
+  // teto
+  t_crystal: r(chandelier, { v: 0 }), t_gas_pendant: r(gasPendant), t_deco_dish: r(decoDish), t_sputnik: r(chandelier, { v: 2 }), t_fluorescent: r(fluorescent),
+  t_rice_globe: r(chandelier, { v: 5 }), t_stage_par: r(stagePar), t_track: r(track), t_industrial: r(industrial), t_led_panel: r(ledPanel),
+  t_smart_ceiling: r(smartCeiling), t_laser: r(laser),
+  // janela
+  k_velvet: r(curtain, { v: 0 }), k_lace: r(lace), k_stained: r(winframe, { v: 0 }), k_venetian: r(venetian), k_barkcloth: r(curtain, { v: 2 }), k_beads: r(beads),
+  k_vertical: r(curtain, { v: 4 }), k_blackout: r(blackout), k_linen: r(curtain, { v: 6 }), k_smart_glass: r(smartGlass), k_planters: r(planters),
+  // letreiros
+  s_painted: r(sign, { v: 0 }), s_brass_plate: r(brassPlate), s_gilt_letters: r(giltLetters), s_marquee: r(marquee), s_neon_script: r(sign, { v: 2 }),
+  s_googie: r(googie), s_supergraphic: r(supergraphic), s_lightbox: r(sign, { v: 3 }), s_steel_letters: r(sign, { v: 6 }), s_min_logo: r(minLogo),
+  s_led_screen: r(sign, { v: 7 }), s_projection: r(projection),
+};
+/** O catálogo tem desenho aqui? (todo item de DECO31 precisa ter: o teste cobra) */
+export const decoHasArt = (id: string): boolean => id in REC || id in TILES;
+/** Janela sem tamanho no catálogo: cortina/moldura no tamanho padrão da janela das cenas. */
+export const DWIN_SIZE = { w: 36, h: 40 } as const;
 
 // ---------------------------------------------------------------- montagem
 
-const DRAW: Record<string, (d: Dc) => void> = {
-  poster, painting, goldrec, clock, wallmirror, wallshelf, sofa, armchair, bookcase, jukebox, aquarium, bigplant, floorlamp, coffeetable,
-  stereo, sculpture, barcart, piano, rug, tablelamp, smallplant, vase, globe, chandelier, ceilfan, curtain, winframe, sign, logo,
-};
-/** Margem em volta do desenho (contorno de 1 px + brilho). */
+/** Margem em volta do desenho (contorno de 1 px). */
 export const DPAD = 2;
 export type DCond = 'new' | 'used';
-export interface DecoOpts { cond?: DCond; lit?: boolean; /** nome do selo (letreiros e placas) */ name?: string }
+export interface DecoOpts { cond?: DCond; lit?: boolean; /** nome do selo (letreiros) */ name?: string }
 const hashS = (s: string): number => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
+const styIdx = (st: DecoStyle31): number => STYLE31.indexOf(st);
+
+/** O item é um padrão que cobre a área (papel de parede ou piso sem tamanho)? */
+export const decoIsTile = (id: string): boolean => id in TILES;
+/** Tamanho lógico do desenho (sem margem): o do catálogo; padrões = ladrilho; janela sem tamanho = DWIN_SIZE. */
+export function decoArtSize(id: string): { w: number; h: number } {
+  const def = decoDef31(id)!;
+  if (id in TILES) return { w: DTILE, h: DTILE };
+  if (def.w === 0 || def.h === 0) return { ...DWIN_SIZE };
+  return { w: def.w, h: def.h };
+}
+/** Tamanho final do Px (com a margem DPAD nos objetos; ladrilho sem margem). */
+export function decoSize(id: string): { w: number; h: number } {
+  const s = decoArtSize(id);
+  return id in TILES ? s : { w: s.w + 2 * DPAD, h: s.h + 2 * DPAD };
+}
+/** Estilo (0..7) com que o item é desenhado no ano: o dele; "sem época" segue a época do ano (limitada ao período do item). */
+export function decoStyleOf(id: string, year: number): number {
+  const def = decoDef31(id)!;
+  if (def.style !== 'any') return styIdx(def.style);
+  const y = Math.max(def.from, Math.min(def.to ? def.to - 1 : 2040, year));
+  return styOf(y);
+}
+/** Épocas (índices de estilo) em que o item existe: do ano em que aparece até sair de linha. */
+export function decoEras(id: string): number[] {
+  const def = decoDef31(id)!;
+  const a = styOf(def.from), b = styOf(def.to ? def.to - 1 : 2040);
+  const out: number[] = [];
+  for (let i = a; i <= b; i++) out.push(i);
+  return out;
+}
 
 /**
  * Desgaste de "usado/vintage": cor desbota para o sépia e escurece um pouco, aparecem riscos claros e manchas escuras
@@ -1068,205 +1984,232 @@ function wear(p: Px, seed: number): void {
   for (let y = 0; y < p.h; y++) for (let x = 0; x < p.w; x++) {
     const i = y * p.w + x, c = p.d[i];
     if (c >>> 24 < 40) continue;
-    const [r, g, b, a] = rgba(c);
-    const gr = (r * 0.3 + g * 0.59 + b * 0.11) | 0;
-    let o = mix(pack(Math.round(r * 0.55 + gr * 0.45), Math.round(g * 0.55 + gr * 0.45), Math.round(b * 0.55 + gr * 0.45), a), sep, 0.22);
+    const [rr, g, b, a] = rgba(c);
+    const gr = (rr * 0.3 + g * 0.59 + b * 0.11) | 0;
+    let o = mix(pack(Math.round(rr * 0.55 + gr * 0.45), Math.round(g * 0.55 + gr * 0.45), Math.round(b * 0.55 + gr * 0.45), a), sep, 0.22);
     o = mix(o, C('#1e1814'), 0.08);
     const n = noise(x, y, seed);
     if (n > 0.95) o = mix(o, C('#f0e8d8'), 0.35); // risco
     else if (n < 0.04) o = mix(o, C('#3a2a1a'), 0.3); // mancha
-    if ((x + seed) % 13 === 0 && noise(x, 0, seed + 1) > 0.6 && y > p.h * 0.3 && y < p.h * 0.7) o = mix(o, C('#f0e8d8'), 0.25); // arranhão vertical
+    if ((x + seed) % 13 === 0 && noise(x, 0, seed + 1) > 0.6 && y > p.h * 0.3 && y < p.h * 0.7) o = mix(o, C('#f0e8d8'), 0.25); // arranhão
     p.d[i] = withAlpha(o, a);
   }
 }
 
 const cacheD = new Map<string, Px>();
-/** O item pronto (com margem DPAD): desenha, desgasta se usado, contorna (INK) e cola a luz. Tamanho fixo por item. */
-export function decoPx(id: string, sty: DSty | number, o: DecoOpts = {}): Px {
-  const def = BY_ID.get(id);
-  if (!def) throw new Error(`deco31px: sem desenho para '${id}'`);
-  const s = styIx(sty);
-  const cond = o.cond ?? 'new', lit = !!(def.light && o.lit), name = def.label ? (o.name ?? 'Selo') : '';
-  const key = `${id}|${s}|${cond}|${lit ? 1 : 0}|${name}`;
+/**
+ * O item pronto: desenha no tamanho do catálogo, desgasta se usado, contorna (INK) e cola a luz. Objetos ganham a margem
+ * DPAD; padrões devolvem o ladrilho (use decoFillPx para cobrir uma área).
+ */
+export function decoPx(id: string, year: number, o: DecoOpts = {}): Px {
+  const def = decoDef31(id);
+  if (!def || !decoHasArt(id)) throw new Error(`deco31px: sem desenho para '${id}'`);
+  const e = decoStyleOf(id, year), cond = o.cond ?? 'new', lit = !!o.lit, name = def.cat === 'sign' ? (o.name ?? 'Selo') : '';
+  const key = `${id}|${e}|${cond}|${lit ? 1 : 0}|${name}`;
   const hit = cacheD.get(key);
   if (hit) return hit;
-  if (def.tile) { const t = decoTilePx(id, s, cond); cacheD.set(key, t); return t; }
-  const layer = new Px(def.w, def.h), fx = new Px(def.w, def.h);
-  DRAW[id]({ p: layer, fx, s, m: M[s], lit, w: def.w, h: def.h, name });
-  if (cond === 'used') wear(layer, hashS(id) + s * 17);
-  const out = new Px(def.w + 2 * DPAD, def.h + 2 * DPAD);
-  out.blit(layer, DPAD, DPAD);
-  out.outline(INK);
-  out.blit(fx, DPAD, DPAD);
-  if (cacheD.size > 1500) cacheD.clear();
+  let out: Px;
+  if (id in TILES) out = decoTilePx(id, year, cond);
+  else {
+    const rec = REC[id], { w, h } = decoArtSize(id), [nw, nh] = rec.nat ?? [w, h];
+    const m = rec.mat ? { ...M[e], ...rec.mat } : M[e];
+    const layer = new Px(nw, nh), fx = new Px(nw, nh);
+    rec.f({ p: layer, fx, s: rec.v ?? e, m, e, lit, w: nw, h: nh, name });
+    if (cond === 'used') { wear(layer, hashS(id) + e * 17); wear(fx, hashS(id) + e * 17 + 1); } // a luz de peça velha também amarela
+    out = new Px(w + 2 * DPAD, h + 2 * DPAD);
+    const ox = DPAD + Math.floor((w - nw) / 2), oy = DPAD + (def.slots[0] === 'ceiling' || def.slots[0] === 'wall' ? 0 : h - nh);
+    out.blit(layer, ox, oy);
+    out.outline(INK);
+    out.blit(fx, ox, oy);
+  }
+  if (cacheD.size > 2500) cacheD.clear();
   cacheD.set(key, out);
   return out;
 }
-/** Tamanho final do Px de um item (igual em todos os estilos e estados). Padrões: o ladrilho, sem margem. */
-export const decoSize = (id: string): { w: number; h: number } => { const d = BY_ID.get(id)!; return d.tile ? { w: d.w, h: d.h } : { w: d.w + 2 * DPAD, h: d.h + 2 * DPAD }; };
-/** O item existe nesse estilo? */
-export const decoHas = (id: string, sty: DSty | number): boolean => !!BY_ID.get(id)?.sty.includes(styIx(sty));
+/** O desenho muda quando aceso? (luminárias, telas, neon, letreiros de luz) */
+export function decoHasLight(id: string): boolean {
+  if (id in TILES) return false;
+  const y = DSTY_YEAR[decoEras(id)[0]];
+  const a = decoPx(id, y, { lit: false }).d, b = decoPx(id, y, { lit: true }).d;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return true;
+  return false;
+}
 
-/** Ladrilho de um padrão (papel de parede, pintura, piso): repete sem costura. */
-export function decoTilePx(id: string, sty: DSty | number, cond: DCond = 'new'): Px {
-  const def = BY_ID.get(id)!, f = TILE[id], s = styIx(sty);
-  const t = new Px(def.w, def.h);
-  for (let y = 0; y < def.h; y++) for (let x = 0; x < def.w; x++) t.d[y * def.w + x] = f(s, x, y) | 0xff000000;
-  if (cond === 'used') wear(t, hashS(id) + s * 17);
+/** Ladrilho 16×16 de um papel de parede ou piso: repete sem costura. */
+export function decoTilePx(id: string, year: number, cond: DCond = 'new'): Px {
+  const f = TILES[id], e = decoStyleOf(id, year), m = M[e];
+  const t = new Px(DTILE, DTILE);
+  for (let y = 0; y < DTILE; y++) for (let x = 0; x < DTILE; x++) t.d[y * DTILE + x] = f(x, y, m, e) | 0xff000000;
+  if (cond === 'used') wear(t, hashS(id) + e * 17);
   return t;
 }
 /** Área W × H coberta pelo padrão, a partir da origem (ox, oy) do mundo (para casar com a área vizinha). */
-export function decoFillPx(id: string, sty: DSty | number, W: number, H: number, cond: DCond = 'new', ox = 0, oy = 0): Px {
-  const t = decoTilePx(id, sty, cond), out = new Px(W, H);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) out.d[y * W + x] = t.d[(((y + oy) % t.h) + t.h) % t.h * t.w + ((((x + ox) % t.w) + t.w) % t.w)];
+export function decoFillPx(id: string, year: number, W: number, H: number, cond: DCond = 'new', ox = 0, oy = 0): Px {
+  const t = decoTilePx(id, year, cond), out = new Px(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) out.d[y * W + x] = t.d[((((y + oy) % t.h) + t.h) % t.h) * t.w + ((((x + ox) % t.w) + t.w) % t.w)];
   return out;
 }
+/** Todos os ids do catálogo (na ordem do catálogo). */
+export const DECO_IDS: string[] = DECO31.map((d: DecoDef31) => d.id);
 
-// ---------------------------------------------------------------- upgrades dos itens obrigatórios (6 épocas × níveis)
+// ---------------------------------------------------------------- upgrades dos itens obrigatórios (UPG31)
 
-export interface UpgArt { id: string; w: number; h: number; mount: 'floor' | 'desk'; levels: { pt: string; en: string }[]; pt: string; en: string }
-const L3 = (a: string, b: string, c: string, ea: string, eb: string, ec: string) => [{ pt: a, en: ea }, { pt: b, en: eb }, { pt: c, en: ec }];
-export const UPG_ART: UpgArt[] = [
-  { id: 'phone', w: 22, h: 16, mount: 'desk', pt: 'Telefone', en: 'Telephone', levels: L3('Uma linha', 'Várias linhas', 'Central do executivo', 'One line', 'Multi-line', 'Executive console') },
-  { id: 'filing', w: 16, h: 32, mount: 'floor', pt: 'Arquivo de aço', en: 'Filing cabinet', levels: L3('2 gavetas', '4 gavetas', '5 gavetas com tranca', '2 drawers', '4 drawers', '5 drawers, locking bar') },
-  { id: 'mixer', w: 50, h: 28, mount: 'floor', pt: 'Mesa de som', en: 'Mixing desk', levels: L3('4 canais', '8 canais', '24 canais', '4 channels', '8 channels', '24 channels') },
-  { id: 'safe', w: 24, h: 28, mount: 'floor', pt: 'Cofre', en: 'Safe', levels: L3('Caixa-forte pequena', 'Cofre de segredo', 'Porta de casa-forte', 'Small strongbox', 'Combination safe', 'Vault door') },
-  { id: 'ledger', w: 24, h: 12, mount: 'desk', pt: 'Livro-caixa', en: 'Ledger', levels: L3('Caderno', 'Livro encadernado', 'Livro e máquina de contas', 'Notebook', 'Bound ledger', 'Ledger and calculator') },
-  { id: 'mic', w: 14, h: 34, mount: 'floor', pt: 'Microfone do estúdio', en: 'Studio microphone', levels: L3('Microfone simples', 'Microfone de fita/condensador', 'Válvula com tela antipop', 'Basic mic', 'Ribbon/condenser mic', 'Tube mic with pop filter') },
-];
-export const UPG_IDS = UPG_ART.map((u) => u.id);
-const UPG = new Map(UPG_ART.map((u) => [u.id, u]));
-export const upgArt = (id: string): UpgArt | undefined => UPG.get(id);
+/** Tamanho fixo do desenho de cada item obrigatório (todos os níveis cabem nele). */
+export const REQ_SIZE: Record<string, { w: number; h: number }> = {
+  telefone: { w: 22, h: 16 }, arquivoaco: { w: 18, h: 32 }, cofre: { w: 24, h: 28 }, livrocaixa: { w: 24, h: 12 }, fichario: { w: 18, h: 12 },
+  mesames: { w: 44, h: 26 }, radiotv: { w: 26, h: 28 }, mesasom: { w: 50, h: 28 }, piano: { w: 40, h: 30 }, palco: { w: 30, h: 40 },
+  mesareuniao: { w: 60, h: 22 }, cama: { w: 46, h: 22 },
+};
+type Ud = Dc & { lv: number };
 
-interface Uc { p: Px; fx: Px; e: number; l: number; w: number; h: number }
-/** Cor-base de cada época (0..5) para as máquinas. */
-const ERA_BODY = [C('#4a2c1a'), C('#1e1c22'), C('#7a7e88'), C('#c8b890'), C('#3a3a42'), C('#d8dce4')];
-const ERA_TRIM = [BRASS, CHROME, CHROME, C('#e08a30'), C('#e04848'), C('#5ae0ff')];
-
-/** Telefone: aparelho da época; nível 2 ganha botões de linha acesos; nível 3 vira central com intercomunicador e dourado. */
-function uPhone(u: Uc): void {
-  const { p, e, l, h } = u, body = ERA_BODY[e], trim = l === 3 ? GOLD : ERA_TRIM[e], fl = h - 1;
-  const set0 = 0;
-  if (e === 0) { blk(p, set0 + 2, fl - 1, 7, 2, body); p.vline(set0 + 5, 3, fl - 2, body); p.vline(set0 + 6, 3, fl - 2, lv(body, 2.4)); p.poly([[set0 + 3, 1], [set0 + 8, 1], [set0 + 7, 4], [set0 + 4, 4]], body); p.hline(set0 + 3, set0 + 7, 1, trim); p.line(set0 + 8, 6, set0 + 10, 9, trim); p.rect(set0 + 9, 9, 2, 3, body); }
-  else if (e <= 2) { const c = e === 1 ? body : C('#2a2a2e'); p.ellipse(set0 + 6, fl - 3, 5.5, 3.5, c); p.disc(set0 + 6, fl - 3, 2.4, e === 2 ? C('#e8e4dc') : trim); p.disc(set0 + 6, fl - 3, 1, c); blk(p, set0, fl - 9, 12, 3, c); p.rect(set0 + 1, fl - 7, 2, 2, c); p.rect(set0 + 9, fl - 7, 2, 2, c); }
-  else if (e === 3) { blk(p, set0, fl - 6, 12, 7, body); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) p.rect(set0 + 2 + i * 3, fl - 4 + j * 2, 2, 1, C('#f0ece0')); blk(p, set0, fl - 9, 12, 3, body); p.hline(set0 + 1, set0 + 10, fl - 9, lv(body, 4.4)); }
-  else if (e === 4) { blk(p, set0, fl - 4, 12, 5, body); blk(p, set0 + 2, fl - 13, 4, 10, C('#2a2a30')); p.rect(set0 + 3, fl - 12, 2, 2, C('#80c0a0')); for (let y = fl - 9; y < fl - 4; y += 2) p.hline(set0 + 3, set0 + 4, y, GREY); p.vline(set0 + 5, fl - 15, fl - 13, DGREY); }
-  else { blk(p, set0 + 1, fl - 2, 10, 3, C('#e8e8ec')); blk(p, set0 + 3, fl - 12, 6, 10, C('#1a1a1e')); screen(p, set0 + 4, fl - 11, 4, 7, l >= 2, C('#3a5ac8')); }
-  if (l >= 2) { // botões de linha
-    const bx = 13, n = l === 3 ? 6 : 3;
-    blk(p, bx, fl - 7, 8, 8, e === 5 ? C('#e8e8ec') : lv(body, e >= 3 ? 1 : 3));
-    for (let i = 0; i < n; i++) p.rect(bx + 1 + (i % 3) * 2, fl - 6 + Math.floor(i / 3) * 3, 1, 2, i === 0 ? C('#48c860') : i === 1 ? C('#f0c040') : C('#e8e4dc'));
-    if (l === 3) { for (let y = fl - 1; y > fl - 3; y--) p.hline(bx + 1, bx + 6, y, lv(body, 1.4)); p.hline(bx, bx + 7, fl - 7, GOLD); p.rect(bx + 6, fl - 6, 1, 1, C('#e04848')); p.vline(bx + 7, fl - 12, fl - 8, GOLD); p.disc(bx + 7, fl - 13, 1, GOLD); }
+/** Telefone: de parede com manivela → baquelite → várias linhas → central com secretária → videoconferência. */
+function uTelefone(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s === 0) { blk(p, 4, 0, 10, fl - 1, m.wood); p.disc(6, 3, 1.4, m.metal); p.disc(11, 3, 1.4, m.metal); p.rect(7, 6, 4, 3, BLACK); p.disc(9, 10.5, 1.5, BLACK); p.line(14, 6, 17, 6, m.metal); p.vline(17, 6, 8, m.metal); p.rect(1, 4, 3, 6, BLACK); p.rect(2, 2, 1, 2, BLACK); blk(p, 3, fl - 1, 12, 2, m.wood2); return; }
+  if (s === 1) { p.ellipse(9, fl - 3, 7, 3.5, BLACK); p.disc(9, fl - 3, 2.6, C('#e8e4dc')); p.disc(9, fl - 3, 1, BLACK); blk(p, 2, fl - 10, 14, 3, BLACK); p.rect(2, fl - 8, 2, 3, BLACK); p.rect(14, fl - 8, 2, 3, BLACK); p.hline(3, 14, fl - 10, lv(BLACK, 4)); return; }
+  if (s === 2) { blk(p, 0, fl - 7, w, 8, C('#e8e0c8')); for (let i = 0; i < 6; i++) p.rect(2 + i * 3, fl - 2, 2, 2, i < 2 ? (lit || i === 0 ? C('#f0c040') : C('#c8b878')) : C('#d0c8b0')); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) p.put(13 + i * 2, fl - 6 + j * 2, BLACK); blk(p, 1, fl - 11, 11, 3, C('#d8d0b8')); p.rect(2, fl - 9, 2, 2, C('#d8d0b8')); p.rect(9, fl - 9, 2, 2, C('#d8d0b8')); return; }
+  if (s === 4) { blk(p, 0, fl - 6, 12, 7, C('#2a2a30')); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) p.put(2 + i * 2, fl - 4 + j * 2, GREY); blk(p, 0, fl - 9, 12, 3, C('#2a2a30')); blk(p, 13, fl - 6, 9, 7, C('#3a3a42')); p.rect(14, fl - 5, 5, 3, C('#5a4a3a')); p.rect(20, fl - 5, 1, 1, lit ? LED : DGREY); p.rect(14, fl - 1, 3, 1, C('#80c0a0')); for (let i = 0; i < 4; i++) p.put(2 + i * 2, fl - 7, i === 0 ? C('#48c860') : C('#f0c040')); return; }
+  // videoconferência
+  blk(p, 2, 0, w - 4, 11, C('#1a1a1e')); p.rect(3, 1, w - 6, 9, lit ? C('#3a5ac8') : C('#14141a'));
+  if (lit) { for (let i = 0; i < 4; i++) { const x = 4 + (i % 2) * 8, y = 2 + Math.floor(i / 2) * 4; p.rect(x, y, 7, 3, C('#2a3a6a')); p.disc(x + 3, y + 1, 1, C('#f0c8a0')); } }
+  p.rect(w / 2 - 1, 0, 2, 1, lit ? LED : DGREY); p.rect(w / 2 - 1, 11, 2, 2, C('#2a2c34')); blk(p, 3, fl - 2, w - 6, 3, C('#2a2c34')); p.ellipse(w / 2, fl - 2, 5, 1, lit ? lv(m.acc, 5) : C('#3a3c44')); glow(u, w / 2, 5, 9, C('#6a8af0'));
+}
+/** Arquivo: carvalho com latão → aço de 4 gavetas → arquivo deslizante → servidor de arquivos. */
+function uArquivo(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s <= 1) {
+    const c = s === 0 ? C('#a87a48') : C('#4a5a3a'), top = 6;
+    blk(p, 0, top, w, fl - top + 1, c);
+    for (let i = 0; i < 4; i++) { const y = top + 1 + i * 6; p.rect(1, y, w - 2, 5, lv(c, 2.6)); p.hline(1, w - 2, y, lv(c, 4)); p.rect(w / 2 - 2, y + 2, 4, 1, s === 0 ? BRASS : CHROME); p.rect(w / 2 - 1, y + 1, 2, 1, PAPER); }
+    if (s === 0) p.hline(0, w - 1, top, m.wood2);
+    return;
   }
-}
-/** Arquivo de aço: 2 → 4 → 5 gavetas; nível 3 com barra de tranca, porta-etiquetas de latão e fichário em cima. */
-function uFiling(u: Uc): void {
-  const { p, e, l, w, h } = u, fl = h - 1;
-  const body = [C('#8a5a30'), C('#4a5a3a'), C('#8a9088'), C('#c8b890'), C('#d0ccc0'), C('#3a3c44')][e];
-  const n = l === 1 ? 2 : l === 2 ? 4 : 5, dh = 5, top = fl + 1 - n * dh - 2;
-  blk(p, 0, top, w, fl - top + 1, body);
-  for (let i = 0; i < n; i++) { const y = top + 1 + i * dh; p.rect(1, y, w - 2, dh - 1, lv(body, 2.6)); p.hline(1, w - 2, y, lv(body, 4)); p.rect(w / 2 - 2, y + 1, 4, 1, l === 3 ? GOLD : e === 0 ? BRASS : CHROME); p.rect(w / 2 - 1, y + 2, 2, 1, lv(body, 1.4)); }
-  if (l === 3) { p.vline(w - 2, top + 1, fl - 1, CHROME); p.rect(w - 3, top + 1, 2, 2, GOLD); blk(p, 3, top - 4, 9, 4, e === 5 ? C('#e8e8ec') : C('#d8c8a0')); for (let x = 4; x < 11; x += 2) p.vline(x, top - 6, top - 4, W); }
-  if (l >= 2 && e >= 2) p.hline(1, w - 2, fl - 1, lv(body, 1));
-}
-/** Mesa de som: 4 canais num tampo → 8 canais maiores → console de 24 canais com ponte de VU e pés. */
-function uMixer(u: Uc): void {
-  const { p, fx, e, l, w, h } = u, fl = h - 1, body = ERA_BODY[e], trim = ERA_TRIM[e];
-  const ch = l === 1 ? 4 : l === 2 ? 8 : 24, sw = l === 3 ? 2 : 3, cw = ch * sw + 4;
-  const x0 = Math.floor((w - cw) / 2);
-  const deskTop = l === 3 ? fl - 22 : fl - 14;
-  // mesa de apoio (níveis 1 e 2) ou console com pés (nível 3)
-  if (l < 3) { const t = e <= 1 ? C('#6a3a22') : e === 2 ? C('#8a7a60') : e === 3 ? C('#7a4a24') : e === 4 ? C('#2a2a30') : C('#e8e6e0'); blk(p, x0 - 4, fl - 8, cw + 8, 2, t); p.vline(x0 - 3, fl - 6, fl, t); p.vline(x0 + cw + 2, fl - 6, fl, t); p.hline(x0 - 3, x0 + cw + 2, fl - 2, lv(t, 1.6)); }
-  else { blk(p, 1, fl - 9, w - 2, 9, lv(body, 1.4)); for (let x = 4; x < w - 4; x += 6) p.rect(x, fl - 7, 4, 5, lv(body, 2.2)); }
-  const top = l === 3 ? deskTop : fl - 8 - (l === 1 ? 8 : 11);
-  const bot = l === 3 ? fl - 9 : fl - 8;
-  // corpo inclinado
-  p.poly([[x0, bot], [x0 + cw, bot], [x0 + cw, top + 2], [x0, top + 4]], body); p.hline(x0, x0 + cw - 1, bot - 1, lv(body, 1.2));
-  p.line(x0, top + 4, x0 + cw - 1, top + 2, lv(body, 4.4));
-  for (let i = 0; i < ch; i++) {
-    const x = x0 + 2 + i * sw, yk = top + 5;
-    p.put(x, yk, [C('#e04848'), C('#3a6ac8'), C('#f0c040'), CHROME][i % 4]); p.put(x, yk + 2, e >= 3 ? CHROME : trim);
-    if (e === 0) { p.put(x, yk + 4, trim); continue; } // sem fader: só potenciômetros
-    p.vline(x, yk + 4, bot - 2, C('#141418')); p.put(x, yk + 4 + ((i * 3) % Math.max(1, bot - yk - 7)), W);
+  if (s === 3) { // deslizante: três estantes em trilho com volante
+    for (let i = 0; i < 3; i++) { const x = i * 6; blk(p, x, 0, 6, fl - 1, i === 1 ? C('#c8b890') : C('#b8a880')); for (let y = 4; y < fl - 2; y += 6) books(p, x + 1, y, 4, 4, 401 + i * 7 + y, [C('#3a6ac8'), C('#e8e0c8'), C('#c83a32'), C('#d8a030')]); }
+    p.ring(w - 4, 14, 2.2, CHROME); p.put(w - 4, 14, CHROME); p.hline(0, w - 1, fl, GREY); p.hline(0, w - 1, fl - 1, C('#5a5a62'));
+    return;
   }
-  // medidores
-  const nm = l === 1 ? 1 : l === 2 ? 2 : 6;
-  const mw = l === 3 ? 6 : 5;
-  const my = l === 3 ? top - 6 : top - 4;
-  if (l === 3) blk(p, x0, my - 1, cw, 7, lv(body, 1.6));
-  for (let i = 0; i < nm; i++) {
-    const mx = x0 + 2 + i * (l === 3 ? Math.floor((cw - 4) / nm) : mw + 2);
-    if (e <= 3) { p.rect(mx, my, mw, 4, C('#f0e0a0')); p.line(mx + 1, my + 3, mx + 3 + (i % 2), my + 1, BLACK); p.hline(mx, mx + mw - 1, my + 3, lv(C('#f0e0a0'), 2)); fx.rect(mx, my, mw, 4, withAlpha(C('#ffe08a'), 50)); }
-    else if (e === 4) { for (let k = 0; k < 4; k++) p.rect(mx + k, my + 3 - k % 4, 1, 1 + k % 4, k > 2 ? C('#e04848') : C('#48c860')); }
-    else { p.rect(mx, my, mw, 4, C('#1a2a4a')); for (let k = 0; k < mw; k++) p.put(mx + k, my + 3 - (k * 2 + i) % 4, C('#5ae0ff')); }
+  // servidor de arquivos
+  blk(p, 0, 0, w, fl + 1, C('#1e1e24')); for (let i = 0; i < 6; i++) { const y = 2 + i * 5; p.rect(2, y, w - 4, 4, C('#2a2a32')); for (let k = 0; k < 4; k++) p.put(4 + k * 2, y + 1, lit ? [C('#48c860'), C('#48c860'), C('#f0c040'), C('#5ae0ff')][(k + i) % 4] : DGREY); p.hline(4, w - 4, y + 3, C('#3a3a44')); }
+  glow(u, w / 2, h / 2, 6, C('#48c860'));
+}
+/** Cofre: de ferro com segredo → casa-forte embutida → biométrico. */
+function uCofre(u: Ud): void {
+  const { p, lv: L, lit, w, h } = u, fl = h - 1;
+  if (L === 1) { const x = 4, sw = 16, top = 8; blk(p, x, top, sw, fl - top - 1, C('#2a2a2a')); p.rect(x + 2, top + 2, sw - 4, fl - top - 6, C('#3a3a3a')); for (let i = x + 3; i < x + sw - 3; i++) p.put(i, top + 3, GOLD); p.disc(x + sw / 2 - 2, top + 9, 2.4, GOLD); p.disc(x + sw / 2 - 2, top + 9, 1, C('#3a3a3a')); p.rect(x + sw - 5, top + 8, 2, 3, GOLD); p.disc(x + 2, fl - 0.5, 1.2, BLACK); p.disc(x + sw - 3, fl - 0.5, 1.2, BLACK); return; }
+  if (L === 2) { blk(p, 0, 0, w, fl + 1, C('#8a8478')); p.rect(2, 2, w - 4, fl - 3, C('#4a4e58')); p.disc(w / 2, h / 2, 9, C('#6a6e78')); p.disc(w / 2, h / 2, 7, C('#5a5e68')); p.disc(w / 2, h / 2, 2, CHROME); for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU; p.line(w / 2, h / 2, w / 2 + Math.cos(a) * 6, h / 2 + Math.sin(a) * 6, CHROME); p.put(w / 2 + Math.cos(a) * 6 - 0.5, h / 2 + Math.sin(a) * 6 - 0.5, W); } for (const y of [5, fl - 5]) p.rect(w - 4, y, 2, 3, CHROME); return; }
+  blk(p, 3, 4, w - 6, fl - 3, C('#1e1e24')); p.rect(5, 6, w - 10, fl - 8, C('#2a2a32')); p.rect(w / 2 - 3, 9, 6, 7, lit ? C('#1a3a5a') : C('#14141a')); for (let y = 10; y < 15; y += 2) p.hline(w / 2 - 2, w / 2 + 1, y, lit ? C('#5ae0ff') : C('#2a3a4a')); p.rect(w / 2 - 3, 18, 6, 2, lit ? C('#48c860') : DGREY); p.rect(w - 7, 12, 1, 6, CHROME); glow(u, w / 2, 12, 6, C('#5ae0ff'));
+}
+/** Livro-caixa: encadernado em couro → máquina de somar → computador com planilha → painel em tempo real. */
+function uLivro(u: Ud): void {
+  const { p, s, lit, h } = u, fl = h - 1;
+  const ledger = (x: number) => { blk(p, x, fl - 4, 13, 5, C('#6a2a1a')); p.rect(x + 1, fl - 3, 11, 3, PAPER); for (let y = fl - 3; y < fl; y++) p.hline(x + 1, x + 11, y, y % 2 ? lv(PAPER, 2) : PAPER); p.hline(x, x + 12, fl - 4, lv(C('#6a2a1a'), 4)); p.rect(x + 9, fl - 4, 2, 1, GOLD); p.vline(x + 5, fl - 4, fl, RED); };
+  if (s === 0) { ledger(1); ledger(11 - 0); p.rect(11, fl - 8, 12, 4, C('#6a2a1a')); p.hline(11, 22, fl - 8, GOLD); p.hline(12, 21, fl - 6, lv(C('#6a2a1a'), 3)); return; }
+  if (s === 2) { ledger(0); blk(p, 13, fl - 6, 10, 7, C('#a8a8a0')); for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) p.put(14 + i * 2, fl - 4 + j * 2, BLACK); p.rect(15, fl - 10, 6, 4, PAPER); p.vline(22, fl - 9, fl - 6, BLACK); p.rect(21, fl - 5, 1, 1, lit ? LED : DGREY); return; }
+  if (s === 4) { blk(p, 0, fl - 1, 11, 2, C('#d8d0b8')); blk(p, 1, 0, 11, fl - 2, C('#d8d0b8')); p.rect(2, 1, 9, 7, lit ? C('#1a3a1a') : C('#14181a')); if (lit) for (let y = 2; y < 8; y += 2) for (let x = 3; x < 10; x += 3) p.hline(x, x + 1, y, C('#80f0a0')); blk(p, 13, fl - 2, 11, 3, C('#d8d0b8')); for (let x = 14; x < 23; x += 2) p.put(x, fl - 1, GREY); return; }
+  blk(p, 0, 0, 15, fl - 1, C('#1a1a1e')); p.rect(1, 1, 13, fl - 3, lit ? C('#14203a') : C('#101014')); if (lit) { for (let i = 0; i < 5; i++) p.vline(2 + i * 2, fl - 3 - i, fl - 3, [C('#48c860'), C('#5ae0ff'), C('#48c860'), C('#f0c040'), C('#5ae0ff')][i]); p.line(1, 4, 13, 1, C('#f0c040')); } p.rect(6, fl - 1, 3, 2, C('#2a2c34'));
+  blk(p, 17, fl - 7, 7, 8, C('#2a2c34')); p.rect(18, fl - 6, 5, 6, lit ? C('#3a5ac8') : C('#14141a')); glow(u, 7, 4, 8, C('#5ae0ff'));
+}
+/** Fichário: giratório → agenda eletrônica → contatos na nuvem (tablet). */
+function uFichario(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s === 2) { p.ellipse(9, 5, 6, 4.5, C('#f0ece0')); for (let i = 0; i < 6; i++) p.line(9, 5, 9 + Math.cos(i) * 6, 5 + Math.sin(i) * 4, lv(C('#f0ece0'), 2)); p.ring(9, 5, 1, CHROME); p.line(3, 5, 3, fl - 1, CHROME); p.line(15, 5, 15, fl - 1, CHROME); blk(p, 1, fl - 1, 16, 2, C('#3a6a5a')); p.disc(17, 5, 1, C('#e04848')); return; }
+  if (s === 4) { blk(p, 3, 1, 12, fl, C('#2a2a30')); p.rect(4, 2, 10, 5, lit ? C('#9af0a0') : C('#3a6a40')); drawText(p, 'AB', 5, 2, C('#1a3a1a')); for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) p.put(5 + i * 2, 8 + j * 2, GREY); return; }
+  blk(p, 1, 0, w - 2, fl + 1, C('#2a2c34')); p.rect(2, 1, w - 4, fl - 1, lit ? C('#e8ecf4') : C('#20242c')); if (lit) for (let i = 0; i < 3; i++) { p.disc(4.5, 3 + i * 3, 1, [C('#e04848'), C('#3a6ac8'), C('#48c860')][i]); p.hline(7, w - 4, 3 + i * 3, C('#5a5c66')); } p.put(w / 2, fl, lit ? m.acc : DGREY);
+}
+/** Mesa de trabalho: tampo corrediço → mesa de executivo → mesa com tela embutida. */
+function uMesa(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s === 0) { blk(p, 0, 4, w, fl - 3, m.wood); p.poly([[2, 12], [6, 2], [w - 6, 2], [w - 2, 12]], m.wood2); for (let x = 7; x < w - 6; x += 2) p.vline(x, 3, 11, lv(m.wood2, 2.6)); p.rect(4, 8, w - 8, 4, lv(m.wood, 0.8)); for (let i = 0; i < 6; i++) p.rect(6 + i * 5, 9, 4, 2, PAPER); for (const x of [2, w - 14]) for (let i = 0; i < 3; i++) { p.rect(x, 14 + i * 4, 12, 3, lv(m.wood, 2.6)); p.put(x + 6, 15 + i * 4, m.metal); } return; }
+  if (s === 1) { blk(p, 0, 8, w, 3, m.wood2); p.rect(4, 8, w - 8, 1, C('#2a5a3a')); p.hline(0, w - 1, 10, m.metal); for (const x of [1, w - 13]) { blk(p, x, 11, 12, fl - 10, m.wood2); for (let i = 0; i < 3; i++) { p.hline(x + 1, x + 10, 13 + i * 4, lv(m.wood2, 3)); p.put(x + 6, 14 + i * 4, m.metal); } } blk(p, 6, 3, 8, 5, C('#1e2a20')); p.vline(9, 3, 7, m.metal); p.poly([[6, 2], [13, 2], [11, 4], [8, 4]], C('#3a7a4a')); p.rect(w - 16, 5, 8, 3, C('#e6dac0')); p.rect(18, 6, 6, 2, BLACK); return; }
+  blk(p, 0, 9, w, 3, C('#e8e6e0')); p.rect(6, 9, w - 12, 2, lit ? C('#2a4a7a') : C('#1a1e28')); if (lit) { p.hline(8, 20, 9, C('#5ae0ff')); p.hline(24, w - 8, 10, C('#f0c040')); } p.rect(3, 12, 2, fl - 13, m.metal); p.rect(w - 5, 12, 2, fl - 13, m.metal); p.hline(1, 7, fl, m.metal); p.hline(w - 8, w - 2, fl, m.metal);
+  blk(p, w / 2 - 6, 0, 13, 8, BLACK); p.rect(w / 2 - 5, 1, 11, 6, lit ? C('#3a5ac8') : C('#14141a')); p.rect(w / 2, 8, 1, 1, m.metal); glow(u, w / 2, 6, 12, C('#6a8af0'));
+}
+/** Rádio/TV: rádio de válvula numa mesinha → TV em cores com controle → parede de telas. */
+function uRadioTv(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s === 1) { blk(p, 2, 14, w - 4, 3, m.wood); legs({ ...u, s: 1 }, 4, w - 5, 17); blk(p, 5, 4, w - 10, 10, m.wood2); p.disc(w / 2, 4, (w - 10) / 2, m.wood2); p.rect(7, 4, 6, 7, C('#c8a878')); for (let x = 8; x < 13; x += 2) p.vline(x, 4, 10, m.wood2); p.rect(14, 6, 5, 2, lit ? C('#f0c060') : C('#a8803a')); p.disc(15.5, 10.5, 1, CHROME); p.disc(18, 10.5, 1, CHROME); glow(u, 16, 7, 4, C('#f0c060')); return; }
+  if (s === 3) { blk(p, 0, 2, w, 18, m.wood); p.rect(2, 4, w - 8, 14, C('#1a1a1a')); p.rect(3, 5, w - 10, 12, lit ? C('#3a8ac8') : C('#2a3a3a')); if (lit) { p.rect(4, 11, 6, 5, C('#48b85c')); p.disc(w - 12, 8, 2, C('#f0c040')); p.rect(11, 9, 4, 6, C('#e04848')); } for (let i = 0; i < 4; i++) p.rect(w - 5, 5 + i * 3, 3, 2, C('#c0a060')); blk(p, 0, 20, w, fl - 19, m.wood2); p.rect(3, 22, 6, 2, C('#2a2a2a')); p.put(4, 22, LED); glow(u, w / 2 - 2, 10, 11, C('#80c0f0')); return; }
+  for (let i = 0; i < 6; i++) { const x = (i % 3) * 8 + 1, y = Math.floor(i / 3) * 8; blk(p, x, y, 8, 7, C('#1a1a1e')); p.rect(x + 1, y + 1, 6, 5, lit ? [C('#3a5ac8'), C('#e04848'), C('#48b85c'), C('#f0c040'), C('#8a4ab0'), C('#5ae0ff')][i] : C('#14141a')); }
+  p.rect(w / 2 - 1, 15, 2, fl - 17, C('#2a2a2e')); blk(p, w / 2 - 6, fl - 2, 12, 3, C('#2a2a2e')); glow(u, w / 2, 7, 13, C('#6a8af0'));
+}
+/** Mesa de som: corte em cera → console de válvulas 4 canais → 8 pistas → 24 pistas → console grande automatizado → estação digital → sala imersiva. */
+function uMesaSom(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s === 0) { // torno de corte direto em cera
+    blk(p, 6, 12, w - 12, fl - 11, m.wood); legs({ ...u, s: 0 }, 7, w - 8, fl - 3); p.ellipse(w / 2, 11, 12, 1.5, C('#c8a060')); p.ellipse(w / 2, 10.5, 9, 1, C('#8a6a3a'));
+    p.vline(w / 2 + 10, 3, 10, m.metal); p.line(w / 2 + 10, 3, w / 2 + 2, 6, m.metal); p.vline(w / 2 + 2, 6, 10, m.metal); p.poly([[w / 2 - 4, 0], [w / 2 - 14, -0], [w / 2 - 18, 7], [w / 2 - 6, 6]], m.metal); p.line(w / 2 - 6, 6, w / 2 + 2, 8, m.metal);
+    return;
   }
-  if (l === 1) { p.vline(x0, my, top + 3, body); } // medidor preso ao corpo
-  if (l === 2) { p.vline(x0 + 2, my + 4, top + 3, body); p.vline(x0 + 2 + mw + 2, my + 4, top + 3, body); }
-  if (e === 5 && l >= 2) { p.rect(x0 + cw - 9, top + 4, 7, 4, C('#1a2a4a')); p.hline(x0 + cw - 8, x0 + cw - 4, top + 5, C('#5ae0ff')); }
-  if (l === 3) { p.hline(x0, x0 + cw - 1, my - 1, trim); p.rect(x0 + cw / 2 - 3, bot - 1, 6, 1, GOLD); }
+  const strips = (x0: number, y0: number, n: number, sw: number, bot: number, fader: boolean, kc: Col[]) => { for (let i = 0; i < n; i++) { const x = x0 + i * sw; p.put(x, y0, kc[i % kc.length]); p.put(x, y0 + 2, kc[(i + 1) % kc.length]); if (fader) { p.vline(x, y0 + 4, bot, C('#141418')); p.put(x, y0 + 4 + ((i * 3) % Math.max(1, bot - y0 - 4)), W); } else p.disc(x + 0.5, y0 + 5, 0.9, CHROME); } };
+  const vu = (x: number, y: number, n: number, mw: number) => { for (let i = 0; i < n; i++) { const mx = x + i * (mw + 1); p.rect(mx, y, mw, 3, C('#f0e0a0')); p.line(mx + 1, y + 2, mx + mw - 2, y + 1, BLACK); if (lit) u.fx.rect(mx, y, mw, 3, withAlpha(GLOW, 60)); } };
+  const desk = (x0: number, x1: number, top: number, c: Col, legsY: number) => { p.poly([[x0, legsY], [x1, legsY], [x1, top], [x0, top + 3]], c); p.line(x0, top + 3, x1, top, lv(c, 4.4)); };
+  if (s === 1) { blk(p, 10, fl - 10, w - 20, 2, m.wood); p.vline(12, fl - 8, fl, m.wood); p.vline(w - 13, fl - 8, fl, m.wood); blk(p, 15, fl - 20, w - 30, 10, C('#4a3a30')); vu(17, fl - 19, 2, 4); strips(18, fl - 15, 4, 4, fl - 11, false, [C('#e8e0c8')]); return; }
+  if (s === 2) { blk(p, 6, fl - 8, w - 12, 8, C('#7a7e88')); desk(6, w - 7, fl - 18, C('#8a8e98'), fl - 8); vu(9, fl - 23, 4, 6); p.vline(8, fl - 20, fl - 18, C('#8a8e98')); strips(10, fl - 15, 8, 4, fl - 10, true, [C('#e04848'), CHROME]); return; }
+  if (s === 3) { blk(p, 2, fl - 8, w - 4, 8, m.wood); desk(2, w - 3, fl - 20, C('#5a6a7a'), fl - 8); blk(p, 2, fl - 26, w - 4, 5, C('#4a5a6a')); vu(4, fl - 25, 8, 4); strips(4, fl - 17, 24, 2, fl - 10, true, [C('#3a6ac8'), C('#e04848'), C('#f0c040')]); return; }
+  if (s === 4) { blk(p, 0, fl - 8, w, 8, C('#2a2a30')); desk(0, w - 1, fl - 21, C('#3a3a42'), fl - 8); blk(p, 0, fl - 27, w, 6, C('#1e1e24')); for (let i = 0; i < 16; i++) for (let k = 0; k < 4; k++) p.put(2 + i * 3, fl - 23 - k, lit ? (k > 2 ? C('#e04848') : C('#48c860')) : DGREY); strips(2, fl - 18, 24, 2, fl - 10, true, [C('#e04848'), CHROME, C('#3a6ac8')]); p.rect(w / 2 - 3, fl - 6, 6, 3, lit ? C('#80c0f0') : C('#2a3a4a')); p.hline(1, w - 2, fl - 27, GOLD); glow(u, w / 2, fl - 24, 14, C('#48c860')); return; }
+  if (s === 6) { blk(p, 0, fl - 10, w, 2, m.wood); p.vline(2, fl - 8, fl, m.metal); p.vline(w - 3, fl - 8, fl, m.metal); for (const x of [6, w - 22]) { blk(p, x, fl - 24, 16, 10, BLACK); p.rect(x + 1, fl - 23, 14, 8, lit ? C('#2a3a5a') : C('#14141a')); if (lit) for (let k = 0; k < 6; k++) p.hline(x + 2, x + 2 + ((k * 5) % 11), fl - 22 + k, [C('#e04848'), C('#48c860'), C('#5ae0ff')][k % 3]); p.rect(x + 7, fl - 14, 2, 2, BLACK); } blk(p, 12, fl - 13, w - 24, 3, C('#2a2a30')); strips(14, fl - 13, 12, 2, fl - 11, false, [C('#5ae0ff')]); blk(p, 0, fl - 30, 5, 8, C('#2a2a2e')); blk(p, w - 5, fl - 30, 5, 8, C('#2a2a2e')); glow(u, w / 2, fl - 19, 14, C('#6a8af0')); return; }
+  // sala imersiva: console, caixas no alto e anel de luz
+  p.rect(0, 0, w, 1, C('#3a3c44')); for (const x of [2, w / 2 - 3, w - 8]) { p.vline(x + 3, 1, 2, C('#3a3c44')); blk(p, x, 3, 6, 7, C('#2a2c34')); p.disc(x + 3, 6.5, 1.8, BLACK); }
+  blk(p, 0, fl - 8, w, 8, C('#2a2c34')); desk(0, w - 1, fl - 18, C('#3a3c44'), fl - 8); strips(2, fl - 15, 24, 2, fl - 10, true, [C('#5ae0ff'), W]); blk(p, w / 2 - 8, fl - 24, 16, 6, BLACK); p.rect(w / 2 - 7, fl - 23, 14, 4, lit ? C('#3a5ac8') : C('#14141a'));
+  p.hline(1, w - 2, fl, lit ? lv(m.acc, 5) : lv(m.acc, 2)); if (lit) u.fx.ellipse(w / 2, 10, w / 2, 6, withAlpha(m.acc, 40)); glow(u, w / 2, fl - 21, 10, m.acc);
 }
-/** Cofre: caixa-forte pequena → cofre de segredo médio → porta de casa-forte com volante e dourado. */
-function uSafe(u: Uc): void {
-  const { p, e, l, w, h } = u, fl = h - 1;
-  const body = [C('#2a2420'), C('#3a5a3a'), C('#6a6e78'), C('#6a4a30'), C('#2e2e34'), C('#1e1e24')][e], trim = l === 3 ? GOLD : ERA_TRIM[e];
-  const sw = l === 1 ? 12 : l === 2 ? 18 : w, sh = l === 1 ? 11 : l === 2 ? 19 : h - 1, x = Math.floor((w - sw) / 2), y = fl + 1 - sh;
-  blk(p, x, y, sw, sh, body); p.rect(x + 2, y + 2, sw - 4, sh - 4 - (l === 1 ? 0 : 2), lv(body, 2.4)); p.hline(x + 2, x + sw - 3, y + 2, lv(body, 1.4));
-  const cx = x + sw / 2 - (l === 3 ? 0 : 2), cy = y + sh / 2 - 1;
-  if (e >= 4 && l < 3) { p.rect(cx - 2, cy - 2, 4, 4, C('#141418')); for (let i = 0; i < 4; i++) p.put(cx - 2 + (i % 2) * 2, cy - 2 + Math.floor(i / 2) * 2, e === 5 ? C('#5ae0ff') : C('#48c860')); }
-  else { p.disc(cx, cy, l === 3 ? 5 : l === 2 ? 3 : 2, trim); p.disc(cx, cy, l === 3 ? 3.5 : 1.2, lv(trim, 2)); if (l >= 2) for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; p.put(cx + Math.cos(a) * (l === 3 ? 4.5 : 2.6) - 0.5, cy + Math.sin(a) * (l === 3 ? 4.5 : 2.6) - 0.5, lv(trim, 4.6)); } }
-  if (l === 3) { for (let i = 0; i < 3; i++) { const a = (i / 3) * TAU + 0.3; p.line(cx, cy, cx + Math.cos(a) * 8, cy + Math.sin(a) * 8, CHROME); p.disc(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8, 1, CHROME); } for (const yy of [y + 4, fl - 5]) { p.rect(x + sw - 3, yy, 2, 3, GOLD); } p.ring(cx, cy, 10, lv(body, 1.4)); }
-  else p.rect(x + sw - 4, cy - 1, 2, 3, trim);
-  if (l >= 2) { p.rect(x + 1, fl - 1, 2, 1, BLACK); p.rect(x + sw - 3, fl - 1, 2, 1, BLACK); }
-  if (e === 0 && l >= 2) { p.hline(x + 3, x + sw - 4, y + 4, GOLD); }
+/** Piano de ensaio: armário afinado → meia cauda → piano de concerto (cauda longa, da época). */
+function uPiano(u: Ud): void {
+  if (u.lv === 1) { piano({ ...u, s: 0 }); return; }
+  if (u.lv === 2) { piano({ ...u, s: 1 }); return; }
+  grandPiano(u);
 }
-/** Livro-caixa: caderno → livro encadernado com fitas → livro e a máquina de contas da época. */
-function uLedger(u: Uc): void {
-  const { p, e, l, h } = u, fl = h - 1;
-  const cov = [C('#6a2a1a'), C('#2a3a5a'), C('#3a5a3a'), C('#8a4a1a'), C('#2a2a3a'), C('#4a4c56')][e];
-  if (l === 1) { blk(p, 1, fl - 2, 12, 3, PAPER); p.rect(1, fl - 3, 12, 1, lv(cov, 2)); p.vline(1, fl - 3, fl, cov); for (let x = 3; x < 12; x += 2) p.put(x, fl - 1, lv(PAPER, 2)); }
-  else { blk(p, 0, fl - 4, 14, 5, cov); p.rect(1, fl - 3, 12, 3, PAPER); for (let y = fl - 3; y < fl; y++) p.hline(1, 12, y, y % 2 ? lv(PAPER, 2) : PAPER); p.hline(0, 13, fl - 4, lv(cov, 4)); p.rect(0, fl - 4, 2, 5, lv(cov, 1.4)); p.vline(5, fl - 4, fl + 0, RED); p.vline(8, fl - 4, fl + 0, C('#f0c040')); if (e <= 1) p.rect(10, fl - 4, 3, 1, GOLD); }
-  if (l === 3) { // máquina de contas
-    const x = 15;
-    if (e <= 1) { blk(p, x, fl - 6, 9, 7, e === 0 ? C('#3a3a3a') : BLACK); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) p.put(x + 2 + i * 2, fl - 4 + j * 2, W); p.line(x + 8, fl - 6, x + 8, fl - 10, CHROME); p.put(x + 8, fl - 11, RED); p.rect(x + 1, fl - 8, 5, 2, PAPER); }
-    else if (e === 2) { blk(p, x, fl - 5, 9, 6, C('#a8a8a0')); for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) p.put(x + 1 + i * 2, fl - 3 + j * 2, BLACK); p.rect(x + 2, fl - 8, 5, 3, PAPER); p.vline(x + 8, fl - 7, fl - 5, BLACK); }
-    else if (e === 3) { blk(p, x + 1, fl - 7, 7, 8, C('#2a2a2a')); p.rect(x + 2, fl - 6, 5, 2, C('#e04848')); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) p.put(x + 2 + i * 2, fl - 3 + j * 2, C('#f0e0c0')); }
-    else if (e === 4) { blk(p, x, fl - 1, 9, 2, C('#2a2a30')); p.poly([[x + 1, fl - 1], [x + 8, fl - 1], [x + 8, fl - 8], [x + 2, fl - 8]], C('#3a3a42')); screen(p, x + 3, fl - 7, 4, 5, true, C('#3a6a4a')); }
-    else { blk(p, x, fl - 2, 9, 3, C('#e8e8ec')); blk(p, x + 1, fl - 9, 7, 7, C('#1a1a1e')); screen(p, x + 2, fl - 8, 5, 5, true, C('#3a5ac8')); p.hline(x + 3, x + 5, fl - 5, C('#5ae0ff')); }
-  }
-  if (l >= 2) { p.line(13, fl - 2, 15 - (l === 3 ? 1 : 0), fl - 6, e < 3 ? BLACK : C('#2a5ab0')); } // caneta
+/** Som do palco: corneta e megafone → amplificação valvulada → paredão de caixas → line array suspenso. */
+function uPalco(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  if (s === 0) { p.vline(w / 2, 14, fl - 1, BLACK); p.line(w / 2, fl - 1, w / 2 - 6, fl, BLACK); p.line(w / 2, fl - 1, w / 2 + 6, fl, BLACK); p.poly([[w / 2, 12], [w / 2 + 2, 12], [w - 1, 2], [w - 1, 22]], m.metal); p.ellipse(w - 1.5, 12, 1.5, 10, lv(m.metal, 1.4)); p.poly([[2, 26], [8, 24], [8, 30], [2, 28]], C('#c8c8c0')); p.ellipse(1.5, 27, 1.5, 2.5, C('#a8a8a0')); blk(p, 0, 32, 10, fl - 31, m.wood); return; }
+  if (s === 1) { for (const y of [fl - 11, fl - 23]) { blk(p, 2, y, w - 4, 12, C('#3a2a20')); p.rect(4, y + 2, w - 8, 8, C('#c8b890')); for (let x = 5; x < w - 5; x += 2) p.vline(x, y + 2, y + 9, C('#a89870')); } blk(p, 6, fl - 30, w - 12, 7, C('#2a2a2a')); for (let i = 0; i < 4; i++) { p.rect(8 + i * 4, fl - 32, 2, 3, lit ? C('#ffb060') : C('#8a6a4a')); } for (let i = 0; i < 3; i++) p.disc(10 + i * 5, fl - 26, 1, CHROME); glow(u, w / 2, fl - 31, 7, C('#ffb060')); return; }
+  if (s === 3) { for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) { const x = c * 15, y = fl + 1 - (r + 1) * 13; blk(p, x, y, 15, 13, C('#2a2a2e')); p.disc(x + 7.5, y + 7, 4.5, C('#3a3a42')); p.disc(x + 7.5, y + 7, 2, BLACK); p.rect(x + 3, y + 1, 9, 2, C('#141418')); } return; }
+  // line array suspenso: treliça presa no teto e caixas curvas
+  p.hline(0, w - 1, 0, GREY); for (const x of [6, w - 7]) p.vline(x, 1, 4, BLACK); blk(p, 4, 4, w - 8, 2, C('#3a3a42'));
+  for (let i = 0; i < 5; i++) { const y = 6 + i * 4, dx = Math.round(i * i * 0.3); blk(p, 5 + dx, y, w - 10, 4, C('#1e1e24')); p.hline(7 + dx, w - 8 + dx, y + 2, C('#3a3a44')); }
+  blk(p, 2, fl - 9, w - 4, 10, C('#1e1e24')); p.disc(w / 2, fl - 4, 3.5, C('#3a3a42')); p.disc(w / 2, fl - 4, 1.5, BLACK);
 }
-/** Microfone: simples no pedestal → fita/condensador com aranha → válvula com tela antipop e dourado. */
-function uMic(u: Uc): void {
-  const { p, e, l, w, h } = u, fl = h - 1, cx = w >> 1;
-  const st = [BRASS, CHROME, CHROME, C('#2a2a2a'), BLACK, C('#2a2c34')][e];
-  p.vline(cx, 12, fl - 1, st); p.line(cx, fl - 1, cx - 5, fl, st); p.line(cx, fl - 1, cx + 5, fl, st); if (e <= 1) { p.ellipse(cx, fl, 4, 1, st); }
-  const head = l === 3 ? GOLD : [C('#3a3a3a'), CHROME, C('#8a8c94'), C('#c8ccd4'), C('#2a2a30'), C('#d8dce4')][e];
-  if (l === 1) { if (e === 0) { p.ring(cx, 7, 3, head); p.disc(cx, 7, 2, C('#1a1a1a')); p.vline(cx, 10, 12, head); } else { p.rect(cx - 1, 5, 3, 7, head); p.ellipse(cx, 5, 2, 2.5, lv(head, 2.6)); } return; }
-  // aranha (shock mount)
-  p.ring(cx, 8, 4, DGREY); p.vline(cx, 12, 13, DGREY);
-  if (e <= 1 || l === 2) { blk(p, cx - 2, 2, 5, 10, head); for (let y = 3; y < 11; y += 2) p.hline(cx - 1, cx + 1, y, lv(head, 1.6)); }
-  if (l === 3) { blk(p, cx - 2, 1, 5, 12, GOLD); p.ellipse(cx, 1, 2.4, 1.5, lv(GOLD, 4)); for (let y = 2; y < 8; y += 2) p.hline(cx - 1, cx + 1, y, lv(GOLD, 2)); p.rect(cx - 1, 9, 3, 2, C('#1e1e24')); p.line(cx + 2, 6, w - 1, 4, DGREY); p.ring(w - 2.5, 7, 2.5, BLACK); p.disc(w - 2.5, 7, 2, withAlpha(C('#4a4a52'), 170)); p.line(cx, 13, 1, fl - 2, C('#1a1a1a')); }
+/** Mesa de reunião: mogno com cadeiras → mesa com sistema de apresentação. */
+function uReuniao(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  const chair = (x: number, c: Col) => { blk(p, x, fl - 14, 7, 9, c); blk(p, x - 1, fl - 6, 9, 2, c); p.vline(x, fl - 4, fl, BLACK); p.vline(x + 6, fl - 4, fl, BLACK); };
+  if (s === 1) { for (const x of [6, w / 2 - 4, w - 14]) chair(x, C('#5a2a1a')); blk(p, 0, fl - 10, w, 3, C('#5a2418')); p.hline(0, w - 1, fl - 8, BRASS); for (const x of [3, w - 6]) blk(p, x, fl - 7, 3, 8, C('#4a1e14')); p.rect(12, fl - 12, 6, 2, PAPER); p.rect(w - 22, fl - 12, 4, 2, withAlpha(C('#c8d8e0'), 220)); return; }
+  for (const x of [5, w / 2 - 4, w - 13]) chair(x, C('#3a3c44'));
+  blk(p, 0, fl - 10, w, 2, C('#e8e6e0')); p.rect(4, fl - 8, 2, 8, m.metal); p.rect(w - 6, fl - 8, 2, 8, m.metal); p.ellipse(w / 2, fl - 11, 4, 1, lit ? lv(C('#5ae0ff'), 4) : C('#2a2c34'));
+  blk(p, w - 20, 0, 18, 11, BLACK); p.rect(w - 19, 1, 16, 9, lit ? C('#2a4a7a') : C('#14141a')); if (lit) { p.rect(w - 17, 6, 2, 3, C('#48c860')); p.rect(w - 14, 4, 2, 5, C('#f0c040')); p.rect(w - 11, 3, 2, 6, C('#e04848')); } p.vline(w - 11, 11, fl - 11, m.metal); glow(u, w - 11, 5, 9, C('#6a8af0'));
 }
-const UDRAW: Record<string, (u: Uc) => void> = { phone: uPhone, filing: uFiling, mixer: uMixer, safe: uSafe, ledger: uLedger, mic: uMic };
-/** Tela de aparelho: escura apagada, clara acesa. */
-function screen(p: Px, x: number, y: number, w: number, h: number, on: boolean, tone: Col): void {
-  p.rect(x, y, w, h, on ? lv(tone, 4) : lv(tone, 1));
-  if (w > 2 && h > 2) p.put(x, y, on ? W : lv(tone, 3));
+/** Cama: de ferro com molas → de casal estofada → king ortopédica → cama que mede o sono. */
+function uCama(u: Ud): void {
+  const { p, m, s, lit, w, h } = u, fl = h - 1;
+  const mattress = (x0: number, x1: number, y: number, th: number, c: Col) => { blk(p, x0, y, x1 - x0, th, c); p.hline(x0 + 1, x1 - 2, y, lv(c, 4.6)); };
+  if (s === 0) { const iron = C('#2a2a30'); for (const [x, top] of [[0, 2], [w - 2, 8]] as const) { p.vline(x, top, fl, iron); p.vline(x + 1, top, fl, iron); } for (let x = 3; x < 10; x += 2) p.vline(x, 4, 12, iron); p.line(0, 2, 10, 2, iron); p.line(10, 2, 11, 12, iron); p.disc(1, 1.5, 1.2, BRASS); p.disc(w - 1, 7.5, 1.2, BRASS); mattress(2, w - 2, 12, 4, C('#e8e0c8')); p.rect(3, 9, 8, 3, W); blk(p, 14, 10, w - 16, 3, C('#a83a3a')); p.hline(2, w - 3, 16, iron); for (let x = 4; x < w - 3; x += 3) p.put(x, 17, iron); return; }
+  if (s === 2) { blk(p, 0, 2, 4, fl - 1, m.fab2); for (let y = 4; y < 14; y += 3) p.put(2, y, lv(m.fab2, 1.4)); mattress(2, w - 1, 12, 5, C('#e8e0c8')); blk(p, 4, 9, 8, 3, W); blk(p, 13, 10, w - 14, 3, m.fab); blk(p, 2, 17, w - 3, 3, m.wood); legs({ ...u, s: 2 }, 3, w - 3, 20); return; }
+  if (s === 4) { blk(p, 0, 0, 5, fl - 1, C('#e8e4ec')); p.rect(1, 2, 3, 10, C('#c8c4d0')); mattress(3, w, 9, 7, W); for (let x = 5; x < w - 1; x += 4) p.put(x, 12, lv(W, 2.6)); blk(p, 5, 6, 9, 3, C('#e8e8f0')); blk(p, 15, 7, w - 15, 3, m.fab); blk(p, 3, 16, w - 3, 4, C('#2a2a30')); p.hline(3, w - 1, fl, BLACK); return; }
+  blk(p, 0, 0, 5, fl - 3, m.fab); p.rect(1, 3, 3, 2, lit ? m.acc : DGREY); mattress(3, w, 10, 6, W); p.hline(3, w - 1, 13, lit ? lv(m.acc, 4) : C('#d8dce4')); blk(p, 5, 7, 9, 3, C('#e8e8ec')); blk(p, 15, 8, w - 15, 3, m.fab2);
+  blk(p, 3, 16, w - 3, 5, C('#2a2c34')); p.hline(4, w - 2, fl, lit ? lv(m.acc, 5) : lv(m.acc, 2)); if (lit) u.fx.hline(2, w - 1, fl, withAlpha(m.acc, 120)); glow(u, 2.5, 4, 3, m.acc);
 }
-
+const UDRAW: Record<string, (u: Ud) => void> = {
+  telefone: uTelefone, arquivoaco: uArquivo, cofre: uCofre, livrocaixa: uLivro, fichario: uFichario, mesames: uMesa, radiotv: uRadioTv,
+  mesasom: uMesaSom, piano: uPiano, palco: uPalco, mesareuniao: uReuniao, cama: uCama,
+};
+/** Tamanho final do Px de um upgrade (com margem): o do seu item obrigatório. */
+export const upgSize = (id: string): { w: number; h: number } => { const s = REQ_SIZE[upgDef31(id)!.req]; return { w: s.w + 2 * DPAD, h: s.h + 2 * DPAD }; };
 const cacheU = new Map<string, Px>();
-/** Item obrigatório no nível `level` (1..n), na época do ano (6 épocas de exp5px). Tamanho fixo por item. */
-export function upgPx(id: string, year: number, level: number, o: { cond?: DCond } = {}): Px {
-  const def = UPG.get(id);
-  if (!def) throw new Error(`deco31px: sem upgrade '${id}'`);
-  const e = ep5Of(year), l = Math.max(1, Math.min(def.levels.length, Math.round(level))), cond = o.cond ?? 'new';
-  const key = `${id}|${e}|${l}|${cond}`;
+/** Um modelo de upgrade (id de UPG31) pronto. Estilo fixo do modelo; "sem época" (piano de concerto) segue a época do ano. */
+export function upgPx(id: string, year: number, o: { cond?: DCond; lit?: boolean } = {}): Px {
+  const def = upgDef31(id);
+  if (!def || !UDRAW[def.req]) throw new Error(`deco31px: sem upgrade '${id}'`);
+  const e = def.style === 'any' ? styOf(Math.max(def.from, year)) : styIdx(def.style), cond = o.cond ?? 'new', lit = !!o.lit;
+  const key = `${id}|${e}|${cond}|${lit ? 1 : 0}`;
   const hit = cacheU.get(key);
   if (hit) return hit;
-  const layer = new Px(def.w, def.h), fx = new Px(def.w, def.h);
-  UDRAW[id]({ p: layer, fx, e, l, w: def.w, h: def.h });
-  if (cond === 'used') wear(layer, hashS(id) + e * 13 + l);
-  const out = new Px(def.w + 2 * DPAD, def.h + 2 * DPAD);
+  const { w, h } = REQ_SIZE[def.req];
+  const layer = new Px(w, h), fx = new Px(w, h);
+  UDRAW[def.req]({ p: layer, fx, s: e, m: M[e], e, lit, w, h, name: '', lv: def.lv });
+  if (cond === 'used') wear(layer, hashS(id) + e * 13);
+  const out = new Px(w + 2 * DPAD, h + 2 * DPAD);
   out.blit(layer, DPAD, DPAD);
   out.outline(INK);
   out.blit(fx, DPAD, DPAD);
@@ -1274,4 +2217,5 @@ export function upgPx(id: string, year: number, level: number, o: { cond?: DCond
   cacheU.set(key, out);
   return out;
 }
-export const upgSize = (id: string): { w: number; h: number } => { const d = UPG.get(id)!; return { w: d.w + 2 * DPAD, h: d.h + 2 * DPAD }; };
+/** Todos os modelos de upgrade, na ordem do catálogo. */
+export const UPG_IDS: string[] = UPG31.map((u) => u.id);
