@@ -44,7 +44,7 @@ const SW_TXT: Record<Sw33, [L, L]> = {
       'Career phases (rise, peak, decline, comeback, farewell) and posthumous tribute with the catalog surging. Off: nothing changes.')],
 };
 for (const k of Object.keys(SW33) as Sw33[]) {
-  registerSwitch({ id: SW33[k], def: false, scope: 'game', desc: SW_TXT[k][1] });
+  registerSwitch({ id: SW33[k], def: true, scope: 'game', desc: SW_TXT[k][1] });
   registerEditable({ id: `sw.${SW33[k]}`, area: 'tools', label: SW_TXT[k][0], kind: 'bool', get: (s) => sw<boolean>(s, SW33[k]), set: (s, v) => { setSw(s, SW33[k], !!v); } });
 }
 export const on33 = (s: GameState, k: Sw33): boolean => sw<boolean>(s, SW33[k]);

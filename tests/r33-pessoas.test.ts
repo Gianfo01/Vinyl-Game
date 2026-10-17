@@ -2,6 +2,7 @@
 // real travado na vida real exata não rompe); mentor; abertura; despedida e homenagem póstuma (fallback do catálogo e
 // gancho da CATÁLOGO). Poucos casos, sem jogo longo.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { advanceWeek } from '../src/sim/tick';
@@ -14,7 +15,7 @@ import {
 } from '../src/sim/r33/pessoas33';
 import type { Act, GameState } from '../src/sim/types';
 
-const game = (over = {}): GameState => createGame(defaultConfig('r33-pessoas', { startYear: 1975, ...over }));
+const game = (over = {}): GameState => createGame(off33c(defaultConfig('r33-pessoas', { startYear: 1975, ...over }))); // QA33: 33 ligada por padrão
 const band = (s: GameState): Act => Object.values(s.acts).find((a) => a.members.length >= 2 && a.status === 'active')!;
 const allOn = (s: GameState) => { for (const id of Object.values(SW33)) setSw(s, id, true); };
 const R = new Rng(seedState('r33m'));

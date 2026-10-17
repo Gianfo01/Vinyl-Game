@@ -34,7 +34,7 @@ export type Prof33 = 'cautious' | 'balanced' | 'aggressive';
 
 export const SW_BOTS33 = 'exp33.bots';
 registerSwitch({
-  id: SW_BOTS33, def: false, scope: 'game',
+  id: SW_BOTS33, def: true, scope: 'game',
   desc: l('Versão 33 · o robô jogador (testes de equilíbrio) também usa jabá, leilões, terrenos, casas e a vitrine do mês. Desligado: o robô de antes.',
     'Version 33 · the bot player (balance tests) also uses payola, auctions, plots, homes and the showcase of the month. Off: the old bot.'),
 });

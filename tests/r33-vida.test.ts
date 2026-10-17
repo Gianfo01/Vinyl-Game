@@ -1,5 +1,6 @@
 // R33 · VIDA — poucos casos, sem jogo longo: tudo desligado por padrão e, ligado, cada regra mexe só no que diz.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { createGame } from '../src/sim/worldgen';
 import { defaultConfig } from '../src/sim/bot';
 import { setSw } from '../src/sim/r31/switches';
@@ -11,7 +12,7 @@ import { setSw as _s } from '../src/sim/r31/switches';
 import { card5 } from '../src/ui/r31/acoes5model';
 import { SW33, takeTrip33, tripOptions33, buildWall33, donate33, foundFoundation33, frail33, papChance33, repLevel33, scandal33, treatOwner33, vida33, vidaMonth33, setRoutine33, kidInterest33 } from '../src/sim/r33/vida33';
 
-const mk = (seed: string) => createGame(defaultConfig(seed));
+const mk = (seed: string) => createGame(off33c(defaultConfig(seed))); // QA33: 33 ligada por padrão; aqui cada regra liga só a sua
 
 describe('R33 VIDA', () => {
   it('desligado por padrão: nada muda', () => {

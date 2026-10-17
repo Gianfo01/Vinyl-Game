@@ -29,7 +29,7 @@ import { fmtL } from '../util';
 
 export const SW_DIR33 = 'exp33.dir';
 registerSwitch({
-  id: SW_DIR33, def: false, scope: 'game',
+  id: SW_DIR33, def: true, scope: 'game',
   desc: l('Versão 33 · diretores de imprensa, jurídico e equipe: com o cargo na equipe, você pode delegar crises de imagem, disputas e pedidos de aumento. Desligado: tudo chega para você, como antes.',
     'Version 33 · press, legal and staff directors: with the role on staff, you can delegate image crises, disputes and raise requests. Off: everything comes to you, as before.'),
 });

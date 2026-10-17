@@ -6,6 +6,7 @@
 //   · catálogo que reaparece: cachê de sync, linha na vitrine e calor no sucesso tardio;
 //   · cadeia: extrato do master soma 1.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { advanceWeek } from '../src/sim/tick';
@@ -22,7 +23,7 @@ import { chain33 } from '../src/sim/r33/chain33';
 import type { GameState, Release } from '../src/sim/types';
 
 const SW = ['exp33.relics', 'exp33.sampling', 'exp33.resurface', 'exp33.chain', 'exp33.formats'];
-const game = (y: number): GameState => createGame(defaultConfig('r33cat', { startYear: y, scenario: 'established', dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
+const game = (y: number): GameState => createGame(off33c(defaultConfig('r33cat', { startYear: y, scenario: 'established', dbSize: 'small' } as Parameters<typeof defaultConfig>[1]))); // QA33: 33 ligada por padrão
 /** um disco antigo do jogador (fabricado no teste quando a partida não tem) */
 function oldRel(s: GameState): Release {
   const own = Object.values(s.releases).find((r) => r.owner === 'player' && s.year - r.year >= 10 && r.q >= 35 && s.acts[r.actId]);

@@ -25,7 +25,7 @@ import type { GameState } from '../types';
 import { registerSwitch, sw } from '../r31/switches';
 
 export const SW_INT2 = 'exp33.int2';
-registerSwitch({ id: SW_INT2, def: false, scope: 'game',
+registerSwitch({ id: SW_INT2, def: true, scope: 'game',
   desc: l('INT-2 (v33): prédios novos com interior (banco, cartório, hospital, estádio, clubes, igreja, TV, agência, escola de samba, gráfica, rádio pirata, trem e porto) e as ações deles.',
     'INT-2 (v33): new buildings with interiors (bank, registry, hospital, stadium, clubs, church, TV, agency, samba school, print shop, pirate radio, train and port) and their actions.') });
 export const int2On = (s: GameState): boolean => !!sw<boolean>(s, SW_INT2);

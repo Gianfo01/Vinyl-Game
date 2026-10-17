@@ -18,7 +18,7 @@ import { registerSwitch, setSw, sw } from '../r31/switches';
 
 export const SW_MAPA33 = 'exp33.mapa';
 registerSwitch({
-  id: SW_MAPA33, def: false, scope: 'game',
+  id: SW_MAPA33, def: true, scope: 'game',
   desc: l('Versão 33 · cidade expandida: bairros novos na borda (periferia leste, orla sul) e lote coerente para cada tipo de prédio novo (estádio na periferia, banco no centro, porto só com água, escola de samba só no Rio). Desligado: o mapa de sempre.',
     'Version 33 · expanded city: new edge districts (east outskirts, south shore) and a fitting plot for every new building type (stadium on the outskirts, bank downtown, harbour only with water, samba school only in Rio). Off: the map as before.'),
 });

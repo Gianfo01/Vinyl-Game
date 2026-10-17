@@ -47,7 +47,7 @@ const SWS33: [string, L][] = [
     'Version 33 · local scenes by era (Seattle grunge, Memphis rock, Rio bossa…) lift live demand for the genre. Off: no scenes.')],
 ];
 for (const [id, desc] of SWS33) {
-  registerSwitch({ id, def: false, scope: 'game', desc });
+  registerSwitch({ id, def: true, scope: 'game', desc });
   registerEditable({ id: `sw.${id}`, area: 'tools', label: desc, kind: 'bool', get: (s) => !!sw<boolean>(s, id), set: (s, v) => { setSw(s, id, !!v); } });
 }
 export const lojas33 = (s: GameState): boolean => !!sw<boolean>(s, SW_LOJAS33);

@@ -22,6 +22,7 @@ function game(seed: string, year: number): GameState {
   const over: Partial<RunConfig> = { startYear: year, realNames: true, dbSize: db };
   if (car === 'artist') Object.assign(over, { role: 'artist', bandGenre: 'rnr', bandName: 'Banda Teste' });
   else if (car !== 'label') over.careers = { main: [car] };
+  if (process.env.QA33_OFF) over.sw31 = Object.fromEntries(SW.map((id) => [id, false])); // a 33 nasce ligada; QA33_OFF compara com o jogo de antes
   const s = createGame(defaultConfig(seed, over));
   if (!process.env.QA33_OFF) for (const id of SW) setSw(s, id, true);
   return s;

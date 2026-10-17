@@ -15,19 +15,19 @@ import { fmtL, money, remember } from '../util';
 export const SW33 = {
   saude: 'exp33.saude', paparazzi: 'exp33.paparazzi', rotina: 'exp33.rotina', rep: 'exp33.reppessoal', herdeiros: 'exp33.herdeiros',
 } as const;
-registerSwitch({ id: SW33.saude, def: false, scope: 'game',
+registerSwitch({ id: SW33.saude, def: true, scope: 'game',
   desc: l('R33 · VIDA: estresse alto do dono tira 1 de tempo livre; saúde baixa piora gravação e negociação. Desligado: como antes.',
     'R33 · LIFE: high owner stress costs 1 free time; low health hurts recording and negotiation. Off: as before.') });
-registerSwitch({ id: SW33.paparazzi, def: false, scope: 'game',
+registerSwitch({ id: SW33.paparazzi, def: true, scope: 'game',
   desc: l('R33 · VIDA: paparazzi na mansão do dono; muro e segurança reduzem. Desligado: sem paparazzi em casa.',
     'R33 · LIFE: paparazzi at the owner\'s mansion; a wall and security cut it. Off: none at home.') });
-registerSwitch({ id: SW33.rotina, def: false, scope: 'game',
+registerSwitch({ id: SW33.rotina, def: true, scope: 'game',
   desc: l('R33 · VIDA: rotina leve do dono (sono, viagens, hobby) com efeito pequeno no estresse. Desligado: sem rotina.',
     'R33 · LIFE: light owner routine (sleep, trips, hobby) with a small stress effect. Off: no routine.') });
-registerSwitch({ id: SW33.rep, def: false, scope: 'game',
+registerSwitch({ id: SW33.rep, def: true, scope: 'game',
   desc: l('R33 · VIDA: reputação pessoal do dono separada da empresa (escândalo × caridade/fundação). Desligado: não existe.',
     'R33 · LIFE: the owner\'s personal reputation apart from the company (scandal vs charity/foundation). Off: absent.') });
-registerSwitch({ id: SW33.herdeiros, def: false, scope: 'game',
+registerSwitch({ id: SW33.herdeiros, def: true, scope: 'game',
   desc: l('R33 · VIDA: filhos do dono herdam talento e interesse dele. Desligado: aptidão sorteada como antes.',
     'R33 · LIFE: the owner\'s kids inherit talent and interest. Off: aptitude drawn as before.') });
 

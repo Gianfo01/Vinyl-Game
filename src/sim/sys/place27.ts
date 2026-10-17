@@ -96,6 +96,8 @@ export const DECO27: { fn?: (s: GameState, out: Place27[]) => void } = {};
 export const INT33: {
   acts?: (s: GameState, p: Pick<Place27, 'k' | 'id'> & Partial<Pick<Place27, 'lot' | 'owner'>>, actId?: string) => PAct27[];
   run?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'name'> & Partial<Pick<Place27, 'lot' | 'owner'>>, id: string, actId?: string) => { ok: boolean; text: L } | null;
+  /** QA33: tipos de lugar que precisam existir na cidade para as ações (hotel, escritório, apartamentos) */
+  need?: (s: GameState) => PlaceK27[];
 } = {};
 /** r33 (INT-2, QA33): os prédios novos nos lotes reservados (sim/r33/ligar33 preenche) e as ações deles (sim/r33/int2). */
 export const INT2P27: {
@@ -358,13 +360,21 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   }
   // r31 (LOTE): prédio sem função vira casa de quem mora na cidade ou terreno vago (e o terreno comprado é seu)
   LOTS27.fn?.(s, out);
+  // r33 (INT-1, QA33): hotel, escritório e apartamentos têm ações próprias; se a cidade da época os trocou por lojas e
+  // casas, a moradia comum menos vista volta a ser esse prédio (um de cada), para as ações sempre terem onde estar
+  for (const k of INT33.need?.(s) ?? []) {
+    if (out.some((p) => p.k === k)) continue;
+    const j = [...out.keys()].filter((i) => out[i].src === 'fill' && out[i].k === 'home' && !out[i].fam31 && out[i].lot >= 0).sort((a, b) => lotVis(out[a].lot) - lotVis(out[b].lot) || out[a].lot - out[b].lot)[0];
+    if (j === undefined) break;
+    out[j] = fillPlace(s, k, out[j].lot, j, undefined, undefined, true);
+  }
   out.push(...i2);
   return out;
 }
 
-function fillPlace(s: GameState, k0: PlaceK27, lot: number, i: number, venueId?: string, outletId?: string): Place27 {
+function fillPlace(s: GameState, k0: PlaceK27, lot: number, i: number, venueId?: string, outletId?: string, noBiz = false): Place27 {
   const key = `pl${lot}`;
-  const biz = BIZ_K27.has(k0) ? PLACE_X27.biz?.(s, lot, k0) ?? null : null; // R31 (H): loja da época no lugar do prédio genérico
+  const biz = BIZ_K27.has(k0) && !noBiz ? PLACE_X27.biz?.(s, lot, k0) ?? null : null; // R31 (H): loja da época no lugar do prédio genérico
   const k: PlaceK27 = biz ? (biz.shop ? 'instruments' : k0 === 'instruments' ? 'office' : k0) : k0;
   const vd = venueId ? VENUES17.find((x) => x.id === venueId) : undefined;
   const ou = outletId ? outlets17(s).find((x) => x.id === outletId) : undefined;

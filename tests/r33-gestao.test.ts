@@ -5,6 +5,7 @@
 //   • diretores: com o cargo e "Delegar", respondem cartões de escândalo, disputa e aumento e casos de outras frentes;
 //   • robô: com o interruptor, usa leilão/terreno/casa/vitrine pelas funções de sempre.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
 import { defaultConfig } from '../src/sim/bot';
 import { familyOf } from '../src/data/world';
@@ -19,7 +20,7 @@ import { playerActs } from '../src/sim/util';
 import type { Decision, GameState, StaffMember } from '../src/sim/types';
 
 const game = (seed = 'r33g', y = 1975): GameState => {
-  const s = createGame(defaultConfig(seed, { startYear: y, scenario: 'established' }));
+  const s = createGame(off33c(defaultConfig(seed, { startYear: y, scenario: 'established' }))); // QA33: 33 ligada por padrão
   s.player.cash = 50_000_000_00;
   return s;
 };

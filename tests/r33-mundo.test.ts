@@ -1,5 +1,6 @@
 // R33 · MUNDO — crises reais, censura e memes/bolhas atrás de exp33.* (desligados). Poucos casos, sem jogo longo.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { Rng } from '../src/core/rng';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
@@ -13,7 +14,7 @@ import { playerActs } from '../src/sim/util';
 import type { GameState, Release } from '../src/sim/types';
 
 const mk = (year: number, month: number): GameState => {
-  const s = createGame(defaultConfig('mundo33', { startYear: 1960 }));
+  const s = createGame(off33c(defaultConfig('mundo33', { startYear: 1960 }))); // QA33: 33 ligada por padrão
   s.year = year; s.month = month;
   return s;
 };

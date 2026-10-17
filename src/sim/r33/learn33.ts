@@ -27,7 +27,7 @@ import { playerActs } from '../util';
 
 export const SW_LEARN33 = 'exp33.learn';
 registerSwitch({
-  id: SW_LEARN33, def: false, scope: 'game',
+  id: SW_LEARN33, def: true, scope: 'game',
   desc: l('Versão 33 · aprendizados ensinam: a previsão de vendas se corrige pelo que os seus lançamentos parecidos venderam, e o A&R e o produtor executivo delegados escolhem pelo histórico. Desligado: tudo como antes.',
     'Version 33 · learnings teach: the sales forecast corrects itself by what your similar releases sold, and the delegated A&R and executive producer choose by the track record. Off: everything as before.'),
 });

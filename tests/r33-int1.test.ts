@@ -2,6 +2,7 @@
 // sede rival, atrás de exp33.int1: desligado por padrão, a pintura é diferente por lugar e por época, os pontos cabem na
 // cena recortada e explorar não muda o estado. Poucos casos, sem jogo longo.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import type { GameState } from '../src/sim/types';
@@ -17,14 +18,14 @@ import { auditInside31, insideModel31, type InsideT31 } from '../src/ui/r31/insi
 import { ownPlace27 } from '../src/ui/sys/place27ui';
 import type { Bld18 } from '../src/sim/sys/campus18';
 
-const game = (seed: string, year = 1962): GameState => createGame(defaultConfig(seed, { scenario: 'established', startYear: year, dbSize: 'small', homeCity: 'rio' } as Parameters<typeof defaultConfig>[1]));
+const game = (seed: string, year = 1962): GameState => createGame(off33c(defaultConfig(seed, { scenario: 'established', startYear: year, dbSize: 'small', homeCity: 'rio' } as Parameters<typeof defaultConfig>[1]))); // QA33: 33 ligada por padrão
 const colors = (d: Uint32Array): number => { const s = new Set<number>(); for (const c of d) if (c >>> 24 > 40) s.add(c); return s.size; };
 const paint = (k: IntK33, year: number) => paintInterior27(interior33(k, year, 4), [], { minW: 360, seed: `t|${k}`, city: 'rio', name: k, extra: (g, sd) => paintInt33(k, year)(g, sd) });
 const YEARS = [1889, 1962, 2025];
 
 describe('R33 INT-1 · interruptor', () => {
-  it('exp33.int1 nasce desligado e o prédio seu só troca de interior com ele ligado', () => {
-    expect(switchDef('exp33.int1')?.def).toBe(false);
+  it('exp33.int1 nasce ligado (decisão do dono, QA33); desligado, o prédio seu volta ao interior emprestado', () => {
+    expect(switchDef('exp33.int1')?.def).toBe(true);
     const s = game('int1-sw');
     expect(int1On(s)).toBe(false);
     const b = { id: 'school', kind: 'school', name: 'Escola', city: 'rio' } as unknown as Bld18;

@@ -19,7 +19,7 @@ import { OWN18 } from '../sys/school18';
 import { WING18 } from '../sys/relics18';
 
 registerSwitch({
-  id: 'exp33.int1', def: false, scope: 'game',
+  id: 'exp33.int1', def: true, scope: 'game',
   desc: l('R33 · interiores próprios (escola, fábrica de discos, museu, plataforma, agência, filial) e ações no hotel, escritório, apartamentos e sede rival.',
     'R33 · own interiors (school, pressing plant, museum, platform, booking agency, branch) and actions at the hotel, offices, apartments and rival HQ.'),
 });
@@ -249,3 +249,4 @@ function runFor33(s: GameState, p: Pick<Place27, 'k' | 'id' | 'name'> & Partial<
 
 INT33.acts = actsFor33;
 INT33.run = runFor33;
+INT33.need = (s) => (int1On(s) ? ['hotel', 'office', 'apartments'] : []); // QA33: os três sempre na cidade com o interruptor

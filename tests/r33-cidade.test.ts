@@ -1,5 +1,6 @@
 // R33 · CIDADE — lojas, base de turnê, terrenos e cenas atrás dos interruptores exp33.cidade.* (desligados por padrão).
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { defaultConfig } from '../src/sim/bot';
 import { applyMods } from '../src/sim/ext4';
 import { setSw, sw } from '../src/sim/r31/switches';
@@ -15,7 +16,7 @@ import { LOTS27 } from '../src/sim/sys/place27';
 import { baseActs33, baseLodgingSaving33, homeValue33, rentBase33, runBase33, sellBase33 } from '../src/sim/r33/cidade33';
 import type { Act, GameState, Release } from '../src/sim/types';
 
-const game = (over = {}) => createGame(defaultConfig('r33-cidade', over));
+const game = (over = {}) => createGame(off33c(defaultConfig('r33-cidade', over))); // QA33: 33 ligada por padrão
 const rel = (s: GameState, owner = 'player'): Release => ({ ...Object.values(s.releases)[0], owner, formats: ['lp'] });
 
 describe('R33 · cidade', () => {

@@ -2,6 +2,7 @@
 // padrão, ações com custo/espera/gancho, e a arte (interior, fachada e lojas da época: tamanho certo, tudo opaco, épocas
 // diferentes entre si, nunca um bloco de uma cor só).
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
 import { newRunConfig20 } from '../src/sim/start17';
 import { setSw } from '../src/sim/r31/switches';
@@ -10,7 +11,7 @@ import { INT2_H, INT2_W, SHOP2_IDS, int2Scene, int2ShopScene, paintInt2 } from '
 import { BIZ31 } from '../src/sim/r31/city31';
 import type { Px } from '../src/ui/pixel/px';
 
-const game = () => createGame(newRunConfig20({ seed: 'int2-teste', companyName: 'Selo Teste' }));
+const game = () => createGame(off33c(newRunConfig20({ seed: 'int2-teste', companyName: 'Selo Teste' }))); // QA33: 33 ligada por padrão
 const colors = (p: Px): number => new Set(p.d).size;
 const opaque = (p: Px): boolean => p.d.every((c) => c >>> 24 > 0); // nada transparente: a cena preenche a área
 const same = (a: Px, b: Px): boolean => a.d.every((c, i) => c === b.d[i]);

@@ -6,6 +6,7 @@ import { ledgerNet23 } from './close23';
 import { simulatedStartCfg20 } from './worldpolicy20';
 import './sys';
 import { emptyExt, ensureExt } from './ext';
+import { setSw, switchDef } from './r31/switches';
 import { initWorldExt } from './worldext';
 import { registerMovementGenres } from './culture';
 import { clamp, hashString, Rng, seedState } from '../core/rng';
@@ -376,6 +377,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     upcoming: [],
     stats: { weeklyPool: 0, marketUnitsYear: 0, playerUnitsYear: 0, marketShare: 0 },
   };
+  applySw33(s, cfg); // QA33: interruptores escolhidos antes de nascer o mundo (ex.: a 33 desligada para comparar com o jogo de antes)
   registerMovementGenres(s);
   s.day = dayOfDate(cfg.startYear, cfg.startYear, 0);
   const r = rng19(s, 'world'); // r31: geração do mundo inicial no fluxo próprio (o fluxo único s.rng saiu)
@@ -464,6 +466,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   // rumores iniciais de cena (sinais)
   seedInitialSignals(s, r);
   ensureExt(s);
+  applySw33(s, cfg);
   initWorldExt(s, r);
   runSimHooks('newgame', s, r);
   // rodada 10: "todos iguais" vale depois da história prévia (que mexe no caixa dos selos)
@@ -732,4 +735,10 @@ export function addSignal(s: GameState, r: Rng, actId: string, source: string, o
 export function talentScore(s: GameState, act: Act): number {
   const t = actTalent(s, act);
   return t.comp * 0.25 + t.lyr * 0.15 + Math.max(t.voice, t.instr) * 0.3 + t.stage * 0.15 + t.prod * 0.15;
+}
+
+/** QA33: `cfg.sw31` (interruptores da partida já no começo). Com a 33 ligada por padrão, é o caminho para começar uma
+ *  partida com regras desligadas DESDE a criação (antes, o mundo nasceria com elas e só depois seriam desligadas). */
+function applySw33(s: GameState, cfg: RunConfig): void {
+  for (const [id, v] of Object.entries(cfg.sw31 ?? {})) if (switchDef(id)) setSw(s, id, v);
 }

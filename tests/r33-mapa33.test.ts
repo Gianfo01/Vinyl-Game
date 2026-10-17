@@ -4,6 +4,7 @@
 //   • registro "tipo → onde": banco no centro, estádio na periferia, porto só com água, escola de samba só no Rio;
 //   • ligado: o lote do tipo pedido fica reservado e o bairro certo abre quando falta lote.
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { defaultConfig } from '../src/sim/bot';
 import { createGame } from '../src/sim/worldgen';
 import { advanceWeek } from '../src/sim/tick';
@@ -17,7 +18,7 @@ import { forSale27 } from '../src/ui/pixel/city27';
 const game = (year: number, city: string) => {
   const cfg = defaultConfig(`mapa33-${city}-${year}`, { startYear: year, homeCity: city });
   (cfg as { dbSize?: string }).dbSize = 'small';
-  const g = createGame(cfg);
+  const g = createGame(off33c(cfg)); // QA33: 33 ligada por padrão
   advanceWeek(g);
   return g;
 };

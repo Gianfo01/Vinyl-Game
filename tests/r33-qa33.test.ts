@@ -1,6 +1,7 @@
 // R33 · QA33 — ganchos entre as frentes ligados (sim/r33/ligar33): cada ligação só vale com os interruptores das duas
 // pontas; desligados, o jogo é o de antes (mesmo estado, nenhuma chave nova no save).
 import { describe, expect, it } from 'vitest';
+import { off33c } from './helpers/off33';
 import { createGame } from '../src/sim/worldgen'; // primeiro: ordem de carga dos sistemas
 import { newRunConfig20 } from '../src/sim/start17';
 import { setSw, sw as swRead, switchDefs } from '../src/sim/r31/switches';
@@ -21,8 +22,21 @@ import { LEGAL_SRC33 } from '../src/sim/r33/dir33';
 import { places27 } from '../src/sim/sys/place27';
 import type { GameState } from '../src/sim/types';
 
-const game = (year = 1962): GameState => { const c = newRunConfig20({ seed: 'qa33-teste', companyName: 'Selo Teste' }); c.startYear = year; return createGame(c); };
+const game = (year = 1962): GameState => { const c = newRunConfig20({ seed: 'qa33-teste', companyName: 'Selo Teste' }); c.startYear = year; return createGame(off33c(c)); }; // QA33: 33 ligada por padrão; cada caso liga as suas pontas
 const on = (s: GameState, ...ids: string[]) => { for (const id of ids) setSw(s, id, true); };
+
+describe('QA33 · padrão: a 33 inteira ligada (decisão do dono, 2026-10-17)', () => {
+  it('todo exp33.* nasce ligado; config sw31 desliga desde a criação', () => {
+    const ids = switchDefs().filter((d) => d.id.startsWith('exp33.'));
+    expect(ids.length).toBeGreaterThanOrEqual(25);
+    for (const d of ids) expect(d.def, d.id).toBe(true);
+    const c = newRunConfig20({ seed: 'qa33-pad', companyName: 'Selo Teste' });
+    const s = createGame(c);
+    for (const d of ids) expect(swRead(s, d.id), d.id).toBe(true);
+    const t = createGame(off33c(newRunConfig20({ seed: 'qa33-pad', companyName: 'Selo Teste' })));
+    for (const d of ids) expect(swRead(t, d.id), d.id).toBe(false);
+  });
+});
 
 describe('QA33 · desligado = como antes', () => {
   it('sem interruptores: um ano igual nas duas partidas e nenhuma chave nova da 33 no save', () => {

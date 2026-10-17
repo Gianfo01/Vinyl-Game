@@ -24,13 +24,13 @@ import { fmtL, notify, playerActs } from '../util';
 export const SW_CRISE33 = 'exp33.crise';
 export const SW_CENSURA33 = 'exp33.censura';
 export const SW_MEMES33 = 'exp33.memes';
-registerSwitch({ id: SW_CRISE33, def: false, scope: 'game',
+registerSwitch({ id: SW_CRISE33, def: true, scope: 'game',
   desc: l('Onda 33 · crises reais (1929, 1973, 2008, 2020): curva de choque e recuperação em shows, vendas físicas × digitais e crédito. Desligado: como antes.',
     'Wave 33 · real crises (1929, 1973, 2008, 2020): shock and recovery curve on shows, physical vs digital sales and credit. Off: as before.') });
-registerSwitch({ id: SW_CENSURA33, def: false, scope: 'game',
+registerSwitch({ id: SW_CENSURA33, def: true, scope: 'game',
   desc: l('Onda 33 · censura e política: pressão do regime (metáfora × exílio × calar) e audiência do selo de aviso nos EUA. Desligado: como antes.',
     'Wave 33 · censorship and politics: regime pressure (metaphor vs exile vs silence) and the US warning-sticker hearing. Off: as before.') });
-registerSwitch({ id: SW_MEMES33, def: false, scope: 'game',
+registerSwitch({ id: SW_MEMES33, def: true, scope: 'game',
   desc: l('Onda 33 · memes e bolhas da cultura pop mexem na economia: meme dá fôlego curto às vendas; bolha infla, estoura e aperta o crédito. Desligado: só notícia.',
     'Wave 33 · pop-culture memes and bubbles move the economy: a meme gives sales a short lift; a bubble inflates, bursts and tightens credit. Off: news only.') });
 

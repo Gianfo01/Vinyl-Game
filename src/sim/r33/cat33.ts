@@ -24,7 +24,7 @@ const DEFS33: [Sw33, L, L][] = [
     l('V33 · ciclos de formato', 'V33 · format cycles')],
 ];
 for (const [id, desc, label] of DEFS33) {
-  registerSwitch({ id, def: false, scope: 'game', desc });
+  registerSwitch({ id, def: true, scope: 'game', desc });
   registerEditable({ id: `sw.${id}`, area: 'tools', label, kind: 'bool', get: (s) => sw<boolean>(s, id), set: (s, v) => { setSw(s, id, !!v); } });
 }
 export const on33 = (s: GameState, id: Sw33): boolean => sw<boolean>(s, id);
