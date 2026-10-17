@@ -567,11 +567,12 @@ function mapFrame(v: View, side: HTMLElement): HTMLElement {
   const arriving = zoom27.arrive;
   requestAnimationFrame?.(() => { if (!arriving && v.live && ui.zFor !== MW) { ui.zFor = MW; if (autoZ() > 1) centerHq(autoZ()); } clampPan(); apply(); });
   // barra sobre o mapa
+  if (nav5) ui.mode = 'cycle'; // QA5 (pedido do dono): na casca nova não há botões de luz; o dia e a noite vão mudando sozinhos
   const modes: [typeof ui.mode, L][] = [['cycle', l('Dia e noite', 'Day & night')], ['day', l('Dia', 'Day')], ['night', l('Noite', 'Night')]];
   const tog = (k: keyof typeof ui.f, n: L) => h('button', { type: 'button', class: `btn small ${ui.f[k] ? '' : 'ghost'}`, 'aria-pressed': String(ui.f[k]), onclick: () => { ui.f[k] = !ui.f[k]; rerender(); } }, t(n));
   const bar = h('div', { class: 'w19-bar' },
     nav5 ? null : h('div', { class: 'w19-grp', role: 'group', 'aria-label': t(l('Filtro', 'Filter')) }, tog('mine', l('Meus', 'Mine')), tog('nb', l('Vizinhos', 'Neighbours')), tog('lm', l('Marcos', 'Landmarks'))),
-    h('div', { class: 'w19-grp', role: 'group', 'aria-label': t(l('Luz', 'Light')) }, modes.map(([m, n]) => h('button', { type: 'button', class: `btn small ${ui.mode === m ? '' : 'ghost'}`, 'aria-pressed': String(ui.mode === m), onclick: () => { ui.mode = m; rerender(); } }, t(n)))),
+    nav5 ? null : h('div', { class: 'w19-grp', role: 'group', 'aria-label': t(l('Luz', 'Light')) }, modes.map(([m, n]) => h('button', { type: 'button', class: `btn small ${ui.mode === m ? '' : 'ghost'}`, 'aria-pressed': String(ui.mode === m), onclick: () => { ui.mode = m; rerender(); } }, t(n)))),
     h('div', { class: 'w19-grp' },
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': t(l('Aproximar', 'Zoom in')), onclick: () => setZ(ui.z * 1.4) }, '+'),
       h('button', { type: 'button', class: 'btn small ghost', 'aria-label': t(l('Afastar', 'Zoom out')), onclick: () => setZ(ui.z / 1.4) }, '−'),

@@ -42,6 +42,7 @@ const URL0 = `http://127.0.0.1:${port}/`;
 const known = (() => { try { return JSON.parse(readFileSync(resolve(root, 'scripts/r31/qa5-known.json'), 'utf8')); } catch { return {}; } })();
 const found = new Map(); // chave → { kind, where, detail, runs }
 let runTag = '';
+let step = ''; // último passo do robô (para o achado dizer onde travou)
 const flag = (kind, where, detail = '') => {
   const key = `${kind}:${where}`;
   const f = found.get(key) ?? { kind, where, detail, runs: [] };
@@ -190,21 +191,25 @@ async function sweepWorld() {
 
 async function sweepSystem() {
   // viagem por tecla e por clique, H
+  step = 'viagem';
   for (const [k, r] of [['Shift+Digit2', 'casa'], ['Shift+Digit3', 'cidade'], ['Shift+Digit4', 'mundo'], ['Shift+Digit1', 'sede']]) await goRegion(k, r);
   for (const r of ['casa', 'mundo', 'sede']) { await p.locator(`.b5-tr[data-travel="${r}"]`).click(); await wait(1100); await escBack(`clique>${r}`, { pauseOk: true }); if ((await region()) !== r) flag('sem-efeito', `viagem.clique.${r}`); }
   await p.keyboard.press('Shift+Digit3'); await wait(1000); await p.keyboard.press('h'); await wait(1100); if ((await region()) !== 'sede') flag('sem-efeito', 'tecla H');
   // ajuda
+  step = 'ajuda';
   await escBack('ajuda', { pauseOk: true });
   await p.keyboard.press('Shift+Slash'); await wait(600);
   if (!(await p.locator('.hk5').count())) flag('sem-efeito', 'tecla ?');
   await escBack('ajuda');
   // busca: Esc fecha a busca e não abre a pausa
+  step = 'busca';
   await p.keyboard.press('Control+k'); await wait(600);
   if (!(await p.locator('.overlay').count())) flag('sem-efeito', 'Ctrl+K');
   await p.keyboard.press('Escape'); await wait(500);
   if (await p.locator('.pz5').count()) flag('sem-volta', 'busca', 'Esc da busca abre a pausa');
   await escBack('busca', { pauseOk: true });
   // pausa: Salvar, Carregar e o índice
+  step = 'pausa';
   await p.keyboard.press('Escape'); await wait(500);
   if (!(await p.locator('.pz5').count())) flag('sem-efeito', 'Esc (pausa)');
   const before = await sig();
@@ -227,6 +232,7 @@ async function sweepSystem() {
     await escBack(`indice.${area}`, { pauseOk: true });
   }
   await escBack('indice', { pauseOk: true });
+  step = 'bolso';
   // bolso: abrir um papel pelo índice (sem cartão), fixar, abrir pelo bolso, tirar
   await p.keyboard.press('Escape'); await wait(450);
   const fin = p.locator('.pz5-row[data-area="finance"]').first();
@@ -288,7 +294,7 @@ for (const run of RUNS) {
     // cada parte isolada: um passo do robô que trava (clique coberto) vira achado daquela parte, e o resto continua
     for (const [name, fn] of parts) {
       try { await fn(); } catch (e) {
-        flag('erro', `robo.${name}`, String(e.message ?? e).split('\n')[0].slice(0, 160));
+        flag('erro', `robo.${name}`, `${step} · ${String(e.message ?? e).split('\n')[0].slice(0, 120)}`);
         await shot(`robo-erro-${name}`);
         await escBack(`robo.${name}`, { pauseOk: true }).catch(() => {});
       }
