@@ -210,7 +210,7 @@ export function sheet27(s: GameState, c: CitySheet27): HTMLElement {
   return h('aside', { class: 'card sheet27', 'aria-label': `${T(l('Ficha da cidade', 'City sheet'))}: ${T(c.name)}` },
     h('header', { class: 'sheet27-h' },
       h('div', null, h('h3', null, a29(cityCrestImg29(c.id, 20)), T(c.name)), h('small', { class: 'muted' }, `${T(c.country)}${c.market ? ` · ${T(c.market)}` : ''}`)),
-      h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar ficha', 'Close sheet')), onclick: () => { mapSel = null; rerender(); } }, '✕')),
+      h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar ficha', 'Close sheet')), onclick: () => { mapSel = null; WORLD5.pick = undefined; rerender(); } }, '✕')), // QA5: também fecha o cartão da cidade (casca nova)
     (() => { const i = skylineThumbImg29(c.id, s.year, 240); i.style.display = 'block'; i.style.width = '100%'; i.style.height = 'auto'; return i; })(), // r29: horizonte da cidade
     c.closed.length ? h('div', { class: 'chips' }, c.closed.map((x) => pill(T(x), 'bad'))) : null,
     sitesBlock27(sitesByCity27(s).get(c.id) ?? []),
@@ -266,7 +266,7 @@ function mapTab(s: GameState): HTMLElement {
     cities: () => cities,
     selected: nav5 && WORLD5.country ? country5(s, WORLD5.country)?.cities ?? [] : mapSel ? [mapSel] : [], // R31 onda 5 (MAPA): cidades do país aceso
     mode: 'scenes' as const,
-    onCityClick: (id: string) => { if (nav5) { openCityMap5(s, id); return; } mapSel = id; rerender(); },
+    onCityClick: (id: string) => { if (nav5) { WORLD5.pick = id; rerender(); return; } mapSel = id; rerender(); }, // QA5: cartão da cidade antes de entrar
     onCountryClick: (a3: string) => { if (nav5) { WORLD5.country = country5(s, a3)?.id; WORLD5.focus = WORLD5.country; rerender(); return; } openMapInfo17(s, 'country', a3); },
     overlays: () => ov,
     countryShade: (a3: string) => { if (nav5 && WORLD5.country && selA3s5.has(a3)) return { color: '#ffc428' }; const c = closed.get(a3); if (!c && ages) { const x = ages.get(a3); if (x) return { color: ageLayerColor29(x.band, x.v) }; } return c ? (c.hard ? { color: 'var(--bad)', hatch: true } : { color: 'rgba(238,143,132,0.45)' }) : undefined; },
@@ -290,10 +290,17 @@ function mapTab(s: GameState): HTMLElement {
     const want = WORLD5.want; WORLD5.want = undefined;
     if (want && typeof requestAnimationFrame === 'function') requestAnimationFrame(() => map27?.centerOn(want.lon, want.lat, want.span));
     const openC = (id: string) => { WORLD5.country = id; WORLD5.focus = id; const c = country5(s, id); if (c) map27?.centerOn(c.lon, c.lat, c.span); rerender(); };
-    const side = (WORLD5.country ? countryPanel5(s, WORLD5.country, { close: () => { WORLD5.country = undefined; rerender(); }, full: (a3) => openMapInfo17(s, 'country', a3), market: () => go27({ area: 'regions19' }) }) : null)
+    // QA5: cidade clicada no mapa = cartão com a ficha dela e "Entrar na cidade ▸" (antes entrava direto)
+    const pick = WORLD5.pick ? citySheet27(s, WORLD5.pick) : null;
+    const pickEl = pick ? h('div', { class: 'm5-pick', 'data-m5': 'pick' },
+      h('div', { class: 'row wrap m5-pick-go' },
+        h('button', { type: 'button', class: 'btn primary', onclick: () => { const id = WORLD5.pick!; WORLD5.pick = undefined; openCityMap5(s, id); } }, T(l('Entrar na cidade', 'Enter the city')), ' ▸'),
+        h('button', { type: 'button', class: 'btn ghost', 'data-esc5': '1', onclick: () => { WORLD5.pick = undefined; rerender(); } }, T(l('Fechar', 'Close')))),
+      sheet27(s, pick)) : null;
+    const side = pickEl ?? (WORLD5.country ? countryPanel5(s, WORLD5.country, { close: () => { WORLD5.country = undefined; rerender(); }, full: (a3) => openMapInfo17(s, 'country', a3), market: () => go27({ area: 'regions19' }) }) : null)
       ?? worldIdle5(s, { open: openC });
     pinTelex5(map27.element, telexCard5(s, go27));
-    const root = h('div', { class: 'map27 m5-world', onkeydown: (e: KeyboardEvent) => { if (e.key === 'Escape' && WORLD5.country) { e.preventDefault(); e.stopPropagation(); WORLD5.country = undefined; rerender(); } } });
+    const root = h('div', { class: 'map27 m5-world', onkeydown: (e: KeyboardEvent) => { if (e.key === 'Escape' && (WORLD5.pick || WORLD5.country)) { e.preventDefault(); e.stopPropagation(); if (WORLD5.pick) WORLD5.pick = undefined; else WORLD5.country = undefined; rerender(); } } });
     root.append(
       h('div', { class: 'map27-bar', role: 'group', 'aria-label': T(l('Camadas do mapa', 'Map layers')) },
         LAYERS27.map((x) => h('button', { type: 'button', class: `chip-btn ${layers.has(x.id) ? 'on' : ''}`, 'aria-pressed': layers.has(x.id) ? 'true' : 'false',

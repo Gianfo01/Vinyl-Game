@@ -118,6 +118,9 @@ export function esc5(): void {
   if (SH5.help) { SH5.help = false; redraw(); return; }
   if (SH5.pause) { SH5.pause = false; redraw(); return; }
   if (SH5.paper) { closePaper5(); return; }
+  // QA5: cidade visitada pelo mundo (ou o cartão dela) — Esc volta ao mapa-múndi (o teclado do mapa só ouvia com o foco nele)
+  const visitBack = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.app5 [data-esc5], .app5 .m5-visit .m5-vhead button') : null;
+  if (visitBack) { visitBack.click(); return; }
   SH5.pause = true; redraw();
 }
 export function closePaper5(): void {
@@ -182,6 +185,7 @@ export function shellKey5(e: KeyboardEvent): boolean {
 // ---------------------------------------------------------------- ganchos e teclado (uma vez)
 
 let installed = false;
+let pinCard5: string | undefined;
 /** Liga a casca aos ganchos de nav5 (só agem com exp5.nav ligado) e o Alt (mostrar nomes) e a troca de teclas. */
 export function install5(host: Shell5Host): void {
   HOST = host;
@@ -198,6 +202,8 @@ export function install5(host: Shell5Host): void {
     if (e.key === 'Alt') { alt(true); if (document.querySelector('.app5')) e.preventDefault(); }
   }, true);
   window.addEventListener('keyup', (e) => { if (e.key === 'Alt') alt(false); });
+  // QA5: o clique fora fecha o cartão de ações no pointerdown; guarda qual estava aberto para o "+ fixar"
+  window.addEventListener('pointerdown', (e) => { if ((e.target as Element | null)?.closest?.('.b5-pin')) pinCard5 = document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card; }, true);
   window.addEventListener('blur', () => alt(false));
 }
 
@@ -241,10 +247,21 @@ function bottom5(s: GameState): HTMLElement {
   const cur = SH5.region;
   const pocket = pocketView5(s);
   const pinned = new Set(pocketIds5(s));
-  const canPin = SH5.paper && object5(SH5.paper.obj) && !pinned.has(SH5.paper.obj);
-  const pinBtn = h('button', { type: 'button', class: 'b5-pin', disabled: canPin ? undefined : true,
-    title: canPin ? t(l('Fixar o papel aberto no bolso', 'Pin the open paper to the pocket')) : t(l('Abra um objeto para fixá-lo aqui', 'Open an object to pin it here')),
-    onclick: () => { if (!SH5.paper) return; const why = pin5(s, SH5.paper.obj); if (why) toast(t(why), 'bad'); redraw(); } }, `+ ${t(l('fixar', 'pin'))}`);
+  // QA5: "+ fixar" fixa o papel aberto ou o objeto do cartão de ações aberto; sem nada aberto, diz o que fazer (antes ficava apagado)
+  const pinTarget = (): string | undefined => {
+    const card = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card : undefined;
+    const id = SH5.paper?.obj ?? card ?? pinCard5;
+    pinCard5 = undefined;
+    return id && object5(id) ? id : undefined;
+  };
+  const pinBtn = h('button', { type: 'button', class: 'b5-pin',
+    title: t(l('Fixar no bolso o objeto aberto (papel ou cartão)', 'Pin the open object (paper or card) to the pocket')),
+    onclick: () => {
+      const id = pinTarget();
+      if (!id) { toast(t(l('Clique num objeto e depois em "+ fixar" para guardá-lo no bolso.', 'Click an object, then "+ pin" to keep it in the pocket.')), 'info'); return; }
+      if (pinned.has(id)) { toast(t(l('Já está no bolso.', 'Already in the pocket.')), 'info'); return; }
+      const why = pin5(s, id); if (why) toast(t(why), 'bad'); redraw();
+    } }, `+ ${t(l('fixar', 'pin'))}`);
   return h('footer', { class: 'b5' },
     h('nav', { class: 'b5-travel', 'aria-label': t(l('Viagem', 'Travel')) }, ...tr.map((x, i) => {
       const on = x.id === cur && !SH5.paper;

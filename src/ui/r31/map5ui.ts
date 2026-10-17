@@ -53,7 +53,7 @@ export function regionCmds5(s: GameState, q: string): RegionCmd5[] {
 // ---------------------------------------------------------------- estado da sessão (não vai para o save)
 
 export const CITY5: { layers: Set<Layer5>; want?: string; /** partida+cidade já vista (zera o zoom ao trocar) */ seen?: string } = { layers: defaultLayers5() };
-export const WORLD5: { country?: string; city?: string; focus?: string; want?: { lon: number; lat: number; span: number } } = {};
+export const WORLD5: { country?: string; city?: string; focus?: string; /** cidade clicada no mapa (cartão antes de entrar, QA5) */ pick?: string; want?: { lon: number; lat: number; span: number } } = {};
 
 /** Vai a uma página. Com a casca nova (frente NAV), cidade e mundo são viagens de região (o mesmo lugar só redesenha) e as
  *  outras páginas abrem como papel do objeto dono; sem casca, troca a página como sempre. */
@@ -72,7 +72,7 @@ export function pointCity5(id: string): void { CITY5.want = id; goArea5('campus1
 /** Apontar um país (ou uma cidade dele) no mapa-múndi. */
 export function pointWorld5(s: GameState, key: string, city?: string): void {
   const c = country5(s, key);
-  WORLD5.country = c?.id; WORLD5.focus = c?.id; WORLD5.city = undefined;
+  WORLD5.country = c?.id; WORLD5.focus = c?.id; WORLD5.city = undefined; WORLD5.pick = undefined;
   const cc = city ? cityById[city] : undefined;
   WORLD5.want = cc ? { lon: cc.lon, lat: cc.lat, span: 14 } : c ? { lon: c.lon, lat: c.lat, span: c.span } : undefined;
   goArea5('world');
@@ -328,7 +328,11 @@ export function visitCity5(s: GameState, id: string): HTMLElement {
   for (const m of scene.marks) { const lm = lms.find((q) => q.id === m.id); if (lm) spots.push({ id: `lm:${m.id}`, box: m.box, name: T(lm.n), what: T(l('Marco da cidade', 'City landmark')), kind: 'lm' }); }
   const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
   const side = h('div', { class: 'm5-vside' });
-  const showSheet = () => side.replaceChildren(CITY5_SHEET.fn?.(s, id) ?? h('p', { class: 'muted' }, T(sh.name)));
+  const showSheet = () => {
+    const el = CITY5_SHEET.fn?.(s, id) ?? h('p', { class: 'muted' }, T(sh.name));
+    el.querySelector('.sheet27-h > button')?.remove(); // QA5: o ✕ da ficha não fazia nada aqui; sair é "Voltar ao mundo"/Esc
+    side.replaceChildren(el);
+  };
   const pick = (sp: VisitSpot5) => side.replaceChildren(h('aside', { class: 'card sheet27', 'data-m5': 'vspot' },
     h('header', { class: 'sheet27-h' }, h('div', null, h('h3', null, sp.name), h('small', { class: 'muted' }, sp.what)),
       h('button', { type: 'button', class: 'btn tiny ghost', 'aria-label': T(l('Fechar', 'Close')), onclick: showSheet }, '✕')),

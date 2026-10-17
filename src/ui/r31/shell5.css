@@ -189,3 +189,8 @@ body.alt5 .s5-obj .s5-lab { z-index: 2; }
 .hk5-ch li small { grid-column: 2; }
 .hk5 .muted { color: #8a9ab0; }
 @media (max-width: 1100px) { .pz5 { grid-template-columns: 1fr; } .pz5-ix { display: none; } .t5-k span { display: none; } .rc5 { display: none; } }
+
+/* QA5: painel da direita da cidade (prédio, placas) cabia em 100dvh e cortava atrás da barra de baixo; na casca a
+   área da região é a tela menos o topo (56px) e a barra (92px), e o painel começa abaixo do título/abas da página */
+.app5 .reg5 .c27-side { max-height: max(240px, calc(100dvh - 330px)); }
+.app5 .reg5 .map27-body > .sheet27 { max-height: max(240px, calc(100dvh - 275px)); overflow: auto; }
