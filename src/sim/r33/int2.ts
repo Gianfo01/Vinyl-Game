@@ -126,6 +126,12 @@ export type Int2Hook = (s: GameState, key: string) => Int2Res | null;
  * `adagency.jingle`/`adagency.sync` (CATÁLOGO), `print.cover` (CATÁLOGO: capa pesa no físico), `station.trip`/`port.ship` (MUNDO).
  */
 export const INT2_HOOKS: Record<string, Int2Hook> = {};
+/** QA33: ações que só existem com a regra de outra frente ligada (`hidden` no registro): a frente diz quando aparecem. */
+export const INT2_WHEN: Record<string, (s: GameState) => boolean> = {};
+/** QA33: linha de situação vinda de outra frente (crise de crédito da MUNDO, processos da CATÁLOGO…); null = a de sempre. */
+/** QA33: motivo de bloqueio vindo da frente dona (sem processo aberto, sem peça para empenhar…). */
+export const INT2_BLOCK: Record<string, (s: GameState) => L | null> = {};
+export const INT2_NOW: Partial<Record<Int2Id, (s: GameState) => L | null>> = {};
 
 type RepK = 'artistic' | 'commercial' | 'artists' | 'institutional';
 interface ActDef {
@@ -137,6 +143,7 @@ interface ActDef {
   /** só existe a partir deste ano (ex.: reabilitação depois de 1970) */ from?: number;
   /** efeito próprio (empréstimo, reabilitação) no lugar do efeito simples */ own?: (s: GameState, key: string) => Int2Res;
   /** motivo de bloqueio próprio além de caixa e espera */ block?: (s: GameState) => L | null;
+  /** QA33: só aparece quando a frente dona liga (`INT2_WHEN[chave]`); o efeito vem do gancho dela */ hidden?: true;
 }
 const A = (id: string, pt: string, en: string, dpt: string, den: string, x: Partial<ActDef> = {}): ActDef => ({ id, label: l(pt, en), desc: l(dpt, den), ...x });
 
@@ -186,11 +193,14 @@ const ACTS: Record<Int2Id, ActDef[]> = {
     A('registro', 'Registrar obras', 'Register works', 'Registrar autoria no cartório: a reputação institucional sobe um pouco.', 'Register authorship at the registry: institutional reputation rises a little.', { cost: 250, rep: ['institutional', 0.5], cd: 12 }),
     A('plagio', 'Consultar plágio e direitos', 'Check plagiarism and rights', 'Advogado do tribunal confere se suas músicas ou as de outros se parecem demais.', 'A court lawyer checks whether your songs, or someone else\'s, are too alike.', { cost: 500, stress: -3, rep: ['institutional', 0.2], cd: 8 }),
     A('rescisao', 'Rescisão de contrato', 'Contract termination', 'Ver como romper um contrato sem cair em processo.', 'See how to break a contract without being sued.', { cost: 800, stress: -2, rep: ['institutional', 0.2], cd: 12 }),
+    A('processo', 'Levar o processo ao tribunal', 'Take the case to court', 'O processo de sample ou regravação mais antigo vai a julgamento: ganha 150% do valor ou paga as custas.', 'The oldest sample or cover lawsuit goes to trial: win 150% of the stake or pay the costs.', { cost: 600, cd: 4, hidden: true }),
+    A('acordo', 'Fechar acordo no cartório', 'Settle at the registry', 'Acordo no processo mais antigo: o selo recebe 60% do valor em jogo.', 'Settle the oldest case: the label receives 60% of the stake.', { cost: 150, cd: 2, hidden: true }),
   ],
   hospital: [
     A('checkup', 'Consulta e exames', 'Check-up', 'A sua saúde: estresse menor e um ponto de saúde.', 'Your health: lower stress and a point of health.', { cost: 300, stress: -6, health: 2, cd: 4 }),
     A('rehab', 'Reabilitação de artista', 'Artist rehab', 'Interna um integrante seu com vício, burnout ou doença para tratar.', 'Admits one of your members with addiction, burnout or illness for treatment.',
       { cost: 4000, cd: 8, from: 1970, block: (s) => (rehabTarget(s) ? null : l('Nenhum integrante seu precisa de tratamento.', 'None of your members needs treatment.')), own: rehab }),
+    A('retiro', 'Internação de descanso (você)', 'Rest cure (you)', 'Dois meses longe do escritório: saúde +20 e estresse −30.', 'Two months away from the office: health +20 and stress −30.', { cost: 6000, cd: 26, hidden: true }),
   ],
   stadium: [
     A('show', 'Reservar show de estádio', 'Book a stadium show', 'Uma noite para multidões: reputação comercial sobe.', 'A night for crowds: commercial reputation rises.', { cost: 5000, rep: ['commercial', 0.8], cd: 12 }),
@@ -261,13 +271,13 @@ const weeksLeft = (s: GameState, key: string): number => Math.max(0, (st(s).cd[k
 /** Ações do lugar no formato do cartão de lugar (PAct27): custo, motivo de bloqueio e descrição. */
 export function int2Acts(s: GameState, id: Int2Id): PAct27[] {
   if (!int2On(s)) return [];
-  return ACTS[id].filter((a) => !a.from || s.year >= a.from).map((a): PAct27 => {
+  return ACTS[id].filter((a) => (!a.from || s.year >= a.from) && (!a.hidden || !!INT2_WHEN[`${id}.${a.id}`]?.(s))).map((a): PAct27 => {
     const key = `${id}.${a.id}`, cost = a.cost ? money(s, a.cost) : 0;
     let dis: L | undefined;
     const w = weeksLeft(s, key);
     if (w > 0) dis = l(`Volte em ${w} semana${w > 1 ? 's' : ''}.`, `Come back in ${w} week${w > 1 ? 's' : ''}.`);
     else if (cost && freeCash20(s) < cost) dis = l('Caixa livre insuficiente.', 'Not enough free cash.');
-    else dis = a.block?.(s) ?? undefined;
+    else dis = a.block?.(s) ?? INT2_BLOCK[key]?.(s) ?? undefined;
     return { id: key, label: a.label, desc: a.desc, cost: cost || undefined, dis };
   });
 }
@@ -298,6 +308,8 @@ export function int2Do(s: GameState, key: string): Int2Res {
 
 /** Linha de situação do lugar para o cartão (crise de crédito, estado de saúde…). */
 export function int2Now(s: GameState, id: Int2Id): L {
+  const x = INT2_NOW[id]?.(s);
+  if (x) return x;
   switch (id) {
     case 'bank': return s.economy.recession ? l('Crise de crédito: o banco aperta e os juros sobem.', 'Credit crunch: the bank tightens and rates rise.') : l('Crédito normal.', 'Normal credit.');
     case 'hospital': { const t = rehabTarget(s); return t ? l(`${t.name} precisa de tratamento.`, `${t.name} needs treatment.`) : l('Ninguém seu precisa de tratamento.', 'Nobody of yours needs treatment.'); }

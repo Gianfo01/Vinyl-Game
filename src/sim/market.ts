@@ -1,4 +1,5 @@
 import { projAlias31, withTxn } from './r31/txn';
+import { FCW33 } from './r33/hooks33'; // QA33: faixa da previsão pelos aprendizados
 import { NPCREL31 } from './r31/npcrel31';
 import { POOL19 } from './pool19';
 // Mercado semanal: atenção finita, vendas, estoque, receita separada (master × edição),
@@ -602,7 +603,7 @@ export interface ForecastExtra31 { songs?: string[]; hype?: number; kind?: Relea
  *  (ruído médio), foco promocional, fragmentação, teto por lançamento, modificadores de unidades, fator de escala do
  *  selo e a pressão de mercado (pelo tamanho da semana). Não sorteia nem grava nada (explorar não muda o mundo). */
 export function forecastUnits(s: GameState, act: Act, type: Release['type'], q: number, marketing: { channel: string; budget: number }[], territories: MarketId[], extra: ForecastExtra31 = {}): { lo: number; mid: number; hi: number } {
-  const width = (staffCount(s, 'analyst') ? 0.35 : 0.6) * (s.config.difficulty === 'hard' ? 1.3 : s.config.difficulty === 'easy' ? 0.8 : 1);
+  const width = (staffCount(s, 'analyst') ? 0.35 : 0.6) * (s.config.difficulty === 'hard' ? 1.3 : s.config.difficulty === 'easy' ? 0.8 : 1) * (FCW33.f?.(s, act, type) ?? 1);
   if (on31(s, 'd31.forecast')) {
     const total = forecast31(s, act, type, q, marketing, territories, extra);
     return { lo: Math.round(total * (1 - width * 0.6)), mid: Math.round(total), hi: Math.round(total * (1 + width)) };

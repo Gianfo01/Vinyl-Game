@@ -24,7 +24,7 @@ export const RESURF_P33 = 0.05;
 /** calor a mais (além do calor do tipo de uso no revival19) */
 export const RESURF_HEAT33 = 12;
 
-type K33 = Resurf33['k'];
+type K33 = Exclude<Resurf33['k'], 'tribute'>;
 export const RESURF_K33: Record<K33, { name: L; from: number; rk: RK19; fee: number; pop: PopKind31[] }> = {
   film: { name: l('filme', 'film'), from: 1930, rk: 'film', fee: 3000, pop: ['filme'] },
   novela: { name: l('novela', 'soap opera'), from: 1965, rk: 'series', fee: 2000, pop: ['brasil'] },
@@ -84,3 +84,23 @@ registerSimHook('month', 'resurf33', (s) => {
   for (; i < rels.length - 1; i++) { k -= w[i]; if (k <= 0) break; }
   resurface33(s, rels[i], r.pick(ks), r.next());
 });
+
+/** QA33 · homenagem póstuma (PESSOAS, exp33.life) → catálogo que reaparece: a melhor faixa antiga do ato volta à vitrine
+ *  (documentário de homenagem, sem cachê), com notícia e calor no sucesso tardio. Só com `exp33.resurface`. O disparo de
+ *  vendas do catálogo continua o da PESSOAS (devolve false): aqui é a vitrine e o revival19. */
+export function tribute33(s: GameState, actId: string): boolean {
+  if (!on33(s, ON)) return false;
+  const rels = releasesNow27(s).filter((x) => x.actId === actId && oldRel19(s, x)).sort((a, b) => b.totalUnits - a.totalUnits || (a.id < b.id ? -1 : 1));
+  const rel = rels[0];
+  if (!rel) return false;
+  const st = cat33(s);
+  if (st.rs.some((x) => x.rel === rel.id && x.k === 'tribute')) return false;
+  const name = l('homenagem póstuma', 'posthumous tribute');
+  st.rs.push({ rel: rel.id, k: 'tribute', name, w: s.week, fee: 0 });
+  if (st.rs.length > 24) st.rs.splice(0, st.rs.length - 24);
+  const tx = fmtL(l('Homenagem: "{t}" ({y}), de {a}, volta a tocar em toda parte.', 'Tribute: "{t}" ({y}) by {a} is playing everywhere again.'), { t: rel.title, y: rel.year, a: s.acts[rel.actId]?.name ?? '?' });
+  emitFact(s, { kind: 'culture33', actors: [rel.actId], severity: 25, visibility: 'public', tags: ['resurf33', 'tribute'], src: 'resurf33', data: { rel: rel.id }, text: tx });
+  log33(s, tx);
+  stage19(s, rel.id, 'doc', RESURF_HEAT33);
+  return false;
+}

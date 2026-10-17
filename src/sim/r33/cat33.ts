@@ -52,7 +52,7 @@ export interface Cat33 {
 }
 export interface Req33 { id: string; kind: 'sample' | 'cover'; song: string; rel: string; by: string; fee: number; until: number; st: 'open' | 'ok' | 'denied' }
 export interface Case33 { id: string; kind: 'sample' | 'cover'; song: string; vs: string; stake: number; since: number; st: 'open' | 'settled' | 'won' | 'lost' | 'dropped'; res?: L }
-export interface Resurf33 { rel: string; k: 'film' | 'novela' | 'tv_ad' | 'short' | 'series'; name: L; w: number; fee: number }
+export interface Resurf33 { rel: string; k: 'film' | 'novela' | 'tv_ad' | 'short' | 'series' | 'tribute'; name: L; w: number; fee: number }
 
 const fresh33 = (): Cat33 => ({ press: {}, pledge: {}, req: [], cases: [], boost: {}, rs: [], seen: {}, chainY: {}, lic: [], fmt: {}, seq: 0, log: [] });
 export function cat33(s: GameState): Cat33 {

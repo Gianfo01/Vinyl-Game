@@ -1,6 +1,7 @@
 // Finanças mensais: aluguel da sede, salários, empréstimos, investidores e insolvência (GDD §18).
 // Ações de empresa: contratar, sede, equipamento, territórios.
 
+import { LOAN_X33 } from './r33/hooks33';
 import { clamp, type Rng } from '../core/rng';
 import { EQUIPMENT, HQ_LEVELS } from '../data/rules';
 import { MARKETS, cityById, l, type L, type MarketId } from '../data/world';
@@ -73,7 +74,8 @@ export function loanOffer(s: GameState): { amount: number; rate: number; months:
   // 4 pontos de juro (eram 3). O primeiro empréstimo (o do cauteloso) não muda; quem vive de 2–3 linhas paga o risco.
   const amount = money(s, (20000 + rep * 600 + s.player.hq * 30000) * Math.pow(0.65, n));
   const rate = clamp(0.16 - rep / 1500 + (s.economy.recession ? 0.04 : 0) + n * 0.04 + (s.year < 1914 ? 0.02 : 0) + loanAdj19(s), 0.04, 0.3); // r19 M13: juro básico da época // r18 era1889: sem banco central, crédito caro
-  return { amount, rate, months: 36 };
+  const o = { amount, rate, months: 36 };
+  return LOAN_X33.f ? LOAN_X33.f(s, o) : o; // QA33: crise de crédito (r33/hooks33)
 }
 
 export function takeLoan(s: GameState): boolean {

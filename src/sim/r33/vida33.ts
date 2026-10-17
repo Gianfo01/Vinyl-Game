@@ -81,12 +81,13 @@ registerMod('songQ', 'vida33', (s, v, { act }) => {
  * GANCHO para INT-2 (hospital/reabilitação): trata saúde/estresse do dono. Cobra do bolso pessoal.
  * 'checkup' (+8 saúde, −8 estresse), 'rehab' (+20 saúde, −30 estresse, 2 meses de afastamento = férias).
  */
-export function treatOwner33(s: GameState, kind: 'checkup' | 'rehab'): L | null {
+export function treatOwner33(s: GameState, kind: 'checkup' | 'rehab', paid = false): L | null {
   const o = ownerP(s);
   if (!o) return l('Sem dono.', 'No owner.');
   const cost = money(s, kind === 'rehab' ? 6000 : 700);
-  if (o.wealth < cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
-  purse(s, -cost, 'leisure', kind === 'rehab' ? 'rehab33' : 'checkup33', { who: o });
+  // QA33: `paid` = quem chama já cobrou (hospital da INT-2 cobra do caixa do lugar) — sem cobrança dupla
+  if (!paid && o.wealth < cost) return l('Patrimônio pessoal insuficiente.', 'Not enough personal wealth.');
+  if (!paid) purse(s, -cost, 'leisure', kind === 'rehab' ? 'rehab33' : 'checkup33', { who: o });
   if (kind === 'rehab') { o.health = clamp01(o.health + 20); o.stress = clamp01(o.stress - 30); o.vacationUntil = s.week + 8; }
   else { o.health = clamp01(o.health + 8); o.stress = clamp01(o.stress - 8); }
   vida33(s).treated = s.week;
