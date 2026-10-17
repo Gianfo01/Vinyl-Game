@@ -13,6 +13,7 @@ import { PAD5, obj5Def, obj5Px, type Obj5 as Art5 } from '../pixel/exp5px';
 import { carSide31 } from '../pixel/props31';
 import { C, INK, Px, lv, mix, noise, tint, withAlpha, type Col } from '../pixel/px';
 import { window31 } from '../pixel/window31';
+import { DPAD, sceneDecoPx, type SceneDeco } from '../pixel/deco31px';
 import { prim27 } from '../ps/hqpx27';
 import type { CasaObj5, Dwell5, Room5 } from './casa5model';
 
@@ -93,11 +94,9 @@ export function paintCasa5(a: CasaArt5): CasaPainted5 {
       if (s.wall) {
         const wx = sx + Math.round((s.w - s.wall.w) / 2), wy = s.wall.y;
         if (s.wall.id === 'janela') {
-          window31(back, wx, wy, 46, 30, a.city, year, a.month);
-          const cur = year < 1950 ? C('#8a2a2a') : year < 1980 ? C('#d8902c') : year < 2010 ? C('#6a7a9a') : C('#e8e2d6');
-          p.rect(wx - 4, wy - 3, 54, 2, pal.woodDark); // varão
-          for (const cx of [wx - 4, wx + 45]) { p.rect(cx, wy - 1, 5, 34, cur); p.vline(cx + 2, wy, wy + 32, tint(cur, -0.2)); }
+          window31(back, wx, wy, 46, 30, a.city, year, a.month, undefined, 7, 'night'); // vista da cidade da casa, de noite como a cena
           p.rect(wx - 1, wy + 30, 48, 2, lv(pal.trim, 2.4)); // peitoril
+          put5(sceneDecoPx('curtain', year, { w: 56, h: 36 }), wx - 5, wy - 4); // cortina da época (DECO-A): painéis nas laterais, vista livre
           spots.push({ id: 'janela', x: wx - 4, y: wy - 3, w: 54, h: 36 });
         } else if (s.wall.art) {
           objs.push({ art: s.wall.art, x: wx, y: wy, id: s.wall.id! });
@@ -106,7 +105,7 @@ export function paintCasa5(a: CasaArt5): CasaPainted5 {
           for (let i = 0; i < 3; i++) i < n ? prim27.goldDisc({ ...g, p }, wx + i * 12, wy, i === 2) : prim27.poster({ ...g, p }, wx + i * 12, wy, 10, 13, i + a.seed);
           if (s.wall.id) spots.push({ id: 'discos', x: wx - 1, y: wy - 1, w: 38, h: 15 });
         } else {
-          frame(p, wx, wy, s.wall.w, s.wall.h, pal, year, a.seed + sx);
+          put5(sceneDecoPx('picture', year, { w: s.wall.w, h: s.wall.h + 3 }), wx, wy - 3); // quadro da época (DECO-A), com prego
         }
       }
       if (s.art) {
@@ -120,8 +119,7 @@ export function paintCasa5(a: CasaArt5): CasaPainted5 {
         spots.push({ id: 'porta', x: sx - 1, y: fy - 35, w: 16, h: 35 });
       } else if (s.id === 'sofa') {
         rug(sx - 6, s.w + 12, mix(pal.accent, C('#6a3a2a'), 0.5));
-        prim27.couch({ ...g, p }, sx + 1, fy, s.w - 2, pal.fabric);
-        p.rect(sx + s.w - 16, fy - 12, 6, 3, tint(pal.fabric2, 0.2)); // almofada
+        put5(sceneDecoPx('couch', year, { w: s.w - 2 }), sx + 1, fy - 20); // sofá da época (DECO-A)
         spots.push({ id: 'sofa', x: sx, y: fy - 15, w: s.w, h: 15 });
       } else if (s.id === 'estante') {
         prim27.shelf({ ...g, p }, sx, y0 + 30, 24, fy - y0 - 30, year < 1985 ? 'books' : year < 2008 ? 'cds' : 'records');
@@ -152,31 +150,15 @@ export function paintCasa5(a: CasaArt5): CasaPainted5 {
     if (ri < rooms.length - 1) { prim27.blk(back, rx, y0, WALL, fy - y0 + 3, lv(pal.wall, 2)); back.rect(rx, fy - 30, WALL, 30, withAlpha(INK, 60)); rx += WALL; }
   });
 
+  /** Cola um desenho da DECO-A (com margem DPAD) com o canto do desenho em (x, y). */
+  function put5(q: Px, x: number, y: number): void { p.blit(q, x - DPAD, y - DPAD); }
+  /** Enfeite fixo na arte da DECO-A, centrado no lugar e pisando no chão. */
   function decor(s: Slot, sx: number): void {
-    const k = Math.floor(noise(sx, 3, a.seed) * 3);
-    switch (s.deco) {
-      case 'coat': // cabideiro com casaco e chapéu
-        p.vline(sx + 5, fy - 30, fy - 1, pal.woodDark); p.hline(sx + 2, sx + 8, fy - 1, pal.woodDark);
-        p.rect(sx + 2, fy - 28, 7, 12, year < 1960 ? C('#3a3a4a') : C('#8a4a2a')); p.rect(sx + 3, fy - 32, 5, 3, C('#2a2a30'));
-        break;
-      case 'lamp': // abajur de pé
-        p.vline(sx + 4, fy - 26, fy - 1, pal.metalDark); p.hline(sx + 1, sx + 7, fy - 1, pal.metalDark);
-        p.poly([[sx, fy - 26], [sx + 8, fy - 26], [sx + 6, fy - 32], [sx + 2, fy - 32]], year < 1960 ? C('#e8d8a8') : year < 1990 ? C('#e8902c') : C('#f0f0e8'));
-        back.ellipse(sx + 4, fy - 30, 10, 9, withAlpha(C('#ffe0a0'), 26));
-        break;
-      case 'night': // criado-mudo com abajur
-        prim27.blk(p, sx, fy - 11, 12, 11, pal.wood); p.hline(sx + 2, sx + 9, fy - 6, tint(pal.wood, -0.2)); p.rect(sx + 5, fy - 5, 2, 1, pal.gold);
-        p.vline(sx + 6, fy - 16, fy - 12, pal.metalDark); p.poly([[sx + 2, fy - 16], [sx + 10, fy - 16], [sx + 8, fy - 21], [sx + 4, fy - 21]], C('#f0d8a0'));
-        break;
-      case 'chair': prim27.chair({ ...g, p }, sx, fy); break;
-      case 'crate': // caixote de discos
-        prim27.blk(p, sx + 1, fy - 9, 16, 9, pal.wood); for (let i = 0; i < 6; i++) p.rect(sx + 3 + i * 2, fy - 12, 1, 4, [pal.accent, pal.accent2, C('#1a1a22')][i % 3]);
-        break;
-      case 'tv': prim27.tv({ ...g, p }, sx + 3, fy); break;
-      case 'low': prim27.blk(p, sx + 4, fy - 10, 38, 10, pal.wood); p.hline(sx + 6, sx + 39, fy - 5, tint(pal.wood, -0.2)); break;
-      case 'plant': prim27.plant({ ...g, p }, sx + 5, fy, k !== 1); break;
-      default: break; // mesinha (com o que está em cima), lugar do boneco, vaga dos carros
-    }
+    const kinds: Partial<Record<Deco, SceneDeco>> = { coat: 'coat', lamp: 'lamp', night: 'night', chair: 'chair', crate: 'crate', tv: 'tv', low: 'low', plant: 'plant' };
+    const k = s.deco ? kinds[s.deco] : undefined;
+    if (!k) return; // mesinha (com o que está em cima), lugar do boneco, vaga dos carros
+    const q = sceneDecoPx(k, year), w = q.w - 2 * DPAD, h = q.h - 2 * DPAD;
+    put5(q, sx + Math.round((s.w - w) / 2), fy - h);
   }
 
   const px = cutEnd27(c, { dim: false, facade: a.dwell === 'mansao' ? C('#e8e6dc') : a.dwell === 'casa' ? C('#d8c8a8') : facadeCol27(year, 'apartments') });
@@ -213,17 +195,4 @@ function wallpaper(p: Px, r: Room5, x: number, y0: number, w: number, fy: number
     for (let yy = fy - 24; yy < fy - 3; yy++) for (let xx = x; xx < x + w; xx++) p.put(xx, yy, (xx - x) % 7 === 0 ? lv(pal.wood, 1.4) : tint(pal.wood, 0.12));
     p.hline(x, x + w - 1, fy - 25, pal.woodDark);
   }
-}
-
-/** Quadro emoldurado (paisagem, foto ou pôster da época). */
-function frame(p: Px, x: number, y: number, w: number, h: number, pal: ReturnType<typeof cut27>['pal'], year: number, k: number): void {
-  p.rect(x - 1, y - 1, w + 2, h + 2, INK);
-  p.rect(x, y, w, h, year < 1950 ? C('#b08a3a') : pal.woodDark);
-  const ix = x + 2, iy = y + 2, iw = w - 4, ih = h - 4;
-  for (let yy = 0; yy < ih; yy++) for (let xx = 0; xx < iw; xx++) {
-    const sky = mix(C('#9ac8e8'), C('#f0c890'), yy / ih);
-    const hill = yy > ih * 0.55 + Math.sin((xx + k) * 0.4) * 2;
-    p.put(ix + xx, iy + yy, hill ? mix(C('#4a7a3a'), C('#2a4a2a'), yy / ih) : sky);
-  }
-  if (year >= 1990) p.disc(ix + iw - 4, iy + 3, 1.5, C('#fff0b0'));
 }

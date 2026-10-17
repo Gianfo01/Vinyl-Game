@@ -372,6 +372,22 @@ export function autoPlace31(s: GameState, objId: string, how: DecoHow31): string
   }
   return undefined;
 }
+/** Leva a peça (a MESMA instância) para o primeiro lugar livre que serve num lugar seu (casa, sede, estabelecimento). */
+export function moveTo31(s: GameState, objId: string, placeKey: string, room?: string): { ok: boolean; text: L } {
+  const d = decoDef31(obj31(s).objs[objId]?.modelId.slice(5) ?? '');
+  const p = decoPlace31(s, placeKey);
+  if (!d || !p) return NO('Lugar ou peça não encontrados.', 'Place or piece not found.');
+  if (!d.places.includes(p.kind)) return NO('Essa peça não combina com esse lugar.', 'This piece does not suit that place.');
+  const used = deco31(s).at;
+  const rooms = room ? [...p.rooms.filter((r) => r.id === room), ...p.rooms.filter((r) => r.id !== room)] : p.rooms;
+  for (const slot of d.slots) for (const r of rooms) for (const sp of r.spots) {
+    const key = `${p.key}|${r.id}|${sp.id}`;
+    if (sp.slot !== slot || (used[key] && used[key] !== objId)) continue;
+    const res = placeDeco31(s, objId, key);
+    if (res.ok) { decol31(s).d[objId]?.ev.push([s.year, fmtL(l('levada para {p}', 'moved to {p}'), { p: p.name })]); return { ok: true, text: fmtL(l('{n} agora está em {p} · {r}.', '{n} is now at {p} · {r}.'), { n: d.name, p: p.name, r: r.name }) }; }
+  }
+  return NO('Não há lugar livre que sirva para essa peça lá.', 'There is no free spot that fits this piece there.');
+}
 const whereTxt = (s: GameState, key: string | undefined, how: DecoHow31): L => {
   if (!key) return how === 'me' ? l('na gaveta da casa', 'in the home drawer') : l('na gaveta da sede', 'in the HQ drawer');
   const [pk, rid] = key.split('|');

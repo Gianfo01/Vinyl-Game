@@ -191,7 +191,7 @@ function stage5(W: number, H: number, paint: (cv: HTMLCanvasElement) => void, pt
   }
   // rótulos no padrão do mock ("Espelho [V]"), sem sobrepor (placeLabels31, na escala da tela)
   const labs = placeLabels31(pts.map((p) => ({ id: p.sp.id, x: p.sp.x, y: p.sp.y + (p.inside ? 1 : 0), w: p.sp.w, h: p.inside ? 0 : p.sp.h, label: p.label, tip: p.tip, go: {} } as unknown as Spot31)), W, H, 3.6,
-    (sp) => { const p = pts.find((x) => x.sp.id === sp.id)!; return `${t(p.label)}${p.key ? `  ${p.key}` : ''}${p.tag ? `  ${p.tag}` : ''}`; }); // QA5: a etiqueta (Saúde 90, $…) entra na largura
+    (sp) => { const p = pts.find((x) => x.sp.id === sp.id)!; return `${t(p.label)}${p.key ? `  ${p.key}` : ''}${p.tag ? `   ${p.tag}` : ''}`; }); // o número (ACOES5) entra na largura: nada se sobrepõe
   const lab = h('div', { class: 'r5-labels', 'aria-hidden': 'true' }, labs.map((b) => {
     const p = pts.find((x) => x.sp.id === b.id)!;
     return h('span', { class: `r5-lab${p.bang ? ' bang' : ''}`, style: `left:${pct(b.x + b.w / 2, W)};top:${pct(b.y, H)}` }, t(p.label), p.key ? keyChip(p.key) : null, p.tag ? h('small', { class: 'r5-tag' }, p.tag) : null);

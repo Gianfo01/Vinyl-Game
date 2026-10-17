@@ -127,6 +127,7 @@ Shift+1…6 do menu) e nada muda.
 | ⇧R | Mesa de reunião | nova |
 | ⇧S | Estúdio de cinema | nova |
 | ⇧T | Telefone | nova |
+| ⇧U | Lojas de decoração | nova |
 | ⇧V | Telefone de casa | nova |
 | ⇧W | Telex na borda | nova |
 | ⇧X | Casa de leilões | nova |

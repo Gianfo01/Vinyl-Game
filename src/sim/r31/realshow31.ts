@@ -90,7 +90,7 @@ let KEEP31: Set<string> | null = null;
  *  ou sem letra ("N", "1984", "883": na tela quase sempre é tecla, ano ou número) */
 export const keep31 = (s: string): boolean => tooShort31(s) || (KEEP31 ??= new Set([...places31(), ...UIWORDS31])).has(s.trim());
 const set31 = (names: DispPair31[], titles: DispPair31[]): void =>
-  setDisplay31(names.filter(([a]) => !keep31(a)), titles.filter(([a]) => !keep31(a)));
+  setDisplay31(names.filter(([a]) => !keep31(a)), titles.filter(([a]) => !keep31(a)), entities31());
 /** nome que pode ser trocado em qualquer ponto da frase (o resto só quando é o texto inteiro ou está entre aspas) */
 const inText31 = (n: string): boolean => {
   const w = n.trim();
@@ -108,7 +108,12 @@ const hasWord31 = (s: string, w: string): boolean => {
   return !wc(s[i - 1]) && !wc(s[i + w.length]);
 };
 
-export interface RealPairs31 { names: DispPair31[]; titles: DispPair31[] }
+/** R31 (NOMES): entidade conhecida que troca mesmo coincidindo com uma palavra da interface (gravadoras reais e atos do
+ *  catálogo à mão: a gravadora "Elenco", o sambista "Cartola"); como rótulo da interface, a marca UI31 do t() protege. */
+let ENT31: Set<string> | null = null;
+export const entities31 = (): ReadonlySet<string> => (ENT31 ??= new Set([...Object.values(REAL_LABELS), ...Object.values(REAL_ACTS).map((a) => a.name)]));
+
+export interface RealPairs31 { names: DispPair31[]; titles: DispPair31[]; keep: ReadonlySet<string> }
 let STATIC_OFF: RealPairs31 | null = null;
 
 /** Todas as trocas real → homenagem que valem com o interruptor desligado (sem os atos da partida). */
@@ -158,7 +163,7 @@ export function realPairsOff31(): RealPairs31 {
   }
   // 5) cultura pop, memes, bolhas e fracassos (src/data/pop31.ts): homenagem escrita junto da referência
   for (const p of POP31) for (const [real, sub] of p.refs) add(real, sub);
-  return (STATIC_OFF = { names, titles });
+  return (STATIC_OFF = { names, titles, keep: entities31() });
 }
 
 /** Todos os nomes reais conhecidos pelo interruptor (teste de varredura). */

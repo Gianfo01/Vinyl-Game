@@ -9,6 +9,8 @@ import { paletteOf, type Palette } from '../pixel/palette';
 import { C, INK, Px, discV, ellipseV, lv, mix, rectV, shade, withAlpha, type Col } from '../pixel/px';
 import { obj5Px, type Obj5 } from '../pixel/exp5px';
 import { drawText, textWidth } from '../pixel/font';
+import { DPAD, DWIN, decoFillPx, decoHasArt, decoIsTile, decoPx, upgPx } from '../pixel/deco31px';
+import { view31, window31 } from '../pixel/window31';
 
 export type DecoArt5 = (d: DecoDef31, year: number) => Px | null;
 let ART: DecoArt5 | null = null;
@@ -67,9 +69,29 @@ function legs(p: Px, x0: number, x1: number, y: number, h: number, st: DecoStyle
   }
 }
 
+// ---------------------------------------------------------------- arte definitiva (DECO-A, deco31px.ts)
+
+const CROP5 = new Map<string, Px>();
+/** A peça desenhada pela DECO-A: luzes, letreiros e telas acesos (cômodo em uso). Peças que pendem do teto ou do alto
+ *  (lustre, letreiro) perdem a margem de cima para o fio encostar no teto. Superfícies (papel, piso, janela) ficam com o
+ *  cômodo (roomPx5). */
+function artA5(d: DecoDef31, year: number, brand: string): Px | null {
+  if (!decoHasArt(d.id) || decoIsTile(d.id) || d.slots[0] === 'window' || d.w === 0) return null;
+  const p = decoPx(d.id, year, { lit: true, name: brand || 'Selo' }); // cômodo em uso: luzes e telas acesas
+  if (d.slots[0] !== 'ceiling' && d.slots[0] !== 'sign') return p;
+  const key = `${d.id}|${year}|${brand}`;
+  const hit = CROP5.get(key);
+  if (hit) return hit;
+  const q = new Px(p.w, p.h - DPAD);
+  for (let y = 0; y < q.h; y++) for (let x = 0; x < q.w; x++) q.d[y * q.w + x] = p.d[(y + DPAD) * p.w + x];
+  if (CROP5.size > 200) CROP5.clear();
+  CROP5.set(key, q);
+  return q;
+}
+
 /** Uma peça decorativa (tamanho do catálogo; superfícies 0×0 não têm peça: o cômodo pinta). */
 export function decoPx5(d: DecoDef31, year: number, brand = ''): Px {
-  const a = ART?.(d, year);
+  const a = ART?.(d, year) ?? artA5(d, year, brand);
   if (a) return a;
   const pal = paletteOf(year);
   const [m, s2, x] = styleCols(d.style, pal);
@@ -420,7 +442,8 @@ export function reqPx5(req: string, lvl: number, year: number, u?: UpgDef31): Px
   const p = paletteOf(year);
   const art = REQ_ART5[req];
   let q: Px;
-  if (art) q = obj5Px(art, u ? Math.max(u.from, Math.min(year, u.to ?? year)) : year);
+  if (u && lvl > 0) q = upgPx(u.id, year, { lit: true }); // modelo de upgrade desenhado pela DECO-A
+  else if (art) q = obj5Px(art, u ? Math.max(u.from, Math.min(year, u.to ?? year)) : year);
   else {
     const style = u?.style ?? 'any';
     const [m] = styleCols(style, p); const pal = p;
@@ -485,62 +508,39 @@ export function roomPx5(W: number, H: number, year: number, o: { paper?: DecoDef
   const p = paletteOf(year);
   const q = new Px(W, H);
   const FL = H - 20;
-  // parede
-  const wc = o.paper ? styleCols(o.paper.style, p) : null;
-  for (let y = 0; y < FL; y++) for (let x = 0; x < W; x++) {
-    let c = p.wall;
-    if (wc && o.paper) {
-      const id = o.paper.id;
-      if (has(id, 'brick')) c = ((y % 6 === 0) || ((x + (Math.floor(y / 6) % 2) * 6) % 12 === 0)) ? lv(C('#8a4a38'), 0) : lv(C('#a85a40'), 1);
-      else if (has(id, 'stripe', 'wood')) c = (x % 8 < 4) ? lv(wc[0], 1) : lv(wc[0], 2);
-      else if (has(id, 'acoustic')) c = ((x >> 2) + (y >> 2)) % 2 ? C('#3a3a44') : C('#4a4a56');
-      else if (has(id, 'white', 'concrete')) c = has(id, 'concrete') && (x * 7 + y * 13) % 29 === 0 ? C('#9a9890') : has(id, 'concrete') ? C('#b4b0a8') : C('#eeeae2');
-      else if (has(id, 'led')) c = (x % 16 < 15 && y % 16 < 15) ? mix(C('#203048'), C('#38e0d0'), ((x + y) % 32) / 64) : INK;
-      else c = ((x % 10 === 5 && y % 10 === 5) || (x % 10 === 0 && y % 10 === 0)) ? lv(wc[2], 2) : ((x + y) % 2 ? lv(wc[1], 1) : lv(wc[1], 2));
-    } else if (y > FL - 26) c = p.wall2;
-    q.put(x, y, c);
+  // parede: papel de parede/pintura em ladrilho sem costura (DECO-A) ou a parede da época com lambri
+  if (o.paper && decoIsTile(o.paper.id)) q.blit(decoFillPx(o.paper.id, year, W, FL), 0, 0);
+  else {
+    for (let y = 0; y < FL; y++) for (let x = 0; x < W; x++) q.put(x, y, y > FL - 26 ? ((x % 8 === 0) ? lv(p.wall2, 1.4) : p.wall2) : ((x * 7 + y * 13) % 41 === 0 ? lv(p.wall, 2.4) : p.wall));
+    q.hline(0, W - 1, FL - 26, p.trim); q.hline(0, W - 1, FL - 25, lv(p.trim, 1.6));
   }
-  q.hline(0, W - 1, FL - 26, p.trim);
-  // piso
-  const gc = o.ground ? styleCols(o.ground.style, p) : null;
-  for (let y = FL; y < H; y++) for (let x = 0; x < W; x++) {
-    let c = (Math.floor(x / 14) + (y % 2)) % 2 ? p.ground[0] : p.ground[1];
-    if (gc && o.ground) {
-      const id = o.ground.id;
-      if (has(id, 'checker')) c = (Math.floor(x / 6) + Math.floor((y - FL) / 6)) % 2 ? C('#f0ece4') : C('#2a2a30');
-      else if (has(id, 'disco')) c = ((Math.floor(x / 8) * 3 + Math.floor((y - FL) / 5)) % 4 === 0) ? C('#f0d040') : ((Math.floor(x / 8) + Math.floor((y - FL) / 5)) % 3 ? C('#c040a0') : C('#40c0d8'));
-      else if (has(id, 'persian', 'kilim')) c = (x > W * 0.2 && x < W * 0.8 && y > FL + 3) ? (((x + y) % 4) ? C('#8a2430') : C('#c09048')) : p.ground[0];
-      else if (has(id, 'shag', 'carpet')) c = (x * 5 + y * 3) % 7 ? lv(gc[0], 1) : lv(gc[0], 0);
-      else if (has(id, 'concrete')) c = C('#a8a49c');
-      else c = ((x + (y - FL) * 2) % 12 < 1) ? lv(gc[0], 0) : lv(gc[0], 2);
-    }
-    q.put(x, y, c);
+  // piso: ladrilho da DECO-A ou tábuas da época; tapete (peça com tamanho) por cima, no meio
+  if (o.ground && decoIsTile(o.ground.id)) q.blit(decoFillPx(o.ground.id, year, W, H - FL), 0, FL);
+  else for (let y = FL; y < H; y++) for (let x = 0; x < W; x++) {
+    const row = Math.floor((y - FL) / 4), seam = (y - FL) % 4 === 0 || (x + row * 11) % 24 === 0;
+    q.put(x, y, seam ? lv(p.woodDark, 1.6) : (x * 5 + row * 3) % 17 === 0 ? lv(p.wood, 2) : lv(p.wood, 2.8));
   }
+  if (o.ground && !decoIsTile(o.ground.id) && decoHasArt(o.ground.id)) { const r = decoPx(o.ground.id, year); q.blit(r, Math.floor((W - r.w) / 2), FL + 6); }
   q.hline(0, W - 1, FL, p.trim); q.hline(0, W - 1, FL - 1, shade(p.trim, 0.7));
-  // janela (a vista é a cidade: céu da hora e silhuetas)
+  for (let x = 0; x < W; x++) { q.set(x, FL + 1, withAlpha(C('#2a1a3a'), 90)); q.set(x, FL + 2, withAlpha(C('#2a1a3a'), 45)); } // sombra do rodapé no piso
+  // janela: a vista real da cidade e da época (window31, a mesma das cenas) e por cima a cortina/moldura (DECO-A),
+  // com o vão DWIN casado com o vidro
   if (!o.noWin && o.win) {
-    const [wx, ww] = o.win; const wy = 22, wh = 34;
-    q.rect(wx - 2, wy - 2, ww + 4, wh + 4, p.woodDark);
-    for (let y = 0; y < wh; y++) for (let x = 0; x < ww; x++) q.put(wx + x, wy + y, mix(C('#8ab8e0'), C('#e8c8a0'), y / wh));
-    for (let i = 0; i < ww; i += 5) { const bh = 6 + ((o.seed * 31 + i * 17) % 14); q.rect(wx + i, wy + wh - bh, 4, bh, mix(C('#506078'), INK, 0.3)); }
-    q.vline(wx + Math.floor(ww / 2), wy, wy + wh - 1, p.woodDark); q.hline(wx, wx + ww - 1, wy + Math.floor(wh / 2), p.woodDark);
-    if (o.window) {
-      const [m, s2] = styleCols(o.window.style, p);
-      const id = o.window.id;
-      if (has(id, 'blind', 'venetian', 'vertical')) for (let y = wy; y < wy + wh * 0.6; y += 2) q.hline(wx, wx + ww - 1, y, has(id, 'vertical') ? s2 : C('#c8ccd4'));
-      else if (has(id, 'planter')) { q.rect(wx - 2, wy + wh + 2, ww + 4, 5, p.pot); for (let i = 0; i < ww; i += 3) q.rect(wx + i, wy + wh - 1, 2, 3, lv(p.plant, 3)); }
-      else if (has(id, 'smart')) for (let y = 0; y < wh; y++) for (let x = 0; x < ww; x++) q.put(wx + x, wy + y, withAlpha(C('#203048'), 120));
-      else if (has(id, 'stained')) for (let x = 0; x < ww; x++) for (let y = 0; y < 8; y++) q.put(wx + x, wy + y, [C('#c03030'), C('#3060c0'), C('#e0b040'), C('#309050')][((x >> 2) + (y >> 2)) % 4]);
-      else { q.rect(wx - 6, wy - 4, 7, wh + 8, lv(m, 1)); q.rect(wx + ww - 1, wy - 4, 7, wh + 8, lv(m, 1)); q.rect(wx - 6, wy - 6, ww + 12, 4, lv(s2, 0)); for (let y = wy - 4; y < wy + wh + 4; y += 3) { q.put(wx - 3, y, lv(m, 3)); q.put(wx + ww + 2, y, lv(m, 3)); } }
-    }
+    const [wx] = o.win, oy = 16;
+    window31(q, wx + DWIN.x - 2, oy + DWIN.y - 2, DWIN.w + 4, DWIN.h + 4, view31.city, year, view31.month, undefined, o.seed, 'night');
+    if (o.window && decoHasArt(o.window.id)) q.blit(decoPx(o.window.id, year, { lit: true }), wx - DPAD, oy - DPAD);
   }
-  // aparador sob a janela (onde ficam as peças "sobre a mesa")
+  // aparador sob a janela (onde ficam as peças "sobre a mesa"): tampo com borda, portas com puxador, pés
   if (o.desk) {
-    const [a, b] = o.desk;
-    q.rect(a, 78, b - a, FL + 1 - 78, p.wood);
-    q.hline(a, b - 1, 78, lv(p.wood, 4)); q.hline(a, b - 1, 79, lv(p.wood, 3));
-    for (let x = a + 6; x < b - 4; x += Math.max(10, Math.floor((b - a) / 3))) q.vline(x, 82, FL - 2, p.woodDark);
-    q.rect(a + 1, FL - 1, 2, 2, p.woodDark); q.rect(b - 3, FL - 1, 2, 2, p.woodDark);
+    const [a, b] = o.desk, top = 78;
+    blk(q, a - 1, top, b - a + 2, 3, p.wood); q.hline(a - 1, b, top, lv(p.wood, 4.6));
+    blk(q, a, top + 3, b - a, FL - 2 - top - 3, lv(p.wood, 2.2));
+    const nd = Math.max(2, Math.round((b - a) / 22)), dw = (b - a - 2) / nd;
+    for (let i = 0; i < nd; i++) { const x = Math.round(a + 1 + i * dw); q.rect(x + 1, top + 5, Math.round(dw) - 2, FL - top - 10, lv(p.wood, 2.8)); q.hline(x + 1, x + Math.round(dw) - 2, top + 5, lv(p.wood, 1.6)); q.put(x + Math.round(dw / 2), top + 8, p.metal); }
+    q.rect(a + 1, FL - 2, 2, 2, p.woodDark); q.rect(b - 3, FL - 2, 2, 2, p.woodDark);
+    const out = new Px(W, H); out.blit(q, 0, 0); // contorno só no móvel
+    const mv = new Px(W, H); for (let y = top; y < FL; y++) for (let x = a - 1; x <= b; x++) mv.d[y * W + x] = q.d[y * W + x];
+    mv.outline(INK); q.blit(mv, 0, 0);
   }
   // luz de teto padrão (sem peça): plafon simples
   if (!o.ceiling) { const cx = Math.floor(W / 2); q.rect(cx - 4, 0, 8, 3, p.metal); q.hline(cx - 3, cx + 3, 3, p.lamp); }

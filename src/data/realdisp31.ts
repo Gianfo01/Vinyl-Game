@@ -12,8 +12,21 @@
 // veio de um rótulo da interface (ui = true) e devolve a palavra com a marca invisível UI31, para o h() também não trocar.
 // A família Fossati nunca é trocada (nome real sempre, regra 11 do briefing). Texto curto (uma letra, só números ou
 // símbolos: teclas "N", "5", "+") nunca é trocado; cidades, países e teclas ficam de fora já na tabela (realshow31.ts).
+// R31 (NOMES): a troca vale só para NOMES DE ENTIDADES. Nunca troca número, letra solta ou par de letras (teclas,
+// colunas, "5", "1984", "OK"; "U2", letra e dígito, é ato e troca); palavra da interface gerada pela varredura (src/data/uiwords31.ts: "Nome",
+// "Telefone", "Status") não troca como texto inteiro e palavra comum ("Fazer", "Total") não troca no meio da frase —
+// salvo entidade conhecida (`keep`: gravadoras reais e atos do catálogo à mão), protegida só pela marca UI31 do t().
+import { UI_INTEXT31, UI_WHOLE31 } from './uiwords31';
 
 export type DispPair31 = [from: string, to: string];
+
+const UIW = new Set(UI_WHOLE31), UIT = new Set(UI_INTEXT31);
+/** texto que nunca é nome de entidade: sem letra (números, datas, "99.9%"), uma letra ("Z") ou duas sem dígito ("OK",
+ *  "LP", "No"); sigla de letra e dígito ("U2", "A1") é nome de ato e troca */
+export const notEntity31 = (from: string): boolean => {
+  const w = [...from.trim()];
+  return w.length <= 1 || !/\p{L}/u.test(from) || (w.length === 2 && !/\p{N}/u.test(from));
+};
 
 // R31 (BASE-IT): protege o sobrenome e os prenomes sozinhos — não nomes reais de terceiros que só dividem o prenome
 // (Lucia Mannucci, Antonella Ruggiero, Gianluca Grignani vazavam com a exibição desligada)
@@ -28,12 +41,15 @@ let byFirst = new Map<string, DispPair31[]>();
 let whole = new Map<string, string>();
 let active = false;
 
-/** Monta a tabela (chamado ao abrir a partida e ao trocar o interruptor). Lista vazia desliga o filtro. */
-export function setDisplay31(names: DispPair31[], titles: DispPair31[]): void {
+/** Monta a tabela (chamado ao abrir a partida e ao trocar o interruptor). Lista vazia desliga o filtro. `keep`: nomes
+ *  de entidade conhecida que trocam mesmo coincidindo com uma palavra da interface. */
+export function setDisplay31(names: DispPair31[], titles: DispPair31[], keep?: ReadonlySet<string>): void {
   const idx = new Map<string, DispPair31[]>();
   const w = new Map<string, string>();
+  const late: DispPair31[] = [];
   for (const [from, to] of names) {
-    if (!from || from === to || FAMILY_GUARD31.test(from) || tooShort31(from)) continue;
+    if (!from || from === to || FAMILY_GUARD31.test(from) || notEntity31(from)) continue;
+    if ((UIT.has(from) || UIW.has(from.trim())) && !keep?.has(from)) { late.push([from, to]); continue; } // palavra comum: só como texto inteiro
     const k = firstWord(from);
     if (!k) continue;
     let arr = idx.get(k);
@@ -42,7 +58,11 @@ export function setDisplay31(names: DispPair31[], titles: DispPair31[]): void {
     if (!w.has(from)) w.set(from, to);
   }
   for (const arr of idx.values()) arr.sort((a, b) => b[0].length - a[0].length);
-  for (const [from, to] of titles) if (from && from !== to && !FAMILY_GUARD31.test(from) && !tooShort31(from) && !w.has(from)) w.set(from, to);
+  for (const [from, to] of [...late, ...titles]) {
+    if (!from || from === to || FAMILY_GUARD31.test(from) || notEntity31(from) || w.has(from)) continue;
+    if (UIW.has(from.trim()) && !keep?.has(from)) continue; // palavra da interface ("Nome", "Telefone")
+    w.set(from, to);
+  }
   byFirst = idx;
   whole = w;
   active = idx.size > 0 || w.size > 0;
