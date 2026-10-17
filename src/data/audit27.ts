@@ -118,6 +118,7 @@ export const FIX27: Record<string, Fix27> = {
   Gorillaz: { mdel: ['Jamie Hewlett'] }, // artista visual (o jogo não tem papel "visual"; segue como cocriador nos textos)
   // Zé Dantas era parceiro de composição de Gonzaga, não integrante (a pessoa fica em AUTHORS27 até existir cadastro de compositor)
   'Luiz Gonzaga': { mdel: ['Zé Dantas'] },
+  'Elvis Presley': { mdel: ['Scotty Moore', 'Bill Black', 'D.J. Fontana'] }, // R33 (DADOS): músicos de apoio (Blue Moon Boys), não integrantes do ato solo
   // ---- arquivo 2 (conteúdo verificado)
   'The Beatles': { al: [['With the Beatles', 1963], ['Beatles for Sale', 1964], ['Help!', 1965], ['Let It Be', 1970]] },
   'Nara Leão': { al: [['Os Meus Amigos São um Barato', 1977]] }, // Philips/Phonogram, produção de Roberto Santana

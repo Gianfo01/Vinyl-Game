@@ -15,6 +15,7 @@ import { REAL_ACTS, REAL_LABELS, applyRealNames, realFounded } from '../data/rea
 import { classicOff31, dbSizeInfo } from './dbsize14';
 import { REAL_CLASSIC } from '../data/realacts_classic';
 import { EXTRA_LABELS } from '../data/labels10';
+import { labelAliveAt33 } from '../data/labelhist33';
 import type { CatalogLabel } from '../data/catalog';
 import { STAFF_ROLES, TECHS } from '../data/rules';
 import { MISFIT_W23, cityGenreFit23, originNote23 } from './genre23';
@@ -96,7 +97,7 @@ export function suggestLabels22(cfg: RunConfig): { ids: string[]; parts: { why: 
     for (const id of ids) taken.add(id);
     if (ids.length) parts.push({ why, ids });
   };
-  const open = pool.filter((d) => d.founded <= y);
+  const open = pool.filter((d) => d.founded <= y && labelAliveAt33(d.id, y)); // R33 (DADOS): extinta antes do início não é sugerida
   // majors que já existem no ano de início
   take('major', open.filter((d) => d.family === 'A'), 8);
   // concorrência local: selos do mesmo mercado da sede (os mais próximos da época primeiro)
@@ -104,7 +105,7 @@ export function suggestLabels22(cfg: RunConfig): { ids: string[]; parts: { why: 
   // a cena do momento: selos fundados nos 15 anos antes do início, de qualquer lugar
   take('era', open.filter((d) => d.founded >= y - 15).sort((a, b) => b.founded - a.founded), 4);
   // era acústica: os pioneiros do disco
-  if (y < 1920) take('acoustic', pool.filter((d) => d.founded < 1920).sort((a, b) => a.founded - b.founded), 12);
+  if (y < 1920) take('acoustic', pool.filter((d) => d.founded < 1920 && labelAliveAt33(d.id, y)).sort((a, b) => a.founded - b.founded), 12);
   return { ids: [...taken], parts };
 }
 
@@ -122,12 +123,13 @@ function setupLabels(s: GameState, r: Rng, cfg: RunConfig): void {
   const future = set.future ?? 'default';
   const chosen = (set.ids ?? DEFAULT_LABEL_IDS()).map((id) => byId.get(id)).filter((d): d is PoolLabel => !!d);
   // no começo só contam as que já existem; as futuras seguem a regra de `future`
-  let now = chosen.filter((d) => d.founded <= startY);
+  // R33 (DADOS): gravadora real que já tinha fechado (ou mudado de nome) antes do início não começa a partida
+  let now = chosen.filter((d) => d.founded <= startY && labelAliveAt33(d.id, startY));
   const later = future === 'none' ? [] : future === 'all' ? pool.filter((d) => d.founded > startY) : chosen.filter((d) => d.founded > startY);
   const want = set.count === undefined ? now.length : Math.max(0, Math.min(LABELS_MAX22, Math.round(set.count)));
   if (now.length > want) now = r.shuffle([...now]).slice(0, want).sort((a, b) => a.founded - b.founded);
   else if (now.length < want && !labelsOn29(cfg)) { // r29: com gravadoras escolhidas, o que falta é inventado na época (LB29.gen)
-    const extra = r.shuffle(pool.filter((d) => d.founded <= startY && !now.includes(d)));
+    const extra = r.shuffle(pool.filter((d) => d.founded <= startY && labelAliveAt33(d.id, startY) && !now.includes(d)));
     now = [...now, ...extra.slice(0, want - now.length)];
   }
   const equal = set.start === 'equal';
@@ -392,12 +394,13 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   if (chosenLabels) setupLabels(s, r, cfg);
   else for (const def0 of CATALOG_LABELS) {
     const def = realDef(def0, cfg);
+    if (def.founded <= cfg.startYear && !labelAliveAt33(def.id, cfg.startYear)) continue; // R33 (DADOS): extinta antes do início
     const founded = cfg.mode === 'chaos' ? def.founded + r.int(-12, 12) : cfg.mode === 'free' ? def.founded + r.int(-4, 4) : def.founded;
     makeLabel(s, r, { ...def, name: cfg.realNames ? REAL_LABELS[def.id] ?? def.name : def.name, founded: def.id === 'cortex' ? Math.max(founded, s.techDates.synthetic_voice - 2) : founded });
   }
   // r18 era1889: começando antes de 1920, as gravadoras reais da era acústica existem (ou surgem) nas datas reais
   if (!chosenLabels && cfg.startYear < 1920) for (const def of EXTRA_LABELS) {
-    if (def.founded >= 1920 || s.labels[def.id]) continue;
+    if (def.founded >= 1920 || s.labels[def.id] || (def.founded <= cfg.startYear && !labelAliveAt33(def.id, cfg.startYear))) continue;
     const f0 = cfg.mode === 'chaos' ? def.founded + r.int(-6, 6) : cfg.mode === 'free' ? def.founded + r.int(-2, 2) : def.founded;
     const founded = def.founded <= cfg.startYear ? Math.min(cfg.startYear, f0) : Math.max(cfg.startYear + 1, f0);
     makeLabel(s, r, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
@@ -406,7 +409,7 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   //     (gerador próprio: não desloca o sorteio do resto do mundo nem do personagem)
   if (!chosenLabels) { const r21 = Rng.fromSeed(`${cfg.seed}|labels21`); for (const id of DEFAULT_EXTRA21) {
     const def = EXTRA_LABELS.find((d) => d.id === id);
-    if (!def || s.labels[def.id]) continue;
+    if (!def || s.labels[def.id] || (def.founded <= cfg.startYear && !labelAliveAt33(def.id, cfg.startYear))) continue;
     const f0 = cfg.mode === 'chaos' ? def.founded + r21.int(-8, 8) : cfg.mode === 'free' ? def.founded + r21.int(-2, 2) : def.founded;
     const founded = def.founded <= cfg.startYear ? Math.min(cfg.startYear, f0) : Math.max(cfg.startYear + 1, f0);
     makeLabel(s, r21, { ...def, name: cfg.realNames ? def.real : def.name, founded }).playbook = def.playbook;
@@ -421,7 +424,13 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
   const presence = cfg.mode === 'historic' ? 1 : cfg.mode === 'free' ? r.float(0.6, 1) : r.float(0.3, 1);
   for (const ca of CATALOG_ACTS) {
     if (classicOff31(cfg, ca.city)) continue; // R31 (DBTAM): país desligado na Nova run (só com nomes reais)
-    if (!r.chance(presence)) continue;
+    // R33 (DADOS): com nomes reais, quem estava em atividade no ano de início existe (fato anterior ao início, em todos
+    // os modos) — antes o sorteio de presença tirava o ato do mundo e o realworld o recriava "separado/aposentado"
+    // (Elvis separado e Luiz Gonzaga aposentado em 1962). O sorteio continua sendo feito (mesma sequência).
+    // O "mundo aleatório" (início simulado, r20 G8) continua sorteando presença e estreia: lá a cronologia real não é fato.
+    const realEnd = cfg.realNames ? REAL_CLASSIC[ca.no]?.e : undefined;
+    const realOn = !!cfg.realNames && !simulatedStartCfg20(cfg) && !!REAL_CLASSIC[ca.no] && (realEnd === undefined || realEnd >= cfg.startYear);
+    if (!r.chance(presence) && !realOn) continue;
     const jitter = cfg.mode === 'historic' ? 0 : cfg.mode === 'free' ? r.int(-2, 2) : r.int(-7, 7);
     let potential = r.int(80, 97);
     if (hasMutator(s, 'rare_talent')) potential -= r.int(0, 10);
@@ -431,8 +440,10 @@ export function createGame(cfg: RunConfig, opts: { preview?: boolean } = {}): Ga
     const activeYears = cfg.startYear - u.debut;
     if (activeYears >= 0) {
       const realE = cfg.realNames && !simulatedStartCfg20(cfg) ? REAL_CLASSIC[ca.no]?.e : undefined; // r20: mundo aleatório v2 não usa o fim real
-      const careerLen = realE !== undefined ? realE - u.debut + (cfg.mode === 'historic' ? 0 : r.int(-3, 3)) : r.int(14, 40);
-      if (activeYears > careerLen) continue; // já faz parte da história
+      let careerLen = realE !== undefined ? realE - u.debut + (cfg.mode === 'historic' ? 0 : r.int(-3, 3)) : r.int(14, 40);
+      // R33 (DADOS): o fim real decide se o ato já acabou antes do início (a variação de ±3 anos só vale para o futuro)
+      if (realE !== undefined && realE >= cfg.startYear) careerLen = Math.max(careerLen, activeYears + 1);
+      if (activeYears > careerLen || (realE !== undefined && realE < cfg.startYear)) continue; // já faz parte da história
       const act = spawnCatalogAct(s, r, u, activeYears);
       act.careerEnd = u.debut + careerLen;
       if (!equal) signToBestRival(s, r, act);
@@ -492,7 +503,7 @@ export function signToBestRival(s: GameState, r: Rng, act: Act): void {
   if (lb) signTo(s, r, act, lb);
 }
 
-function signTo(s: GameState, r: Rng, act: Act, lb: Label): void {
+export function signTo(s: GameState, r: Rng, act: Act, lb: Label): void {
   const id = nextId(s, 'k');
   s.contracts[id] = {
     id,

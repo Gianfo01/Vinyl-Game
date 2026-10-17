@@ -29,7 +29,7 @@ export const REAL_1889: RealArtist[] = [
   gr("Sousa's Band", 'march', 'new_york', 'USA', 1892, 1931, 1, 'John Philip Sousa:h:1854:1932|Arthur Pryor:h:1870:1942:1892:1903|Herbert L. Clarke:h:1867:1945:1893:1917',
     ['The Washington Post March|1893|s', 'El Capitan March|1896|s', 'The Stars and Stripes Forever|1897|s']),
   so('Vess L. Ossman', 'ragtime', 'new_york', 'USA', 1893, 1917, 3, 1868, 1923, 's'),
-  gr('Haydn Quartet', 'barbershop', 'new_york', 'USA', 1898, 1914, 3, 'Harry Macdonough:v:1871:1931|John Bieling:v:1869:1948|S. H. Dudley:v|William F. Hooley:v', ['Sweet Adeline|1904|s', 'Take Me Out to the Ball Game|1908|s']),
+  gr('Haydn Quartet', 'barbershop', 'new_york', 'USA', 1898, 1914, 3, 'Harry Macdonough:v:1871:1931|John Bieling:v:1869:1948|S. H. Dudley:v:1864:1947|William F. Hooley:v:1861:1918', ['Sweet Adeline|1904|s', 'Take Me Out to the Ball Game|1908|s']),
   so('Scott Joplin', 'ragtime', 'kansas_city', 'USA', 1899, 1917, 1, 1868, 1917, 'k', ['Maple Leaf Rag (partitura)|1899|s', 'The Entertainer (partitura)|1902|s', 'Treemonisha|1911', 'Maple Leaf Rag (rolo de pianola)|1916|s']),
   so('Bert Williams', 'vaudeville', 'new_york', 'USA', 1901, 1922, 2, 1874, 1922, 'v', ['Nobody|1906|s']),
   gr('Collins & Harlan', 'vaudeville', 'new_york', 'USA', 1901, 1918, 3, 'Arthur Collins:v:1864:1933|Byron G. Harlan:v:1861:1936', ["Alexander's Ragtime Band|1911|s"]),

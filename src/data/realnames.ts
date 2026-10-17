@@ -26,7 +26,7 @@ export const REAL_ACTS: Record<number, RealAct> = {
   11: { name: 'Frank Sinatra' },
   12: { name: 'Billie Holiday' },
   13: { name: 'Hank Williams' },
-  14: { name: 'Elvis Presley', members: ['Elvis Presley', 'Scotty Moore'] },
+  14: { name: 'Elvis Presley', members: ['Elvis Presley'] }, // R33 (DADOS): solo — Scotty Moore era músico de apoio
   15: { name: 'Chuck Berry' },
   16: { name: 'Fats Domino' },
   17: { name: 'Johnny Cash & the Tennessee Two', members: ['Johnny Cash', 'Luther Perkins'] },
@@ -35,7 +35,7 @@ export const REAL_ACTS: Record<number, RealAct> = {
   20: { name: 'Celia Cruz' },
   21: { name: 'Dave Brubeck Quartet', members: ['Dave Brubeck', 'Paul Desmond', 'Eugene Wright', 'Joe Morello'] },
   22: { name: 'Ray Charles' },
-  23: { name: 'Luiz Gonzaga', members: ['Luiz Gonzaga', 'Zé Dantas'] },
+  23: { name: 'Luiz Gonzaga', members: ['Luiz Gonzaga'] }, // R33 (DADOS): solo — Zé Dantas era parceiro de composição
   24: { name: 'Ravi Shankar' },
   25: { name: 'Cartola' },
   26: { name: 'The Beatles', members: ['John Lennon', 'Paul McCartney', 'George Harrison', 'Ringo Starr'] },

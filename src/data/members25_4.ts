@@ -23,7 +23,7 @@ export const MEMBERS25_4: Record<string, RealMember[]> = {
   'Papas Da Língua': [],
   'Sha Na Na': [],
   'The Coral': [['James Skelly', 'vocal', U, U, U, U], ['Ian Skelly', 'drums', U, U, U, U], ['Bill Ryder-Jones', 'guitar', 1983, U, U, 2008], ['Paul Duffy', 'bass', U, U, U, U], ['Nick Power', 'keys', U, U, U, U], ['Lee Southall', 'guitar', U, U, U, U]],
-  'Alice Cooper': [['Alice Cooper', 'vocal', 1948, U, U, U], ['Glen Buxton', 'guitar', 1947, 1997, U, U], ['Michael Bruce', 'guitar', 1948, U, U, U], ['Dennis Dunaway', 'bass', 1946, U, U, U], ['Neal Smith', 'drums', 1947, U, U, U]],
+  'Alice Cooper': [['Alice Cooper', 'vocal', 1948, U, U, U], ['Glen Buxton', 'guitar', 1947, 1997, U, 1975], ['Michael Bruce', 'guitar', 1948, U, U, 1975], ['Dennis Dunaway', 'bass', 1946, U, U, 1975], ['Neal Smith', 'drums', 1947, U, U, 1975]], // R33 (DADOS): a banda original acaba em 1975; dali em diante Alice Cooper é solo
   'Casuarina': [],
   'Giant Rooks': [['Frederik Rabe', 'vocal', U, U, U, U]],
   'Rainbow Kitten Surprise': [['Ela Melo', 'vocal', U, U, U, U], ['Darrick Keller', 'guitar', U, U, U, U], ['Jess Haney', 'drums', U, U, U, U], ['Ethan Goodpaster', 'guitar', U, U, U, U], ['Charlie Holt', 'bass', U, U, U, U]],

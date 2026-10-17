@@ -731,3 +731,34 @@ proibido sem pedido do dono.
   (RCA Victor, Columbia, K-tel, "Victor Talking Machine Co." — nome extinto em 1929 —, Gramophone Company of India,
   ou independente/aposentado); Elvis Presley aparece "separado" em 1985/1995 e "aposentado" em 2022 (morreu em 1977);
   o ato Elvis Presley tem 4 integrantes (com Scotty Moore). Prints antes/depois em `docs/r33/fichas/`.
+
+## R33 · DADOS33 — base de gente real coerente no começo da partida (17/10)
+Dono pediu para corrigir a base (autorizado a mexer nos dados de gente real). Relatório: `docs/r33/dados/AUDITORIA.md`.
+- **Política dos modos (decisão do dono):** "nada inventado para gente real" continua só no modo exato
+  (`config.history === 'strict'`, `realSafe`/`histLocked`). Fatos ANTERIORES ao começo valem em todos os modos: quem já
+  morreu está morto, quem já era solo é solo, gravadora que já tinha fechado não existe, quem estava em atividade não
+  começa "separado/aposentado", e o contrato do começo é com a gravadora histórica quando a base a conhece e ela está
+  no mundo. Depois do começo, nos modos com variações/livre, a vida segue os sorteios (mas ato solo cujo artista morre
+  na partida fica encerrado — `personDies` marca `deceased` e a volta exige `!deceased`).
+- **Gravadoras por época (`src/data/labelhist33.ts`, LABEL_END33):** ano de fim documentado (Victor Talking Machine
+  1929 → RCA Victor, Edison 1929, Casa Edison 1932, Factory 1992…; `[fim, volta]` para Stax/Casablanca/Arista). Sai da
+  sugestão da Nova run (`suggestLabels22`), do conjunto escolhido (`setupLabels`), das reais da labels29
+  (`rankReal29`/`prep`) e do mundo padrão (catálogo, era acústica, núcleo r21). Vale também com nomes ficcionais (o
+  arquétipo é o mesmo). Fim DURANTE a partida (ex.: começo em 1900, Victor em 1962) fica para outra frente.
+- **Selo histórico no começo (`HIST_LABEL33` + `src/sim/sys/labelhist33.ts`):** 77 atos do catálogo com a gravadora de
+  cada época (nome real). Roda no fim do `newgame` do realworld, sorteio próprio `semente|hist33` (o resto do mundo não
+  muda de sequência); move o contrato existente ou assina; nunca mexe no jogador, na gravadora assumida, nem nos
+  começos "todos iguais"/"startups".
+- **Presença do catálogo:** com nomes reais, ato do catálogo em atividade no ano de início sempre existe (o sorteio de
+  presença continua sendo feito, mesma sequência) e o fim real decide se já acabou (o ±3 vale só para o futuro). O
+  realworld não recria mais como "separado/aposentado" quem ainda estava ativo (causa do Elvis separado e do Gonzaga
+  aposentado em 1962).
+- **Dados corrigidos:** Elvis solo (`mdel` Scotty Moore, Bill Black, D.J. Fontana — Blue Moon Boys, banda de apoio);
+  REAL_ACTS 14/23 sem integrantes extras; Alice Cooper: banda original sai em 1975; Haydn Quartet (S. H. Dudley
+  1864–1947, William F. Hooley 1861–1918) e Trio Lescano (1910–1987, 1913–2007, 1919–1965) com datas.
+- **Regras novas:** gente real sem morte documentada não passa dos 100 anos no começo (morte estimada antes do início);
+  a variação de estreia não faz ninguém estrear com menos de 14 anos.
+  Tributo: o "original contrata o sósia" (`soundalike19`) não reativa ato encerrado por morte (Caruso voltava em 1953).
+  O "mundo aleatório" (início simulado) continua sorteando presença e estreia do catálogo.
+- **Goldens:** r27-p2a/p2b re-medidos (caixa, turnês, acts, rng); r16-playbot trocou de semente (pb-10 → pb-9) e
+  r29-lineup-start a do The Who (d1 → d2) — ver relatório.

@@ -141,10 +141,15 @@ describe('r27 P2B — modo rápido intacto', () => {
     // Com todas as chaves base31.* desligadas (base31br, base31it, base31hits, base31stars = false) voltam os valores antigos (conferido).
     // R31 · BASE-BR 3ª rodada + DBTAM (de propósito): +251 atos brasileiros com notoriedade própria (nt); a divisão por tamanho põe
     // outro núcleo BR na base Média: 1109567 / 1382068899 / 3840120958 / 3918718534 → 703829 / 3703042045 / 3137463213 / 2738656355.
-    expect(AFTER.player.cash).toBe(703829);
-    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3703042045);
-    expect(hashString(JSON.stringify(AFTER.acts))).toBe(3137463213);
-    expect(hashString(rngSnapshot19(AFTER))).toBe(2738656355);
+    // R33 (DADOS33 · base corrigida, de propósito — docs/r33/dados/AUDITORIA.md): no começo de 1975 os atos reais ativos assinam
+    // com a gravadora histórica (selo sorteado antes), os do catálogo que estavam em atividade sempre existem (o sorteio de
+    // presença tirava alguns e o realworld os recriava "separados"), Elvis vira solo e ninguém real passa dos 100 anos:
+    // caixa, turnês, acts e rng mudam. Só sem o selo histórico (histOwners33) mediu-se 167269 / 32808709 / 477092327 / 2334738270.
+    // Antes: 703829 / 3703042045 / 3137463213 / 2738656355.
+    expect(AFTER.player.cash).toBe(732007);
+    expect(hashString(JSON.stringify(AFTER.tours))).toBe(3533897490);
+    expect(hashString(JSON.stringify(AFTER.acts))).toBe(1265575343);
+    expect(hashString(rngSnapshot19(AFTER))).toBe(2652050922);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   });
   it('nada de estado P2B criado sem o jogador', () => {
