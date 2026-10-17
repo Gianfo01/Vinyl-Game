@@ -400,6 +400,7 @@ import './extras31'; // R31 onda 4 (N): extras — conquistas novas, ovos do Edi
 import './gente31'; // R31 onda 4 (I): gente de verdade nos lugares — donos, equipe, músicos fazendo bico (vaga muda de mãos na virada do mês)
 import './under31'; // R31 onda 4 (S): submundo no Nosso mundo — fachadas, sala dos fundos, mural, delegacia, mercado negro, baile
 import '../r31/vitrine31'; // R31 onda 4 (VIT): vitrine do mês — motor único do conteúdo mensal dos lugares (gera o estoque da loja, do beco e dos leilões)
+import '../r31/decoshop31'; // R31 DECO-L: lojas de decoração (estoque pela vitrine), correio/internet, época/vintage, decorar os seus estabelecimentos, roubo
 import './lots31'; // R31 onda 4 (LOTE): registro de lotes da cidade — prédio sem função vira casa (CEO, artista, família Fossati) ou terreno vago à venda
 import './amor31'; // R31 onda 4 (AMOR): chamar qualquer pessoa para sair, ser amante, romance com o mercado (interruptores amor31.*)
 import './facades19'; // r19 fachadas (fandom19/rivals19/awards19): fatos-índice e ouvintes — manter por último
