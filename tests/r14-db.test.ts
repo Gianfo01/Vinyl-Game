@@ -63,14 +63,18 @@ describe('base de dados r14', () => {
   });
 
   it('enorme: criar o jogo < 3s e avançar meses continua rápido', () => {
-    const t0 = Date.now();
+    // W5-FIX2: tempo de CPU da linha de execução do teste (sem as linhas do coletor de lixo e do compilador), não de
+    // parede — com a suíte em paralelo o relógio media a disputa pela máquina (3,5 s/mês com 4 arquivos juntos × 2,2 s
+    // sozinho), não o jogo. Sozinho, CPU da linha ≈ parede (é o que o limite calibrado mediu).
+    const cpu = (): number => { const u = process.threadCpuUsage(); return (u.user + u.system) / 1000; };
+    const t0 = cpu(), w0 = Date.now();
     const s = mk('huge', 2010, 'r14perf');
-    const created = Date.now() - t0;
+    const created = cpu() - t0;
     expect(created).toBeLessThan(3000);
-    const t1 = Date.now();
+    const t1 = cpu(), w1 = Date.now();
     const { state } = simulate(defaultConfig('r14perf', { startYear: 2010, realNames: true, dbSize: 'huge' }), 1);
-    const perMonth = (Date.now() - t1) / 12;
-    console.log(`huge: acts=${count(s)} criar=${created}ms simulate(1 ano)/mês=${perMonth.toFixed(0)}ms`);
+    const perMonth = (cpu() - t1) / 12;
+    console.log(`huge: acts=${count(s)} criar=${created.toFixed(0)}ms (parede ${w1 - w0}) simulate(1 ano)/mês=${perMonth.toFixed(0)}ms CPU (parede ${((Date.now() - w1) / 12).toFixed(0)})`);
     expect(perMonth).toBeLessThan(3000); // R31: recalibrado para o hardware das sessões (v30 já dava ~1 570 aqui; R31 ~2 130) — decisão do dono, 2026-10-16
     expect(Object.keys(state.acts).length).toBeGreaterThan(count(mk('small', 2010)));
   }, 60000);

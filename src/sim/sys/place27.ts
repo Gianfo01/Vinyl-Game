@@ -68,6 +68,10 @@ export interface Place27 {
   /** r31 (S): facção dona da fachada (id do crime17) */ org?: string;
   /** r31 (LOTE): casa (quem mora: chave da pessoa, porte 0 apartamento · 1 casa · 2 mansão) ou terreno (seu ou à venda) */
   lot31?: { k: 'home' | 'sale' | 'own'; who?: string; tier?: number };
+  /** r31 (DECO-L): loja de decoração da cidade (móveis, antiquário, eletrônicos, galeria — sim/r31/decoshop31) */
+  deco31?: 'furniture' | 'antique' | 'hifi' | 'gallery';
+  /** r31 (DECO-L): outras lojas de decoração no mesmo prédio (galeria comercial, quando faltam terrenos) */
+  deco31x?: ('furniture' | 'antique' | 'hifi' | 'gallery')[];
 }
 /** r31 (FOS): a casa da família Fossati na cidade de início (sys/fossati31 preenche): ocupa um prédio de moradia. */
 export const FAMHOME27: { fn?: (s: GameState) => { name: L; what: L; owner: string; now: L; people: Person27[] } | null } = {};
@@ -79,6 +83,8 @@ export const LOTS27: {
   acts?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>) => PAct27[];
   run?: (s: GameState, p: Pick<Place27, 'k' | 'id' | 'lot' | 'lot31'>, id: string) => { ok: boolean; text: L };
 } = {};
+/** r31 (DECO-L): as lojas de decoração ocupam prédios da cidade comum (sim/r31/decoshop31 preenche). */
+export const DECO27: { fn?: (s: GameState, out: Place27[]) => void } = {};
 export const UNDER27: { fn?: (s: GameState) => Under27[]; /** emissários das facções de outra cidade do país (no bar) */ bar?: (s: GameState) => Person27[] } = {};
 
 /** R31 (H): negócio da época num prédio de cidade comum (lojas com ano de abertura e fechamento — sim/r31/city31). */
@@ -294,9 +300,12 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   // faltou lote: o básico divide um prédio de terceiros (segundo andar, sobreloja)
   const host = [...out].sort((a, b) => Number(MUSIC27.includes(a.k)) - Number(MUSIC27.includes(b.k)) || (a.src === 'fill' ? -1 : 1));
   need.forEach((k, i) => { const h = host[i % Math.max(1, host.length)]; if (h) h.also.push(k); });
+  // r31 (DECO-L): lojas de decoração em prédios da cidade comum — antes do submundo e dos lotes, para sempre caberem
+  // (faltando terreno, as lojas dividem um prédio só: a galeria comercial)
+  DECO27.fn?.(s, out);
   // r31 (S): o submundo ocupa prédios da cidade comum (escritórios, prédios, hotel), dos menos vistos para os mais
   for (const u of UNDER27.fn?.(s) ?? []) {
-    const i = [...out.keys()].reverse().find((j) => out[j].src === 'fill' && !out[j].venue && FLAVOR27.includes(out[j].k) && out[j].k !== 'instruments');
+    const i = [...out.keys()].reverse().find((j) => out[j].src === 'fill' && !out[j].venue && !out[j].deco31 && FLAVOR27.includes(out[j].k) && out[j].k !== 'instruments');
     if (i === undefined) { const h = out.find((p) => p.src === 'fill'); if (h && !h.also.includes(u.k)) h.also.push(u.k); continue; }
     const lot = out[i].lot;
     out[i] = { id: `pl:${lot}`, lot, k: u.k, name: u.name, what: u.what, owner: u.owner, ownerK: 'npc', now: u.now, people: u.people, also: [], src: 'fill', draw: DRAW27[u.k], org: u.org };
@@ -304,7 +313,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   // r31 (FOS): a casa da família Fossati ocupa a moradia mais visível da cidade comum (ou outro prédio comum)
   const fam = FAMHOME27.fn?.(s);
   if (fam) {
-    const free = (p: Place27) => p.src === 'fill' && !p.venue && !p.org && FLAVOR27.includes(p.k) && p.k !== 'instruments';
+    const free = (p: Place27) => p.src === 'fill' && !p.venue && !p.org && !p.deco31 && FLAVOR27.includes(p.k) && p.k !== 'instruments';
     const j = out.findIndex((p) => free(p) && p.k === 'apartments');
     const i = j >= 0 ? j : out.findIndex(free);
     if (i >= 0) { const lot = out[i].lot; out[i] = { id: `pl:${lot}`, lot, k: 'apartments', name: fam.name, what: fam.what, owner: fam.owner, ownerK: 'npc', now: fam.now, people: fam.people, also: [], src: 'fill', draw: DRAW27.apartments, fam31: true }; }
@@ -316,7 +325,7 @@ export function places27(s: GameState, fillers: number[], nbs: Nb19[] = nb19(s),
   if (CREW27.fn) {
     const copies = new Map<PlaceK27, number>();
     for (const p of out) {
-      if (p.k === 'label' || p.k === 'facade' || p.k === 'police' || p.k === 'market' || p.fam31) continue;
+      if (p.k === 'label' || p.k === 'facade' || p.k === 'police' || p.k === 'market' || p.fam31 || p.deco31) continue;
       const c = copies.get(p.k) ?? 0;
       copies.set(p.k, c + 1);
       const crew = CREW27.fn(s, p.k, c);

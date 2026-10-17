@@ -148,7 +148,11 @@ describe('18 perfis de selo', () => {
 });
 
 describe('13 manuais de rival', () => {
-  it('há 13 manuais com líder e perfil; os selos recebem manuais variados e perfis válidos, e os novos lances aparecem no relatório', () => {
+  it('há 13 manuais com líder e perfil; os selos recebem manuais variados e perfis válidos, e os novos lances aparecem no relatório', async () => {
+    // W5-FIX2: 260 meses de ganchos; devolve o controle ao vitest a cada mês (síncrono, travava o worker: "Timeout calling
+    // onTaskUpdate") e o orçamento de 120 s vale para a CPU da linha do teste, não para o relógio da suíte carregada
+    const cpu = (): number => { const u = process.threadCpuUsage(); return (u.user + u.system) / 1000; };
+    const t0 = cpu();
     expect(Object.keys(PLAYBOOKS).length).toBeGreaterThanOrEqual(13);
     for (const pb of Object.values(PLAYBOOKS)) { expect(pb.leader.pt.length).toBeGreaterThan(3); expect(pb.profiles.length).toBeGreaterThan(0); }
     const s = mk('r9-rivals', 1995);
@@ -163,11 +167,13 @@ describe('13 manuais de rival', () => {
       s.week += 4;
       runSimHooks('month', s, rng19(s, 'act'));
       for (const lb of labels) lb.cash = Math.max(lb.cash, money(s, 5e7));
+      await new Promise<void>((r) => setTimeout(r, 0));
     }
     for (const [, list] of allMoves8(s)) for (const m of list) seen.add(m.k);
     const fresh = ['idol_debut', 'gospel_circuit', 'prestige_award', 'sync_deal', 'regional_tour', 'asset_strip', 'visionary_bet', 'purist_refuse'];
     expect(fresh.filter((k) => seen.has(k)).length).toBeGreaterThanOrEqual(2);
-  });
+    expect(cpu() - t0).toBeLessThan(120000);
+  }, 600000);
 });
 
 describe('9 eixos de som', () => {
