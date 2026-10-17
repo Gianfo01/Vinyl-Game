@@ -23,7 +23,7 @@ import { OUTFIT27 } from '../pixel/looks27';
 import { pasteCode20 } from '../newgame17';
 import { launchRun27, newGameScreen, randomSeed } from '../newgame';
 import { scenarioScreen } from '../sys/live/goals';
-import { quickCharBlock29 } from '../ps/char29';
+import { SEXES29, quickCharBlock29 } from '../ps/char29';
 import { charDefaults29, lookFor29, refreshChar29 } from '../ps/char29model';
 import { CAREER_SHORT27, careerOpen27, clampYear27, quickDefaults27 } from '../ps/home27model';
 import { ERAS5, PRIMARY5, SIZES5, SIZE_NAME5, TRAITS5, durOf5, histOn5, quickRun5Config, realOn5, story5, yearsOfDur5, type Dur5, type QuickRun5 } from './newrun5model';
@@ -142,6 +142,10 @@ export function quickRun5Screen(root: HTMLElement, onStart: () => void, q0?: Qui
     const accs: Acc5[] = c.sex === 'f' ? ['none', 'hat', 'glasses', 'both'] : ['none', 'hat', 'glasses', 'both', 'beard'];
     rows.replaceChildren(
       h('div', { class: 'n5-row' }, h('span', { class: 'n5-k' }, t(l('Nome', 'Name'))), nameIn),
+      // pedido do dono: gênero no editor rápido (o mesmo efeito do seletor de "mais opções": nome e visual acompanham)
+      stepRow(l('Gênero', 'Gender'), t(SEXES29.find((x) => x.id === c.sex)?.name ?? SEXES29[0].name), (d) => {
+        c.sex = cyc(SEXES29.map((x) => x.id), c.sex, d); if (c.look) c.look = fitLookToSex(c.look, c.sex);
+        refreshChar29(q); drawWho(); prev.update(quickRun5Config(q)); }),
       stepRow(l('Idade', 'Age'), String(c.age), (d) => { c.age = clampAge29(c.age + d); c.ageAuto = false; drawWho(); prev.update(quickRun5Config(q)); }),
       stepRow(l('Pele', 'Skin'), `${t(l('tom', 'tone'))} ${a.skin + 1}`, (d) => setLook({ skin: (a.skin + d + SKINS.length) % SKINS.length })),
       stepRow(l('Cabelo', 'Hair'), a.hair === 0 ? t(l('careca', 'bald')) : `${t(l('estilo', 'style'))} ${hairs.indexOf(a.hair) + 1} · ${t(HAIRC5[a.hairColor] ?? HAIRC5[0])}`, (d) => setLook({ hair: cyc(hairs, a.hair, d) }),
@@ -155,7 +159,7 @@ export function quickRun5Screen(root: HTMLElement, onStart: () => void, q0?: Qui
           ' · ',
           h('button', { type: 'button', class: 'n5-lk', 'data-n5': 'more', onclick: () => moreChar() }, t(l('mais opções', 'more options')), ' ▸'))));
   };
-  // "mais opções": sexo, instrumentos e banda (artista) e o editor de aparência completo do jogo
+  // "mais opções": sexo (também no editor rápido), instrumentos e banda (artista) e o editor de aparência completo do jogo
   const moreChar = () => {
     const blk = quickCharBlock29(q, () => undefined);
     const fake = { id: 'player-new', role: (q.art29?.role ?? 'guitar') as never, look: look() };

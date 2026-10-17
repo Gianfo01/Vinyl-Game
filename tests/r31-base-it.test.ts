@@ -15,7 +15,7 @@ import type { GameState } from '../src/sim/types';
 
 const IT_CITIES = new Set(['milan', 'rome', 'naples']);
 /** Contagem mínima da base nova (o máximo que deu com dados conferidos — docs/r31/base-it.md). */
-const MIN31IT = 284;
+const MIN31IT = 560;
 const NOW = 2026;
 
 describe('base italiana: dados', () => {
@@ -84,7 +84,7 @@ const itActs = (s: GameState) => Object.values(s.acts).filter((a) => a.catalogNo
 
 describe('base italiana: interruptor base31.it', () => {
   it('ligado por padrão: atos da base nascem (no início e na fila); desligado: nenhum', () => {
-    const on = createGame(defaultConfig('r31it-sw', { startYear: 1975, realNames: true }));
+    const on = createGame(defaultConfig('r31it-sw', { startYear: 1975, realNames: true, dbSize: 'huge' }));
     expect(sw(on, 'base31.it')).toBe(true);
     expect(itActs(on).length).toBeGreaterThan(20);
     const off = createGame(defaultConfig('r31it-sw', { startYear: 1975, realNames: true, base31it: false }));
