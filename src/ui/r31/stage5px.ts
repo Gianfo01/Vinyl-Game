@@ -273,6 +273,7 @@ export function scene5(o: StageOpts5): Scene5 {
 const holoTint5 = new Map<CanvasImageSource, HTMLCanvasElement>();
 function holo5(ctx: CanvasRenderingContext2D, src: CanvasImageSource & { width: number; height: number }, x: number, y: number, fx: number, fy: number, t: number): void {
   let tint = holoTint5.get(src);
+  if (!tint && typeof document === 'undefined') { ctx.save(); ctx.globalAlpha = 0.85; ctx.drawImage(src, x, y); ctx.restore(); return; } // sem DOM (testes)
   if (!tint) {
     tint = document.createElement('canvas'); tint.width = src.width; tint.height = src.height;
     const g = tint.getContext('2d')!;
