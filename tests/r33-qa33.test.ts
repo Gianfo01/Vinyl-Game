@@ -15,7 +15,7 @@ import { int2FestPlace33, int2Sites33 } from '../src/sim/r33/ligar33';
 import { lotFor33, reserved33 } from '../src/sim/r33/mapa33';
 import { cat33, peek33 } from '../src/sim/r33/cat33';
 import { openCases33 } from '../src/sim/r33/sample33';
-import { creditCrisis33 } from '../src/sim/r33/mundo33';
+import { censAt33, creditCrisis33 } from '../src/sim/r33/mundo33';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { relics } from '../src/sim/sys/relics9';
 import { LEGAL_SRC33 } from '../src/sim/r33/dir33';
@@ -186,5 +186,17 @@ describe('QA33 · estádio, trem, porto e gráfica (INT-2) ligados', () => {
     expect(has(rel)?.ratio).toBeCloseTo(1.05 * 1.06, 5);
     const npc = { ...base, id: 'r-n', owner: 'x', formats: ['lp'], week: s.week } as never;
     expect(has(npc)).toBeUndefined();
+  });
+});
+
+describe('QA33 · censura no país da cidade, não na região inteira (MUNDO)', () => {
+  it('Viena 1975 não vive o bloco soviético; Praga vive; Madri vive Franco até 1975; regime sem cidades vale para a região', () => {
+    // antes: a pressão do regime era lida pela região ("eu"), e um ato de Viena em 1975 acabava no exílio ou calado
+    // (a JV do teste r29-contracts-more fechava porque a confiança do artista desabava)
+    expect(censAt33(1975, 'vienna')).toBeLessThan(0.5); // abaixo do limiar do regime (sobra só o clima da Guerra Fria)
+    expect(censAt33(1975, 'prague')).toBeGreaterThanOrEqual(0.5);
+    expect(censAt33(1975, 'madrid')).toBeGreaterThanOrEqual(0.5);
+    expect(censAt33(1980, 'madrid')).toBeLessThan(0.5);
+    expect(censAt33(1942, 'london')).toBeGreaterThanOrEqual(0.5); // Segunda Guerra: sem lista de cidades
   });
 });

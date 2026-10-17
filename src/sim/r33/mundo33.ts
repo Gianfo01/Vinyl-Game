@@ -8,7 +8,8 @@
 // no arquivo de dados). Sem sorteio no fluxo rng19: sorte pura por chave (Rng.fromSeed) → desligado = estado idêntico.
 // GANCHO para o banco (INT-2): `creditCrisis33(s)`. GANCHO para UI: `mundoNow33(s)`.
 import { Rng, clamp } from '../../core/rng';
-import { censorshipIn, geoById } from '../../data/content';
+import { geoActive, geoById } from '../../data/content';
+import { countryOfCity } from '../../data/geo';
 import { cityById, familyOf, l, type L } from '../../data/world';
 import type { EventDef } from '../events';
 import { EH } from '../events_more';
@@ -237,7 +238,6 @@ export function exileAct33(s: GameState, actId: string): L | null {
   EH.log(s, 'exile33', '{a} embarca para o exílio em {c}.', '{a} sails into exile in {c}.', { a: a.name, c: cityById[city]?.name ?? city }, a.id, true);
   return null;
 }
-const actMarket = (s: GameState, id: string) => cityById[s.acts[id]?.city ?? '']?.market;
 
 registerSimHook('month', 'mundo33', (s) => {
   const st = mundo33(s);
@@ -260,6 +260,22 @@ registerSimHook('month', 'mundo33', (s) => {
   if (memes33On(s)) memesMonth33(s);
 });
 
+/**
+ * QA33: censura no PAÍS da cidade (não na região inteira): o regime que lista cidades só pesa para quem mora num país
+ * delas (Viena em 1975 não vive o bloco soviético, Madri vive Franco); o que não lista cidades vale para a região.
+ */
+export function censAt33(year: number, city: string): number {
+  const m = cityById[city]?.market;
+  if (!m) return 0;
+  const c = countryOfCity(city);
+  let lv = 0;
+  for (const g of geoActive(year, m)) {
+    if (g.cities?.length && !g.cities.some((x) => x === city || (!!c && countryOfCity(x) === c))) continue;
+    lv = Math.max(lv, g.effects.censorshipLevel);
+  }
+  return lv;
+}
+
 function censuraMonth33(s: GameState): void {
   const st = mundo33(s);
   for (const id of playerActs(s)) {
@@ -268,7 +284,7 @@ function censuraMonth33(s: GameState): void {
     const ex = st.exile[id];
     if (ex) {
       // volta triunfal quando o regime cai (ou depois de 3 anos fora)
-      const reg = censorshipIn(s.year, cityById[ex.from]?.market ?? 'na').level;
+      const reg = censAt33(s.year, ex.from);
       if (reg < 0.3 || s.week - ex.since > 156) {
         a.city = ex.from; delete st.exile[id];
         a.fame = clamp(a.fame + 3, 0, 100);
@@ -277,8 +293,7 @@ function censuraMonth33(s: GameState): void {
       }
       continue;
     }
-    const m = actMarket(s, id);
-    const lvl = m ? censorshipIn(s.year, m).level : 0;
+    const lvl = censAt33(s.year, a.city);
     const political = a.members.some((pid) => s.persons[pid]?.traits.some((t) => t === 'engaged' || t === 'controversial'));
     const p = st.pressure[id] ?? 0;
     st.pressure[id] = clamp(lvl >= 0.5 ? p + lvl * (political ? 3 : 0.8) : p - 2, 0, 30);
