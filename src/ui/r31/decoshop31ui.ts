@@ -31,6 +31,8 @@ import type { Painted31 } from './shop31px';
 export const DECO_AREA31 = 'deco31';
 type Tab = DecoShopK31 | 'mail' | 'net' | 'places';
 const UI: { tab: Tab; place: string; room: string; more: boolean } = { tab: 'furniture', place: '', room: '', more: false };
+/** Estado da tela (escolha de aba/lugar; só interface). */
+export const DECO_UI31 = UI;
 /** Abre a tela numa loja (botão do prédio no mapa, calendário, caixa de entrada). */
 export function openDecoShop31(tab: Tab): void { UI.tab = tab; goDest31({ area: DECO_AREA31 }); }
 

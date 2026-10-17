@@ -20,6 +20,7 @@ import { C, INK, Px, lv, mix, withAlpha, type Col } from '../pixel/px';
 import { cityView31, window31 } from '../pixel/window31';
 import { STY31, pieceArt31 } from '../pixel/decol31px';
 import { prim27 } from '../ps/hqpx27';
+import { art31, light31, sign31 } from './decol31art';
 import { SH31, SW31, tagPrice31, type Painted31, type Person31px } from './shop31px';
 import type { Spot31 } from './scene31model';
 
@@ -48,6 +49,8 @@ export function piece31(g: G, d: DecoDef31, x: number, base: number, k: number):
   const { w, h } = pieceSize31(d);
   const p = g.p, id = d.id, year = g.pl.year;
   const has = (re: RegExp) => re.test(id);
+  if (d.cat === 'light') return light31(g, d, x + (w >> 1), base - h);
+  if (d.cat !== 'hifi') { const own = art31(g, d, x, base); if (own) return own; }
   switch (d.cat) {
     case 'furniture':
       if (has(/sofa|couch|pit|futon|booth|chaise|lounge/) || (w > h * 1.4 && !has(/table|desk|cart|bed/))) { prim27.couch(g, x, base, Math.max(16, w), col(d)); return { w: Math.max(16, w), h: 14 }; }
@@ -56,11 +59,7 @@ export function piece31(g: G, d: DecoDef31, x: number, base: number, k: number):
       if (has(/desk|table|cart|vanity/)) { prim27.desk(g, x, base, Math.max(16, w)); return { w: Math.max(16, w), h: 12 }; }
       break;
     case 'plant': prim27.plant(g, x + (w >> 1), base, h > 20); return { w, h: h > 20 ? 22 : 12 };
-    case 'hifi':
-      if (has(/tv|telev|screen|flat|radio|console/)) { prim27.tv(g, x, base); return { w: 22, h: 24 }; }
-      if (has(/gramo|phono|record|turntable|juke|vitrola/)) { prim27.recordPlayer(g, x, base); return { w: 18, h: 27 }; }
-      if (has(/piano/)) { prim27.piano(g, x, base); return { w: 26, h: 26 }; }
-      break;
+    case 'hifi': { const r = hifi31(g, id, x, base); if (r) return r; break; }
     case 'art':
       if (has(/gold|platinum|disc|record/)) { prim27.goldDisc(g, x, base - 12, has(/platinum/)); return { w: 10, h: 12 }; }
       { // moldura (dourada antes de 1950, preta depois) + a pintura/pôster da época
@@ -76,12 +75,41 @@ export function piece31(g: G, d: DecoDef31, x: number, base: number, k: number):
       p.poly([[x + (w >> 1) - 5, base - hh + 6], [x + (w >> 1) + 5, base - hh + 6], [x + (w >> 1) + 3, base - hh], [x + (w >> 1) - 3, base - hh]], col(d, 1));
       return { w, h: hh };
     }
-    case 'sign': prim27.sign(g, x + (w >> 1), base - 9, year < 1950 ? 'ABERTO' : year < 1990 ? 'OPEN' : 'ON AIR', 70, true); return { w, h: 9 };
+    case 'sign': return sign31(g, d, x, base, year < 1950 ? 'ABERTO' : year < 1990 ? 'OPEN' : 'ON AIR');
     default: break;
   }
   pieceArt31(p, { ...d, w, h }, x, base, year, false);
   return { w, h };
 }
+/** Cada aparelho de som e imagem do catálogo com desenho próprio (base embaixo à esquerda). */
+function hifi31(g: G, id: string, x: number, b: number): { w: number; h: number } | null {
+  const p = g.p, wd = g.pal.wood, wk = g.pal.woodDark, blk = prim27.blk;
+  const knob = (cx: number, cy: number, c: Col = C('#e0b030')) => { p.put(cx, cy, c); p.put(cx + 1, cy, lv(c, 2)); };
+  const spk = (cx: number, cy: number, r: number) => { p.disc(cx, cy, r, C('#1a1a1e')); p.disc(cx, cy, Math.max(0.8, r * 0.45), C('#4a4a52')); };
+  switch (id.replace(/^h_/, '')) {
+    case 'gramophone': prim27.recordPlayer({ ...g, pl: { ...g.pl, gear: 'shellac' } }, x, b); return { w: 16, h: 27 };
+    case 'music_box': blk(p, x, b - 7, 12, 7, wd); p.rect(x + 1, b - 9, 10, 2, lv(wd, 4)); p.rect(x + 2, b - 6, 8, 3, C('#e8d8a8')); p.disc(x + 6, b - 5, 1.2, C('#c83a2a')); p.line(x + 12, b - 4, x + 14, b - 6, C('#c8a040')); return { w: 15, h: 9 };
+    case 'player_piano': prim27.piano(g, x, b); blk(p, x + 8, b - 21, 10, 3, C('#f0e8d0')); for (let i = 0; i < 5; i++) p.put(x + 9 + i * 2, b - 20, INK); return { w: 26, h: 26 };
+    case 'cathedral_radio': blk(p, x, b - 16, 14, 16, wd); p.ellipse(x + 7, b - 15, 7, 4, wd); p.rect(x + 3, b - 14, 8, 7, C('#e8d8a8')); for (let i = 0; i < 4; i++) p.vline(x + 4 + i * 2, b - 14, b - 8, lv(wd, 2)); knob(x + 3, b - 4); knob(x + 9, b - 4); return { w: 14, h: 20 };
+    case 'console_radio': blk(p, x, b - 22, 26, 22, wd); p.rect(x + 2, b - 20, 22, 2, lv(wd, 4)); p.rect(x + 3, b - 16, 9, 9, C('#d8c8a0')); for (let i = 0; i < 4; i++) p.vline(x + 4 + i * 2, b - 16, b - 8, lv(wd, 2)); p.rect(x + 15, b - 16, 8, 3, C('#f0e090')); knob(x + 16, b - 10); knob(x + 20, b - 10); p.rect(x + 2, b - 3, 2, 3, wk); p.rect(x + 22, b - 3, 2, 3, wk); return { w: 26, h: 22 };
+    case 'jukebox': prim27.recordPlayer({ ...g, pl: { ...g.pl, gear: 'reel' } }, x, b); return { w: 14, h: 26 };
+    case 'hifi_tube': blk(p, x, b - 9, 26, 9, wk); blk(p, x + 1, b - 12, 13, 3, C('#9a9aa2')); p.ellipse(x + 7, b - 13, 5, 1, INK); for (let i = 0; i < 3; i++) { p.rect(x + 17 + i * 3, b - 15, 2, 5, withAlpha(C('#ffb060'), 200)); p.put(x + 17 + i * 3, b - 15, C('#fff0c0')); } p.rect(x + 16, b - 10, 9, 1, C('#c8ccd4')); return { w: 26, h: 15 };
+    case 'tv_fifties': blk(p, x, b - 22, 22, 22, wd); p.rect(x + 3, b - 19, 12, 10, C('#3a4a48')); p.rect(x + 4, b - 18, 4, 3, C('#9ad0c0')); knob(x + 17, b - 17); knob(x + 17, b - 13); for (let i = 0; i < 3; i++) p.hline(x + 3, x + 18, b - 6 + i * 2, lv(wd, 2)); return { w: 22, h: 22 };
+    case 'reel_deck': blk(p, x, b - 20, 18, 20, C('#5a5e66')); for (const cy of [b - 15, b - 8]) { p.disc(x + 9, cy, 4, C('#b8bcc4')); p.disc(x + 9, cy, 1.2, INK); } p.line(x + 5, b - 15, x + 5, b - 8, C('#3a2a1e')); p.rect(x + 2, b - 3, 14, 2, C('#2a2a30')); return { w: 18, h: 20 };
+    case 'quad_stereo': for (const sx of [x, x + 30]) { blk(p, sx, b - 18, 8, 18, wd); spk(sx + 4, b - 13, 2.5); spk(sx + 4, b - 5, 2); } blk(p, x + 10, b - 8, 18, 8, C('#c8ccd4')); for (let i = 0; i < 4; i++) p.disc(x + 13 + i * 4, b - 4, 1, C('#2a2a30')); p.rect(x + 12, b - 7, 14, 1, C('#40e060')); return { w: 38, h: 18 };
+    case 'boombox': blk(p, x, b - 11, 24, 11, C('#3a3a42')); spk(x + 5, b - 5, 3.5); spk(x + 19, b - 5, 3.5); p.rect(x + 10, b - 9, 4, 4, C('#9aa0a8')); p.rect(x + 10, b - 4, 4, 2, C('#c83a2a')); p.line(x + 3, b - 11, x + 6, b - 15, C('#c8ccd4')); p.line(x + 6, b - 15, x + 18, b - 15, C('#c8ccd4')); p.line(x + 18, b - 15, x + 21, b - 11, C('#c8ccd4')); return { w: 24, h: 15 };
+    case 'vcr_tv': blk(p, x, b - 6, 20, 6, wk); blk(p, x + 2, b - 9, 16, 3, C('#2a2a30')); p.rect(x + 4, b - 8, 6, 1, C('#7af0a0')); blk(p, x + 1, b - 24, 18, 15, C('#2a2a30')); p.rect(x + 3, b - 22, 12, 10, C('#3a7ab8')); p.rect(x + 4, b - 21, 4, 2, C('#9ad0f0')); return { w: 20, h: 24 };
+    case 'cd_micro': for (const sx of [x, x + 18]) { blk(p, sx, b - 12, 7, 12, C('#2a2a30')); spk(sx + 3.5, b - 7, 2.5); } blk(p, x + 8, b - 10, 9, 10, C('#9aa0a8')); p.rect(x + 9, b - 9, 7, 2, C('#40c0f0')); p.ellipse(x + 12, b - 4, 3, 1, C('#d8dce4')); return { w: 25, h: 12 };
+    case 'pa_speaker': blk(p, x, b - 36, 16, 18, C('#1e1e22')); blk(p, x, b - 18, 16, 18, C('#1e1e22')); spk(x + 8, b - 28, 5); spk(x + 8, b - 10, 5); p.rect(x + 3, b - 34, 10, 2, C('#5a5e66')); return { w: 16, h: 36 };
+    case 'flat_tv': prim27.tv({ ...g, pl: { ...g.pl, year: Math.max(2006, g.pl.year) } }, x + 2, b); return { w: 26, h: 24 };
+    case 'smart_speaker': p.rect(x + 2, b - 10, 6, 10, C('#3a3a42')); p.ellipse(x + 5, b - 10, 3, 1, C('#4a4a54')); p.hline(x + 3, x + 7, b - 10, C('#40c0ff')); for (let i = 0; i < 4; i++) p.hline(x + 2, x + 7, b - 8 + i * 2, C('#2a2a30')); p.ellipse(x + 5, b - 13, 4, 1.5, withAlpha(C('#40c0ff'), 90)); return { w: 10, h: 13 };
+    case 'vinyl_revival': blk(p, x, b - 6, 20, 6, wd); blk(p, x + 1, b - 8, 18, 2, C('#e8e6e0')); p.ellipse(x + 8, b - 9, 6, 1.4, INK); p.put(x + 8, b - 9, C('#c83a2a')); p.line(x + 16, b - 9, x + 13, b - 10, C('#c8ccd4')); p.put(x + 18, b - 4, C('#40a0ff')); return { w: 20, h: 10 };
+    case 'holo': blk(p, x + 2, b - 4, 14, 4, C('#2a2a30')); p.ellipse(x + 9, b - 5, 6, 1.5, C('#60e0ff')); p.poly([[x + 4, b - 5], [x + 14, b - 5], [x + 12, b - 24], [x + 6, b - 24]], withAlpha(C('#80f0ff'), 60)); p.disc(x + 9, b - 20, 2, withAlpha(C('#a0ffff'), 170)); p.rect(x + 8, b - 18, 3, 6, withAlpha(C('#a0ffff'), 150)); return { w: 18, h: 24 };
+    case 'karaoke': blk(p, x, b - 14, 16, 14, C('#4a2a6a')); p.rect(x + 2, b - 12, 12, 6, C('#2a2a40')); p.hline(x + 3, x + 12, b - 10, C('#ff60c0')); p.hline(x + 3, x + 9, b - 8, C('#60e0ff')); spk(x + 5, b - 3, 1.5); spk(x + 11, b - 3, 1.5); p.line(x + 17, b - 1, x + 19, b - 12, C('#2a2a30')); p.rect(x + 18, b - 15, 3, 4, C('#9aa0a8')); return { w: 22, h: 15 };
+    default: return null;
+  }
+}
+
 /** Papel de parede (estampa da época por cima da parede do corte), piso/tapete e luz de teto. */
 function surfaces(c: Cut27, items: { d: DecoDef31; slot: string }[]): void {
   const { back, layer, x0, w0, y0, fy } = c;
@@ -96,7 +124,7 @@ function surfaces(c: Cut27, items: { d: DecoDef31; slot: string }[]): void {
   }
   const ground = items.find((i) => i.slot === 'ground');
   if (ground) { const a = col(ground.d), b = col(ground.d, 1); back.rect(x0 + 30, fy - 1, w0 - 60, 3, b); back.rect(x0 + 34, fy, w0 - 68, 1, a); }
-  for (const it of items.filter((i) => i.slot === 'ceiling')) { const cx = x0 + Math.round(w0 / 2); layer.vline(cx, y0, y0 + 6, INK); layer.poly([[cx - 6, y0 + 11], [cx + 6, y0 + 11], [cx + 3, y0 + 6], [cx - 3, y0 + 6]], col(it.d, 1)); layer.hline(cx - 4, cx + 4, y0 + 12, C('#fff0b8')); layer.poly([[cx - 5, y0 + 12], [cx + 5, y0 + 12], [cx + 22, fy], [cx - 22, fy]], withAlpha(C('#ffe8a0'), 22)); }
+  for (const it of items.filter((i) => i.slot === 'ceiling')) light31({ ...c.g, p: layer }, it.d, x0 + Math.round(w0 / 2), y0);
 }
 
 // ---------------------------------------------------------------- loja
@@ -176,7 +204,7 @@ export function paintDecoShop31(a: DecoShopArt31): Painted31 {
     if (d.cat === 'paper' || d.cat === 'window') { // amostra: rolo/cortina pendurado
       const a2 = col(d), b2 = col(d, 1);
       prim27.blk(p, wx, top, 14, 22, a2); for (let yy = top + 3; yy < top + 20; yy += 4) p.hline(wx + 2, wx + 11, yy, b2); size = { w: 14, h: 22 };
-    } else if (d.cat === 'light') { p.vline(wx + 7, y0, top + 4, INK); p.poly([[wx + 1, top + 12], [wx + 13, top + 12], [wx + 10, top + 5], [wx + 4, top + 5]], col(d, 1)); size = { w: 14, h: 12 }; }
+    } else if (d.cat === 'light') size = light31({ ...g, p }, d, wx + 10, y0);
     else size = piece31({ ...g, p }, d, wx, top + Math.min(30, sz.h), hk(it.def.id));
     if (a.k === 'gallery') back.poly([[wx + (size.w >> 1) - 2, y0 + 5], [wx + (size.w >> 1) + 2, y0 + 5], [wx + size.w + 2, top + size.h + 4], [wx - 2, top + size.h + 4]], withAlpha(C('#fff4c8'), 30));
     const tb = label(it, wx, top + Math.min(30, Math.max(size.h, 12)) + 3, 2);
@@ -298,7 +326,7 @@ export function paintEst31(a: EstArt31): Painted31 {
   }
   const sg = a.items.find((i) => i.slot === 'sign');
   const px = cutEnd27(c, { name: a.name, dim: a.room.id === 'stage', facade: facadeCol27(a.year, 'instruments') });
-  if (sg) { const t = a.room.id === 'bar' ? 'BAR' : a.room.id === 'stage' ? (a.year < 1950 ? 'BAILE' : 'AO VIVO') : a.room.id === 'shop' ? 'DISCOS' : 'ABERTO'; const w = textWidth(t) + 8, sx = X(0.5) - (w >> 1), sy = y0 + 4; prim27.blk(px, sx, sy, w, 9, C('#1a1420')); drawText(px, t, sx + 4, sy + 2, mix(col(sg.d, 1), C('#ffffff'), 0.4)); }
+  if (sg) { const t = a.room.id === 'bar' ? 'BAR' : a.room.id === 'stage' ? (a.year < 1950 ? 'BAILE' : 'AO VIVO') : a.room.id === 'shop' ? 'DISCOS' : 'ABERTO'; const q = new Px(SW31, SH31); const sz = sign31({ ...g, p: q }, sg.d, 0, 40, t); q.outline(INK); px.blit(q, X(0.5) - (sz.w >> 1), y0 + 14 - 40 + sz.h - 10); }
   const people: Person31px[] = [{ id: 'you', x: X(0.12), y: fy, dir: 'SE' }];
   if (hasDesk) people.push({ id: 'clerk', x: kx + (kw >> 1), y: fy, dir: 'SW', behind: true });
   if (a.pub) people.push({ id: 'cust1', x: X(0.3), y: fy, dir: 'SE' }, { id: 'cust2', x: X(0.78), y: fy, dir: 'SW' }, { id: 'cust3', x: X(0.9), y: fy, dir: 'SW' });
