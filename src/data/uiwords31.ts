@@ -714,6 +714,7 @@ export const UI_WHOLE31: readonly string[] = [
   "Treino",
   "Trem",
   "Tribute",
+  "Trip",
   "Troféu",
   "Trophy cabinet",
   "True",
