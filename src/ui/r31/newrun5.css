@@ -69,10 +69,12 @@
 .n5-ruler::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 26px; margin-top: 2px; background: #c0392b; border: 3px solid #1a1214; border-radius: 3px; }
 .n5-ruler::-moz-range-thumb { width: 16px; height: 20px; background: #c0392b; border: 3px solid #1a1214; border-radius: 3px; }
 .n5-ruler:focus-visible { outline: 2px solid var(--n5-brown); outline-offset: 2px; }
-.n5-eras { position: relative; height: 18px; margin: 0 6px; font-size: 12px; color: var(--n5-mute); }
+.n5-eras { position: relative; height: 34px; margin: 0 6px; font-size: 12px; color: var(--n5-mute); }
 .n5-era { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 0; font: 12px var(--sans); color: var(--n5-mute); cursor: pointer; white-space: nowrap; }
 .n5-era:first-child { transform: none; }
 .n5-era:last-child { transform: translateX(-100%); }
+/* QA5: eras próximas (1950 e 1962) grudavam; as pares descem uma linha */
+.n5-era:nth-child(even) { top: 16px; }
 .n5-era:hover { color: var(--n5-ink); text-decoration: underline; }
 /* interruptores */
 .n5 .n5-swrow { display: flex; flex-direction: row; margin: 0; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; }

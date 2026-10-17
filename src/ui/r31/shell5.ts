@@ -68,7 +68,7 @@ export function show5(area: string, tab?: [string, string], objId?: string): voi
   const s = game();
   if (!s) return;
   const o = (objId ? object5(objId) : undefined) ?? objectFor5(area, tab);
-  if (o && isPlace5(o) && !objId) { travel5go(regionOf5(o.place)); return; }
+  if (o && isPlace5(o) && (!objId || !SH5.paper)) { travel5go(regionOf5(o.place)); return; } // QA5: "ver tudo" de um lugar (Cidade, Mundo) viaja, não abre a página antiga num papel
   if (o && !SH5.paper && CARD5.take?.(o.id, { area, tab })) return; // ACOES5 (EXP-13): cartão de ações ao lado do objeto; papel só por "ver tudo ▸"/pausa
   // porta da rua / mapa na parede: são atalhos de viagem, não papel (QA5; sem cartão)
   if (o && !o.opens.length && o.keyRef?.startsWith('travel:')) { travel5go(o.keyRef.slice(7) as Region5); return; }
