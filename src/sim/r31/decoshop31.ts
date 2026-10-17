@@ -33,7 +33,7 @@ import { emitFact } from '../facts17';
 import { cashWhy20, freeCash20 } from '../oblig20';
 import { buildings18 } from '../sys/campus18';
 import { peekLots31 } from '../sys/lots31';
-import { DECO27, npcName27, type Place27 } from '../sys/place27';
+import { DECO27, FAMHOME27, MUSIC27, UNDER27, npcName27, type Place27 } from '../sys/place27';
 import { addRelic, relics, type RelicKind } from '../sys/relics9';
 import { underOrgs31 } from '../sys/under31';
 import { VENUE_DECO17 } from '../sys/venues17';
@@ -259,25 +259,41 @@ export function clearDeco31(s: GameState): void {
 // ---------------------------------------------------------------- no mapa: as lojas ocupam prédios da cidade comum
 
 const ROLE31: Record<DecoShopK31, L> = { furniture: l('Gerente da loja', 'Store manager'), antique: l('Antiquário(a)', 'Antique dealer'), hifi: l('Vendedor(a) de som', 'Sound salesperson'), gallery: l('Galerista', 'Gallerist') };
-/** Puro: troca prédios comuns (escritório, hotel, moradia, loja repetida) pelas lojas abertas, dos menos vistos para os mais. */
+/** Nome do prédio que junta as lojas quando falta terreno (galeria comercial → centro comercial → shopping). */
+export const mallName31 = (y: number): L => (y < 1950 ? l('Galeria Comercial', 'Shopping Arcade') : y < 1990 ? l('Centro Comercial', 'Shopping Centre') : l('Shopping', 'Shopping Mall'));
+/** Puro: as lojas abertas ocupam prédios comuns (escritório, hotel, moradia, loja repetida), dos menos vistos para os
+ *  mais. Sempre aparecem: faltando terreno, as que sobram dividem o último prédio (galeria comercial); sem nenhum
+ *  prédio comum, ocupam o prédio de cidade comum menos visto que não é lugar básico da música. */
 export function decoPlacesOnMap31(s: GameState, out: Place27[]): void {
   const open = decoShopsOpen31(s);
   if (!open.length) return;
   // a cidade comum repete a loja de instrumentos/da época: a primeira fica
   const firstShop = out.findIndex((p) => p.k === 'instruments');
-  const free = (p: Place27, i: number) => p.src === 'fill' && !p.venue && !p.org && !p.fam31 && !p.lot31 && !p.deco31 && !p.outlet
-    && (p.k === 'office' || p.k === 'apartments' || p.k === 'hotel' || (p.k === 'instruments' && i !== firstShop));
-  const idx = [...out.keys()].filter((i) => free(out[i], i)).reverse();
-  open.forEach((k, j) => {
+  const base = (p: Place27) => p.src === 'fill' && !p.venue && !p.org && !p.fam31 && !p.lot31 && !p.deco31 && !p.outlet;
+  const free = (p: Place27, i: number) => base(p) && (p.k === 'office' || p.k === 'apartments' || p.k === 'hotel' || (p.k === 'instruments' && i !== firstShop));
+  // a Casa Fossati (vem depois) fica com o primeiro prédio de moradia livre: não mexe nele
+  const famFree = (p: Place27, i: number) => free(p, i) && p.k !== 'instruments';
+  const famApt = out.findIndex((p, i) => famFree(p, i) && p.k === 'apartments');
+  const famAt = FAMHOME27.fn ? (famApt >= 0 ? famApt : out.findIndex(famFree)) : -1;
+  let idx = [...out.keys()].filter((i) => i !== famAt && free(out[i], i)).reverse();
+  if (!idx.length) idx = [...out.keys()].filter((i) => base(out[i]) && !MUSIC27.includes(out[i].k) && i !== firstShop).reverse().slice(0, 1);
+  if (!idx.length) return;
+  // deixa terreno para o submundo (fachadas, delegacia, beco), que vem depois: as lojas ficam com o que sobra (mínimo 1)
+  const under = UNDER27.fn?.(s).length ?? 0;
+  const n = Math.max(1, Math.min(idx.length - under, open.length));
+  for (let j = 0; j < n; j++) {
     const i = idx[j];
-    if (i === undefined) return;
+    const ks = j === n - 1 ? open.slice(j) : [open[j]];
+    const k = ks[0];
     const lot = out[i].lot;
     const owner = npcName27(s, `deco31|${k}`);
-    const n = shopRows31(s, k).length;
-    out[i] = { id: `pl:${lot}`, lot, k: 'office', name: shopName31(k, s.year), what: SHOP_WHAT31[k], owner, ownerK: 'npc',
-      now: n ? fmtL(l('{n} peça(s) à venda este mês; estoque novo em {w} semana(s).', '{n} piece(s) for sale this month; new stock in {w} week(s).'), { n, w: weeksToRestockDeco31(s) }) : l('Vitrine sendo arrumada.', 'Window being dressed.'),
-      people: [{ name: owner, role: ROLE31[k], staff: true, job: 0 }], also: [], src: 'fill', draw: 'store', deco31: k };
-  });
+    const rows = ks.reduce((a, x) => a + shopRows31(s, x).length, 0);
+    const mall = ks.length > 1;
+    out[i] = { id: `pl:${lot}`, lot, k: 'office', name: mall ? mallName31(s.year) : shopName31(k, s.year),
+      what: mall ? fmtL(l('{n} lojas de decoração: {l}.', '{n} decoration shops: {l}.'), { n: ks.length, l: ks.map((x) => shopName31(x, s.year).pt).join(', ') }) : SHOP_WHAT31[k], owner, ownerK: 'npc',
+      now: rows ? fmtL(l('{n} peça(s) à venda este mês; estoque novo em {w} semana(s).', '{n} piece(s) for sale this month; new stock in {w} week(s).'), { n: rows, w: weeksToRestockDeco31(s) }) : l('Vitrine sendo arrumada.', 'Window being dressed.'),
+      people: ks.map((x) => ({ name: npcName27(s, `deco31|${x}`), role: ROLE31[x], staff: true, job: 0 })), also: [], src: 'fill', draw: 'store', deco31: k, ...(mall ? { deco31x: ks.slice(1) } : {}) };
+  }
 }
 DECO27.fn = decoPlacesOnMap31;
 

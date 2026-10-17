@@ -17,12 +17,13 @@ import { CO31, ME31 } from '../src/sim/r31/relic31';
 import { ownerOf } from '../src/sim/sys/people/owner';
 import { CAMPUS_EXTRA28 } from '../src/sim/sys/campus18';
 import { places27 } from '../src/sim/sys/place27';
+import { commonLots31 } from '../src/sim/r31/city31';
 import { underOrgs31 } from '../src/sim/sys/under31';
 import { DECO31 } from '../src/data/deco31';
 import { decoPlaces31, placeDeco31, whereIs31 } from '../src/sim/r31/deco31';
 import {
   DECOL, DECO_SHOPS31, SW_DECO_SHOPS31, buyShop31, checkSets31, decoIn31, decoMine31, decol31, deliverDeco31, inLine31, orderDeco31, outOfLine31,
-  peekDecol31, placePub31, rare31, remoteCat31, remoteOpen31, setProgress31, shopRows31, theftDeco31, venueOcc31, vintage31, type DecoShopK31,
+  decoShopsOpen31, peekDecol31, placePub31, rare31, remoteCat31, remoteOpen31, setProgress31, shopRows31, theftDeco31, venueOcc31, vintage31, type DecoShopK31,
 } from '../src/sim/r31/decoshop31';
 
 const game = (seed: string, year = 1975, on = true): GameState => {
@@ -206,6 +207,20 @@ describe('r31 DECO-L: estabelecimentos, efeito e roubo', () => {
     expect(checkSets31(s)).toEqual(['eighties']);
     expect(checkSets31(s)).toEqual([]);
     expect(setProgress31(s).find((p) => p.style === 'eighties')?.done).toBe(true);
+  });
+});
+
+describe('r31 DECO-L: as lojas aparecem no mundo', () => {
+  it('toda loja aberta está num prédio do mapa da cidade, em várias épocas e cidades (cidade pequena: centro comercial)', () => {
+    for (const [y, c] of [[1905, 'london'], [1935, 'new_york'], [1955, 'new_york'], [1975, 'london'], [2015, 'london'], [2035, 'london']] as [number, string][]) {
+      const s = createGame(defaultConfig(`decol-map-${y}`, { startYear: y, homeCity: c, dbSize: 'small' } as Parameters<typeof defaultConfig>[1]));
+      advanceMonth(s);
+      const ps = places27(s, commonLots31(s));
+      const shown = ps.flatMap((p) => (p.deco31 ? [p.deco31, ...(p.deco31x ?? [])] : []));
+      expect(shown.sort(), `${y} ${c}`).toEqual(decoShopsOpen31(s).slice().sort());
+      // o submundo continua com prédio próprio quando a cidade tem
+      if (y >= 1975) expect(ps.some((p) => p.k === 'market')).toBe(true);
+    }
   });
 });
 
