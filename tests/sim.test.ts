@@ -105,17 +105,26 @@ describe('conteúdo', () => {
 });
 
 describe('arco completo', () => {
-  it('uma run iniciada em 2030 chega a um dos 20 finais', () => {
+  it('uma run iniciada em 2030 chega a um dos 20 finais', async () => {
+    // W5-FIX2: devolve o controle ao vitest a cada mês (como o r29-relics): síncrona, a run travava o worker e o vitest
+    // marcava erro ("Timeout calling onTaskUpdate") mesmo com o teste passando. O orçamento de 300 s vale para o tempo de
+    // CPU da linha do teste (a lentidão real continua pega); o prazo de parede é folgado porque na suíte a máquina é dividida.
+    const cpu = (): number => { const u = process.threadCpuUsage(); return (u.user + u.system) / 1000; };
+    const t0 = cpu();
     const s = createGame(defaultConfig('arc-1', { startYear: 2030, scenario: 'established' }));
     for (let i = 0; i < 12 * 11 + 2 && !s.ended; i++) {
       botMonth(s);
       for (const d of [...s.decisions]) void d;
       advanceMonth(s);
+      await new Promise<void>((r) => setTimeout(r, 0));
     }
     expect(s.ended).toBeTruthy();
     expect(endingScores(s).length).toBe(20);
     expect(s.player.cash).toBe(s.player.initialCash + s.player.totalPosted);
-  }, 300000); // r21: já levava ~170 s de 180 s; o acervo (+210 atos modernos na base média) soma ~10%
+    const used = cpu() - t0;
+    console.log(`arco 2030: ${(used / 1000).toFixed(0)} s de CPU`);
+    expect(used).toBeLessThan(300000);
+  }, 900000); // r21: já levava ~170 s de 180 s; o acervo (+210 atos modernos na base média) soma ~10%
   // R29b: sozinho, na mesma máquina: antes do R29 (2269a63) 145 s; com o R29 216 s (demo29 recalculava a semente do
   // público de todos os atos todo mês; pressões do conn29 refaziam a busca do ato 4× por leitura de estresse); depois da
   // otimização (mesmos números, docs/fixes29b.md) 182 s. O teto fica em 300 s; o estouro na suíte inteira vinha da carga.

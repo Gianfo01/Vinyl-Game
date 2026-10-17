@@ -57,6 +57,9 @@ export function shape31(art: Art31, f: { w: number; d: number; H: number }, lw: 
     case 'holo': s.H = cl(f.H, 10, 13); s.tint = [C('#dfe6ee'), 0.5]; s.top = 16; break;
     case 'store': case 'records': case 'instruments': case 'sheet': case 'piano': case 'gramophone': case 'tailor': case 'radiotv': case 'hifi': case 'arcade':
     case 'video': case 'lan': case 'games': case 'vinyl': case 'cafe': case 'bakery': s.H = cl(f.H, 10, 14); break;
+    case 'furniture': W(3.2); D(2.4); s.H = cl(Math.max(f.H, 14), 14, 22); break;
+    case 'antique': W(2); s.H = cl(f.H, 11, 14); s.worn = true; break;
+    case 'gallery': W(2.6); s.H = cl(f.H, 12, 16); s.noWin = true; break;
     case 'office': case 'dorm': case 'plant': case 'booking': case 'rehearsal': case 'school': case 'publisher': s.ownSign = false; break;
     default: break;
   }
@@ -72,6 +75,7 @@ const PAL31: Partial<Record<Art31, [string, number, string?]>> = {
   radiotv: ['#3a7a7a', 0.4, '#2a5050'], jukebox: ['#e080a8', 0.4, '#a04070'], hifi: ['#3a3a44', 0.45, '#26262c'], arcade: ['#2a2436', 0.5, '#5a2a8a'],
   video: ['#2a4aa0', 0.4, '#f0c020'], cdmega: ['#e8e4dc', 0.4, '#c83030'], pager: ['#8ab040', 0.4, '#5a7a2a'], lan: ['#2a2436', 0.45, '#2a4a8a'],
   games: ['#6a3aa0', 0.4, '#3a2060'], vinyl: ['#7a3a2a', 0.4, '#2a2a2e'], cafe: ['#a87848', 0.4, '#5a3a24'], bakery: ['#e8c870', 0.45, '#a86a30'],
+  furniture: ['#b88a5a', 0.4, '#6a4a2a'], antique: ['#5a4030', 0.45, '#3a2a20'], gallery: ['#f2f0ea', 0.7, '#9aa0a8'],
   telegraph: ['#8a7a5a', 0.35, '#4a4038'], diner: ['#e8e4dc', 0.4, '#c83030'], phones: ['#f4f4f2', 0.7, '#e8ecf0'], holo: ['#dfe6ee', 0.5, '#80d0e0'],
   label: ['#3a5a90', 0.15, '#2a3a5a'], sublabel: ['#b04888', 0.15, '#6a2a5a'], imprint: ['#3a8a50', 0.2, '#2a5a3a'], hotel: ['#efe2c4', 0.35, '#8a2a2a'],
   press: ['#5a5a60', 0.3, '#3a3a40'], police: ['#7a8aa0', 0.35, '#2a3a5a'], facade: ['#4a2a2a', 0.3, '#2a1a1a'], tv: ['#c8ccd0', 0.3, '#5a6a80'],
@@ -205,7 +209,7 @@ function roofBoard(g: G31, f: (x: number, y: number) => void, bg: Col): void {
   g.t.line(x - 4, y, x - 4, y - 4, STEEL2); g.t.line(x + 4, y, x + 4, y - 4, STEEL2);
   plate(g, x - 7, y - 12, 15, 8, bg, INK); f(x - 7, y - 12);
 }
-const OLD31 = new Set<Art31>(['sheet', 'piano', 'gramophone', 'tailor', 'bakery', 'telegraph', 'records', 'instruments', 'radiotv']);
+const OLD31 = new Set<Art31>(['sheet', 'piano', 'gramophone', 'tailor', 'bakery', 'telegraph', 'records', 'instruments', 'radiotv', 'furniture', 'antique', 'gallery']);
 
 // ---------------------------------------------------------------- tipos
 
@@ -555,6 +559,52 @@ const ART: Partial<Record<Art31, Draw31>> = {
     const [x, y] = gnd(g, 0.2, 3); g.t.rect(x - 2, y - 1, 5, 1, STEEL2); g.t.rect(x - 1, y - 2, 3, 1, C('#60e0ff'));
     const hc = withAlpha(C('#80f0ff'), 150); g.t.disc(x, y - 11, 1.5, hc); g.t.rect(x - 1, y - 9, 3, 4, hc); g.t.rect(x - 1, y - 5, 1, 3, hc); g.t.rect(x + 1, y - 5, 1, 3, hc);
     g.L.disc(x, y - 11, 1.5, C('#a0ffff')); g.L.rect(x - 1, y - 9, 3, 4, C('#a0ffff'));
+  },
+  // ----- móveis / loja de departamentos: vitrines largas com sofá, abajur e mesa; andar de cima com mais vitrines a
+  // partir de 1930; toldo listrado (era 0–1), faixa de neon (2–3), caixa luminosa (4) e painel de LED (5)
+  furniture(g) {
+    const z1 = groundShop(g); shopWin(g, 2, g.lenL - 2, 1, z1, C('#4a3a2e'));
+    const sofa = g.era <= 1 ? C('#7a2a3a') : g.era === 2 ? C('#3aa0a0') : g.era === 3 ? C('#d07a2a') : g.era === 4 ? C('#6a6a74') : C('#c8c8c0');
+    const u0 = 3; fL(g, u0, u0 + 6, 1, 3, sofa); fL(g, u0, u0 + 1, 3, 4, sofa); fL(g, u0 + 5, u0 + 6, 3, 4, sofa); fL(g, u0 + 1, u0 + 5, 3, 4, shade(sofa, 0.2));
+    const u1 = Math.min(g.lenL - 6, u0 + 9); fL(g, u1, u1 + 1, 1, 5, STEEL2); fL(g, u1 - 1, u1 + 2, 5, 6, g.era <= 1 ? C('#e0c070') : CREAM); g.L.set(...lp(g, u1 + 0.5, 4.5), LITW);
+    if (g.lenL > 22) { const u2 = g.lenL - 7; fL(g, u2, u2 + 4, 2, 3, WOOD); fL(g, u2, u2 + 1, 1, 2, WOOD2); fL(g, u2 + 3, u2 + 4, 1, 2, WOOD2); }
+    door(g, 0, 4, 5, g.era >= 2);
+    if (g.H >= 13) for (let u = 3; u + 4 < g.lenL - 2; u += 6) { shopWin(g, u, u + 4, z1 + 3, z1 + 6, C('#3a4a5a')); fL(g, u + 1, u + 3, z1 + 3, z1 + 4, COVERS[(u * 3) % COVERS.length]); }
+    if (g.era <= 1) { const [a, b] = awnCols(g); awning(g, 1, g.lenL - 1, z1 + 1, a, b); }
+    else fL(g, 0, g.lenL, z1 + 1, z1 + 3, g.era >= 4 ? C('#2a5aa0') : C('#b03030'));
+    eraBoard(g, lp(g, 3, 0)[0], lp(g, 3, Math.min(g.H - 1, z1 + (g.H >= 13 ? 8 : 4)))[1] - 2, Math.min(18, Math.round(g.lenL - 6)), g.era >= 4 ? C('#2a5aa0') : C('#e0a040'));
+    if (g.era >= 4) { const [x, y] = gnd(g, 0.9, 2); g.t.rect(x - 1, y - 6, 2, 6, STEEL2); g.t.rect(x - 3, y - 9, 6, 3, C('#2a5aa0')); g.L.rect(x - 2, y - 8, 4, 1, WHITE); }
+  },
+  // ----- antiquário / brechó: fachada de madeira escura, vitrine em bay com relógio, gramofone e vaso; placa oval
+  // pendurada; cadeira e baú na calçada (do brechó em diante: arara com roupas)
+  antique(g) {
+    const z1 = groundShop(g); fL(g, 1, g.lenL - 1, 0, z1 + 1, C('#3a2618'));
+    shopWin(g, 2, g.lenL - 2, 1, z1 - 1, C('#2a2018'));
+    const [cx, cy] = lp(g, 4, 3); g.t.disc(cx, cy - 1, 1.6, GOLD2); g.t.set(cx, cy - 1, CREAM); g.t.rect(cx - 1, cy + 1, 3, 2, WOOD2);
+    const hx = lp(g, Math.min(g.lenL - 5, 8), 2); g.t.rect(hx[0], hx[1] - 1, 3, 2, WOOD); g.t.poly([[hx[0] + 2, hx[1] - 1], [hx[0] + 5, hx[1] - 4], [hx[0] + 5, hx[1]]], GOLD);
+    if (g.lenL > 16) { const vx = lp(g, g.lenL - 5, 2); g.t.rect(vx[0], vx[1] - 3, 2, 3, C('#3a7a8a')); g.t.set(vx[0], vx[1] - 4, C('#5aa0b0')); }
+    door(g, C('#4a2e1c'), 3, 5);
+    const [bx, by] = lp(g, 1, z1 + 4); g.t.line(bx - 1, by, bx - 5, by + 2, DARK);
+    g.t.disc(bx - 6, by + 4, 2.5, C('#e8d8b0')); g.t.disc(bx - 6, by + 4, 1.8, C('#5a3a24')); g.t.set(bx - 7, by + 4, GOLD); g.t.set(bx - 5, by + 4, GOLD);
+    const [sx, sy] = gnd(g, 0.18, 2); g.t.rect(sx - 2, sy - 4, 1, 4, WOOD2); g.t.rect(sx + 1, sy - 4, 1, 4, WOOD2); g.t.rect(sx - 2, sy - 3, 4, 1, WOOD); g.t.rect(sx - 2, sy - 7, 1, 4, WOOD);
+    if (g.year >= 1965) { const [rx, ry] = gnd(g, 0.82, 2); g.t.line(rx - 3, ry - 8, rx + 3, ry - 8, STEEL2); g.t.line(rx - 3, ry - 8, rx - 3, ry, STEEL2); g.t.line(rx + 3, ry - 8, rx + 3, ry, STEEL2); for (let i = 0; i < 4; i++) g.t.rect(rx - 2 + i * 1.5, ry - 7, 1, 4, COVERS[(i * 3 + 1) % COVERS.length]); }
+    else { const [tx, ty] = gnd(g, 0.82, 2); g.t.rect(tx - 3, ty - 3, 6, 3, C('#6a4228')); g.t.rect(tx - 3, ty - 4, 6, 1, C('#8a5a34')); g.t.set(tx, ty - 2, GOLD); }
+  },
+  // ----- galeria: fachada branca lisa, uma vitrine alta com UM quadro iluminado por spot; pilastras e friso (até 1949),
+  // faixa de exposição pendurada (1950–1999), moldura de LED na fachada (2000+)
+  gallery(g) {
+    const z1 = Math.min(g.H - 3, groundShop(g) + 3);
+    const u0 = 3, u1 = Math.max(u0 + 8, g.lenL - 8);
+    fL(g, u0 - 1, u1 + 1, 0, z1 + 1, shade(g.trim, -0.2)); fL(g, u0, u1, 1, z1, C('#e8e6e0'));
+    const pw = Math.min(7, u1 - u0 - 2), pu = Math.round((u0 + u1) / 2 - pw / 2);
+    const paint = [C('#c84040'), C('#3a6ab0'), C('#e0b030'), C('#40a060')];
+    fL(g, pu - 1, pu + pw + 1, 2, z1 - 1, GOLD2); fL(g, pu, pu + pw, 3, z1 - 2, (u, z) => paint[(Math.floor(u / 2) + Math.floor(z / 2) + g.seed) % 4]);
+    fL(g, pu, pu + pw, z1 - 2, z1 - 1, withAlpha(LITW, 160), g.L);
+    door(g, 0, 3, 5, true);
+    if (g.era <= 1) { for (const u of [1, g.lenL - 2]) fL(g, u, u + 1, 0, g.H, C('#e8e0c8')); fL(g, 1, g.lenL - 1, g.H - 2, g.H - 1, (u) => (u % 3 ? C('#d8d0b8') : C('#b8b098'))); }
+    else if (g.era <= 3) { const [x, y] = lp(g, g.lenL - 3, g.H - 1); g.t.rect(x, y, 3, Math.min(10, g.H - 3), C('#c83030')); g.t.rect(x + 1, y + 2, 1, Math.min(6, g.H - 6), WHITE); }
+    else { fL(g, u0 - 1, u1 + 1, z1 + 1, z1 + 2, C('#40e0ff')); fL(g, u0 - 1, u1 + 1, z1 + 1, z1 + 2, C('#a0ffff'), g.L); }
+    const [px, py] = gnd(g, 0.85, 2); g.t.rect(px - 1, py - 6, 3, 6, CREAM); g.t.rect(px - 1, py - 6, 3, 1, INK); g.t.set(px, py - 4, paint[g.seed % 4]);
   },
   // ----- telégrafo: postes com cruzetas e fios até o telhado, relógio grande na fachada
   telegraph(g) {

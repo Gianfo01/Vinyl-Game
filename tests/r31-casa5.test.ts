@@ -9,7 +9,7 @@ import type { GameState } from '../src/sim/types';
 import { nav5On } from '../src/sim/r31/exp5';
 import { HOUSES, ownerOf } from '../src/sim/sys/people/owner';
 import { grantRoom27 } from '../src/sim/sys/hqrooms27';
-import { ENTRIES31, PLACES31, entryHome31, entryLabel31, menu31, type MenuCtx31 } from '../src/ui/ps/menu31';
+import { ENTRIES31, PLACES31, entryHome31, entryLabel31, type MenuCtx31 } from '../src/ui/ps/menu31';
 import { TABS_REG27 } from '../src/ui/ps/tabsreg27';
 import { plan27 } from '../src/ui/ps/hqpx27';
 import {
@@ -139,10 +139,9 @@ describe('desligado = igual a hoje; explorar não muda o mundo', () => {
     expect(nav5On(s)).toBe(false);
     const ctx: MenuCtx31 = { active: ['label'] };
     expect(entryHome31('voce', ctx)).toBe('you');
-    expect(menu31(ctx).map((e) => [e.id, e.home])).toEqual(menu31({ ...ctx, nav5: undefined }).map((e) => [e.id, e.home]));
     expect(ENTRIES31.find((e) => e.id === 'voce')!.home).toBe('you');
-    expect(entryHome31('voce', { ...ctx, nav5: true })).toBe('casa31');
-    expect(entryLabel31('voce', { ...ctx, nav5: true }).pt).toBe('Casa');
+    // POL5: o desvio temporário do menu (Você → Casa) saiu; com exp5.nav a casa é o botão de viagem da casca
+    expect(entryLabel31('voce', ctx).pt).not.toBe('Casa');
   });
   it('montar a casa, a sede e a maquete não muda o estado', () => {
     const s = game(1975);

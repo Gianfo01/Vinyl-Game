@@ -21,11 +21,11 @@ describe('r17 agenda', () => {
     expect(careers(s).active).toEqual(['label']);
     expect(energyLeft(s)).toBe(5 + e0);
     for (const id of ['manager', 'festival', 'booking']) startCareer(s, id);
-    expect(overflow(s)).toBe(2);
-    expect(energyLeft(s)).toBe(3 + e0);
+    expect(overflow(s)).toBe(1); // dono (2026-10-17): 3 de expediente (antes 2)
+    expect(energyLeft(s)).toBe(4 + e0);
     const b = balls(s);
     expect(b.office.every((x) => x.k === 'career')).toBe(true);
-    expect(b.personal.filter((x) => x.k === 'career').length).toBe(2);
+    expect(b.personal.filter((x) => x.k === 'career').length).toBe(1);
     // o gasto fica registrado com o rótulo
     expect(spendEnergy(s, 1)).toBeNull();
     expect(balls(s).personal.filter((x) => x.k === 'spent').length).toBe(1);
@@ -36,7 +36,7 @@ describe('r17 agenda', () => {
     // r19 (onda 5 C): à frente rende menos quando você toca outras frentes (aqui 3) — continua acima de só acompanhar
     expect(careerQ(s, 'label').f).toBeGreaterThan(1.03);
     expect(perk(s, 'songQ')).toBeGreaterThan(q0); // r22: sem a árvore de habilidades, compara com antes de ir à frente
-    expect(energyLeft(s)).toBe(1 + e0);
+    expect(energyLeft(s)).toBe(2 + e0);
   });
 
   it('sobrecarga gera estresse; diretor contratado libera a bolinha', () => {

@@ -78,11 +78,13 @@ export function staffNeed(x: V12): number { return Math.max(1, Math.ceil(x.prog.
 // ---------------------------------------------------------------- previsão por noite
 
 export interface NightEst { att: number; occ: number; door: number; bar: number; house: number; cost: number; net: number; why: L[] }
+/** R31 · DECO-M: bônus de público da decoração da casa de shows (0 sem peças postas). */
+export const nightDeco12: { f: (s: GameState) => number } = { f: () => 0 };
 export function nightEst(s: GameState, v: OwnVenue, x: V12, n: Night): NightEst {
   const K = NIGHTS[n.k];
   const why: L[] = [];
   const act = n.actId ? s.acts[n.actId] : undefined;
-  let occ = K.occ + DAYS[n.day].occ + x.regulars / 250 * (n.k === 'original' || n.k === 'residency' ? 1.3 : 0.6) + n.idn / 400 + x.scene / 500 + v.acoustics * 0.04;
+  let occ = K.occ + DAYS[n.day].occ + x.regulars / 250 * (n.k === 'original' || n.k === 'residency' ? 1.3 : 0.6) + n.idn / 400 + x.scene / 500 + v.acoustics * 0.04 + nightDeco12.f(s);
   if (act) { occ += act.fame / 250 + ((x.rel[act.id] ?? 30) >= 60 ? 0.05 : 0); if (x.ups.stage) occ += 0.06; }
   if (x.ups.access) occ += 0.04;
   if (x.cond < 40) { occ -= 0.1; why.push(l('Casa malconservada: −10% de público.', 'Run-down house: −10% crowd.')); }

@@ -15,6 +15,7 @@
 // Sempre que possível a edição usa as funções do jogo (dinheiro passa por `post`, opinião por `setOpinion`, empresa
 // por `transferLabel`, relíquia pela lista de donos); quando não há, o editável declara `raw: true` ("edição crua").
 
+import { EDITABLES31 as EDITABLES, RUNNABLES31 as RUNNABLES } from './editreg31'; // primeiro: folha sem dependências
 import { Rng, clamp } from '../../core/rng';
 import { formatMoney } from '../../core/money';
 import { GENRES, genreById, l, type L } from '../../data/world';
@@ -79,8 +80,7 @@ export interface Runnable {
   when?: (s: GameState, target?: string) => boolean;
 }
 
-const EDITABLES = new Map<string, Editable>();
-const RUNNABLES = new Map<string, Runnable>();
+// mapas em ./editreg31 (módulo-folha): registrar funciona mesmo no meio do ciclo de carga
 
 /** Registra (ou substitui) um editável. */
 export function registerEditable(e: Editable): void { EDITABLES.set(e.id, e); }
@@ -435,7 +435,7 @@ registerRunnable({
     if (!def) return { ok: false, text: l('Escolha um evento.', 'Choose an event.') };
     const r = luck(s, `ev:${def.id}`);
     const ctx = def.find ? def.find(s, r) : {};
-    if (!ctx) return { ok: false, text: l('Ninguém se encaixa neste evento agora (faltam artistas ou condições).', 'Nobody fits this event right now (missing acts or conditions).') };
+    if (!ctx || (def.ok && !def.ok(s, ctx))) return { ok: false, text: l('Ninguém se encaixa neste evento agora (faltam artistas ou condições).', 'Nobody fits this event right now (missing acts or conditions).') };
     const before = s.decisions.length;
     emitEvent(s, r, def.id, ctx);
     return s.decisions.length > before ? l('Virou uma decisão na sua mesa.', 'It became a decision on your desk.') : l('Aconteceu (veja os avisos).', 'It happened (see notices).');
