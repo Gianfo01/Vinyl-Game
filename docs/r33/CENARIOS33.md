@@ -196,8 +196,8 @@ aparecem na tela (odds19) e são as mesmas do sorteio.
 
 ## 9. LEVA 1 detalhada (versão 34) — o que cada frente faz e onde encaixa
 
-Decisão do dono (17/10): POL33 cancelado; a 33 sai sem polimento; seguimos com a leva 1 (e talvez a 2) e o
-polimento vem depois de tudo. Base técnica que a 33 já deixou pronta:
+O POL33 continua na 33 (o dono chegou a cancelar e voltou atrás). Depois da 33: leva 1 (e talvez a 2) e um
+polimento geral no fim. Base técnica que a 33 já deixou pronta:
 - **Lugares:** `registerSite33` (mapa33: tipo → zona, cidade, época) + o padrão do INT-2 (`src/sim/r33/int2.ts`:
   prédio novo com interior e ações que passam pelos ganchos) + `place27`/`interior27` (props) + `lots31`.
 - **Pessoas:** GENTE33 (pessoas fixas, três camadas, talento escondido, ciclo bartender↔artista do gente31).
@@ -236,6 +236,6 @@ Testes `r34-lugares`: cada lugar só na época/país; o verbo chama a função e
   antes/depois.
 
 ### Ordem e build
-33 sai (QA33 + REDES33 juntadas) → CENARIOS34-A e -B em paralelo (A mexe em lugares/interiores, B em regras;
+33 sai (QA33 + REDES33 + POL33 juntadas) → CENARIOS34-A e -B em paralelo (A mexe em lugares/interiores, B em regras;
 B usa os lugares de A por id, então B registra o cassino só pelo id `casino33` combinado) → junção → build
 `Masters_34_previa` → decidir leva 2 → polimento geral → `Masters_34`.

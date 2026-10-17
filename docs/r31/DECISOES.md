@@ -618,3 +618,5 @@ polir. A 33 sai com QA33 + REDES33 juntadas, sem polimento. Os itens do POL33 (o
 itens exclusivos, as 6 ideias, controles, tutorial, festival a céu aberto, interiores antigos pequenos, tela de
 escolher candidato do GENTE33) ficam para o polimento geral depois das levas. Leva 1 detalhada em
 docs/r33/CENARIOS33.md §9.
+
+**Revisto no mesmo dia:** o dono voltou atrás — o POL33 fica onde estava (depois de QA33 e REDES33, antes da `Masters_33.html`). A prévia `Masters_33_previa.html` vai antes, só para ver.
