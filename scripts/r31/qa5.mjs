@@ -228,7 +228,7 @@ async function sweepSystem() {
     const row = p.locator(`.pz5-row[data-area="${area}"]`).first();
     if (!(await row.count())) continue;
     try { await row.click({ timeout: 2500 }); } catch { flag('sem-efeito', `indice.${area}`, 'clique bloqueado'); continue; }
-    await wait(700);
+    await wait(1400); // viagem (Nosso mundo, Mundo…) passa pela cortina; tecla durante ela só pula a transição
     if (await p.locator('.pz5').count()) flag('sem-efeito', `indice.${area}`);
     await checkScroll(`indice.${area}`);
     await escBack(`indice.${area}`, { pauseOk: true });
@@ -282,7 +282,7 @@ async function advance(n) {
     const d0 = await p.locator('.t5-chip').first().textContent();
     await p.locator('.t5-go').click(); await wait(1500);
     for (let k = 0; k < 4; k++) {
-      const acc = p.getByRole('button', { name: /Aceitar padrões e avançar/ });
+      const acc = p.getByRole('button', { name: /Aceitar padrões e avançar|Resolver rápido/i });
       if (await acc.count()) { await acc.first().click(); await wait(1500); continue; }
       if (await p.locator('.overlay').count()) { await p.keyboard.press('Escape'); await wait(500); continue; }
       break;
@@ -291,7 +291,7 @@ async function advance(n) {
     let d1 = await p.locator('.t5-chip').first().textContent();
     if (d0 === d1) { // uma janela (decisão, aviso) segurou a virada: o jogador fecha e aperta de novo
       await p.locator('.t5-go').click(); await wait(1500);
-      const acc = p.getByRole('button', { name: /Aceitar padrões e avançar/ });
+      const acc = p.getByRole('button', { name: /Aceitar padrões e avançar|Resolver rápido/i });
       if (await acc.count()) { await acc.first().click(); await wait(1500); }
       await escBack('mes', { pauseOk: true });
       d1 = await p.locator('.t5-chip').first().textContent();
