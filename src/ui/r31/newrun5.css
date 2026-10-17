@@ -117,7 +117,7 @@
 .n5-rail .ng-tab .ng21-sub { color: #9aa8b8; font-size: 13px; }
 .n5-rail .ng-tab.on { background: #4a3a10; box-shadow: inset 0 0 0 2px var(--n5-gold); }
 .n5-rail .ng-tab.on .ng21-tl b { color: var(--n5-gold); }
-.n5-rail .ng-tab.done .ng21-tl b::after { content: ' ✓'; color: #48b85c; }
+.n5-rail .ng-tab.done .ng21-tl b::after { content: ''; display: inline-block; width: 4px; height: 8px; margin: 0 0 1px 7px; border: solid #48b85c; border-width: 0 2px 2px 0; transform: rotate(45deg); } /* QA33: visto desenhado, sem símbolo (r31-emo) */
 .n5-keys { font-size: 13px; color: #9aa8b8; margin: 6px 0 0; }
 .n5-keys kbd { font-family: var(--pixel); font-size: 9px; background: #24364d; border: 1px solid #4a6280; border-bottom-width: 3px; border-radius: 4px; padding: 2px 5px; color: #fff; }
 .n5-clipfull { padding: 26px 26px 18px; }

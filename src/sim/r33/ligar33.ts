@@ -24,7 +24,7 @@ import { fmtL, money, nextId, post } from '../util';
 import { registerBot33 } from './bots33';
 import { FCW33, LOAN_X33 } from './hooks33';
 import { on33, peek33 } from './cat33';
-import { openShop33, shopLock33 } from './cidade33';
+import { CIDADE33, openShop33, ownShops33, shopLock33 } from './cidade33';
 import { registerLegalCase33 } from './dir33';
 import { INT2, INT2_BLOCK, INT2_HOOKS, INT2_NOW, INT2_WHEN, int2Acts, int2Do, int2Exists, int2Now, int2On, int2What, type Int2Id, type Int2Res } from './int2';
 import { INT2P27, npcName27, type Place27 } from '../sys/place27';
@@ -187,7 +187,7 @@ registerBot33({ id: 'vida33.rotina', on: (s) => vidaOn(s, 'rotina'), run: (s) =>
 registerBot33({
   id: 'cidade33.shop', on: (s) => !!sw<boolean>(s, 'exp33.cidade.lojas'),
   run: (s, p) => {
-    if (p === 'cautious' || s.player.cash < money(s, 60000)) return false;
+    if (p === 'cautious' || ownShops33(s) >= CIDADE33.ownMax || s.player.cash < money(s, 60000)) return false; // além do teto a loja não soma
     for (let lot = 1; lot < LOTS18.length; lot++) if (ownsLot31(s, lot) && !shopLock33(s, lot)) return openShop33(s, lot).ok;
     return false;
   },

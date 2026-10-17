@@ -21,6 +21,7 @@ import { actsTouched17 } from '../actidx17';
 import { registerMod, registerSimHook, deferEvents } from '../ext4';
 import type { Act, GameState, Person } from '../types';
 import { fmtL, money, notify, post, remember } from '../util';
+import { relAdd } from '../opinion';
 import { registerEditable } from '../r31/editor';
 import { registerSwitch, setSw, sw } from '../r31/switches';
 
@@ -272,8 +273,8 @@ function mentorMonth(s: GameState): void {
     a.inspiration = clamp(a.inspiration + 1, 0, 100);
     m.morale = clamp(m.morale + 1, 0, 100);
     m.fatigue = clamp(m.fatigue + 0.5, 0, 100);
-    m.rel[a.id] = clamp((m.rel[a.id] ?? 0) + 1, -100, 100);
-    a.rel[m.id] = clamp((a.rel[m.id] ?? 0) + 1.5, -100, 100);
+    relAdd(s, m.id, a.id, 1); // QA33: relação pela fonte única (opinion.ts), como pede o contrato r31
+    relAdd(s, a.id, m.id, 1.5);
   }
 }
 

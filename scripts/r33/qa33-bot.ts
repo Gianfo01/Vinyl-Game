@@ -23,7 +23,7 @@ function game(seed: string, year: number): GameState {
   if (car === 'artist') Object.assign(over, { role: 'artist', bandGenre: 'rnr', bandName: 'Banda Teste' });
   else if (car !== 'label') over.careers = { main: [car] };
   const s = createGame(defaultConfig(seed, over));
-  for (const id of SW) setSw(s, id, true);
+  if (!process.env.QA33_OFF) for (const id of SW) setSw(s, id, true);
   return s;
 }
 const bad: string[] = [];
