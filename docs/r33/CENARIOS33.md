@@ -139,15 +139,33 @@ Cada serviço gera **laço** (gente31/social31) e **fato** (facts17) — a pesso
 - **Redes e Jornal** (REDES33): o que acontece nos lugares vira post e manchete, e muda reputação.
 - **Celular/PC** (APARELHOS33): ligar para os "quem resolve", app de apostas (2010+), reservar mesa.
 
-## 7. Divisão em frentes
+## 7. Divisão em duas levas (decisão do dono, 17/10)
 
-| Frente | Escopo | Mexe na simulação? |
+Tudo de uma vez seria pesado demais (arte de ~27 interiores, 15 minijogos, mecânicas novas de dinheiro mexendo no
+equilíbrio). Fica em duas levas; a leva 2 aproveita o que a leva 1 deixar pronto (motor de minijogos, lotes,
+pessoas fixas, cassino).
+
+**LEVA 1 (versão 34)** — duas frentes do tamanho das da 33:
+
+| Frente | Escopo | Simulação |
 |---|---|---|
-| CENARIOS33-A | lugares, interiores, objetos/relíquias e NPCs fixos (seções 2 e 5), na arte do jogo | pouco (lotes e pessoas fixas) — goldens podem mudar com explicação |
-| CENARIOS33-B | cassino (seção 3), "quem resolve" (seção 4), ligações (seção 6) | sim — goldens re-medidos com explicação; robôs QA |
+| CENARIOS34-A (lugares) | 10 lugares com interior, NPC fixo e objetos: cassino, bar (Cheers/HIMYM), café (Friends), loja de discos (Alta Fidelidade), lanchonete com jukebox, fliperama, advogado (Saul), hospital (House), restaurante (The Bear), QG hacker (Mr. Robot); todos os objetos/relíquias da seção 2 | pouco (lotes e pessoas fixas); goldens podem mudar com explicação |
+| CENARIOS34-B (cassino e serviços) | cassino: residência, vício em jogo, dívida com agiota, a baleia; 6 "quem resolve": advogado, médico, hacker, agente, chef, chefão; 5 minijogos simples: blackjack, caça-níquel, roleta, jukebox, karaokê | sim; goldens re-medidos com explicação; robôs QA |
 
-Ordem: depois do POL33 e do GENTE33-B (usa as camadas de pessoas). Testes: `r33-cenarios` (cada lugar aparece só na
-época/país certos; cada verbo chama a função existente; dívida/lavagem/apostas com Rng fixo) + uiwords + goldens.
+**LEVA 2 (depois)**
+- Lugares restantes: Sopranos, Boardwalk Empire, Breaking Bad, Dexter, The Americans, Lost, Entourage,
+  Californication, How to Make It, Studio 60, Atlanta, Gatsby, O Iluminado, Blues Brothers, Mad Men, Blade Runner,
+  ônibus de turnê.
+- Minijogos difíceis: pôquer com NPCs, sinuca, dardos, dados, corrida de cavalos, bingo, pinball, cozinha sob
+  pressão, ritmo no palco.
+- Mecânicas: lavagem com fachada própria, apostas da indústria, golpe no cofre, patrocínio de bets, artista seu que
+  joga.
+- "Quem resolve" restantes: forense, produtor de TV, espiões, político, escritor.
+- Negócios paralelos próprios (seção 5) e ligações da seção 6.
+
+Ordem: 33 sai → GENTE33-B (as camadas de pessoas) → CENARIOS34-A → CENARIOS34-B → leva 2.
+Testes: `r34-cenarios` (cada lugar só na época/país certos; cada verbo chama a função existente; dívida e minijogos
+com Rng fixo; chance mostrada = chance sorteada) + uiwords + goldens.
 
 ## 8. Minijogos do cassino e dos lugares
 

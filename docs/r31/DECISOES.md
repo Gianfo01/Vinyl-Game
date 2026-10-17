@@ -550,3 +550,9 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   holograma, movimento reduzido não anima, roteiro e duração da intro, easter eggs). Prints em `docs/r33/intro/`.
 - **Achado de processo**: o observador de visibilidade entrega o primeiro aviso antes de o canvas entrar na página; ler só o
   primeiro pausava o laço para sempre. Vale o último aviso.
+
+## R33 · CENARIOS em duas levas (17/10)
+Dono pediu lugares, interiores, objetos e NPCs inspirados em filmes e séries, cassino com mecânicas e minijogos.
+Decisão: inspirar sem copiar (nome trocado, sem logo/rosto), mesma arte, cada lugar = lote com função (lots31) e cada
+ação chama função existente. Para não ficar complexo demais: leva 1 na versão 34 (10 lugares, cassino com 4
+mecânicas, 6 "quem resolve", 5 minijogos simples); o resto na leva 2. Plano em docs/r33/CENARIOS33.md.
