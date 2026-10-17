@@ -22,6 +22,9 @@ import { artItems31, artSpots31, dressRoom31 } from './art31model';
 import type { ArtItem31 } from '../pixel/props31';
 import type { VitPx31 } from '../pixel/vit31px';
 import { vitPeople31, vitPx31, vitSpots31 } from './vit31model';
+import { ACT33_KINDS, int1Lines, int1On, isInt33 } from '../../sim/r33/int1'; // R33 (INT-1)
+import { LAY33, cropPt33, cropSize33, interior33 } from '../r33/int1px';
+import { EMPTY33, OBJS33 } from '../r33/int1model';
 
 export const INSIDE_W31 = 360;
 
@@ -36,6 +39,7 @@ export interface InsideT31 {
 export interface InsideM31 {
   id: string; k: IKind27; title: L; what: L; year: number; W: number; H: number;
   room: Interior27; people: Person27[]; spots: Spot31[];
+  /** r33 (INT-1): corte sem céu e rua (a cena preenche a área) */ crop: boolean;
   you: { here: boolean; where: L };
   /** seu rastro no mundo (uma frase por marca) */ trail: L[];
   acts: PAct27[];
@@ -48,8 +52,9 @@ export interface InsideM31 {
 
 // ---------------------------------------------------------------- objetos clicáveis por lugar (a tabela do plano)
 
-interface ObjDef31 { prop: PropT27 | null; at?: [number, number]; id: string; label: L; tip: L; go: string }
+interface ObjDef31 { prop: PropT27 | null; at?: [number, number]; id: string; label: L; tip: L; go: string; /** r33 (INT-1): só com exp33.int1 */ r33?: boolean }
 const O = (prop: PropT27 | null, id: string, label: L, tip: L, go: string, at?: [number, number]): ObjDef31 => ({ prop, id, label, tip, go, at });
+const O33 = (prop: PropT27 | null, id: string, label: L, tip: L, go: string): ObjDef31 => ({ ...O(prop, id, label, tip, go), r33: true });
 
 const OBJS31: Partial<Record<IKind27, ObjDef31[]>> = {
   venue: [
@@ -89,10 +94,21 @@ const OBJS31: Partial<Record<IKind27, ObjDef31[]>> = {
   label: [
     O('gold', 'gold', l('Parede de discos de ouro', 'Gold record wall'), l('O catálogo do rival.', 'The rival\'s catalogue.'), 'info:gold'),
     O('desk', 'ceo', l('Sala do CEO', 'CEO\'s office'), l('Conversar, propor sociedade ou compra.', 'Talk, propose a partnership or a buyout.'), 'go:labels'),
+    O33('couch', 'lunch', l('Sofá da recepção', 'Reception sofa'), l('Almoçar com o CEO rival e se apresentar.', 'Lunch with the rival CEO and get acquainted.'), 'do:lunch'),
+    O33('poster', 'demo', l('Cartaz e fita demo', 'Poster and demo tape'), l('Ouvir a demo de um artista deles na recepção.', 'Listen to a demo by one of their acts at reception.'), 'do:demo'),
   ],
-  office: [O('desk', 'hire', l('Recepção', 'Front desk'), l('Contratar o serviço (advocacia, contabilidade, agência).', 'Hire the service (law, accounting, agency).'), 'go:office')],
-  apartments: [O('window', 'res', l('Moradores', 'Residents'), l('Quem mora aqui e você conhece.', 'Who lives here that you know.'), 'info:res')],
-  hotel: [O('counter', 'desk', l('Recepção', 'Reception'), l('Quem está hospedado: artistas em turnê na cidade.', 'Who is staying: touring acts in town.'), 'info:guests')],
+  office: [
+    O('desk', 'hire', l('Recepção', 'Front desk'), l('Contratar o serviço (advocacia, contabilidade, agência).', 'Hire the service (law, accounting, agency).'), 'go:office'),
+    O33('filing', 'staffs', l('Quem trabalha aqui', 'Who works here'), l('Conhecer quem trabalha nos andares.', 'Meet the people who work on the floors.'), 'info:meet'),
+  ],
+  apartments: [
+    O('window', 'res', l('Moradores', 'Residents'), l('Quem mora aqui e você conhece.', 'Who lives here that you know.'), 'info:res'),
+    O33('listen', 'wall', l('Parede fina', 'Thin wall'), l('Ouvir o ensaio de um vizinho: se for bom, entra no radar.', 'Listen to a neighbour rehearsing: if good, they go on the radar.'), 'do:wall'),
+  ],
+  hotel: [
+    O('counter', 'desk', l('Recepção', 'Reception'), l('Quem está hospedado: artistas em turnê na cidade.', 'Who is staying: touring acts in town.'), 'info:guests'),
+    O33('couch', 'suite', l('Suíte do hotel', 'Hotel suite'), l('Hospedar um artista seu para descansar (baixa o estresse).', 'Put one of your acts up to rest (lowers stress).'), 'do:suite'),
+  ],
   instruments: [
     O('guitars', 'wall', l('Parede de instrumentos', 'Instrument wall'), l('Comprar para você, para a empresa ou de presente.', 'Buy for yourself, the company or as a gift.'), 'go:shop'),
     O('counter', 'counter', l('Balcão', 'Counter'), l('A loja nova: estoque do mês.', 'The new shop: this month\'s stock.'), 'go:shop'),
@@ -189,7 +205,9 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   const W = INSIDE_W31;
   const you = youIn31(s, x.name);
   const people = [...(you.who ? [you.who] : []), ...x.people.filter((p) => !p.away), ...vitPeople31(s, x).filter((v) => !x.people.some((p) => (p.pid && p.pid === v.pid) || (p.key && p.key === v.key)))];
-  const room = dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v ?? (x.k === 'home' ? `${x.place?.lot31?.tier ?? 1}:${x.place?.lot31?.who === 'fam' ? 'fam' : x.place?.lot31?.who?.startsWith('l:') ? 'ceo' : 'artist'}` : undefined)));
+  const own33 = int1On(s) && isInt33(x.k); // r33 (INT-1): interior próprio
+  const crop = int1On(s) && (own33 || (ACT33_KINDS as readonly string[]).includes(x.k)); // a cena sem o céu e a rua em volta
+  const room = isInt33(x.k) ? interior33(x.k, x.year, people.length) : dressRoom31(s, x, interior27(x.k, x.year, people.length, x.v ?? (x.k === 'home' ? `${x.place?.lot31?.tier ?? 1}:${x.place?.lot31?.who === 'fam' ? 'fam' : x.place?.lot31?.who?.startsWith('l:') ? 'ceo' : 'artist'}` : undefined)));
   const G = geom27(W);
   const acts = actsOfPlace(s, x);
   const trail = trail31(s, x.k);
@@ -198,7 +216,7 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
   // objetos
   const seen = new Set<string>();
   for (const o of x.vit ? [] : OBJS31[x.k] ?? []) { // r31 (VIT): na feira só valem as bancas do mês
-    if (seen.has(o.id)) continue;
+    if (seen.has(o.id) || (o.r33 && !int1On(s))) continue;
     const pr = o.prop ? room.props.find((p) => p.t === o.prop) : undefined;
     if (o.prop && !pr) continue;
     seen.add(o.id);
@@ -209,6 +227,12 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
     if (go.startsWith('do:') && !acts.some((a) => a.id === go.slice(3))) continue; // ação que este lugar não tem (rádio antes de 1922…)
     const badge = badgeOf(s, x, o.id, trail);
     spots.push({ id: o.id, x: px, y: py, w: pw, h: ph, label: o.label, tip: lk ? fmtL(l('{t} 🔒 {w}', '{t} 🔒 {w}'), { t: o.tip, w: lk }) : o.tip, go: { panel: go }, badge, quiet: false });
+  }
+  // r33 (INT-1): objetos dos interiores próprios (a posição é a da pintura)
+  if (own33 && isInt33(x.k)) for (const o of OBJS33[x.k]) {
+    const [fx, fw] = LAY33[x.k][o.lay];
+    const [py, ph] = vband(o.band === 'wall' ? 'poster' : o.band === 'floor' ? 'desk' : null, G);
+    spots.push({ id: o.id, x: G.X(fx), y: py, w: Math.max(14, G.Wd(fw)), h: ph, label: o.label, tip: o.tip, go: { panel: o.go }, quiet: false });
   }
   // r31 (ART2): objetos novos ligados às mecânicas (jukebox, parada, telefone, vitrine, carro na porta…)
   if (!x.vit) spots.push(...artSpots31(s, x, room, W));
@@ -228,8 +252,11 @@ export function insideModel31(s: GameState, x: InsideT31): InsideM31 {
       badge: p.vit ? { text: l('no mês', 'this month'), level: 'info', sym: '✦' } : p.bico ? { text: l('bico', 'day job'), level: 'info', sym: '♪' } : p.cell ? { text: l('preso', 'jailed'), level: 'info', sym: '⛓' } : undefined });
   });
   const city = cityById[x.city]?.name;
+  // r33 (INT-1): sem o céu e a rua em volta, todos os pontos andam junto com o recorte
+  const cs = cropSize33(W);
+  if (crop) for (const q of spots) { const [qx, qy] = cropPt33(q.x, q.y); q.x = Math.max(0, qx); q.y = Math.max(0, qy); q.w = Math.min(q.w, cs.W - q.x); q.h = Math.min(q.h, cs.H - q.y); }
   return {
-    id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W, H: G.H, room, people, spots, you, trail, acts, art: artItems31(s, x), vit: vitPx31(s, x),
+    id: x.id, k: x.k, title: l(x.name, x.name), what: l(x.what ?? '', x.what ?? ''), year: x.year, W: crop ? cs.W : W, H: crop ? cs.H : G.H, crop, room, people, spots, you, trail, acts, art: artItems31(s, x), vit: vitPx31(s, x),
     note: you.here ? undefined : fmtL(l('{w} — você olha de longe; as ações seguem valendo.', '{w} — you look from afar; actions still work.'), { w: you.where }),
     ...(city ? {} : {}),
   };
@@ -254,7 +281,7 @@ function badgeOf(s: GameState, x: InsideT31, id: string, trail: L[]): Badge31 | 
 
 // ---------------------------------------------------------------- painéis de informação (linhas prontas, só leitura)
 
-export function infoLines31(s: GameState, m: Pick<InsideM31, 'k' | 'people'>, key: string, x?: Pick<InsideT31, 'place' | 'org'>): L[] {
+export function infoLines31(s: GameState, m: Pick<InsideM31, 'k' | 'people'>, key: string, x?: Pick<InsideT31, 'place' | 'org'> & { id?: string }): L[] {
   const out: L[] = [];
   const mine = new Set(playerActs(s));
   const rel = (id: string) => s.releases[id];
@@ -333,7 +360,9 @@ export function infoLines31(s: GameState, m: Pick<InsideM31, 'k' | 'people'>, ke
       for (const p of m.people.filter((y) => !y.you)) out.push(fmtL(l('{n} — {r}', '{n} — {r}'), { n: p.name, r: p.role }));
       break;
     }
-    default: break;
+    default:
+      if (isInt33(m.k)) { out.push(...int1Lines(s, m.k, key, x?.id ?? '')); if (!out.length) out.push(EMPTY33); } // r33 (INT-1)
+      break;
   }
   return out;
 }
