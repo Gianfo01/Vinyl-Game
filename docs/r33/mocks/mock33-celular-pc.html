@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--bg:#121c2a;--btn:#1a2638;--edge:#34455e;--ink:#e9e2d0;--mute:#93a3b8;--gold:#f0c060;--red:#e04848;--pix:'Silkscreen',monospace}
+*{box-sizing:border-box}
+body{margin:0;width:1366px;height:768px;overflow:hidden;position:relative;background:#000;font-family:'Barlow Semi Condensed',sans-serif;color:var(--ink)}
+#bg{position:absolute;inset:0;width:1366px;height:768px}
+canvas{image-rendering:pixelated;display:block}
+.dim{position:absolute;left:0;right:0;top:58px;height:620px;background:#050a12c8}
+.dock{position:absolute;left:370px;top:678px;right:0;bottom:0;background:var(--bg)}
+.btn{position:absolute;top:686px;width:82px;height:74px;background:var(--btn);border:2px solid var(--edge);border-radius:3px}
+.btn .k{position:absolute;left:5px;top:3px;font-family:var(--pix);font-size:9px;color:#93a3b8}
+.btn .lb{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-family:var(--pix);font-size:10px;font-weight:700;letter-spacing:.12em;color:#cbc6b7}
+.btn.on{border-color:var(--gold);background:#2a2a24}
+.btn.on .lb{color:var(--gold)}
+.btn .bang{position:absolute;right:-6px;top:-8px;background:var(--red);color:#fff;font-family:var(--pix);font-size:10px;padding:2px 5px;border:2px solid #1a1018}
+.sep{position:absolute;top:688px;width:2px;height:70px;background:#2a3a52}
+.bolso{position:absolute;top:716px;font-family:var(--pix);font-size:10px;letter-spacing:.3em;color:#93a3b8}
+.fixar{position:absolute;top:704px;height:38px;padding:0 10px;border:1px dashed #4a5d78;border-radius:3px;color:#cbd5e1;font-size:15px;line-height:36px}
+.ann{position:absolute;border:2px dashed #7fd0ff;border-radius:4px}
+.callout{position:absolute;background:#0d2236f2;border:2px dashed #7fd0ff;color:#dff3ff;font-size:14px;padding:6px 9px;border-radius:4px;line-height:1.25}
+.callout b{color:#fff}
+.note{position:absolute;background:#16263af4;border:1px solid #3a5070;border-radius:8px;padding:12px 14px;font-size:14.5px;line-height:1.3}
+.note h4{margin:0 0 6px;font-family:var(--pix);font-size:11px;letter-spacing:.12em;color:var(--gold)}
+.note .it{border-left:3px solid var(--gold);padding:4px 8px;margin:5px 0;background:#0f1d2c}
+.note .it b{color:var(--gold)}
+.note .sm{color:var(--mute);font-size:13px}
+.eras{display:flex;gap:6px;margin-top:6px}
+.eras div{flex:1;text-align:center;font-size:12px;color:var(--mute);background:#0f1d2c;border:1px solid #2b4260;border-radius:4px;padding:4px 2px}
+.eras div b{display:block;color:var(--ink);font-size:12.5px}
+.eras canvas{margin:0 auto 3px}
+.title{position:absolute;left:18px;top:64px;background:#0b141ef0;padding:6px 10px;border-radius:4px;border:1px solid #2b4260;font-family:var(--pix);font-size:13px;color:var(--gold);letter-spacing:.12em;z-index:3}
+.title span{color:var(--mute);font-family:'Barlow Semi Condensed';letter-spacing:0;font-size:15px}
+/* phone screen */
+.scr{position:absolute;overflow:hidden;font-size:13px}
+.sbar{display:flex;justify-content:space-between;font-family:var(--pix);font-size:9px;color:#e9f0ff;padding:3px 8px;background:#0008}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px 4px;padding:10px 8px}
+.app{text-align:center;font-size:12px;color:#f2f4f8;position:relative;text-shadow:1px 1px 0 #000}
+.app canvas{margin:0 auto 2px}
+.app i{position:absolute;right:12px;top:-4px;background:var(--red);color:#fff;font-style:normal;font-family:var(--pix);font-size:8px;padding:1px 4px;border:1px solid #1a1018}
+.notif{margin:6px 8px 0;background:#f4efe2;color:#2a2018;border-radius:5px;padding:5px 7px;font-size:12.5px;line-height:1.2;border:2px solid #1a1018}
+.notif b{color:#b0441e}
+.apphead{background:#2a1f3d;color:#fff;padding:6px 8px;font-weight:700;font-size:14px;border-bottom:2px solid #1a1018;display:flex;justify-content:space-between;align-items:center}
+.apphead span{font-weight:400;font-size:11.5px;color:#cdb9f5}
+.opt{margin:5px 7px;background:#fffaf0;color:#2a2018;border:2px solid #1a1018;border-radius:4px;padding:5px 7px;font-size:12.5px;line-height:1.2;box-shadow:2px 2px 0 #00000055}
+.opt b{display:block;font-size:13.5px}
+.opt em{font-style:normal;color:#2f7a3a;font-weight:600}
+.opt em.r{color:#b0441e}
+.opt.sel{outline:3px solid var(--gold)}
+.feed{margin:6px 7px;background:#1d1530;border:1px solid #4a3a6a;border-radius:4px;padding:5px 7px;color:#e6dcff;font-size:12px}
+/* pc */
+.desk{display:grid;grid-template-columns:repeat(2,96px);gap:12px 8px;padding:12px;position:absolute;left:0;top:0;bottom:30px}
+.ico{text-align:center;font-size:12.5px;color:#fff;text-shadow:1px 1px 0 #000;position:relative}
+.ico canvas{margin:0 auto 2px}
+.ico i{position:absolute;right:18px;top:-4px;background:var(--red);color:#fff;font-style:normal;font-family:var(--pix);font-size:8px;padding:1px 4px;border:1px solid #1a1018}
+.win{position:absolute;background:#f4f1ea;color:#1f2430;border:2px solid #1a1018;box-shadow:4px 4px 0 #0007}
+.win .tb{background:#3b5b8a;color:#fff;font-weight:700;padding:4px 8px;font-size:13.5px;display:flex;justify-content:space-between}
+.win .tb span{font-family:var(--pix);font-size:9px;line-height:16px}
+.win .bd{padding:8px 10px;font-size:13px}
+.row{display:flex;justify-content:space-between;border-bottom:1px solid #d8d2c4;padding:3px 0}
+.row b{font-weight:700}
+.bar{height:9px;background:#3b5b8a;border:1px solid #1a1018;display:inline-block;vertical-align:middle}
+.wbtn{display:inline-block;background:#f0c060;border:2px solid #1a1018;padding:3px 8px;font-weight:700;margin:6px 4px 0 0;font-size:13px}
+.wbtn.g{background:#dfe6ee}
+.task{position:absolute;left:0;right:0;bottom:0;height:30px;background:#1b2430;border-top:2px solid #3a4a62;display:flex;align-items:center;gap:8px;padding:0 8px;font-size:12.5px;color:#cbd5e1}
+.task .st{background:#2f7a3a;color:#fff;font-family:var(--pix);font-size:9px;padding:4px 7px;border:1px solid #1a1018}
+.task .tab{background:#2a3a52;padding:3px 8px;border:1px solid #4a5d78}
+.task .clk{margin-left:auto;font-family:var(--pix);font-size:9px}
+.card{position:absolute;background:#16263af6;border:2px solid var(--gold);border-radius:6px;padding:9px 11px;width:250px;font-size:14px;box-shadow:0 8px 24px #000a}
+.card h5{margin:0 0 2px;font-size:16px;color:#fff}
+.card .s{color:var(--mute);font-size:12.5px;margin-bottom:6px}
+.card .a{display:flex;justify-content:space-between;padding:4px 6px;border-top:1px solid #2b4260}
+.card .a kbd{font-family:var(--pix);font-size:8px;background:#24364d;border:1px solid #4a6280;border-bottom-width:2px;border-radius:3px;padding:2px 4px;color:#fff}
+.card .a.hi{background:#2a2a24;color:var(--gold);font-weight:700}
+.ring{position:absolute;border:3px solid var(--gold);border-radius:4px;box-shadow:0 0 0 2px #1a1018,0 0 14px #f0c06099}
+</style></head><body>
+<img id="bg">
+<div id="root"></div>
+<script>
+const M=new URLSearchParams(location.search).get('m')||'cel';
+const $=(h)=>{const d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild};
+const root=document.getElementById('root');const add=(h)=>{const e=$(h);root.appendChild(e);return e};
+// ---------- pixel helpers ----------
+const INK='#1a1018';
+function spr(rows,map,sc){const h=rows.length,w=rows[0].length;const c=document.createElement('canvas');c.width=w*sc;c.height=h*sc;const g=c.getContext('2d');
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const ch=rows[y][x];if(ch==='.')continue;g.fillStyle=map[ch]||ch;g.fillRect(x*sc,y*sc,sc,sc)}return c}
+function pcanvas(w,h,sc,draw){const c=document.createElement('canvas');c.width=w*sc;c.height=h*sc;const g=c.getContext('2d');const R=(x,y,ww,hh,col)=>{g.fillStyle=col;g.fillRect(x*sc,y*sc,ww*sc,hh*sc)};draw(R,g);return c}
+// 12x12 app icons — luz de cima à esquerda, contorno INK
+const K={k:INK,w:'#fff6e8',W:'#d8cfc0',r:'#e04848',R:'#a02a2a',y:'#f0c060',Y:'#c08a2a',g:'#5cbf6a',G:'#2f7a3a',b:'#5aa0e8',B:'#2a5aa0',p:'#b07ae8',P:'#6a3aa8',o:'#f08a3a',O:'#b0561e',c:'#7fe0e8',C:'#2a8a9a',n:'#8a6a4a',N:'#5a3a24',s:'#9aa8b8',S:'#5a6a7a',m:'#e86aa0',M:'#a03a6a'};
+const ICONS={
+ ligar:['kkkkkkkkkkkk','kGGGGGGGGGGk','kGgg....ggGk','kGg.kk...gGk','kG..kgk...Gk','kG...kgk..Gk','kG....kgk.Gk','kG.....kgkGk','kG......kkGk','kGg......gGk','kGGGGGGGGGGk','kkkkkkkkkkkk'],
+ msg:['kkkkkkkkkkkk','kBBBBBBBBBBk','kBbbbbbbbbBk','kBbwwwwwwbBk','kBbwkkkkwbBk','kBbwwwwwwbBk','kBbwkkkwwbBk','kBbwwwwwwbBk','kBbbbwbbbbBk','kBBBBkBBBBBk','kBBBBBBBBBBk','kkkkkkkkkkkk'],
+ redes:['kkkkkkkkkkkk','kPPPPPPPPPPk','kPpppppppPPk','kPpmm.mmpPPk','kPpmmmmmmpPk','kPpmmmmmmpPk','kPppmmmmppPk','kPpppmmpppPk','kPppppppppPk','kPPPPPPPPPPk','kPPPPPPPPPPk','kkkkkkkkkkkk'],
+ stream:['kkkkkkkkkkkk','kGGGGGGGGGGk','kGggggggggGk','kGgg.kgggggk','kGgg.kkggggk','kGgg.kkkgggk','kGgg.kkkkggk','kGgg.kkkgggk','kGgg.kkggggk','kGgg.kgggggk','kGGGGGGGGGGk','kkkkkkkkkkkk'],
+ banco:['kkkkkkkkkkkk','kYYYYYYYYYYk','kYyyykkyyyYk','kYyykyykyyYk','kYyykyyyyyYk','kYyyykkyyyYk','kYyyyyykyyYk','kYyykyykyyYk','kYyyykkyyyYk','kYyyyyyyyyYk','kYYYYYYYYYYk','kkkkkkkkkkkk'],
+ mapa:['kkkkkkkkkkkk','kCCCCCCCCCCk','kCccgggcccCk','kCcgrrrgccCk','kCgrrwwrgcCk','kCgrrwwrgcCk','kCcgrrrrgcCk','kCccgrrgccCk','kCcccgrcccCk','kCccccgcccCk','kCCCCCCCCCCk','kkkkkkkkkkkk'],
+ agenda:['kkkkkkkkkkkk','kRRRRRRRRRRk','kRrrrrrrrrRk','kRwwwwwwwwRk','kRwkwkwkwwRk','kRwwwwwwwwRk','kRwkwywkwwRk','kRwwwwwwwwRk','kRwkwkwwwwRk','kRwwwwwwwwRk','kRRRRRRRRRRk','kkkkkkkkkkkk'],
+ camera:['kkkkkkkkkkkk','kSSSSSSSSSSk','kSsssskkssSk','kSkkkkkkkkSk','kSkWWWWWWkSk','kSkWkkkkWkSk','kSkWkbbkWkSk','kSkWkbbkWkSk','kSkWkkkkWkSk','kSkkkkkkkkSk','kSSSSSSSSSSk','kkkkkkkkkkkk'],
+ leilao:['kkkkkkkkkkkk','kNNNNNNNNNNk','kNnnnnnnnnNk','kNnnkkkknnNk','kNnnkoookkNk','kNnnkookknNk','kNnkkokknnNk','kNnkookknnNk','kNkkkknnnnNk','kNnkkkkkknNk','kNNNNNNNNNNk','kkkkkkkkkkkk'],
+ noticias:['kkkkkkkkkkkk','kWWWWWWWWWWk','kWwwwwwwwwWk','kWwkkkkkkwWk','kWwwwwwwwwWk','kWwkkkwsswWk','kWwwwwwsswWk','kWwkkkwsswWk','kWwwwwwwwwWk','kWwkkkkkkwWk','kWWWWWWWWWWk','kkkkkkkkkkkk'],
+ ingresso:['kkkkkkkkkkkk','kOOOOOOOOOOk','kOooooooooOk','kOwwwwkwwwOk','kOwrrwkwwwOk','kOwrrw.wwwOk','kOwwwwkwwwOk','kOwkkw.wwwOk','kOwwwwkwwwOk','kOooooooooOk','kOOOOOOOOOOk','kkkkkkkkkkkk'],
+ fas:['kkkkkkkkkkkk','kMMMMMMMMMMk','kMmmmmmmmmMk','kMmmyymmmmMk','kMmyyyymmmMk','kMmmyymyymMk','kMmmmmyyyyMk','kMmyyyymyymk','kMyyyyyyymMk','kMmmmmmmmmMk','kMMMMMMMMMMk','kkkkkkkkkkkk'],
+ // PC
+ email:null,planilha:['kkkkkkkkkkkk','kGGGGGGGGGGk','kGwwwwwwwwGk','kGwkwkwkwwGk','kGwwwwwwwwGk','kGwkwkwgwwGk','kGwwwwwgwwGk','kGwkwkwgwgGk','kGwwgwwgwgGk','kGwwgwggwgGk','kGGGGGGGGGGk','kkkkkkkkkkkk'],
+ audio:['kkkkkkkkkkkk','kCCCCCCCCCCk','kCkkkkkkkkCk','kCkccckcckCk','kCkkckckckCk','kCkckckkckCk','kCkckcccckCk','kCkkckkckkCk','kCkkkkkkkkCk','kCssWWWWssCk','kCCCCCCCCCCk','kkkkkkkkkkkk'],
+ loja:['kkkkkkkkkkkk','kOOOOOOOOOOk','kOrwrwrwrwOk','kOrwrwrwrwOk','kOWWWWWWWWOk','kOWkkWWbbWOk','kOWkkWWbbWOk','kOWkkWWWWWOk','kOWkkWWWWWOk','kOkkkkkkkkOk','kOOOOOOOOOOk','kkkkkkkkkkkk'],
+ talentos:['kkkkkkkkkkkk','kBBBBBBBBBBk','kBbbbbbbbbBk','kBbkkkbbbbBk','kBkwwwkbbbBk','kBkwwwkbbbBk','kBbkkkkbbbBk','kBbbbbkkbbBk','kBbbbbbkkbBk','kBbbbbbbkkBk','kBBBBBBBBBBk','kkkkkkkkkkkk'],
+ anuncio:['kkkkkkkkkkkk','kYYYYYYYYYYk','kYyyyyyyykYk','kYyyyyykkkYk','kYykkkkwwkYk','kYykwwwwwkYk','kYykkkkwwkYk','kYyyykykkkYk','kYyyykyyykYk','kYyyyyyyyyYk','kYYYYYYYYYYk','kkkkkkkkkkkk'],
+ jogo:['kkkkkkkkkkkk','kPPPPPPPPPPk','kPppppppppPk','kPpkkkkkkpPk','kPkwkwwwwkPk','kPkkkwwrwkPk','kPkwkwrwrkPk','kPpkkkkkkpPk','kPppppppppPk','kPppppppppPk','kPPPPPPPPPPk','kkkkkkkkkkkk'],
+};
+ICONS.email=ICONS.msg; ICONS.site=ICONS.mapa.map(r=>r.replace(/C/g,'B').replace(/c/g,'b')); ICONS.dados=ICONS.stream;
+const ico=(n,sc=3)=>spr(ICONS[n],K,sc);
+
+// ---------- era phones (14x26) ----------
+function eraPhone(kind,sc=2){return pcanvas(14,26,sc,(R)=>{
+ if(kind==='brick'){R(9,0,2,6,INK);R(10,1,1,4,'#5a6a7a');R(2,5,10,21,INK);R(3,6,8,19,'#c8bfae');R(3,6,8,1,'#efe6d4');R(4,7,6,4,'#2a3a2a');R(5,8,3,1,'#7fe07f');for(let y=13;y<23;y+=2)for(let x=4;x<10;x+=2)R(x,y,1,1,'#5a5248')}
+ if(kind==='flip'){R(3,2,8,11,INK);R(4,3,6,9,'#8aa0c0');R(5,4,4,5,'#a8e0ff');R(3,13,8,12,INK);R(4,14,6,10,'#6a7a9a');for(let y=15;y<23;y+=2)for(let x=5;x<9;x+=2)R(x,y,1,1,'#e9e2d0')}
+ if(kind==='smart1'){R(2,1,10,24,INK);R(3,2,8,22,'#2a2a30');R(4,4,6,16,'#5aa0e8');R(4,4,6,1,'#9ad0ff');R(6,21,2,2,'#8a8a90');for(let y=6;y<18;y+=3)for(let x=5;x<9;x+=2)R(x,y,1,1,'#fff6e8')}
+ if(kind==='smart'){R(2,0,10,26,INK);R(3,1,8,24,'#1a1a22');R(3,2,8,22,'#7a3ae8');R(3,2,8,3,'#b07ae8');for(let y=7;y<21;y+=3)for(let x=4;x<10;x+=2)R(x,y,1,1,'#fff6e8')}
+ if(kind==='holo'){R(4,21,6,4,INK);R(5,22,4,2,'#5a6a7a');R(6,20,2,1,'#7fe0e8');for(let y=2;y<19;y++){const a=y%3===0?'#7fe0e8':'#2a8a9a';R(3,y,1,1,a);R(10,y,1,1,a)}R(3,2,8,1,'#7fe0e8');R(3,18,8,1,'#7fe0e8');for(let y=5;y<16;y+=3)for(let x=5;x<9;x+=2)R(x,y,1,1,'#c8f8ff')}
+});}
+function eraMon(kind,sc=2){return pcanvas(20,18,sc,(R)=>{
+ if(kind==='term'){R(1,0,18,14,INK);R(2,1,16,12,'#c8bfae');R(3,2,14,9,'#0a1a0a');for(let y=3;y<10;y+=2)R(4,y,(y*3)%9+3,1,'#5cff6a');R(6,14,8,2,INK);R(2,16,16,2,INK);R(3,16,14,1,'#c8bfae')}
+ if(kind==='win95'){R(1,0,18,14,INK);R(2,1,16,12,'#d8d0c0');R(3,2,14,9,'#2a8a8a');R(4,3,2,2,'#f0c060');R(4,6,2,2,'#fff6e8');R(9,4,6,4,'#d8d0c0');R(9,4,6,1,'#2a3a9a');R(3,10,14,1,'#c0c0c0');R(3,10,2,1,'#2f7a3a');R(7,14,6,2,INK);R(4,16,12,2,INK)}
+ if(kind==='portal'){R(1,0,18,14,INK);R(2,1,16,12,'#3a3a44');R(3,2,14,9,'#5aa0e8');R(3,2,14,2,'#2a5aa0');R(4,5,6,4,'#fff6e8');R(11,5,5,2,'#f0c060');R(11,8,5,1,'#fff6e8');R(8,14,4,2,INK);R(5,16,10,2,INK)}
+ if(kind==='plano'){R(0,1,20,12,INK);R(1,2,18,10,'#14141c');R(1,2,18,10,'#3a2a5a');for(let x=3;x<17;x+=4){R(x,4,2,2,'#f0c060');R(x,8,2,2,'#7fe0e8')}R(9,13,2,3,INK);R(6,16,8,2,INK)}
+ if(kind==='vidro'){R(3,15,14,3,INK);R(4,16,12,1,'#5a6a7a');for(let y=1;y<14;y++){R(1,y,1,1,'#7fe0e8');R(18,y,1,1,'#7fe0e8')}R(1,1,18,1,'#7fe0e8');R(1,13,18,1,'#7fe0e8');for(let x=4;x<16;x+=3)R(x,5,2,4,'#2a8a9a');R(8,6,4,2,'#c8f8ff')}
+});}
+
+function dockPhone(){return pcanvas(18,23,2,(R)=>{R(3,0,12,23,INK);R(2,1,14,21,INK);R(4,1,10,21,'#4a4a5a');R(4,1,10,1,'#8a8a9e');R(4,3,10,15,INK);R(5,4,8,13,'#7a3ae8');R(5,4,8,3,'#b07ae8');for(let y=8;y<16;y+=3)for(let x=6;x<12;x+=2)R(x,y,1,1,'#fff6e8');R(7,19,4,1,'#2a2a34')});}
+// ---------- big phone frame (logical 70x132, sc 4) ----------
+function bigPhone(){return pcanvas(70,132,4,(R)=>{
+ R(2,0,66,132,INK);R(0,2,70,128,INK);
+ R(3,1,64,130,'#4a4a5a');R(3,1,64,2,'#8a8a9e');R(3,1,2,128,'#6a6a7e');R(65,3,2,126,'#2a2a34');R(3,129,64,2,'#2a2a34');
+ R(5,5,60,118,INK);// tela
+ R(30,2,10,1,'#0a0a0e');R(42,2,2,1,'#3a5070');// alto-falante e câmera
+ R(29,125,12,3,'#16161e');R(30,126,10,1,'#5a5a6a');// barra home
+ R(0,30,2,10,'#3a3a46');R(68,28,2,16,'#3a3a46');R(68,48,2,8,'#3a3a46');// botões laterais
+});}
+// wallpaper pixel (city at night + logo)
+function wall(w,h){return pcanvas(w,h,4,(R)=>{
+ for(let y=0;y<h;y++){const t=y/h;R(0,y,w,1,t<.5?'#2a1f4a':t<.75?'#3a2a5a':'#4a2a5a')}
+ for(let i=0;i<14;i++)R((i*37)%w,(i*11)%(h/5|0)+1,1,1,'#fff6e8');
+ const bx=[[0,8,22],[8,6,30],[14,10,18],[24,7,34],[31,9,24],[40,8,28],[48,7,20],[55,6,26]];
+ for(const [x,ww,hh] of bx){R(x,h-hh,ww,hh,'#1a1430');for(let yy=h-hh+2;yy<h-2;yy+=3)for(let xx=x+1;xx<x+ww-1;xx+=2)if((xx*7+yy*3)%5<2)R(xx,yy,1,1,'#f0c060')}
+});}
+// studio photo for post
+function photo(){return pcanvas(56,30,4,(R)=>{R(0,0,56,30,INK);R(1,1,54,28,'#3a3a46');R(1,22,54,7,'#5a3a24');R(1,22,54,1,'#8a5a30');
+ R(6,10,10,12,INK);R(7,11,8,10,'#5a5a64');R(9,13,4,4,'#2a2a30');// amp
+ R(24,6,2,16,INK);R(22,6,6,2,INK);// mic
+ R(32,8,6,6,'#e8b080');R(32,7,6,2,'#3a2414');R(31,14,8,8,'#e04848');R(33,22,2,0,INK);R(32,14,8,1,'#a02a2a');// artista
+ R(42,12,10,10,INK);R(43,13,8,8,'#2a2a30');R(44,14,6,2,'#5cbf6a');R(44,17,4,1,'#f0c060');// mesa
+ R(1,1,54,2,'#f0c06055');});}
+
+// ---------- background ----------
+document.getElementById('bg').src=M==='cel'?'sede25.png':'sede25.png';
+
+if(M==='cel'){
+ add('<div class="dim"></div>');
+ add('<div class="title">CELULAR <span>· atalho 5 · aparece no menu de baixo quando o celular é lançado (1983)</span></div>');
+ // dock
+ add('<div class="dock"></div>');
+ const b=add('<div class="btn" style="left:374px"><div class="k">⇧5</div><div class="lb">CELULAR</div><div class="bang">3</div></div>');
+ const pi=dockPhone();pi.style.cssText='position:absolute;left:23px;top:7px';b.appendChild(pi);
+ add('<div class="sep" style="left:466px"></div>');
+ add('<div class="bolso" style="left:486px">BOLSO</div>');
+ add('<div class="fixar" style="left:576px">+ fixar</div>');
+ add('<div class="callout" style="left:470px;top:618px;width:300px"><b>Botão novo, o último do menu.</b> "!" = recados, convites e lances esperando. Antes de 1983 não existe.</div>');
+ add('<div class="ann" style="left:368px;top:680px;width:94px;height:86px"></div>');
+ // phone 1: home
+ const P1L=150,PT=96;const f1=bigPhone();f1.style.cssText=`position:absolute;left:${P1L}px;top:${PT}px;width:280px;height:528px`;root.appendChild(f1);
+ const s1=add(`<div class="scr" style="left:${P1L+20}px;top:${PT+20}px;width:240px;height:472px"></div>`);
+ const w1=wall(60,118);w1.style.cssText='position:absolute;inset:0;width:240px;height:472px';s1.appendChild(w1);
+ const c1=$('<div style="position:relative"></div>');s1.appendChild(c1);
+ c1.innerHTML='<div class="sbar"><span>09:41</span><span>JAN 2025</span><span>▮▮▮ 82%</span></div>'+
+  '<div class="notif"><b>Rádio XFM</b> quer entrevista ao vivo sexta. <u>Responder</u></div>';
+ const g1=$('<div class="grid"></div>');c1.appendChild(g1);
+ const apps=[['ligar','Ligar',''],['msg','Recados','3'],['redes','Redes','1'],['stream','Streaming',''],['banco','Banco',''],['mapa','Mapa',''],['agenda','Agenda',''],['camera','Câmera',''],['leilao','Leilão','1'],['noticias','Notícias',''],['ingresso','Ingressos',''],['fas','Fã-clube','']];
+ for(const [k,lbl,bd] of apps){const a=$(`<div class="app">${bd?`<i>${bd}</i>`:''}<div>${lbl}</div></div>`);a.insertBefore(ico(k,3),a.firstChild);g1.appendChild(a)}
+ add(`<div class="callout" style="left:${P1L-8}px;top:${PT+540}px;width:296px;display:none"></div>`);
+ // phone 2: app Redes aberto
+ const P2L=470;const f2=bigPhone();f2.style.cssText=`position:absolute;left:${P2L}px;top:${PT}px;width:280px;height:528px`;root.appendChild(f2);
+ const s2=add(`<div class="scr" style="left:${P2L+20}px;top:${PT+20}px;width:240px;height:472px;background:#141022"></div>`);
+ s2.innerHTML='<div class="sbar"><span>09:42</span><span>REDES</span><span>▮▮▮ 82%</span></div>'+
+  '<div class="apphead">@seloagulha <span>128 mil seguidores</span></div>';
+ const ph=photo();ph.style.cssText='display:block;margin:6px auto 0;width:224px;height:120px';s2.appendChild(ph);
+ s2.insertAdjacentHTML('beforeend',
+  '<div class="opt sel"><b>Postar bastidor do estúdio</b><em>+hype pequeno · grátis</em></div>'+
+  '<div class="opt"><b>Anunciar single de sexta</b><em>+pré-saves · liga ao lançamento</em></div>'+
+  '<div class="opt"><b>Live com o artista</b><em>+fãs</em> · 1 bolinha pessoal</div>'+
+  '<div class="opt"><b>Responder a crítica</b><em class="r">risco de polêmica · reputação pessoal</em></div>'+
+  '<div class="feed"><b>Meme do momento:</b> a dança do refrão de "Neon Rain". Usar no clipe?</div>');
+ add(`<div class="callout" style="left:${P2L+286}px;top:${PT+150}px;width:150px">Cada app é <b>ação no objeto</b> (EXP-13): faz ali mesmo ou leva ao lugar certo. Sem tela nova.</div>`);
+ // note
+ const n=add(`<div class="note" style="left:916px;top:96px;width:432px"></div>`);
+ n.innerHTML='<h4>O QUE DÁ PARA FAZER NO CELULAR</h4>'+
+ '<div class="it"><b>Ligar</b>: falar com artista, empresário, rádio ou imprensa de qualquer lugar, sem voltar à sede (é o mesmo Telefone).</div>'+
+ '<div class="it"><b>Recados</b>: a caixa de entrada de sempre, só muda a forma.</div>'+
+ '<div class="it"><b>Redes</b>: postar, anunciar, live, responder. Mexe em hype, fãs e reputação pessoal; memes do Mundo entram aqui.</div>'+
+ '<div class="it"><b>Streaming</b>: ouvintes por cidade e playlists; pedir vaga em playlist; serve para escolher a turnê.</div>'+
+ '<div class="it"><b>Banco · Leilão · Ingressos</b>: saldo e empréstimo, lances em relíquias e merch fora de casa, venda de shows.</div>'+
+ '<div class="it"><b>Mapa · Agenda · Câmera</b>: ir até um lugar da cidade, ver as bolinhas do mês, foto que vira post (ou flagra de paparazzi).</div>'+
+ '<div class="sm" style="margin-top:6px">O aparelho e os apps mudam com a época; o botão fica no mesmo lugar:</div>';
+ const er=$('<div class="eras"></div>');n.appendChild(er);
+ for(const [k,y,t] of [['brick','1983','só ligar'],['flip','1997','SMS e toques'],['smart1','2007','apps e música'],['smart','2012','redes e streaming'],['holo','2032','holograma']]){const d=$(`<div><b>${y}</b>${t}</div>`);const cv=eraPhone(k,2);d.insertBefore(cv,d.firstChild);er.appendChild(d)}
+ n.insertAdjacentHTML('beforeend','<div class="sm" style="margin-top:7px">1997–2009: <b style="color:#f0c060">toques de celular</b> viram um formato que vende (como o ringtone real).</div>');
+}
+
+if(M==='pc'){
+ // ring + action card on the desk PC (scene stays visible)
+ add('<div class="title" style="top:96px;left:18px;background:#0b141ee0;padding:4px 8px;border-radius:4px">COMPUTADOR <span>· item da mesa (sem atalho no menu de baixo)</span></div>');
+ add('<div class="ring" style="left:352px;top:360px;width:40px;height:50px"></div>');
+ add(`<div class="card" style="left:96px;top:150px">
+  <h5>Computador</h5><div class="s">Escritório · 2025 · upgrade do livro-caixa (desde 1982)</div>
+  <div class="a hi"><span>▶ Ligar o PC</span><kbd>P</kbd></div>
+  <div class="a"><span>E-mails (caixa de entrada)</span><kbd>E</kbd></div>
+  <div class="a"><span>Planilha de vendas</span><kbd>Z</kbd></div>
+  <div class="a"><span>Gravar demo caseira</span><kbd>⇧S</kbd></div>
+  <div class="a"><span>Trocar de computador ▸ loja</span><kbd></kbd></div></div>`);
+ add('<div style="position:absolute;left:318px;top:300px;width:40px;height:2px;background:#f0c060;transform:rotate(55deg);transform-origin:0 0"></div>');
+ // monitor overlay
+ add('<div class="dim" style="left:470px;top:58px;height:620px;background:#050a12d8"></div>');
+ const ML=486,MT=74,MW=860,MH=520;
+ const mon=pcanvas(MW/4,(MH+76)/4,4,(R)=>{const w=MW/4,h=MH/4;R(0,0,w,h,INK);R(1,1,w-2,h-2,'#2a2a34');R(1,1,w-2,1,'#5a5a6a');R(4,4,w-8,h-10,INK);R(w/2-6,h,12,10,INK);R(w/2-5,h,10,9,'#3a3a46');R(w/2-22,h+10,44,4,INK);R(w/2-21,h+10,42,2,'#4a4a58');R(w-10,h-4,2,1,'#5cbf6a')});
+ mon.style.cssText=`position:absolute;left:${ML}px;top:${MT}px;width:${MW}px;height:${MH+76}px`;root.appendChild(mon);
+ const scr=add(`<div class="scr" style="left:${ML+20}px;top:${MT+20}px;width:${MW-40}px;height:${MH-44}px;background:#3a2a5a"></div>`);
+ const wp=wall(205,119);wp.style.cssText='position:absolute;inset:0;width:100%;height:100%';scr.appendChild(wp);
+ const dk=$('<div class="desk"></div>');scr.appendChild(dk);
+ for(const [k,l,bd] of [['email','E-mail','4'],['planilha','Planilha',''],['dados','Painel do artista',''],['audio','Editor de áudio',''],['loja','Loja online',''],['talentos','Demos online','2'],['anuncio','Anúncios',''],['site','Site e fã-clube',''],['leilao','Leilão',''],['jogo','Jogo','']]){const a=$(`<div class="ico">${bd?`<i>${bd}</i>`:''}<div>${l}</div></div>`);a.insertBefore(ico(k,3),a.firstChild);dk.appendChild(a)}
+ // janela: painel do artista
+ scr.insertAdjacentHTML('beforeend',`<div class="win" style="left:236px;top:22px;width:330px">
+  <div class="tb">Painel do artista · Neon Rain <span>_ ▢ x</span></div><div class="bd">
+  <div class="row"><span>Ouvintes no mês</span><b>412 mil</b></div>
+  <div class="row"><span>Londres</span><span><i class="bar" style="width:120px"></i> 31%</span></div>
+  <div class="row"><span>Berlim</span><span><i class="bar" style="width:70px"></i> 18%</span></div>
+  <div class="row"><span>São Paulo</span><span><i class="bar" style="width:52px"></i> 13%</span></div>
+  <div class="row"><span>Playlists</span><b>3 editoriais</b></div>
+  <span class="wbtn">Montar turnê por aqui</span><span class="wbtn g">Pedir playlist</span></div></div>`);
+ // janela: editor de áudio
+ scr.insertAdjacentHTML('beforeend',`<div class="win" style="left:420px;top:228px;width:378px">
+  <div class="tb">Editor de áudio · demo caseira <span>_ ▢ x</span></div><div class="bd">
+  <div id="wave" style="height:58px;background:#1b2430;border:2px solid #1a1018"></div>
+  <div style="margin-top:4px">Gravar uma demo sem estúdio: <b>1 bolinha</b>, custo zero, qualidade baixa. Boa para testar música ou mandar para a rádio.</div>
+  <span class="wbtn">● Gravar</span><span class="wbtn g">Enviar à rádio</span><span class="wbtn g">Subir na rede</span></div></div>`);
+ const wv=pcanvas(92,14,4,(R)=>{R(0,0,92,14,'#1b2430');for(let x=1;x<91;x++){const a=Math.abs(Math.sin(x*.45)*Math.cos(x*.13))*6+1|0;R(x,7-a,1,a*2,x<58?'#7fe0e8':'#3a5a6a')}R(58,0,1,14,'#e04848')});
+ wv.style.cssText='width:100%;height:100%';scr.querySelector('#wave').appendChild(wv);
+ scr.insertAdjacentHTML('beforeend','<div class="task"><span class="st">INICIAR</span><span class="tab">Painel do artista</span><span class="tab">Editor de áudio</span><span class="clk">JAN 2025 · 09:41</span></div>');
+ // note + eras
+ const n=add(`<div class="note" style="left:14px;top:376px;width:332px;font-size:13px;padding:9px 10px"></div>`);
+ n.innerHTML='<h4>NO COMPUTADOR</h4>'+
+ '<div class="it"><b>E-mail · Planilha</b>: caixa e livro-caixa de sempre; a planilha mostra a previsão de vendas.</div>'+
+ '<div class="it"><b>Painel · Demos online</b>: ouvintes por cidade para a turnê; talentos que sobem música na rede.</div>'+
+ '<div class="it"><b>Áudio · Loja · Anúncios · Site · Jogo</b>: demo caseira, venda direta ao fã, campanha online, fã-clube, pausa que baixa o estresse.</div>'+
+ '';
+ const er=$('<div class="eras"></div>');n.appendChild(er);
+ for(const [k,y,t] of [['term','1982','planilha'],['win95','1995','e-mail e site'],['portal','2003','perfil e P2P'],['plano','2012','painel e loja'],['vidro','2032','IA e holo']]){const d=$(`<div><b>${y}</b>${t}</div>`);const cv=eraMon(k,2);d.insertBefore(cv,d.firstChild);er.appendChild(d)}
+}
+</script></body></html>
