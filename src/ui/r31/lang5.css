@@ -1,0 +1,6 @@
+.lang5 { display: inline-flex; gap: 0; border: 2px solid #3f5f84; border-radius: 4px; overflow: hidden; }
+.lang5 button { font-family: var(--pixel); font-size: 11px; letter-spacing: 0.08em; padding: 4px 9px; background: #1c3048; color: #9aa8b8; border: 0; cursor: pointer; }
+.lang5 button + button { border-left: 2px solid #3f5f84; }
+.lang5 button.on { background: #f0c060; color: #1a1214; }
+.lang5 button:focus-visible { outline: 2px solid #f0c060; outline-offset: -2px; }
+.h27-langrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

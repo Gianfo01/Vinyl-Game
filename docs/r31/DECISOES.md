@@ -487,3 +487,11 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - Ordem: entra **antes do POL33**, em duas frentes paralelas (APARELHOS33 em Opus, REDES33 em Sonnet), depois do QA33.
 - Dono aprovou o escopo e os mocks: **tudo na mesma arte do resto do jogo** (componentes, cores e fontes atuais, pixel
   art pelas regras do PLANO). Os mocks valem só como conteúdo e fluxo. Não fazer mocks novos.
+
+## 2026-10-17 · Tela inicial e opções (dono)
+- Saiu "PIXEL STUDIO EDITION" do rodapé. "Créditos" saiu dos links e o "Editor de base" foi para o lugar dele.
+- A língua troca com dois botões PT | EN (`src/ui/r31/lang5.ts`), sem lista suspensa, na tela inicial e nas opções.
+- Não há mais escolha de tema claro/escuro: o jogo é sempre escuro, e o botão de tema também saiu das opções do jogo.
+- O logo MASTERS ficou maior (o `fitHead5` continua encolhendo se cobrir o letreiro). A linha de baixo ficou só "UM
+  MUNDO VIVE DE MÚSICA", sem "1889 – 2040".
+- Nas cenas de 2030+, só a vocal vira holograma (antes eram vocal e guitarra: dois hologramas).

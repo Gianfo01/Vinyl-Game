@@ -249,8 +249,8 @@ export function scene5(o: StageOpts5): Scene5 {
   // 1889–1899: ribalta a gás (bicos com chama) na beira do palco
   const lamps: [number, number][] = [];
   if (year < 1900) for (let x = L + 10; x < R - 4; x += 22) { inked(P, (q) => { q.rect(x - 1, fy - 2, 3, 2, C('#6a5a3a')); q.put(x, fy - 3, C('#3a3020')); }); lamps.push([x, fy - 4]); }
-  // hologramas (2030+): a vocal e o guitarrista viram projeções, cada um com o projetor no chão
-  if (year >= HOLO5) for (const a of actors) if (a.role === 'vocal' || a.role === 'guitar') {
+  // holograma (2030+): só a vocal vira projeção, com o projetor no chão (dono, 2026-10-17: um holograma só, não dois)
+  if (year >= HOLO5) for (const a of actors) if (a.role === 'vocal') {
     a.holo = true;
     inked(P, (q) => { q.rect(a.x - 6, fy - 3, 12, 3, C('#2a2a38')); q.rect(a.x - 3, fy - 4, 6, 1, C('#7af0ff')); });
   }
