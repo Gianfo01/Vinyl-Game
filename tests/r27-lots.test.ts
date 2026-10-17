@@ -17,6 +17,7 @@ import type { GameState } from '../src/sim/types';
 const game = (year: number, city = 'london', seed = 'lots27') => {
   const cfg = defaultConfig(`${seed}-${city}-${year}`, { startYear: year, homeCity: city });
   (cfg as { dbSize?: string }).dbSize = 'small';
+  cfg.sw31 = { 'exp33.mapa': false }; // QA33: a 33 nasce ligada; este arquivo mede o mapa de sempre (bairros 7–8 da MAPA33: tests/r33-mapa33)
   const g = createGame(cfg);
   advanceWeek(g);
   return g;

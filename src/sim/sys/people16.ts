@@ -155,9 +155,9 @@ function trackClients(s: GameState): void {
     const cur = h[aid];
     // cliente histórico: começa no ano real (dados), nunca depois do ano em que o ato apareceu
     const real = rp.h ? mgrById[rp.m]?.cl.find(([n]) => n === realDataOf(s.acts[aid])?.n)?.[1] : undefined;
-    if (!cur || cur[1] !== undefined) h[aid] = [real ?? rp.y, undefined];
+    if (!cur || cur[1] != null) h[aid] = [real ?? rp.y, undefined]; // QA33: undefined vira null no save (== null cobre os dois)
   }
-  for (const [mid, h] of Object.entries(st.mh)) for (const [aid, v] of Object.entries(h)) if (v[1] === undefined && rep[aid]?.m !== mid) v[1] = s.year;
+  for (const [mid, h] of Object.entries(st.mh)) for (const [aid, v] of Object.entries(h)) if (v[1] == null && rep[aid]?.m !== mid) v[1] = s.year;
 }
 
 /** Clientes atuais e passados de um empresário no jogo: [ato, de, até?]. */

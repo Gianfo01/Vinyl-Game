@@ -256,7 +256,8 @@ export function migrate(g: GameState): GameState {
   g.economy.investorShare ??= 0;
   g.economy.investorUntil ??= 0;
   g.upcoming ??= [];
-  ensureExt(g);
+  ensureExt(g, { same: g.version === SAVE_VERSION }); // QA33: save da versão atual não é "completado"
+  for (const r of Object.values(g.releases ?? {})) if (r.stock == null) r.stock = Infinity; // QA33: Infinity vira null no JSON; sem isso o disco de estoque não modelado deixava de vender físico depois de carregar
   migrate18(g);
   registerMovementGenres(g);
   syncEditor31(g);

@@ -81,12 +81,15 @@ export function personaOf(p: Person): NonNullable<Person['persona']> {
   return p.persona;
 }
 
-export function ensureExt(s: GameState): GameState {
+export function ensureExt(s: GameState, o: { same?: boolean } = {}): GameState {
   const base = emptyExt() as unknown as Record<string, unknown>;
   const st = s as unknown as Record<string, unknown>;
   for (const k of Object.keys(base)) if (st[k] === undefined) st[k] = base[k];
   if (!s.clock.monthStartWeek) s.clock.monthStartWeek = s.week;
   ensureExt4(s);
+  // QA33 (save/load): save da versão atual já tem tudo o que a partida criou; completar persona/meta/posição de quem nasceu
+  // na partida mudava o jogo carregado em relação ao original (o rumo divergia no mês seguinte). Só saves antigos completam.
+  if (o.same) return s;
   for (const p of Object.values(s.persons)) {
     personaOf(p);
     if (!p.goal) {

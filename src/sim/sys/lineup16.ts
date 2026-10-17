@@ -45,6 +45,8 @@ export interface L16 {
   free: Record<string, [number, string, Why16]>;
   /** atos já checados para a fama herdada */
   boost: Record<string, 1>;
+  /** QA33: formação de cada ato na última conferência (antes num mapa fora do save: carregar perdia as entradas/saídas do mês) */
+  snap?: Record<string, string>;
 }
 declare module '../ext4' { interface Ext4 { l16: L16 } }
 registerExt4('l16', () => ({ ev: [], names: {}, free: {}, boost: {} }));
@@ -479,16 +481,14 @@ function carryFame(s: GameState): void {
 
 // ---------------------------------------------------------------- histórico de formação (diff mensal)
 
-const SNAP = new WeakMap<GameState, Map<string, string>>();
 function diff(s: GameState): void {
   const st = l16(s), m = mIdx(s);
-  let snap = SNAP.get(s);
-  const first = !snap;
-  if (!snap) { snap = new Map(); SNAP.set(s, snap); }
+  const first = !st.snap;
+  const snap = (st.snap ??= {});
   for (const a of actsNow27(s)) {
     const cur = a.members.join(',');
-    const old = snap.get(a.id);
-    snap.set(a.id, cur);
+    const old = snap[a.id];
+    snap[a.id] = cur;
     if (first || old === undefined || old === cur) continue;
     const was = old ? old.split(',') : [];
     for (const id of a.members) if (!was.includes(id)) st.ev.push([m, a.id, id, 'j']);
