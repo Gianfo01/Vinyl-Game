@@ -58,6 +58,21 @@ dinheiro e pessoas ficam com GESTÃO/VIDA/CATÁLOGO (combinar pelo gancho, sem e
 | **QA33** | suíte inteira e goldens re-medidos com explicação; robô jogando 1889→2040 em várias carreiras com todos os `exp33.*` ligados; abrir cada prédio e interior novo; save/load com o estado novo; consertar tudo que quebrar (sem desligar teste); relatório com o que ficou | Opus |
 | **POL33** | polimento visual depois do QA (inclui: interiores antigos pequenos com vazio em volta, achado do QA5; terreno do festival da INT-2 aparece dentro de uma moldura de prédio com teto — virar campo aberto com céu, palco grande e plateia em campo): varrer telas, cenas e interiores novos em 1962 e 2025 (e 1889/2035 nos novos), textos cortados ou sobrepostos, padrão pixel, letreiros, cartão de ações; prints antes/depois | Sonnet |
 
+Pedidos do dono para o POL33 (2026-10-17, vistos no mapa de Londres 1962):
+- **Outdoors**: hoje poucos e amontoados no centro. Espalhar pela cidade (avenidas, esquinas, estação, estádio,
+  beira-rio, periferia), sem sobrepor letreiro (regra POL2), e criar mais. Cada outdoor é objeto clicável (ACOES5):
+  **alugar** por meses (preço pelo movimento do bairro e da época) para anunciar disco/turnê/artista — dá hype e
+  vendas na cidade; **comprar** o outdoor para ter renda alugando a terceiros (rivais também alugam); arte por época
+  (cartaz pintado/lambe-lambe → painel iluminado → luminoso de neon → telão de LED → holograma 2030+). Interruptor
+  `exp33.outdoors`, ligado por padrão.
+- **Merch e itens exclusivos**: no festival e em outros lugares (estádio, clube de jazz, boate, museu, show de
+  artista, aeroporto/loja de souvenir, leilão), comprar ou ganhar merch e itens exclusivos usando o MESMO sistema das
+  relíquias (`relic31`/`relic33`: raridade, valor que muda, vitrine, leilão, garantia no banco, efeito pequeno). Itens
+  por época (lista no relatório do coordenador): camiseta de turnê, pôster autografado, pulseira/ingresso de festival,
+  baqueta e palheta de show, setlist do palco, passe de backstage, fita/vinil de edição limitada, jaqueta de equipe,
+  bilhete de festival histórico (Woodstock 69, Rock in Rio 85, Live Aid 85), boneco/brinquedo de artista. Interruptor
+  `exp33.merch`, ligado por padrão.
+
 Ordem: frentes → junção → QA33 → POL33 → build `Masters_33.html` + fumaça → enviar ao dono.
 
 ## Fica para a onda 6 (fechamento), não para a 33
