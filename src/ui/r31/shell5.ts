@@ -214,6 +214,8 @@ export function install5(host: Shell5Host): void {
     if (e.key === 'Alt') { alt(true); if (document.querySelector('.app5')) e.preventDefault(); }
   }, true);
   window.addEventListener('keyup', (e) => { if (e.key === 'Alt') alt(false); });
+  // o cartão de ações (ACOES5) fecha no apertar fora (captura no document); a janela vê antes e guarda qual estava aberto
+  window.addEventListener('pointerdown', (e) => { if ((e.target as HTMLElement | null)?.closest?.('.b5-pin')) cardAtDown5 = document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card; }, true);
   document.addEventListener('click', (e) => { const t0 = e.target as HTMLElement | null; if (!t0?.closest('.b5-pinw, .b5-drawer')) document.querySelectorAll<HTMLElement>('.b5-drawer').forEach((x) => { x.hidden = true; }); }); // gaveta do "+ fixar" fecha ao clicar fora
   window.addEventListener('blur', () => alt(false));
 }
@@ -253,6 +255,8 @@ function topBar5(s: GameState, host: Shell5Host): HTMLElement {
 
 // ---------------------------------------------------------------- barra de baixo: viagem + bolso
 
+let cardAtDown5: string | undefined;
+
 function bottom5(s: GameState): HTMLElement {
   const tr = travel5(s);
   const cur = SH5.region;
@@ -271,6 +275,9 @@ function bottom5(s: GameState): HTMLElement {
     onclick: (e: Event) => {
       if (full) { toast(t(l('O bolso está cheio (8). Tire um objeto (×) antes de fixar outro.', 'The pocket is full (8). Remove one (×) before pinning another.')), 'bad'); return; }
       if (canPin && SH5.paper) { const why = pin5(s, SH5.paper.obj); if (why) toast(t(why), 'bad'); redraw(); return; }
+      // cartão de ações aberto (ACOES5): fixa o objeto do cartão
+      const card = cardAtDown5 ?? (typeof document !== 'undefined' ? document.querySelector<HTMLElement>('.ac5[data-card]')?.dataset.card : undefined); cardAtDown5 = undefined;
+      if (card && object5(card) && !pinned.has(card)) { const why = pin5(s, card); if (why) toast(t(why), 'bad'); else toast(t(l('{o} no bolso.', '{o} in the pocket.'), { o: tl5(object5(card)!.label) }), 'good'); redraw(); return; }
       e.stopPropagation(); drawer.hidden = !drawer.hidden;
       if (!drawer.hidden) { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); drawer.style.left = `${Math.max(8, Math.min(r.left, (window.innerWidth || 1280) - 316))}px`; drawer.style.bottom = `${(window.innerHeight || 800) - r.top + 8}px`; }
     } }, `+ ${t(l('fixar', 'pin'))}`, full ? h('small', null, ' 8/8') : null);
