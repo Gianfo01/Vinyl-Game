@@ -63,8 +63,8 @@ describe('BASE-BR · sem duplicata e no lugar certo', () => {
 
   it('contagem: base brasileira cresce (meta de 1 000 em andamento — ver docs/r31/base-br.md)', () => {
     const br = REAL_ALL.filter((a) => a.cn === 'BRA').length;
-    expect(BASE31BR_ACTS.length).toBeGreaterThanOrEqual(330);
-    expect(br).toBeGreaterThanOrEqual(880);
+    expect(BASE31BR_ACTS.length).toBeGreaterThanOrEqual(580);
+    expect(br).toBeGreaterThanOrEqual(1000);
   });
 
   it('curadoria e nome real registrado no espaço br31 (homenagem ≠ real)', () => {

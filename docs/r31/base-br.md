@@ -1,39 +1,41 @@
 # R31 · onda 4 · BASE-BR — base brasileira ampliada
 
-**Resultado (2 turnos de pesquisa):** 337 atos brasileiros novos, todos com fonte verificada nas buscas. O Brasil vai de
-551 para **888 atos** em REAL_ALL (464 desde 1992), e a base inteira vai de 3 483 para 3 820 atos.
-**Meta (≥ 1 000): faltam cerca de 112.** Ainda há 410 candidatos listados à espera de pesquisa, então mais um turno de
-buscas passa da meta.
+**Resultado (3 rodadas): meta atingida.** São 588 atos brasileiros novos, todos com fonte. O Brasil vai de 551 para
+**1 139 atos** em REAL_ALL (603 desde 1992). Na integração, o lote só entra com base Enorme (z 3), e a frente DBTAM vai
+redistribuir os atos por tamanho de base usando a notoriedade registrada aqui (campo `nt`).
 
-## Por que não chegou a 1 000 (e como continuar)
+## Como foi feito (3 rodadas)
 
-As fichas vêm de buscas na web: Wikipédia pt/en, Dicionário Cravo Albin da MPB, IMMuB e Discogs. As APIs do Wikidata e do
-MusicBrainz e o acesso direto às páginas estão bloqueados nesta rede. Cada turno tem um limite de 200 buscas, dividido
-entre todos os agentes.
-- **1º turno:** 165 fichas.
-- **2º turno:** 172 fichas, com uma busca por ato e prioridade para os nomes mais conhecidos e os pedidos do dono.
+1. **Busca web, 165 atos.** Fichas completas, com Wikipédia pt/en, Cravo Albin, IMMuB e Discogs. Cada turno tem um
+   limite de 200 buscas, dividido entre todos os agentes.
+2. **Busca web, uma busca por ato, 172 atos.** Prioridade para os pedidos do dono (LS Jack, Dalto, Hanói-Hanói…) e para
+   os nomes mais conhecidos.
+3. **MusicBrainz e conferência web, 251 atos.** A API do MusicBrainz passou a responder nesta rede. O coletor
+   `scripts/r31/base-br-mb/mbbr.py` segue estas regras:
+   - aceita só nome exato com país Brasil; homônimo brasileiro faz o ato ser pulado;
+   - estreia = lançamento original próprio mais antigo (álbum, single ou EP, sem coletâneas nem ao vivo);
+   - cidade = área de nascimento ou fundação levada à cidade do jogo do mesmo estado;
+   - nascimento e morte vêm da ficha do MusicBrainz;
+   - fontes = página do MusicBrainz, mais os links do Wikidata e da Wikipédia que ela traz.
 
-Nada foi preenchido de memória. Os pendentes estão em `docs/r31/base-br/*.jsonl` com `"status":"skip"` e o motivo
-"limite de buscas".
+   O MusicBrainz costuma não ter 78 rpm e compactos. Por isso a estreia dos 141 atos que estreiam antes de 2000 foi
+   conferida com uma busca web cada: 65 estreias foram corrigidas, como Matogrosso & Mathias (1976, e não 1999) e Anjos do
+   Inferno (1937, e não 1945). A estreia que não foi conferida fica marcada como aproximada (`ap: d`).
 
-Para continuar:
-1. Mande uma nova mensagem à sessão.
-2. Os agentes pesquisam os `skip` pendentes.
-3. Rode `npx tsx scripts/r31/base31br-gen.ts`.
-4. Rode `tests/r31-base-br.test.ts` e suba o piso de contagem.
+**Mortes que faltavam,** agora corrigidas com fonte: Marinês (2007), Moreira da Silva (2000), Dolores Duran (1959),
+Herivelto Martins (1992) e Carlos Galhardo (1985).
 
-**Ficaram de fora por mérito** (pesquisados, sem dado confirmável ou sem gravação própria):
-- Só compositores: Catulo da Paixão Cearense, Zequinha de Abreu, Sinhô, Paulo Vanzolini e Zé Kéti. Do Zé Kéti, a fonte
-  só confirma uma composição gravada por outros em 1946.
-- Sem a primeira gravação documentada: Heitor Villa-Lobos, Bidu Sayão, Guiomar Novaes, Nelson Freire e João Carlos Martins.
-- Estreia sem confirmação: DJ Marky, Naiara Azevedo, Pablo do Arrocha, Plutão Já Foi Planeta e Mestre Lucindo.
+**Ficaram de fora 169 candidatos:**
+- 120 não têm artista brasileiro com esse nome no MusicBrainz e não foram pesquisados na web.
+- 33 não têm lançamento próprio datado.
+- 6 são ambíguos (homônimos brasileiros).
+- 6 têm discografia incoerente com o nascimento.
+- O resto ficou de fora por mérito: compositores sem gravação própria (Catulo, Zequinha de Abreu, Sinhô, Vanzolini) e
+  estreias sem confirmação.
 
-**Pedidos do dono:**
-- Rádio Táxi: entrou, estreia em 1982.
-- LS Jack: entrou, com o álbum *LS Jack* (1999), "Você Chegou" e *V.I.B.E.* (2002).
-- Milton Guedes: já existia, no lote Z.
-- "E mais": também entraram Dalto, Hanói-Hanói, Yahoo, Byafra, Marjorie Estiano, Hori, Afrodite se Quiser e Inimigos da HP.
-  O Inimigos da HP é pagode, e não rock.
+A lista completa está em `docs/r31/base-br/_gerado.txt`.
+
+**Pedidos do dono:** Rádio Táxi e LS Jack entraram; Milton Guedes já existia no lote Z.
 
 ## Como o dado entra (regras de confiabilidade)
 
@@ -63,61 +65,62 @@ Para continuar:
 
 ## Contagem
 
-**Por década de estreia (novos / total BR depois do lote):**
+**Por década de estreia (novos / total BR):**
 
 | Década | Novos / total |
 |---|---:|
 | 1880–1890 | 0 / 2 |
 | 1900 | 3 / 5 |
-| 1910 | 1 / 4 |
+| 1910 | 2 / 5 |
 | 1920 | 4 / 8 |
-| 1930 | 13 / 23 |
-| 1940 | 10 / 13 |
-| 1950 | 33 / 44 |
-| 1960 | 41 / 90 |
-| 1970 | 47 / 104 |
-| 1980 | 51 / 107 |
-| 1990 | 41 / 128 |
-| 2000 | 41 / 110 |
-| 2010 | 49 / 190 |
-| 2020 | 3 / 60 |
+| 1930 | 15 / 25 |
+| 1940 | 15 / 18 |
+| 1950 | 39 / 50 |
+| 1960 | 61 / 110 |
+| 1970 | 86 / 143 |
+| 1980 | 85 / 141 |
+| 1990 | 75 / 162 |
+| 2000 | 91 / 160 |
+| 2010 | 98 / 239 |
+| 2020 | 14 / 71 |
 
 **Por gênero (novos):**
-- mpb 27, samba 21, bossa 20, gospel 19
-- samba-canção 15, axé 15, forró 14, rock BR 14, funk carioca 14
-- choro 12, jovem guarda 11, indie 11, sertanejo universitário 11, sertanejo 10
-- gaúcho 9, pagode 9, soul BR 7, MPB nova 6
-- modinha, frevo, marchinha, bolero e house: 5 cada
-- punk, pop rock, reggae, heavy metal, hip-hop, alt rock e funk ostentação: 4 cada
-- e mais 22 gêneros com 1 a 3 atos cada
+- mpb 48, samba 35, gospel 35
+- rock BR 29, forró 27, bossa 25
+- MPB nova 22, sertanejo universitário 22, funk carioca 21
+- indie 19, choro 18, samba-canção 18, axé 18
+- sertanejo 15, fusion 15, pagode 15, jovem guarda 14, brega 13, soul BR 13, hip-hop 13
+- trap 10, gaúcho 9, erudito 8, psicodélico 7, reggae 7, thrash 6
+- e mais 40 gêneros com 1 a 5 atos cada
 
 **Por cidade do jogo (novos):**
-- rio 124, sao_paulo 89
-- salvador 27, recife 26
-- porto_alegre 17, bh 15, goiania 13
-- curitiba 7, fortaleza 6, campinas 5, brasilia 5
-- belem 2, sao_luis 1
+- rio 191, sao_paulo 171
+- recife 43, salvador 42, bh 35
+- porto_alegre 28, goiania 20
+- belem 14, curitiba 13, fortaleza 10, brasilia 8, campinas 7
+- sao_luis 4, manaus 1, florianopolis 1
 
-127 fichas têm a cidade real anotada em `lugar`, quando o jogo não tem a cidade ou quando ela foi aproximada.
+175 fichas têm a cidade real anotada em `lugar`.
 
-**Qualidade dos dados:**
-- 168 atos têm algum campo marcado como aproximado (`ap`), e um tem `exact: false` (Victor Ruiz).
-- 16 atos têm t 2: Emilinha Borba, Dircinha Batista, Jamelão, Carlos Galhardo, Aline Barros, Padre Marcelo Rossi, Padre
-  Fábio de Melo, Leonardo, Mano Brown, Alexandre Pires e outros. Os demais têm t 3, e nenhum tem t 1.
+**Qualidade:**
+- 320 atos têm algum campo aproximado; em 263 deles é a estreia.
+- Notoriedade (`nt`): anos de carreira em todos os atos; número de álbuns e de lançamentos do MusicBrainz em 505 atos.
+  Hits e certificações não estão em nenhuma das fontes acessíveis daqui (Pró-Música e as paradas ficaram fora do
+  alcance) e ficam para a DBTAM.
 
 ## Fontes
 
-863 referências, de 1 a 4 por ato:
+1 592 referências:
 
 | Fonte | Referências |
 |---|---:|
-| pt.wikipedia.org | 284 |
-| dicionariompb.com.br (Cravo Albin) | 267 |
-| en.wikipedia.org | 177 |
-| discogs.com | 87 |
-| immub.org | 48 |
-
-As URLs de cada ato estão em `BR31_NOTES` (`src/data/base31br.ts`) e na ficha de curadoria `CURBR31`.
+| dicionariompb.com.br (Cravo Albin) | 361 |
+| pt.wikipedia.org | 361 |
+| musicbrainz.org | 253 |
+| en.wikipedia.org | 239 |
+| wikidata.org | 195 |
+| discogs.com | 116 |
+| immub.org | 67 |
 
 ## Interruptor e efeito no mundo
 
@@ -158,7 +161,7 @@ Armandinho do reggae. Conflito de nascimento com a base fica omitido e anotado:
 - Solange Almeida: 1974 contra 1976 no Aviões do Forró.
 - Alexandre Pires: 1976 contra 1975 no Só Pra Contrariar.
 
-## Medição (desempenho do mês e tamanho do save, 337 atos)
+## Medição (desempenho do mês e tamanho do save, 337 atos; antes da regra z 3)
 
 A medição foi feita antes de a integração receber as bases IT e HITS. Os números comparam só o lote BR ligado e
 desligado.
@@ -187,3 +190,8 @@ O balanço do jogador (mediana de 4 sementes) mudou nas eras de 1955 a 2030, par
 
 O lote não mexe em nenhuma regra econômica, então essa diferença vem da trajetória de cada partida ter mudado com
 concorrentes diferentes, não de uma tendência.
+
+**Depois da integração (z 3):** o lote só entra com base Enorme, então os goldens da base padrão voltaram aos de antes
+das bases, e esta rodada não mexe neles. O r14-db (base Enorme) já falhava na integração com 3 471 ms/mês contra o
+limite de 3 000, antes dos 251 atos desta rodada, e mediu o mesmo valor depois deles. O redimensionamento é da DBTAM e da
+onda 6.

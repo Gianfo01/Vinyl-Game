@@ -75,6 +75,8 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
         while (row.length > 2 && row[row.length - 1] === undefined) row.pop();
         return row;
       });
+      // formação sem ninguém na estreia (integrantes do MB que entraram depois): sem dado confiável da formação original
+      if (a.m.length && !a.m.some((m: unknown[]) => m[4] === undefined || (m[4] as number) <= d!)) { extra.push('formação de estreia desconhecida (integrantes documentados só entraram depois) — integrantes omitidos'); fixes.push(`${n}: ninguém na formação de estreia — integrantes omitidos`); a.m = []; }
       if (!a.m.length) delete a.m;
     }
     const al = (Array.isArray(j.al) ? j.al : []).filter((r: unknown[]) => {
