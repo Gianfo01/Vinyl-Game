@@ -9,7 +9,7 @@
 body.alt5 .sc5 .sc5-labels { display: block; }
 body.alt5 .sc5 .sc31-spot { border: 2px dashed rgba(255, 211, 74, 0.85); }
 body.alt5 .sc5 .sc31-badge { z-index: 4; }
-.sc5 .sc31-label { font: 400 11px/1.35 var(--pixel, monospace); background: #0d1218; border: 1px solid #3a4a62; color: #f4ecd8; box-shadow: 2px 2px 0 rgba(0, 0, 0, .5); border-radius: 0; }
+.sc5 .sc31-label { background: #0d1218; outline: 1px solid #3a4a62; color: #f4ecd8; box-shadow: 2px 2px 0 rgba(0, 0, 0, .5); border-radius: 0; }
 .sc5 .sc31-tip { font: 400 12px/1.35 var(--sans, sans-serif); background: #0d1218; border: 2px solid var(--c5-gold, #f0c040); border-radius: 0; box-shadow: 3px 3px 0 rgba(0, 0, 0, .55); }
 .sc5 .sc31-tip b { font: 400 12px/1.2 var(--pixel, monospace); color: var(--c5-gold, #f0c040); }
 .sc5 .sc31-badge { border-radius: 0; font-family: var(--pixel, monospace); font-weight: 400; box-shadow: 1px 1px 0 rgba(0, 0, 0, .5); }
@@ -54,3 +54,6 @@ body.alt5 .s31.cn5-sala .s31-lbl { opacity: 1; }
 body.alt5 .mc5-stage .mc31-pt { outline: 2px dashed var(--c5-gold, #f0c040); outline-offset: 3px; }
 .mc5-help { cursor: pointer; }
 .mc5-tip { margin: 0; padding: 6px 8px; border: 2px solid #3a4a62; background: #0d1218; color: #f4ecd8; font-size: 13px; }
+
+/* cena aberta num papel (aeroporto, leilões, beco, alfândega, envelopes, loja): o título já está no cabeçalho do papel */
+.p5-body h2:has(+ .sc5), .p5-body h2:has(+ .sc31-host > .sc5) { display: none; }

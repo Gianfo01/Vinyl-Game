@@ -102,7 +102,7 @@ export function vitSpot5(s: GameState, p: VitPlace31, W: number): Spot31[] {
   if (!nav5On(s)) return [];
   const n = vitItems31(s, p).length;
   if (!n) return [];
-  return [{ id: 'vit5', x: W - 50, y: 3, w: 46, h: 12, label: l('Vitrine do mês', 'Showcase of the month'),
+  return [{ id: 'vit5', x: W - 50, y: 14, w: 46, h: 12, label: l('Vitrine do mês', 'Showcase of the month'),
     tip: fmtL(l('O que o lugar tem neste mês ({n}); some na virada.', 'What the place has this month ({n}); gone at the month turn.'), { n }),
     go: { panel: 'vit5' }, badge: { text: fmtL(l('{n} no mês', '{n} this month'), { n }), level: 'info', sym: '✦' } }];
 }
