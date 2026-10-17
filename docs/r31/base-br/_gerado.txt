@@ -1,428 +1,185 @@
-atos aceitos: 337
+atos aceitos: 588
 
 # fora (skip da pesquisa ou reprovado no gerador)
 Catulo da Paixão Cearense — poeta/compositor; fontes só registram gravações de suas obras por outros intérpretes
 Zequinha de Abreu — compositor; não há gravação própria documentada (Tico-tico gravado pela Orquestra Colbaz, 1931)
 Sinhô — compositor; só aparece acompanhando gravações de outros (sem disco próprio documentado)
-Benedito Lacerda — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Dilermando Reis — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Abel Ferreira — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Radamés Gnattali — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Luiz Americano — não pesquisado: limite de buscas web da sessão esgotado — refazer
-K-Ximbinho — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Joel Nascimento — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Nó em Pingo d'Água — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Galo Preto — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Heitor Villa-Lobos — busca não identificou a primeira gravação comercial (só nascimento/morte); compositor
-Alberto Nepomuceno — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Guiomar Novaes — busca só diz 78 rpm 'dos anos 1920', sem ano de estreia
-Bidu Sayão — busca não identificou ano da primeira gravação (só material de 1941-50)
-Magda Tagliaferro — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Francisco Mignone — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Camargo Guarnieri — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Nelson Freire — busca não confirmou ano/título da primeira gravação
-Arthur Moreira Lima — não pesquisado: limite de buscas web da sessão esgotado — refazer
-João Carlos Martins — busca não confirmou a estreia em disco (mais antigo datado: 1969, sem ser descrito como primeiro)
-Antonio Meneses — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Turíbio Santos — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Duo Assad — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Severino Araújo e Orquestra Tabajara — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Mário Zan — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Cornélio Pires — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Jararaca & Ratinho — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Raul Torres — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Pedro Raymundo — não pesquisado: limite de buscas web da sessão esgotado — refazer
-Bando da Lua — não verificado: limite de buscas web esgotado (refazer)
-João de Barro — não verificado: limite de buscas web esgotado (refazer)
-Jorge Goulart — não verificado: limite de buscas web esgotado (refazer)
-Anjos do Inferno — não verificado: limite de buscas web esgotado (refazer)
-Quatro Ases e Um Coringa — não verificado: limite de buscas web esgotado (refazer)
-Trio Irakitan — não verificado: limite de buscas web esgotado (refazer)
-Ismael Silva — não verificado: limite de buscas web esgotado (refazer)
-Geraldo Pereira — não verificado: limite de buscas web esgotado (refazer)
-Haroldo Lobo — não verificado: limite de buscas web esgotado (refazer)
-Custódio Mesquita — não verificado: limite de buscas web esgotado (refazer)
-Marília Batista — não verificado: limite de buscas web esgotado (refazer)
-Araci Cortes — não verificado: limite de buscas web esgotado (refazer)
-Patrício Teixeira — não verificado: limite de buscas web esgotado (refazer)
-Gastão Formenti — não verificado: limite de buscas web esgotado (refazer)
-Augusto Calheiros — não verificado: limite de buscas web esgotado (refazer)
-Castro Barbosa — não verificado: limite de buscas web esgotado (refazer)
-Nuno Roland — não verificado: limite de buscas web esgotado (refazer)
-Gilberto Alves — não verificado: limite de buscas web esgotado (refazer)
-Roberto Silva — não verificado: limite de buscas web esgotado (refazer)
-Francisco Carlos — não verificado: limite de buscas web esgotado (refazer)
+Benedito Lacerda — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem lançamento próprio datado
+Abel Ferreira — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Luiz Americano — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem lançamento próprio datado
+K-Ximbinho — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: estreia 2009 incoerente com nascimento 1917 (discografia incompleta?)
+Nó em Pingo d'Água — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Heitor Villa-Lobos — busca não identificou a primeira gravação comercial (só nascimento/morte); compositor · MusicBrainz: sem artista brasileiro com esse nome
+Alberto Nepomuceno — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: estreia 1994 incoerente com nascimento 1864 (discografia incompleta?)
+Magda Tagliaferro — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: estreia 1973 incoerente com nascimento 1893 (discografia incompleta?)
+Francisco Mignone — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: estreia 2004 incoerente com nascimento 1897 (discografia incompleta?)
+Camargo Guarnieri — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: estreia 1998 incoerente com nascimento 1907 (discografia incompleta?)
+Severino Araújo e Orquestra Tabajara — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Mário Zan — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Cornélio Pires — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Jararaca & Ratinho — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Raul Torres — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem lançamento próprio datado
+Pedro Raymundo — não pesquisado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Bando da Lua — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: primeiro lançamento 1957 depois do fim/morte 1955 (póstumo)
+João de Barro — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Jorge Goulart — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Quatro Ases e Um Coringa — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Geraldo Pereira — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Haroldo Lobo — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Custódio Mesquita — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Marília Batista — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Araci Cortes — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Patrício Teixeira — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Gastão Formenti — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Augusto Calheiros — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Castro Barbosa — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Nuno Roland — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Gilberto Alves — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Francisco Carlos — não verificado: limite de buscas web esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
 Paulo Vanzolini — compositor; o LP de estreia (Onze sambas e uma capoeira, 1967) é cantado por outros intérpretes
-Waldir Calmon — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Ivon Curi — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Carmélia Alves — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Abdias — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Os 3 do Nordeste — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Clemilda — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Messias Holanda — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Elino Julião — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Jorge de Altinho — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Santanna o Cantador — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Pinto do Acordeon — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Waldonys — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Petrúcio Amorim — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Nando Cordel — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Alcymar Monteiro — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Magníficos — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Limão com Mel — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Cavaleiros do Forró — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Garota Safada — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Solteirões do Forró — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Jonas Esticado — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Taty Girl — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Desejo de Menina — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Forró do Muído — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Unha Pintada — nao pesquisado: limite de buscas da sessao esgotado (refazer)
-Vital Farias — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Eddie — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-DJ Dolores — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Devotos — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Pablo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Silvanno Salles — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Tierry — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Nadson o Ferinha — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Sérgio Murilo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Ronnie Cord — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Demétrius — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Trio Esperança — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Golden Boys — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Os Vips — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Leno & Lilian — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Silvinha — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Bobby di Carlo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-A Bolha — não verificado: limite de buscas web da sessão esgotado (refazer)
-Módulo 1000 — não verificado: limite de buscas web da sessão esgotado (refazer)
-Serguei — não verificado: limite de buscas web da sessão esgotado (refazer)
-Som Imaginário — não verificado: limite de buscas web da sessão esgotado (refazer)
-O Peso — não verificado: limite de buscas web da sessão esgotado (refazer)
-Terreno Baldio — não verificado: limite de buscas web da sessão esgotado (refazer)
-Bixo da Seda — não verificado: limite de buscas web da sessão esgotado (refazer)
-Sá, Rodrix & Guarabyra — não verificado: limite de buscas web da sessão esgotado (refazer)
-Carlos Alexandre — não verificado: limite de buscas web da sessão esgotado (refazer)
-Diana — não verificado: limite de buscas web da sessão esgotado (refazer)
-Perla — não verificado: limite de buscas web da sessão esgotado (refazer)
-Gilliard — não verificado: limite de buscas web da sessão esgotado (refazer)
-Márcio Greyck — não verificado: limite de buscas web da sessão esgotado (refazer)
-Bartô Galeno — não verificado: limite de buscas web da sessão esgotado (refazer)
-Ovelha — não verificado: limite de buscas web da sessão esgotado (refazer)
-Kátia — não verificado: limite de buscas web da sessão esgotado (refazer)
-Peninha — não verificado: limite de buscas web da sessão esgotado (refazer)
-Elymar Santos — não verificado: limite de buscas web da sessão esgotado (refazer)
-Wanderley Andrade — não verificado: limite de buscas web da sessão esgotado (refazer)
-Carlos Dafé — não verificado: limite de buscas web da sessão esgotado (refazer)
-Tony Bizarro — não verificado: limite de buscas web da sessão esgotado (refazer)
-Lady Zu — não verificado: limite de buscas web da sessão esgotado (refazer)
-Dom Salvador — não verificado: limite de buscas web da sessão esgotado (refazer)
-Trio Mocotó — não verificado: limite de buscas web da sessão esgotado (refazer)
-Bebeto — não verificado: limite de buscas web da sessão esgotado (refazer)
-Luís Vagner — não verificado: limite de buscas web da sessão esgotado (refazer)
-Luiz Eça — não verificado: limite de buscas web da sessão esgotado — refazer
-Paulinho Nogueira — não verificado: limite de buscas web da sessão esgotado — refazer
-Tavinho Moura — não verificado: limite de buscas web da sessão esgotado — refazer
-Aldir Blanc — não verificado: limite de buscas web da sessão esgotado — refazer
-Sueli Costa — não verificado: limite de buscas web da sessão esgotado — refazer
-Cristina Buarque — não verificado: limite de buscas web da sessão esgotado — refazer
-Olivia Byington — não verificado: limite de buscas web da sessão esgotado — refazer
-Tetê Espíndola — não verificado: limite de buscas web da sessão esgotado — refazer
-Nei Lisboa — não verificado: limite de buscas web da sessão esgotado — refazer
-Zé Geraldo — não verificado: limite de buscas web da sessão esgotado — refazer
-Raimundo Sodré — não verificado: limite de buscas web da sessão esgotado — refazer
-Luli & Lucina — não verificado: limite de buscas web da sessão esgotado — refazer
-Ná Ozzetti — não verificado: limite de buscas web da sessão esgotado — refazer
-Rumo — não verificado: limite de buscas web da sessão esgotado — refazer
-Premeditando o Breque — não verificado: limite de buscas web da sessão esgotado — refazer
-Língua de Trapo — não verificado: limite de buscas web da sessão esgotado — refazer
-Vânia Bastos — não verificado: limite de buscas web da sessão esgotado — refazer
-Fátima Guedes — não verificado: limite de buscas web da sessão esgotado — refazer
-Zé Renato — não verificado: limite de buscas web da sessão esgotado — refazer
-Paulinho Pedra Azul — não verificado: limite de buscas web da sessão esgotado — refazer
-Vander Lee — não verificado: limite de buscas web da sessão esgotado — refazer
-Pedro Mariano — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Luciana Mello — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Paula Lima — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Fernanda Porto — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Bebel Gilberto — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Celso Fonseca — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Moreno Veloso — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Kell Smith — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Ana Cañas — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Karina Buhr — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Mariana Aydar — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Mônica Salmaso — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Fabiana Cozza — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Ellen Oléria — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Xênia França — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Larissa Luz — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Carne Doce — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Francisco, el Hombre — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Metá Metá — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Kiko Dinucci — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Rômulo Fróes — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Thiago Pethit — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Mahmundi — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Ava Rocha — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Luiza Lian — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Tagua Tagua — não verificado: limite de buscas web da sessão esgotado antes deste ato
-Plutão Já Foi Planeta — título e ano do álbum de estreia não confirmados nas fontes (formada em Natal em 2013); limite de buscas esgotado
-Bonde do Rolê — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-CSS — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Copacabana Club — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Urias — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Linn da Quebrada — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Vitão — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Giulia Be — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Agnes Nunes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Day Limns — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Priscilla — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Twister — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Felipe Dylon — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Luka — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Perlla — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Restart — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Cine — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Gaab — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Rosana — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Fernanda Takai — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Cólera — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Olho Seco — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Gang 90 & Absurdettes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Magazine — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-João Penca e Seus Miquinhos Amestrados — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada)
-Smack — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Mercenárias — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Voluntários da Pátria — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Zero — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-DeFalla — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-TNT — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Os Cascavelletes — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Graforréia Xilarmônica — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Júpiter Maçã — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Wander Wildner — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Hojerizah — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Uns e Outros — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Marcelo Nova — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Korzus — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Dorsal Atlântica — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Sarcófago — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Overdose — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Torture Squad — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Claustrofobia — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Velhas Virgens — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Virgulóides — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Ultramen — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Tianastácia — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Penélope — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Little Quail and the Mad Birds — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Maskavo — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Forfun — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Strike — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Gloria — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Fake Number — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Dibob — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Hevo84 — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Moptop — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Autoramas — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Black Pantera — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Crypta — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Nervosa — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer
-Elton Medeiros — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Zé Kéti — estreia confirmada só como compositor (gravação dos Vocalistas Tropicais, 1946); falta a estreia como intérprete
-Sombrinha — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Luiz Carlos da Vila — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Reinaldo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Osvaldinho da Cuíca — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Eduardo Gudin — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Luiz Ayrão — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Dominguinhos do Estácio — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Moyseis Marques — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Nilze Carvalho — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Soweto — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Os Morenos — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Kiloucura — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Karametade — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Pique Novo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Swing & Simpatia — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Rodriguinho — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Bom Gosto — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Suel — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Imaginasamba — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Grupo Vou pro Sereno — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Di Propósito — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Clareou — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Ricardo Chaves — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Banda Reflexu's — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Companhia do Pagode — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada
-Dodô & Osmar — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Planta & Raiz — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Adão Negro — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Mato Seco — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Alma Djem — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Dazaranha — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Sine Calmon — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Leões de Israel — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Liu & Léu — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Zico & Zeca — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Pedro Bento & Zé da Estrada — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Tibagi & Miltinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Vieira & Vieirinha — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Belmonte & Amaraí — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Matogrosso & Mathias — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Teodoro & Sampaio — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Di Paullo & Paulino — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Duduca & Dalvan — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Lourenço & Lourival — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Peão Carreiro & Zé Paulo — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Zé Henrique & Gabriel — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Hugo Pena & Gabriel — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Cezar & Paulinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Gino & Geno — não pesquisado: limite de WebSearch da sessão esgotado (refazer)
-Naiara Azevedo — estreia não confirmada: 'Ao Vivo em Londrina' (2014) dito primeiro, mas cronologia lista 'Ao Vivo' de 2011
-Lauana Prado — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Diego & Victor Hugo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Hugo & Guilherme — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Thiago Brava — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Loubet — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Felipe Araújo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Bruno & Barretto — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Clayton & Romário — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Guilherme & Benuto — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Us Agroboy — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Léo & Raphael — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Jads & Jadson — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-George Henrique & Rodrigo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Yasmin Santos — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Luíza & Maurílio — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Gabriel Gava — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Bruna Viola — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Fiduma & Jeca — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Marília Tavares — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Pablo do Arrocha — estreia não confirmada: Grupo Arrocha gravou 4 CDs sem datas; solo mais antigo achado é Vol.02 (2012), Vol.01 sem data
-Devinho Novaes — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Amilcka & Chocolate — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-William & Duda — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Junior & Leonardo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Sapão — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Os Hawaianos — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Gaiola das Popozudas — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Deize Tigrona — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Créu — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Naldo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Koringa — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Biel — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Fioti — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC Carol — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-Heavy Baile — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada)
-MC João — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Shevchenko e Elloco — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Dadá Boladão — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Xis — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Detentos do Rap — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-DMN — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Consciência Humana — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Pavilhão 9 — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Câmbio Negro — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Inquérito — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Kamau — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Marechal — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Sant — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Coruja BC1 — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Tássia Reis — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Pregador Luo — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Ndee Naldinho — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Realidade Cruel — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Trilha Sonora do Gueto — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Dexter — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Z'África Brasil — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Recayd Mob — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Sidoka — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Derek — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Raffa Moreira — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Chris MC — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-MC Igu — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Borges — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Major RD — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Kyan — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Tz da Coronel — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Budah — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Duquesa — não pesquisado: limite de buscas web da sessão esgotado (refazer)
-Catedral — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Regis Danese — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Toque no Altar — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Trazendo a Arca — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Cristina Mel — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Ludmila Ferber — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Eyshila — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Rose Nascimento — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Elaine de Jesus — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Isadora Pompeo — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Midian Lima — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Preto no Branco — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Padre Zezinho — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Padre Reginaldo Manzotti — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Davi Sacer — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-André Valadão — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Palavrantiga — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Fruto Sagrado — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Katsbarnea — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Vencedores por Cristo — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Sérgio Lopes — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Jotta A — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Leonardo Gonçalves — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Nívea Soares — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Ministério Morada — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-DJ Marky — busca não confirmou o primeiro disco/gravação (só carreira desde 1992 e coletânea de 2000 de outros artistas)
-Patife — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-XRS — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Gui Boratto — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Renato Cohen — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Anderson Noise — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Amon Tobin — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer)
-Mestre Lucindo — Aparece essencialmente como compositor (Immub/Discogs); nenhuma gravação própria nem datas de nascimento/morte confirmadas
-Lia Sophia — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Felipe Cordeiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Manoel Cordeiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Aíla — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Gang do Eletro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Viviane Batidão — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Fruto Sensual — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Arraial do Pavulagem — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Nilson Chaves — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Jane Duboc — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Waldemar Henrique — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Billy Blanco — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Sebastião Tapajós — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-David Assayag — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Carrapicho — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Papete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Rita Benneditto — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Flávia Bittencourt — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Flora Purim — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Victor Assis Brasil — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Raul de Souza — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Dom Um Romão — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Azymuth — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Nelson Ayres — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Arismar do Espírito Santo — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Hélio Delmiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Heraldo do Monte — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Quarteto Novo — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Cama de Gato — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Pau Brasil — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Duofel — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Marco Pereira — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Paulo Bellinati — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Badi Assad — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Laurindo Almeida — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Bola Sete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Toninho Ferragutti — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
-Trio Mossoró — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote
+Carmélia Alves — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Abdias — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Messias Holanda — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Elino Julião — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Santanna o Cantador — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Pinto do Acordeon — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Cavaleiros do Forró — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Solteirões do Forró — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Jonas Esticado — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Desejo de Menina — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Forró do Muído — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Unha Pintada — nao pesquisado: limite de buscas da sessao esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Eddie — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Devotos — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Nadson o Ferinha — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Sérgio Murilo — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Ronnie Cord — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Demétrius — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Trio Esperança — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Silvinha — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Bobby di Carlo — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+O Peso — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Diana — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Gilliard — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Ovelha — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Kátia — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: 2 homônimos brasileiros (ambíguo)
+Dom Salvador — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Bebeto — não verificado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: 3 homônimos brasileiros (ambíguo)
+Nei Lisboa — não verificado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Luli & Lucina — não verificado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Rumo — não verificado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Premeditando o Breque — não verificado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Língua de Trapo — não verificado: limite de buscas web da sessão esgotado — refazer · MusicBrainz: sem artista brasileiro com esse nome
+Carne Doce — não verificado: limite de buscas web da sessão esgotado antes deste ato · MusicBrainz: sem artista brasileiro com esse nome
+Kiko Dinucci — não verificado: limite de buscas web da sessão esgotado antes deste ato · MusicBrainz: sem artista brasileiro com esse nome
+Linn da Quebrada — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Giulia Be — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Agnes Nunes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Day Limns — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Priscilla — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: 2 homônimos brasileiros (ambíguo)
+Felipe Dylon — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Luka — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: 2 homônimos brasileiros (ambíguo)
+Cólera — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Olho Seco — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Gang 90 & Absurdettes — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Magazine — não verificado: limite de buscas web da sessão esgotado (refazer em nova rodada) · MusicBrainz: sem artista brasileiro com esse nome
+Zero — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: 2 homônimos brasileiros (ambíguo)
+Hojerizah — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Virgulóides — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Maskavo — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Fake Number — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Dibob — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Hevo84 — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Black Pantera — não verificado: limite de buscas web da sessão esgotado (200/turno) antes da pesquisa; refazer · MusicBrainz: sem artista brasileiro com esse nome
+Reinaldo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Dominguinhos do Estácio — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem lançamento próprio datado
+Kiloucura — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Pique Novo — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Swing & Simpatia — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Rodriguinho — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Bom Gosto — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem lançamento próprio datado
+Suel — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Imaginasamba — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Grupo Vou pro Sereno — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Clareou — não verificado: limite de buscas web da sessão esgotado (200) — refazer em nova rodada · MusicBrainz: sem artista brasileiro com esse nome
+Dodô & Osmar — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Planta & Raiz — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Adão Negro — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Sine Calmon — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Leões de Israel — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Liu & Léu — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Zico & Zeca — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Pedro Bento & Zé da Estrada — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Tibagi & Miltinho — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Vieira & Vieirinha — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Belmonte & Amaraí — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Duduca & Dalvan — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Lourenço & Lourival — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Peão Carreiro & Zé Paulo — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Zé Henrique & Gabriel — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Hugo Pena & Gabriel — não pesquisado: limite de WebSearch da sessão esgotado (refazer) · MusicBrainz: sem lançamento próprio datado
+Loubet — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Clayton & Romário — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Us Agroboy — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem lançamento próprio datado
+Jads & Jadson — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+George Henrique & Rodrigo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Gabriel Gava — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Bruna Viola — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Fiduma & Jeca — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Marília Tavares — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Pablo do Arrocha — estreia não confirmada: Grupo Arrocha gravou 4 CDs sem datas; solo mais antigo achado é Vol.02 (2012), Vol.01 sem data · MusicBrainz: sem artista brasileiro com esse nome
+Amilcka & Chocolate — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+William & Duda — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Junior & Leonardo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+MC Sapão — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+Os Hawaianos — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+MC Naldo — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+MC Koringa — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+MC Biel — não verificado: cota de WebSearch da sessão esgotada (sem fonte consultada) · MusicBrainz: sem artista brasileiro com esse nome
+MC João — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Shevchenko e Elloco — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Detentos do Rap — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+DMN — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Consciência Humana — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Pavilhão 9 — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Inquérito — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Marechal — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Ndee Naldinho — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Realidade Cruel — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Z'África Brasil — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Borges — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Kyan — não pesquisado: limite de buscas web da sessão esgotado (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Toque no Altar — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Midian Lima — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem lançamento próprio datado
+Preto no Branco — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Padre Reginaldo Manzotti — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Palavrantiga — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Katsbarnea — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Vencedores por Cristo — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Sérgio Lopes — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Ministério Morada — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Patife — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+XRS — não verificado: limite de WebSearch da sessão esgotado antes da pesquisa (refazer) · MusicBrainz: sem artista brasileiro com esse nome
+Mestre Lucindo — Aparece essencialmente como compositor (Immub/Discogs); nenhuma gravação própria nem datas de nascimento/morte confirmadas · MusicBrainz: sem artista brasileiro com esse nome
+Manoel Cordeiro — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem artista brasileiro com esse nome
+Fruto Sensual — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem artista brasileiro com esse nome
+Waldemar Henrique — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem artista brasileiro com esse nome
+David Assayag — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem lançamento próprio datado
+Papete — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem artista brasileiro com esse nome
+Flávia Bittencourt — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem artista brasileiro com esse nome
+Arismar do Espírito Santo — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem lançamento próprio datado
+Pau Brasil — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: 2 homônimos brasileiros (ambíguo)
+Trio Mossoró — não pesquisado: limite de buscas web do turno (200) esgotado; refazer em outro lote · MusicBrainz: sem artista brasileiro com esse nome
 
 # correções automáticas
+Limão com Mel: ninguém na formação de estreia — integrantes omitidos
 Solange Almeida: nascimento 1974 ≠ base (Aviões do Forró: 1976) — omitido
+Terreno Baldio: obra "Terreno Baldio" (1975) fora de [estreia, fim] — removida
+Júpiter Maçã: obra "Orgasmo Legal & Ela Sabe o que Faz" (1994) fora de [estreia, fim] — removida
+Sombrinha: nascimento 1959 ≠ base (Fundo de Quintal: 1950) — omitido
+Soweto: obra "Vento dos areais" (1995) fora de [estreia, fim] — removida
+Os Morenos: obra "Os Morenos" (1994) fora de [estreia, fim] — removida
 Alexandre Pires: nascimento 1976 ≠ base (Só Pra Contrariar: 1975) — omitido
 Saulo Fernandes: nascimento 1977 ≠ base (Banda Eva: 1973) — omitido
+Câmbio Negro: obra "Ninguém Toma" (2021) fora de [estreia, fim] — removida
+Fruto Sagrado: obra "Fruto Sagrado" (1989) fora de [estreia, fim] — removida

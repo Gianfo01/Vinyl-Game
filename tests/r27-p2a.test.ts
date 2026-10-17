@@ -137,9 +137,11 @@ beforeAll(() => {
   // das bases BR/IT/HITS (46 + 92 + 92 atos por notoriedade) e as 8 estrelas antigas que estavam só na Grande; mais atos reais
   // nascem e estreiam nesses 8 meses: 182589 / 3575668786 / 1693608899 / 3302724126 → 1109567 / 1382068899 / 3840120958 / 3918718534.
   // Com todas as chaves base31.* desligadas (base31br, base31it, base31hits, base31stars = false) voltam os valores antigos (conferido).
-  expect(s.player.cash).toBe(1109567);
-  expect(hashString(JSON.stringify(s.acts))).toBe(3840120958);
-  expect(hashString(rngSnapshot19(s))).toBe(3918718534);
+  // R31 · BASE-BR 3ª rodada + DBTAM (de propósito): +251 atos brasileiros com notoriedade própria (nt); a divisão por tamanho põe
+  // outro núcleo BR na base Média: 1109567 / 1382068899 / 3840120958 / 3918718534 → 703829 / 3703042045 / 3137463213 / 2738656355.
+  expect(s.player.cash).toBe(703829);
+  expect(hashString(JSON.stringify(s.acts))).toBe(3137463213);
+  expect(hashString(rngSnapshot19(s))).toBe(2738656355);
   // R31 onda 4 (VIT · vitrine do mês, de propósito — docs/r31/vit.md): o mês dos lugares é sorteado no fluxo rng19 próprio 'vit31'; só o rng muda (caixa, turnês e acts iguais). Com `vit31` desligado volta 103954728. LOTE soma o fluxo lots31 (VIT+LOTE juntos: 3302724126).
   expect((s.x4 as unknown as { camp27?: unknown; press27?: unknown }).camp27).toBeUndefined();
 }, 600000);

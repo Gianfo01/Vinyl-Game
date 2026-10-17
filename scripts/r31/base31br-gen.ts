@@ -75,6 +75,8 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
         while (row.length > 2 && row[row.length - 1] === undefined) row.pop();
         return row;
       });
+      // formação sem ninguém na estreia (integrantes do MB que entraram depois): sem dado confiável da formação original
+      if (a.m.length && !a.m.some((m: unknown[]) => m[4] === undefined || (m[4] as number) <= d!)) { extra.push('formação de estreia desconhecida (integrantes documentados só entraram depois) — integrantes omitidos'); fixes.push(`${n}: ninguém na formação de estreia — integrantes omitidos`); a.m = []; }
       if (!a.m.length) delete a.m;
     }
     const al = (Array.isArray(j.al) ? j.al : []).filter((r: unknown[]) => {
@@ -86,7 +88,9 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.jsonl')).sort()) {
     const ap = (Array.isArray(j.ap) ? j.ap : []).filter((v: string) => ['f', 'd', 'b', 'x', 'm'].includes(v));
     if (ap.length) a.ap = [...new Set(ap)];
     if (j.exact === false) a.exact = false;
-    ok.push({ a, note: { id: slug(n), f: j.fontes, ap: j.apelidos ?? [], c: [...(j.confirmar ?? []), ...extra], lugar: j.cityNote } });
+    // notoriedade para a DBTAM (redistribuição por tamanho de base): anos de carreira, discos e lançamentos (MusicBrainz quando houver)
+    const nt = { anos: (e ?? NOW) - d!, discos: num(j.nt?.discos) ?? (a.al ?? []).filter((r: unknown[]) => r[2] === undefined || r[2] === 'lp').length, lanc: num(j.nt?.lancamentos), fonte: j.nt?.fonte ?? 'ficha' };
+    ok.push({ a, note: { id: slug(n), f: j.fontes, ap: j.apelidos ?? [], c: [...(j.confirmar ?? []), ...extra], lugar: j.cityNote, nt } });
   }
 }
 
@@ -115,7 +119,8 @@ export const BASE31BR_ACTS: RealArtist[] = [
 ${ok.map((o) => `  ${lit(o.a)},`).join('\n')}
 ];
 
-export interface BrNote31 { id: string; f: string[]; ap: string[]; c: string[]; lugar?: string }
+/** nt: notoriedade (DBTAM) — anos de carreira até o fim ou hoje, discos (álbuns), lançamentos próprios no MusicBrainz, fonte da contagem. */
+export interface BrNote31 { id: string; f: string[]; ap: string[]; c: string[]; lugar?: string; nt: { anos: number; discos: number; lanc?: number; fonte: string } }
 /** Curadoria por ato (mesma ordem de BASE31BR_ACTS): fontes, apelidos, dúvidas e o lugar real quando a cidade do jogo é aproximada. */
 export const BR31_NOTES: BrNote31[] = [
 ${ok.map((o) => `  ${lit(o.note)},`).join('\n')}

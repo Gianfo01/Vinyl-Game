@@ -30,6 +30,8 @@ const s = (pt: string, en: string): L => ({ pt, en });
 
 export const S = {
   gameTitle: s('Masters', 'Masters'),
+  /** dono (2026-10-17): nome completo "Masters: Music Industry Tycoon" — o logo segue MASTERS, o subtítulo vai embaixo (igual nas duas línguas) */
+  gameSubtitle: s('Music Industry Tycoon', 'Music Industry Tycoon'),
   tagline: s('Do cilindro de cera às vozes neurais: mais de 150 anos de negócio da música (1889–2040, e depois o que você quiser). Nenhuma run conta a mesma história.', 'From wax cylinders to neural voices: run a music business through 150+ years (1889–2040, and beyond). No two runs tell the same story.'),
   newGame: s('Nova run', 'New run'),
   continue: s('Continuar', 'Continue'),

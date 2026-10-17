@@ -527,7 +527,7 @@ export function roomPx5(W: number, H: number, year: number, o: { paper?: DecoDef
   // com o vão DWIN casado com o vidro
   if (!o.noWin && o.win) {
     const [wx] = o.win, oy = 16;
-    window31(q, wx + DWIN.x - 2, oy + DWIN.y - 2, DWIN.w + 4, DWIN.h + 4, view31.city, year, view31.month, undefined, o.seed);
+    window31(q, wx + DWIN.x - 2, oy + DWIN.y - 2, DWIN.w + 4, DWIN.h + 4, view31.city, year, view31.month, undefined, o.seed, 'night');
     if (o.window && decoHasArt(o.window.id)) q.blit(decoPx(o.window.id, year, { lit: true }), wx - DPAD, oy - DPAD);
   }
   // aparador sob a janela (onde ficam as peças "sobre a mesa"): tampo com borda, portas com puxador, pés
