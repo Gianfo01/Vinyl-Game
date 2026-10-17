@@ -120,10 +120,25 @@ Continua opt-in: só age sobre quem o jogador contratou, então os goldens não 
   (vaga na cidade, "chefe de selo X" ou "ex-cargo"), 2–3 traços e opinião. Aparece nas linhas do cartão do quadro da
   equipe.
 
+## Parte B completa (`src/sim/r33/gente33b.ts`, teste `tests/r33-gente-b.test.ts`)
+
+Mexe em todo mundo, por isso cada regra tem o seu interruptor, **desligado por padrão**. Desligados, os goldens não
+mudam. O QA33 liga e mede.
+
+| Interruptor | O quê |
+|---|---|
+| `exp33.camadas` | **Três camadas** que seguem a pessoa, não o emprego. **Completa:** artistas em atividade, quem trabalha para você, família, romances. **Leve:** gente da cidade, ex-artistas, quem já trabalhou para você; ficha `lightCard33` com nome, idade, profissão, 2–3 traços e opinião, sem custo mensal. **Multidão:** sem identidade. Na virada do mês, quem perdeu o papel desce: guarda um resumo do passado (atos, auge, papéis) e só as relações fortes (\|v\| ≥ 40). Quem ganhou papel sobe, sempre com o mesmo id. |
+| `exp33.talento` | **Talento escondido:** cerca de 12% de quem trabalha na cidade tem dom, fixo pela semente e pela pessoa. É achado pelo A&R e pelos canais de descoberta da época, ou ao ouvir a pessoa no bar (cartão do bar: "Ouvir quem trabalha aqui"). Achado, vira artista solo fazendo bico no mesmo emprego (o ciclo do gente31 continua: assinou, larga a vaga). Rivais também acham. Quem você achou e deixou meio ano sem contrato, um rival leva. **Gancho:** gente da cidade que passou pelo seu radar e virou estrela num rival gera aviso na Caixa ("A que escapou") e um fato. |
+| `exp33.volta` | **Volta por cima:** catálogo de volta às paradas, olheiro do seu selo ou vídeo viral (2006+) trazem ex-artistas de volta. A banda se reúne, ou o melhor integrante segue solo, sem contrato e no seu radar. No máximo 2 por mês e uma vez por década por ato; ato travado pela história não volta. |
+| `exp33.romance33` | **Romance no elenco:** o seu par ou o seu caso entra no seu elenco e vira decisão na Caixa (manter em segredo, assumir, terminar). O segredo pode vazar como escândalo (cai a confiança do ato e a reputação com artistas). |
+
+A família Fossati fica fora de tudo. Sorteios com `Rng.fromSeed('gente33b')`. O estado (`s.x4.gente33b`) só nasce
+com um interruptor ligado.
+
 ## Fica para depois
 
-- **REDES33:** a coluna do jornalista no Jornal e nas Redes, a partir do fato `column33`.
-- **POL33:** a ficha de escolha de candidato na tela. A regra já aceita a escolha (`hireBranchDir33(s, br, k)`).
-- **Depois do QA33**, por mudar todas as pessoas e os goldens: o resto do PLANO da parte B, que são as três camadas
-  para todo mundo, talento escondido, volta por cima e os ganchos (bartender recusado vira estrela num rival,
-  romance com quem vira artista).
+- **REDES33:** a coluna do jornalista e o post "ex-artista atrás do balcão", a partir dos fatos `column33`,
+  `talent33`, `comeback33` e `missed33`.
+- **POL33:** a ficha de escolha de candidato na tela.
+- **QA33:** ligar os quatro interruptores, medir os goldens e ajustar as chances de descoberta e de volta por cima
+  num jogo longo.

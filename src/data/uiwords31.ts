@@ -906,6 +906,7 @@ export const UI_WHOLE31: readonly string[] = [
   "documentary",
   "dome",
   "dos",
+  "dreamer",
   "drugs",
   "drums",
   "dub",

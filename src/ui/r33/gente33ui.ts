@@ -13,6 +13,8 @@ import {
   fixed33, freeBranch33, gente33On, light33, hireCeo33, hireCrew33, hireFirstBranchDir33, log33Of, peek33, seatBoard33, toggleBranchLine33, canHireBranchDir33,
   type Crew33, type Fixed33,
 } from '../../sim/r33/gente33';
+import { SWB33, listenHere33, toHear33 } from '../../sim/r33/gente33b';
+import { sw } from '../../sim/r31/switches';
 import type { GameState } from '../../sim/types';
 import { fmtL } from '../../sim/util';
 import { CARDS5 } from '../r31/acoes5data';
@@ -48,6 +50,9 @@ const ADD: Record<string, ActDef5> = {
   'g33.jornalista': fix('press', 'jornal', l('Ter um(a) jornalista que acompanha você', 'Get a journalist on your beat')),
   'g33.agrado': A(l('Dar uma exclusiva ao(à) jornalista', 'Give the journalist an exclusive'), courtFixed33, 'courtFixed33', 'jornal', (s) => !!fixed33(s, 'press'),
     (s) => courtFixed33(s, 'press'), l('Exclusiva dada: a relação melhorou.', 'Exclusive given: the relationship improved.')),
+  // parte B · talento escondido (exp33.talento): ouvir quem trabalha no bar
+  'g33.ouvir': { label: l('Ouvir quem trabalha aqui', 'Listen to whoever works here'), kind: 'do', src: ['sim/r33/gente33b', 'listenHere33'], fn: listenHere33, home: 'bar',
+    when: (s) => !!sw<boolean>(s, SWB33.talento) && !!toHear33(s, 'bar'), run: (s) => done(listenHere33(s, 'bar'), l('Você ouviu com atenção.', 'You listened closely.')), same: (s) => { listenHere33(s, 'bar'); } },
   'g33.sindicato': fix('union', 'quadrofunc', l('Receber o(a) representante do sindicato', 'Meet the union representative')),
 };
 Object.assign(ACTS_CAT5, ADD);
@@ -85,3 +90,4 @@ put('espelho', ['g33.treinador', 'g33.medico'], []);
 put('mural', ['g33.fa'], []);
 put('jornal', ['g33.jornalista', 'g33.agrado'], []);
 put('quadrofunc', ['g33.sindicato'], [], 'g33gente');
+put('bar', ['g33.ouvir'], []);

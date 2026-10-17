@@ -549,3 +549,13 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
   - camada leve (`light33`) nas linhas do quadro da equipe.
   - Goldens rodados e iguais. O resto do PLANO da parte B (camadas para todos, talento escondido, volta por cima)
     segue para depois do QA33. Ver `docs/r33/gente.md`.
+- **2026-10-17 · R33 GENTE33 parte B (pedido do dono, antes do QA33).** Em `src/sim/r33/gente33b.ts`, cada parte atrás
+  do seu interruptor, desligado por padrão:
+  - três camadas de pessoas (`exp33.camadas`): rebaixar guarda o resumo do passado e as relações fortes; promover
+    devolve a pessoa inteira, com o mesmo id;
+  - talento escondido de quem trabalha na cidade (`exp33.talento`), com o gancho do bartender recusado que vira
+    estrela num rival;
+  - volta por cima por catálogo, olheiro ou vídeo viral (`exp33.volta`);
+  - romance com quem vira artista do seu selo (`exp33.romance33`).
+  - Desligados, os goldens não mudam (rodados e iguais). O QA33 liga e mede. Teste `tests/r33-gente-b.test.ts`; ver
+    `docs/r33/gente.md`.
