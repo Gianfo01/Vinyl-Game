@@ -98,7 +98,7 @@ export const REAL_EU: RealArtist[] = [
   { n: 'Central Cee', g: 'uk_drill', c: 'london', d: 2020, t: 2, cn: 'GBR', b: 1998, r: 'mc', al: [['Wild West', 2021], ['23', 2022], ["Can't Rush Greatness", 2025]] },
 
   // ——— Itália ———
-  { n: 'Trio Lescano', g: 'vocal_jazz', c: 'milan', d: 1936, e: 1943, t: 3, cn: 'ITA', m: [['Alexandra Leschan', 'vocal'], ['Judik Leschan', 'vocal'], ['Kitty Leschan', 'vocal']], al: [['Ma le gambe', 1938, 'single'], ['Tulipan', 1940, 'single']] },
+  { n: 'Trio Lescano', g: 'vocal_jazz', c: 'milan', d: 1936, e: 1943, t: 3, cn: 'ITA', m: [['Alexandra Leschan', 'vocal', 1910, 1987], ['Judik Leschan', 'vocal', 1913, 2007], ['Kitty Leschan', 'vocal', 1919, 1965]], al: [['Ma le gambe', 1938, 'single'], ['Tulipan', 1940, 'single']] },
   { n: 'Nilla Pizzi', g: 'canzone', c: 'milan', d: 1942, e: 2011, t: 3, cn: 'ITA', b: 1919, x: 2011, r: 'vocal', al: [['Grazie dei fiori', 1951, 'single'], ['Vola colomba', 1952, 'single']] },
   { n: 'Claudio Villa', g: 'canzone', c: 'rome', d: 1946, e: 1987, t: 3, cn: 'ITA', b: 1926, x: 1987, r: 'vocal', al: [['Buongiorno tristezza', 1955, 'single'], ['Corde della mia chitarra', 1957, 'single'], ['Addio... addio...', 1962, 'single']] },
   { n: 'Renato Carosone', g: 'canzone_napoletana', c: 'naples', d: 1950, e: 2001, t: 2, cn: 'ITA', b: 1920, x: 2001, r: 'keys', al: [['Maruzzella', 1955, 'single'], ["Tu vuò fà l'americano", 1956, 'single'], ['Torero', 1957, 'single']] },

@@ -55,6 +55,7 @@ import { actsTouched17 } from '../actidx17';
 import { roll20, simCareer20, simDeath20, simStart20 } from '../worldpolicy20';
 import { actsNow27 } from '../tickcache27';
 import { RW_AFTER_NEWGAME } from './after29';
+import { histOwners33 } from './labelhist33';
 import { lineup29Of, type Lineup29 } from '../lineup29';
 import { relPut, relTouch } from '../opinion';
 
@@ -612,6 +613,12 @@ function decorate(s: GameState, r: Rng, act: Act, d: { n: string; t: number; d?:
   }
   // r27 (F): parceiros de composição reais (não integrantes) viram Pessoa — Zé Dantas e Humberto Teixeira com Gonzaga
   if (real && !sim) writers27(s, act, d.n, fates);
+  // R33 (DADOS): gente real sem morte documentada não passa dos 100 anos no começo (integrantes antigos sem datas, com
+  // nascimento estimado, ficavam vivos aos 110–130: Haydn Quartet, Golden Gate Quartet). Morte estimada, antes do início.
+  if (s.week === 0) for (const id of act.members) {
+    const p = s.persons[id];
+    if (p?.alive && s.year - p.born > 100) { p.alive = false; p.died = Math.min(s.year - 1, p.born + 80); }
+  }
   // todo mundo morto antes da run: o ato é parte da história
   if (act.members.length && act.members.every((id) => !s.persons[id]?.alive)) {
     act.status = 'retired';
@@ -845,6 +852,7 @@ function newgame(s: GameState, r: Rng): void {
     // r27 (LIN): quem estreia no próprio ano inicial não pode ter "terminado antes do início" (Beatles separados em jan/1962)
     if (upcomingNos.has(no) || !s.config.realNames || ex.d === undefined || ex.d >= y0) continue;
     if (classicOff31(s.config, CATALOG_LOOKUP()[no]?.city ?? '')) continue; // R31 (DBTAM): país desligado
+    if (!sim && (ex.e === undefined || ex.e >= y0)) continue; // R33 (DADOS): ainda em atividade na vida real — nunca "separado/aposentado" no início
     // terminou antes do início: entra aposentado/separado, com catálogo
     const real = REAL_ACTS[no];
     const memberCount = Math.max(1, (ex.m ?? []).filter((m) => inLineupAt(m, ex.d!)).length);
@@ -866,7 +874,8 @@ function newgame(s: GameState, r: Rng): void {
     if (!realAllowed(s.config, a) || brOff31(s, i) || !it31Ok(s, i) || hitOff31(s, i) || starsOff31(s.config, i)) continue;
     if (mode === 'chaos' && r.chance(0.25)) continue;
     if (mode === 'free' && r.chance(0.08)) continue;
-    const debut = a.d + jitter(s, r, 2);
+    // R33 (DADOS): a variação de estreia (livre/caos) não faz ninguém estrear criança (Cassiane, n. 1973, "estreava" em 1975)
+    const debut = Math.max(a.d + jitter(s, r, 2), Math.min(a.d, (a.b ?? -9999) + 14));
     if (debut > y0) { st.upcoming.push(i); continue; }
     const end = sim ? debut + simCareer20(s, `rw:${i}`) : a.e;
     const reunionNow = !sim && (a.rj ?? []).some(([x, y]) => x <= y0 && (y === undefined || y >= y0));
@@ -1031,7 +1040,7 @@ function monthly(s: GameState, r: Rng): void {
 // R29 (CONNECT): RW_AFTER_NEWGAME (after29.ts) roda no fim do newgame real — renomes do lineup16 etc. A ordem dos ganchos
 // 'newgame' dependia da ordem dos imports (ciclo realworld ↔ lineup16): com os imports de um teste o gancho do lineup16
 // rodava antes e "The Jackson 5" nunca virava "The Jacksons".
-registerSimHook('newgame', 'realworld', (s, r) => { newgame(s, r); for (const f of RW_AFTER_NEWGAME) f(s); });
+registerSimHook('newgame', 'realworld', (s, r) => { newgame(s, r); for (const f of RW_AFTER_NEWGAME) f(s); histOwners33(s); }); // R33 (DADOS): selo histórico por último (nomes já finais)
 // r27 (F): música com título de obra real leva os compositores reais nos créditos (Gonzaga + Zé Dantas), sem sorteio
 registerSimHook('compose', 'realworld:writers27', (s, _r, a) => {
   const song = a.song;

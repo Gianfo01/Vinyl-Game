@@ -1,0 +1,15 @@
+{
+ "seeds": 3,
+ "simYears": 30,
+ "count": {
+  "selo_fora_epoca": 0,
+  "dono_fora_epoca": 0,
+  "dono_historico": 0,
+  "morto_ativo": 0,
+  "solo_com_integrantes": 0,
+  "integrante_duplo": 0,
+  "idade": 0,
+  "morto_depois": 0
+ },
+ "examples": {}
+}

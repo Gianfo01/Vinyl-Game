@@ -280,6 +280,9 @@ export function soundalike19(s: GameState, id: string): L | null {
   const t = trib19(s, id), a = t && s.acts[t.act];
   if (!t || !a || !t.sa || !alive(s, t.sa)) return l('Sem sósia disponível.', 'No sound-alike available.');
   if (a.members.includes(t.sa)) return l('Já está na banda.', 'Already in the band.');
+  // R33 (DADOS): quem contrata é o original — ato encerrado por morte (ou sem ninguém vivo) não volta com o sósia
+  // (Enrico Caruso, morto em 1921, "voltava" em 1953 com a sósia como voz oficial)
+  if (a.deceased || !a.members.some((x) => alive(s, x))) return l('O artista original já morreu.', 'The original artist has died.');
   const pid = t.sa, p = s.persons[pid];
   a.members.push(pid);
   t.mem = t.mem.filter((x) => x !== pid); t.sa = undefined; t.q = Math.max(10, t.q - 15);

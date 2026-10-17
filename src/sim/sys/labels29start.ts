@@ -13,6 +13,7 @@
 
 import { Rng, clamp } from '../../core/rng';
 import { REAL_LABELS, realFounded } from '../../data/realnames';
+import { labelAliveAt33 } from '../../data/labelhist33'; // R33 (DADOS): extinta antes do início não começa
 import { CITIES, MARKETS, cityById, familyOf, l, type MarketId } from '../../data/world';
 import { registerSimHook } from '../ext4';
 import { LB29, labelsOn29 } from '../labels29gate';
@@ -54,7 +55,7 @@ export function rankReal29(cfg: RunConfig): PoolLabel[] {
   const score = (d: PoolLabel): number => (inc.has(d.id) ? 100 : 0) + fw[d.family] + (core.has(d.id) ? 1.5 : 0) + (sp !== 'world' && inSpread(cfg, cityById[d.city]?.market) ? 6 : 0)
     + (cityById[d.city]?.market === homeMk(cfg) ? 0.5 : 0) + Math.min(1, (cfg.startYear - fy(d, cfg)) / 200);
   const seen = new Set<string>(); // o mesmo nome real em duas entradas do catálogo conta uma vez
-  return labelPool().filter((d) => fy(d, cfg) <= cfg.startYear && !exc.has(d.id)).sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id))
+  return labelPool().filter((d) => fy(d, cfg) <= cfg.startYear && labelAliveAt33(d.id, cfg.startYear) && !exc.has(d.id)).sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id))
     .filter((d) => { const n = cfg.realNames ? d.real ?? REAL_LABELS[d.id] ?? d.name : d.name; if (seen.has(n)) return false; seen.add(n); return true; });
 }
 
@@ -64,13 +65,13 @@ LB29.prep = (cfg) => {
   const sug = suggestLabels22(cfg).ids;
   const pool = labelPool();
   const byId = new Map(pool.map((d) => [d.id, d]));
-  const exists = (id: string) => { const d = byId.get(id); return !!d && fy(d, cfg) <= cfg.startYear; };
+  const exists = (id: string) => { const d = byId.get(id); return !!d && fy(d, cfg) <= cfg.startYear && labelAliveAt33(id, cfg.startYear); };
   const n = count29(cfg) ?? sug.filter(exists).length;
   const ranked = rankReal29(cfg);
   const nReal = Math.min(ranked.length, Math.round(n * clamp(x.real ?? 100, 0, 100) / 100));
   const now = ranked.slice(0, nReal).map((d) => d.id);
   const exc = new Set(x.exc ?? []);
-  const later = sug.filter((id) => !exists(id) && byId.has(id) && !exc.has(id)); // as reais do futuro seguem chegando nas datas
+  const later = sug.filter((id) => !exists(id) && byId.has(id) && fy(byId.get(id)!, cfg) > cfg.startYear && !exc.has(id)); // as reais do futuro seguem chegando nas datas
   cfg.labels = { ...(cfg.labels ?? {}), ids: [...now, ...later], count: n };
   if (x.freq === 'none') cfg.labels.future = 'none';
 };

@@ -123,7 +123,9 @@ describe('R29 formação — regras', () => {
   }, 180_000);
 
   it("'famous' tira quem já morreu no início (The Who 1981 sem Keith Moon, que fica ex-integrante por morte)", () => {
-    const s = game('d1', 1981, 'real', 'famous');
+    // R33 (DADOS33): com o catálogo real em atividade sempre presente, a sequência do mundo mudou e 'd1' caiu nos 8% de
+    // ausência do modo livre (The Who fora do mundo); 'd2' tem o The Who no início (d2–d8 conferidos, todos iguais).
+    const s = game('d2', 1981, 'real', 'famous');
     const who = Object.values(s.acts).find((a) => realDataOf(a)?.n === 'The Who')!;
     expect(names(s, who.members)).toEqual(['John Entwistle', 'Pete Townshend', 'Roger Daltrey']);
     const ex = exMembers29(s, who);

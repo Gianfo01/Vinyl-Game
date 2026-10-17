@@ -33,7 +33,11 @@ describe('playbot16', () => {
     // UNI-4 + N + I + T/H/CAR2 juntos: varredura pb-1..16 → 6 de 16 com todas as ações (pb-3, 6, 7, 9, 10, 11); pb-11 (a mesma do N).
     // R31 onda 4 (BASE-BR: 337 atos brasileiros reais a mais): pb-11 deixou de ter todas as ações no 1º ano; varredura pb-1..16:
     // 6 de 16 com todas as ações (pb-2, 5, 8, 10, 12, 13) → pb-10. Com `base31.br` desligado pb-11 continua passando.
-    const cfg = defaultConfig('r16pb-10', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
+    // R33 (DADOS33 · base corrigida: selo histórico no começo, catálogo real em atividade sempre presente, Elvis solo —
+    // docs/r33/dados/AUDITORIA.md): pb-10 deixou de contratar equipe no 1º ano; varredura pb-1..16 (scripts/r33/dados/
+    // pbsweep33.ts, na ordem de carga do teste): 6 de 16 com todas as ações (pb-2, 8, 9, 11, 13, 16) → pb-9 (2 turnês,
+    // 5 festivais, 2 contratações).
+    const cfg = defaultConfig('r16pb-9', { startYear: 1975, realNames: true }); // r27 INT: depois dos merges do mundo pb-9 não contrata no 1º ano (só 6 de 25 sementes contratam: o bot só contrata no ano 1 com caixa > 24× salários — revisar na frente do bot); pb-16 tem todas as ações. r27: dados novos mudaram a trajetória (pb-5 sem contratação; contratar no 1º ano ficou raro — revisar na frente do bot). r23: segredos/vínculos mudaram a trajetória (pb-3 sem contratação). r18: economia (econ18) e mídia (media18) mudaram a trajetória das sementes 1 e 2
     const years = FULL ? 2 : 1;
     // a mesma partida que simulatePlayer joga, guardando o retrato do 3º mês para a reprise curta
     const s = createGame(cfg);
