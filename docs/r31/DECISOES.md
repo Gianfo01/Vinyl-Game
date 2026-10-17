@@ -692,3 +692,9 @@ Casca nova (`VITE_EXP5NAV=1`), Londres e Brasil 1962, em português e inglês. P
 Dono: as ideias do Idol Manager (escalação, fãs por integrante, regras da casa, agenda por pessoa, casa própria,
 subgrupos, gerações, panelinhas, produtos por integrante, propostas de trabalho) valem para todo artista e banda em que
 fizer sentido e entram antes da leva 1 de CENARIOS. Plano em docs/r33/ELENCO34.md.
+
+## Gente real: proteção só no modo de história exata (17/10)
+Dono: a regra "nada inventado para gente real" vale só no modo de história exata (config.history === 'strict', como
+realSafe). Nos modos com variações e livre, gente real participa dos sorteios (amizades, brigas, escândalos, saídas)
+como qualquer pessoa. Vale para ELENCO34, GENTE33 e as próximas frentes. Editar a BASE de dados de gente real continua
+proibido sem pedido do dono.

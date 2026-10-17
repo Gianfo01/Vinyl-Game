@@ -6,9 +6,10 @@ de CENARIOS (versão 34). Já existe: idols japoneses (aperto de mão, eleição
 esgotamento, escândalos, segurança, TV de talentos, fã-clube, Redes, brigas na banda (bandpay19/member29), pessoas
 fixas e laços (GENTE33). Esta frente aprofunda a pessoa DENTRO do ato.
 
-Regras: mesma arte do jogo; nada de conteúdo adulto; Fossati fora; gente real só com o que a base diz (nada de
-inventar integrante, amizade ou briga de pessoa real além do histórico; o que for sorteado vale só para atos fictícios
-ou fica no nível "boato"). Cada item atrás de interruptor `exp34.elenco.*`, com robôs medindo o mês antes/depois.
+Regras: mesma arte do jogo; nada de conteúdo adulto; Fossati fora. Gente real: a proteção vale SÓ no modo de história
+EXATA (`config.history === 'strict'`, a mesma regra de `realSafe`): ali nada se inventa para pessoa real (integrante,
+amizade, briga, escândalo) além do histórico. Nos modos "com variações" (padrão) e "livre", gente real entra no sorteio
+como qualquer outra pessoa. Cada item atrás de interruptor `exp34.elenco.*`, com robôs medindo o mês antes/depois.
 
 | # | Item | Para quem faz sentido | Como joga | Liga com |
 |---|---|---|---|---|
@@ -19,7 +20,7 @@ ou fica no nível "boato"). Cada item atrás de interruptor `exp34.elenco.*`, co
 | 5 | Casa própria com apresentação fixa | grupos e artistas de palco (teatro do grupo, banda da casa no clube de jazz, cabaré) | apresentação toda noite: renda fixa, treino para novatos, fãs fiéis, cansaço | casa de shows própria, lotes, residência |
 | 6 | Subgrupos e projetos paralelos | bandas e grupos | dupla/trio dentro da banda, projeto paralelo, supergrupo com gente de outros atos; lançamentos próprios; pode ajudar ou rachar a banda | formação, lançamento, contratos |
 | 7 | Gerações e audições | grupos de formação rotativa (idols, coros, boy/girl bands, big bands) | a cada geração entra uma leva por audição e os veteranos saem com despedida | escola, TV de talentos, graduação |
-| 8 | Amizades e panelinhas | toda banda | pares de amigos, rivalidades, panelinhas que afetam palco, moral e vazamentos | laços (GENTE33), brigas na banda, vazamentos |
+| 8 | Amizades e panelinhas | toda banda (no modo exato, gente real só com o histórico) | pares de amigos, rivalidades, panelinhas que afetam palco, moral e vazamentos | laços (GENTE33), brigas na banda, vazamentos |
 | 9 | Produtos por integrante | quem tem fama | fotolivro, revista, linha de merch com o rosto da pessoa (de bom gosto) | merch, relíquias |
 | 10 | Propostas de trabalho chegando | todo artista com fama | comercial, papel em novela/filme, programa de variedades, jurado de reality chegam na Caixa; aceitar dá dinheiro e fama e cansa; recusar pode irritar o artista | sync15, tv18, adsync19, caixa de entrada |
 
