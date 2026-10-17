@@ -74,6 +74,34 @@ Testes mínimos (tsc + o próprio teste), prints das telas em 1962, 1983/1997, 2
 APARELHOS33 é dona do botão e da casca do celular e do PC. REDES33 é dona do app Redes e do Jornal e entrega o app
 pelo gancho de app do celular (sem editar a casca).
 
+## INTRO33 — intro e fundo animado da tela inicial (dono, 2026-10-17, já rodando em paralelo ao QA33)
+
+Referência só de **conceito** (não copiar): `docs/r33/ref/intro-conceito.webp`. A ideia é uma rua isométrica só, em que
+andar para a direita é avançar no tempo (1889 → 2035), com uma onda de som de luz atravessando tudo.
+
+- **Desenho:** por código, em `Px` e na arte do jogo; sem arquivo de vídeo.
+- **A mesma animação serve em dois lugares:**
+  - **fundo da tela inicial** em loop de ~40 s, substituindo o carrossel de épocas;
+  - **intro** curta (~15 s), só na primeira abertura, pulável com qualquer tecla.
+- **Trechos e ordem:**
+
+  | Ano | Trecho |
+  |---|---|
+  | 1889 | sobrado com gramofone e piano, ribalta a gás |
+  | 1920 | torre de rádio com faíscas |
+  | 1950 | loja de discos com toldo e jukebox |
+  | 1965 | estúdio de fita |
+  | 1975 | palco com plateia e luzes |
+  | 1995 | estúdio digital com telas |
+  | 2035 | cidade de vidro e um único holograma |
+
+- **Detalhes:** gente andando, carros da época, janelas acendendo. A onda de luz muda de cor por época, do dourado ao
+  ciano, e puxa a câmera. O logo MASTERS aparece no fim de cada volta.
+- **Regras:**
+  - movimento reduzido = quadro parado bonito;
+  - letreiro e menu sem sobreposição (regra do `fitHead5`);
+  - 60 fps leve, que pausa quando a aba sai.
+
 ## Fechamento da 33 (depois que todas as frentes estiverem juntas)
 | Frente | O quê | Modelo |
 |---|---|---|

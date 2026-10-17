@@ -495,3 +495,11 @@ Cada linha: data · onda · decisão (o que substituiu o quê) · motivo · valo
 - O logo MASTERS ficou maior (o `fitHead5` continua encolhendo se cobrir o letreiro). A linha de baixo ficou só "UM
   MUNDO VIVE DE MÚSICA", sem "1889 – 2040".
 - Nas cenas de 2030+, só a vocal vira holograma (antes eram vocal e guitarra: dois hologramas).
+
+## 2026-10-17 · INTRO33
+- O dono pediu uma intro e um fundo animado da tela inicial a partir do conceito de `docs/r33/ref/intro-conceito.webp`:
+  uma rua isométrica que atravessa as épocas, ligadas por uma onda de som de luz. É só conceito, sem copiar a imagem.
+- Desenho por código na arte do jogo, sem vídeo:
+  - o mesmo motor serve de fundo em loop na tela inicial (no lugar do carrossel de épocas);
+  - e de intro curta na primeira abertura, pulável.
+- Frente INTRO33 (Sonnet), em paralelo ao QA33.
